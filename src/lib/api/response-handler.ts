@@ -1077,10 +1077,13 @@ export function mergePaginatedResponses<T>(
   return {
     items,
     pagination: {
-      ...(lastResponse?.pagination ?? {}),
       page: responses.length,
       pageSize: Math.ceil(items.length / responses.length),
       total: lastResponse?.pagination?.total ?? items.length,
+      totalPages: lastResponse?.pagination?.totalPages ?? 1,
+      hasMore: lastResponse?.pagination?.hasMore ?? false,
+      nextCursor: lastResponse?.pagination?.nextCursor,
+      prevCursor: lastResponse?.pagination?.prevCursor,
     },
   };
 }

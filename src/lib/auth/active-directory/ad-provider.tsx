@@ -846,7 +846,7 @@ function applyMappings(
   return {
     ...user,
     ...mappedUser,
-    roles: [role],
+    roles: role ? [role] : [],
     permissions: permissions,
     effectivePermissions: permissions,
     adGroups: user.adGroups,

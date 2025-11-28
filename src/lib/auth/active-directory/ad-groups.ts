@@ -105,11 +105,11 @@ export class ADGroupMapper {
    *
    * @param groups - User's AD group memberships
    * @param user - Optional user for condition evaluation
-   * @returns Mapped role
+   * @returns Mapped role (or default role if none matched)
    */
   getRole(groups: ADGroup[], user?: ADUser): Role {
     const result = this.mapUserGroups(groups, user);
-    return result.role;
+    return result.role ?? this.config.defaultRole;
   }
 
   /**
@@ -222,11 +222,13 @@ export class ADGroupMapper {
     );
 
     if (index >= 0) {
+      const existing = this.config.mappings[index]!;
       this.config.mappings[index] = {
-        groupIdentifier: updates.groupIdentifier ?? this.config.mappings[index]?.groupIdentifier ?? '',
-        matchType: updates.matchType ?? this.config.mappings[index]?.matchType ?? 'exact',
-        ...this.config.mappings[index],
+        ...existing,
         ...updates,
+        groupIdentifier: updates.groupIdentifier ?? existing.groupIdentifier,
+        matchType: updates.matchType ?? existing.matchType,
+        role: updates.role ?? existing.role,
       };
       this.clearCache();
     }
@@ -270,8 +272,8 @@ export class ADGroupMapper {
     const highestPriorityMapping = matchedMappings[0];
     if (!highestPriorityMapping) {
       return {
-        role: undefined,
-        permissions: [],
+        role: this.config.defaultRole,
+        permissions: [...this.config.defaultPermissions],
         matchedGroups: [],
         appliedMappings: [],
       };
@@ -365,7 +367,7 @@ export class ADGroupMapper {
  */
 export interface GroupMappingResult {
   /** Resolved role (highest priority) */
-  role: Role;
+  role: Role | undefined;
   /** Combined permissions from all matched mappings */
   permissions: Permission[];
   /** Groups that matched mappings */

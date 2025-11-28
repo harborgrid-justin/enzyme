@@ -53,6 +53,8 @@ export interface ConfigContextValue<T extends ConfigRecord = ConfigRecord> {
   set: (path: string, value: ConfigValue) => void;
   has: (path: string) => boolean;
   reset: () => void;
+  reload: () => Promise<void>;
+  subscribe: (listener: (event: import('../contexts/ConfigContext').ConfigChangeEvent) => void) => () => void;
   isLoading: boolean;
   error: Error | null;
 }
@@ -247,8 +249,16 @@ export function ConfigProvider<T extends ConfigRecord = ConfigRecord>({
 
   // Subscribe to changes
   const subscribe = useCallback(
-    (listener: ConfigEventListener): (() => void) => {
-      return runtimeConfig.subscribe(listener);
+    (listener: (event: import('../contexts/ConfigContext').ConfigChangeEvent) => void): (() => void) => {
+      return runtimeConfig.subscribe((event) => {
+        // Convert ConfigEvent to ConfigChangeEvent
+        if (event.type === 'change' || event.type === 'reset' || event.type === 'reload') {
+          listener({
+            type: event.type,
+            changes: event.type === 'change' && 'changes' in event ? event.changes : undefined,
+          });
+        }
+      });
     },
     [runtimeConfig]
   );

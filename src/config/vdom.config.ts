@@ -91,10 +91,12 @@ export const vdomConfig = createEnvConfig<VDOMConfig>({
       usePooling: true,
       poolSize: 150,
       gcInterval: 15000,
+      memoryLimit: 100,
     },
     boundaries: {
       sandbox: true,
       cspIntegration: true,
+      xssPrevention: true,
     },
   },
 });

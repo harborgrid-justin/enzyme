@@ -606,7 +606,7 @@ export function useBulkCacheOperations(): {
         predicate: (query) => {
           const meta = query.meta as Record<string, unknown> | undefined;
           const tags = meta?.tags as string[] | undefined;
-          return meta?.tag === tag || tags?.includes?.(tag);
+          return Boolean(meta?.tag === tag || tags?.includes?.(tag));
         },
       });
     },

@@ -402,7 +402,8 @@ export function createDeduplicatedFetch(
 export function deduplicateFunction<TArgs extends unknown[], TResult>(
   fn: (...args: TArgs) => Promise<TResult>,
   keyGenerator: (...args: TArgs) => string,
-  config?: Omit<DeduplicationConfig, 'keyGenerator'>
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _config?: Omit<DeduplicationConfig, 'keyGenerator'>
 ): (...args: TArgs) => Promise<TResult> {
   const cache = new Map<string, Promise<TResult>>();
 

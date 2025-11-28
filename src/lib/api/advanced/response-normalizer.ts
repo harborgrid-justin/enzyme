@@ -326,8 +326,6 @@ export class ResponseNormalizer {
    * @returns Normalized errors
    */
   normalizeErrors(response: unknown): NormalizedError[] {
-    const errors: NormalizedError[] = [];
-
     // Handle array of errors
     if (Array.isArray(response)) {
       return response.map(err => this.normalizeError(err));
@@ -375,16 +373,16 @@ export class ResponseNormalizer {
 
     return {
       code:
-        this.getNestedValue(error, mapping.code ?? 'code') ??
-        this.getNestedValue(error, 'status') ??
+        (this.getNestedValue(error, mapping.code ?? 'code') as string) ??
+        (this.getNestedValue(error, 'status') as string) ??
         'ERROR',
       message:
-        this.getNestedValue(error, mapping.message ?? 'message') ??
-        this.getNestedValue(error, 'error') ??
+        (this.getNestedValue(error, mapping.message ?? 'message') as string) ??
+        (this.getNestedValue(error, 'error') as string) ??
         'Unknown error',
-      field: this.getNestedValue(error, mapping.field ?? 'field'),
-      details: this.getNestedValue(error, mapping.details ?? 'details'),
-      status: this.getNestedValue(error, 'status'),
+      field: this.getNestedValue(error, mapping.field ?? 'field') as string | undefined,
+      details: this.getNestedValue(error, mapping.details ?? 'details') as string | undefined,
+      status: this.getNestedValue(error, 'status') as number | undefined,
       context: this.extractErrorContext(error),
     };
   }
@@ -441,10 +439,11 @@ export class ResponseNormalizer {
     }
 
     const pageSize =
-      this.getNestedValue(paginationSource, mapping.pageSize ?? 'pageSize') ?? 20;
+      (this.getNestedValue(paginationSource, mapping.pageSize ?? 'pageSize') as number) ?? 20;
+    const totalItemsCount = this.getNestedValue(paginationSource, mapping.totalItems ?? 'totalItems') as number | undefined;
     const totalPages =
-      this.getNestedValue(paginationSource, mapping.totalPages ?? 'totalPages') ??
-      (totalItems ? Math.ceil(totalItems / pageSize) : 1);
+      (this.getNestedValue(paginationSource, mapping.totalPages ?? 'totalPages') as number) ??
+      (totalItemsCount && pageSize ? Math.ceil(totalItemsCount / pageSize) : 1);
 
     let hasNextPage: boolean;
     let hasPrevPage: boolean;
@@ -454,7 +453,7 @@ export class ResponseNormalizer {
       // Handle Spring's 'last' field (inverted)
       hasNextPage = mapping.hasNext === 'last' ? !hasNextValue : !!hasNextValue;
     } else {
-      hasNextPage = (currentPage ?? 1) < totalPages;
+      hasNextPage = ((currentPage as number) ?? 1) < totalPages;
     }
 
     if (mapping.hasPrev) {

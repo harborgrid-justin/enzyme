@@ -74,6 +74,9 @@ export const hydrationConfig = createEnvConfig<HydrationConfig>({
     scheduler: {
       maxConcurrent: 4,
       batchSize: 15,
+      yieldInterval: 8,
+      useIdleCallback: true,
+      idleTimeout: 75,
     },
     metrics: {
       trackTiming: true,

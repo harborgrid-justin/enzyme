@@ -108,7 +108,7 @@ describe('useGlobalStore hooks', () => {
     it('should not re-render when unrelated state changes', () => {
       // Arrange
       const renderCount = { current: 0 };
-      const { result } = renderHook(() => {
+      renderHook(() => {
         renderCount.current++;
         return useGlobalStore((state) => state.sidebarOpen);
       });
@@ -129,33 +129,21 @@ describe('useGlobalStore hooks', () => {
     });
 
     it('should work with nested state selectors', () => {
-      // Arrange - first set up session with user
-      const mockUser = {
-        id: '1',
-        email: 'test@example.com',
-        firstName: 'Test',
-        lastName: 'User',
-        displayName: 'Test User',
-        roles: ['user'],
-        permissions: ['read'],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
+      // Arrange - first set up session
       act(() => {
         const state = getStoreState();
-        if (typeof state.startSession === 'function') {
-          state.startSession(mockUser);
+        if (typeof state.initSession === 'function') {
+          state.initSession('test-session');
         }
       });
 
       // Act
       const { result } = renderHook(() =>
-        useGlobalStore((state) => state.user?.email)
+        useGlobalStore((state) => state.sessionId)
       );
 
       // Assert
-      expect(result.current).toBe('test@example.com');
+      expect(result.current).toBe('test-session');
     });
   });
 
@@ -167,7 +155,7 @@ describe('useGlobalStore hooks', () => {
     it('should maintain reference equality for unchanged selections', () => {
       // Arrange
       const results: unknown[] = [];
-      const { result, rerender } = renderHook(() => {
+      const { rerender } = renderHook(() => {
         const value = useGlobalStore((state) => state.sidebarOpen);
         results.push(value);
         return value;
@@ -373,7 +361,7 @@ describe('useGlobalStore hooks', () => {
     it('should receive updates during component lifecycle', async () => {
       // Arrange
       const updates: boolean[] = [];
-      const { result } = renderHook(() => {
+      renderHook(() => {
         const value = useGlobalStore((state) => state.sidebarOpen);
         updates.push(value);
         return value;

@@ -49,7 +49,9 @@ export const streamingConfig = createEnvConfig<StreamingConfig>({
     },
     performance: {
       compression: false,
+      compressionLevel: 6,
       caching: false,
+      cacheTTL: 0,
     },
   },
 

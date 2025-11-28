@@ -43,7 +43,6 @@ import {
   useInfiniteQuery,
   useQueryClient,
   type UseQueryOptions,
-  type UseMutationOptions,
   type QueryKey,
   type QueryClient,
 } from '@tanstack/react-query';
@@ -348,7 +347,7 @@ function createQueryHook<TResponse>(
   endpoint: ApiEndpoint,
   defaultStaleTime: number,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  globalOnError?: (error: ApiError) => void
+  _globalOnError?: (error: ApiError) => void
 ) {
   return (params?: QueryRequestParams, hookConfig?: QueryHookConfig<TResponse>) => {
     const queryKey = useMemo(
@@ -393,8 +392,8 @@ function createQueryHook<TResponse>(
  */
 function createMutationHook<TResponse, TBody = unknown>(
   client: ApiClient,
-  namespace: string,
-  endpointName: string,
+  _namespace: string,
+  _endpointName: string,
   endpoint: ApiEndpoint,
   globalOnError?: (error: ApiError) => void,
   globalOnSuccess?: (data: unknown) => void
@@ -547,9 +546,9 @@ export function createInfiniteQueryHook<TResponse>(config: {
 
         const response = await client.get<TResponse>(url, {
           params: {
-            ...(params?.queryParams as Record<string, unknown>),
+            ...(params?.queryParams as Record<string, string | number>),
             [pageParamName]: pageParam,
-          },
+          } as import('./types').QueryParams,
           timeout: endpoint.timeout,
           ...params?.config,
         });

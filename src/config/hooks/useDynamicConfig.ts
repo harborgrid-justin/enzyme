@@ -436,7 +436,7 @@ export function useFeatureFlagOverride(): UseFeatureFlagOverrideResult {
  * }
  * ```
  */
-export function useRemoteConfig<T>(key: string, defaultValue: T): T {
+export function useRemoteConfig<T extends import('../types').ConfigValue>(key: string, defaultValue: T): T {
   const { dynamicConfig, isInitialized } = useConfigContext();
   const [value, setValue] = useState<T>(defaultValue);
 

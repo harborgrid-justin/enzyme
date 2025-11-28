@@ -40,10 +40,12 @@ export const layoutsConfig = createEnvConfig<LayoutsConfig>({
       enabled: true,
       useResizeObserver: true,
       resizeDebounce: 150,
+      breakpoints: { xs: 0, sm: 640, md: 768, lg: 1024, xl: 1280, '2xl': 1536 },
     },
     morphing: {
       enabled: true,
       animate: true,
+      useFLIP: true,
       transition: {
         duration: 400,
         easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
@@ -54,11 +56,13 @@ export const layoutsConfig = createEnvConfig<LayoutsConfig>({
     clsGuard: {
       enabled: true,
       reserveSpace: true,
+      defaultAspectRatio: 1.5,
       useSkeleton: true,
     },
     context: {
       enabled: true,
       trackAncestry: true,
+      bridgePortals: true,
       maxDepth: 15,
     },
   },
@@ -68,6 +72,7 @@ export const layoutsConfig = createEnvConfig<LayoutsConfig>({
       enabled: true,
       useResizeObserver: true,
       resizeDebounce: 100,
+      breakpoints: { xs: 0, sm: 640, md: 768, lg: 1024, xl: 1280, '2xl': 1536 },
     },
     morphing: {
       enabled: true,

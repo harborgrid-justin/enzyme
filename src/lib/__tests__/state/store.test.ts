@@ -597,51 +597,27 @@ describe('Store', () => {
 
   describe('Session slice', () => {
     it('should start session', () => {
-      // Arrange
-      const mockUser = {
-        id: '1',
-        email: 'test@example.com',
-        firstName: 'Test',
-        lastName: 'User',
-        displayName: 'Test User',
-        roles: ['user'],
-        permissions: ['read'],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
       // Act
       act(() => {
         const state = getStoreState();
-        if (typeof state.startSession === 'function') {
-          state.startSession(mockUser);
+        if (typeof state.initSession === 'function') {
+          state.initSession('test-session-123');
         }
       });
 
       // Assert
       const newState = getStoreState();
-      expect(newState.user).toEqual(mockUser);
+      expect(newState.sessionId).toEqual('test-session-123');
       expect(newState.sessionStartedAt).toBeDefined();
     });
 
     it('should end session', () => {
       // Arrange - start a session first
-      const mockUser = {
-        id: '1',
-        email: 'test@example.com',
-        firstName: 'Test',
-        lastName: 'User',
-        displayName: 'Test User',
-        roles: ['user'],
-        permissions: ['read'],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
 
       act(() => {
         const state = getStoreState();
-        if (typeof state.startSession === 'function') {
-          state.startSession(mockUser);
+        if (typeof state.initSession === 'function') {
+          state.initSession('test-session-123');
         }
       });
 
@@ -655,7 +631,7 @@ describe('Store', () => {
 
       // Assert
       const newState = getStoreState();
-      expect(newState.user).toBeNull();
+      expect(newState.sessionId).toBeNull();
       expect(newState.sessionStartedAt).toBeNull();
     });
 
@@ -664,8 +640,8 @@ describe('Store', () => {
       const before = Date.now();
       act(() => {
         const state = getStoreState();
-        if (typeof state.updateLastActivity === 'function') {
-          state.updateLastActivity();
+        if (typeof state.updateActivity === 'function') {
+          state.updateActivity();
         }
       });
       const after = Date.now();

@@ -43,11 +43,11 @@
 import type { HttpMethod } from '../types';
 import type {
   GeneratedEndpoint,
-  ComputedAccess,
   OpenAPIDocument,
   OpenAPIInfo,
   OpenAPIServer,
   JSONSchemaLike,
+  UserContext,
 } from './api-generator';
 import { generateOpenAPISpec } from './api-generator';
 import type {
@@ -556,7 +556,7 @@ export class EndpointRegistry {
    */
   async checkAccess(
     endpointId: string,
-    user: UserContext | undefined,
+    user: unknown | undefined,
     context?: PermissionCheckContext
   ): Promise<RBACCheckResult> {
     const endpoint = this.endpoints.get(endpointId);
@@ -572,22 +572,24 @@ export class EndpointRegistry {
 
     if (!this.config.rbacIntegration) {
       // No RBAC integration, allow by default
+      const userContext = user as { isAuthenticated?: boolean } | undefined;
       return {
-        allowed: !endpoint.access.requiresAuth || (user?.isAuthenticated ?? false),
-        decision: endpoint.access.requiresAuth && !user?.isAuthenticated ? 'requires_auth' : 'allow',
+        allowed: !endpoint.access.requiresAuth || (userContext?.isAuthenticated ?? false),
+        decision: endpoint.access.requiresAuth && !userContext?.isAuthenticated ? 'requires_auth' : 'allow',
         reason: 'No RBAC integration configured',
         evaluationTimeMs: 0,
         cacheHit: false,
       };
     }
 
-    const result = await this.config.rbacIntegration.checkAccess(endpoint, user, context);
+    const result = await this.config.rbacIntegration.checkAccess(endpoint, user as UserContext | undefined, context);
 
     // Emit event
     if (user) {
+      const userContext = user as UserContext;
       this.emit('access_checked', {
         endpointId,
-        userId: user.id,
+        userId: userContext.id,
         result,
       });
     }
@@ -601,7 +603,7 @@ export class EndpointRegistry {
   async checkAccessByPath(
     path: string,
     method: HttpMethod,
-    user: UserContext | undefined
+    user: unknown | undefined
   ): Promise<RBACCheckResult & { endpoint?: GeneratedEndpoint; params?: Record<string, string> }> {
     const lookup = this.getByPath(path, method);
     if (!lookup) {

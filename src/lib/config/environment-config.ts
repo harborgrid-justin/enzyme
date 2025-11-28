@@ -159,9 +159,9 @@ export class EnvironmentConfigManager<T extends ConfigRecord = ConfigRecord> {
     baseConfig: T,
     envOverrides: EnvironmentConfigType<T>
   ): T {
-    const overrides = envOverrides[this.environment];
+    const overrides = envOverrides[this.environment] as T | undefined;
 
-    if (overrides === undefined || overrides === null) {
+    if (!overrides) {
       return baseConfig;
     }
 

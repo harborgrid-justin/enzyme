@@ -119,7 +119,7 @@ export function useConfig<T extends ConfigRecord>(
     if (selector) {
       return selector(fullConfig as T) as DeepReadonly<T>;
     }
-    return fullConfig;
+    return fullConfig as DeepReadonly<T>;
   }, [getNamespace, namespace, selector]);
 
   const [config, setConfig] = useState<DeepReadonly<T>>(getConfig);

@@ -171,7 +171,6 @@ export function useApiRequest<TResponse = unknown>(
     retry: options.retry,
     retryDelay: options.retryDelay,
     select: options.select,
-    placeholderData: options.placeholderData as unknown as UseQueryResult<TResponse, ApiError>['placeholderData'],
   });
 
   // Invalidate query
@@ -543,19 +542,21 @@ export function usePolling<TResponse = unknown>(
 } {
   const shouldStop = useRef(false);
 
+  const refetchIntervalFn = useCallback((query: any) => {
+    if (shouldStop.current) return false;
+
+    const data = query.state.data;
+    if (data && options.stopCondition?.(data)) {
+      shouldStop.current = true;
+      return false;
+    }
+
+    return options.interval;
+  }, [options.interval, options.stopCondition]);
+
   const result = useApiRequest<TResponse>({
     ...options,
-    refetchInterval: (query: any) => {
-      if (shouldStop.current) return false;
-
-      const data = query.state.data;
-      if (data && options.stopCondition?.(data)) {
-        shouldStop.current = true;
-        return false;
-      }
-
-      return options.interval;
-    },
+    refetchInterval: refetchIntervalFn as unknown as number | false,
   });
 
   const startPolling = useCallback(() => {

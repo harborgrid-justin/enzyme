@@ -9,13 +9,10 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { http, HttpResponse } from 'msw';
-import { server } from '../../../test/mocks/server';
 import {
   createMockUser,
   createMockAuthTokens,
   createMockSecureStorage,
-  flushPromises,
   createDeferred,
 } from '../utils/test-utils';
 

@@ -22,6 +22,7 @@
     "outDir": "dist",
     "declaration": true,
     "declarationMap": true,
-    "noEmit": false
+    "noEmit": false,
+    "allowImportingTsExtensions": false
   }
 }

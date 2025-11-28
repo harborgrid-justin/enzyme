@@ -14,7 +14,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   createMockFetch,
   createDeferred,
-  flushPromises,
   delay,
 } from '../utils/test-utils';
 
@@ -224,7 +223,7 @@ describe('ApiClient', () => {
       mockFetch.mockResponse('');
 
       // Act
-      const response = await client.head('/users');
+      await client.head('/users');
 
       // Assert
       expect(mockFetch).toHaveBeenCalledWith(
@@ -998,8 +997,8 @@ describe('ApiClient', () => {
       mockFetch.mockReturnValue(new Promise(() => {}));
 
       // Start multiple requests
-      const promise1 = client.get('/users');
-      const promise2 = client.get('/posts');
+      client.get('/users');
+      client.get('/posts');
 
       // Small delay to ensure requests are started
       await delay(10);
@@ -1063,7 +1062,7 @@ describe('ApiClient', () => {
         })
       );
 
-      const callArgs = mockFetch.mock.calls[0];
+      const callArgs = mockFetch.mock.calls[0]!;
       const headers = callArgs[1].headers as Headers;
       expect(headers.get('Authorization')).toBe('Bearer test-token');
     });
@@ -1081,7 +1080,7 @@ describe('ApiClient', () => {
       await client.get('/public', { meta: { skipAuth: true } });
 
       // Assert
-      const callArgs = mockFetch.mock.calls[0];
+      const callArgs = mockFetch.mock.calls[0]!;
       const headers = callArgs[1].headers as Headers;
       expect(headers.get('Authorization')).toBeNull();
     });
@@ -1108,7 +1107,7 @@ describe('ApiClient', () => {
 
       // Assert
       expect(customProvider.getAccessToken).toHaveBeenCalled();
-      const callArgs = mockFetch.mock.calls[0];
+      const callArgs = mockFetch.mock.calls[0]!;
       const headers = callArgs[1].headers as Headers;
       expect(headers.get('Authorization')).toBe('Bearer custom-token');
     });

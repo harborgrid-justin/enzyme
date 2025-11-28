@@ -38,15 +38,6 @@ const WILDCARD = '*';
 const MAX_PATTERN_LENGTH = 256;
 
 /**
- * Characters that need to be escaped in user-provided patterns
- * before converting to regex.
- *
- * SECURITY: These regex metacharacters must be escaped to prevent
- * ReDoS attacks and unintended pattern matching behavior.
- */
-const REGEX_METACHARACTERS = /[.+^${}()|[\]\\]/g;
-
-/**
  * Timeout for pattern matching operations in milliseconds.
  *
  * SECURITY: Limits execution time for regex operations to prevent DoS.
@@ -706,34 +697,6 @@ export class RBACEngine {
     }
 
     return pi === pattern.length;
-  }
-
-  /**
-   * Creates a safe regex pattern from a glob-like pattern.
-   *
-   * SECURITY: This method is provided for cases where regex is required,
-   * but the preferred approach is to use globMatch() which is ReDoS-safe.
-   *
-   * Safety measures:
-   * 1. Escapes all regex metacharacters first
-   * 2. Then converts * and ? to their regex equivalents
-   * 3. Uses non-greedy quantifiers (.*? instead of .*)
-   *
-   * @param pattern - Glob-like pattern
-   * @returns Safe regex pattern string (without anchors)
-   */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private _escapePatternToRegex(pattern: string): string {
-    // First, escape all regex metacharacters (except * and ?)
-    let escaped = pattern.replace(REGEX_METACHARACTERS, '\\$&');
-
-    // Then convert glob wildcards to regex equivalents
-    // Use non-greedy .*? to prevent catastrophic backtracking
-    escaped = escaped
-      .replace(/\*/g, '.*?')
-      .replace(/\?/g, '.');
-
-    return escaped;
   }
 
   /**

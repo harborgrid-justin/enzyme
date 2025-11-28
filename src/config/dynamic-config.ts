@@ -366,7 +366,7 @@ export class DynamicConfigManager {
   /**
    * Save configuration to cache
    */
-  private async saveToCache(config: RemoteConfigResponse): Promise<void> {
+  private async saveToCache(_config: RemoteConfigResponse): Promise<void> {
     try {
       const cacheData = {
         flags: Object.fromEntries(this.flags),

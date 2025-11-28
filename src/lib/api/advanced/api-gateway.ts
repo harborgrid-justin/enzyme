@@ -346,7 +346,7 @@ export class APIGateway {
         this.cacheResponse(processedRequest, response);
       }
 
-      return response;
+      return response as GatewayResponse<T>;
     } catch (error) {
       const gatewayError = this.normalizeError(error, processedRequest);
 
@@ -821,9 +821,9 @@ export class APIGateway {
   /**
    * Log debug message.
    */
-  private log(message: string, ...args: unknown[]): void {
+  private _log(_message: string, ..._args: unknown[]): void {
     if (this.config.debug) {
-      console.log(`[APIGateway] ${message}`, ...args);
+      console.log(`[APIGateway] ${_message}`, ..._args);
     }
   }
 }

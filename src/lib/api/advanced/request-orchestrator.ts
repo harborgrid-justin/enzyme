@@ -219,7 +219,7 @@ export class RequestOrchestrator {
       if (result.status === 'fulfilled') {
         fulfilled.push(result.value);
       } else {
-        rejected.push({ request: requests[index], error: result.reason });
+        rejected.push({ request: requests[index]!, error: result.reason });
       }
     });
 
@@ -486,7 +486,7 @@ export class RequestOrchestrator {
 
     for (let i = 0; i < allRequests.length; i++) {
       try {
-        return await this.executor<T>(allRequests[i]);
+        return await this.executor<T>(allRequests[i]!);
       } catch (error) {
         if (i === allRequests.length - 1) {
           throw error;

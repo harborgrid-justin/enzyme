@@ -636,7 +636,7 @@ export type ParametersOf<T> = T extends (...args: infer P) => unknown
  * Unique symbol for branded types.
  * @internal
  */
-declare const __brand: unique symbol;
+export declare const __brand: unique symbol;
 
 /**
  * Creates a branded (nominal) type from a base type.

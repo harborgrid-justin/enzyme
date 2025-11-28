@@ -1,4 +1,4 @@
-import { flagKeys, flagCategories, type FlagCategory } from '@/lib/flags/flagKeys';
+import { flagKeys, type FlagCategory } from '@/lib/flags/flagKeys';
 
 /**
  * Global default values & source keys for feature flags.

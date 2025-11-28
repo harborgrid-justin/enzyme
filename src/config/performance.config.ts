@@ -17,7 +17,7 @@
  * @see https://developer.chrome.com/docs/lighthouse/performance/
  */
 
-import { isDev, isProd, isStaging } from '@/lib/core/config/env-helper';
+import { isProd, isStaging } from '@/lib/core/config/env-helper';
 
 // ============================================================================
 // Types
@@ -495,7 +495,7 @@ export function getNetworkTier(rtt: number, downlink: number): NetworkTierConfig
     }
   }
   // Default to slowest tier
-  return NETWORK_TIERS[NETWORK_TIERS.length - 1];
+  return NETWORK_TIERS[NETWORK_TIERS.length - 1]!;
 }
 
 /**

@@ -360,7 +360,7 @@ export class VersionManager {
 
     for (let i = 0; i < 3; i++) {
       if (aParts[i] !== bParts[i]) {
-        return aParts[i] - bParts[i];
+        return aParts[i]! - bParts[i]!;
       }
     }
 
@@ -427,7 +427,7 @@ export class VersionManager {
     if (migrations) {
       let result = data;
       for (const migration of migrations) {
-        result = migration.transform(result, fromVersion, toVersion);
+        result = migration.transform(result, fromVersion, toVersion) as T;
       }
       return result;
     }
@@ -442,7 +442,7 @@ export class VersionManager {
 
     let result = data;
     for (let i = 0; i < path.length - 1; i++) {
-      result = this.migrateResponse(result, path[i], path[i + 1]);
+      result = this.migrateResponse(result, path[i]!, path[i + 1]!);
     }
 
     return result;
@@ -606,7 +606,7 @@ export function parseSemver(version: string): {
   if (!match) return null;
 
   return {
-    major: parseInt(match[1], 10),
+    major: parseInt(match[1]!, 10),
     minor: parseInt(match[2] ?? '0', 10),
     patch: parseInt(match[3] ?? '0', 10),
     prerelease: match[4],

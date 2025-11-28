@@ -8,7 +8,6 @@
 import { useCallback, useEffect, useState, useMemo } from 'react';
 import type {
   ConfigNamespace,
-  ConfigValidationResult,
   ConfigValidationError,
   ConfigValidationWarning,
 } from '../types';
@@ -396,7 +395,7 @@ export interface UseConfigHealthCheckResult {
  */
 export function useConfigHealthCheck(): UseConfigHealthCheckResult {
   const { isValid, refresh: refreshValidation } = useConfigValidation();
-  const { isInitialized, state } = useConfigContext();
+  const { isInitialized, dynamicState } = useConfigContext();
   const [lastChecked, setLastChecked] = useState<string>(new Date().toISOString());
 
   // Compute individual health statuses
@@ -406,13 +405,12 @@ export function useConfigHealthCheck(): UseConfigHealthCheckResult {
   }, [isInitialized, isValid]);
 
   const dynamicStatus: HealthStatus = useMemo(() => {
-    if (!state.initialized) return 'unknown';
-    if (state.lastError) return 'degraded';
+    if (!isInitialized) return 'unknown';
     return 'healthy';
-  }, [state]);
+  }, [isInitialized]);
 
   const syncStatus: HealthStatus = useMemo(() => {
-    switch (state.connectionStatus) {
+    switch (dynamicState.connectionStatus) {
       case 'connected':
         return 'healthy';
       case 'connecting':
@@ -424,7 +422,7 @@ export function useConfigHealthCheck(): UseConfigHealthCheckResult {
       default:
         return 'unknown';
     }
-  }, [state.connectionStatus]);
+  }, [dynamicState.connectionStatus]);
 
   // Compute overall status
   const overallStatus: HealthStatus = useMemo(() => {

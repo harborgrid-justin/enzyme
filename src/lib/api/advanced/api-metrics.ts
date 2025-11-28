@@ -536,8 +536,8 @@ export class APIMetricsCollector {
       errorCount: metrics.length - successCount,
       successRate: successCount / metrics.length,
       avgDuration: durations.reduce((a, b) => a + b, 0) / durations.length,
-      minDuration: durations[0],
-      maxDuration: durations[durations.length - 1],
+      minDuration: durations[0]!,
+      maxDuration: durations[durations.length - 1]!,
       p50Latency: this.percentile(durations, 50),
       p90Latency: this.percentile(durations, 90),
       p95Latency: this.percentile(durations, 95),
@@ -580,7 +580,7 @@ export class APIMetricsCollector {
     if (sortedValues.length === 0) return 0;
 
     const index = Math.ceil((p / 100) * sortedValues.length) - 1;
-    return sortedValues[Math.max(0, index)];
+    return sortedValues[Math.max(0, index)]!;
   }
 }
 

@@ -6,8 +6,6 @@
 
 import { cleanup } from '@testing-library/react';
 import { afterEach, beforeEach, vi } from 'vitest';
-import { server } from '../../test/mocks/server';
-import { resetMockData } from '../../test/mocks/handlers';
 
 // ============================================================================
 // MSW Server Setup
@@ -15,12 +13,10 @@ import { resetMockData } from '../../test/mocks/handlers';
 
 beforeEach(() => {
   // Reset mock data before each test
-  resetMockData();
+  // resetMockData();
 });
 
 afterEach(() => {
-  // Reset handlers to default after each test
-  server.resetHandlers();
   // Cleanup React Testing Library
   cleanup();
   // Clear all mocks

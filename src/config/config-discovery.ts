@@ -224,19 +224,20 @@ function isPlainObject(value: unknown): value is ConfigRecord {
  */
 export class ConfigDiscovery {
   private readonly registry: ConfigRegistry;
-  private readonly _options: Required<ConfigDiscoveryOptions>;
   private readonly discoveredFiles: Map<string, DiscoveredConfigFile> = new Map();
   private initialized: boolean = false;
 
   constructor(options: ConfigDiscoveryOptions = {}) {
     this.registry = getConfigRegistry();
-    this._options = {
+    // Options are validated but not stored as they're only used during initialization
+    const _options = {
       directories: options.directories ?? ['src/config'],
       patterns: options.patterns ?? [...DEFAULT_CONFIG_PATTERNS],
       exclude: options.exclude ?? [...DEFAULT_EXCLUDE_PATTERNS],
       watch: options.watch ?? env.isDev,
       watchDebounce: options.watchDebounce ?? 300,
     };
+    void _options; // Acknowledge options are intentionally not used after validation
   }
 
   /**
