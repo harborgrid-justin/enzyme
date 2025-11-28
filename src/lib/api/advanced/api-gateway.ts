@@ -820,10 +820,11 @@ export class APIGateway {
 
   /**
    * Log debug message.
+   * @internal Used for debug logging when config.debug is enabled
    */
-  private _log(_message: string, ..._args: unknown[]): void {
+  protected log(message: string, ...args: unknown[]): void {
     if (this.config.debug) {
-      console.log(`[APIGateway] ${_message}`, ..._args);
+      console.log(`[APIGateway] ${message}`, ...args);
     }
   }
 }

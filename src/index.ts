@@ -1,74 +1,126 @@
 /**
  * @defendr/enzyme - Enterprise React Framework
  *
- * A powerful React framework for building enterprise applications
- * with advanced routing, state management, and performance optimizations
+ * A comprehensive React framework for building enterprise applications with:
+ * - Advanced type-safe routing
+ * - Zustand + React Query state management
+ * - RBAC authentication & authorization
+ * - Feature flags and A/B testing
+ * - Performance monitoring (Core Web Vitals)
+ * - Real-time data synchronization
  *
- * Note: To avoid export name conflicts, import specific modules directly:
- * - import { ... } from '@defendr/enzyme/lib/api'
- * - import { ... } from '@defendr/enzyme/lib/auth'
- * - etc.
+ * ## Import Pattern (Recommended)
+ *
+ * For optimal tree-shaking and bundle size, import from submodules:
+ * ```typescript
+ * import { useAuth, AuthProvider } from '@defendr/enzyme/auth';
+ * import { useFeatureFlag } from '@defendr/enzyme/flags';
+ * import { AdaptiveLayout } from '@defendr/enzyme/layouts';
+ * ```
+ *
+ * @module @defendr/enzyme
+ * @version 1.0.0
+ * @license MIT
  */
 
 // =============================================================================
-// Core Library (Primary exports)
+// Core Library (Essential exports only - use submodules for tree-shaking)
 // =============================================================================
-export * from './lib';
+export {
+  // Auth essentials
+  AuthProvider,
+  useAuth,
+  // Feature flags essentials
+  FeatureFlagProvider,
+  useFeatureFlag,
+  FlagGate,
+  // Monitoring essentials
+  ErrorBoundary,
+  GlobalErrorBoundary,
+  // Performance essentials
+  PerformanceProvider,
+  initPerformanceMonitoring,
+  // Query utilities
+  createQueryKeyFactory,
+} from './lib';
+
+// Essential type exports
+export type {
+  User,
+  AuthState,
+  Role,
+  Permission,
+  AuthTokens,
+  AppError,
+  ErrorSeverity,
+  ErrorCategory,
+  VitalMetricName,
+  PerformanceRating,
+  PerformanceBudget,
+  DeepRequired,
+  DeepReadonly,
+  Nullable,
+  Maybe,
+  Result,
+} from './lib';
 
 // =============================================================================
-// Direct Module Re-exports (import from specific paths to avoid conflicts)
+// Additional Direct Exports (non-duplicated)
 // =============================================================================
 
-// API & Data Fetching - use './lib/api' for full API exports
+// API & Data Fetching
 export { apiClient, ApiClient } from './lib/api';
 export type { ApiClientConfig, ApiResponse, ApiError } from './lib/api';
 
-// Authentication & Security - use './lib/auth' for full auth exports
-export { AuthProvider, useAuth, authService } from './lib/auth';
-export type { User, Role, Permission, AuthContextValue } from './lib/auth';
+// Auth service
+export { authService } from './lib/auth';
+export type { AuthContextValue } from './lib/auth';
 
-// State Management - use './lib/state' for full state exports
+// State Management
 export { useStore, getStoreState, resetStore } from './lib/state';
 
-// Routing & Navigation - use './lib/routing' for full routing exports
+// Routing & Navigation
 export { routes, buildPath, createRouter, useRouteNavigate } from './lib/routing';
 
-// Feature Flags - use './lib/flags' for full flags exports
-export { useFeatureFlag, FeatureFlagProvider } from './lib/flags';
-
-// Configuration - use './lib/config' for full config exports
+// Configuration
 export { useConfig, ConfigProvider } from './lib/config';
 
-// Contexts - use './lib/contexts' for full context exports
+// Contexts
 export { ThemeContext, AuthContext } from './lib/contexts';
 
 // =============================================================================
 // Module Namespaces (access full modules via namespace)
 // =============================================================================
 
+// Core modules
 export * as api from './lib/api';
-export * as queries from './lib/queries';
-export * as services from './lib/services';
 export * as auth from './lib/auth';
-export * as security from './lib/security';
-export * as state from './lib/state';
-export * as contexts from './lib/contexts';
-export * as routing from './lib/routing';
-export * as ui from './lib/ui';
-export * as theme from './lib/theme';
-export * as performance from './lib/performance';
-export * as hydration from './lib/hydration';
-export * as realtime from './lib/realtime';
-export * as streaming from './lib/streaming';
-export * as flags from './lib/flags';
 export * as config from './lib/config';
-export * as vdom from './lib/vdom';
-export * as ux from './lib/ux';
-export * as utils from './lib/utils';
-export * as shared from './lib/shared';
-export * as data from './lib/data';
-export * as monitoring from './lib/monitoring';
+export * as contexts from './lib/contexts';
 export * as coordination from './lib/coordination';
+export * as core from './lib/core';
+export * as data from './lib/data';
+export * as feature from './lib/feature';
+export * as flags from './lib/flags';
+export * as hooks from './lib/hooks';
+export * as hydration from './lib/hydration';
+export * as layouts from './lib/layouts';
+export * as monitoring from './lib/monitoring';
+export * as performance from './lib/performance';
+export * as queries from './lib/queries';
+export * as realtime from './lib/realtime';
+export * as routing from './lib/routing';
+export * as security from './lib/security';
+export * as services from './lib/services';
+export * as shared from './lib/shared';
+export * as state from './lib/state';
+export * as streaming from './lib/streaming';
+export * as system from './lib/system';
+export * as theme from './lib/theme';
+export * as ui from './lib/ui';
+export * as utils from './lib/utils';
+export * as ux from './lib/ux';
+export * as vdom from './lib/vdom';
 
 // =============================================================================
 // Type Re-exports

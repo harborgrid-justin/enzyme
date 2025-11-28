@@ -10,7 +10,7 @@ npm run typecheck || {
 }
 
 # Run tests
-npm run test:run || {
+npm run test || {
   echo "Tests failed. Push aborted."
   exit 1
 }

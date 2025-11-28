@@ -1,7 +1,7 @@
 {
   "name": "@defendr/enzyme",
-  "version": "0.0.1",
-  "description": "A powerful React framework for building enterprise applications with advanced routing, state management, and performance optimizations",
+  "version": "1.0.0",
+  "description": "Enterprise React framework with advanced routing, state management, performance optimizations, and plug-and-play architecture",
   "type": "module",
   "license": "MIT",
   "author": "Defendr Team",
@@ -13,6 +13,10 @@
   "bugs": {
     "url": "https://github.com/harborgrid-justin/enzyme/issues"
   },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "keywords": [
     "react",
     "framework",
@@ -22,7 +26,11 @@
     "performance",
     "typescript",
     "vite",
-    "defendr",
+    "zustand",
+    "react-query",
+    "feature-flags",
+    "authentication",
+    "rbac",
     "enzyme"
   ],
   "main": "./dist/index.js",
@@ -154,6 +162,26 @@
       "import": "./dist/lib/vdom/index.mjs",
       "require": "./dist/lib/vdom/index.js"
     },
+    "./core": {
+      "types": "./dist/lib/core/index.d.ts",
+      "import": "./dist/lib/core/index.mjs",
+      "require": "./dist/lib/core/index.js"
+    },
+    "./feature": {
+      "types": "./dist/lib/feature/index.d.ts",
+      "import": "./dist/lib/feature/index.mjs",
+      "require": "./dist/lib/feature/index.js"
+    },
+    "./hooks": {
+      "types": "./dist/lib/hooks/index.d.ts",
+      "import": "./dist/lib/hooks/index.mjs",
+      "require": "./dist/lib/hooks/index.js"
+    },
+    "./system": {
+      "types": "./dist/lib/system/index.d.ts",
+      "import": "./dist/lib/system/index.mjs",
+      "require": "./dist/lib/system/index.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -167,18 +195,21 @@
     "npm": ">=10.0.0"
   },
   "scripts": {
-    "dev": "vite build --watch",
-    "build": "npm run clean && tsc -p tsconfig.build.json && vite build",
+    "dev": "vite",
+    "build": "npm run clean && vite build",
     "build:check": "npm run typecheck && npm run lint && npm run test",
     "clean": "rimraf dist .tsbuildinfo coverage .eslintcache",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0 --cache",
+    "lint:fix": "eslint . --ext ts,tsx --fix --cache",
     "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,css,json}\"",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "prepublishOnly": "npm run build:check && npm run build",
-    "prepare": "npm run build"
+    "test:ci": "vitest run --coverage --no-coverage.all",
+    "verify": "npm run typecheck && npm run lint && npm run test",
+    "prepublishOnly": "npm run build:check && npm run build"
   },
   "peerDependencies": {
     "react": "^18.3.1",
