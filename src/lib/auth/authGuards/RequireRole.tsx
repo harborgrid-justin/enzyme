@@ -1,0 +1,88 @@
+import React, { memo, type ReactNode } from 'react';
+import { Navigate } from 'react-router-dom';
+import { useAuth } from '../useAuth';
+import { routes } from '@/lib/routing/routes';
+import { AuthGuardLoading } from './AuthGuardLoading';
+import type { Role } from '../types';
+
+interface RequireRoleProps {
+  children: ReactNode;
+  /** Single role required */
+  role?: Role;
+  /** Any of these roles required */
+  roles?: Role[];
+  /** Redirect path if role check fails */
+  redirectTo?: string;
+  /** Component to show if access denied (not shown during loading) */
+  fallback?: ReactNode;
+}
+
+/**
+ * Guard component that requires a specific role.
+ * Redirects if user doesn't have the required role.
+ *
+ * @example
+ * ```tsx
+ * // Single role
+ * <RequireRole role="admin">
+ *   <AdminPanel />
+ * </RequireRole>
+ *
+ * // Multiple roles (any of)
+ * <RequireRole roles={['admin', 'manager']}>
+ *   <ManagementDashboard />
+ * </RequireRole>
+ *
+ * // With access denied fallback
+ * <RequireRole role="admin" fallback={<AccessDenied />}>
+ *   <AdminPanel />
+ * </RequireRole>
+ * ```
+ */
+export const RequireRole = memo(function RequireRole({
+  children,
+  role,
+  roles,
+  redirectTo = routes.dashboard,
+  fallback
+}: RequireRoleProps) {
+  const { isAuthenticated, isLoading, hasRole, hasAnyRole } = useAuth();
+
+  if (isLoading) {
+    return <AuthGuardLoading ariaLabel="Verifying role authorization..." />;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to={routes.login} replace />;
+  }
+
+  // Check single role
+  if (role && !hasRole(role)) {
+    if (fallback) return <>{fallback}</>;
+    return <Navigate to={redirectTo} replace />;
+  }
+
+  // Check multiple roles
+  if (roles && !hasAnyRole(roles)) {
+    if (fallback) return <>{fallback}</>;
+    return <Navigate to={redirectTo} replace />;
+  }
+
+  return <>{children}</>;
+});
+
+/**
+ * HOC version of RequireRole
+ */
+export function withRequireRole<P extends object>(
+  Component: React.ComponentType<P>,
+  roleConfig: { role?: Role; roles?: Role[]; redirectTo?: string }
+) {
+  return function WithRequireRole(props: P) {
+    return (
+      <RequireRole {...roleConfig}>
+        <Component {...props} />
+      </RequireRole>
+    );
+  };
+}

@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    // ==========================================================================
+    // Language & Environment
+    // ==========================================================================
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable", "DOM.AsyncIterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+
+    // ==========================================================================
+    // Maximum Strictness Configuration
+    // These settings enable the highest level of type safety
+    // ==========================================================================
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": false, // Disabled for template flexibility
+    "noImplicitReturns": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": false, // Disabled for env variables
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+
+    // ==========================================================================
+    // Code Quality - Dead Code Detection
+    // ==========================================================================
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "allowUnusedLabels": false,
+    "allowUnreachableCode": false,
+
+    // ==========================================================================
+    // Module System Configuration
+    // ==========================================================================
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "moduleDetection": "force",
+
+    // ==========================================================================
+    // Class & Decorator Configuration
+    // ==========================================================================
+    "useDefineForClassFields": true,
+    "experimentalDecorators": false,
+
+    // ==========================================================================
+    // Performance & Build Optimization
+    // ==========================================================================
+    "skipLibCheck": true,
+    "incremental": false,
+
+    // ==========================================================================
+    // Path Mapping - Type-safe Import Aliases
+    // ==========================================================================
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@/lib/*": ["src/lib/*"]
+    },
+
+    // ==========================================================================
+    // Type Definitions
+    // ==========================================================================
+    "types": ["vite/client", "vitest/globals"]
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist", "coverage", "**/*.stories.tsx", "*.config.ts"],
+  "references": [{ "path": "./tsconfig.node.json" }]
+}
