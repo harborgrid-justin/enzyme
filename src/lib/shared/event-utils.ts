@@ -228,7 +228,7 @@ interface PendingRequest<T = unknown> {
 /**
  * Standard application events that can be used across modules.
  */
-export interface AppEvents {
+export type AppEvents = {
   // Authentication
   'auth:login': { userId: string; timestamp: number };
   'auth:logout': { userId: string; reason?: string };
@@ -266,6 +266,18 @@ export interface AppEvents {
 
   // Feature flags
   'feature:flagChange': { key: string; value: unknown; previousValue: unknown };
+
+  // Offline Queue
+  'offlineQueue:expired': { id: string; url: string };
+  'offlineQueue:enqueued': { id: string; url: string };
+  'offlineQueue:processing': { count: number };
+  'offlineQueue:completed': { id: string; url: string; response: unknown };
+  'offlineQueue:failed': { id: string; url: string; error: Error };
+
+  // Service Circuit Breaker
+  'service:stateChange': { service: string; from: string; to: string; health: unknown };
+  'service:error': { service: string; error: Error };
+  'service:healthCheck': { service: string; health: unknown };
 }
 
 // =============================================================================
@@ -356,12 +368,12 @@ function createEventHash(event: string, data: unknown): string {
 /**
  * Create debounced function.
  */
-function debounce<T extends (...args: unknown[]) => void>(
+function debounce<T extends (...args: any[]) => any>(
   fn: T,
   delay: number
 ): T {
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
-  return ((...args: unknown[]) => {
+  return ((...args: any[]) => {
     if (timeoutId) clearTimeout(timeoutId);
     timeoutId = setTimeout(() => fn(...args), delay);
   }) as T;
@@ -370,12 +382,12 @@ function debounce<T extends (...args: unknown[]) => void>(
 /**
  * Create throttled function.
  */
-function throttle<T extends (...args: unknown[]) => void>(
+function throttle<T extends (...args: any[]) => any>(
   fn: T,
   interval: number
 ): T {
   let lastExecution = 0;
-  return ((...args: unknown[]) => {
+  return ((...args: any[]) => {
     const now = Date.now();
     if (now - lastExecution >= interval) {
       lastExecution = now;

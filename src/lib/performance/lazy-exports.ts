@@ -66,8 +66,8 @@ export const LazyPerformanceMonitor = lazy(() =>
 export const LazyMemoryGuardian = lazy(() =>
   import('./memory-guardian').then((module) => ({
     default: () => {
-      const guardian = module.getMemoryGuardian();
-      return guardian;
+      module.getMemoryGuardian();
+      return null;
     },
   }))
 );
@@ -79,8 +79,8 @@ export const LazyMemoryGuardian = lazy(() =>
 export const LazyBundleOptimizer = lazy(() =>
   import('./bundle-optimizer').then((module) => ({
     default: () => {
-      const optimizer = module.getBundleOptimizer();
-      return optimizer;
+      module.getBundleOptimizer();
+      return null;
     },
   }))
 );

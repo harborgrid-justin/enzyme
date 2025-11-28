@@ -6,7 +6,7 @@
 import { useQuery, useSuspenseQuery, type UseQueryOptions, type UseSuspenseQueryOptions } from '@tanstack/react-query';
 import { queryKeys } from './queryClient';
 import { TIMING } from '@/config';
-import { apiClient, type ApiError } from '@/lib/api';
+import { apiClient } from '@/lib/api';
 
 /**
  * Dashboard stats response type

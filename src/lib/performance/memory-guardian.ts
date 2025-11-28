@@ -171,7 +171,7 @@ export class MemoryGuardian {
     if (MemoryGuardian.instance) {
       MemoryGuardian.instance.stopMonitoring();
       // Type-safe null assignment for singleton reset
-      (MemoryGuardian as { instance: MemoryGuardian | null }).instance = null;
+      (MemoryGuardian as unknown as { instance: MemoryGuardian | null }).instance = null;
     }
   }
 

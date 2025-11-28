@@ -111,10 +111,10 @@ export interface OfflineQueueEvents {
 }
 
 // Extend global events
-declare module '../utils/eventEmitter' {
-  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-  interface GlobalEvents extends OfflineQueueEvents {}
-}
+// declare module '../utils/eventEmitter' {
+//   // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+//   interface GlobalEvents extends OfflineQueueEvents {}
+// }
 
 // ============================================================================
 // IndexedDB Wrapper

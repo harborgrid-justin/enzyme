@@ -462,7 +462,7 @@ export class RenderScheduler {
     if (RenderScheduler.instance) {
       RenderScheduler.instance.stop();
       // Type-safe null assignment for singleton reset
-      (RenderScheduler as { instance: RenderScheduler | null }).instance = null;
+      (RenderScheduler as unknown as { instance: RenderScheduler | null }).instance = null;
     }
   }
 
@@ -526,7 +526,7 @@ export class RenderScheduler {
     return new Promise((resolve) => {
       // Use scheduler.yield() if available (Chrome 115+)
       if (hasSchedulerYieldAPI(globalThis)) {
-        globalThis.scheduler.yield().then(resolve);
+        (globalThis as any).scheduler.yield().then(resolve);
       } else {
         // Fallback to setTimeout
         setTimeout(resolve, 0);

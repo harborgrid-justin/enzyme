@@ -376,7 +376,7 @@ export interface DebouncedFn<Args extends unknown[], R> {
 /**
  * Deferred promise with external resolve/reject
  */
-interface Deferred<T> {
+export interface Deferred<T> {
   promise: Promise<T>;
   resolve: (value: T | PromiseLike<T>) => void;
   reject: (reason?: unknown) => void;
