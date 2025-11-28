@@ -260,7 +260,7 @@ export class HydrationPriorityQueue {
     const tasks: HydrationTask[] = [];
 
     for (let i = 0; i < count && !this.isEmpty(); i++) {
-      const task = this.dequeue();
+      const task = this.extractMin();
       if (task) {
         tasks.push(task);
       }

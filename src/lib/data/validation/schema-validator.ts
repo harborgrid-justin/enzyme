@@ -1424,3 +1424,12 @@ export const v = {
 // =============================================================================
 
 export { type InferObjectShape as InferObject };
+
+export type Schema<T = unknown> = BaseSchema<T>;
+
+export class ValidationError extends Error {
+  constructor(public issues: ValidationIssue[]) {
+    super(issues[0]?.message || 'Validation failed');
+    this.name = 'ValidationError';
+  }
+}

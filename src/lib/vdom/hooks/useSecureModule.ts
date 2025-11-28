@@ -20,7 +20,7 @@ import {
   type SecurityNonce,
 } from '../types';
 import { useModuleContext } from '../ModuleBoundary';
-import { isDev, devWarn } from '@/lib/core/config/env-helper';
+import { devWarn } from '@/lib/core/config/env-helper';
 
 /**
  * Hook for accessing module security context.

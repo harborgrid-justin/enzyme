@@ -573,7 +573,7 @@ function DefaultHierarchicalFallback({
 
   return (
     <div
-      ref={containerRef}
+      ref={containerRef as any}
       style={getContainerStyles()}
       role="alertdialog"
       aria-modal={shouldTrapFocus}

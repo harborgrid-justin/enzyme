@@ -18,9 +18,9 @@ import type {
   ConfigValidationError,
   ConfigValidationWarning,
   ConfigErrorCode,
-  ConfigWarningCode,
+  ConfigWarningCode as _ConfigWarningCode,
   ConfigSchema,
-  ConfigEnvironment,
+  ConfigEnvironment as _ConfigEnvironment,
 } from './types';
 
 // =============================================================================
@@ -30,11 +30,11 @@ import type {
 /**
  * Create a duration schema (milliseconds) with validation
  */
-function duration(options: { min?: number; max?: number; default?: number } = {}) {
-  let schema = z.number().int().positive();
+function duration(options: { min?: number; max?: number; default?: number } = {}): z.ZodDefault<z.ZodNumber> | z.ZodNumber {
+  let schema: z.ZodNumber = z.number().int().positive();
   if (options.min !== undefined) schema = schema.min(options.min);
   if (options.max !== undefined) schema = schema.max(options.max);
-  if (options.default !== undefined) schema = schema.default(options.default);
+  if (options.default !== undefined) return schema.default(options.default);
   return schema;
 }
 
@@ -107,7 +107,7 @@ export const streamingConfigSchema = z.object({
     shellTimeout: duration({ min: 100, max: 10000, default: 3000 }),
     /** Content render timeout (ms) */
     contentTimeout: duration({ min: 1000, max: 60000, default: 30000 }),
-  }).default({}),
+  }).default({ flushInterval: 50, maxFlushDelay: 200, shellTimeout: 3000, contentTimeout: 30000 }),
   /** Error handling */
   errorHandling: z.object({
     /** Fallback on stream error */
@@ -129,7 +129,7 @@ export const streamingConfigSchema = z.object({
     caching: z.boolean().default(true),
     /** Cache TTL (ms) */
     cacheTTL: duration({ min: 0, max: 3600000, default: 300000 }),
-  }).default({}),
+  }).default({ compression: true, compressionLevel: 6, caching: true, cacheTTL: 300000 }),
 });
 
 export type StreamingConfig = z.infer<typeof streamingConfigSchema>;
@@ -188,7 +188,7 @@ export const hydrationConfigSchema = z.object({
     useIdleCallback: z.boolean().default(true),
     /** Idle callback timeout (ms) */
     idleTimeout: duration({ min: 50, max: 5000, default: 1000 }),
-  }).default({}),
+  }).default({ maxConcurrent: 3, batchSize: 10, yieldInterval: 16, useIdleCallback: true, idleTimeout: 1000 }),
   /** Visibility detection */
   visibility: z.object({
     /** Use Intersection Observer */
@@ -208,7 +208,7 @@ export const hydrationConfigSchema = z.object({
     hydrateOnHover: z.boolean().default(true),
     /** Hover delay before hydration (ms) */
     hoverDelay: duration({ min: 0, max: 1000, default: 100 }),
-  }).default({}),
+  }).default({ triggerEvents: ['click', 'focus', 'touchstart', 'mouseenter'], useCapture: true, hydrateOnHover: true, hoverDelay: 100 }),
   /** Performance metrics */
   metrics: z.object({
     /** Track hydration timing */
@@ -244,7 +244,7 @@ export const morphTransitionSchema = z.object({
   useGPU: z.boolean().default(true),
   /** Reduce motion for accessibility */
   respectReducedMotion: z.boolean().default(true),
-});
+}).default({ duration: 300, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', useGPU: true, respectReducedMotion: true });
 
 /**
  * Layout system configuration
@@ -265,8 +265,8 @@ export const layoutsConfigSchema = z.object({
       lg: z.number().int().default(1024),
       xl: z.number().int().default(1280),
       '2xl': z.number().int().default(1536),
-    }).default({}),
-  }).default({}),
+    }).default({ xs: 0, sm: 640, md: 768, lg: 1024, xl: 1280, '2xl': 1536 }),
+  }).default({ enabled: true, useResizeObserver: true, resizeDebounce: 100, breakpoints: { xs: 0, sm: 640, md: 768, lg: 1024, xl: 1280, '2xl': 1536 } }),
   /** Morphing layouts */
   morphing: z.object({
     enabled: z.boolean().default(true),
@@ -330,7 +330,7 @@ export const vdomConfigSchema = z.object({
     gcInterval: duration({ min: 1000, max: 60000, default: 10000 }),
     /** Memory limit (MB) */
     memoryLimit: z.number().int().min(10).max(500).default(100),
-  }).default({}),
+  }).default({ usePooling: true, poolSize: 100, gcInterval: 10000, memoryLimit: 100 }),
   /** Reconciliation */
   reconciliation: z.object({
     /** Batch DOM updates */
@@ -395,7 +395,7 @@ export const performanceConfigSchema = z.object({
     fcp: duration({ min: 0, max: 5000, default: 1800 }),
     /** Bundle size target (KB) */
     bundleSize: z.number().int().min(0).default(150),
-  }).default({}),
+  }).default({ lcp: 2500, inp: 200, cls: 0.1, ttfb: 800, fcp: 1800, bundleSize: 150 }),
   /** Resource hints */
   resourceHints: z.object({
     /** Enable preconnect */
@@ -417,7 +417,7 @@ export const performanceConfigSchema = z.object({
     prefetchOnHover: z.boolean().default(true),
     /** Hover delay (ms) */
     hoverDelay: duration({ min: 0, max: 500, default: 100 }),
-  }).default({}),
+  }).default({ routeBased: true, componentBased: true, prefetchOnHover: true, hoverDelay: 100 }),
   /** Image optimization */
   images: z.object({
     /** Enable lazy loading */
@@ -439,7 +439,7 @@ export const performanceConfigSchema = z.object({
     strategy: z.enum(['cache-first', 'network-first', 'stale-while-revalidate']).default('stale-while-revalidate'),
     /** Cache TTL (ms) */
     ttl: duration({ min: 0, max: 86400000, default: 3600000 }),
-  }).default({}),
+  }).default({ serviceWorker: true, strategy: 'stale-while-revalidate', ttl: 3600000 }),
 });
 
 export type PerformanceConfig = z.infer<typeof performanceConfigSchema>;
@@ -521,7 +521,7 @@ export const securityConfigSchema = z.object({
     cookieName: z.string().default('csrf_token'),
     /** Token expiry (ms) */
     tokenExpiry: duration({ min: 300000, max: 86400000, default: 3600000 }),
-  }).default({}),
+  }).default({ enabled: true, headerName: 'X-CSRF-Token', cookieName: 'csrf_token', tokenExpiry: 3600000 }),
   /** Rate limiting */
   rateLimit: z.object({
     enabled: z.boolean().default(true),
@@ -531,7 +531,7 @@ export const securityConfigSchema = z.object({
     windowMs: duration({ min: 1000, max: 3600000, default: 60000 }),
     /** Retry-After header */
     retryAfter: z.boolean().default(true),
-  }).default({}),
+  }).default({ enabled: true, maxRequests: 100, windowMs: 60000, retryAfter: true }),
   /** Secure headers */
   headers: z.object({
     /** X-Frame-Options */

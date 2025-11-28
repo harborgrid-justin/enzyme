@@ -104,7 +104,7 @@ export function createSlice<
       if (typeof updaterOrPartial === 'function') {
         // Immer-style updater function - the updater for TState is compatible with TStore which extends TState
         const storeUpdater = (state: Draft<TStore>): void => {
-          updaterOrPartial(state as Draft<TState>);
+          updaterOrPartial(state as unknown as Draft<TState>);
         };
         (set as (
           updater: (state: Draft<TStore>) => void,

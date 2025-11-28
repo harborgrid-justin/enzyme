@@ -34,8 +34,8 @@
  * ```
  */
 
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import type { NormalizedEntities, Entity } from '../normalization/normalizer';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import type { NormalizedEntities } from '../normalization/normalizer';
 import type {
   IntegrityChecker,
   IntegrityReport,

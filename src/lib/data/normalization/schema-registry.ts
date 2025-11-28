@@ -40,13 +40,13 @@ import {
   ObjectSchema,
   UnionSchema,
   ValueSchema,
-  Schema,
-  Entity,
-  NormalizedEntities,
-  NormalizationResult,
+  type Schema,
+  type Entity,
+  type NormalizedEntities,
+  type NormalizationResult,
   normalize as baseNormalize,
 } from './normalizer';
-import { denormalize as baseDenormalize, DenormalizeOptions } from './denormalizer';
+import { denormalize as baseDenormalize, type DenormalizeOptions } from './denormalizer';
 
 // =============================================================================
 // TYPES
@@ -336,7 +336,7 @@ export function createSchemaRegistry(config: SchemaRegistryConfig = {}): SchemaR
     // Create entity schema
     const schema = new EntitySchema(name, {
       idAttribute: definition.idAttribute || options.defaultIdAttribute,
-      relations,
+      relations: relations as Record<string, EntitySchema | ArraySchema | UnionSchema>,
       processStrategy: definition.processStrategy,
       mergeStrategy: definition.mergeStrategy,
       excludeFields: definition.excludeFields,
@@ -360,7 +360,7 @@ export function createSchemaRegistry(config: SchemaRegistryConfig = {}): SchemaR
     // Second pass: update references for circular dependencies
     for (const [name, registered] of registeredSchemas) {
       if (registered.definition.relations) {
-        const schema = registered.schema!;
+        // const schema = registered.schema!;
         const newRelations: Record<string, Schema> = {};
 
         for (const [key, value] of Object.entries(registered.definition.relations)) {
@@ -370,7 +370,7 @@ export function createSchemaRegistry(config: SchemaRegistryConfig = {}): SchemaR
         // Replace schema with updated relations
         const updatedSchema = new EntitySchema(name, {
           idAttribute: registered.definition.idAttribute || options.defaultIdAttribute,
-          relations: newRelations,
+          relations: newRelations as Record<string, EntitySchema | ArraySchema | UnionSchema>,
           processStrategy: registered.definition.processStrategy,
           mergeStrategy: registered.definition.mergeStrategy,
           excludeFields: registered.definition.excludeFields,
@@ -607,8 +607,9 @@ export function createSchemaRegistry(config: SchemaRegistryConfig = {}): SchemaR
         if (typeof relation.schema === 'string') {
           deps.add(relation.schema);
         }
-        if (relation.schemas) {
-          Object.values(relation.schemas).forEach((s) => {
+        if ('schema' in relation && relation.schema) {
+          const schemas = typeof relation.schema === 'object' ? Object.values(relation.schema) : [];
+          schemas.forEach((s) => {
             if (typeof s === 'string') deps.add(s);
           });
         }

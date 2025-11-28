@@ -198,7 +198,7 @@ export class StatePersister<T extends object> {
     // Skip PHI data
     if (this.config.containsPHI) {
       return {
-        state: null,
+        state: null as any,
         error: null,
         migrated: false,
         fromVersion: null,
@@ -206,11 +206,11 @@ export class StatePersister<T extends object> {
     }
 
     // Outer try-catch for overall rehydration process
-    let persisted: PersistedState<unknown> | null = null;
+    let persisted: PersistedState<unknown> | null | undefined = null;
 
     // Inner try-catch specifically for storage.get() to handle parse errors gracefully
     try {
-      persisted = await this.config.storage.get<PersistedState<unknown>>(
+      persisted = await this.config.storage.get<PersistedState<unknown> | null>(
         this.config.key
       );
     } catch (storageError) {
@@ -224,7 +224,7 @@ export class StatePersister<T extends object> {
       this.config.storage.remove(this.config.key);
 
       return {
-        state: null,
+        state: null as any,
         error: storageError as Error,
         migrated: false,
         fromVersion: null,
@@ -234,7 +234,7 @@ export class StatePersister<T extends object> {
     try {
       if (!persisted) {
         return {
-          state: null,
+          state: null as any,
           error: null,
           migrated: false,
           fromVersion: null,
@@ -248,7 +248,7 @@ export class StatePersister<T extends object> {
       ) {
         this.config.storage.remove(this.config.key);
         return {
-          state: null,
+          state: null as any,
           error: new Error('Persisted state expired'),
           migrated: false,
           fromVersion: persisted.version,
@@ -281,7 +281,7 @@ export class StatePersister<T extends object> {
       const state = this.config.deserialize(migratedState);
 
       return {
-        state,
+        state: state as any,
         error: null,
         migrated,
         fromVersion,
@@ -289,7 +289,7 @@ export class StatePersister<T extends object> {
     } catch (error) {
       logger.error('[StatePersister] Failed to rehydrate state', { error });
       return {
-        state: null,
+        state: null as any,
         error: error as Error,
         migrated: false,
         fromVersion: null,

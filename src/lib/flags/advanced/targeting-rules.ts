@@ -43,6 +43,7 @@ import type {
   VariantId,
   JsonValue,
 } from './types';
+import type { Mutable } from '../../utils/types';
 
 // ============================================================================
 // Types
@@ -674,7 +675,7 @@ export class TargetingRuleBuilder {
    * Set the rule ID.
    */
   id(id: string): this {
-    this.rule.id = id;
+    (this.rule as any).id = id;
     return this;
   }
 
@@ -682,7 +683,7 @@ export class TargetingRuleBuilder {
    * Set the rule name.
    */
   name(name: string): this {
-    this.rule.name = name;
+    (this.rule as any).name = name;
     return this;
   }
 
@@ -690,7 +691,7 @@ export class TargetingRuleBuilder {
    * Set the rule description.
    */
   description(description: string): this {
-    this.rule.description = description;
+    (this.rule as any).description = description;
     return this;
   }
 
@@ -698,7 +699,7 @@ export class TargetingRuleBuilder {
    * Set the rule priority.
    */
   priority(priority: number): this {
-    this.rule.priority = priority;
+    (this.rule as any).priority = priority;
     return this;
   }
 
@@ -706,7 +707,7 @@ export class TargetingRuleBuilder {
    * Set whether the rule is enabled.
    */
   enabled(enabled: boolean): this {
-    this.rule.enabled = enabled;
+    (this.rule as any).enabled = enabled;
     return this;
   }
 
@@ -714,7 +715,7 @@ export class TargetingRuleBuilder {
    * Set the variant to serve when matched.
    */
   variant(variantId: VariantId): this {
-    this.rule.variantId = variantId;
+    (this.rule as any).variantId = variantId;
     return this;
   }
 
@@ -792,7 +793,7 @@ export class TargetingRuleBuilder {
    * Set schedule constraints.
    */
   schedule(schedule: RuleSchedule): this {
-    this.rule.schedule = schedule;
+    (this.rule as any).schedule = schedule;
     return this;
   }
 

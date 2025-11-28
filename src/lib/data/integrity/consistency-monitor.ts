@@ -251,7 +251,7 @@ export function createConsistencyMonitor(config: ConsistencyMonitorConfig): Cons
   const {
     integrityChecker,
     checkInterval = 0,
-    debounceMs = 100,
+    debounceMs: _debounceMs = 100,
     autoRepair = false,
     repairOptions = {},
     maxSnapshots = 10,

@@ -305,7 +305,7 @@ export class AutoSetup {
     if (AutoSetup.instance) {
       AutoSetup.instance.cleanup();
       // Type-safe null assignment for singleton reset
-      (AutoSetup as { instance: AutoSetup | null }).instance = null;
+      (AutoSetup as unknown as { instance: AutoSetup | null }).instance = null;
     }
   }
 

@@ -170,27 +170,27 @@ export function createProvider(
       if (!('endpoint' in config)) {
         throw new Error('Remote provider requires endpoint');
       }
-      return new RemoteProvider(config as ConstructorParameters<typeof RemoteProvider>[0]);
+      return new RemoteProvider(config as unknown as ConstructorParameters<typeof RemoteProvider>[0]);
     case 'cached':
       if (!('provider' in config)) {
         throw new Error('Cached provider requires wrapped provider');
       }
-      return new CachedProvider(config as ConstructorParameters<typeof CachedProvider>[0]);
+      return new CachedProvider(config as unknown as ConstructorParameters<typeof CachedProvider>[0]);
     case 'composite':
       if (!('providers' in config)) {
         throw new Error('Composite provider requires providers array');
       }
-      return new CompositeProvider(config as ConstructorParameters<typeof CompositeProvider>[0]);
+      return new CompositeProvider(config as unknown as ConstructorParameters<typeof CompositeProvider>[0]);
     case 'polling':
       if (!('provider' in config)) {
         throw new Error('Polling provider requires wrapped provider');
       }
-      return new PollingProvider(config as ConstructorParameters<typeof PollingProvider>[0]);
+      return new PollingProvider(config as unknown as ConstructorParameters<typeof PollingProvider>[0]);
     case 'websocket':
       if (!('url' in config)) {
         throw new Error('WebSocket provider requires url');
       }
-      return new WebSocketProvider(config as ConstructorParameters<typeof WebSocketProvider>[0]);
+      return new WebSocketProvider(config as unknown as ConstructorParameters<typeof WebSocketProvider>[0]);
     default:
       throw new Error(`Unknown provider type: ${type}`);
   }

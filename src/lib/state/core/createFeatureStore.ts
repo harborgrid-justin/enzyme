@@ -180,7 +180,7 @@ export function createFeatureStore<TState extends object>(
   const devtoolsName = `Feature/${name}`;
 
   // Store will be properly typed after creation
-  let store: ReturnType<typeof create<TState>>;
+  let store: any;
 
   if (persistConfig !== undefined) {
     const storageKey = persistConfig.key ?? `feature-${name}`;

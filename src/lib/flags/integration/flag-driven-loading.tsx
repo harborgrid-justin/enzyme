@@ -518,7 +518,7 @@ export function SuspenseFlaggedLoader<P extends Record<string, unknown> = Record
 
   return (
     <Suspense fallback={loadingFallback}>
-      <Component {...(componentProps as P)} />
+      <Component {...(componentProps as any)} />
     </Suspense>
   );
 }
@@ -530,7 +530,7 @@ export function SuspenseFlaggedLoader<P extends Record<string, unknown> = Record
 /**
  * Create a flagged component that auto-loads based on flag state
  */
-export function createFlaggedComponent<P = Record<string, unknown>>(config: {
+export function createFlaggedComponent<P extends Record<string, unknown> = Record<string, unknown>>(config: {
   flagKey: string;
   enabledComponent: ComponentLoader<P>;
   fallbackComponent?: ComponentType<P>;

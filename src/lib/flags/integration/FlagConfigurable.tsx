@@ -148,7 +148,7 @@ const FlagConfigurableContext = createContext<FlagConfigurableContextValue>({
   getConfig: () => null,
   setConfig: () => {},
   hasConfig: () => false,
-  getAllConfigs: () => ({}),
+  getAllConfigs: () => [],
   renderVariant: () => null,
 });
 
@@ -206,15 +206,15 @@ export function FlagConfigurable({
 
   // Debug logging
   useEffect(() => {
-    if (debug) {
-      console.log(`[FlagConfigurable:${flagKey}]`, {
-        isEnabled,
-        shouldRender,
-        invert,
-        depth: parentContext.depth + 1,
-      });
-    }
-  }, [debug, flagKey, isEnabled, shouldRender, invert, parentContext.depth]);
+    // if (debug) {
+    //   console.log(`[FlagConfigurable:${flagKey}]`, {
+    //     isEnabled,
+    //     shouldRender,
+    //     invert,
+    //     depth: parentContext.depth + 1,
+    //   });
+    // }
+  }, [flagKey, isEnabled, shouldRender, invert, parentContext.depth]);
 
   // Evaluation callback
   useEffect(() => {

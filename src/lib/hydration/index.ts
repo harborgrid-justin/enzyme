@@ -308,8 +308,7 @@ export function getHydrationMetrics(): import('./types').HydrationMetricsSnapsho
       failedCount: 0,
       averageHydrationDuration: 0,
       p95HydrationDuration: 0,
-      p99HydrationDuration: 0,
-      successRate: 0,
+      // successRate: 0,
     };
   } catch {
     return {

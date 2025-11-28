@@ -12,6 +12,8 @@
  * @module core/config/constants/timing
  */
 
+import { ms, px } from '../../shared/type-utils';
+
 import type {
   Milliseconds,
   Seconds,
@@ -30,13 +32,13 @@ import type {
 // =============================================================================
 
 /** One second in milliseconds */
-export const SECOND: Milliseconds = 1000;
+export const SECOND: Milliseconds = ms(1000);
 
 /** One minute in milliseconds */
-export const MINUTE: Milliseconds = 60 * SECOND;
+export const MINUTE: Milliseconds = ms(60 * SECOND);
 
 /** One hour in milliseconds */
-export const HOUR: Milliseconds = 60 * MINUTE;
+export const HOUR: Milliseconds = ms(60 * MINUTE);
 
 // =============================================================================
 // Network Timing Defaults
@@ -152,17 +154,17 @@ export const DEFAULT_LAYOUTS_CONFIG: LayoutsConfig = {
   minColumnWidth: 200,                // Grid minimum column width (px)
 
   // CLS (Cumulative Layout Shift) timing
-  clsEntryMaxAge: 5 * SECOND,
-  clsSessionWindowGap: 1 * SECOND,
-  clsMaxSessionWindow: 5 * SECOND,
+  clsEntryMaxAge: ms(5 * SECOND),
+  clsSessionWindowGap: ms(1 * SECOND),
+  clsMaxSessionWindow: ms(5 * SECOND),
 
   // Animation/transitions
-  morphTransitionDuration: 300,       // ms
+  morphTransitionDuration: ms(300),       // ms
 
   // Event handling
-  resizeDebounce: 150,                // ms
-  scrollThrottle: 16,                 // ~60fps
-  scrollEdgeThreshold: 5,             // px
+  resizeDebounce: ms(150),                // ms
+  scrollThrottle: ms(16),                 // ~60fps
+  scrollEdgeThreshold: px(5),             // px
 
   // Viewport intersection
   viewportThresholds: [0, 0.1, 0.25, 0.5, 0.75, 0.9, 1],

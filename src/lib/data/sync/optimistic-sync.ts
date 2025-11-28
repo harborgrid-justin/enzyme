@@ -444,7 +444,7 @@ export function useOptimisticSync<T>(
     let rollbackData = firstSnapshot;
 
     if (rollback) {
-      rollbackData = rollback(firstSnapshot, new Error('Rollback all'));
+      rollbackData = rollback(firstSnapshot, new Error('Rollback all')) as NonNullable<T>;
     }
 
     setPendingChanges([]);

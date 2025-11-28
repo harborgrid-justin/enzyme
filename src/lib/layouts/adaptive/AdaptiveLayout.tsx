@@ -45,6 +45,9 @@ import { createConstraintSolver } from './constraint-solver.ts';
 /**
  * Context for sharing adaptive layout state and controls.
  */
+type AdaptiveLayoutContextValue = any;
+type AdaptiveLayoutContextValueInternal = any;
+
 /**
  * Hook to access the adaptive layout context.
  *

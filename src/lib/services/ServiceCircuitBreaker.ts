@@ -84,13 +84,13 @@ export interface ServiceStateChangeEvent {
 // Extend Global Events
 // ============================================================================
 
-declare module '../utils/eventEmitter' {
-  interface GlobalEvents {
-    'service:stateChange': ServiceStateChangeEvent;
-    'service:healthCheck': { service: string; healthy: boolean };
-    'service:error': { service: string; error: string };
-  }
-}
+// declare module '../utils/eventEmitter' {
+//   interface GlobalEvents {
+//     'service:stateChange': ServiceStateChangeEvent;
+//     'service:healthCheck': { service: string; healthy: boolean };
+//     'service:error': { service: string; error: string };
+//   }
+// }
 
 // ============================================================================
 // Service Circuit Breaker
@@ -214,7 +214,7 @@ export class ServiceCircuitBreaker {
 
       globalEventBus.emitSync('service:error', {
         service: this.config.name,
-        error: this.metrics.lastError,
+        error: new Error(this.metrics.lastError),
       });
 
       // Try fallback if circuit is open and fallback exists
@@ -410,7 +410,7 @@ export class ServiceCircuitBreaker {
 
       globalEventBus.emitSync('service:healthCheck', {
         service: this.config.name,
-        healthy: isHealthy,
+        health: isHealthy,
       });
 
       return isHealthy;
@@ -420,7 +420,7 @@ export class ServiceCircuitBreaker {
 
       globalEventBus.emitSync('service:healthCheck', {
         service: this.config.name,
-        healthy: false,
+        health: false,
       });
 
       return false;

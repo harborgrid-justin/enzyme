@@ -457,7 +457,7 @@ export class CriticalCSSExtractor {
    */
   static reset(): void {
     // Type-safe null assignment for singleton reset
-    (CriticalCSSExtractor as { instance: CriticalCSSExtractor | null }).instance = null;
+    (CriticalCSSExtractor as unknown as { instance: CriticalCSSExtractor | null }).instance = null;
   }
 
   /**

@@ -278,6 +278,14 @@ export type AppEvents = {
   'service:stateChange': { service: string; from: string; to: string; health: unknown };
   'service:error': { service: string; error: Error };
   'service:healthCheck': { service: string; health: unknown };
+
+  // Analytics
+  'analytics:consentChanged': { consent: unknown };
+
+  // Network
+  'network:online': undefined;
+  'network:offline': undefined;
+  'network:qualityChange': { quality: string };
 }
 
 // =============================================================================
@@ -695,7 +703,7 @@ export class UnifiedEventEmitter<Events extends Record<string, unknown>>
     if (this.config.enableMiddleware) {
       const middlewares = this.middlewares.get(event);
       if (middlewares && middlewares.length > 0) {
-        processedData = await this.applyMiddleware(middlewares, data);
+        processedData = await this.applyMiddleware(middlewares, data) as Events[K];
       }
     }
 
@@ -871,10 +879,10 @@ export class UnifiedEventEmitter<Events extends Record<string, unknown>>
     }
 
     const middlewares = this.middlewares.get(event)!;
-    middlewares.push(middleware as EventMiddleware<Events[keyof Events]>);
+    middlewares.push(middleware as unknown as EventMiddleware<Events[keyof Events]>);
 
     return () => {
-      const index = middlewares.indexOf(middleware as EventMiddleware<Events[keyof Events]>);
+      const index = middlewares.indexOf(middleware as unknown as EventMiddleware<Events[keyof Events]>);
       if (index !== -1) {
         middlewares.splice(index, 1);
       }
@@ -1494,13 +1502,16 @@ export function withEvents<
 >(
   Base: T
 ): T & Constructor<{ events: UnifiedEventEmitter<Events> }> {
-  return class WithEventsMixin extends Base {
+  // Use a type assertion to avoid the mixin class constructor signature issue
+  const MixinClass = class extends (Base as Constructor<object>) {
     events = createEventEmitter<Events>();
 
-    constructor(...args: unknown[]) {
+    constructor(...args: any[]) {
       super(...args);
     }
-  } as T & Constructor<{ events: UnifiedEventEmitter<Events> }>;
+  };
+  
+  return MixinClass as T & Constructor<{ events: UnifiedEventEmitter<Events> }>;
 }
 
 // =============================================================================

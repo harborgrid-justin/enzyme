@@ -666,9 +666,9 @@ export class CriticalPathAnalyzer {
     };
   }
 
-  private _log(_message: string, ..._args: unknown[]): void {
+  private log(message: string, ...args: unknown[]): void {
     if (this.config.debug) {
-      console.log(`[CriticalPathAnalyzer] ${_message}`, ..._args);
+      console.log(`[CriticalPathAnalyzer] ${message}`, ...args);
     }
   }
 }

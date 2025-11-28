@@ -573,7 +573,7 @@ export class AutoAccessibility {
     if (AutoAccessibility.instance) {
       AutoAccessibility.instance.cleanup();
       // Type-safe null assignment for singleton reset
-      (AutoAccessibility as { instance: AutoAccessibility | null }).instance = null;
+      (AutoAccessibility as unknown as { instance: AutoAccessibility | null }).instance = null;
     }
   }
 

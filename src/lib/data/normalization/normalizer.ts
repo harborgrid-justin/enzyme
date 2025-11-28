@@ -121,7 +121,7 @@ export class EntitySchema {
   define(relations: Record<string, Schema>): EntitySchema {
     return new EntitySchema(this.name, {
       idAttribute: this.idAttribute,
-      relations: { ...this.relations, ...relations },
+      relations: { ...this.relations, ...relations } as Record<string, EntitySchema | ArraySchema | UnionSchema>,
       processStrategy: this.processStrategy,
       mergeStrategy: this.mergeStrategy,
       excludeFields: this.excludeFields,
@@ -200,7 +200,7 @@ export const schema = {
    * Create entity schema
    */
   entity: (name: string, relations?: Record<string, Schema>, options?: Omit<EntitySchemaDefinition, 'name' | 'relations'>) =>
-    new EntitySchema(name, { ...options, relations }),
+    new EntitySchema(name, { ...options, relations: relations as Record<string, EntitySchema | ArraySchema | UnionSchema> | undefined }),
 
   /**
    * Create array schema
@@ -347,7 +347,9 @@ function normalizeEntity(
     if (key in entitySchema.relations) {
       // Normalize relationship
       const relationSchema = entitySchema.relations[key];
-      normalizedEntity[key] = normalizeValue(value, relationSchema, context);
+      if (relationSchema) {
+        normalizedEntity[key] = normalizeValue(value, relationSchema, context);
+      }
     } else {
       // Copy value
       normalizedEntity[key] = value;
@@ -381,7 +383,10 @@ function normalizeObject(
 
   for (const [key, value] of Object.entries(obj)) {
     if (key in objectSchema.schema) {
-      result[key] = normalizeValue(value, objectSchema.schema[key], context);
+      const fieldSchema = objectSchema.schema[key];
+      if (fieldSchema) {
+        result[key] = normalizeValue(value, fieldSchema, context);
+      }
     } else {
       result[key] = value;
     }

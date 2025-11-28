@@ -382,7 +382,7 @@ export interface Deferred<T> {
   reject: (reason?: unknown) => void;
 }
 
-function createDeferred<T>(): Deferred<T> {
+export function defer<T>(): Deferred<T> {
   let resolve!: (value: T | PromiseLike<T>) => void;
   let reject!: (reason?: unknown) => void;
 
@@ -393,6 +393,9 @@ function createDeferred<T>(): Deferred<T> {
 
   return { promise, resolve, reject };
 }
+
+// Alias for backward compatibility
+export const createDeferred = defer;
 
 /**
  * Create a debounced function that delays execution until after the

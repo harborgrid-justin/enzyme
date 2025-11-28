@@ -22,7 +22,7 @@ import type {
   ConfigDiscoveryResult,
   ConfigSetOptions,
 } from './types';
-import { CONFIG_NAMESPACES, createNamespace } from './types';
+import { createNamespace } from './types';
 import { getConfigRegistry, type ConfigRegistry } from './config-registry';
 import { env } from './env';
 
@@ -224,13 +224,13 @@ function isPlainObject(value: unknown): value is ConfigRecord {
  */
 export class ConfigDiscovery {
   private readonly registry: ConfigRegistry;
-  private readonly options: Required<ConfigDiscoveryOptions>;
+  private readonly _options: Required<ConfigDiscoveryOptions>;
   private readonly discoveredFiles: Map<string, DiscoveredConfigFile> = new Map();
   private initialized: boolean = false;
 
   constructor(options: ConfigDiscoveryOptions = {}) {
     this.registry = getConfigRegistry();
-    this.options = {
+    this._options = {
       directories: options.directories ?? ['src/config'],
       patterns: options.patterns ?? [...DEFAULT_CONFIG_PATTERNS],
       exclude: options.exclude ?? [...DEFAULT_EXCLUDE_PATTERNS],

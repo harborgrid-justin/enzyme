@@ -222,7 +222,7 @@ export {
   resetDependencyResolver,
   validateDependencies,
   generateDependencyDOT,
-  isValidTransition,
+  // isValidTransition,
 } from './flag-dependencies';
 
 export type {

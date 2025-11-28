@@ -650,7 +650,7 @@ export function LazyHydration<P extends object>({
   return (
     <HydrationBoundary {...restBoundaryProps} placeholder={placeholder}>
       <Suspense fallback={placeholder}>
-        <LazyComponent {...componentProps} />
+        <LazyComponent {...(componentProps as any)} />
       </Suspense>
     </HydrationBoundary>
   );

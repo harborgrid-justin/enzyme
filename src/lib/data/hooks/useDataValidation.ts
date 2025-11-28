@@ -151,8 +151,6 @@ export function useDataValidation<T>(
 ): UseDataValidationReturn<T> {
   const {
     initialData,
-    mode = 'onSubmit',
-    debounceMs = 0,
     transformBeforeValidation,
     onValid,
     onInvalid,
@@ -262,12 +260,12 @@ export function useDataValidation<T>(
           fieldErrors: newFieldErrors,
         };
       });
-      return { success: true, data: value };
+      return { success: true, data: value, issues: [] };
     }
 
     // Filter to only errors for this field
-    const fieldIssues = result.error.issues.filter(
-      (issue) => issue.path[0] === field || issue.path.join('.') === field
+    const fieldIssues = result.issues.filter(
+      (issue: { path: (string | number)[]; message: string }) => issue.path[0] === field || issue.path.join('.') === field
     );
 
     if (fieldIssues.length === 0) {
@@ -279,27 +277,21 @@ export function useDataValidation<T>(
           fieldErrors: newFieldErrors,
         };
       });
-      return { success: true, data: value };
+      return { success: true, data: value, issues: [] };
     }
 
     setState((prev) => ({
       ...prev,
       fieldErrors: {
         ...prev.fieldErrors,
-        [field]: fieldIssues.map((i) => i.message),
+        [field]: fieldIssues.map((i: { message: string }) => i.message),
       },
     }));
 
     return {
       success: false,
-      error: {
-        issues: fieldIssues,
-        flatten: () => ({
-          formErrors: [],
-          fieldErrors: { [field]: fieldIssues.map((i) => i.message) },
-        }),
-        format: () => ({ _errors: fieldIssues.map((i) => i.message) }),
-      },
+      data: undefined,
+      issues: fieldIssues,
     };
   }, []);
 

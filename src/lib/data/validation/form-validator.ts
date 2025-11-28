@@ -458,7 +458,7 @@ export function createFormValidator<T extends Record<string, unknown>>(
     hasAsyncRules: (field) => {
       const fieldConfig = fieldConfigs.get(field);
       if (!fieldConfig) return false;
-      return fieldConfig.rules.some((rule) => isAsyncRule(rule));
+      return fieldConfig.rules.some((rule) => isAsyncRule(rule as FieldRule<unknown>));
     },
   };
 }
@@ -595,11 +595,15 @@ export function useFormValidation<T extends Record<string, unknown>>(
       setFieldStates((prev) => {
         const newStates = { ...prev } as Record<string, FieldState>;
         for (const [field, fieldErrors] of Object.entries(errors)) {
+          const prevState = prev[field as keyof T];
           newStates[field] = {
             ...newStates[field],
             errors: fieldErrors as FieldError[],
             validating: false,
             valid: (fieldErrors as FieldError[]).length === 0,
+            value: prevState?.value ?? null,
+            touched: prevState?.touched ?? false,
+            dirty: prevState?.dirty ?? false,
           };
         }
         return newStates as { [K in keyof T]: FieldState };

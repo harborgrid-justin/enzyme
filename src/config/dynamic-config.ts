@@ -24,7 +24,7 @@ import type {
   FeatureFlagConfig,
   FeatureFlagContext,
   FeatureFlagResult,
-  FeatureFlagReason,
+  FeatureFlagReason as _FeatureFlagReason,
   ABTestConfig,
   ABTestVariant,
   ConfigEnvironment,

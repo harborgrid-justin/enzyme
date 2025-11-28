@@ -160,7 +160,6 @@ export class LayoutEngine implements LayoutEngineInterface {
   private readonly _callbacks: Map<HTMLElement, (entry: ResizeObserverEntry) => void>;
   private readonly _elementCache: WeakMap<HTMLElement, ContentAnalysis>;
   private readonly _userPreferences: UserLayoutPreferences;
-  private __lastComputeTime: number = 0;
   private _destroyed: boolean = false;
 
   /**
@@ -312,7 +311,7 @@ export class LayoutEngine implements LayoutEngineInterface {
     const listConfig = mode === 'list' ? this._computeListConfig(request.containerDimensions, analysis) : undefined;
 
     const computeTimeMs = performance.now() - startTime;
-    this.__lastComputeTime = computeTimeMs;
+    // this.__lastComputeTime = computeTimeMs;
 
     const state: LayoutState = {
       mode,

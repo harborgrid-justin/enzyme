@@ -276,7 +276,7 @@ export function PortalBridge({
 
       {/* Portal content */}
       {isReady && portalContainerRef.current && portalContext && (
-        <PortalBridgeContext.Provider value={portalContext}>
+        <PortalBridgeContext.Provider value={portalContext as any}>
           {createPortal(
             <PortalContent sourceContext={portalContext.sourceContext}>
               {children}

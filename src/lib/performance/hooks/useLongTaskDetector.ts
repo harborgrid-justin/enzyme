@@ -411,7 +411,7 @@ export function useYieldToMain(): {
   const yieldToMain = useCallback(async (): Promise<void> => {
     return new Promise((resolve) => {
       if (hasSchedulerYield(globalThis)) {
-        globalThis.scheduler.yield().then(resolve);
+        (globalThis as any).scheduler.yield().then(resolve);
       } else {
         setTimeout(resolve, 0);
       }

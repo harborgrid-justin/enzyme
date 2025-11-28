@@ -53,7 +53,7 @@ export {
   type SkeletonElement,
   type SkeletonPattern,
   type SkeletonFactoryConfig,
-  type SkeletonCSS,
+  // type SkeletonCSS,
 } from './skeleton-factory';
 
 // ============================================================================

@@ -176,7 +176,7 @@ export class PermissionGuard extends BaseRouteGuard {
    * Pre-expanded permissions with aliases resolved.
    * Used for efficient permission lookups during guard execution.
    */
-  // private readonly expandedPermissions: ReadonlySet<Permission>;
+  private readonly _expandedPermissions: ReadonlySet<Permission>;
 
   constructor(config: PermissionGuardConfig) {
     const mergedConfig = { ...DEFAULT_PERMISSION_CONFIG, ...config };
@@ -195,7 +195,7 @@ export class PermissionGuard extends BaseRouteGuard {
     this.permConfig = mergedConfig;
 
     // Pre-expand permissions with aliases
-    this.expandedPermissions = this.expandPermissionsWithAliases(
+    this._expandedPermissions = this.expandPermissionsWithAliases(
       config.requiredPermissions,
       config.aliases ?? {}
     );

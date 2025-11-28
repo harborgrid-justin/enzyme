@@ -29,12 +29,13 @@
  */
 
 import type {
-  FlagId,
+  // FlagId,
   VariantId,
   UserId,
   EvaluationReason,
   JsonValue,
 } from '../advanced/types';
+import type { Mutable } from '../../utils/types';
 
 // ============================================================================
 // Types
@@ -472,7 +473,7 @@ export class ExposureTracker {
           if (!cohorts[exposure.cohort]) {
             cohorts[exposure.cohort] = [];
           }
-          cohorts[exposure.cohort].push(userId);
+          cohorts[exposure.cohort]?.push(userId);
         }
       }
     }
@@ -665,7 +666,7 @@ export class ExposureTracker {
    * Enable or disable tracking.
    */
   setEnabled(enabled: boolean): void {
-    this.config.enabled = enabled;
+    (this.config as any).enabled = enabled;
     if (enabled) {
       this.startFlushTimer();
     } else {

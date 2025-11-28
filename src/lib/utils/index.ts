@@ -70,7 +70,7 @@ export {
   err,
   isOk,
   isErr,
-  type DeepPartial,
+  // type DeepPartial,
   type DeepRequired,
   type DeepReadonly,
   type PartialBy,
@@ -160,30 +160,21 @@ export {
 // Async utilities (debounce, throttle, mutex, semaphore)
 export {
   CancellationToken,
-  createCancellationToken,
   defer,
   sleep,
   debounce,
   throttle,
   Mutex,
   Semaphore,
-  PromisePool,
   pMap,
   pSeries,
-  pRetry,
-  pFinally,
   withCleanup,
-  createAsyncQueue,
   type Deferred,
-  type DebounceOptions,
-  type DebouncedFn,
-  type ThrottleOptions,
-  type ThrottledFn,
-} from './asyncUtils';
+} from '../shared/async-utils';
 
 // Event emitter utilities
 export {
-  EventEmitter,
+  UnifiedEventEmitter as EventEmitter,
   createEventEmitter,
   globalEventBus,
   events,
@@ -191,9 +182,9 @@ export {
   createScopedEmitter,
   type EventHandler,
   type EventMiddleware,
-  type EventEmitterOptions,
-  type GlobalEvents,
-} from './eventEmitter';
+  type EventListenerOptions as EventEmitterOptions,
+  type AppEvents as GlobalEvents,
+} from '../shared/event-utils';
 
 // Error recovery utilities
 export {

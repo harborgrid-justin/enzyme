@@ -145,12 +145,14 @@ function setAtPath<T extends object>(obj: T, path: string, value: unknown): T {
 
   for (let i = 0; i < parts.length - 1; i++) {
     const part = parts[i];
-    if (typeof current[part] === 'object' && current[part] !== null) {
+    if (part && typeof current[part] === 'object' && current[part] !== null) {
       current[part] = { ...(current[part] as object) };
-    } else {
+    } else if (part) {
       current[part] = {};
     }
-    current = current[part] as Record<string, unknown>;
+    if (part) {
+      current = current[part] as Record<string, unknown>;
+    }
   }
 
   current[parts[parts.length - 1]] = value;

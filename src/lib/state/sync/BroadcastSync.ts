@@ -464,6 +464,7 @@ export function createBroadcastSync<TState extends object>(
             (state as Record<string, unknown>)[key] = newState[key as keyof typeof newState];
           }
         }
+        return state;
       });
       log('Applied remote state from', sourceTabId.slice(-6), Object.keys(newState));
       onRemoteUpdate?.(Object.keys(newState), sourceTabId);

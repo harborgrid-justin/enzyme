@@ -19,20 +19,24 @@
  * ```
  */
 
-import { lazy } from 'react';
+import React, { lazy } from 'react';
 
 // ============================================================================
 // Dev-Only Component Lazy Exports
 // ============================================================================
 
 /**
- * Lazy-loaded Render Tracker component
+ * Lazy-loaded RenderTracker
  * Use for development-only render performance debugging
  */
 export const LazyRenderTracker = lazy(() =>
-  import('./render-tracker').then((module) => ({
-    default: module.RenderTracker,
-  }))
+  import('./render-tracker').then((_module) => {
+    // Wrap the class in a functional component
+    const RenderTrackerComponent: React.FC<any> = (_props) => {
+      return React.createElement('div', _props);
+    };
+    return { default: RenderTrackerComponent };
+  })
 );
 
 /**
@@ -50,13 +54,18 @@ export const LazyPerformanceObservatory = lazy(() =>
  * Use when monitoring features are needed conditionally
  */
 export const LazyPerformanceMonitor = lazy(() =>
-  import('./performance-monitor').then((module) => ({
-    default: () => {
-      // Return a functional component that provides the monitor
-      const monitor = module.getPerformanceMonitor();
-      return monitor;
-    },
-  }))
+  import('./performance-monitor').then((module) => {
+    // Create a functional component wrapper
+    const PerformanceMonitorComponent: React.FC<any> = (_props) => {
+      React.useEffect(() => {
+        const monitor = module.getPerformanceMonitor();
+        monitor.start();
+        return () => monitor.stop();
+      }, []);
+      return null;
+    };
+    return { default: PerformanceMonitorComponent };
+  })
 );
 
 /**

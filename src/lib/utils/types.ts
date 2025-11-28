@@ -7,10 +7,11 @@
  */
 
 // Re-export canonical types from shared utilities
-export type { DeepPartial, DeepReadonly } from '../shared/type-utils';
+// Note: Some types are commented out to avoid conflicts
+// export type { DeepPartial, DeepReadonly } from '../shared/type-utils';
 export type { Result } from '../shared/type-utils';
-export type { Brand, Milliseconds, Seconds, Pixels, Percentage } from '../shared/type-utils';
-export { ok, err, isOk, isErr, ms, sec, px, pct } from '../shared/type-utils';
+// export type { Brand, Milliseconds, Seconds, Pixels, Percentage } from '../shared/type-utils';
+export { ok, err, isOk, isErr } from '../shared/type-utils';
 
 /**
  * Make all properties required recursively

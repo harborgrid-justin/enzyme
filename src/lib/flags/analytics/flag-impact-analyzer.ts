@@ -31,6 +31,7 @@ import type {
   UserId,
   JsonValue,
 } from '../advanced/types';
+import type { Mutable } from '../../utils/types';
 
 // ============================================================================
 // Types
@@ -215,8 +216,8 @@ function percentile(values: number[], p: number): number {
   const index = (p / 100) * (sorted.length - 1);
   const lower = Math.floor(index);
   const upper = Math.ceil(index);
-  if (lower === upper) return sorted[lower];
-  return sorted[lower] * (upper - index) + sorted[upper] * (index - lower);
+  if (lower === upper) return sorted[lower] ?? 0;
+  return (sorted[lower] ?? 0) * (upper - index) + (sorted[upper] ?? 0) * (index - lower);
 }
 
 /**
@@ -609,8 +610,8 @@ export class FlagImpactAnalyzer {
 
     for (const [key, dataPoints] of flagMap.entries()) {
       const [metric, variant] = key.split(':');
-      metricsSet.add(metric);
-      variantsSet.add(variant);
+      if (metric) metricsSet.add(metric);
+      if (variant) variantsSet.add(variant);
 
       for (const dp of dataPoints) {
         if (dp.timestamp < periodStart) {
@@ -798,7 +799,7 @@ export class FlagImpactAnalyzer {
     const metrics = new Set<string>();
     for (const key of flagMap.keys()) {
       const [metric] = key.split(':');
-      metrics.add(metric);
+      if (metric) metrics.add(metric);
     }
 
     return Array.from(metrics);
@@ -816,7 +817,7 @@ export class FlagImpactAnalyzer {
     const variants = new Set<VariantId>();
     for (const key of flagMap.keys()) {
       const parts = key.split(':');
-      if (parts.length > 1) {
+      if (parts.length > 1 && parts[1]) {
         variants.add(parts[1]);
       }
     }
@@ -849,7 +850,7 @@ export class FlagImpactAnalyzer {
    * Enable or disable analysis.
    */
   setEnabled(enabled: boolean): void {
-    this.config.enabled = enabled;
+    (this.config as any).enabled = enabled;
   }
 
   // ==========================================================================

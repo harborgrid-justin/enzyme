@@ -518,7 +518,7 @@ export class EndpointRegistry implements IEndpointRegistry {
     if (!times || times.length === 0) {
       return undefined;
     }
-    return Math.round(times.reduce((a, b) => a + b, 0) / times.length);
+    return Math.round(times.reduce((a, b) => a + b, 0) / times.length) as Milliseconds;
   }
 
   // ===========================================================================
@@ -696,7 +696,7 @@ export class EndpointRegistry implements IEndpointRegistry {
     return {
       totalEndpoints: this.endpoints.size,
       ...healthCounts,
-      avgResponseTime: count > 0 ? Math.round(totalTime / count) : undefined,
+      avgResponseTime: count > 0 ? (Math.round(totalTime / count) as Milliseconds) : undefined,
     };
   }
 }

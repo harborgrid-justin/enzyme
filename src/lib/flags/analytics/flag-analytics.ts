@@ -28,12 +28,13 @@
  */
 
 import type {
-  FlagId,
+  // FlagId,
   VariantId,
   UserId,
   EvaluationReason,
   JsonValue,
 } from '../advanced/types';
+import type { Mutable } from '../../utils/types';
 
 // ============================================================================
 // Types
@@ -502,7 +503,7 @@ export class FlagAnalytics {
    * Enable or disable analytics.
    */
   setEnabled(enabled: boolean): void {
-    this.config.enabled = enabled;
+    (this.config as any).enabled = enabled;
     if (enabled) {
       this.startFlushTimer();
     } else {

@@ -539,7 +539,7 @@ export function createConflictResolver<T extends Record<string, unknown>>(
       case 'three-way-merge':
         if (base) {
           result = threeWayMerge(local, remote, base, {
-            fieldStrategies: effectiveFieldStrategies,
+            fieldStrategies: effectiveFieldStrategies as Record<string, FieldStrategy>,
             ignoreFields,
           });
         } else {

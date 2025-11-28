@@ -21,6 +21,7 @@ import type {
   Pixels as BrandedPixels,
   Percentage as BrandedPercentage,
   DeepPartial as SharedDeepPartial,
+  DeepReadonly as SharedDeepReadonly,
 } from '../../shared/type-utils';
 
 // Re-export branded types for module consumers
@@ -28,6 +29,14 @@ export type { BrandedMilliseconds as Milliseconds };
 export type { BrandedSeconds as Seconds };
 export type { BrandedPixels as Pixels };
 export type { BrandedPercentage as Percentage };
+
+// Local type aliases for use within this file
+type Milliseconds = BrandedMilliseconds;
+type Seconds = BrandedSeconds;
+type Pixels = BrandedPixels;
+type Percentage = BrandedPercentage;
+type DeepPartial<T> = SharedDeepPartial<T>;
+type DeepReadonly<T> = SharedDeepReadonly<T>;
 
 // Re-export type constructors for convenience
 export { ms, sec, px, pct } from '../../shared/type-utils';

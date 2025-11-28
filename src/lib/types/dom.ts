@@ -122,11 +122,7 @@ export interface StorageQuota {
  * Navigator extended with storage API
  */
 export interface NavigatorWithStorage extends Navigator {
-  storage?: {
-    estimate(): Promise<StorageQuota>;
-    persist(): Promise<boolean>;
-    persisted(): Promise<boolean>;
-  };
+  storage: StorageManager;
 }
 
 // =============================================================================

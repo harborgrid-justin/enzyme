@@ -222,7 +222,9 @@ function denormalizeEntityInternal(
     if (key in entitySchema.relations) {
       // Denormalize relationship
       const relationSchema = entitySchema.relations[key];
-      denormalized[key] = denormalizeValue(value, relationSchema, childContext);
+      if (relationSchema) {
+        denormalized[key] = denormalizeValue(value, relationSchema, childContext);
+      }
     } else {
       // Copy value
       denormalized[key] = value;
@@ -270,7 +272,10 @@ function denormalizeObject(
     }
 
     if (key in objectSchema.schema) {
-      result[key] = denormalizeValue(value, objectSchema.schema[key], context);
+      const fieldSchema = objectSchema.schema[key];
+      if (fieldSchema) {
+        result[key] = denormalizeValue(value, fieldSchema, context);
+      }
     } else {
       result[key] = value;
     }

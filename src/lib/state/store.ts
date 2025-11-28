@@ -160,10 +160,10 @@ type SliceCreatorArgs = Parameters<StateCreator<StoreState, FullMiddleware>>;
 const storeCreator: StateCreator<StoreState, FullMiddleware> = (...args: SliceCreatorArgs) => {
   // Cast args to the expected slice parameters - this is safe as all slices
   // use the same StateCreator pattern with compatible argument types
-  const sliceArgs = args as Parameters<typeof uiSlice>;
+  const sliceArgs = args as unknown as Parameters<typeof uiSlice>;
   const ui = uiSlice(...sliceArgs);
-  const session = sessionSlice(...sliceArgs);
-  const settings = settingsSlice(...sliceArgs);
+  const session = sessionSlice(...sliceArgs as unknown as Parameters<typeof sessionSlice>);
+  const settings = settingsSlice(...sliceArgs as unknown as Parameters<typeof settingsSlice>);
 
   return {
     // Compose slices

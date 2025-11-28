@@ -28,7 +28,7 @@ import type {
   ConfigUnsubscribe,
   DynamicConfigState,
   ConfigValidationStatus,
-  ConfigValidationResult,
+  ConfigValidationResult as _ConfigValidationResult,
 } from './types';
 import { getConfigRegistry, type ConfigRegistry } from './config-registry';
 import {

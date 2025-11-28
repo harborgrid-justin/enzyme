@@ -445,7 +445,7 @@ export class SmartDefaultsManager {
    */
   static reset(): void {
     // Type-safe null assignment for singleton reset
-    (SmartDefaultsManager as { instance: SmartDefaultsManager | null }).instance = null;
+    (SmartDefaultsManager as unknown as { instance: SmartDefaultsManager | null }).instance = null;
   }
 
   /**

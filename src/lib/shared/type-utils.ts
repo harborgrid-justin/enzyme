@@ -935,7 +935,7 @@ export function mapResult<T, U, E>(
   result: Result<T, E>,
   fn: (value: T) => U
 ): Result<U, E> {
-  return isOk(result) ? ok(fn(result.value)) : result;
+  return isOk(result) ? ok(fn(result.value)) : (result as unknown as Result<U, E>);
 }
 
 /**
@@ -961,7 +961,7 @@ export function mapError<T, E, F>(
   result: Result<T, E>,
   fn: (error: E) => F
 ): Result<T, F> {
-  return isErr(result) ? err(fn(result.error)) : result;
+  return isErr(result) ? err(fn(result.error)) : (result as unknown as Result<T, F>);
 }
 
 /**
@@ -994,7 +994,7 @@ export function flatMapResult<T, U, E>(
   result: Result<T, E>,
   fn: (value: T) => Result<U, E>
 ): Result<U, E> {
-  return isOk(result) ? fn(result.value) : result;
+  return isOk(result) ? fn(result.value) : (result as unknown as Result<U, E>);
 }
 
 /**
@@ -1019,7 +1019,10 @@ export function unwrapResult<T, E>(result: Result<T, E>): T {
   if (isOk(result)) {
     return result.value;
   }
-  throw result.error;
+  if (isErr(result)) {
+    throw result.error;
+  }
+  throw new Error('Invalid Result type');
 }
 
 /**

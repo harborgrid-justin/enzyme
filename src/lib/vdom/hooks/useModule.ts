@@ -98,7 +98,7 @@ export function useModule(): UseModuleReturn {
     ): EventSubscription => {
       const subscriptionId = `${moduleId}-${name}-${Date.now()}`;
       let isActive = true;
-      const unsubscribeFn = eventBus.subscribe(name, handler, moduleId);
+      const unsubscribeFn = eventBus.subscribe(name, handler as any, moduleId);
       
       const unsubscribe = () => {
         if (isActive) {

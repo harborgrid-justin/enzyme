@@ -14,7 +14,7 @@ import { globalEventBus } from '../shared/event-utils';
 import { ErrorReporter } from '../monitoring/ErrorReporter';
 import { logger, configureLogger, type LogLevel } from '../utils/logging';
 import { globalRequestQueue } from '../services/requestQueue';
-import { isDebugModeEnabled, isDevelopmentEnv } from '../flags/debugMode';
+import { isDebugModeEnabled } from '../flags/debugMode';
 
 /**
  * System configuration options
@@ -223,7 +223,7 @@ class SystemManager {
         if (task.duration > 100) {
           globalEventBus.emitSync('performance:slowOperation', {
             operation: `long_task:${task.attribution}`,
-            duration: task.duration,
+            durationMs: task.duration,
           });
         }
       });

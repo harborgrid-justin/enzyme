@@ -17,8 +17,8 @@ import React, {
   useRef,
   useState,
   type ReactNode,
+  createContext,
 } from 'react';
-import { SecurityContext } from '../contexts/SecurityContext';
 import type {
   SecurityContextValue,
   SecurityContextState,
@@ -28,6 +28,11 @@ import type {
   SecurityEventType,
   SecureStorageInterface,
 } from './types';
+
+/**
+ * Security context for React components
+ */
+const SecurityContext = createContext<SecurityContextValue | null>(null);
 import { securityConfig } from '@/config/security.config';
 import { CSPManager } from './csp-manager';
 import { CSRFProtection } from './csrf-protection';
@@ -37,6 +42,7 @@ import {
   isSecureStorageAvailable,
   generateEncryptionKey,
 } from './secure-storage';
+import { ContentSanitizer } from '@/lib/vdom/security-sandbox';
 
 // ============================================================================
 // Context
@@ -432,9 +438,22 @@ export function SecurityProvider({
   // Context Value
   // ==========================================================================
 
+  const sanitizer = useMemo(() => new ContentSanitizer(), []);
+  const sanitize = useCallback((html: string) => sanitizer.sanitize(html), [sanitizer]);
+  const validateUrl = useCallback((url: string) => {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
+  }, []);
+
   const contextValue = useMemo<SecurityContextValue>(
     () => ({
       ...state,
+      sanitize,
+      validateUrl,
       regenerateNonce,
       regenerateCsrfToken,
       reportViolation,
@@ -444,6 +463,8 @@ export function SecurityProvider({
     }),
     [
       state,
+      sanitize,
+      validateUrl,
       regenerateNonce,
       regenerateCsrfToken,
       reportViolation,

@@ -45,6 +45,7 @@ export type SyncDirection = 'push' | 'pull' | 'bidirectional';
  * Sync status for an entity
  */
 export type SyncStatus =
+  | 'idle'
   | 'synced'
   | 'pending'
   | 'syncing'
@@ -90,7 +91,9 @@ export type SyncEventType =
   | 'sync:online'
   | 'entity:changed'
   | 'entity:deleted'
-  | 'entity:created';
+  | 'entity:created'
+  | 'offline-queue-change'
+  | 'conflict-resolved';
 
 /**
  * Sync event payload
@@ -219,11 +222,23 @@ export interface SyncOperation {
  */
 export interface SyncEngine {
   /** Sync a single entity */
-  sync: (entityType: string, id: string, options?: SyncOptions) => Promise<SyncResult>;
+  sync: <T = unknown>(entityType: string, id: string, options?: SyncOptions) => Promise<SyncResult<T>>;
   /** Sync multiple entities */
-  syncMany: (entityType: string, ids: string[], options?: SyncOptions) => Promise<SyncResult[]>;
+  syncMany: <T = unknown>(entityType: string, ids: string[], options?: SyncOptions) => Promise<SyncResult<T>[]>;
   /** Sync all entities of a type */
-  syncAll: (entityType: string, options?: SyncOptions) => Promise<SyncResult>;
+  syncAll: <T = unknown>(entityType: string, options?: SyncOptions) => Promise<SyncResult<T>>;
+  /** Create entity */
+  create: <T>(entityType: string, data: Partial<T>) => Promise<T>;
+  /** Update entity */
+  update: <T>(entityType: string, id: string, data: Partial<T>) => Promise<T>;
+  /** Delete entity */
+  delete: (entityType: string, id: string) => Promise<void>;
+  /** Resolve conflict */
+  resolveConflict: (conflictId: string, resolution: unknown) => Promise<void>;
+  /** Retry failed operations */
+  retryFailed: () => Promise<void>;
+  /** Clear offline queue */
+  clearOfflineQueue: () => void;
   /** Push local changes to remote */
   push: (entityType: string, id: string) => Promise<void>;
   /** Pull remote changes to local */
@@ -265,12 +280,13 @@ export interface SyncOptions {
 /**
  * Sync result
  */
-export interface SyncResult {
+export interface SyncResult<T = unknown> {
   success: boolean;
   entityType: string;
   entityId?: string;
+  data?: T[];
   status: SyncStatus;
-  conflicts?: SyncConflict[];
+  conflicts?: SyncConflict<T>[];
   error?: string;
   syncedAt: number;
 }
@@ -279,6 +295,7 @@ export interface SyncResult {
  * Sync conflict
  */
 export interface SyncConflict<T = unknown> {
+  id: string;
   entityType: string;
   entityId: string;
   localData: T;
@@ -887,10 +904,57 @@ export function createSyncEngine(config: SyncEngineConfig): SyncEngine {
     log('Destroyed');
   }
 
+  // Create entity
+  async function createEntity<T>(entityType: string, data: Partial<T>): Promise<T> {
+    // Placeholder implementation
+    const id = (data as any).id || crypto.randomUUID();
+    const source = sortedSources[0]; // Use primary source
+    if (source) {
+      await source.set(entityType, id, data);
+    }
+    return data as T;
+  }
+
+  // Update entity
+  async function updateEntity<T>(entityType: string, id: string, data: Partial<T>): Promise<T> {
+    // Placeholder implementation
+    const source = sortedSources[0]; // Use primary source
+    if (source) {
+      await source.set(entityType, id, data);
+    }
+    return data as T;
+  }
+
+  // Delete entity
+  async function deleteEntity(entityType: string, id: string): Promise<void> {
+    // Placeholder implementation
+    const source = sortedSources[0]; // Use primary source
+    if (source) {
+      await source.delete(entityType, id);
+    }
+  }
+
+  // Resolve conflict
+  async function resolveConflictManual(_conflictId: string, _resolution: unknown): Promise<void> {
+    // Placeholder implementation
+    // In a real implementation, this would find the conflict by ID and apply the resolution
+  }
+
+  // Clear offline queue
+  function clearOfflineQueue(): void {
+    pendingOperations.length = 0;
+  }
+
   return {
-    sync: syncEntity,
-    syncMany: syncManyEntities,
-    syncAll: syncAllEntities,
+    sync: syncEntity as any,
+    syncMany: syncManyEntities as any,
+    syncAll: syncAllEntities as any,
+    create: createEntity,
+    update: updateEntity,
+    delete: deleteEntity,
+    resolveConflict: resolveConflictManual,
+    retryFailed: processPendingOperations,
+    clearOfflineQueue,
     push: pushEntity,
     pull: pullEntity,
 

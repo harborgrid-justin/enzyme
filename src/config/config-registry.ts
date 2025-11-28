@@ -19,7 +19,7 @@ import type {
   ConfigEntry,
   ConfigEntryMeta,
   ConfigSource,
-  ConfigEnvironment,
+  ConfigEnvironment as _ConfigEnvironment,
   ConfigSchema,
   ConfigChangeEvent,
   ConfigChangeListener,
@@ -516,7 +516,7 @@ export class ConfigRegistry {
     migration: ConfigMigration<TFrom, TTo>
   ): void {
     const data = this.ensureNamespace(namespace);
-    data.migrations.push(migration as ConfigMigration);
+    data.migrations.push(migration as unknown as ConfigMigration);
     data.migrations.sort((a, b) => a.fromVersion - b.fromVersion);
   }
 

@@ -150,11 +150,11 @@ const srOnlyStyle: CSSProperties = {
 };
 
 // Focus indicator styles for keyboard navigation
-const focusRowStyle: CSSProperties = {
-  outline: '2px solid #3b82f6',
-  outlineOffset: '-2px',
-  backgroundColor: '#eff6ff',
-};
+// const focusRowStyle: CSSProperties = {
+//   outline: '2px solid #3b82f6',
+//   outlineOffset: '-2px',
+//   backgroundColor: '#eff6ff',
+// };
 
 // CSS for keyboard focus styles
 const keyboardFocusStyles = `
@@ -221,7 +221,7 @@ function VirtualizedRowInner<T>({
   index,
   style,
   data: rowData,
-}: ListChildComponentProps<RowData<T>>): React.ReactElement {
+}: ListChildComponentProps): React.ReactElement {
   const { data, columns, rowKey, onRowClick, focusedIndex, onRowFocus, onKeyDown } = rowData;
   const row = data[index];
   const key = getRowKey(row, rowKey);
@@ -276,7 +276,7 @@ function VirtualizedRowInner<T>({
       tabIndex={isFocused ? 0 : -1}
       aria-rowindex={index + 2} // +2 for header row and 1-based index
     >
-      {columns.map((column) => {
+      {columns.map((column: VirtualizedColumn<T>) => {
         const value = getCellValue(row, column.accessor);
         const cellContent = column.cell
           ? column.cell(value, row, index)
@@ -334,7 +334,7 @@ function VirtualizedDataTableInner<T>({
 }: VirtualizedDataTableProps<T>): React.ReactElement {
   // State for keyboard navigation - track which row is focused
   const [focusedIndex, setFocusedIndex] = useState<number>(-1);
-  const listRef = useRef<List<RowData<T>>>(null);
+  const listRef = useRef<any>(null);
 
   // Handler for keyboard navigation
   const handleKeyDown = useCallback((event: React.KeyboardEvent, currentIndex: number) => {
@@ -455,7 +455,7 @@ function VirtualizedDataTableInner<T>({
 
       {/* Virtualized rows */}
       {!isLoading && data.length > 0 && (
-        <List<RowData<T>>
+        <List
           ref={listRef}
           height={listHeight}
           itemCount={data.length}

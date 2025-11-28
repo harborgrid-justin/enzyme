@@ -332,8 +332,6 @@ export const IconButton = memo(forwardRef<HTMLButtonElement, IconButtonProps>(fu
   { icon, size = 'md', style, ...props },
   ref
 ): React.ReactElement {
-  const sizeProps = sizeConfig[size];
-
   // Square padding for icon buttons
   const iconButtonStyle: CSSProperties = {
     ...style,

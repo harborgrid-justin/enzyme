@@ -146,7 +146,7 @@ export function DataTableFallback({
  * />
  * ```
  */
-export function SuspenseDataTable<T>({
+export function SuspenseDataTable({
   fallback,
   ...props
 }: {

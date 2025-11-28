@@ -649,7 +649,7 @@ export class LifecycleBuilder {
    * Set ticket/issue reference.
    */
   ticket(ticketId: string): this {
-    this.lifecycle.ticketId = ticketId;
+    (this.lifecycle as any).ticketId = ticketId;
     return this;
   }
 
@@ -657,7 +657,7 @@ export class LifecycleBuilder {
    * Set documentation URL.
    */
   documentation(url: string): this {
-    this.lifecycle.documentationUrl = url;
+    (this.lifecycle as any).documentationUrl = url;
     return this;
   }
 
@@ -665,7 +665,7 @@ export class LifecycleBuilder {
    * Set owner.
    */
   owner(owner: string): this {
-    this.lifecycle.owner = owner;
+    (this.lifecycle as any).owner = owner;
     return this;
   }
 
@@ -673,7 +673,7 @@ export class LifecycleBuilder {
    * Set review date.
    */
   reviewDate(date: Date): this {
-    this.lifecycle.reviewDate = date;
+    (this.lifecycle as any).reviewDate = date;
     return this;
   }
 
@@ -681,7 +681,7 @@ export class LifecycleBuilder {
    * Set deprecation date.
    */
   deprecationDate(date: Date): this {
-    this.lifecycle.deprecationDate = date;
+    (this.lifecycle as any).deprecationDate = date;
     return this;
   }
 
@@ -689,7 +689,7 @@ export class LifecycleBuilder {
    * Set removal date.
    */
   removalDate(date: Date): this {
-    this.lifecycle.removalDate = date;
+    (this.lifecycle as any).removalDate = date;
     return this;
   }
 

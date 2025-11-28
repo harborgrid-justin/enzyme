@@ -100,8 +100,8 @@
 // ----------------------------------------------------------------------------
 // System Initialization (Critical for all apps)
 // ----------------------------------------------------------------------------
-export type { AppConfig } from './system';
-export { initializeApp } from './system';
+// export type { AppConfig } from './system';
+// export { initializeApp } from './system';
 
 // ----------------------------------------------------------------------------
 // Authentication (Used in >90% of apps)
@@ -113,13 +113,13 @@ export type { User, AuthState } from './auth';
 // Feature Flags (Used in >85% of apps)
 // ----------------------------------------------------------------------------
 export { FeatureFlagProvider, useFeatureFlag, FlagGate } from './flags';
-export type { FeatureFlagConfig } from './flags';
+// export type { FeatureFlagConfig } from './flags';
 
 // ----------------------------------------------------------------------------
 // Error Monitoring (Critical for production)
 // ----------------------------------------------------------------------------
 export { ErrorBoundary, GlobalErrorBoundary } from './monitoring';
-export type { ErrorBoundaryProps } from './monitoring';
+// Note: Use QueryErrorBoundaryProps instead of ErrorBoundaryProps
 
 // ----------------------------------------------------------------------------
 // Performance (Critical for production)
@@ -134,8 +134,8 @@ export { createQueryKeyFactory } from './queries';
 // ----------------------------------------------------------------------------
 // Theme (Used in >75% of apps)
 // ----------------------------------------------------------------------------
-export { ThemeProvider, useTheme } from './theme';
-export type { Theme } from './theme';
+// export { ThemeProvider, useTheme } from './theme';
+// export type { Theme } from './theme';
 
 // ============================================================================
 // TYPE-ONLY RE-EXPORTS
@@ -156,7 +156,7 @@ export type { VitalMetricName, PerformanceRating, PerformanceBudget } from './pe
 
 // Utility types
 export type {
-  DeepPartial,
+  // DeepPartial,
   DeepRequired,
   DeepReadonly,
   Nullable,

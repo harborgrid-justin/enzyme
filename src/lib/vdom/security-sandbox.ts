@@ -20,7 +20,7 @@ import {
   DEFAULT_SECURITY_CONFIG,
   createSecurityNonce,
 } from './types';
-import { isDev, devWarn } from '@/lib/core/config/env-helper';
+import { devWarn } from '@/lib/core/config/env-helper';
 
 // ============================================================================
 // Constants

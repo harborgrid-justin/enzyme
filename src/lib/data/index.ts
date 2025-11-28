@@ -95,7 +95,7 @@ export {
   SchemaValidationError,
 
   // Types
-  type Schema as ValidationSchema,
+  // type Schema as ValidationSchema,
   type ValidationResult,
   type ValidationIssue,
 
@@ -129,13 +129,13 @@ export {
   useField,
 
   // Types
-  type FieldValidationRule,
-  type ValidationRuleResult,
-  type FormValidatorConfig,
+  // type FieldValidationRule,
+  // type ValidationRuleResult,
+  // type FormValidatorConfig,
   type FormValidator,
   type FormState,
-  type UseFormValidationOptions,
-  type UseFormValidationReturn,
+  // type UseFormValidationOptions,
+  // type UseFormValidationReturn,
 } from './validation';
 
 // =============================================================================

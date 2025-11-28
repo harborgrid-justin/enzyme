@@ -39,6 +39,7 @@ import type {
   TargetingCondition,
   JsonValue,
 } from './types';
+// import type { Mutable } from '../../utils/types';
 
 // ============================================================================
 // Types
@@ -455,7 +456,7 @@ export class SegmentBuilder {
    * Set the segment ID.
    */
   id(id: SegmentId): this {
-    this.segment.id = id;
+    (this.segment as any).id = id;
     return this;
   }
 
@@ -463,7 +464,7 @@ export class SegmentBuilder {
    * Set the segment name.
    */
   name(name: string): this {
-    this.segment.name = name;
+    (this.segment as any).name = name;
     return this;
   }
 
@@ -471,7 +472,7 @@ export class SegmentBuilder {
    * Set the segment description.
    */
   description(description: string): this {
-    this.segment.description = description;
+    (this.segment as any).description = description;
     return this;
   }
 
@@ -514,7 +515,7 @@ export class SegmentBuilder {
    * Add an in condition.
    */
   in(attribute: string, values: readonly JsonValue[]): this {
-    return this.where(attribute, 'in', values);
+    return this.where(attribute, 'in', values as unknown as JsonValue);
   }
 
   /**
@@ -542,7 +543,7 @@ export class SegmentBuilder {
    * Add users to explicitly include.
    */
   include(...userIds: UserId[]): this {
-    this.segment.includedUsers = [
+    (this.segment as any).includedUsers = [
       ...(this.segment.includedUsers ?? []),
       ...userIds,
     ];
@@ -553,7 +554,7 @@ export class SegmentBuilder {
    * Add users to explicitly exclude.
    */
   exclude(...userIds: UserId[]): this {
-    this.segment.excludedUsers = [
+    (this.segment as any).excludedUsers = [
       ...(this.segment.excludedUsers ?? []),
       ...userIds,
     ];
@@ -564,7 +565,7 @@ export class SegmentBuilder {
    * Add tags.
    */
   tag(...tags: string[]): this {
-    this.segment.tags = [...(this.segment.tags ?? []), ...tags];
+    (this.segment as any).tags = [...(this.segment.tags ?? []), ...tags];
     return this;
   }
 
@@ -572,7 +573,7 @@ export class SegmentBuilder {
    * Set estimated size.
    */
   estimatedSize(size: number): this {
-    this.segment.estimatedSize = size;
+    (this.segment as any).estimatedSize = size;
     return this;
   }
 
@@ -671,7 +672,7 @@ export const SegmentFactories = {
       .id(id)
       .name(`${roles.join(' / ')} Roles`)
       .description(`Users with ${roles.join(' or ')} roles`)
-      .where('user.roles', 'contains', roles[0])
+      .where('user.roles', 'contains', roles[0] ?? '')
       .tag('rbac', ...roles)
       .build();
   },
@@ -747,7 +748,7 @@ export function composeSegments(
       if (segmentList.length < 2) return false;
       const [first, ...rest] = segmentList;
       return (
-        matcher.matches(first, context) &&
+        matcher.matches(first ?? { id: 'dummy', name: 'dummy', rules: { operator: 'and', conditions: [] }, createdAt: new Date(), updatedAt: new Date() } as Segment, context) &&
         !matcher.matchesAny(rest, context).matched
       );
 

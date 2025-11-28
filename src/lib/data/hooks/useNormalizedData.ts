@@ -39,7 +39,6 @@ import type {
   NormalizationResult,
 } from '../normalization/normalizer';
 import {
-  normalize,
   normalizeAndMerge,
   getEntity as getEntityFromState,
   getEntities as getEntitiesFromState,
@@ -52,7 +51,7 @@ import {
 import {
   denormalize,
   denormalizeMany,
-  DenormalizeOptions,
+  type DenormalizeOptions,
 } from '../normalization/denormalizer';
 import type { SchemaRegistry } from '../normalization/schema-registry';
 
@@ -174,7 +173,7 @@ export function useNormalizedData(
   options: UseNormalizedDataOptions = {}
 ): UseNormalizedDataReturn {
   const {
-    registry,
+    registry: _registry,
     denormalizeOptions = {},
     trackChanges = false,
     onEntityChange,
@@ -260,7 +259,7 @@ export function useNormalizedData(
 
   // Get denormalized entity
   const getDenormalized = useCallback(
-    <T>(entityType: string, entityId: string, schema: EntitySchema): T | null => {
+    <T>(_entityType: string, entityId: string, schema: EntitySchema): T | null => {
       return denormalize<T>(entityId, schema, state.entities, denormalizeOptions);
     },
     [state.entities, denormalizeOptions]
@@ -268,7 +267,7 @@ export function useNormalizedData(
 
   // Get multiple denormalized entities
   const getDenormalizedMany = useCallback(
-    <T extends Entity>(entityType: string, ids: string[], schema: EntitySchema): T[] => {
+    <T extends Entity>(_entityType: string, ids: string[], schema: EntitySchema): T[] => {
       return denormalizeMany<T>(ids, schema, state.entities, denormalizeOptions);
     },
     [state.entities, denormalizeOptions]

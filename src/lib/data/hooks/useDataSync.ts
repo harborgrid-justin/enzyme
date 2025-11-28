@@ -44,7 +44,7 @@ import type {
   SyncOptions,
   SyncEvent,
 } from '../sync/sync-engine';
-import type { ConflictStrategy, Conflict, ConflictResolutionResult } from '../sync/conflict-resolver';
+import type { ConflictStrategy, ConflictResolutionResult } from '../sync/conflict-resolver';
 import type { Entity } from '../normalization/normalizer';
 
 // =============================================================================
@@ -70,7 +70,7 @@ export interface SyncState<T extends Entity> {
   /** Pending changes count */
   pendingChanges: number;
   /** Active conflicts */
-  conflicts: SyncConflict[];
+  conflicts: SyncConflict<T>[];
   /** Last error */
   error: Error | null;
 }
@@ -92,7 +92,7 @@ export interface UseDataSyncOptions<T extends Entity> {
   /** Conflict resolution strategy */
   conflictStrategy?: ConflictStrategy;
   /** Custom conflict resolver */
-  onConflict?: (conflict: SyncConflict) => Promise<ConflictResolutionResult>;
+  onConflict?: (conflict: SyncConflict) => Promise<ConflictResolutionResult<unknown>>;
   /** Callback on sync success */
   onSyncSuccess?: (result: SyncResult<T>) => void;
   /** Callback on sync error */
@@ -168,8 +168,6 @@ export function useDataSync<T extends Entity>(
     initialData = [],
     autoSync = true,
     syncInterval = 0,
-    conflictStrategy = 'latest-wins',
-    onConflict,
     onSyncSuccess,
     onSyncError,
     onDataChange,
@@ -218,7 +216,7 @@ export function useDataSync<T extends Entity>(
       if (!mountedRef.current) return;
 
       switch (event.type) {
-        case 'sync-start':
+        case 'sync-start' as SyncEventType:
           setState((prev) => ({
             ...prev,
             isSyncing: true,
@@ -226,7 +224,7 @@ export function useDataSync<T extends Entity>(
           }));
           break;
 
-        case 'sync-complete':
+        case 'sync:complete':
           setState((prev) => ({
             ...prev,
             isSyncing: false,
@@ -237,7 +235,7 @@ export function useDataSync<T extends Entity>(
           }));
           break;
 
-        case 'sync-error':
+        case 'sync:error':
           setState((prev) => ({
             ...prev,
             isSyncing: false,
@@ -247,7 +245,7 @@ export function useDataSync<T extends Entity>(
           }));
           break;
 
-        case 'conflict':
+        case 'sync:conflict':
           setState((prev) => ({
             ...prev,
             conflicts: [...prev.conflicts, event.data as SyncConflict],
@@ -285,9 +283,9 @@ export function useDataSync<T extends Entity>(
           data: result.data as T[],
           isSyncing: false,
           isLoading: false,
-          status: result.conflicts.length > 0 ? 'conflict' : 'synced',
+          status: (result.conflicts?.length ?? 0) > 0 ? 'conflict' : 'synced',
           lastSyncAt: Date.now(),
-          conflicts: result.conflicts,
+          conflicts: result.conflicts ?? [],
           error: null,
         }));
 
@@ -617,14 +615,14 @@ export function useSyncStatus(engine: SyncEngine): {
   useEffect(() => {
     const unsubscribe = engine.subscribe((event: SyncEvent) => {
       switch (event.type) {
-        case 'sync-start':
+        case 'sync:start':
           setStatus('syncing');
           break;
-        case 'sync-complete':
+        case 'sync:complete':
           setStatus('synced');
           setLastSyncAt(Date.now());
           break;
-        case 'sync-error':
+        case 'sync:error':
           setStatus('error');
           break;
         case 'offline-queue-change':
@@ -666,7 +664,7 @@ export function useSyncConflicts(engine: SyncEngine): {
 
   useEffect(() => {
     const unsubscribe = engine.subscribe((event: SyncEvent) => {
-      if (event.type === 'conflict') {
+      if (event.type === 'sync:conflict') {
         setConflicts((prev) => [...prev, event.data as SyncConflict]);
       }
       if (event.type === 'conflict-resolved') {

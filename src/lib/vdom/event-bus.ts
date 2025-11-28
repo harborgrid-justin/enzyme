@@ -69,10 +69,10 @@ export interface ModuleEventBusOptions {
 export class ModuleEventBus {
   private readonly emitter;
   private readonly moduleSubscriptions = new Map<string, Set<() => void>>();
-  private readonly options: ModuleEventBusOptions;
+  // private readonly options: ModuleEventBusOptions;
 
   constructor(options: ModuleEventBusOptions = {}) {
-    this.options = options;
+    // this.options = options;
     this.emitter = createEventEmitter<Record<string, ModuleEventMessage>>({
       maxListeners: options.maxListeners ?? 100,
       debug: options.debug ?? false,

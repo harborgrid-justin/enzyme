@@ -344,7 +344,7 @@ export const ScrollAwareContainer = forwardRef<HTMLDivElement, ExtendedScrollAwa
     }, [virtualize, itemHeight, scrollState, children, overscan, scrollSnap]);
 
     return (
-      <ScrollContainerContext.Provider value={scrollState}>
+      <ScrollContainerContext.Provider value={scrollState as any}>
         <div
           ref={setRefs}
           className={computedClassName}

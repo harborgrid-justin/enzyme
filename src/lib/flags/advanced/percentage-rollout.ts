@@ -258,13 +258,9 @@ export class PercentageRolloutEngine {
 
       // Check if user is in any of the ring's segments
       // Note: Segment matching is done externally, here we just check inclusion
-      for (const _segmentId of ring.segments) {
+      for (const _ of ring.segments) {
         // In a real implementation, this would check segment membership
         // For now, we'll use a hash-based approach
-        const segmentBucket = this.hashFunction(
-          `${flagKey}:${userId}:ring`,
-          ring.id
-        );
 
         // Ring-based bucketing
         if (this.isInRing(ring.id, rollout.currentRing, rollout.rings)) {
@@ -341,7 +337,7 @@ export class PercentageRolloutEngine {
     rollout: ExperimentRollout,
     context: EvaluationContext,
     flagKey: string,
-    variants: readonly Variant[]
+    _variants: readonly Variant[]
   ): RolloutResult {
     // Check if experiment has ended
     if (rollout.endDate && new Date() > rollout.endDate) {
@@ -360,7 +356,7 @@ export class PercentageRolloutEngine {
     for (const allocation of rollout.allocation) {
       cumulativePercentage += allocation.percentage;
       if (bucket < cumulativePercentage) {
-        const variant = variants.find((v) => v.id === allocation.variantId);
+        // const variant = variants.find((v) => v.id === allocation.variantId);
         return {
           included: true,
           variantId: allocation.variantId,
@@ -398,7 +394,7 @@ export class PercentageRolloutEngine {
   }
 
   private selectVariant(
-    bucket: number,
+    _bucket: number,
     variants: readonly Variant[]
   ): VariantId {
     // Find the first non-control variant, or use the first variant

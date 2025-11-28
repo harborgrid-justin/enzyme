@@ -30,6 +30,7 @@ import type {
   JsonValue,
   VariantAllocation,
 } from './types';
+import type { Mutable } from '../../utils/types';
 
 // ============================================================================
 // Types
@@ -311,7 +312,7 @@ export class VariantManager {
 
     // Equal weight selection
     const index = Math.floor((bucket / 100) * variants.length);
-    return variants[Math.min(index, variants.length - 1)];
+    return variants[Math.min(index, variants.length - 1)] || null;
   }
 
   /**
@@ -385,7 +386,7 @@ export class VariantBuilder<T extends JsonValue = JsonValue> {
    * Set the variant ID.
    */
   id(id: VariantId): this {
-    this.variant.id = id;
+    (this.variant as any).id = id;
     return this;
   }
 
@@ -393,7 +394,7 @@ export class VariantBuilder<T extends JsonValue = JsonValue> {
    * Set the variant name.
    */
   name(name: string): this {
-    this.variant.name = name;
+    (this.variant as any).name = name;
     return this;
   }
 
@@ -401,7 +402,7 @@ export class VariantBuilder<T extends JsonValue = JsonValue> {
    * Set the variant description.
    */
   description(description: string): this {
-    this.variant.description = description;
+    (this.variant as any).description = description;
     return this;
   }
 
@@ -409,8 +410,8 @@ export class VariantBuilder<T extends JsonValue = JsonValue> {
    * Set the variant value.
    */
   value(value: T): this {
-    this.variant.value = value;
-    this.variant.valueType = new VariantManager().inferValueType(value);
+    (this.variant as any).value = value;
+    (this.variant as any).valueType = new VariantManager().inferValueType(value);
     return this;
   }
 
@@ -418,7 +419,7 @@ export class VariantBuilder<T extends JsonValue = JsonValue> {
    * Mark as control variant.
    */
   asControl(): this {
-    this.variant.isControl = true;
+    (this.variant as any).isControl = true;
     return this;
   }
 
@@ -426,7 +427,7 @@ export class VariantBuilder<T extends JsonValue = JsonValue> {
    * Add payload data.
    */
   payload(data: Record<string, JsonValue>): this {
-    this.variant.payload = data;
+    (this.variant as any).payload = data;
     return this;
   }
 
@@ -434,7 +435,7 @@ export class VariantBuilder<T extends JsonValue = JsonValue> {
    * Add attachments.
    */
   attachments(...files: string[]): this {
-    this.variant.attachments = files;
+    (this.variant as any).attachments = files;
     return this;
   }
 

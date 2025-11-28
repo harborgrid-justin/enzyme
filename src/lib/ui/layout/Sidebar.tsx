@@ -4,7 +4,7 @@
  * Performance optimized: static styles extracted, dynamic styles memoized
  */
 
-import React, { type ReactNode, useState, useCallback, useMemo, memo, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, useRef, useEffect } from 'react';
+import React, { type ReactNode, useState, useCallback, useMemo, memo, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, useRef } from 'react';
 
 /**
  * Custom hook for keyboard navigation in sidebar menu
@@ -30,26 +30,26 @@ function useSidebarKeyboardNavigation(
       case 'ArrowDown':
         event.preventDefault();
         if (currentIndex < menuItems.length - 1) {
-          menuItems[currentIndex + 1].focus();
+          menuItems[currentIndex + 1]?.focus();
         } else {
-          menuItems[0].focus(); // Wrap to start
+          menuItems[0]?.focus(); // Wrap to start
         }
         break;
       case 'ArrowUp':
         event.preventDefault();
         if (currentIndex <= 0) {
-          menuItems[menuItems.length - 1].focus(); // Wrap to end
+          menuItems[menuItems.length - 1]?.focus(); // Wrap to end
         } else {
-          menuItems[currentIndex - 1].focus();
+          menuItems[currentIndex - 1]?.focus();
         }
         break;
       case 'Home':
         event.preventDefault();
-        menuItems[0].focus();
+        menuItems[0]?.focus();
         break;
       case 'End':
         event.preventDefault();
-        menuItems[menuItems.length - 1].focus();
+        menuItems[menuItems.length - 1]?.focus();
         break;
       case 'ArrowRight':
         // Expand item with children

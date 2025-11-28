@@ -191,7 +191,7 @@ class ObserverPool {
     if (ObserverPool.instance) {
       ObserverPool.instance.disconnectAll();
       // Type-safe null assignment
-      (ObserverPool as { instance: ObserverPool | null }).instance = null;
+      (ObserverPool as unknown as { instance: ObserverPool | null }).instance = null;
     }
   }
 
@@ -225,7 +225,7 @@ class ObserverPool {
     const orphanedElements: Element[] = [];
 
     // Find elements that are no longer in the DOM
-    for (const [element, entry] of this.entries) {
+    for (const [element] of this.entries) {
       if (!element.isConnected) {
         orphanedElements.push(element);
       }
@@ -611,7 +611,7 @@ export function withLazyLoading<P extends object>(
     return (
       <Suspense fallback={fallback} key={retryCount}>
         <ErrorBoundaryWrapper onError={setError}>
-          <LazyComponent {...(props as P)} />
+          <LazyComponent {...(props as any)} />
         </ErrorBoundaryWrapper>
       </Suspense>
     );

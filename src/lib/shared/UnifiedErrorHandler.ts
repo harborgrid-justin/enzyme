@@ -282,10 +282,15 @@ export class UnifiedErrorHandler {
    * Handle a network/API error
    */
   network(message: string, metadata?: Record<string, unknown>): StructuredError {
+    const tags: Record<string, string> = { errorType: 'network' };
+    if (metadata) {
+      Object.entries(metadata).forEach(([key, value]) => {
+        tags[key] = String(value);
+      });
+    }
     return this.handle(new Error(message), {
       userAction: 'api-call',
-      tags: { errorType: 'network' },
-      metadata,
+      tags,
     });
   }
 
@@ -293,7 +298,7 @@ export class UnifiedErrorHandler {
    * Handle an unauthorized (401) error
    */
   unauthorized(message = 'You are not authenticated'): StructuredError {
-    return this.handle(new Error('Unauthorized'), {
+    return this.handle(new Error(message), {
       userAction: 'auth',
       tags: { errorType: 'unauthorized' },
     });
@@ -303,7 +308,7 @@ export class UnifiedErrorHandler {
    * Handle a forbidden (403) error
    */
   forbidden(message = 'You do not have permission'): StructuredError {
-    return this.handle(new Error('Forbidden'), {
+    return this.handle(new Error(message), {
       userAction: 'auth',
       tags: { errorType: 'forbidden' },
     });

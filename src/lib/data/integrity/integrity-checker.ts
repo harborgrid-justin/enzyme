@@ -425,7 +425,7 @@ export function createIntegrityChecker(config: IntegrityCheckerConfig): Integrit
 
       const referenced = referencedIds.get(entityType) || new Set();
 
-      for (const [entityId, entity] of Object.entries(entityMap)) {
+      for (const [entityId, _entity] of Object.entries(entityMap)) {
         if (!referenced.has(entityId)) {
           violations.push({
             type: 'orphan',
@@ -584,7 +584,10 @@ export function createIntegrityChecker(config: IntegrityCheckerConfig): Integrit
       // Check for custom handler
       if (options.handlers?.[violation.type]) {
         if (!options.dryRun) {
-          repairedEntities = options.handlers[violation.type](violation, repairedEntities);
+          const handler = options.handlers[violation.type];
+          if (handler) {
+            repairedEntities = handler(violation, repairedEntities);
+          }
         }
         repairs.push({ violation, action: 'custom-handler', success: true });
         continue;
@@ -606,17 +609,21 @@ export function createIntegrityChecker(config: IntegrityCheckerConfig): Integrit
               break;
 
             case 'update':
-              if (repairedEntities[violation.entityType]?.[violation.entityId] && violation.repair.data) {
+              if (repairedEntities[violation.entityType] && violation.repair.data) {
+                const existing = repairedEntities[violation.entityType][violation.entityId];
                 repairedEntities[violation.entityType][violation.entityId] = {
-                  ...repairedEntities[violation.entityType][violation.entityId],
+                  ...existing,
                   ...(violation.repair.data as Record<string, unknown>),
-                };
+                } as Entity;
               }
               break;
 
             case 'nullify':
-              if (repairedEntities[violation.entityType]?.[violation.entityId] && violation.field) {
-                repairedEntities[violation.entityType][violation.entityId][violation.field] = null;
+              if (repairedEntities[violation.entityType] && violation.field) {
+                const entity = repairedEntities[violation.entityType][violation.entityId];
+                if (entity) {
+                  entity[violation.field] = null;
+                }
               }
               break;
 

@@ -319,7 +319,7 @@ export class StorageManager {
    * @param options - Storage options
    * @returns The stored value, or undefined if not found
    */
-  getMemoryItem<T = unknown>(key: string, options: StorageOptions = {}): T | undefined {
+  getMemoryItem<T = unknown>(key: string): T | undefined {
     const entry = this.memoryStore.get(key);
     if (!entry) {
       return undefined;

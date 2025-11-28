@@ -88,7 +88,7 @@ export class RuntimeConfigManager {
       storageKey: options.storageKey ?? STORAGE_KEYS.CONFIG_OVERRIDES,
       validate: options.validate ?? true,
       emitEvents: options.emitEvents ?? true,
-      debounceDelay: options.debounceDelay ?? 100,
+      debounceDelay: (options.debounceDelay ?? 100) as Milliseconds,
     };
 
     // Load persisted config on initialization
@@ -279,9 +279,9 @@ export class RuntimeConfigManager {
    * Enable configuration persistence.
    */
   enablePersistence(storageKey?: string): void {
-    this.options.persist = true;
+    (this.options as any).persist = true;
     if (storageKey) {
-      this.options.storageKey = storageKey;
+      (this.options as any).storageKey = storageKey;
     }
     this.saveToStorage();
   }
@@ -290,7 +290,7 @@ export class RuntimeConfigManager {
    * Disable configuration persistence.
    */
   disablePersistence(): void {
-    this.options.persist = false;
+    (this.options as any).persist = false;
   }
 
   /**

@@ -536,6 +536,7 @@ export class PersistentOfflineQueue {
         globalEventBus.emitSync('offlineQueue:completed', {
           id: item.id,
           url: item.url,
+          response: response.status,
         });
       } else if (response.status >= 400 && response.status < 500) {
         // Client error - don't retry
@@ -543,7 +544,7 @@ export class PersistentOfflineQueue {
         globalEventBus.emitSync('offlineQueue:failed', {
           id: item.id,
           url: item.url,
-          error: `HTTP ${response.status}`,
+          error: new Error(`HTTP ${response.status}`),
         });
       } else {
         // Server error - retry
@@ -569,8 +570,8 @@ export class PersistentOfflineQueue {
       globalEventBus.emitSync('offlineQueue:failed', {
         id: item.id,
         url: item.url,
-        error,
-        retriesExhausted: true,
+        error: new Error(error),
+        // retriesExhausted: true,
       });
 
       // Report to error monitoring

@@ -1107,8 +1107,8 @@ export class HydrationScheduler {
       {
         root: this.config.visibility.root ?? null,
         rootMargin: this.config.visibility.rootMargin ?? '100px 0px',
-        threshold: Array.isArray(this.config.visibility.threshold) 
-          ? [...this.config.visibility.threshold] 
+        threshold: Array.isArray(this.config.visibility.threshold)
+          ? [...this.config.visibility.threshold] as number[]
           : (this.config.visibility.threshold ?? 0),
       }
     );

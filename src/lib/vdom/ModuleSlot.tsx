@@ -22,7 +22,7 @@ import {
 import { createModuleId } from './types';
 import { useModuleContext, useOptionalModuleContext } from './ModuleBoundary';
 import { useModuleSystem } from './ModuleProvider';
-import { isDev, devWarn } from '@/lib/core/config/env-helper';
+import { devWarn } from '@/lib/core/config/env-helper';
 
 // ============================================================================
 // Types
