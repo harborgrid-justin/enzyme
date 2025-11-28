@@ -125,6 +125,19 @@ export { routes, buildPath, buildPathWithQuery, parseQuery } from './routes';
 export type { RoutePath, RouteParams, RouteQuery } from './routes';
 
 // =============================================================================
+// Linking Components & Navigation Hooks
+// =============================================================================
+export {
+  AppLink,
+  AppNavLink,
+  appRoutes,
+} from './linking';
+
+export type {
+  // AppLink types can be inferred from the component props
+} from './linking';
+
+// =============================================================================
 // Legacy Linking (for backward compatibility)
 // =============================================================================
 export {

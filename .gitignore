@@ -6,3 +6,7 @@ dist
 coverage
 *.log
 .DS_Store
+
+# Demo folder for development testing
+demo/
+scripts/

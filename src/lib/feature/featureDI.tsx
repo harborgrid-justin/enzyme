@@ -1,7 +1,6 @@
 /**
  * @file Feature Dependency Injection
  * @description Enables loose coupling between features via service contracts
- * @jsxImportSource react
  */
 
 import {

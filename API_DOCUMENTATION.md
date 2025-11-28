@@ -1,4 +1,4 @@
-# @defendr/enzyme Framework - API Documentation
+# @missionfabric-js/enzyme Framework - API Documentation
 
 Version: 1.0.0
 Last Updated: 2025-11-28
@@ -25,7 +25,7 @@ Last Updated: 2025-11-28
 
 ## Introduction
 
-The **@defendr/enzyme** framework is an enterprise-grade React application framework providing comprehensive solutions for API communication, authentication, authorization, configuration management, and state management. This documentation covers all exported functions, hooks, classes, and types.
+The **@missionfabric-js/enzyme** framework is an enterprise-grade React application framework providing comprehensive solutions for API communication, authentication, authorization, configuration management, and state management. This documentation covers all exported functions, hooks, classes, and types.
 
 ### Architecture Overview
 

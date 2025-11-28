@@ -1,4 +1,4 @@
-# @defendr/enzyme - System & Types API Documentation
+# @missionfabric-js/enzyme - System & Types API Documentation
 
 **Version:** 1.0.0
 **License:** MIT
@@ -27,7 +27,7 @@
 
 ## Overview
 
-The `@defendr/enzyme` framework is an enterprise-grade React framework providing:
+The `@missionfabric-js/enzyme` framework is an enterprise-grade React framework providing:
 
 - **System Management**: Centralized initialization, monitoring, and lifecycle management
 - **Type Safety**: Comprehensive TypeScript types for enhanced type safety
@@ -39,7 +39,7 @@ The `@defendr/enzyme` framework is an enterprise-grade React framework providing
 
 ## System Module
 
-**Import Path:** `@defendr/enzyme/lib/system` or `import { system } from '@defendr/enzyme'`
+**Import Path:** `@missionfabric-js/enzyme/lib/system` or `import { system } from '@missionfabric-js/enzyme'`
 
 The System module provides enterprise-grade system initialization, monitoring, and lifecycle management.
 
@@ -61,7 +61,7 @@ get initialized(): boolean
 
 **Example:**
 ```typescript
-import { systemManager } from '@defendr/enzyme/lib/system';
+import { systemManager } from '@missionfabric-js/enzyme/lib/system';
 
 if (systemManager.initialized) {
   console.log('System is ready');
@@ -95,7 +95,7 @@ initialize(config: SystemConfig): void
 
 **Example:**
 ```typescript
-import { systemManager } from '@defendr/enzyme/lib/system';
+import { systemManager } from '@missionfabric-js/enzyme/lib/system';
 
 systemManager.initialize({
   environment: 'production',
@@ -229,7 +229,7 @@ function initializeSystem(config: SystemConfig): void
 
 **Example:**
 ```typescript
-import { initializeSystem, defaultSystemConfig } from '@defendr/enzyme/lib/system';
+import { initializeSystem, defaultSystemConfig } from '@missionfabric-js/enzyme/lib/system';
 
 // Use default configuration
 initializeSystem(defaultSystemConfig);
@@ -256,7 +256,7 @@ function getSystemStatus(): SystemStatus
 
 **Example:**
 ```typescript
-import { getSystemStatus } from '@defendr/enzyme/lib/system';
+import { getSystemStatus } from '@missionfabric-js/enzyme/lib/system';
 
 const status = getSystemStatus();
 console.log(`System uptime: ${status.uptime}ms`);
@@ -282,7 +282,7 @@ function systemHealthCheck(): {
 
 **Example:**
 ```typescript
-import { systemHealthCheck } from '@defendr/enzyme/lib/system';
+import { systemHealthCheck } from '@missionfabric-js/enzyme/lib/system';
 
 // Use in health check endpoint
 app.get('/health', (req, res) => {
@@ -305,7 +305,7 @@ function shutdownSystem(): void
 
 **Example:**
 ```typescript
-import { shutdownSystem } from '@defendr/enzyme/lib/system';
+import { shutdownSystem } from '@missionfabric-js/enzyme/lib/system';
 
 process.on('SIGTERM', () => {
   console.log('Received SIGTERM, shutting down gracefully...');
@@ -437,7 +437,7 @@ const defaultSystemConfig: SystemConfig
 
 **Example:**
 ```typescript
-import { initializeSystem, defaultSystemConfig } from '@defendr/enzyme/lib/system';
+import { initializeSystem, defaultSystemConfig } from '@missionfabric-js/enzyme/lib/system';
 
 // Use defaults
 initializeSystem(defaultSystemConfig);
@@ -506,7 +506,7 @@ Memory Monitor ───────┘
 
 ## Types Module
 
-**Import Path:** `@defendr/enzyme/types` or `import type { ... } from '@defendr/enzyme'`
+**Import Path:** `@missionfabric-js/enzyme/types` or `import type { ... } from '@missionfabric-js/enzyme'`
 
 The Types module provides comprehensive TypeScript type definitions for type-safe development.
 
@@ -534,7 +534,7 @@ interface ApiResponse<T> {
 
 **Example:**
 ```typescript
-import type { ApiResponse } from '@defendr/enzyme/types';
+import type { ApiResponse } from '@missionfabric-js/enzyme/types';
 
 interface User {
   id: string;
@@ -571,7 +571,7 @@ interface PaginatedResponse<T> extends ApiResponse<readonly T[]> {
 
 **Example:**
 ```typescript
-import type { PaginatedResponse } from '@defendr/enzyme/types';
+import type { PaginatedResponse } from '@missionfabric-js/enzyme/types';
 
 async function fetchUsers(page: number): Promise<PaginatedResponse<User>> {
   const response = await fetch(`/api/users?page=${page}`);
@@ -608,8 +608,8 @@ interface ApiError {
 
 **Example:**
 ```typescript
-import type { ApiError, ApiErrorResponse } from '@defendr/enzyme/types';
-import { isApiErrorResponse } from '@defendr/enzyme/types';
+import type { ApiError, ApiErrorResponse } from '@missionfabric-js/enzyme/types';
+import { isApiErrorResponse } from '@missionfabric-js/enzyme/types';
 
 try {
   await api.post('/users', userData);
@@ -672,7 +672,7 @@ interface ListQueryParams extends PaginationParams, SortParams, FilterParams {
 
 **Example:**
 ```typescript
-import type { ListQueryParams } from '@defendr/enzyme/types';
+import type { ListQueryParams } from '@missionfabric-js/enzyme/types';
 
 const queryParams: ListQueryParams = {
   page: 1,
@@ -741,7 +741,7 @@ interface ValidationError {
 
 **Example:**
 ```typescript
-import { isValidationErrorResponse } from '@defendr/enzyme/types';
+import { isValidationErrorResponse } from '@missionfabric-js/enzyme/types';
 
 try {
   await api.post('/users', formData);
@@ -817,8 +817,8 @@ type Percentage = Branded<number, 'Percentage'>;
 
 **Example:**
 ```typescript
-import type { Email, UUID } from '@defendr/enzyme/types';
-import { createEmail, createUUID } from '@defendr/enzyme/types';
+import type { Email, UUID } from '@missionfabric-js/enzyme/types';
+import { createEmail, createUUID } from '@missionfabric-js/enzyme/types';
 
 // Create with validation
 const userEmail = createEmail('user@example.com'); // Email
@@ -1148,7 +1148,7 @@ type PropsOf<T extends React.ComponentType<never>> =
 
 **Example:**
 ```typescript
-import type { PropsOf } from '@defendr/enzyme/types';
+import type { PropsOf } from '@missionfabric-js/enzyme/types';
 
 function Button(props: { label: string; onClick: () => void }) {
   return <button onClick={props.onClick}>{props.label}</button>;
@@ -1174,7 +1174,7 @@ type PolymorphicProps<
 
 **Example:**
 ```typescript
-import type { PolymorphicProps } from '@defendr/enzyme/types';
+import type { PolymorphicProps } from '@missionfabric-js/enzyme/types';
 
 type ButtonProps<E extends React.ElementType = 'button'> = PolymorphicProps<
   E,
@@ -1239,7 +1239,7 @@ type AsyncState<T, E = Error> =
 
 **Example:**
 ```typescript
-import type { AsyncState } from '@defendr/enzyme/types';
+import type { AsyncState } from '@missionfabric-js/enzyme/types';
 
 function UserProfile({ userId }: { userId: string }) {
   const [state, setState] = useState<AsyncState<User>>({
@@ -1319,7 +1319,7 @@ function isDefined<T>(value: T | null | undefined): value is T
 
 **Example:**
 ```typescript
-import { isDefined } from '@defendr/enzyme/types';
+import { isDefined } from '@missionfabric-js/enzyme/types';
 
 const users: (User | null)[] = [user1, null, user2];
 const definedUsers = users.filter(isDefined); // User[]
@@ -1337,7 +1337,7 @@ function isNonEmptyString(value: unknown): value is string
 
 **Example:**
 ```typescript
-import { isNonEmptyString } from '@defendr/enzyme/types';
+import { isNonEmptyString } from '@missionfabric-js/enzyme/types';
 
 function processInput(input: unknown) {
   if (isNonEmptyString(input)) {
@@ -1358,7 +1358,7 @@ function isPlainObject(value: unknown): value is Record<string, unknown>
 
 **Example:**
 ```typescript
-import { isPlainObject } from '@defendr/enzyme/types';
+import { isPlainObject } from '@missionfabric-js/enzyme/types';
 
 function merge(a: unknown, b: unknown) {
   if (isPlainObject(a) && isPlainObject(b)) {
@@ -1386,7 +1386,7 @@ function assertNever(value: never, message?: string): never
 
 **Example:**
 ```typescript
-import { assertNever } from '@defendr/enzyme/types';
+import { assertNever } from '@missionfabric-js/enzyme/types';
 
 type Status = 'pending' | 'complete' | 'failed';
 
@@ -1416,7 +1416,7 @@ function isApiErrorResponse(response: unknown): response is ApiErrorResponse
 
 **Example:**
 ```typescript
-import { isApiErrorResponse } from '@defendr/enzyme/types';
+import { isApiErrorResponse } from '@missionfabric-js/enzyme/types';
 
 try {
   const response = await api.get('/users/123');
@@ -1446,7 +1446,7 @@ function isValidationErrorResponse(
 
 **Example:**
 ```typescript
-import { isValidationErrorResponse } from '@defendr/enzyme/types';
+import { isValidationErrorResponse } from '@missionfabric-js/enzyme/types';
 
 try {
   await api.post('/users', formData);
@@ -1473,7 +1473,7 @@ function isPaginatedResponse<T>(
 
 **Example:**
 ```typescript
-import { isPaginatedResponse } from '@defendr/enzyme/types';
+import { isPaginatedResponse } from '@missionfabric-js/enzyme/types';
 
 const response = await api.get('/users');
 if (isPaginatedResponse(response)) {
@@ -1485,7 +1485,7 @@ if (isPaginatedResponse(response)) {
 
 ## Main Exports
 
-**Import Path:** `@defendr/enzyme`
+**Import Path:** `@missionfabric-js/enzyme`
 
 The main package exports essential components and utilities, with full module namespaces available.
 
@@ -1534,7 +1534,7 @@ import {
   hooks,
   monitoring,
   // ... all other modules
-} from '@defendr/enzyme';
+} from '@missionfabric-js/enzyme';
 
 // Use namespaced imports:
 system.initializeSystem(config);
@@ -1581,8 +1581,8 @@ const status = system.getSystemStatus();
 import {
   initializeSystem,
   defaultSystemConfig
-} from '@defendr/enzyme/lib/system';
-import type { SystemConfig } from '@defendr/enzyme/lib/system';
+} from '@missionfabric-js/enzyme/lib/system';
+import type { SystemConfig } from '@missionfabric-js/enzyme/lib/system';
 
 // Initialize system on app startup
 const appConfig: SystemConfig = {
@@ -1621,7 +1621,7 @@ initializeSystem(appConfig);
 ### Health Check Endpoint
 
 ```typescript
-import { systemHealthCheck } from '@defendr/enzyme/lib/system';
+import { systemHealthCheck } from '@missionfabric-js/enzyme/lib/system';
 
 // Express endpoint
 app.get('/api/health', (req, res) => {
@@ -1646,7 +1646,7 @@ import type {
   ApiResponse,
   PaginatedResponse,
   ListQueryParams
-} from '@defendr/enzyme/types';
+} from '@missionfabric-js/enzyme/types';
 
 interface User {
   id: string;
@@ -1695,7 +1695,7 @@ import type {
   PartialBy,
   AsyncState,
   Branded,
-} from '@defendr/enzyme/types';
+} from '@missionfabric-js/enzyme/types';
 
 // Branded IDs prevent mixing
 type UserId = Branded<string, 'UserId'>;
@@ -1761,8 +1761,8 @@ function PostView({ postId }: { postId: PostId }) {
 import {
   isValidationErrorResponse,
   isApiErrorResponse
-} from '@defendr/enzyme/types';
-import type { ValidationErrorResponse } from '@defendr/enzyme/types';
+} from '@missionfabric-js/enzyme/types';
+import type { ValidationErrorResponse } from '@missionfabric-js/enzyme/types';
 
 interface FormState {
   values: Record<string, string>;
@@ -1810,8 +1810,8 @@ async function handleSubmit(
 ### Monitoring Dashboard
 
 ```typescript
-import { getSystemStatus } from '@defendr/enzyme/lib/system';
-import type { SystemStatus } from '@defendr/enzyme/lib/system';
+import { getSystemStatus } from '@missionfabric-js/enzyme/lib/system';
+import type { SystemStatus } from '@missionfabric-js/enzyme/lib/system';
 
 function SystemDashboard() {
   const [status, setStatus] = useState<SystemStatus | null>(null);
@@ -1894,7 +1894,7 @@ Always initialize the system at the root of your application, before any compone
 
 ```typescript
 // main.tsx
-import { initializeSystem, defaultSystemConfig } from '@defendr/enzyme/lib/system';
+import { initializeSystem, defaultSystemConfig } from '@missionfabric-js/enzyme/lib/system';
 
 initializeSystem(defaultSystemConfig);
 
@@ -1912,7 +1912,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 Prevent ID mixing bugs by using branded types:
 
 ```typescript
-import type { UserId, PostId } from '@defendr/enzyme/types';
+import type { UserId, PostId } from '@missionfabric-js/enzyme/types';
 
 // ✅ Good - type-safe
 function getPost(userId: UserId, postId: PostId) { }
@@ -1928,7 +1928,7 @@ function getPost(userId: string, postId: string) { }
 Use type guards for runtime type checking:
 
 ```typescript
-import { isApiErrorResponse, isValidationErrorResponse } from '@defendr/enzyme/types';
+import { isApiErrorResponse, isValidationErrorResponse } from '@missionfabric-js/enzyme/types';
 
 // ✅ Good - type-safe error handling
 if (isApiErrorResponse(error) && isValidationErrorResponse(error)) {
@@ -1946,7 +1946,7 @@ const validationError = error as ValidationErrorResponse;
 Implement health checks for production monitoring:
 
 ```typescript
-import { systemHealthCheck } from '@defendr/enzyme/lib/system';
+import { systemHealthCheck } from '@missionfabric-js/enzyme/lib/system';
 
 // Periodic health checks
 setInterval(() => {
@@ -1986,7 +1986,7 @@ const config: SystemConfig = {
 
 ## Conclusion
 
-This documentation covers the System and Types modules of the @defendr/enzyme framework. For additional modules (auth, routing, state management, etc.), refer to their respective documentation files.
+This documentation covers the System and Types modules of the @missionfabric-js/enzyme framework. For additional modules (auth, routing, state management, etc.), refer to their respective documentation files.
 
 **Key Takeaways:**
 

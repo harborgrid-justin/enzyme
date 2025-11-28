@@ -1,9 +1,9 @@
-# @defendr/enzyme Framework - Module Documentation
+# @missionfabric-js/enzyme Framework - Module Documentation
 
 > **Version:** 1.0.0
 > **License:** MIT
 
-This document provides comprehensive API documentation for the core modules of the @defendr/enzyme framework.
+This document provides comprehensive API documentation for the core modules of the @missionfabric-js/enzyme framework.
 
 ---
 
@@ -186,7 +186,7 @@ Initializes the error reporter with global error handlers.
 
 **Example:**
 ```typescript
-import { initErrorReporter } from '@defendr/enzyme/monitoring';
+import { initErrorReporter } from '@missionfabric-js/enzyme/monitoring';
 
 initErrorReporter({
   enabled: true,
@@ -421,7 +421,7 @@ interface HierarchicalErrorBoundaryProps {
 
 **Example:**
 ```typescript
-import { HierarchicalErrorBoundary } from '@defendr/enzyme/monitoring';
+import { HierarchicalErrorBoundary } from '@missionfabric-js/enzyme/monitoring';
 
 function App() {
   return (
@@ -521,7 +521,7 @@ Simple app-wide error boundary.
 
 **Example:**
 ```typescript
-import { GlobalErrorBoundary } from '@defendr/enzyme/monitoring';
+import { GlobalErrorBoundary } from '@missionfabric-js/enzyme/monitoring';
 
 <GlobalErrorBoundary
   fallback={(error, reset) => (
@@ -543,7 +543,7 @@ Specialized boundary for data-fetching errors.
 
 **Example:**
 ```typescript
-import { QueryErrorBoundary } from '@defendr/enzyme/monitoring';
+import { QueryErrorBoundary } from '@missionfabric-js/enzyme/monitoring';
 
 <QueryErrorBoundary
   queryKey="users"
@@ -601,7 +601,7 @@ interface SessionData {
 #### Global Instance
 
 ```typescript
-import { crashAnalytics } from '@defendr/enzyme/monitoring';
+import { crashAnalytics } from '@missionfabric-js/enzyme/monitoring';
 
 // Initialize
 crashAnalytics.init();
@@ -693,7 +693,7 @@ interface QueryClientConfig {
 
 **Example:**
 ```typescript
-import { createQueryClient } from '@defendr/enzyme/queries';
+import { createQueryClient } from '@missionfabric-js/enzyme/queries';
 
 const queryClient = createQueryClient({
   defaultStaleTime: 10 * 60 * 1000, // 10 minutes
@@ -705,7 +705,7 @@ const queryClient = createQueryClient({
 ### Default Instance
 
 ```typescript
-import { queryClient } from '@defendr/enzyme/queries';
+import { queryClient } from '@missionfabric-js/enzyme/queries';
 
 // Use the default pre-configured instance
 queryClient.prefetchQuery({ ... });
@@ -718,7 +718,7 @@ queryClient.prefetchQuery({ ... });
 Type-safe query key factory.
 
 ```typescript
-import { queryKeys } from '@defendr/enzyme/queries';
+import { queryKeys } from '@missionfabric-js/enzyme/queries';
 
 // Dashboard
 queryKeys.dashboard.stats();
@@ -1682,7 +1682,7 @@ The Performance module provides:
 ### Initialization
 
 ```typescript
-import { initPerformanceMonitoring } from '@defendr/enzyme/performance';
+import { initPerformanceMonitoring } from '@missionfabric-js/enzyme/performance';
 
 const cleanup = await initPerformanceMonitoring({
   debug: import.meta.env.DEV,
@@ -1715,7 +1715,7 @@ Tracks Core Web Vitals metrics.
 
 **Example:**
 ```typescript
-import { getVitalsCollector, initVitals } from '@defendr/enzyme/performance';
+import { getVitalsCollector, initVitals } from '@missionfabric-js/enzyme/performance';
 
 // Initialize vitals collection
 const cleanup = initVitals({
@@ -1780,7 +1780,7 @@ Real-time performance dashboard component.
 import {
   PerformanceProvider,
   PerformanceObservatory
-} from '@defendr/enzyme/performance';
+} from '@missionfabric-js/enzyme/performance';
 
 function App() {
   return (
@@ -1816,7 +1816,7 @@ Enforces performance budgets with auto-degradation.
 
 **Example:**
 ```typescript
-import { getBudgetManager } from '@defendr/enzyme/performance';
+import { getBudgetManager } from '@missionfabric-js/enzyme/performance';
 
 const manager = getBudgetManager({
   debug: true,
@@ -2119,7 +2119,7 @@ import {
   getRenderTracker,
   trackRender,
   withRenderTracking
-} from '@defendr/enzyme/performance';
+} from '@missionfabric-js/enzyme/performance';
 
 // Manual tracking
 function MyComponent() {
@@ -2159,7 +2159,7 @@ import {
   getNetworkQuality,
   isSlowConnection,
   getAdaptiveLoadingStrategy
-} from '@defendr/enzyme/performance';
+} from '@missionfabric-js/enzyme/performance';
 
 const analyzer = getNetworkAnalyzer({ autoMonitor: true });
 
@@ -2193,7 +2193,7 @@ AI-driven navigation prediction and prefetching.
 import {
   getPredictivePrefetchEngine,
   usePredictivePrefetch
-} from '@defendr/enzyme/performance';
+} from '@missionfabric-js/enzyme/performance';
 
 // Initialize engine
 const engine = getPredictivePrefetchEngine({
@@ -2229,7 +2229,7 @@ Automatically prefetches on hover.
 
 **Example:**
 ```typescript
-import { PredictiveLink } from '@defendr/enzyme/performance';
+import { PredictiveLink } from '@missionfabric-js/enzyme/performance';
 
 <PredictiveLink
   to="/products"
@@ -2252,7 +2252,7 @@ Optimized lazy-loaded images.
 
 **Example:**
 ```typescript
-import { LazyImage } from '@defendr/enzyme/performance';
+import { LazyImage } from '@missionfabric-js/enzyme/performance';
 
 <LazyImage
   src="/image.jpg"
@@ -2269,7 +2269,7 @@ Create lazy-loaded components.
 
 **Example:**
 ```typescript
-import { createLazyComponent } from '@defendr/enzyme/performance';
+import { createLazyComponent } from '@missionfabric-js/enzyme/performance';
 
 const LazyDashboard = createLazyComponent({
   loader: () => import('./Dashboard'),
@@ -2291,7 +2291,7 @@ Intelligent task scheduling for optimal frame rate.
 
 **Example:**
 ```typescript
-import { useScheduledRender } from '@defendr/enzyme/performance';
+import { useScheduledRender } from '@missionfabric-js/enzyme/performance';
 
 function HeavyComponent({ data }) {
   const shouldRender = useScheduledRender({
@@ -2311,7 +2311,7 @@ Schedule work in idle time.
 
 **Example:**
 ```typescript
-import { scheduleWork } from '@defendr/enzyme/performance';
+import { scheduleWork } from '@missionfabric-js/enzyme/performance';
 
 const taskId = scheduleWork(
   () => {
@@ -2333,7 +2333,7 @@ Advanced memory management system.
 
 **Example:**
 ```typescript
-import { useMemoryGuard } from '@defendr/enzyme/performance';
+import { useMemoryGuard } from '@missionfabric-js/enzyme/performance';
 
 function MemoryIntensiveComponent() {
   const guard = useMemoryGuard({
@@ -2362,7 +2362,7 @@ Runtime bundle optimization.
 
 **Example:**
 ```typescript
-import { useBundleOptimizer } from '@defendr/enzyme/performance';
+import { useBundleOptimizer } from '@missionfabric-js/enzyme/performance';
 
 function App() {
   const { loadOptimalModule, deviceTier } = useBundleOptimizer();
@@ -2385,7 +2385,7 @@ Automatic critical CSS extraction and injection.
 
 **Example:**
 ```typescript
-import { useCriticalCSS } from '@defendr/enzyme/performance';
+import { useCriticalCSS } from '@missionfabric-js/enzyme/performance';
 
 function App() {
   useCriticalCSS({
@@ -2415,7 +2415,7 @@ import {
   trackPageView,
   trackCustomEvent,
   getRUMSessionSummary
-} from '@defendr/enzyme/performance';
+} from '@missionfabric-js/enzyme/performance';
 
 // Initialize
 initRUM({
@@ -2453,7 +2453,7 @@ import {
   getRegressionDetector,
   recordPerformanceSample,
   analyzePerformanceTrend
-} from '@defendr/enzyme/performance';
+} from '@missionfabric-js/enzyme/performance';
 
 const detector = getRegressionDetector();
 
@@ -2476,7 +2476,7 @@ if (trend.status === 'regression') {
 ### Global Configuration
 
 ```typescript
-import { performanceConfig, getPerformanceConfig } from '@defendr/enzyme/performance';
+import { performanceConfig, getPerformanceConfig } from '@missionfabric-js/enzyme/performance';
 
 // Access config
 const config = getPerformanceConfig();
@@ -2497,7 +2497,7 @@ config.memory.criticalThreshold; // 0.9 (90%)
 ### Budget Configuration
 
 ```typescript
-import { VITAL_THRESHOLDS, RUNTIME_BUDGET } from '@defendr/enzyme/performance';
+import { VITAL_THRESHOLDS, RUNTIME_BUDGET } from '@missionfabric-js/enzyme/performance';
 
 // Vital thresholds
 VITAL_THRESHOLDS.LCP.good; // 2500ms
@@ -2625,7 +2625,7 @@ function CachedComponent() {
 
 ## Summary
 
-The @defendr/enzyme framework provides four comprehensive modules:
+The @missionfabric-js/enzyme framework provides four comprehensive modules:
 
 1. **Monitoring** - Error handling, boundaries, crash analytics
 2. **Queries** - React Query integration with offline support

@@ -1,4 +1,4 @@
-# @defendr/enzyme - Complete API Documentation
+# @missionfabric-js/enzyme - Complete API Documentation
 
 > Enterprise React Framework with Advanced Routing, State Management, Performance Optimizations, and Plug-and-Play Architecture
 
@@ -50,7 +50,7 @@
 ### Installation
 
 ```bash
-npm install @defendr/enzyme
+npm install @missionfabric-js/enzyme
 ```
 
 ### Basic Setup
@@ -71,7 +71,7 @@ import {
 
   // API
   useApiRequest,
-} from '@defendr/enzyme';
+} from '@missionfabric-js/enzyme';
 
 function App() {
   return (
@@ -92,7 +92,7 @@ function App() {
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                           @defendr/enzyme                                    │
+│                           @missionfabric-js/enzyme                                    │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
 │  ┌──────────────────────────────────────────────────────────────────────┐  │
@@ -141,7 +141,7 @@ function App() {
 
 ## API Module
 
-**Import:** `import { ... } from '@defendr/enzyme/api'`
+**Import:** `import { ... } from '@missionfabric-js/enzyme/api'`
 
 Enterprise-grade HTTP client with retry logic, interceptors, request deduplication, and React Query integration.
 
@@ -152,7 +152,7 @@ Enterprise-grade HTTP client with retry logic, interceptors, request deduplicati
 Type-safe HTTP client with automatic retry, interceptors, and request deduplication.
 
 ```typescript
-import { ApiClient, createApiClient, apiClient } from '@defendr/enzyme/api';
+import { ApiClient, createApiClient, apiClient } from '@missionfabric-js/enzyme/api';
 
 // Use singleton
 const users = await apiClient.get<User[]>('/users');
@@ -179,7 +179,7 @@ const client = createApiClient({
 Fluent API for constructing type-safe requests.
 
 ```typescript
-import { get, post, RequestBuilder } from '@defendr/enzyme/api';
+import { get, post, RequestBuilder } from '@missionfabric-js/enzyme/api';
 
 // Simple GET request
 const config = get<User[]>('/users')
@@ -205,7 +205,7 @@ function useApiRequest<T>(options: UseApiRequestOptions<T>): UseApiRequestResult
 Fetch data with automatic caching, refetching, and error handling.
 
 ```typescript
-import { useApiRequest } from '@defendr/enzyme/api';
+import { useApiRequest } from '@missionfabric-js/enzyme/api';
 
 function UserProfile({ userId }: { userId: string }) {
   const { data, isLoading, error, refetch } = useApiRequest<User>({
@@ -232,7 +232,7 @@ function useApiMutation<TData, TVariables>(
 Perform mutations with optimistic updates.
 
 ```typescript
-import { useApiMutation, createOptimisticAdd } from '@defendr/enzyme/api';
+import { useApiMutation, createOptimisticAdd } from '@missionfabric-js/enzyme/api';
 
 function CreateUser() {
   const mutation = useApiMutation<User, CreateUserDto>({
@@ -300,7 +300,7 @@ type ErrorCategory =
 
 ## Auth Module
 
-**Import:** `import { ... } from '@defendr/enzyme/auth'`
+**Import:** `import { ... } from '@missionfabric-js/enzyme/auth'`
 
 Comprehensive authentication with RBAC, Active Directory integration, and route protection.
 
@@ -309,7 +309,7 @@ Comprehensive authentication with RBAC, Active Directory integration, and route 
 #### `AuthProvider`
 
 ```typescript
-import { AuthProvider, useAuth } from '@defendr/enzyme/auth';
+import { AuthProvider, useAuth } from '@missionfabric-js/enzyme/auth';
 
 function App() {
   return (
@@ -366,7 +366,7 @@ interface UseAuthReturn {
 #### `RBACProvider` & `useRBAC`
 
 ```typescript
-import { RBACProvider, useRBAC } from '@defendr/enzyme/auth';
+import { RBACProvider, useRBAC } from '@missionfabric-js/enzyme/auth';
 
 function App() {
   return (
@@ -413,7 +413,7 @@ import {
   createPermissionMatrixBuilder,
   createStandardMatrix,
   CRUD_ACTIONS
-} from '@defendr/enzyme/auth';
+} from '@missionfabric-js/enzyme/auth';
 
 const matrix = createPermissionMatrixBuilder()
   .addRole('admin', { inherits: ['manager'] })
@@ -428,7 +428,7 @@ const matrix = createPermissionMatrixBuilder()
 ### Active Directory Integration
 
 ```typescript
-import { ADProvider, useActiveDirectory } from '@defendr/enzyme/auth';
+import { ADProvider, useActiveDirectory } from '@missionfabric-js/enzyme/auth';
 
 function App() {
   return (
@@ -468,14 +468,14 @@ function ADLogin() {
 
 ## Routing Module
 
-**Import:** `import { ... } from '@defendr/enzyme/routing'`
+**Import:** `import { ... } from '@missionfabric-js/enzyme/routing'`
 
 Type-safe file-based routing with auto-discovery, guards, and advanced patterns.
 
 ### Router Factory
 
 ```typescript
-import { createRouter, createSimpleRouter } from '@defendr/enzyme/routing';
+import { createRouter, createSimpleRouter } from '@missionfabric-js/enzyme/routing';
 
 // Full-featured router
 const router = createRouter({
@@ -499,7 +499,7 @@ const simpleRouter = createSimpleRouter([
 ### Type-Safe Path Building
 
 ```typescript
-import { buildPath, createRouteBuilder } from '@defendr/enzyme/routing';
+import { buildPath, createRouteBuilder } from '@missionfabric-js/enzyme/routing';
 
 // Compile-time type checking for route params
 const userPath = buildPath('/users/:id', { id: '123' });
@@ -529,7 +529,7 @@ import {
   createFeatureGuard,
   createCompositeGuard,
   allGuards,
-} from '@defendr/enzyme/routing';
+} from '@missionfabric-js/enzyme/routing';
 
 // Role-based guard
 const adminGuard = createRoleGuard({
@@ -562,7 +562,7 @@ const protectedGuard = createCompositeGuard({
 import {
   createAutoScanner,
   DiscoveryEngine
-} from '@defendr/enzyme/routing';
+} from '@missionfabric-js/enzyme/routing';
 
 // Scan routes from file system (build time)
 const scanner = createAutoScanner({
@@ -591,7 +591,7 @@ import {
   useRouteNavigate,
   useQueryParams,
   useRouteInfo,
-} from '@defendr/enzyme/routing';
+} from '@missionfabric-js/enzyme/routing';
 
 function MyComponent() {
   const navigate = useRouteNavigate();
@@ -612,7 +612,7 @@ function MyComponent() {
 
 ## State Module
 
-**Import:** `import { ... } from '@defendr/enzyme/state'`
+**Import:** `import { ... } from '@missionfabric-js/enzyme/state'`
 
 Production-grade state management built on Zustand with Immer, DevTools, and multi-tab sync.
 
@@ -623,7 +623,7 @@ import {
   useStore,
   createAppStore,
   createSlice
-} from '@defendr/enzyme/state';
+} from '@missionfabric-js/enzyme/state';
 
 // Define slices
 const userSlice = createSlice({
@@ -657,7 +657,7 @@ const store = createAppStore({
 ### Using the Store
 
 ```typescript
-import { useStore } from '@defendr/enzyme/state';
+import { useStore } from '@missionfabric-js/enzyme/state';
 
 function UserProfile() {
   // Select state
@@ -684,7 +684,7 @@ function UserProfile() {
 import {
   createSelector,
   createParameterizedSelector,
-} from '@defendr/enzyme/state';
+} from '@missionfabric-js/enzyme/state';
 
 // Memoized selector
 const selectUserName = createSelector(
@@ -706,7 +706,7 @@ const user = useStore((state) => selectUserById(state, '123'));
 ### Multi-Tab Sync
 
 ```typescript
-import { createBroadcastSync, useBroadcastSync } from '@defendr/enzyme/state';
+import { createBroadcastSync, useBroadcastSync } from '@missionfabric-js/enzyme/state';
 
 // Setup broadcast sync
 const sync = createBroadcastSync({
@@ -732,7 +732,7 @@ function SyncedComponent() {
 ### Feature Stores
 
 ```typescript
-import { createFeatureStore } from '@defendr/enzyme/state';
+import { createFeatureStore } from '@missionfabric-js/enzyme/state';
 
 // Create isolated feature store
 const cartStore = createFeatureStore({
@@ -764,7 +764,7 @@ const { items, addItem } = cartStore.useStore();
 
 ## Data Module
 
-**Import:** `import { ... } from '@defendr/enzyme/data'`
+**Import:** `import { ... } from '@missionfabric-js/enzyme/data'`
 
 Data validation, normalization, synchronization, and integrity checking.
 
@@ -774,7 +774,7 @@ Data validation, normalization, synchronization, and integrity checking.
 import {
   createSchema,
   useDataValidation
-} from '@defendr/enzyme/data';
+} from '@missionfabric-js/enzyme/data';
 
 // Define schema
 const userSchema = createSchema({
@@ -814,7 +814,7 @@ function UserForm() {
 import {
   createNormalizer,
   useNormalizedData
-} from '@defendr/enzyme/data';
+} from '@missionfabric-js/enzyme/data';
 
 // Define entities
 const normalizer = createNormalizer({
@@ -840,7 +840,7 @@ const posts = normalizer.denormalize('posts', normalized);
 ### Data Sync
 
 ```typescript
-import { createSyncEngine, useDataSync } from '@defendr/enzyme/data';
+import { createSyncEngine, useDataSync } from '@missionfabric-js/enzyme/data';
 
 const syncEngine = createSyncEngine({
   sources: ['local', 'remote'],
@@ -871,7 +871,7 @@ function SyncedComponent() {
 
 ## Performance Module
 
-**Import:** `import { ... } from '@defendr/enzyme/performance'`
+**Import:** `import { ... } from '@missionfabric-js/enzyme/performance'`
 
 Web Vitals collection, performance budgets, and optimization utilities.
 
@@ -881,7 +881,7 @@ Web Vitals collection, performance budgets, and optimization utilities.
 import {
   collectWebVitals,
   PerformanceObservatory
-} from '@defendr/enzyme/performance';
+} from '@missionfabric-js/enzyme/performance';
 
 // Collect Core Web Vitals
 collectWebVitals({
@@ -904,7 +904,7 @@ function Dashboard() {
 import {
   usePerformanceBudget,
   useDegradedMode
-} from '@defendr/enzyme/performance';
+} from '@missionfabric-js/enzyme/performance';
 
 function HeavyComponent() {
   const { withinBudget, currentMetrics } = usePerformanceBudget({
@@ -940,7 +940,7 @@ import {
   useRenderMetrics,
   useDeferredRender,
   useNetworkQuality
-} from '@defendr/enzyme/performance';
+} from '@missionfabric-js/enzyme/performance';
 
 function OptimizedComponent() {
   const { renderCount, avgRenderTime } = useRenderMetrics();
@@ -961,7 +961,7 @@ function OptimizedComponent() {
 
 ## Security Module
 
-**Import:** `import { ... } from '@defendr/enzyme/security'`
+**Import:** `import { ... } from '@missionfabric-js/enzyme/security'`
 
 CSP management, XSS prevention, CSRF protection, and secure storage.
 
@@ -971,7 +971,7 @@ CSP management, XSS prevention, CSRF protection, and secure storage.
 import {
   CSPManager,
   useCSPNonce
-} from '@defendr/enzyme/security';
+} from '@missionfabric-js/enzyme/security';
 
 const cspManager = new CSPManager({
   directives: {
@@ -1000,7 +1000,7 @@ function SecureScript() {
 import {
   sanitizeHtml,
   useSanitizedContent
-} from '@defendr/enzyme/security';
+} from '@missionfabric-js/enzyme/security';
 
 // Sanitize HTML
 const safeHtml = sanitizeHtml(userInput, {
@@ -1026,7 +1026,7 @@ function UserContent({ html }: { html: string }) {
 import {
   useCSRFToken,
   CSRFTokenProvider
-} from '@defendr/enzyme/security';
+} from '@missionfabric-js/enzyme/security';
 
 function App() {
   return (
@@ -1051,7 +1051,7 @@ function SecureForm() {
 ### Secure Storage
 
 ```typescript
-import { useSecureStorage } from '@defendr/enzyme/security';
+import { useSecureStorage } from '@missionfabric-js/enzyme/security';
 
 function SensitiveData() {
   const {
@@ -1073,7 +1073,7 @@ function SensitiveData() {
 
 ## Monitoring Module
 
-**Import:** `import { ... } from '@defendr/enzyme/monitoring'`
+**Import:** `import { ... } from '@missionfabric-js/enzyme/monitoring'`
 
 Error tracking, crash analytics, and error boundaries.
 
@@ -1084,7 +1084,7 @@ import {
   GlobalErrorBoundary,
   FeatureErrorBoundary,
   withErrorBoundary,
-} from '@defendr/enzyme/monitoring';
+} from '@missionfabric-js/enzyme/monitoring';
 
 // Global boundary
 function App() {
@@ -1123,7 +1123,7 @@ const SafeWidget = withErrorBoundary(Widget, {
 import {
   errorReporter,
   configureErrorReporter
-} from '@defendr/enzyme/monitoring';
+} from '@missionfabric-js/enzyme/monitoring';
 
 // Configure
 configureErrorReporter({
@@ -1151,7 +1151,7 @@ try {
 ### Crash Analytics
 
 ```typescript
-import { useCrashAnalytics } from '@defendr/enzyme/monitoring';
+import { useCrashAnalytics } from '@missionfabric-js/enzyme/monitoring';
 
 function App() {
   const {
@@ -1179,7 +1179,7 @@ function App() {
 
 ## Hydration Module
 
-**Import:** `import { ... } from '@defendr/enzyme/hydration'`
+**Import:** `import { ... } from '@missionfabric-js/enzyme/hydration'`
 
 Progressive hydration with priority queues and interaction capture.
 
@@ -1189,7 +1189,7 @@ Progressive hydration with priority queues and interaction capture.
 import {
   HydrationBoundary,
   HydrationPriority
-} from '@defendr/enzyme/hydration';
+} from '@missionfabric-js/enzyme/hydration';
 
 function App() {
   return (
@@ -1224,7 +1224,7 @@ function App() {
 import {
   useHydrationStatus,
   useHydrationControl
-} from '@defendr/enzyme/hydration';
+} from '@missionfabric-js/enzyme/hydration';
 
 function HydrationAwareComponent() {
   const { isHydrated, hydrationTime } = useHydrationStatus();
@@ -1242,7 +1242,7 @@ function HydrationAwareComponent() {
 
 ## Theme Module
 
-**Import:** `import { ... } from '@defendr/enzyme/theme'`
+**Import:** `import { ... } from '@missionfabric-js/enzyme/theme'`
 
 Design tokens, theme management, and color palettes.
 
@@ -1254,7 +1254,7 @@ import {
   useTheme,
   lightPalette,
   darkPalette
-} from '@defendr/enzyme/theme';
+} from '@missionfabric-js/enzyme/theme';
 
 function App() {
   return (
@@ -1283,7 +1283,7 @@ function ThemeToggle() {
 ### Design Tokens
 
 ```typescript
-import { tokens } from '@defendr/enzyme/theme';
+import { tokens } from '@missionfabric-js/enzyme/theme';
 
 // Spacing
 tokens.spacing.xs   // 4px
@@ -1323,14 +1323,14 @@ tokens.transitions.slow    // 500ms
 
 ## UI Module
 
-**Import:** `import { ... } from '@defendr/enzyme/ui'`
+**Import:** `import { ... } from '@missionfabric-js/enzyme/ui'`
 
 Layout components, navigation, feedback, and inputs.
 
 ### Layout Components
 
 ```typescript
-import { Page, Sidebar, TopNav } from '@defendr/enzyme/ui';
+import { Page, Sidebar, TopNav } from '@missionfabric-js/enzyme/ui';
 
 function AppLayout() {
   return (
@@ -1364,7 +1364,7 @@ import {
   ToastProvider,
   useToast,
   LoadingOverlay
-} from '@defendr/enzyme/ui';
+} from '@missionfabric-js/enzyme/ui';
 
 // Toast notifications
 function MyComponent() {
@@ -1388,7 +1388,7 @@ function MyComponent() {
 ### Input Components
 
 ```typescript
-import { Button, IconButton, ButtonGroup } from '@defendr/enzyme/ui';
+import { Button, IconButton, ButtonGroup } from '@missionfabric-js/enzyme/ui';
 
 <Button variant="primary" size="md" onClick={handleClick}>
   Save Changes
@@ -1418,7 +1418,7 @@ import { Button, IconButton, ButtonGroup } from '@defendr/enzyme/ui';
 
 ## UX Module
 
-**Import:** `import { ... } from '@defendr/enzyme/ux'`
+**Import:** `import { ... } from '@missionfabric-js/enzyme/ux'`
 
 Loading states, skeleton screens, and optimistic UI.
 
@@ -1430,7 +1430,7 @@ import {
   createListSkeleton,
   createTableSkeleton,
   SkeletonFactory
-} from '@defendr/enzyme/ux';
+} from '@missionfabric-js/enzyme/ux';
 
 // Quick skeletons
 function LoadingList() {
@@ -1464,7 +1464,7 @@ factory.registerPattern({
 import {
   OptimisticListManager,
   createOptimisticManager
-} from '@defendr/enzyme/ux';
+} from '@missionfabric-js/enzyme/ux';
 
 const todoManager = new OptimisticListManager<Todo>([], {
   autoRetry: true,
@@ -1498,7 +1498,7 @@ async function deleteTodo(id: string) {
 
 ## Hooks Module
 
-**Import:** `import { ... } from '@defendr/enzyme/hooks'`
+**Import:** `import { ... } from '@missionfabric-js/enzyme/hooks'`
 
 50+ production-ready React hooks.
 
@@ -1508,7 +1508,7 @@ async function deleteTodo(id: string) {
 import {
   useOnlineStatus,
   useNetworkQuality,
-} from '@defendr/enzyme/hooks';
+} from '@missionfabric-js/enzyme/hooks';
 
 function NetworkAware() {
   const isOnline = useOnlineStatus();
@@ -1533,7 +1533,7 @@ import {
   useDebounce,
   useThrottle,
   useDeferredValue,
-} from '@defendr/enzyme/hooks';
+} from '@missionfabric-js/enzyme/hooks';
 
 function SearchInput() {
   const [query, setQuery] = useState('');
@@ -1554,7 +1554,7 @@ import {
   useScreenReaderAnnounce,
   useKeyboardShortcuts,
   useFocusTrap,
-} from '@defendr/enzyme/hooks';
+} from '@missionfabric-js/enzyme/hooks';
 
 function AccessibleModal() {
   const announce = useScreenReaderAnnounce();
@@ -1579,7 +1579,7 @@ function AccessibleModal() {
 import {
   useAsyncWithRecovery,
   useRetry,
-} from '@defendr/enzyme/hooks';
+} from '@missionfabric-js/enzyme/hooks';
 
 function DataLoader() {
   const {
@@ -1613,7 +1613,7 @@ function DataLoader() {
 
 ## Shared Module
 
-**Import:** `import { ... } from '@defendr/enzyme/shared'`
+**Import:** `import { ... } from '@missionfabric-js/enzyme/shared'`
 
 Common utilities, type guards, and helpers.
 
@@ -1627,7 +1627,7 @@ import {
   debounce,
   throttle,
   Mutex,
-} from '@defendr/enzyme/shared';
+} from '@missionfabric-js/enzyme/shared';
 
 // Sleep
 await sleep(1000);
@@ -1663,7 +1663,7 @@ import {
   isUrl,
   isUuid,
   createShapeGuard,
-} from '@defendr/enzyme/shared';
+} from '@missionfabric-js/enzyme/shared';
 
 // Basic guards
 if (isString(value)) {
@@ -1686,7 +1686,7 @@ if (isUser(data)) {
 ### Result Type
 
 ```typescript
-import { ok, err, isOk, isErr, Result } from '@defendr/enzyme/shared';
+import { ok, err, isOk, isErr, Result } from '@missionfabric-js/enzyme/shared';
 
 function divide(a: number, b: number): Result<number, string> {
   if (b === 0) return err('Division by zero');
@@ -1705,14 +1705,14 @@ if (isOk(result)) {
 
 ## Utils Module
 
-**Import:** `import { ... } from '@defendr/enzyme/utils'`
+**Import:** `import { ... } from '@missionfabric-js/enzyme/utils'`
 
 Logging, time formatting, storage, and analytics.
 
 ### Logger
 
 ```typescript
-import { logger, configureLogger } from '@defendr/enzyme/utils';
+import { logger, configureLogger } from '@missionfabric-js/enzyme/utils';
 
 configureLogger({
   level: 'debug',
@@ -1738,7 +1738,7 @@ import {
   formatDuration,
   isToday,
   addTime,
-} from '@defendr/enzyme/utils';
+} from '@missionfabric-js/enzyme/utils';
 
 formatDate(new Date(), 'long');     // "January 15, 2024"
 formatRelative(Date.now() - 3600000); // "1 hour ago"
@@ -1750,7 +1750,7 @@ addTime(new Date(), 7, 'days');     // Date 7 days from now
 ### Storage
 
 ```typescript
-import { StorageManager, setLocal, getLocal } from '@defendr/enzyme/utils';
+import { StorageManager, setLocal, getLocal } from '@missionfabric-js/enzyme/utils';
 
 // Simple API
 await setLocal('theme', 'dark');
@@ -1771,7 +1771,7 @@ await secureStorage.set('token', sensitiveData);
 
 ## VDOM Module
 
-**Import:** `import { ... } from '@defendr/enzyme/vdom'`
+**Import:** `import { ... } from '@missionfabric-js/enzyme/vdom'`
 
 Virtual module system with lazy loading and security sandboxing.
 
@@ -1782,7 +1782,7 @@ import {
   registerModule,
   loadModule,
   ModuleProvider
-} from '@defendr/enzyme/vdom';
+} from '@missionfabric-js/enzyme/vdom';
 
 // Register module
 registerModule({
@@ -1809,7 +1809,7 @@ import {
   useModule,
   useModuleState,
   useModuleBoundary
-} from '@defendr/enzyme/vdom';
+} from '@missionfabric-js/enzyme/vdom';
 
 function DynamicFeature() {
   const {
@@ -1830,7 +1830,7 @@ function DynamicFeature() {
 
 ## System Module
 
-**Import:** `import { ... } from '@defendr/enzyme/system'`
+**Import:** `import { ... } from '@missionfabric-js/enzyme/system'`
 
 System initialization, health checks, and lifecycle management.
 
@@ -1842,7 +1842,7 @@ import {
   getSystemStatus,
   systemHealthCheck,
   shutdownSystem
-} from '@defendr/enzyme/system';
+} from '@missionfabric-js/enzyme/system';
 
 // Initialize on app start
 await initializeSystem({
@@ -1878,7 +1878,7 @@ import type {
   AccessToken,
   ISODateString,
   PositiveInteger,
-} from '@defendr/enzyme';
+} from '@missionfabric-js/enzyme';
 
 // Type-safe IDs that can't be mixed
 function getUser(id: UserId): Promise<User>;
@@ -1901,7 +1901,7 @@ import type {
   Merge,
   ValueOf,
   Result,
-} from '@defendr/enzyme';
+} from '@missionfabric-js/enzyme';
 
 // Deep partial - all nested properties optional
 type Config = DeepPartial<AppConfig>;
@@ -1936,7 +1936,7 @@ import {
 
   // System
   initializeSystem,
-} from '@defendr/enzyme';
+} from '@missionfabric-js/enzyme';
 
 // Initialize system
 initializeSystem({
@@ -1971,7 +1971,7 @@ function App() {
 ### Protected Route Pattern
 
 ```typescript
-import { useAuth, useRBAC } from '@defendr/enzyme';
+import { useAuth, useRBAC } from '@missionfabric-js/enzyme';
 
 function ProtectedRoute({
   children,
@@ -2003,7 +2003,7 @@ function ProtectedRoute({
 ### Data Fetching Pattern
 
 ```typescript
-import { useApiRequest, useApiMutation } from '@defendr/enzyme/api';
+import { useApiRequest, useApiMutation } from '@missionfabric-js/enzyme/api';
 
 function UserList() {
   // Fetch users
@@ -2062,7 +2062,7 @@ useEffect(() => {
     .finally(() => setLoading(false));
 }, []);
 
-// After: @defendr/enzyme
+// After: @missionfabric-js/enzyme
 const { data: users, isLoading, error } = useApiRequest({
   url: '/users',
   queryKey: ['users'],
@@ -2075,8 +2075,8 @@ const { data: users, isLoading, error } = useApiRequest({
 // Before: React Router
 import { Routes, Route, useNavigate } from 'react-router-dom';
 
-// After: @defendr/enzyme
-import { createRouter, useRouteNavigate } from '@defendr/enzyme/routing';
+// After: @missionfabric-js/enzyme
+import { createRouter, useRouteNavigate } from '@missionfabric-js/enzyme/routing';
 
 const router = createRouter({ routes: [...] });
 const navigate = useRouteNavigate();
@@ -2092,7 +2092,7 @@ const useStore = create((set) => ({
   increment: () => set((s) => ({ count: s.count + 1 })),
 }));
 
-// After: @defendr/enzyme (with DevTools, persistence, sync)
+// After: @missionfabric-js/enzyme (with DevTools, persistence, sync)
 const countSlice = createSlice({
   name: 'counter',
   initialState: { count: 0 },

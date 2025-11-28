@@ -60,3 +60,6 @@ FAST_REFRESH_*.md
 package-lock.json
 yarn.lock
 pnpm-lock.yaml
+
+demo/
+scripts/

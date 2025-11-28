@@ -12,7 +12,6 @@
  *
  * @author Agent 5 - PhD TypeScript Architect
  * @version 1.0.0
- * @jsxImportSource react
  */
 
 import {

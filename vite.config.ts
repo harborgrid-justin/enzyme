@@ -21,9 +21,10 @@ export default defineConfig({
     },
     rollupOptions: {
       external: [
-        'react', 
-        'react-dom', 
-        'react-router-dom', 
+        'react',
+        'react/jsx-runtime',
+        'react-dom',
+        'react-router-dom',
         '@tanstack/react-query',
         'zustand',
         'zod',
@@ -31,7 +32,7 @@ export default defineConfig({
         'clsx',
         'lucide-react',
         'react-window',
-        'web-vitals'
+        'web-vitals',
       ],
       output: {
         globals: {

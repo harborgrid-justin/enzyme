@@ -1,4 +1,4 @@
-# @defendr/enzyme
+# @missionfabric-js/enzyme
 
 > **A powerful React framework for building enterprise applications** — Advanced routing, state management, and performance optimizations in a lightweight, modular package.
 
@@ -12,16 +12,16 @@
 ## Installation
 
 ```bash
-npm install @defendr/enzyme
+npm install @missionfabric-js/enzyme
 # or
-yarn add @defendr/enzyme
+yarn add @missionfabric-js/enzyme
 # or
-pnpm add @defendr/enzyme
+pnpm add @missionfabric-js/enzyme
 ```
 
 ## Why Enzyme?
 
-| Feature | @defendr/enzyme | Next.js |
+| Feature | @missionfabric-js/enzyme | Next.js |
 |---------|-------------|---------|
 | **Build Tool** | Vite (lightning fast) | Webpack/Turbopack |
 | **Rendering** | Client-side (CSR) | SSR/SSG/CSR |
@@ -33,7 +33,7 @@ pnpm add @defendr/enzyme
 | **Multi-Tab Sync** | ✅ BroadcastChannel | ❌ Manual |
 | **Performance Observatory** | ✅ Built-in | ❌ External tools |
 
-**Choose @defendr/enzyme when you need:**
+**Choose @missionfabric-js/enzyme when you need:**
 - Full control over routing and data fetching
 - Lightning-fast development builds
 - Simple deployment to any hosting provider

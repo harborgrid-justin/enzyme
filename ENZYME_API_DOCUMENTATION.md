@@ -1,4 +1,4 @@
-# @defendr/enzyme Framework API Documentation
+# @missionfabric-js/enzyme Framework API Documentation
 
 **Version:** 1.0.0
 **Author:** Harbor Grid Development Team
@@ -10,16 +10,16 @@
 
 1. [Overview](#overview)
 2. [Architecture](#architecture)
-3. [Module: `@defendr/enzyme/vdom`](#module-vdom)
-4. [Module: `@defendr/enzyme/core`](#module-core)
-5. [Module: `@defendr/enzyme/feature`](#module-feature)
-6. [Module: `@defendr/enzyme/hooks`](#module-hooks)
+3. [Module: `@missionfabric-js/enzyme/vdom`](#module-vdom)
+4. [Module: `@missionfabric-js/enzyme/core`](#module-core)
+5. [Module: `@missionfabric-js/enzyme/feature`](#module-feature)
+6. [Module: `@missionfabric-js/enzyme/hooks`](#module-hooks)
 
 ---
 
 ## Overview
 
-@defendr/enzyme is a comprehensive enterprise-grade React framework providing:
+@missionfabric-js/enzyme is a comprehensive enterprise-grade React framework providing:
 
 - **Virtual Modular DOM (VDOM)**: Advanced module boundary system with lifecycle management
 - **Configuration Management**: Centralized, type-safe configuration with runtime updates
@@ -51,7 +51,7 @@
 └──────────┼──────────────────┼──────────────────┼───────────┘
            │                  │                  │
 ┌──────────┼──────────────────┼──────────────────┼───────────┐
-│          │    @defendr/enzyme Framework         │           │
+│          │    @missionfabric-js/enzyme Framework         │           │
 │  ┌───────▼───────┐  ┌───────▼───────┐  ┌───────▼───────┐   │
 │  │  VDOM System  │  │  Core Config  │  │  Hooks Lib    │   │
 │  │  ┌─────────┐  │  │  ┌─────────┐  │  │  ┌─────────┐  │   │
@@ -93,14 +93,14 @@ User Interaction
 
 ---
 
-## Module: @defendr/enzyme/vdom
+## Module: @missionfabric-js/enzyme/vdom
 
 The Virtual Modular DOM system provides module boundary management, memory pooling, security sandboxing, and cross-module communication.
 
 ### Import Path
 
 ```typescript
-import { /* exports */ } from '@defendr/enzyme/vdom';
+import { /* exports */ } from '@missionfabric-js/enzyme/vdom';
 ```
 
 ---
@@ -1192,7 +1192,7 @@ interface ModuleProviderProps {
 **Example:**
 
 ```tsx
-import { ModuleProvider } from '@defendr/enzyme/vdom';
+import { ModuleProvider } from '@missionfabric-js/enzyme/vdom';
 
 function App() {
   return (
@@ -2191,14 +2191,14 @@ createModuleRegistration('my-module', 'My Module')
 
 ---
 
-## Module: @defendr/enzyme/core
+## Module: @missionfabric-js/enzyme/core
 
 The core configuration system provides centralized, type-safe configuration management.
 
 ### Import Path
 
 ```typescript
-import { /* exports */ } from '@defendr/enzyme/core';
+import { /* exports */ } from '@missionfabric-js/enzyme/core';
 ```
 
 ---
@@ -3002,14 +3002,14 @@ RATE_LIMITS = {
 
 ---
 
-## Module: @defendr/enzyme/feature
+## Module: @missionfabric-js/enzyme/feature
 
 The feature factory provides a plug-and-play system for modular feature development.
 
 ### Import Path
 
 ```typescript
-import { /* exports */ } from '@defendr/enzyme/feature';
+import { /* exports */ } from '@missionfabric-js/enzyme/feature';
 ```
 
 ---
@@ -3131,7 +3131,7 @@ Creates a feature page component.
 **Example:**
 
 ```typescript
-import { createFeaturePage } from '@defendr/enzyme/feature';
+import { createFeaturePage } from '@missionfabric-js/enzyme/feature';
 
 const DashboardPage = createFeaturePage({
   config: {
@@ -3282,7 +3282,7 @@ Gets feature count.
 Auto-registers features using import.meta.glob.
 
 ```typescript
-import { autoRegisterFeatures } from '@defendr/enzyme/feature';
+import { autoRegisterFeatures } from '@missionfabric-js/enzyme/feature';
 
 await autoRegisterFeatures(
   import.meta.glob('./features/*/index.tsx')
@@ -3916,14 +3916,14 @@ const users = testData.users(10);
 
 ---
 
-## Module: @defendr/enzyme/hooks
+## Module: @missionfabric-js/enzyme/hooks
 
 Production-ready custom hooks for common patterns.
 
 ### Import Path
 
 ```typescript
-import { /* exports */ } from '@defendr/enzyme/hooks';
+import { /* exports */ } from '@missionfabric-js/enzyme/hooks';
 ```
 
 ---
@@ -4902,27 +4902,27 @@ import {
   useSecureModule,
   HydrationPriority,
   HydrationTrigger,
-} from '@defendr/enzyme/vdom';
+} from '@missionfabric-js/enzyme/vdom';
 
 import {
   useLibConfig,
   useEndpointUrl,
   registerEndpoint,
-} from '@defendr/enzyme/core';
+} from '@missionfabric-js/enzyme/core';
 
 import {
   createFeaturePage,
   useFeatureVisibility,
   useService,
   AnalyticsContract,
-} from '@defendr/enzyme/feature';
+} from '@missionfabric-js/enzyme/feature';
 
 import {
   useOnlineStatus,
   useDeboun cedValue,
   useTrackEvent,
   useKeyboardShortcuts,
-} from '@defendr/enzyme/hooks';
+} from '@missionfabric-js/enzyme/hooks';
 
 // Register API endpoint
 registerEndpoint({
@@ -5146,7 +5146,7 @@ const API_TIMEOUT = 30000;
 fetch(url, { timeout: API_TIMEOUT });
 
 // After
-import { useLibConfig } from '@defendr/enzyme/core';
+import { useLibConfig } from '@missionfabric-js/enzyme/core';
 
 const config = useLibConfig();
 fetch(url, { timeout: config.network.defaultTimeout });

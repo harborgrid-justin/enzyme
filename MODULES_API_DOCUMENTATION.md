@@ -1,6 +1,6 @@
-# @defendr/enzyme - API Documentation
+# @missionfabric-js/enzyme - API Documentation
 
-Complete API reference for the @defendr/enzyme framework modules.
+Complete API reference for the @missionfabric-js/enzyme framework modules.
 
 **Version:** 1.0.0
 **Modules Documented:** shared, state, streaming, theme
@@ -2960,7 +2960,7 @@ const textColor = darkPalette.text.primary;
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                      @defendr/enzyme                            │
+│                      @missionfabric-js/enzyme                            │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │

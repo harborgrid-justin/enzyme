@@ -1,4 +1,4 @@
-# @defendr/enzyme Framework API Documentation
+# @missionfabric-js/enzyme Framework API Documentation
 
 > **Version:** 1.0.0
 > **Last Updated:** 2025-11-28
@@ -3067,7 +3067,7 @@ await limiter.acquire();  // Waits if rate limit exceeded
 
 ## Summary
 
-This documentation covers the four main modules of the @defendr/enzyme framework:
+This documentation covers the four main modules of the @missionfabric-js/enzyme framework:
 
 1. **Realtime**: WebSocket/SSE clients with automatic reconnection, channel subscriptions, and React Query integration
 2. **Routing**: Type-safe file-based routing with guards, conflict detection, and automatic discovery

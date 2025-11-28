@@ -1,7 +1,6 @@
 /**
  * @file Feature Code Splitting
  * @description Advanced code splitting utilities for features with preloading support
- * @jsxImportSource react
  */
 
 import React, {
