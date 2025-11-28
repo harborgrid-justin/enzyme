@@ -1,0 +1,62 @@
+# Source files (only include built dist)
+src/
+scripts/
+
+# Configuration files
+.eslintrc*
+.prettierrc*
+.eslintcache
+.gitignore
+.husky/
+eslint.config.js
+eslint-plugin-no-barrel-imports.js
+playwright.config.ts
+postcss.config.js
+tailwind.config.ts
+tsconfig*.json
+vite.config.ts
+vitest.config.ts
+vite-plugin-routes.ts
+
+# Development files
+docs/
+*.md
+!README.md
+*.log
+*.tsbuildinfo
+.git/
+.github/
+node_modules/
+coverage/
+.nyc_output/
+
+# Test files
+__tests__/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+test/
+tests/
+
+# Temporary files
+temp*
+tmp/
+*.tmp
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Build artifacts that shouldn't be published
+fast-refresh-report.json
+FAST_REFRESH_*.md
+
+# Lock files (consumers should generate their own)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml

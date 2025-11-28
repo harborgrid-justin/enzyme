@@ -1,9 +1,15 @@
 {
   "extends": "./tsconfig.json",
+  "include": [
+    "src/lib/**/*",
+    "src/types/**/*",
+    "src/index.ts"
+  ],
   "exclude": [
     "node_modules",
     "dist",
     "coverage",
+    "src/config/**",
     "**/*.stories.tsx",
     "*.config.ts",
     "src/**/__tests__/**",
@@ -11,5 +17,11 @@
     "src/**/*.test.tsx",
     "src/**/*.spec.ts",
     "src/**/*.spec.tsx"
-  ]
+  ],
+  "compilerOptions": {
+    "outDir": "dist",
+    "declaration": true,
+    "declarationMap": true,
+    "noEmit": false
+  }
 }

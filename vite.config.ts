@@ -8,26 +8,47 @@ export default defineConfig({
     react(),
     dts({
       insertTypesEntry: true,
-      include: ['src/lib'],
-      exclude: ['**/*.test.ts', '**/*.test.tsx', '**/*.spec.ts', '**/*.spec.tsx'],
+      include: ['src/lib', 'src/types'],
+      exclude: ['**/*.test.ts', '**/*.test.tsx', '**/*.spec.ts', '**/*.spec.tsx', 'src/config/**'],
     }),
   ],
   build: {
     lib: {
-      entry: resolve(__dirname, 'src/lib/index.ts'),
+      entry: resolve(__dirname, 'src/index.ts'),
       name: 'DefendrEnzyme',
-      fileName: 'index',
+      fileName: (format) => `index.${format === 'es' ? 'mjs' : 'js'}`,
       formats: ['es', 'cjs'],
     },
     rollupOptions: {
-      external: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query'],
+      external: [
+        'react', 
+        'react-dom', 
+        'react-router-dom', 
+        '@tanstack/react-query',
+        'zustand',
+        'zod',
+        'immer',
+        'clsx',
+        'lucide-react',
+        'react-window',
+        'web-vitals'
+      ],
       output: {
         globals: {
           react: 'React',
           'react-dom': 'ReactDOM',
           'react-router-dom': 'ReactRouterDOM',
           '@tanstack/react-query': 'ReactQuery',
+          'zustand': 'zustand',
+          'zod': 'zod',
+          'immer': 'immer',
+          'clsx': 'clsx',
+          'lucide-react': 'lucideReact',
+          'react-window': 'ReactWindow',
+          'web-vitals': 'webVitals'
         },
+        preserveModules: true,
+        preserveModulesRoot: 'src',
       },
     },
     sourcemap: true,

@@ -1,6 +1,6 @@
-# Harbor React Framework
+# @defendr/enzyme
 
-> **An enterprise-grade React application framework** — Built as a lightweight, performant alternative to Next.js for internal applications requiring full control over rendering, routing, and state management.
+> **A powerful React framework for building enterprise applications** — Advanced routing, state management, and performance optimizations in a lightweight, modular package.
 
 [![React 18](https://img.shields.io/badge/React-18.3-blue)](https://reactjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue)](https://www.typescriptlang.org)
@@ -9,9 +9,19 @@
 
 ---
 
-## Why Harbor React?
+## Installation
 
-| Feature | Harbor React | Next.js |
+```bash
+npm install @defendr/enzyme
+# or
+yarn add @defendr/enzyme
+# or
+pnpm add @defendr/enzyme
+```
+
+## Why Enzyme?
+
+| Feature | @defendr/enzyme | Next.js |
 |---------|-------------|---------|
 | **Build Tool** | Vite (lightning fast) | Webpack/Turbopack |
 | **Rendering** | Client-side (CSR) | SSR/SSG/CSR |
@@ -23,7 +33,7 @@
 | **Multi-Tab Sync** | ✅ BroadcastChannel | ❌ Manual |
 | **Performance Observatory** | ✅ Built-in | ❌ External tools |
 
-**Choose Harbor React when you need:**
+**Choose @defendr/enzyme when you need:**
 - Full control over routing and data fetching
 - Lightning-fast development builds
 - Simple deployment to any hosting provider
