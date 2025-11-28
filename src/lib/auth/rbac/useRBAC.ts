@@ -255,7 +255,13 @@ export function useRBAC(): UseRBACReturn {
  * }
  * ```
  */
-export function usePermissions() {
+export function usePermissions(): {
+  permissions: Permission[];
+  effectivePermissions: Permission[];
+  hasPermission: (permission: Permission) => boolean;
+  hasAnyPermission: (permissions: Permission[]) => boolean;
+  hasAllPermissions: (permissions: Permission[]) => boolean;
+} {
   const {
     userPermissions,
     hasPermission,

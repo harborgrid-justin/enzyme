@@ -92,7 +92,10 @@ export async function retry<T>(
     }
   }
 
-  throw lastError!;
+  if (lastError !== undefined) {
+    throw lastError;
+  }
+  throw new Error('Operation failed without error details');
 }
 
 /**
@@ -107,13 +110,17 @@ export async function concurrent<T, R>(
   const executing: Promise<void>[] = [];
 
   for (let i = 0; i < items.length; i++) {
-    const item = items[i]!;
+    const item = items[i];
+    if (item === undefined) continue;
     const promise = fn(item, i).then((result) => {
       results[i] = result;
     });
 
     const e: Promise<void> = promise.then(() => {
-      executing.splice(executing.indexOf(e), 1);
+      const index = executing.indexOf(e);
+      if (index !== -1) {
+        executing.splice(index, 1);
+      }
     });
     executing.push(e);
 
@@ -145,7 +152,9 @@ export async function withTimeout<T>(
   try {
     return await Promise.race([promise, timeoutPromise]);
   } finally {
-    clearTimeout(timeoutId!);
+    if (timeoutId !== undefined) {
+      clearTimeout(timeoutId);
+    }
   }
 }
 

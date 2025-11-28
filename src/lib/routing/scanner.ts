@@ -37,7 +37,7 @@ export function parseRouteSegment(filename: string): ParsedRouteSegment {
  * @see core/segment-parser.ts for implementation details
  */
 export function segmentsToUrlPath(segments: readonly ParsedRouteSegment[]): string {
-  return coreSegmentsToUrlPath(segments);
+  return coreSegmentsToUrlPath(segments as ParsedRouteSegment[]);
 }
 
 /**

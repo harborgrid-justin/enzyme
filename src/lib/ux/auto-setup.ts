@@ -193,11 +193,11 @@ export function detectEnvironment(): EnvironmentInfo {
   }
 
   // Check import.meta.env for additional config if available
-  if (import.meta.env.VITE_API_URL) {
+  if (typeof import.meta.env.VITE_API_URL === 'string' && import.meta.env.VITE_API_URL !== '') {
     apiEndpoint = import.meta.env.VITE_API_URL;
   }
 
-  if (import.meta.env.VITE_APP_VERSION) {
+  if (typeof import.meta.env.VITE_APP_VERSION === 'string' && import.meta.env.VITE_APP_VERSION !== '') {
     version = import.meta.env.VITE_APP_VERSION;
   }
 

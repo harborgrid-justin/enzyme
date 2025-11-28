@@ -304,7 +304,7 @@ export class InterceptingRouteManager {
     }
 
     // Check allowed/denied origins
-    if (config.deniedOrigins?.some(o => this.matchesPattern(o, context.originPath))) {
+    if (config.deniedOrigins?.some(o => this.matchesPattern(o, context.originPath)) === true) {
       return false;
     }
 

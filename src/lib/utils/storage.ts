@@ -221,9 +221,9 @@ export class StorageManager {
     this.broadcastChannel.onmessage = (event: MessageEvent<{ type: string; key?: string }>) => {
       const { type, key } = event.data;
 
-      if (type === 'set' && key) {
+      if (type === 'set' && key !== undefined && key !== '') {
         globalEventBus.emitSync('data:invalidate', { keys: [key] });
-      } else if (type === 'remove' && key) {
+      } else if (type === 'remove' && key !== undefined && key !== '') {
         globalEventBus.emitSync('data:invalidate', { keys: [key] });
       } else if (type === 'clear') {
         globalEventBus.emitSync('data:invalidate', { keys: ['*'] });
@@ -406,7 +406,7 @@ export class StorageManager {
 
     for (let i = 0; i < this.storage.length; i++) {
       const key = this.storage.key(i);
-      if (key !== null && key.startsWith(`${this.config.prefix}:`)) {
+      if (key?.startsWith(`${this.config.prefix}:`) === true) {
         keysToRemove.push(key);
       }
     }
@@ -425,7 +425,7 @@ export class StorageManager {
 
     for (let i = 0; i < this.storage.length; i++) {
       const key = this.storage.key(i);
-      if (key !== null && key.startsWith(`${this.config.prefix}:`)) {
+      if (key?.startsWith(`${this.config.prefix}:`) === true) {
         keys.push(key.substring(prefixLength));
       }
     }

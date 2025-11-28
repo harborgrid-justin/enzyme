@@ -135,7 +135,7 @@ export function isObject(value: unknown): value is Record<string, unknown> {
  */
 export function isPlainObject(value: unknown): value is Record<string, unknown> {
   if (!isObject(value)) return false;
-  const proto = Object.getPrototypeOf(value);
+  const proto = Object.getPrototypeOf(value) as unknown;
   return proto === null || proto === Object.prototype;
 }
 
@@ -1022,7 +1022,7 @@ export function unwrapResult<T, E>(result: Result<T, E>): T {
   if (isErr(result)) {
     throw result.error;
   }
-  throw new Error('Invalid Result type');
+  throw new TypeError('Invalid Result type');
 }
 
 /**

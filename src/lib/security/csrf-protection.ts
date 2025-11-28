@@ -318,7 +318,7 @@ class CSRFProtectionClass {
     }
 
     const cookieValue = getCookie(this.config.cookieName);
-    if (!cookieValue) {
+    if (cookieValue == null || cookieValue === '') {
       return null;
     }
 
@@ -327,7 +327,7 @@ class CSRFProtectionClass {
       const [token, timestampStr] = cookieValue.split(':');
       const timestamp = parseInt(timestampStr ?? '0', 10);
 
-      if (!token || isNaN(timestamp)) {
+      if ((token == null || token === '') || isNaN(timestamp)) {
         return null;
       }
 

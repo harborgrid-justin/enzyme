@@ -875,7 +875,7 @@ function getDefaultValue(schema: z.ZodTypeAny): string {
  * Get description from Zod schema
  */
 function getDescription(schema: z.ZodTypeAny): string {
-  if (schema.description) {
+  if (schema.description != null && schema.description !== '') {
     return schema.description;
   }
   return '-';

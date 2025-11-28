@@ -70,7 +70,7 @@ export function extractFeatureFlags(): string[] {
 
     // Tab-level flags
     tabs?.forEach((tab) => {
-      if (tab.access?.featureFlag) {
+      if (tab.access?.featureFlag != null && tab.access.featureFlag.length > 0) {
         flags.add(tab.access.featureFlag);
       }
       tab.access?.requiredFlags?.forEach((flag) => flags.add(flag));
@@ -92,7 +92,7 @@ export function generateFeatureFlagManifest(): FeatureFlagManifestEntry[] {
     const { metadata, access, tabs } = feature.config;
 
     // Main feature flag
-    if (access.featureFlag) {
+    if (access.featureFlag != null && access.featureFlag.length > 0) {
       manifest.push({
         flag: access.featureFlag,
         featureId: metadata.id,
@@ -111,7 +111,7 @@ export function generateFeatureFlagManifest(): FeatureFlagManifestEntry[] {
 
     // Tab-level flags
     tabs?.forEach((tab) => {
-      if (tab.access?.featureFlag) {
+      if (tab.access?.featureFlag != null && tab.access.featureFlag.length > 0) {
         manifest.push({
           flag: tab.access.featureFlag,
           featureId: metadata.id,

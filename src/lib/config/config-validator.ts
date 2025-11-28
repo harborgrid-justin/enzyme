@@ -105,7 +105,7 @@ export class ConfigValidator {
         const error = this.validateRule(value, rule, path);
         if (error) {
           errors.push(error);
-          if (this.options.stopOnFirstError) {
+          if (this.options.stopOnFirstError === true) {
             break;
           }
         }
@@ -128,7 +128,7 @@ export class ConfigValidator {
       const value = obj[key];
 
       // Check for deprecated fields
-      if (fieldSchema.deprecated && value !== undefined) {
+      if (fieldSchema.deprecated === true && value !== undefined) {
         warnings.push(
           fieldSchema.deprecationMessage ??
             `Field '${path}' is deprecated`

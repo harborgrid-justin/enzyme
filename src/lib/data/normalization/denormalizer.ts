@@ -178,10 +178,11 @@ function denormalizeEntityInternal(
         return null;
       case 'id-only':
         return entityId;
-      case 'shallow':
+      case 'shallow': {
         // Return entity without relations
         const entity = context.entities[entityType]?.[entityId];
         return entity ? { ...entity } : entityId;
+      }
     }
   }
 

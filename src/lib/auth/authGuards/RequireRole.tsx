@@ -74,11 +74,12 @@ export const RequireRole = memo(({
 /**
  * HOC version of RequireRole
  */
+// @refresh reset
 export function withRequireRole<P extends object>(
   Component: React.ComponentType<P>,
   roleConfig: { role?: Role; roles?: Role[]; redirectTo?: string }
-) {
-  return function WithRequireRole(props: P) {
+): React.ComponentType<P> {
+  return function WithRequireRole(props: P): React.ReactElement {
     return (
       <RequireRole {...roleConfig}>
         <Component {...props} />

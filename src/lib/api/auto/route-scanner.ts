@@ -248,8 +248,8 @@ export function parseApiSegment(name: string): ParsedApiSegment {
 
   // Group segments (parentheses)
   const groupMatch = trimmed.match(/^\(([^)]+)\)$/);
-  if (groupMatch?.[1]) {
-    const groupName = groupMatch[1];
+  if (groupMatch?.[1] != null && groupMatch[1] !== '') {
+    const [, groupName] = groupMatch;
     return {
       type: 'group',
       name: '',
@@ -261,12 +261,13 @@ export function parseApiSegment(name: string): ParsedApiSegment {
 
   // Catch-all segments [[...param]] or [...param]
   const catchAllMatch = trimmed.match(/^\[{1,2}\.\.\.([^\]]+)\]{1,2}$/);
-  if (catchAllMatch?.[1]) {
+  if (catchAllMatch?.[1] != null && catchAllMatch[1] !== '') {
     const isOptional = trimmed.startsWith('[[');
+    const [, paramName] = catchAllMatch;
     return {
       type: 'catchAll',
       name: '*',
-      paramName: catchAllMatch[1],
+      paramName,
       isOptional,
       original: name,
     };

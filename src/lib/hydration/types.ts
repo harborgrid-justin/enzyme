@@ -13,7 +13,7 @@
  * @module hydration/types
  */
 
-import type { ReactNode, ComponentType } from 'react';
+import type { ReactNode, ComponentType, CSSProperties } from 'react';
 
 // ============================================================================
 // Priority System Types
@@ -466,7 +466,7 @@ export interface HydrationBoundaryProps {
   /** Additional CSS class for the wrapper */
   readonly className?: string;
   /** Additional styles for the wrapper */
-  readonly style?: React.CSSProperties;
+  readonly style?: CSSProperties;
 }
 
 /**

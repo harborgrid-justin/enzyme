@@ -596,7 +596,7 @@ export function useTypedNavigate(): {
           preventScrollReset: options?.preventScrollReset,
         });
 
-        routeRegistry.trackNavigation(fullPath, params as Record<string, string>);
+        void routeRegistry.trackNavigation(fullPath, params as Record<string, string>);
 
         return { success: true, path: fullPath };
       } catch (error) {

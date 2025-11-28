@@ -55,7 +55,7 @@ export const AuthGuardLoading = memo(({
   ariaLabel = 'Checking authentication...',
 }: AuthGuardLoadingProps) => {
   // If a custom fallback is provided, render it directly
-  if (fallback) {
+  if (typeof fallback !== 'undefined') {
     return <>{fallback}</>;
   }
 

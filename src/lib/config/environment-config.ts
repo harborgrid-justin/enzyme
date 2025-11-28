@@ -45,8 +45,9 @@ export function detectEnvironment(): Environment {
   }
 
   // Check window.__ENV__ (runtime injection)
-  if (typeof window !== 'undefined' && (window as { __ENV__?: string }).__ENV__) {
-    return normalizeEnvironment((window as { __ENV__?: string }).__ENV__!);
+  const windowEnv = typeof window !== 'undefined' ? (window as { __ENV__?: string }).__ENV__ : undefined;
+  if (windowEnv != null && windowEnv !== '') {
+    return normalizeEnvironment(windowEnv);
   }
 
   // Default to development

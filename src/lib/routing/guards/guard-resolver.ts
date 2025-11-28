@@ -320,7 +320,7 @@ export class GuardResolver {
    * @returns Resolution result
    */
   async resolveDeactivation(intent: NavigationIntent): Promise<GuardResolutionResult> {
-    if (!intent.from) {
+    if (intent.from === null || intent.from === undefined || intent.from === '') {
       return {
         canProceed: true,
         result: GuardResult.allow(),

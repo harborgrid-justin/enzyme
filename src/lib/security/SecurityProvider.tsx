@@ -227,7 +227,7 @@ export function SecurityProvider({
 
     initializingRef.current = true;
 
-    const initialize = async (): Promise<void> => {
+    const initialize = (): void => {
       try {
         // Initialize CSP Manager
         CSPManager.initialize();
@@ -374,7 +374,7 @@ export function SecurityProvider({
   /**
    * Regenerate CSRF token
    */
-  const regenerateCsrfToken = useCallback(async (): Promise<string> => {
+  const regenerateCsrfToken = useCallback((): string => {
     const newToken = CSRFProtection.regenerateToken();
 
     setState((prev) => ({ ...prev, csrfToken: newToken }));

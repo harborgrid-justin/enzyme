@@ -732,7 +732,7 @@ export class DynamicConfigManager {
     }
 
     // Fallback to control
-    const control = test.variants.find((v) => v.isControl);
+    const control = test.variants.find((v) => v.isControl === true);
     if (control) {
       this.userAssignments.set(cacheKey, control.id);
     }

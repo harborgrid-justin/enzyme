@@ -210,8 +210,8 @@ const SidebarNavItem = memo(function SidebarNavItem({
     border: 'none',
     backgroundColor: isActive ? '#374151' : 'transparent',
     color: isActive ? '#f9fafb' : '#d1d5db',
-    cursor: item.disabled ? 'not-allowed' : 'pointer',
-    opacity: item.disabled ? 0.5 : 1,
+    cursor: (item.disabled ?? false) ? 'not-allowed' : 'pointer',
+    opacity: (item.disabled ?? false) ? 0.5 : 1,
     borderRadius: '0.375rem',
     textAlign: 'left',
     fontSize: '0.875rem',
@@ -344,7 +344,7 @@ export const Sidebar = memo(({
   // Memoize item click handler
   const handleItemClick = useCallback(
     (item: SidebarItem) => {
-      if (item.items !== undefined && item.items.length > 0) {
+      if (item.items !== undefined && item.items.length > 0 && item.items.length !== 0) {
         toggleGroup(item.id);
       } else {
         item.onClick?.();

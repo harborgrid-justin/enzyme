@@ -191,13 +191,13 @@ export function useSecureStorage<T>(
 
   // Set up refresh interval
   useEffect(() => {
-    if (refreshInterval && refreshInterval > 0) {
+    if ((refreshInterval != null && refreshInterval > 0)) {
       refreshIntervalRef.current = setInterval(() => {
         void loadValue();
       }, refreshInterval);
 
       return () => {
-        if (refreshIntervalRef.current) {
+        if (refreshIntervalRef.current != null) {
           clearInterval(refreshIntervalRef.current);
           refreshIntervalRef.current = null;
         }
@@ -215,7 +215,7 @@ export function useSecureStorage<T>(
     const handleStorageChange = (event: StorageEvent): void => {
       // Check if the changed key matches our key
       // Note: Secure storage uses a prefix, so we need to check for that
-      if (event.key?.includes(key)) {
+      if (event.key != null && event.key.includes(key)) {
         void loadValue();
       }
     };
@@ -259,7 +259,9 @@ export function useSecureStorageWithTTL<T>(
 
   // Store setValue in a ref to avoid dependency instability
   const setValueRef = useRef(result.setValue);
-  setValueRef.current = result.setValue;
+  useEffect(() => {
+    setValueRef.current = result.setValue;
+  }, [result.setValue]);
 
   // Wrapper to always include TTL
   const setValueWithTTL = useCallback(

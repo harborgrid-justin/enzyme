@@ -219,7 +219,7 @@ export class ADClient {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({})) as { error?: string; error_description?: string };
+        const errorData = await response.json().catch(() => ({} as { error?: string; error_description?: string })) as { error?: string; error_description?: string };
         const error = this.createError(
           (errorData.error != null && errorData.error !== '') ? errorData.error : 'token_refresh_failed',
           (errorData.error_description != null && errorData.error_description !== '') ? errorData.error_description : 'Failed to refresh token'
@@ -391,7 +391,8 @@ export class ADClient {
           // Retry 5xx errors and 429
           if (response.status === 429) {
             const retryAfter = response.headers.get('Retry-After');
-            const delay = (retryAfter != null && retryAfter !== '') ? parseInt(retryAfter, 10) * 1000 : RETRY_DELAY * (attempt + 1);
+            const parsedRetryAfter = (retryAfter != null && retryAfter !== '') ? parseInt(retryAfter, 10) : null;
+            const delay = (parsedRetryAfter != null && parsedRetryAfter > 0) ? parsedRetryAfter * 1000 : RETRY_DELAY * (attempt + 1);
             await this.delay(delay);
             continue;
           }

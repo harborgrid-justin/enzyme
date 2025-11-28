@@ -30,7 +30,7 @@ import type {
   ExtractOptionalParams,
   RouteParams,
   HasParams,
-  ParamsFor
+  ParamsFor as _ParamsFor
 } from './route-parameter-types';
 
 // =============================================================================

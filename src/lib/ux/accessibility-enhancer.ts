@@ -166,9 +166,9 @@ export function announceRouteChange(pageTitle: string): void {
  */
 export function announceLoading(isLoading: boolean, context?: string): void {
   if (isLoading) {
-    announce(`Loading${context ? ` ${context}` : ''}...`);
+    announce(`Loading${context !== undefined && context !== '' ? ` ${context}` : ''}...`);
   } else {
-    announce(`${context || 'Content'} loaded`);
+    announce(`${context ?? 'Content'} loaded`);
   }
 }
 
@@ -214,7 +214,7 @@ export function getFocusableElements(container: HTMLElement): HTMLElement[] {
  */
 export function getFirstFocusable(container: HTMLElement): HTMLElement | null {
   const elements = getFocusableElements(container);
-  return elements[0] || null;
+  return elements[0] ?? null;
 }
 
 /**
@@ -222,7 +222,7 @@ export function getFirstFocusable(container: HTMLElement): HTMLElement | null {
  */
 export function getLastFocusable(container: HTMLElement): HTMLElement | null {
   const elements = getFocusableElements(container);
-  return elements[elements.length - 1] || null;
+  return elements[elements.length - 1] ?? null;
 }
 
 /**
@@ -274,7 +274,7 @@ export function createFocusTrap(options: FocusTrapOptions): FocusTrapController 
       const focusables = getFocusableElements(container);
       if (focusables.length === 0) return;
 
-      const first = focusables[0];
+      const [first] = focusables;
       const last = focusables[focusables.length - 1];
       const active = document.activeElement as HTMLElement;
 

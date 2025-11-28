@@ -1,4 +1,4 @@
-import {
+import React, {
   useContext,
   useState,
   useEffect,
@@ -59,12 +59,14 @@ export function ThemeProvider({ children, defaultTheme }: ThemeProviderProps): R
   // Update resolved theme when theme or system preference changes
   useEffect(() => {
     const resolved = theme === 'system' ? getSystemTheme() : theme;
-    setResolvedTheme(resolved);
 
-    // Apply theme to document
-    document.documentElement.classList.remove('light', 'dark');
-    document.documentElement.classList.add(resolved);
-    document.documentElement.setAttribute('data-theme', resolved);
+    // Apply theme to document and update state
+    queueMicrotask(() => {
+      document.documentElement.classList.remove('light', 'dark');
+      document.documentElement.classList.add(resolved);
+      document.documentElement.setAttribute('data-theme', resolved);
+      setResolvedTheme(resolved);
+    });
   }, [theme]);
 
   // Listen for system theme changes

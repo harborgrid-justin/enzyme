@@ -1,4 +1,4 @@
-import {
+import React, {
   useContext,
   useState,
   useEffect,
@@ -32,7 +32,7 @@ interface FeatureFlagProviderProps {
 export function FeatureFlagProvider({
   children,
   initialFlags
-}: FeatureFlagProviderProps): JSX.Element {
+}: FeatureFlagProviderProps): React.JSX.Element {
   const [flags, setFlags] = useState<Record<string, boolean>>(() => {
     const initial = {
       ...getDefaultFlags(),
@@ -124,6 +124,7 @@ export function FeatureFlagProvider({
 /**
  * Hook to access the feature flag context.
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useFeatureFlagContext(): FeatureFlagContextValue {
   const context = useContext(FeatureFlagContext);
   if (!context) {

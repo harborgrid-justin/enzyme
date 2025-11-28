@@ -118,7 +118,7 @@ export function HydrationProvider({
   onMetric,
   autoStart = true,
   integrateWithPerformance = true,
-}: HydrationProviderProps): React.JSX.Element {
+}: HydrationProviderProps): JSX.Element {
   // ==========================================================================
   // Refs
   // ==========================================================================
@@ -134,13 +134,18 @@ export function HydrationProvider({
    * Using ref to avoid stale closures in event handlers.
    */
   const onMetricRef = useRef<HydrationMetricsReporter | undefined>(onMetric);
-  onMetricRef.current = onMetric;
+
+  // Update ref in effect to avoid ref access during render
+  useEffect(() => {
+    onMetricRef.current = onMetric;
+  }, [onMetric]);
 
   /**
    * Configuration merged with defaults.
    */
-  const configRef = useRef<HydrationSchedulerConfig>(
-    mergeWithDefaults(configOverrides as PartialHydrationConfig)
+  const config = useMemo<HydrationSchedulerConfig>(
+    () => mergeWithDefaults(configOverrides as PartialHydrationConfig),
+    [configOverrides]
   );
 
   // ==========================================================================
@@ -160,7 +165,7 @@ export function HydrationProvider({
   useEffect(() => {
     // Create or get scheduler
     if (!schedulerRef.current) {
-      schedulerRef.current = getHydrationScheduler(configRef.current);
+      schedulerRef.current = getHydrationScheduler(config);
     }
 
     const scheduler = schedulerRef.current;
@@ -371,7 +376,7 @@ export function HydrationProvider({
       resume,
       isPaused: state.isPaused,
       getMetrics,
-      config: configRef.current,
+      config,
       isInitialized: state.isInitialized,
     }),
     [
@@ -386,6 +391,7 @@ export function HydrationProvider({
       state.isPaused,
       state.isInitialized,
       getMetrics,
+      config,
     ]
   );
 

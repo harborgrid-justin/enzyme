@@ -149,10 +149,11 @@ export function normalizeError(
   
   let message = 'An unexpected error occurred';
   let stack: string | undefined;
-  
+
   if (error instanceof Error) {
-    message = error.message;
-    stack = error.stack;
+    const { message: msg, stack: stk } = error;
+    message = msg;
+    stack = stk;
   } else if (typeof error === 'string') {
     message = error;
   } else if (typeof error === 'object' && error !== null) {

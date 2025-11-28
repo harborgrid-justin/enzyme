@@ -458,7 +458,7 @@ export function initializeConfig(): void {
 
   // Log successful initialization in development
   if (env.isDev) {
-    console.log(
+    console.info(
       `[Config] Initialized successfully (${result.environment} v${result.version})`
     );
   }
@@ -606,7 +606,7 @@ if (import.meta.env.DEV) {
 
   // This is a compile-time check - modules that fail to import will throw
   // before this code runs
-  console.debug(`[Config] All ${requiredModules.length} configuration modules loaded`);
+  console.info(`[Config] All ${requiredModules.length} configuration modules loaded`);
 }
 /**
  * Estimate the total size of localStorage in bytes

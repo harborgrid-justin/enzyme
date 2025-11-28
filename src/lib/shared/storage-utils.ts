@@ -123,7 +123,8 @@ export class StorageWrapper {
       }
 
       // Check expiration
-      if (item.ttl && Date.now() - item.timestamp > item.ttl) {
+      const ttl = item.ttl;
+      if (ttl !== undefined && ttl !== null && ttl > 0 && Date.now() - item.timestamp > ttl) {
         this.remove(key);
         return defaultValue;
       }
@@ -170,8 +171,8 @@ export class StorageWrapper {
 
     for (let i = 0; i < this.storage.length; i++) {
       const key = this.storage.key(i);
-      if (key !== null && key.startsWith(prefix)) {
-        keys.push(prefix ? key.slice(prefix.length) : key);
+      if (key?.startsWith(prefix) === true) {
+        keys.push(prefix !== '' ? key.slice(prefix.length) : key);
       }
     }
 
@@ -209,7 +210,7 @@ export class StorageWrapper {
 
       try {
         const raw = this.storage.getItem(key);
-        if (!raw) continue;
+        if (raw === null || raw === undefined || raw === '') continue;
 
         const item = JSON.parse(raw) as unknown;
         if (

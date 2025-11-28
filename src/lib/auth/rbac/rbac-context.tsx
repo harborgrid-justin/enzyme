@@ -7,7 +7,7 @@
  * @module auth/rbac/rbac-context
  */
 
-import {
+import React, {
   createContext,
   useCallback,
   useEffect,
@@ -36,6 +36,7 @@ import { createRBACEngine } from './rbac-engine';
 /**
  * RBAC Context for React applications.
  */
+// @refresh reset
 export const RBACContext = createContext<RBACContextValue | null>(null);
 
 // =============================================================================
@@ -123,7 +124,7 @@ export function RBACProvider({
   loadingComponent,
   onPermissionCheck,
   onAccessCheck,
-}: RBACProviderProps) {
+}: RBACProviderProps): React.ReactElement {
   // Check feature flag
   const isRBACEnabled = useFeatureFlag(config.featureFlag ?? 'rbac');
 

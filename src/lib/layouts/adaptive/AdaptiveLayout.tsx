@@ -42,6 +42,8 @@ import { createConstraintSolver } from './constraint-solver';
 // CONTEXT
 // =============================================================================
 
+/* @refresh reset */
+
 /**
  * Context for sharing adaptive layout state and controls.
  */

@@ -1,3 +1,4 @@
+/* @refresh reset */
 /**
  * @file Stream Boundary Component
  * @description React component that defines streaming boundaries for progressive HTML delivery.

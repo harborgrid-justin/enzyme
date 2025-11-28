@@ -115,16 +115,25 @@ export function useSessionDuration(options: SessionTimeOptions = {}): number | n
   useEffect(() => {
     // If no session, return null
     if (sessionStartedAt === null || !isSessionActive) {
-      setDuration(null);
-      return;
+      // Use setTimeout to make setState async and avoid cascading renders
+      const timeoutId = setTimeout(() => {
+        setDuration(null);
+      }, 0);
+      return () => {
+        clearTimeout(timeoutId);
+      };
     }
 
-    // Calculate initial duration
-    setDuration(Date.now() - sessionStartedAt);
+    // Calculate initial duration asynchronously
+    const initialTimeoutId = setTimeout(() => {
+      setDuration(Date.now() - sessionStartedAt);
+    }, 0);
 
     // If updates are disabled, don't set up interval
     if (!enableUpdates) {
-      return;
+      return () => {
+        clearTimeout(initialTimeoutId);
+      };
     }
 
     // Set up interval for updates
@@ -133,6 +142,7 @@ export function useSessionDuration(options: SessionTimeOptions = {}): number | n
     }, updateInterval);
 
     return () => {
+      clearTimeout(initialTimeoutId);
       clearInterval(intervalId);
     };
   }, [sessionStartedAt, isSessionActive, updateInterval, enableUpdates]);
@@ -183,16 +193,24 @@ export function useTimeUntilExpiry(options: SessionTimeOptions = {}): number | n
   useEffect(() => {
     // If no expiry set, return null
     if (sessionExpiresAt === null) {
-      setTimeUntilExpiry(null);
-      return;
+      const timeoutId = setTimeout(() => {
+        setTimeUntilExpiry(null);
+      }, 0);
+      return () => {
+        clearTimeout(timeoutId);
+      };
     }
 
-    // Calculate initial time until expiry
-    setTimeUntilExpiry(Math.max(0, sessionExpiresAt - Date.now()));
+    // Calculate initial time until expiry asynchronously
+    const initialTimeoutId = setTimeout(() => {
+      setTimeUntilExpiry(Math.max(0, sessionExpiresAt - Date.now()));
+    }, 0);
 
     // If updates are disabled, don't set up interval
     if (!enableUpdates) {
-      return;
+      return () => {
+        clearTimeout(initialTimeoutId);
+      };
     }
 
     // Set up interval for updates
@@ -207,6 +225,7 @@ export function useTimeUntilExpiry(options: SessionTimeOptions = {}): number | n
     }, updateInterval);
 
     return () => {
+      clearTimeout(initialTimeoutId);
       clearInterval(intervalId);
     };
   }, [sessionExpiresAt, updateInterval, enableUpdates]);
@@ -270,12 +289,16 @@ export function useIsSessionExpired(options: SessionTimeOptions = {}): boolean {
   const [isExpired, setIsExpired] = useState<boolean>(checkExpiry);
 
   useEffect(() => {
-    // Calculate initial expired state
-    setIsExpired(checkExpiry());
+    // Calculate initial expired state asynchronously
+    const initialTimeoutId = setTimeout(() => {
+      setIsExpired(checkExpiry());
+    }, 0);
 
     // If updates are disabled, don't set up interval
     if (!enableUpdates) {
-      return;
+      return () => {
+        clearTimeout(initialTimeoutId);
+      };
     }
 
     // Set up interval for updates
@@ -290,6 +313,7 @@ export function useIsSessionExpired(options: SessionTimeOptions = {}): boolean {
     }, updateInterval);
 
     return () => {
+      clearTimeout(initialTimeoutId);
       clearInterval(intervalId);
     };
   }, [checkExpiry, updateInterval, enableUpdates]);
@@ -389,10 +413,14 @@ export function useSessionTimeInfo(options: SessionTimeOptions = {}): SessionTim
   const [state, setState] = useState(calculateState);
 
   useEffect(() => {
-    setState(calculateState());
+    const initialTimeoutId = setTimeout(() => {
+      setState(calculateState());
+    }, 0);
 
     if (!enableUpdates) {
-      return;
+      return () => {
+        clearTimeout(initialTimeoutId);
+      };
     }
 
     const intervalId = setInterval(() => {
@@ -406,6 +434,7 @@ export function useSessionTimeInfo(options: SessionTimeOptions = {}): SessionTim
     }, updateInterval);
 
     return () => {
+      clearTimeout(initialTimeoutId);
       clearInterval(intervalId);
     };
   }, [calculateState, updateInterval, enableUpdates]);

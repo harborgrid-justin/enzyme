@@ -125,7 +125,7 @@ const MESSAGE_TEMPLATES: Record<ErrorCategory, MessageTemplate> = {
   server: {
     title: 'Server Error',
     description: (ctx) =>
-      ctx?.feature
+      (ctx?.feature != null && ctx.feature.length > 0)
         ? `We're having trouble with ${ctx.feature} right now.`
         : 'Something went wrong on our end.',
     suggestions: () => [
@@ -151,7 +151,7 @@ const MESSAGE_TEMPLATES: Record<ErrorCategory, MessageTemplate> = {
   timeout: {
     title: 'Request Timed Out',
     description: (ctx) =>
-      ctx?.userAction
+      (ctx?.userAction != null && ctx.userAction.length > 0)
         ? `The request to ${ctx.userAction} took too long.`
         : 'The request took longer than expected.',
     suggestions: () => [
@@ -228,7 +228,7 @@ export function getStructuredErrorMessage(
     recoverable: template.recoverable,
   };
 
-  if (isDev() && error.stack) {
+  if (isDev() && error.stack != null && error.stack.length > 0) {
     result.technicalDetails = error.stack;
   }
 

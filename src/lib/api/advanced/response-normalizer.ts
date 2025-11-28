@@ -340,7 +340,7 @@ export class ResponseNormalizer {
     const errorsPath = ['errors', 'error', 'message'];
     for (const path of errorsPath) {
       const extracted = this.getNestedValue(response, path);
-      if (extracted) {
+      if (extracted !== null && extracted !== undefined) {
         if (Array.isArray(extracted)) {
           return extracted.map(err => this.normalizeError(err));
         }
@@ -397,7 +397,7 @@ export class ResponseNormalizer {
   private extractData<T>(response: unknown): T {
     const paths = this.config.dataPath;
 
-    if (!paths) {
+    if (paths === undefined || paths === null) {
       return response as T;
     }
 
@@ -420,7 +420,7 @@ export class ResponseNormalizer {
     const mapping = this.config.paginationMapping;
     if (!mapping) return undefined;
 
-    const paginationSource = this.config.paginationPath
+    const paginationSource = (this.config.paginationPath != null && this.config.paginationPath !== '')
       ? this.getNestedValue(response, this.config.paginationPath) ?? response
       : response;
 

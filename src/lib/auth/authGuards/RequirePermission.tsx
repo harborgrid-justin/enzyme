@@ -88,16 +88,17 @@ export const RequirePermission = memo(({
 /**
  * HOC version of RequirePermission
  */
+// @refresh reset
 export function withRequirePermission<P extends object>(
   Component: React.ComponentType<P>,
-  permissionConfig: { 
-    permission?: Permission; 
+  permissionConfig: {
+    permission?: Permission;
     permissions?: Permission[];
     anyPermission?: Permission[];
-    redirectTo?: string 
+    redirectTo?: string
   }
-) {
-  return function WithRequirePermission(props: P) {
+): React.ComponentType<P> {
+  return function WithRequirePermission(props: P): React.ReactElement {
     return (
       <RequirePermission {...permissionConfig}>
         <Component {...props} />

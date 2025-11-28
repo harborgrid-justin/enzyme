@@ -114,7 +114,7 @@ const originalError = console.error;
 beforeAll(() => {
   console.error = (...args: unknown[]) => {
     // Filter out expected React warnings during tests
-    const message = args[0];
+    const [message] = args;
     if (
       typeof message === 'string' &&
       (message.includes('Warning: ReactDOM.render is no longer supported') ||

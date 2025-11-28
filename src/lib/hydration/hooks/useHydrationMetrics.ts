@@ -263,8 +263,13 @@ export function useHydrationMetrics(
   // ==========================================================================
 
   const previousCountRef = useRef(0);
-  const previousTimestampRef = useRef(Date.now());
+  const previousTimestampRef = useRef(0);
   const hydrationRateRef = useRef(0);
+
+  // Initialize timestamp ref on first mount
+  if (previousTimestampRef.current === 0) {
+    previousTimestampRef.current = Date.now();
+  }
 
   // ==========================================================================
   // Metrics Fetcher

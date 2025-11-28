@@ -51,8 +51,10 @@ export function useEndpoint(name: string): EndpointDefinition | undefined {
   useEffect(() => {
     // Update state only if name changed
     if (nameRef.current !== name) {
-      nameRef.current = name;
-      setEndpoint(getEndpoint(name));
+      queueMicrotask(() => {
+        nameRef.current = name;
+        setEndpoint(getEndpoint(name));
+      });
     }
 
     const registry = getEndpointRegistry();
@@ -222,9 +224,11 @@ export function useEndpointHealth(name: string): EndpointHealth | undefined {
   useEffect(() => {
     // Update state only if name changed
     if (nameRef.current !== name) {
-      nameRef.current = name;
-      const registry = getEndpointRegistry();
-      setHealth(registry.getHealth(name));
+      queueMicrotask(() => {
+        nameRef.current = name;
+        const registry = getEndpointRegistry();
+        setHealth(registry.getHealth(name));
+      });
     }
 
     const registry = getEndpointRegistry();

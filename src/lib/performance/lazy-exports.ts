@@ -32,7 +32,7 @@ import React, { lazy } from 'react';
 export const LazyRenderTracker = lazy(async () =>
   import('./render-tracker').then((_module) => {
     // Wrap the class in a functional component
-    const RenderTrackerComponent: React.FC<any> = (_props) => {
+    const RenderTrackerComponent: React.FC<Record<string, unknown>> = (_props) => {
       return React.createElement('div', _props);
     };
     return { default: RenderTrackerComponent };

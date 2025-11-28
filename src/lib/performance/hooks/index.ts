@@ -157,15 +157,31 @@ export function usePerformanceAwareness(): {
     isHighBlocking ||
     hasViolations;
 
-  const healthScore = Math.round(
-    (budgetHealth + networkScore + (memoryPressure === 'normal' ? 100 : memoryPressure === 'warning' ? 50 : 0)) / 3
-  );
+  let memoryScore = 0;
+  if (memoryPressure === 'normal') {
+    memoryScore = 100;
+  } else if (memoryPressure === 'warning') {
+    memoryScore = 50;
+  }
+  const healthScore = Math.round((budgetHealth + networkScore + memoryScore) / 3);
 
   const memoryConstraint = memoryPressure;
-  const networkConstraint: 'fast' | 'moderate' | 'slow' =
-    networkScore >= 70 ? 'fast' : networkScore >= 40 ? 'moderate' : 'slow';
-  const mainThreadConstraint: 'free' | 'busy' | 'blocked' =
-    isBlocked ? 'blocked' : isHighBlocking ? 'busy' : 'free';
+  let networkConstraint: 'fast' | 'moderate' | 'slow';
+  if (networkScore >= 70) {
+    networkConstraint = 'fast';
+  } else if (networkScore >= 40) {
+    networkConstraint = 'moderate';
+  } else {
+    networkConstraint = 'slow';
+  }
+  let mainThreadConstraint: 'free' | 'busy' | 'blocked';
+  if (isBlocked) {
+    mainThreadConstraint = 'blocked';
+  } else if (isHighBlocking) {
+    mainThreadConstraint = 'busy';
+  } else {
+    mainThreadConstraint = 'free';
+  }
 
   return {
     shouldReduceComplexity,

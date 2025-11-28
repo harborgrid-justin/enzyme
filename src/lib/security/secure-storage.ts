@@ -187,8 +187,8 @@ async function compress(data: string): Promise<Uint8Array> {
   const writer = stream.writable.getWriter();
   const reader = stream.readable.getReader();
 
-  writer.write(bytes);
-  writer.close();
+  void writer.write(bytes);
+  void writer.close();
 
   const chunks: Uint8Array[] = [];
   let result = await reader.read();

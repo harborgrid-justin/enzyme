@@ -484,7 +484,7 @@ function parseServerError(response: ServerErrorResponse, _status: number): Parti
   const fieldErrors: Array<{ field: string; message: string }> = [];
 
   if (typeof response.message === 'string') {
-    message = response.message;
+    ({ message } = response);
   } else if (typeof response.error === 'string') {
     message = response.error;
   } else if (response.error != null && typeof response.error.message === 'string') {
@@ -653,7 +653,7 @@ export class ApiClient {
     const url = this.buildUrl(processedConfig);
 
     // Apply rate limiting if enabled
-    if (this.rateLimiter && !config.meta?.skipRateLimit) {
+    if ((this.rateLimiter != null && this.rateLimiter !== undefined) && !(config.meta?.skipRateLimit === true)) {
       try {
         return await this.rateLimiter.execute(url, async () => {
           return this.executeRequestWithDedup<TResponse>(processedConfig, requestId);
@@ -684,7 +684,7 @@ export class ApiClient {
     requestId: string
   ): Promise<ApiResponse<TResponse>> {
     // Check for deduplication
-    if (this.config.deduplicate && config.method === 'GET' && !config.meta?.skipAuth) {
+    if (this.config.deduplicate === true && config.method === 'GET' && !(config.meta?.skipAuth === true)) {
       const cacheKey = generateRequestKey(config);
       const inflight = inflightRequests.get(cacheKey);
       if (inflight) {

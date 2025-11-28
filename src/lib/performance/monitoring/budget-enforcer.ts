@@ -576,7 +576,7 @@ export class BudgetEnforcer {
 
     // Determine severity based on thresholds
     if (lowerIsBetter) {
-      if (budget.criticalThreshold && value > budget.criticalThreshold) {
+      if (budget.criticalThreshold !== null && budget.criticalThreshold !== undefined && value > budget.criticalThreshold) {
         severity = 'critical';
         threshold = budget.criticalThreshold;
         compliant = false;

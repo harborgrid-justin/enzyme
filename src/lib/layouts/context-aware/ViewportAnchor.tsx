@@ -133,7 +133,8 @@ export const ViewportAnchor = forwardRef<HTMLDivElement, ExtendedViewportAnchorP
     // Combine refs
     const setRefs = useCallback(
       (node: HTMLDivElement | null) => {
-        (containerRef as any).current = node;
+        // Use Object.assign to update ref.current without type escape
+        Object.assign(containerRef, { current: node });
         if (typeof forwardedRef === 'function') {
           forwardedRef(node);
         } else if (forwardedRef) {
@@ -214,7 +215,7 @@ export const ViewportAnchor = forwardRef<HTMLDivElement, ExtendedViewportAnchorP
      * Sets up sticky behavior.
      */
     const handleStickyBehavior = useCallback(() => {
-      if (!sticky?.enabled || !containerRef.current || isSSR) {
+      if (sticky?.enabled !== true || !containerRef.current || isSSR) {
         return;
       }
 
@@ -228,7 +229,7 @@ export const ViewportAnchor = forwardRef<HTMLDivElement, ExtendedViewportAnchorP
         },
         {
           threshold: [1],
-          rootMargin: `-${sticky.offset || 0}px 0px 0px 0px`,
+          rootMargin: `-${sticky.offset ?? 0}px 0px 0px 0px`,
         }
       );
 

@@ -229,14 +229,15 @@ function defaultGenerateComponentName(filePath: string): string {
     .filter(Boolean);
 
   // Get the last meaningful segment
-  let name = parts.pop() || 'Route';
+  let name = parts.pop() ?? 'Route';
 
   // Remove extension
   name = name.replace(/\.(tsx?|jsx?)$/, '');
 
   // Skip common names
-  if (['page', 'index', 'layout', '_layout', '_index'].includes(name)) {
-    name = parts.pop() || 'Route';
+  const commonNames = ['page', 'index', 'layout', '_layout', '_index'];
+  if (name !== null && name !== undefined && name !== '' && commonNames.includes(name)) {
+    name = parts.pop() ?? 'Route';
   }
 
   // Convert to PascalCase

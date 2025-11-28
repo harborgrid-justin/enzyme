@@ -197,7 +197,10 @@ export class RBACEngine {
     // Check cache first
     const cacheKey = `perm:${permission}`;
     if (this.isCacheValid() && this.permissionCache.has(cacheKey)) {
-      return this.permissionCache.get(cacheKey)!;
+      const cachedValue = this.permissionCache.get(cacheKey);
+      if (cachedValue != null) {
+        return cachedValue;
+      }
     }
 
     // Check super admin bypass
@@ -330,7 +333,7 @@ export class RBACEngine {
     if (this.canAccess(resourceType, action, 'own')) {
       // Check if resource belongs to user
       const ownerId = context?.ownerId ?? context?.userId;
-      if (ownerId && ownerId === this.userAttributes.id) {
+      if (ownerId != null && ownerId === this.userAttributes.id) {
         return true;
       }
     }

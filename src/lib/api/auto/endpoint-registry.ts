@@ -273,7 +273,7 @@ export function matchPath(
   for (let i = 0; i < matcher.paramNames.length; i++) {
     const name = matcher.paramNames[i];
     const value = match[i + 1];
-    if (name && value !== undefined) {
+    if ((name != null && name !== '') && value !== undefined) {
       params[name] = decodeURIComponent(value);
     }
   }
@@ -281,7 +281,7 @@ export function matchPath(
   // Calculate match score
   // Higher score = better match (more specific)
   // Static segments score higher than dynamic
-  const staticSegments = matcher.pattern.split('/').filter((s) => s && !s.startsWith(':') && s !== '*').length;
+  const staticSegments = matcher.pattern.split('/').filter((s) => (s !== '' && s != null) && !s.startsWith(':') && s !== '*').length;
   const dynamicSegments = matcher.paramNames.length;
   const score = staticSegments * 10 + dynamicSegments;
 
@@ -575,7 +575,7 @@ export class EndpointRegistry {
       const userContext = user as { isAuthenticated?: boolean } | undefined;
       return {
         allowed: !endpoint.access.requiresAuth || (userContext?.isAuthenticated ?? false),
-        decision: endpoint.access.requiresAuth && !userContext?.isAuthenticated ? 'requires_auth' : 'allow',
+        decision: endpoint.access.requiresAuth && !(userContext?.isAuthenticated === true) ? 'requires_auth' : 'allow',
         reason: 'No RBAC integration configured',
         evaluationTimeMs: 0,
         cacheHit: false,

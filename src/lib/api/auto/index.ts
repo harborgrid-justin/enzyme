@@ -405,7 +405,7 @@ export async function initializeAutoApi(options: AutoApiOptions): Promise<AutoAp
   registry.registerBatch(endpoints);
 
   // Create refresh function
-  const refresh = async () => {
+  const refresh = async (): Promise<void> => {
     const newRoutes = await scanApiRoutes(options.rootDir, options.scanner);
     const newEndpoints = await generateApiEndpoints(newRoutes, options.generator);
 

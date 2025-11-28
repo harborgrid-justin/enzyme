@@ -225,9 +225,7 @@ export class UnifiedErrorHandler {
    * Get or create the error handler instance (singleton)
    */
   static getInstance(config?: Partial<UnifiedErrorHandlerConfig>): UnifiedErrorHandler {
-    if (!UnifiedErrorHandler.instance) {
-      UnifiedErrorHandler.instance = new UnifiedErrorHandler(config);
-    }
+    UnifiedErrorHandler.instance ??= new UnifiedErrorHandler(config);
     return UnifiedErrorHandler.instance;
   }
 
@@ -274,7 +272,7 @@ export class UnifiedErrorHandler {
   validation(message: string, code?: string): StructuredError {
     return this.handle(new Error(message), {
       userAction: 'validation',
-      tags: { errorType: 'validation', ...(code && { errorCode: code }) },
+      tags: { errorType: 'validation', errorCode: code ?? '' },
     });
   }
 
@@ -328,7 +326,7 @@ export class UnifiedErrorHandler {
    */
   rateLimited(retryAfter?: number): StructuredError {
     return this.handle(new Error('Too many requests'), {
-      tags: { errorType: 'rate_limit', ...(retryAfter && { retryAfter: String(retryAfter) }) },
+      tags: { errorType: 'rate_limit', retryAfter: retryAfter !== undefined ? String(retryAfter) : '' },
     });
   }
 

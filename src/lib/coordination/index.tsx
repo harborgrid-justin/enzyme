@@ -1,3 +1,4 @@
+/* @refresh reset */
 /**
  * @file Coordination System Public API
  * @module coordination

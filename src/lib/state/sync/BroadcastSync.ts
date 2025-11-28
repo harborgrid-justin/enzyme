@@ -175,8 +175,8 @@ function throttle<T extends (...args: never[]) => void>(
       }
       lastCall = now;
       fn(...args);
-    } else if (timeout === null) {
-      timeout = setTimeout(() => {
+    } else {
+      timeout ??= setTimeout(() => {
         lastCall = Date.now();
         timeout = null;
         fn(...args);
@@ -374,7 +374,7 @@ export function createBroadcastSync<TState extends object>(
   };
 
   // Send message
-  const sendMessage = (message: Omit<SyncMessage<TState>, 'tabId' | 'timestamp'>) => {
+  const sendMessage = (message: Omit<SyncMessage<TState>, 'tabId' | 'timestamp'>): void => {
     if (!channel) return;
 
     const fullMessage: SyncMessage<TState> = {

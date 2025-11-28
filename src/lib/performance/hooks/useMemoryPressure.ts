@@ -198,11 +198,11 @@ export function useMemoryPressure(
         const globalWithGC = globalThis as typeof globalThis & { gc: () => void };
         globalWithGC.gc();
         if (debug) {
-          console.log('[useMemoryPressure] GC requested');
+          console.info('[useMemoryPressure] GC requested');
         }
       } catch {
         if (debug) {
-          console.log('[useMemoryPressure] GC not available');
+          console.info('[useMemoryPressure] GC not available');
         }
       }
     }

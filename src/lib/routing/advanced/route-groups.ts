@@ -216,7 +216,7 @@ export class RouteGroupManager {
   registerGroup(config: RouteGroupConfig): RouteGroup {
     // Compute full path
     let fullPath = `(${config.name})`;
-    if (config.parent) {
+    if (config.parent !== null && config.parent !== undefined && config.parent !== '') {
       const parent = this.groups.get(config.parent);
       if (parent) {
         fullPath = `${parent.fullPath}/(${config.name})`;

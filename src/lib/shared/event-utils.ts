@@ -376,12 +376,12 @@ function createEventHash(event: string, data: unknown): string {
 /**
  * Create debounced function.
  */
-function debounce<T extends (...args: any[]) => any>(
+function debounce<T extends (...args: unknown[]) => unknown>(
   fn: T,
   delay: number
 ): T {
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
-  return ((...args: any[]) => {
+  return ((...args: unknown[]) => {
     if (timeoutId) clearTimeout(timeoutId);
     timeoutId = setTimeout(() => fn(...args), delay);
   }) as T;
@@ -390,12 +390,12 @@ function debounce<T extends (...args: any[]) => any>(
 /**
  * Create throttled function.
  */
-function throttle<T extends (...args: any[]) => any>(
+function throttle<T extends (...args: unknown[]) => unknown>(
   fn: T,
   interval: number
 ): T {
   let lastExecution = 0;
-  return ((...args: any[]) => {
+  return ((...args: unknown[]) => {
     const now = Date.now();
     if (now - lastExecution >= interval) {
       lastExecution = now;

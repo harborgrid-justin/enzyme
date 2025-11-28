@@ -1,3 +1,4 @@
+/* @refresh reset */
 /**
  * @file Realtime Provider
  * @description Manages WebSocket/SSE connection and distributes events by channel.

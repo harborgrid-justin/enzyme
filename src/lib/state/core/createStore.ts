@@ -4,7 +4,7 @@
  *              Immer + DevTools + SubscribeWithSelector + Persist
  */
 
-import { create, type StateCreator } from 'zustand';
+import { create, type StateCreator, type StoreApi, type UseBoundStore } from 'zustand';
 import { devtools, subscribeWithSelector, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import type { HydrationState, ResetState } from './types';
@@ -98,7 +98,7 @@ export function createAppStore<TState extends object>(
     TState
   >,
   config: AppStoreConfig<TState>
-) {
+): UseBoundStore<StoreApi<TState & HydrationState & ResetState>> {
   const {
     name,
     persist: persistConfig,

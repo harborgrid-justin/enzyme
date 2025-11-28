@@ -280,8 +280,8 @@ export function useOptimisticSync<T>(
           const delay = calculateRetryDelay(change.retryCount, retryDelay);
           setTimeout(() => {
             const updatedChange = pendingChanges.find((c) => c.id === change.id);
-            if (updatedChange) {
-              persistChange(updatedChange);
+            if (updatedChange != null) {
+              void persistChange(updatedChange);
             }
           }, delay);
         } else {
@@ -309,17 +309,15 @@ export function useOptimisticSync<T>(
       if (batchWindow > 0) {
         batchQueue.current.push(payload);
 
-        if (!batchTimer.current) {
-          batchTimer.current = setTimeout(() => {
-            const batchedPayload = batchQueue.current.reduce(
-              (acc, p) => ({ ...acc, ...p }),
-              {} as Partial<T>
-            );
-            batchQueue.current = [];
-            batchTimer.current = undefined;
-            update(batchedPayload);
-          }, batchWindow);
-        }
+        batchTimer.current ??= setTimeout(() => {
+          const batchedPayload = batchQueue.current.reduce(
+            (acc, p) => ({ ...acc, ...p }),
+            {} as Partial<T>
+          );
+          batchQueue.current = [];
+          batchTimer.current = undefined;
+          void update(batchedPayload);
+        }, batchWindow);
 
         // Return current data for batch
         return currentData;

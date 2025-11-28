@@ -226,7 +226,7 @@ export class CompositeGuard implements RouteGuard {
           failed.push(guard.name);
 
           // Short-circuit on failure
-          if (this.config.shortCircuit) {
+          if (this.config.shortCircuit === true) {
             return {
               result,
               guardResults,

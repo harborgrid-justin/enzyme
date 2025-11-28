@@ -229,7 +229,7 @@ export class ParallelRoutes {
       const match = this.matchSlot(slot, path);
       if (match) {
         matches.set(name, match);
-      } else if (!slot.optional) {
+      } else if (slot.optional !== true) {
         unmatched.push(name);
       }
     }

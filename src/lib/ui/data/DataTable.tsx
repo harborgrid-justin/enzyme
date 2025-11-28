@@ -5,7 +5,7 @@
  * Uses theme tokens for consistent styling
  */
 
-import { useMemo, useCallback, memo, type ReactNode, type CSSProperties } from 'react';
+import React, { useMemo, useCallback, memo, type ReactNode, type CSSProperties } from 'react';
 import { colorTokens } from '../../theme/tokens';
 
 /**
@@ -356,24 +356,27 @@ function DataTableInner<T>({
   // Generate header cell styles based on column config - memoized per-column
   const getHeaderCellStyle = useCallback((column: Column<T>): CSSProperties => ({
     ...baseHeaderCellStyle,
-    textAlign: column.align || 'left',
+    textAlign: column.align ?? 'left',
     width: column.width,
     minWidth: column.minWidth,
-    cursor: column.sortable ? 'pointer' : 'default',
-    userSelect: column.sortable ? 'none' : undefined,
+    cursor: (column.sortable ?? false) ? 'pointer' : 'default',
+    userSelect: (column.sortable ?? false) ? 'none' : undefined,
     ...stickyStyleExtension,
   }), [stickyStyleExtension]);
 
   // Generate content justification based on alignment - memoized
-  const getContentJustification = useCallback((align?: 'left' | 'center' | 'right'): CSSProperties => ({
-    ...headerCellContentStyle,
-    justifyContent:
-      align === 'center'
-        ? 'center'
-        : align === 'right'
-          ? 'flex-end'
-          : 'flex-start',
-  }), []);
+  const getContentJustification = useCallback((align?: 'left' | 'center' | 'right'): CSSProperties => {
+    let justifyContent: 'flex-start' | 'center' | 'flex-end' = 'flex-start';
+    if (align === 'center') {
+      justifyContent = 'center';
+    } else if (align === 'right') {
+      justifyContent = 'flex-end';
+    }
+    return {
+      ...headerCellContentStyle,
+      justifyContent,
+    };
+  }, []);
 
   // Generate row style based on selection and click handler - memoized factory
   const getRowStyle = useCallback((isSelected: boolean, hasClickHandler: boolean): CSSProperties => ({

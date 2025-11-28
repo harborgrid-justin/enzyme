@@ -73,7 +73,7 @@ export function usePortalContext(): UsePortalContextReturn {
 
   // Fall back to DOM context
   const domContext = useDOMContextValue();
-  const portal = bridgeContext || domContext.portal;
+  const portal = bridgeContext ?? domContext.portal;
 
   // Get layer z-index function
   const getZIndex = useCallback(
@@ -323,7 +323,7 @@ export function useZIndexRegistration(layer: ZIndexLayer = 'base'): {
   const zIndex = useMemo(() => {
     if (elementRef.current) {
       const reg = zIndexManager.getRegistration(elementRef.current);
-      return reg?.zIndex || Z_INDEX_LAYERS[layer];
+      return reg?.zIndex ?? Z_INDEX_LAYERS[layer];
     }
     return Z_INDEX_LAYERS[layer];
   }, [layer, zIndexManager]);

@@ -114,7 +114,7 @@ function createRetryFn(maxRetries: number) {
     }
 
     // Check for HTTP status codes
-    if (error && typeof error === 'object' && 'status' in error) {
+    if (error != null && typeof error === 'object' && 'status' in error) {
       const {status} = (error as { status: number });
 
       // Never retry these
@@ -182,8 +182,8 @@ function createQueryErrorHandler(config: QueryClientConfig) {
     // Check if error toast should be shown
     if (meta?.showErrorToast !== false) {
       const message =
-        meta?.errorMessage ||
-        getErrorMessage(error) ||
+        meta?.errorMessage ??
+        getErrorMessage(error) ??
         'An error occurred while fetching data';
 
       console.error('[Query Error]', message, {

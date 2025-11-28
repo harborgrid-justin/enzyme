@@ -196,9 +196,9 @@ export class StatePersister<T extends object> {
    */
   async rehydrate(): Promise<RehydrateResult<Partial<T>>> {
     // Skip PHI data
-    if (this.config.containsPHI) {
+    if (this.config.containsPHI === true) {
       return {
-        state: null as any,
+        state: {} as Partial<T>,
         error: null,
         migrated: false,
         fromVersion: null,
@@ -224,17 +224,17 @@ export class StatePersister<T extends object> {
       this.config.storage.remove(this.config.key);
 
       return {
-        state: null as any,
-        error: storageError as Error,
+        state: {} as Partial<T>,
+        error: storageError instanceof Error ? storageError : new Error(String(storageError)),
         migrated: false,
         fromVersion: null,
       };
     }
 
     try {
-      if (!persisted) {
+      if (persisted === null || persisted === undefined) {
         return {
-          state: null as any,
+          state: {} as Partial<T>,
           error: null,
           migrated: false,
           fromVersion: null,
@@ -248,7 +248,7 @@ export class StatePersister<T extends object> {
       ) {
         this.config.storage.remove(this.config.key);
         return {
-          state: null as any,
+          state: {} as Partial<T>,
           error: new Error('Persisted state expired'),
           migrated: false,
           fromVersion: persisted.version,

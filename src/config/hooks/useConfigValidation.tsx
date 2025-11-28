@@ -106,8 +106,11 @@ export function useConfigValidation(): UseConfigValidationResult {
   const initializedRef = useRef(false);
   useEffect(() => {
     if (isInitialized && !initializedRef.current) {
-      initializedRef.current = true;
-      setStatus(getValidationStatus());
+      // Use queueMicrotask to avoid setState during render
+      queueMicrotask(() => {
+        initializedRef.current = true;
+        setStatus(getValidationStatus());
+      });
     }
   }, [isInitialized, getValidationStatus]);
 

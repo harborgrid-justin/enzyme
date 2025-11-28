@@ -4,6 +4,8 @@ import { Link, NavLink, type LinkProps, type NavLinkProps } from 'react-router-d
 import { buildRoutePath } from './route-builder';
 import { routeRegistry } from './route-registry';
 
+/* @refresh reset */
+
 // Re-export appRoutes from the separate file for backward compatibility
 export { appRoutes } from './app-routes';
 

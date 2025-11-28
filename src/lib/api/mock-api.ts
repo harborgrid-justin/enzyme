@@ -104,9 +104,9 @@ export class MockServer {
 
   constructor(config: MockServerConfig = {}) {
     this.config = {
-      baseUrl: config.baseUrl || '',
-      defaultDelay: config.defaultDelay || [50, 200],
-      defaultErrorRate: config.defaultErrorRate || 0,
+      baseUrl: (config.baseUrl != null && config.baseUrl !== '') ? config.baseUrl : '',
+      defaultDelay: config.defaultDelay ?? [50, 200],
+      defaultErrorRate: config.defaultErrorRate ?? 0,
       logging: config.logging ?? isDev(),
       notFoundHandler:
         config.notFoundHandler ||

@@ -42,6 +42,8 @@ import {
 // Context
 // ============================================================================
 
+/* @refresh reset */
+
 /**
  * Hook to access scroll container context.
  */

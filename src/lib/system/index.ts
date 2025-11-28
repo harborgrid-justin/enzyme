@@ -149,7 +149,7 @@ class SystemManager {
    */
   private setupLogging(config: SystemConfig): void {
     configureLogger({
-      level: config.logLevel ?? (config.debug ? 'debug' : 'info'),
+      level: config.logLevel ?? (config.debug === true ? 'debug' : 'info'),
       console: true,
       timestamp: true,
       caller: config.debug,
@@ -291,7 +291,7 @@ class SystemManager {
     if (typeof window === 'undefined') return;
 
     // Unhandled promise rejections
-    const onUnhandledRejection = (event: PromiseRejectionEvent) => {
+    const onUnhandledRejection = (event: PromiseRejectionEvent): void => {
       ErrorReporter.reportError(event.reason, {
         action: 'unhandled_rejection',
       });
@@ -310,8 +310,9 @@ class SystemManager {
     );
 
     // Global errors
-    const onError = (event: ErrorEvent) => {
-      ErrorReporter.reportError(event.error ?? event.message, {
+    const onError = (event: ErrorEvent): void => {
+      const error = event.error instanceof Error ? event.error : new Error(event.message);
+      ErrorReporter.reportError(error, {
         action: 'global_error',
         metadata: {
           filename: event.filename,
@@ -321,7 +322,7 @@ class SystemManager {
       });
 
       globalEventBus.emitSync('error:global', {
-        error: event.error ?? new Error(event.message),
+        error,
         context: 'global_error',
       });
     };
@@ -474,25 +475,34 @@ class SystemManager {
 
     // Check memory
     const memoryInfo = memoryManager.monitor.getMemoryInfo();
-    if (memoryInfo) {
+    if (memoryInfo !== null && memoryInfo !== undefined) {
+      let memoryStatus: 'pass' | 'warn' | 'fail';
+      if (memoryInfo.pressure === 'none') {
+        memoryStatus = 'pass';
+      } else if (memoryInfo.pressure === 'moderate') {
+        memoryStatus = 'warn';
+      } else {
+        memoryStatus = 'fail';
+      }
+
       checks.memory = {
-        status:
-          memoryInfo.pressure === 'none'
-            ? 'pass'
-            : memoryInfo.pressure === 'moderate'
-            ? 'warn'
-            : 'fail',
-        message:
-          memoryInfo.pressure !== 'none'
-            ? `Memory pressure: ${memoryInfo.pressure}`
-            : undefined,
+        status: memoryStatus,
+        message: memoryInfo.pressure !== 'none' ? `Memory pressure: ${memoryInfo.pressure}` : undefined,
       };
     }
 
     // Check error rate
     const hourlyErrorRate = this.hourlyErrors.length;
+    let errorRateStatus: 'pass' | 'warn' | 'fail';
+    if (hourlyErrorRate < 10) {
+      errorRateStatus = 'pass';
+    } else if (hourlyErrorRate < 50) {
+      errorRateStatus = 'warn';
+    } else {
+      errorRateStatus = 'fail';
+    }
     checks.errorRate = {
-      status: hourlyErrorRate < 10 ? 'pass' : hourlyErrorRate < 50 ? 'warn' : 'fail',
+      status: errorRateStatus,
       message: hourlyErrorRate >= 10 ? `${hourlyErrorRate} errors in last hour` : undefined,
     };
 

@@ -15,6 +15,7 @@ import {
   useReducer,
   useRef,
   type ReactNode,
+  type JSX,
 } from 'react';
 import { useFeatureFlag } from '@/lib/flags';
 import type {
@@ -47,6 +48,7 @@ import { validateADConfig } from './ad-config';
 /**
  * AD Authentication Context.
  */
+// @refresh reset
 export const ADContext = createContext<ADContextValue | null>(null);
 
 // =============================================================================
@@ -386,8 +388,8 @@ export function ADProvider({
         const user = await adClient.getCurrentUser();
         const mappedUser = applyMappings(user, groupMapper, attributeMapper);
 
-        if (ssoManager) {
-          await ssoManager.startSession(mappedUser, redirectTokens);
+        if (ssoManager != null) {
+          ssoManager.startSession(mappedUser, redirectTokens);
         }
 
         dispatch({

@@ -114,9 +114,10 @@ export class StreamQueryCacheUpdater {
     void this.queryClient.invalidateQueries({
       queryKey: strategy.getListQueryKey(),
     });
-    
+
+
     // Optionally pre-populate detail query
-    if (event.id && event.data) {
+    if (event.id != null && event.id.length > 0 && event.data != null) {
       this.queryClient.setQueryData(
         strategy.getQueryKey(event.id),
         event.data
@@ -132,9 +133,10 @@ export class StreamQueryCacheUpdater {
     strategy: CacheUpdateStrategy<T>
   ): void {
     if (event.id === undefined || event.id === null) return;
-    
+
+
     // Update detail query with new data
-    if (event.data) {
+    if (event.data != null) {
       this.queryClient.setQueryData(
         strategy.getQueryKey(event.id),
         event.data

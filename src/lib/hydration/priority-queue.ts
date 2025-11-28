@@ -235,7 +235,7 @@ export class HydrationPriorityQueue {
       return undefined;
     }
 
-    const min = this.heap[0];
+    const [min] = this.heap;
     const last = this.heap.pop();
 
     if (this.heap.length > 0 && last) {
@@ -293,7 +293,9 @@ export class HydrationPriorityQueue {
 
       // Re-heapify (might need to bubble up or down)
       const parent = Math.floor((index - 1) / 2);
-      if (index > 0 && this.heap[index] && this.heap[parent] && this.config.comparator(this.heap[index], this.heap[parent]) < 0) {
+      const currentItem = this.heap[index];
+      const parentItem = this.heap[parent];
+      if (index > 0 && currentItem !== undefined && parentItem !== undefined && this.config.comparator(currentItem, parentItem) < 0) {
         this.bubbleUp(index);
       } else {
         this.bubbleDown(index);

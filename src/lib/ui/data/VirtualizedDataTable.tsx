@@ -278,9 +278,19 @@ function VirtualizedRowInner<T>({
     >
       {columns.map((column: VirtualizedColumn<T>) => {
         const value = getCellValue(row, column.accessor);
-        const cellContent = column.cell
-          ? column.cell(value, row, index)
-          : (value !== null && value !== undefined ? String(value) : '');
+        let cellContent: ReactNode;
+        if (column.cell !== undefined) {
+          cellContent = column.cell(value, row, index);
+        } else if (value !== null && value !== undefined) {
+          // Safe stringification: only convert primitives
+          if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+            cellContent = String(value);
+          } else {
+            cellContent = '';
+          }
+        } else {
+          cellContent = '';
+        }
 
         return (
           <div
@@ -291,7 +301,7 @@ function VirtualizedRowInner<T>({
               width: column.width,
               minWidth: column.minWidth,
               textAlign: column.align ?? 'left',
-              flex: column.width ? 'none' : 1,
+              flex: (column.width !== undefined && column.width !== null) ? 'none' : 1,
             }}
           >
             {cellContent}
@@ -334,7 +344,7 @@ function VirtualizedDataTableInner<T>({
 }: VirtualizedDataTableProps<T>): React.ReactElement {
   // State for keyboard navigation - track which row is focused
   const [focusedIndex, setFocusedIndex] = useState<number>(-1);
-  const listRef = useRef<any>(null);
+  const listRef = useRef<{ scrollToItem: (index: number, align: string) => void } | null>(null);
 
   // Handler for keyboard navigation
   const handleKeyDown = useCallback((event: React.KeyboardEvent, currentIndex: number) => {

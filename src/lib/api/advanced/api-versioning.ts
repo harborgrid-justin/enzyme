@@ -617,14 +617,14 @@ export function parseSemver(version: string): {
 
   if (!match) return null;
 
-  const majorStr = match[1];
+  const [, majorStr, minorStr, patchStr, prerelease] = match;
   if (majorStr == null) return null;
 
   return {
     major: parseInt(majorStr, 10),
-    minor: parseInt(match[2] ?? '0', 10),
-    patch: parseInt(match[3] ?? '0', 10),
-    prerelease: match[4],
+    minor: parseInt(minorStr ?? '0', 10),
+    patch: parseInt(patchStr ?? '0', 10),
+    prerelease,
   };
 }
 

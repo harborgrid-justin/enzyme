@@ -562,9 +562,12 @@ export class ADTokenHandler {
 
     this.log(`Scheduling token refresh in ${refreshIn}ms`);
 
-    this.refreshTimer = setTimeout(async () => {
+    this.refreshTimer = setTimeout(() => {
       this.log('Auto-refreshing token');
-      await this.refreshToken(tokens.refreshToken!);
+      const refreshToken = tokens.refreshToken;
+      if (refreshToken != null) {
+        void this.refreshToken(refreshToken);
+      }
     }, refreshIn);
   }
 

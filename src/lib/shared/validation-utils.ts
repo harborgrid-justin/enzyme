@@ -588,7 +588,7 @@ export function validateSchema(
     const fieldErrors: string[] = [];
 
     // Required check
-    if (fieldSchema.required && (value === undefined || value === null || value === '')) {
+    if (fieldSchema.required === true && (value === undefined || value === null || value === '')) {
       fieldErrors.push(`${field} is required`);
       errors[field] = fieldErrors;
       continue;
@@ -631,12 +631,14 @@ export function validateSchema(
     }
 
     // Array item schema
-    if (fieldSchema.items && isArray(value)) {
+    if (fieldSchema.items !== undefined && isArray(value)) {
       (value).forEach((item, index) => {
-        if (fieldSchema.items!.type && !checkType(item, fieldSchema.items!.type)) {
+        if (fieldSchema.items?.type !== undefined && !checkType(item, fieldSchema.items.type)) {
           const key = `${field}[${index}]`;
           errors[key] = errors[key] ?? [];
-          errors[key].push(`Item must be of type ${fieldSchema.items!.type}`);
+          if (fieldSchema.items?.type !== undefined) {
+            errors[key].push(`Item must be of type ${fieldSchema.items.type}`);
+          }
         }
       });
     }

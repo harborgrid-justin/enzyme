@@ -5,8 +5,8 @@
 
 import { useContext } from 'react';
 import type { ModuleId } from '../types';
-import type { ModuleSystemContextValue } from '../ModuleProvider';
-import { ModuleSystemContext, ModuleHierarchyContext } from '../ModuleProvider';
+import type { ModuleSystemContextValue } from '../ModuleProviderContext';
+import { ModuleSystemContext, ModuleHierarchyContext } from '../ModuleProviderContext';
 import type { VDOMPool } from '../vdom-pool';
 import type { ModuleRegistry } from '../module-registry';
 import type { ModuleLoader } from '../module-loader';
@@ -22,8 +22,8 @@ import type { ModuleEventBus } from '../event-bus';
  * @returns Module system context value
  */
 export function useModuleSystem(): ModuleSystemContextValue {
-  const context = useContext(ModuleSystemContext);
-  if (!context) {
+  const context = useContext<ModuleSystemContextValue | null>(ModuleSystemContext);
+  if (context === null || context === undefined) {
     throw new Error('useModuleSystem must be used within a ModuleProvider');
   }
   return context;
@@ -38,7 +38,11 @@ export function useModuleHierarchy(): {
   depth: number;
   path: readonly ModuleId[];
 } {
-  return useContext(ModuleHierarchyContext);
+  return useContext<{
+    moduleId: ModuleId | null;
+    depth: number;
+    path: readonly ModuleId[];
+  }>(ModuleHierarchyContext);
 }
 
 // ============================================================================

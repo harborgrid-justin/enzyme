@@ -98,11 +98,11 @@ export class EntitySchema {
 
   constructor(name: string, definition?: Omit<EntitySchemaDefinition, 'name'>) {
     this.name = name;
-    this.idAttribute = definition?.idAttribute || 'id';
-    this.relations = (definition?.relations as Record<string, Schema>) || {};
+    this.idAttribute = definition?.idAttribute ?? 'id';
+    this.relations = (definition?.relations != null ? definition.relations as Record<string, Schema> : {});
     this.processStrategy = definition?.processStrategy;
-    this.mergeStrategy = definition?.mergeStrategy || ((_, newEntity) => newEntity);
-    this.excludeFields = definition?.excludeFields || [];
+    this.mergeStrategy = definition?.mergeStrategy ?? ((_, newEntity) => newEntity);
+    this.excludeFields = definition?.excludeFields ?? [];
   }
 
   /**

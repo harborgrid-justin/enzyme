@@ -211,7 +211,7 @@ export class OptimisticUpdateManager<T> {
       }
     };
 
-    execute();
+    await execute();
 
     return {
       value: this.currentValue,
@@ -381,9 +381,9 @@ export class OptimisticUpdateManager<T> {
           clearTimeout(timer);
           resolve(result);
         })
-        .catch((error) => {
+        .catch((error: unknown) => {
           clearTimeout(timer);
-          reject(error);
+          reject(error instanceof Error ? error : new Error(String(error)));
         });
     });
   }

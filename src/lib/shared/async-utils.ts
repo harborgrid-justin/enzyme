@@ -153,7 +153,7 @@ export async function withRetry<T>(
   for (let attempt = 1; attempt <= resolvedConfig.maxAttempts; attempt++) {
     try {
       // Check for abort before attempting
-      if (config.signal?.aborted) {
+      if (config.signal?.aborted === true) {
         throw new Error('Aborted');
       }
 

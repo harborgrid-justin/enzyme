@@ -20,7 +20,7 @@ import {
   ModuleLifecycleState,
 } from '../types';
 import { useModuleContext } from '../ModuleBoundary';
-import { useEventBus } from '../ModuleProvider';
+import { useEventBus } from '../ModuleProviderExports';
 
 /**
  * Primary hook for accessing module context and capabilities.

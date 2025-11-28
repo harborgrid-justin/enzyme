@@ -25,7 +25,7 @@ import React from 'react';
 import { createPortal } from 'react-dom';
 import { createModuleId } from './types';
 import { useOptionalModuleContext } from './ModuleBoundary';
-import { useModuleSystem } from './ModuleProvider';
+import { useModuleSystem } from './ModuleProviderExports';
 import { devWarn } from '@/lib/core/config/env-helper';
 
 // ============================================================================
@@ -170,13 +170,13 @@ export const ModuleSlot: FC<ModuleSlotProps> = ({
   };
 
   // Don't render wrapper if no content
-  if (content == null && !className && !style) {
+  if (content == null && (className === undefined || className === null) && (style === undefined || style === null)) {
     return null;
   }
 
   return (
     <Wrapper className={className} style={style} {...dataAttributes}>
-      {fallback ? <Suspense fallback={fallback}>{content}</Suspense> : content}
+      {(fallback !== null && fallback !== undefined) ? <Suspense fallback={fallback}>{content}</Suspense> : content}
     </Wrapper>
   );
 };
@@ -337,13 +337,13 @@ export const LazyModuleSlot: FC<LazyModuleSlotProps> = ({
   className,
   style,
 }) => {
-  // Get or create lazy component from cache
-  const LazyComponent = useMemo(() => {
-    if (!lazyComponentCache.has(loader)) {
-      lazyComponentCache.set(loader, lazy(loader));
-    }
-    return lazyComponentCache.get(loader)!;
-  }, [loader]);
+  // Get or create lazy component from cache (outside render to avoid React warnings)
+  if (!lazyComponentCache.has(loader)) {
+    lazyComponentCache.set(loader, lazy(loader));
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const LazyComponent = lazyComponentCache.get(loader)!;
 
   return (
     <Wrapper className={className} style={style}>

@@ -393,14 +393,14 @@ export function createSyncEngine(config: SyncEngineConfig): SyncEngine {
 
   // Get entity config
   function getEntityConfig(entityType: string): EntitySyncConfig {
-    return entities[entityType] || {};
+    return entities[entityType] ?? {};
   }
 
   // Find available source
   async function findAvailableSource(preferredId?: string): Promise<SyncSource | null> {
-    if (preferredId) {
+    if (preferredId != null && preferredId.length > 0) {
       const preferred = sortedSources.find((s) => s.id === preferredId);
-      if (preferred && (await preferred.isAvailable())) {
+      if (preferred != null && (await preferred.isAvailable())) {
         return preferred;
       }
     }
@@ -492,12 +492,12 @@ export function createSyncEngine(config: SyncEngineConfig): SyncEngine {
   }
 
   // Resolve conflict
-  async function resolveConflict<T>(
+  function resolveConflict<T>(
     entityType: string,
     conflict: SyncConflict<T>
-  ): Promise<T> {
+  ): T {
     const entityConfig = getEntityConfig(entityType);
-    const strategy = entityConfig.conflictStrategy || conflictStrategy;
+    const strategy = entityConfig.conflictStrategy ?? conflictStrategy;
 
     switch (strategy) {
       case 'server-wins':

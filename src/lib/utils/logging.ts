@@ -155,13 +155,14 @@ function formatForConsole(entry: LogEntry): string {
  * @see {@link @/lib/api/api-client} for application API calls
  */
 async function sendToRemote(entry: LogEntry): Promise<void> {
-  if (!currentConfig.remote || !currentConfig.remoteEndpoint) {
+  const endpoint = currentConfig.remoteEndpoint;
+  if (currentConfig.remote !== true || endpoint === undefined || endpoint === '') {
     return;
   }
 
   try {
     // Raw fetch is intentional - logging must be independent of apiClient
-    await fetch(currentConfig.remoteEndpoint, {
+    await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(entry),
@@ -191,33 +192,37 @@ function log(
     context,
     tags,
   };
-  
-  if (currentConfig.caller) {
+
+  if (currentConfig.caller === true) {
     entry.caller = getCallerInfo();
   }
-  
+
   // Custom handler
-  if (currentConfig.handler) {
+  if (currentConfig.handler !== undefined) {
     currentConfig.handler(entry);
     return;
   }
-  
+
   // Console output
-  if (currentConfig.console) {
+  if (currentConfig.console === true) {
     const formatted = formatForConsole(entry);
-    let consoleMethod: 'error' | 'warn' | 'info';
-    if (level === 'error') {
-      consoleMethod = 'error';
-    } else if (level === 'warn') {
-      consoleMethod = 'warn';
-    } else {
-      consoleMethod = 'info';
-    }
-    
+
     if (context !== undefined && Object.keys(context).length > 0) {
-      console[consoleMethod](formatted, context);
+      if (level === 'error') {
+        console.error(formatted, context);
+      } else if (level === 'warn') {
+        console.warn(formatted, context);
+      } else {
+        console.info(formatted, context);
+      }
     } else {
-      console[consoleMethod](formatted);
+      if (level === 'error') {
+        console.error(formatted);
+      } else if (level === 'warn') {
+        console.warn(formatted);
+      } else {
+        console.info(formatted);
+      }
     }
   }
   

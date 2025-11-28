@@ -132,9 +132,7 @@ export class StorageManager {
    * Get or create the storage manager instance (singleton)
    */
   static getInstance(accessControl?: StorageAccessControl): StorageManager {
-    if (!StorageManager.instance) {
-      StorageManager.instance = new StorageManager(accessControl);
-    }
+    StorageManager.instance ??= new StorageManager(accessControl);
     return StorageManager.instance;
   }
 
@@ -159,10 +157,10 @@ export class StorageManager {
       const entry: StorageEntry<T> = {
         value,
         timestamp: Date.now(),
-        expiresAt: options.ttl ? Date.now() + options.ttl : undefined,
-        encryption: options.encryption || EncryptionAlgorithm.None,
+        expiresAt: (options.ttl !== undefined && options.ttl !== null && options.ttl > 0) ? Date.now() + options.ttl : undefined,
+        encryption: options.encryption ?? EncryptionAlgorithm.None,
         version: 1,
-        containsPHI: options.containsPHI || false,
+        containsPHI: options.containsPHI ?? false,
       };
 
       const serialized = JSON.stringify(entry);
@@ -258,9 +256,9 @@ export class StorageManager {
       const entry: StorageEntry<T> = {
         value,
         timestamp: Date.now(),
-        encryption: options.encryption || EncryptionAlgorithm.None,
+        encryption: options.encryption ?? EncryptionAlgorithm.None,
         version: 1,
-        containsPHI: options.containsPHI || false,
+        containsPHI: options.containsPHI ?? false,
       };
 
       sessionStorage.setItem(key, JSON.stringify(entry));
@@ -364,10 +362,10 @@ export class StorageManager {
       const entry: StorageEntry<T> = {
         value,
         timestamp: Date.now(),
-        expiresAt: options.ttl ? Date.now() + options.ttl : undefined,
-        encryption: options.encryption || EncryptionAlgorithm.None,
+        expiresAt: (options.ttl !== undefined && options.ttl !== null && options.ttl > 0) ? Date.now() + options.ttl : undefined,
+        encryption: options.encryption ?? EncryptionAlgorithm.None,
         version: 1,
-        containsPHI: options.containsPHI || false,
+        containsPHI: options.containsPHI ?? false,
       };
 
       return new Promise((resolve, reject) => {

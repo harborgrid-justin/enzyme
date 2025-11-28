@@ -296,8 +296,10 @@ export function useHydrationStatus(
   // ==========================================================================
 
   useEffect(() => {
-    // Initial fetch
-    fetchStatus();
+    // Initial fetch (use queueMicrotask to avoid synchronous setState in effect)
+    queueMicrotask(() => {
+      fetchStatus();
+    });
 
     // Setup polling if enabled
     if (pollInterval > 0) {

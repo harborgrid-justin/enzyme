@@ -313,7 +313,7 @@ export function initMonitoringSystem(
  * });
  * ```
  */
-export async function quickStartMonitoring(options: {
+export function quickStartMonitoring(options: {
   /** Enable debug mode */
   debug?: boolean;
   /** Analytics endpoint */

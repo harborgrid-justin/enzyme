@@ -641,7 +641,7 @@ export class AnalyticsManager {
 export class ConsoleAnalyticsProvider implements AnalyticsProvider {
   name = 'console';
 
-  async initialize(): Promise<void> {
+  initialize(): void {
     logger.info('[ConsoleAnalytics] Initialized');
   }
 

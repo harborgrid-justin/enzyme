@@ -418,7 +418,9 @@ export function getFeatureStoreNames(): string[] {
  */
 export function resetAllFeatureStores(clearRegistry = true): void {
   featureStores.forEach((store, _name) => {
-    const state = (store as any).getState() as { reset?: () => void; _reset?: () => void };
+    // Type the store's getState method properly
+    type StoreWithReset = { reset?: () => void; _reset?: () => void };
+    const state = (store.getState as () => StoreWithReset)();
     if (typeof state.reset === 'function') {
       state.reset();
     } else if (typeof state._reset === 'function') {

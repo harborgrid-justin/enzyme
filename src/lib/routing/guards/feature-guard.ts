@@ -247,7 +247,7 @@ export class FeatureGuard extends BaseRouteGuard {
     context: GuardContext
   ): Promise<{ value: FeatureFlagState; cached: boolean }> {
     // Check cache first
-    if (this.featureConfig.cacheFlags) {
+    if (this.featureConfig.cacheFlags === true) {
       const cached = this.flagCache.get(flagKey);
       if (cached && Date.now() < cached.expiresAt) {
         return { value: cached.value, cached: true };

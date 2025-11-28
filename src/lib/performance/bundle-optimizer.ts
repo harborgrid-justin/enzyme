@@ -317,9 +317,7 @@ export class BundleOptimizer {
    * Get singleton instance
    */
   static getInstance(config?: BundleOptimizerConfig): BundleOptimizer {
-    if (BundleOptimizer.instance == null) {
-      BundleOptimizer.instance = new BundleOptimizer(config);
-    }
+    BundleOptimizer.instance ??= new BundleOptimizer(config);
     return BundleOptimizer.instance;
   }
 

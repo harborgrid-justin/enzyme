@@ -191,7 +191,7 @@ function deepClone<T>(obj: T): T {
   }
 
   if (Array.isArray(obj)) {
-    return obj.map((item) => deepClone(item)) as unknown as T;
+    return obj.map((item: unknown) => deepClone(item)) as unknown as T;
   }
 
   const cloned: Record<string, unknown> = {};
@@ -224,9 +224,7 @@ function setAtPath<T>(obj: T, path: string[], value: unknown): T {
 
   for (let i = 0; i < path.length - 1; i++) {
     const key = path[i] as string;
-    if (current[key] === undefined || current[key] === null) {
-      current[key] = {};
-    }
+    current[key] ??= {};
     current = current[key] as Record<string, unknown>;
   }
 
@@ -318,7 +316,7 @@ export function threeWayMerge<T extends Record<string, unknown>>(
       setAtPath(result as T, path, localValue);
     } else {
       // Conflict - both changed to different values
-      const fieldStrategy = fieldStrategies[pathStr] || fieldStrategies[path[0] as string] || 'server';
+      const fieldStrategy = fieldStrategies[pathStr] ?? fieldStrategies[path[0] as string] ?? 'server';
 
       let resolvedValue: unknown;
       let resolution: string;

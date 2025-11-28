@@ -235,8 +235,8 @@ function getNetworkQuality(): NetworkQuality {
     };
   });
 
-  if (!connection) return 'fast';
-  if (connection.saveData) return 'slow';
+  if (connection === null || connection === undefined) return 'fast';
+  if (connection.saveData === true) return 'slow';
 
   const {effectiveType} = connection;
   if (effectiveType === '4g') return 'fast';
@@ -263,7 +263,7 @@ function scheduleByPriority(callback: () => void, priority: RenderPriority): () 
       break;
     case 'high':
       // Run on next microtask
-      Promise.resolve().then(run);
+      void Promise.resolve().then(run);
       break;
     case 'normal':
       // Run on next frame

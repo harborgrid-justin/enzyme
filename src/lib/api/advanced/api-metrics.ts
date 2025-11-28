@@ -529,7 +529,7 @@ export class APIMetricsCollector {
     const recentMetrics = metrics.filter(m => m.timestamp >= windowStart);
     const windowSeconds = this.config.windowMs / 1000;
 
-    const minDuration = durations[0];
+    const [minDuration] = durations;
     const maxDuration = durations[durations.length - 1];
 
     return {
@@ -661,8 +661,8 @@ export function createBatchedReporter(
 
       if (batch.length >= batchSize) {
         sendBatch();
-      } else if (timer == null) {
-        timer = setTimeout(sendBatch, maxWait);
+      } else {
+        timer ??= setTimeout(sendBatch, maxWait);
       }
     },
     flush: () => {

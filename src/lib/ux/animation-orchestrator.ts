@@ -242,7 +242,7 @@ export class AnimationOrchestrator {
     const fullOptions = { ...DEFAULT_OPTIONS, ...options };
 
     // Respect reduced motion
-    if (fullOptions.respectReducedMotion && this.reducedMotion) {
+    if ((fullOptions.respectReducedMotion ?? false) && this.reducedMotion) {
       return this.animateReduced(el, keyframes, fullOptions);
     }
 
@@ -270,9 +270,9 @@ export class AnimationOrchestrator {
     let maxDuration = 0;
 
     for (const item of items) {
-      const offset = item.offset || 0;
-      const delay = (item.options?.delay || 0) + offset;
-      const duration = (item.options?.duration || DEFAULT_OPTIONS.duration) + delay;
+      const offset = item.offset ?? 0;
+      const delay = (item.options?.delay ?? 0) + offset;
+      const duration = (item.options?.duration ?? DEFAULT_OPTIONS.duration) + delay;
       maxDuration = Math.max(maxDuration, duration);
 
       const controller = this.animate(item.element, item.keyframes, {
@@ -315,9 +315,10 @@ export class AnimationOrchestrator {
     const delays = this.calculateStaggerDelays(els.length, fullOptions);
 
     els.forEach((el, index) => {
+      const delayValue = delays[index] ?? 0;
       const controller = this.animate(el, keyframes, {
         ...fullOptions,
-        delay: (fullOptions.delay || 0) + (delays[index] ?? 0),
+        delay: (fullOptions.delay ?? 0) + (typeof delayValue === 'number' && !Number.isNaN(delayValue) ? delayValue : 0),
       });
       controllers.push(controller);
     });

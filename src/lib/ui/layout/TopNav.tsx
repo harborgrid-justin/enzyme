@@ -323,7 +323,7 @@ export const TopNav = memo(({
   // Create stable menu item click handlers using data attributes
   const handleMenuItemClick = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
     const {menuItemId} = event.currentTarget.dataset;
-    if (menuItemId) {
+    if (menuItemId !== undefined && menuItemId !== '') {
       const menuItem = userMenuItems.find((item) => item.id === menuItemId);
       menuItem?.onClick?.();
       setUserMenuOpen(false);
@@ -377,14 +377,14 @@ export const TopNav = memo(({
                 aria-label={`User menu for ${user.name}`}
                 style={userButtonStyle}
               >
-                {user.avatar ? (
+                {(user.avatar !== undefined && user.avatar !== '') ? (
                   <img
                     src={user.avatar}
                     alt={user.name}
                     style={avatarImageStyle}
                   />
                 ) : (
-                  <div style={avatarPlaceholderStyle}>
+                  <div style={avatarPlaceholderStyle} aria-hidden="true">
                     {user.name.charAt(0).toUpperCase()}
                   </div>
                 )}
@@ -393,6 +393,7 @@ export const TopNav = memo(({
                   height="16"
                   viewBox="0 0 20 20"
                   fill="currentColor"
+                  aria-hidden="true"
                   style={chevronStyle}
                 >
                   <path
@@ -552,8 +553,8 @@ const NavButton = memo(({
     border: 'none',
     backgroundColor: isActive ? '#f3f4f6' : 'transparent',
     color: isActive ? '#111827' : '#6b7280',
-    cursor: item.disabled ? 'not-allowed' : 'pointer',
-    opacity: item.disabled ? 0.5 : 1,
+    cursor: (item.disabled ?? false) ? 'not-allowed' : 'pointer',
+    opacity: (item.disabled ?? false) ? 0.5 : 1,
     borderRadius: '0.375rem',
     fontSize: '0.875rem',
     fontWeight: isActive ? '500' : '400',

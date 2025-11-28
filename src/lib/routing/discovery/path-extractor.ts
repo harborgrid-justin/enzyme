@@ -241,10 +241,11 @@ export function parseSegment(
   // Check for optional catch-all first (most specific)
   if ('optionalCatchAll' in patterns) {
     const optionalCatchAllMatch = segment.match(patterns.optionalCatchAll);
-    if (optionalCatchAllMatch?.[1]) {
+    const optionalCatchAllValue = optionalCatchAllMatch?.[1];
+    if (optionalCatchAllValue !== null && optionalCatchAllValue !== undefined && optionalCatchAllValue !== '') {
       return {
         type: 'optional-catch-all',
-        value: optionalCatchAllMatch[1],
+        value: optionalCatchAllValue,
         raw: segment,
         optional: true,
         position,

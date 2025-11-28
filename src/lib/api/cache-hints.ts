@@ -46,20 +46,19 @@ export interface CacheHints {
  */
 export function extractCacheHints(headers: ResponseHeaders): CacheHints {
   const cacheControl = headers['cache-control'] ?? '';
-  const etag = headers['etag'];
-  const lastModified = headers['last-modified'];
+  const { etag, 'last-modified': lastModified } = headers;
 
   // Parse Cache-Control directives
   const directives = parseCacheControlHeader(cacheControl);
 
   const hints: CacheHints = {
     cacheable: !directives['no-store'] && !directives['no-cache'],
-    maxAge: directives['max-age'] ? parseInt(directives['max-age'], 10) : undefined,
-    staleWhileRevalidate: directives['stale-while-revalidate']
+    maxAge: (directives['max-age'] != null && directives['max-age'] !== '') ? parseInt(directives['max-age'], 10) : undefined,
+    staleWhileRevalidate: (directives['stale-while-revalidate'] != null && directives['stale-while-revalidate'] !== '')
       ? parseInt(directives['stale-while-revalidate'], 10)
       : undefined,
     etag,
-    lastModified: lastModified ? new Date(lastModified) : undefined,
+    lastModified: (lastModified != null && lastModified !== '') ? new Date(lastModified) : undefined,
     mustRevalidate: 'must-revalidate' in directives,
     isPrivate: 'private' in directives,
     noStore: 'no-store' in directives,

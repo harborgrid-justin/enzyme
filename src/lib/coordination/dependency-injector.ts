@@ -275,7 +275,7 @@ export class DependencyInjectorImpl implements DependencyContainer {
     };
 
     for (const entry of this.services.values()) {
-      if (entry.options.tags != null && entry.options.tags.includes(tag)) {
+      if (entry.options.tags?.includes(tag)) {
         try {
           const instance = this.resolveEntry(entry, context);
           results.push(instance as T);

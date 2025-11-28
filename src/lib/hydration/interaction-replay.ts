@@ -54,13 +54,13 @@ function generateSelector(element: Element): string {
 
   // Try data-testid (common in React apps)
   const testId = element.getAttribute('data-testid');
-  if (testId) {
+  if (testId !== null && testId !== '') {
     return `[data-testid="${CSS.escape(testId)}"]`;
   }
 
   // Try data-hydration-target (our custom attribute)
   const hydrationTarget = element.getAttribute('data-hydration-target');
-  if (hydrationTarget) {
+  if (hydrationTarget !== null && hydrationTarget !== '') {
     return `[data-hydration-target="${CSS.escape(hydrationTarget)}"]`;
   }
 

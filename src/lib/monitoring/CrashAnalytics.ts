@@ -359,11 +359,11 @@ class CrashAnalyticsManager {
    */
   private setupConsoleCapture(): void {
     const levels = ['log', 'warn', 'error'] as const;
-    const originals = {} as Record<typeof levels[number], typeof console.log>;
+    const originals = {} as Record<(typeof levels)[number], (...args: unknown[]) => void>;
 
     levels.forEach((level) => {
       originals[level] = console[level].bind(console);
-      console[level] = (...args: unknown[]) => {
+      console[level] = (...args: unknown[]): void => {
         this.addBreadcrumb({
           type: 'console',
           category: `console.${level}`,

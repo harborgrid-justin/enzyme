@@ -9,7 +9,7 @@
  * @version 1.0.0
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import type { UseCSRFTokenResult } from '../types';
 import { CSRFProtection } from '../csrf-protection';
 
@@ -78,7 +78,7 @@ export function useCSRFToken(
       return;
     }
 
-    const init = async (): Promise<void> => {
+    const init = (): void => {
       if (!CSRFProtection.isInitialized()) {
         CSRFProtection.initialize();
       }
@@ -88,11 +88,11 @@ export function useCSRFToken(
       setIsInitialized(true);
     };
 
-    void init();
+    init();
   }, [autoInitialize]);
 
   // Regenerate token function
-  const regenerate = useCallback(async (): Promise<string> => {
+  const regenerate = useCallback((): string => {
     const newToken = CSRFProtection.regenerateToken();
     setToken(newToken);
     return newToken;

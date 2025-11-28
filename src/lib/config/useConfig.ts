@@ -175,7 +175,9 @@ export function useWatchConfig<T = ConfigValue>(
 
   useEffect(() => {
     // Update initial value
-    setValue(get<T>(path, defaultValue));
+    queueMicrotask(() => {
+      setValue(get<T>(path, defaultValue));
+    });
 
     // Subscribe to changes
     return subscribe((event: ConfigChangeEvent) => {

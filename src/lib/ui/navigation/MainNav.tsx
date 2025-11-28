@@ -116,20 +116,11 @@ const NavItem = memo(({
 }: NavItemProps): React.ReactElement | null => {
   // Check feature flag - always call with consistent pattern to avoid Rules of Hooks violation
   // Use sentinel value '__ALWAYS_ENABLED__' when no feature flag is specified
-  const flagEnabled = useFeatureFlag(route.featureFlag || '__ALWAYS_ENABLED__');
-
-  // Check if route should be visible (only check flag if one was actually specified)
-  if (route.featureFlag && !flagEnabled) {
-    return null;
-  }
-
-  if (!hasRouteAccess(route, roles)) {
-    return null;
-  }
+  const flagEnabled = useFeatureFlag(route.featureFlag ?? '__ALWAYS_ENABLED__');
 
   const isHorizontal = direction === 'horizontal';
 
-  // Memoize link style based on direction and active state
+  // Memoize link style based on direction and active state - MUST be before early returns
   const linkStyle = useMemo((): CSSProperties => ({
     display: 'flex',
     alignItems: 'center',
@@ -144,11 +135,20 @@ const NavItem = memo(({
     whiteSpace: 'nowrap',
   }), [isHorizontal, isActive]);
 
+  // Check visibility AFTER all hooks
+  if (route.featureFlag !== undefined && route.featureFlag !== '' && !flagEnabled) {
+    return null;
+  }
+
+  if (!hasRouteAccess(route, roles)) {
+    return null;
+  }
+
   const content = (
     <>
       {route.icon !== undefined && <span style={iconContainerStyle}>{route.icon}</span>}
       <span>{route.label}</span>
-      {route.badge !== undefined && route.badge !== '' && (
+      {(route.badge !== undefined && route.badge !== '') && (
         <span style={badgeStyle}>
           {route.badge}
         </span>

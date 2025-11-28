@@ -141,7 +141,7 @@ export function useRenderMetrics(
 
   // Get tracker instance
   const trackerRef = useRef<RenderTracker | null>(null);
-  if (!trackerRef.current) {
+  if (trackerRef.current === null) {
     trackerRef.current = getRenderTracker({
       slowThreshold,
       debug,
@@ -161,9 +161,10 @@ export function useRenderMetrics(
   const tracker = trackerRef.current;
 
   // Component instance ID (stable across renders)
-  const componentIdRef = useRef<string>(
-    `${componentName}_${Math.random().toString(36).substr(2, 6)}`
-  );
+  const componentIdRef = useRef<string>('');
+  if (componentIdRef.current === '') {
+    componentIdRef.current = `${componentName}_${Math.random().toString(36).substr(2, 6)}`;
+  }
 
   // Track render count
   const renderCountRef = useRef(0);
@@ -444,13 +445,15 @@ export function useWastedRenderDetector(
       }
     });
 
-    if (changed.length === 0) {
-      setWasWasted(true);
-      setReason(`No dependencies changed for ${componentName}`);
-    } else {
-      setWasWasted(false);
-      setReason(null);
-    }
+    queueMicrotask(() => {
+      if (changed.length === 0) {
+        setWasWasted(true);
+        setReason(`No dependencies changed for ${componentName}`);
+      } else {
+        setWasWasted(false);
+        setReason(null);
+      }
+    });
 
     prevDepsRef.current = deps;
   }, deps);

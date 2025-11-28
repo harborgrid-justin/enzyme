@@ -47,7 +47,7 @@ import { createSecuritySandbox, type SecuritySandbox } from './security-sandbox'
 import {
   useModuleSystem,
   ModuleHierarchyProvider,
-} from './ModuleProvider';
+} from './ModuleProviderExports';
 
 // ============================================================================
 // Types
@@ -509,7 +509,7 @@ const ModuleBoundaryInner: FC<
 
     mountTimeRef.current = performance.now();
 
-    const initAndMount = async () => {
+    const initAndMount = async (): Promise<void> => {
       try {
         await manager.initialize();
 

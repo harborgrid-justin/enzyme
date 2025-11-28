@@ -448,7 +448,7 @@ export class ModuleRegistry {
     newComponent: ComponentType<unknown>
   ): void {
     const entry = this.modules.get(moduleId);
-    if (!entry?.hmrEnabled) {
+    if (entry?.hmrEnabled !== true) {
       return;
     }
 
