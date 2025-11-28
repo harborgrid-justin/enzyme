@@ -455,7 +455,7 @@ export class UnifiedEventEmitter<Events extends Record<string, unknown>>
   private readonly config: Required<UnifiedEventEmitterOptions>;
   private readonly listeners = new Map<keyof Events, PriorityListener<Events[keyof Events]>[]>();
   private readonly middlewares = new Map<keyof Events, EventMiddleware<Events[keyof Events]>[]>();
-  private readonly wildcardListeners: PriorityListener<unknown>[] = [];
+  // private readonly wildcardListeners: PriorityListener<unknown>[] = [];
 
   // Advanced features
   private readonly deduplicationCache = new Map<string, DeduplicationEntry>();

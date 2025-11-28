@@ -15,7 +15,7 @@
  * @deprecated Use `apiClient` from `@/lib/api` instead.
  * This import is maintained for backward compatibility with existing versioning code.
  */
-import { httpClient, type HttpRequestConfig } from './http';
+import { type HttpRequestConfig } from './http';
 import { apiClient } from '@/lib/api';
 
 // =============================================================================

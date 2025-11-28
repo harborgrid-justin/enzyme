@@ -50,17 +50,35 @@ export type ModuleEventHandler<T = unknown> = EventHandler<ModuleEventMessage<T>
 // Module Event Bus
 // =============================================================================
 
+export interface ModuleEventBusOptions {
+  /** Enable security checks */
+  enableSecurity?: boolean;
+  /** Maximum listeners per event */
+  maxListeners?: number;
+  /** Enable debug mode */
+  debug?: boolean;
+  /** Enable event history */
+  enableHistory?: boolean;
+  /** Maximum events in history */
+  maxHistorySize?: number;
+}
+
 /**
  * Event bus for cross-module communication
  */
 export class ModuleEventBus {
-  private readonly emitter = createEventEmitter<Record<string, ModuleEventMessage>>({
-    maxListeners: 100,
-    debug: false,
-    enableStatistics: true,
-  });
-
+  private readonly emitter;
   private readonly moduleSubscriptions = new Map<string, Set<() => void>>();
+  private readonly options: ModuleEventBusOptions;
+
+  constructor(options: ModuleEventBusOptions = {}) {
+    this.options = options;
+    this.emitter = createEventEmitter<Record<string, ModuleEventMessage>>({
+      maxListeners: options.maxListeners ?? 100,
+      debug: options.debug ?? false,
+      enableStatistics: true,
+    });
+  }
 
   /**
    * Subscribe to events

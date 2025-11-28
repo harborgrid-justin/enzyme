@@ -36,13 +36,13 @@
  */
 
 import { z, type ZodType, type ZodSchema, type ZodError } from 'zod';
-import { apiClient, createApiError, type ApiError, type RequestConfig } from '@/lib/api';
+import { apiClient, type ApiError, type RequestConfig } from '@/lib/api';
 
 /**
  * Re-export HttpError for backward compatibility
  * @deprecated Use ApiError from '@/lib/api/types' instead
  */
-export { ApiError as HttpError } from '@/lib/api/types';
+export type { ApiError as HttpError } from '@/lib/api/types';
 
 // =============================================================================
 // TYPE DEFINITIONS

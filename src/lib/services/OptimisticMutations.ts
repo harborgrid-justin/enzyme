@@ -305,7 +305,7 @@ export function createListOptimisticUpdates<TItem extends ListItem, TList extend
      */
     updateItem: (list: TList | undefined, id: string, updates: Partial<TItem>): TList => {
       if (!list) {
-        return { items: [], total: 0 } as TList;
+        return { items: [], total: 0 } as unknown as TList;
       }
       return {
         ...list,
@@ -319,7 +319,7 @@ export function createListOptimisticUpdates<TItem extends ListItem, TList extend
      */
     removeItem: (list: TList | undefined, id: string): TList => {
       if (!list) {
-        return { items: [], total: 0 } as TList;
+        return { items: [], total: 0 } as unknown as TList;
       }
       return {
         ...list,
@@ -334,7 +334,7 @@ export function createListOptimisticUpdates<TItem extends ListItem, TList extend
      */
     reorderItems: (list: TList | undefined, fromIndex: number, toIndex: number): TList => {
       if (!list) {
-        return { items: [], total: 0 } as TList;
+        return { items: [], total: 0 } as unknown as TList;
       }
       const items = [...list.items];
       const [removed] = items.splice(fromIndex, 1);
@@ -350,7 +350,7 @@ export function createListOptimisticUpdates<TItem extends ListItem, TList extend
      */
     moveItem: (list: TList | undefined, id: string, toIndex: number): TList => {
       if (!list) {
-        return { items: [], total: 0 } as TList;
+        return { items: [], total: 0 } as unknown as TList;
       }
       const fromIndex = list.items.findIndex((item) => item.id === id);
       if (fromIndex === -1) return list;

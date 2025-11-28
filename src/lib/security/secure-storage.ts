@@ -226,7 +226,7 @@ async function decompress(data: Uint8Array): Promise<string> {
   const writer = stream.writable.getWriter();
   const reader = stream.readable.getReader();
 
-  writer.write(data);
+  writer.write(data as any);
   writer.close();
 
   const chunks: Uint8Array[] = [];

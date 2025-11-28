@@ -84,7 +84,7 @@ export function useModule(): UseModuleReturn {
   // Event emission
   const emit = useCallback(
     <T>(name: string, payload: T): void => {
-      eventBus.publish(name, moduleId, payload);
+      eventBus.publish(name, payload, moduleId);
     },
     [eventBus, moduleId]
   );
@@ -94,9 +94,25 @@ export function useModule(): UseModuleReturn {
     <T>(
       name: string,
       handler: EventHandler<T>,
-      options?: EventSubscriptionOptions
+      _options?: EventSubscriptionOptions
     ): EventSubscription => {
-      return eventBus.subscribe(name, moduleId, handler, options);
+      const subscriptionId = `${moduleId}-${name}-${Date.now()}`;
+      let isActive = true;
+      const unsubscribeFn = eventBus.subscribe(name, handler, moduleId);
+      
+      const unsubscribe = () => {
+        if (isActive) {
+          isActive = false;
+          unsubscribeFn();
+        }
+      };
+      
+      return {
+        id: subscriptionId,
+        eventName: name,
+        unsubscribe,
+        get isActive() { return isActive; },
+      };
     },
     [eventBus, moduleId]
   );
