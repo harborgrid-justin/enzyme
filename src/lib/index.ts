@@ -130,6 +130,19 @@ export { PerformanceProvider, initPerformanceMonitoring } from './performance';
 export { createQueryKeyFactory } from './queries';
 
 // ----------------------------------------------------------------------------
+// Routing & Navigation (Essential for React apps)
+// ----------------------------------------------------------------------------
+export { 
+  AppLink, 
+  AppNavLink, 
+  appRoutes,
+  createRouter,
+  routes,
+  buildPath,
+  useRouteNavigate,
+} from './routing';
+
+// ----------------------------------------------------------------------------
 // Theme (Used in >75% of apps)
 // ----------------------------------------------------------------------------
 // export { ThemeProvider, useTheme } from './theme';

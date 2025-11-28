@@ -80,7 +80,7 @@ export type { AuthContextValue } from './lib/auth';
 export { useStore, getStoreState, resetStore } from './lib/state';
 
 // Routing & Navigation
-export { routes, buildPath, createRouter, useRouteNavigate } from './lib/routing';
+export { routes, buildPath, createRouter, useRouteNavigate, AppLink, AppNavLink, appRoutes } from './lib/routing';
 
 // Configuration
 export { useConfig, ConfigProvider } from './lib/config';
