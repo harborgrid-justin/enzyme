@@ -1,10 +1,10 @@
 /**
- * Harbor React Library - Minimal Barrel Export
+ * @defendr/enzyme - Minimal Barrel Export
  *
  * @fileoverview Minimal re-export for the most commonly used items.
  * **For optimal tree-shaking and bundle size, import from submodules directly.**
  *
- * @version 4.0.0
+ * @version 1.0.0
  * @license MIT
  *
  * ## PERFORMANCE CRITICAL: Use Submodule Imports
@@ -12,19 +12,19 @@
  * This barrel export has been minimized to prevent bundle bloat. Importing from
  * this file forces the bundler to parse all exports, even if tree-shaking is enabled.
  *
- * ### Recommended Submodule Import Pattern (GOOD ✅):
+ * ### Recommended Submodule Import Pattern (GOOD):
  * ```typescript
  * // Import from specific submodules for optimal tree-shaking
- * import { useAuth, AuthProvider } from '@/lib/auth';
- * import { useFeatureFlag, FlagGate } from '@/lib/flags';
- * import { usePerformanceMonitor } from '@/lib/performance';
- * import { ErrorBoundary } from '@/lib/monitoring';
+ * import { useAuth, AuthProvider } from '@defendr/enzyme/auth';
+ * import { useFeatureFlag, FlagGate } from '@defendr/enzyme/flags';
+ * import { usePerformanceMonitor } from '@defendr/enzyme/performance';
+ * import { ErrorBoundary } from '@defendr/enzyme/monitoring';
  * ```
  *
- * ### Avoid Main Index Import (BAD ❌):
+ * ### Avoid Main Index Import:
  * ```typescript
- * // This forces bundler to process all 1,134 lines of exports
- * import { useAuth, useFeatureFlag } from '@/lib';
+ * // This forces bundler to process all exports
+ * import { useAuth, useFeatureFlag } from '@defendr/enzyme';
  * ```
  *
  * ### Performance Impact:
@@ -34,54 +34,52 @@
  *
  * ## Available Submodules:
  *
- * - `@/lib/auth` - Authentication, authorization, RBAC, Active Directory
- * - `@/lib/api` - HTTP client, type-safe API calls, request queue
- * - `@/lib/config` - Configuration management, environment overrides
- * - `@/lib/data` - Data utilities, transformations, validation
- * - `@/lib/feature` - Feature module system, dependency injection
- * - `@/lib/flags` - Feature flags, A/B testing, conditional rendering
- * - `@/lib/hooks` - Custom React hooks (theme, network, analytics, etc.)
- * - `@/lib/hydration` - Progressive hydration for SSR applications
- * - `@/lib/monitoring` - Error tracking, crash analytics, error boundaries
- * - `@/lib/performance` - Web Vitals, performance monitoring, budgets
- * - `@/lib/queries` - React Query utilities, query key factories
- * - `@/lib/realtime` - WebSocket, SSE, real-time data sync
- * - `@/lib/routing` - Type-safe routing, route registry, guards
- * - `@/lib/security` - CSP, CSRF protection, XSS prevention, secure storage
- * - `@/lib/services` - Service layer, HTTP interceptors, request queue
- * - `@/lib/state` - State management, store factory, persistence
- * - `@/lib/streaming` - Streaming data, chunked responses
- * - `@/lib/system` - Application initialization, lifecycle management
- * - `@/lib/theme` - Theme provider, dark mode, system preferences
- * - `@/lib/ui` - UI components (buttons, forms, feedback, etc.)
- * - `@/lib/utils` - Utility functions, type guards, async helpers
- * - `@/lib/ux` - Loading states, skeletons, optimistic UI, accessibility
- * - `@/lib/vdom` - Virtual DOM utilities, reconciliation
+ * - `@defendr/enzyme/auth` - Authentication, authorization, RBAC, Active Directory
+ * - `@defendr/enzyme/api` - HTTP client, type-safe API calls, request queue
+ * - `@defendr/enzyme/config` - Configuration management, environment overrides
+ * - `@defendr/enzyme/coordination` - Cross-module coordination and event bus
+ * - `@defendr/enzyme/core` - Core utilities and base functionality
+ * - `@defendr/enzyme/data` - Data utilities, transformations, validation
+ * - `@defendr/enzyme/feature` - Feature module system, dependency injection
+ * - `@defendr/enzyme/flags` - Feature flags, A/B testing, conditional rendering
+ * - `@defendr/enzyme/hooks` - Custom React hooks (theme, network, analytics, etc.)
+ * - `@defendr/enzyme/hydration` - Progressive hydration for SSR applications
+ * - `@defendr/enzyme/layouts` - Adaptive layouts, context-aware positioning
+ * - `@defendr/enzyme/monitoring` - Error tracking, crash analytics, error boundaries
+ * - `@defendr/enzyme/performance` - Web Vitals, performance monitoring, budgets
+ * - `@defendr/enzyme/queries` - React Query utilities, query key factories
+ * - `@defendr/enzyme/realtime` - WebSocket, SSE, real-time data sync
+ * - `@defendr/enzyme/routing` - Type-safe routing, route registry, guards
+ * - `@defendr/enzyme/security` - CSP, CSRF protection, XSS prevention, secure storage
+ * - `@defendr/enzyme/services` - Service layer, HTTP interceptors, request queue
+ * - `@defendr/enzyme/state` - State management, store factory, persistence
+ * - `@defendr/enzyme/streaming` - Streaming data, chunked responses
+ * - `@defendr/enzyme/system` - Application initialization, lifecycle management
+ * - `@defendr/enzyme/theme` - Theme provider, dark mode, system preferences
+ * - `@defendr/enzyme/ui` - UI components (buttons, forms, feedback, etc.)
+ * - `@defendr/enzyme/utils` - Utility functions, type guards, async helpers
+ * - `@defendr/enzyme/ux` - Loading states, skeletons, optimistic UI, accessibility
+ * - `@defendr/enzyme/vdom` - Virtual DOM utilities, reconciliation
  *
- * @see {@link ./MIGRATION_GUIDE.md} for migration instructions
- * @see {@link ./docs/ARCHITECTURE.md} for system architecture
- * @see {@link ./docs/PERFORMANCE.md} for performance optimization guide
+ * @module @defendr/enzyme
  */
 
 // ============================================================================
-// DEPRECATION NOTICE
+// PERFORMANCE NOTICE
 // ============================================================================
 /**
- * @deprecated Importing from the main barrel export is discouraged for performance.
+ * Note: For optimal bundle size, use submodule imports instead of the main barrel.
  *
- * The main index previously exported over 1,000 items, causing:
- * - Slow bundler parse times (+1.5s on mobile)
- * - Large initial bundles (+500-700KB)
- * - Prevented effective tree-shaking
- * - Increased memory usage during build
+ * Importing from the main index can cause:
+ * - Slower bundler parse times
+ * - Larger initial bundles
+ * - Reduced tree-shaking effectiveness
  *
- * **Migration Path:**
- * Use submodule imports instead. See MIGRATION_GUIDE.md for automated migration.
- *
- * **Timeline:**
- * - v4.0.0: Main index minimized (this version)
- * - v5.0.0: ESLint errors for main index imports (planned Q2 2025)
- * - v6.0.0: Main index deprecated entirely (planned Q4 2025)
+ * **Recommended:**
+ * ```typescript
+ * import { useAuth } from '@defendr/enzyme/auth';
+ * import { useFeatureFlag } from '@defendr/enzyme/flags';
+ * ```
  */
 
 // ============================================================================
@@ -212,6 +210,4 @@ export type {
  * ... and 20+ more submodules
  */
 
-// Prevent accidental export of everything
-// @ts-expect-error - This is intentional to prevent wildcard exports
-export * from void 0;
+// Note: No wildcard exports - use explicit imports from submodules for tree-shaking

@@ -33,7 +33,6 @@ import {
 import type {
   ConfigRecord,
   ConfigValue,
-  ConfigEventListener,
   ConfigSchema,
 } from './types';
 import { ConfigLoader } from './config-loader';
@@ -252,10 +251,18 @@ export function ConfigProvider<T extends ConfigRecord = ConfigRecord>({
     (listener: (event: import('../contexts/ConfigContext').ConfigChangeEvent) => void): (() => void) => {
       return runtimeConfig.subscribe((event) => {
         // Convert ConfigEvent to ConfigChangeEvent
-        if (event.type === 'change' || event.type === 'reset' || event.type === 'reload') {
+        // Map event types: 'error' events are not exposed to the context listener
+        if (event.type === 'change' || event.type === 'reload') {
+          const mappedChanges = event.type === 'change' && event.changes
+            ? event.changes.map((c) => ({
+                path: c.path,
+                oldValue: c.previousValue ?? null,
+                newValue: c.newValue,
+              }))
+            : undefined;
           listener({
-            type: event.type,
-            changes: event.type === 'change' && 'changes' in event ? event.changes : undefined,
+            type: event.type === 'reload' ? 'reload' : 'change',
+            changes: mappedChanges,
           });
         }
       });

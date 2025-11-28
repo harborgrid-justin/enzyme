@@ -28,42 +28,47 @@ import {
  * Custom hook to track dependency array changes with a stable version number.
  * This allows proper ESLint compliance when using dynamic dependency arrays.
  *
- * Uses JSON.stringify for deep comparison which provides a stable trigger
- * for effects that depend on a dynamic array of dependencies.
+ * Uses shallow comparison for better performance (avoids JSON.stringify overhead).
+ * Only increments version when React's shallow comparison detects changes.
  *
  * @param deps - The dependency array to track
  * @returns A stable version number that increments when any dependency changes
  */
 function useDepsVersion(deps: DependencyList): number {
-  // Serialize deps to detect changes
-  // This provides a stable string that can be used in useMemo's deps
-  const depsKey = useMemo(
-    () => JSON.stringify(deps.map(d => {
-      // Handle special cases for stable serialization
-      if (typeof d === 'function') return d.toString().slice(0, 50);
-      if (d === undefined) return '__undefined__';
-      if (typeof d === 'symbol') return d.toString();
-      return d;
-    })),
-    // We use deps directly - ESLint doesn't like this but it's intentional
-    // for dynamic dependency tracking. The useMemo will recompute when
-    // React detects deps have changed via its shallow comparison
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    deps
-  );
-
-  // Track the version - increment when depsKey changes
   const versionRef = useRef(0);
-  const prevKeyRef = useRef(depsKey);
+  const prevDepsRef = useRef<DependencyList>(deps);
 
-  // Use useMemo to compute version in a way that's stable across renders
+  // Use useMemo with deps to detect changes via React's shallow comparison
+  // This is more efficient than JSON.stringify
   const version = useMemo(() => {
-    if (prevKeyRef.current !== depsKey) {
+    // React's shallow comparison already ran to trigger this memo
+    // We just need to check if this is a new computation
+    const prevDeps = prevDepsRef.current;
+
+    // Quick length check
+    if (prevDeps.length !== deps.length) {
       versionRef.current++;
-      prevKeyRef.current = depsKey;
+      prevDepsRef.current = deps;
+      return versionRef.current;
     }
+
+    // Shallow compare each dependency using Object.is
+    let hasChanged = false;
+    for (let i = 0; i < deps.length; i++) {
+      if (!Object.is(prevDeps[i], deps[i])) {
+        hasChanged = true;
+        break;
+      }
+    }
+
+    if (hasChanged) {
+      versionRef.current++;
+      prevDepsRef.current = deps;
+    }
+
     return versionRef.current;
-  }, [depsKey]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
 
   return version;
 }
