@@ -228,17 +228,17 @@ function getNetworkQuality(): NetworkQuality {
 
   if (!navigator.onLine) return 'offline';
 
-  const connection = (navigator as Navigator & {
+  const {connection} = (navigator as Navigator & {
     connection?: {
       effectiveType?: string;
       saveData?: boolean;
     };
-  }).connection;
+  });
 
   if (!connection) return 'fast';
   if (connection.saveData) return 'slow';
 
-  const effectiveType = connection.effectiveType;
+  const {effectiveType} = connection;
   if (effectiveType === '4g') return 'fast';
   if (effectiveType === '3g') return 'moderate';
   return 'slow';
@@ -337,7 +337,7 @@ export function useOptimizedRender<T>(
   const forceCompute = useCallback(() => {
     const newValue = computeFn();
 
-    if (skipWhen && skipWhen(newValue)) {
+    if (skipWhen?.(newValue)) {
       return;
     }
 
@@ -595,9 +595,9 @@ export function useProgressiveLoad<T>(
     window.addEventListener('online', updateNetwork);
     window.addEventListener('offline', updateNetwork);
 
-    const connection = (navigator as Navigator & {
+    const {connection} = (navigator as Navigator & {
       connection?: EventTarget & { addEventListener: (type: string, handler: () => void) => void };
-    }).connection;
+    });
     connection?.addEventListener('change', updateNetwork);
 
     return () => {

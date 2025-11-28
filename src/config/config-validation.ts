@@ -41,7 +41,7 @@ function duration(options: { min?: number; max?: number; default?: number } = {}
 /**
  * Create a percentage schema (0-100)
  */
-function percentage(defaultValue?: number) {
+function percentage(defaultValue?: number): z.ZodNumber | z.ZodDefault<z.ZodNumber> {
   const schema = z.number().min(0).max(100);
   return defaultValue !== undefined ? schema.default(defaultValue) : schema;
 }
@@ -55,8 +55,8 @@ export type PriorityLevel = z.infer<typeof priorityLevel>;
 /**
  * Create an environment schema
  */
-const environment = z.enum(['development', 'staging', 'production', 'test']);
-export type Environment = z.infer<typeof environment>;
+const _environment = z.enum(['development', 'staging', 'production', 'test']);
+export type Environment = z.infer<typeof _environment>;
 
 // =============================================================================
 // Streaming Configuration Schema
@@ -229,8 +229,8 @@ export type HydrationConfig = z.infer<typeof hydrationConfigSchema>;
 /**
  * Layout mode schema
  */
-const layoutMode = z.enum(['grid', 'flex', 'block', 'inline', 'masonry', 'auto']);
-export type LayoutMode = z.infer<typeof layoutMode>;
+const _layoutMode = z.enum(['grid', 'flex', 'block', 'inline', 'masonry', 'auto']);
+export type LayoutMode = z.infer<typeof _layoutMode>;
 
 /**
  * Morph transition schema
@@ -693,7 +693,10 @@ export function validateConfigOrThrow<T extends z.ZodTypeAny>(
     throw new Error(`Configuration validation failed for "${namespace}":\n${errorMessage}`);
   }
 
-  return result.data!;
+  if (result.data == null) {
+    throw new Error(`Validation succeeded but no data returned for "${namespace}"`);
+  }
+  return result.data;
 }
 
 /**
@@ -737,11 +740,17 @@ function getExpectedFromError(error: z.ZodIssue): string | undefined {
  */
 function getReceivedFromError(error: z.ZodIssue): string | undefined {
   if ('received' in error && error.received !== undefined) {
-    const received = error.received;
-    if (typeof received === 'string' && received.length > 50) {
-      return received.slice(0, 50) + '...';
+    const {received} = error;
+    if (typeof received === 'string') {
+      if (received.length > 50) {
+        return `${received.slice(0, 50)  }...`;
+      }
+      return received;
     }
-    return String(received);
+    if (typeof received === 'number' || typeof received === 'boolean') {
+      return String(received);
+    }
+    return typeof received;
   }
   return undefined;
 }
@@ -753,10 +762,10 @@ export function formatValidationErrors(errors: ConfigValidationError[]): string 
   return errors
     .map((err) => {
       let message = `  - ${err.path}: ${err.message}`;
-      if (err.expected) {
+      if (err.expected != null) {
         message += ` (expected: ${err.expected})`;
       }
-      if (err.received) {
+      if (err.received != null) {
         message += ` (received: ${err.received})`;
       }
       return message;
@@ -771,7 +780,7 @@ export function formatValidationWarnings(warnings: ConfigValidationWarning[]): s
   return warnings
     .map((warn) => {
       let message = `  - ${warn.path}: ${warn.message}`;
-      if (warn.suggestion) {
+      if (warn.suggestion != null) {
         message += ` Suggestion: ${warn.suggestion}`;
       }
       return message;
@@ -803,7 +812,7 @@ export function generateSchemaDocumentation(
 
   // Extract schema shape for objects
   if (schema instanceof z.ZodObject) {
-    const shape = schema.shape;
+    const {shape} = schema;
     for (const [key, value] of Object.entries(shape)) {
       const zodValue = value as z.ZodTypeAny;
       const typeName = getTypeName(zodValue);
@@ -820,6 +829,7 @@ export function generateSchemaDocumentation(
  * Get human-readable type name from Zod schema
  */
 function getTypeName(schema: z.ZodTypeAny): string {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
   const typeName = (schema._def as any).typeName as string;
 
   switch (typeName) {
@@ -830,6 +840,7 @@ function getTypeName(schema: z.ZodTypeAny): string {
     case 'ZodBoolean':
       return 'boolean';
     case 'ZodEnum':
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
       return (schema as any).options.join(' \\| ');
     case 'ZodObject':
       return 'object';
@@ -838,9 +849,9 @@ function getTypeName(schema: z.ZodTypeAny): string {
     case 'ZodDefault':
       return getTypeName((schema as z.ZodDefault<z.ZodTypeAny>)._def.innerType);
     case 'ZodOptional':
-      return getTypeName((schema as z.ZodOptional<z.ZodTypeAny>)._def.innerType) + '?';
+      return `${getTypeName((schema as z.ZodOptional<z.ZodTypeAny>)._def.innerType)  }?`;
     default:
-      return typeName.replace('Zod', '').toLowerCase();
+      return String(typeName).replace('Zod', '').toLowerCase();
   }
 }
 
@@ -849,8 +860,10 @@ function getTypeName(schema: z.ZodTypeAny): string {
  */
 function getDefaultValue(schema: z.ZodTypeAny): string {
   if (schema instanceof z.ZodDefault) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
     const defaultValue = (schema._def.defaultValue as () => any)();
-    if (typeof defaultValue === 'object') {
+     
+    if (typeof defaultValue === 'object' && defaultValue !== null) {
       return '`{...}`';
     }
     return `\`${JSON.stringify(defaultValue)}\``;

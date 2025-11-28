@@ -147,7 +147,7 @@ export function RealtimeProvider({
       unsubMessage();
       client.disconnect();
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, [realtimeEnabled, mergedConfig.type, mergedConfig.url, mergedConfig.autoConnect, mergedConfig.cacheStrategies]);
 
   /**

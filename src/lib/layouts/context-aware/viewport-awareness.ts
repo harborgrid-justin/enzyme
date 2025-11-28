@@ -316,7 +316,7 @@ export class ViewportTracker {
       return { startIndex: 0, endIndex: Math.min(20, totalItems), offsetTop: 0 };
     }
 
-    const scrollY = this.viewport.scrollY;
+    const {scrollY} = this.viewport;
     const viewportHeight = this.viewport.height;
 
     // Calculate visible range
@@ -521,8 +521,8 @@ export class ViewportTracker {
     const height = window.innerHeight;
     const scrollX = window.scrollX || window.pageXOffset;
     const scrollY = window.scrollY || window.pageYOffset;
-    const scrollWidth = document.documentElement.scrollWidth;
-    const scrollHeight = document.documentElement.scrollHeight;
+    const {scrollWidth} = document.documentElement;
+    const {scrollHeight} = document.documentElement;
     const devicePixelRatio = window.devicePixelRatio || 1;
     const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     const orientation = width > height ? 'landscape' : 'portrait';
@@ -597,7 +597,7 @@ export class ViewportTracker {
    */
   private computePositionFromEntry(entry: IntersectionObserverEntry): ViewportPosition {
     const rect = entry.boundingClientRect;
-    const viewport = this.viewport;
+    const {viewport} = this;
 
     // Compute bounds
     const bounds: ComputedBounds = {
@@ -661,7 +661,7 @@ export class ViewportTracker {
    */
   private computeElementPosition(element: Element): ViewportPosition {
     const rect = element.getBoundingClientRect();
-    const viewport = this.viewport;
+    const {viewport} = this;
 
     // Compute bounds
     const bounds: ComputedBounds = {

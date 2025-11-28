@@ -308,7 +308,7 @@ export function createResourceClient<T extends { id: string | number }>(
      * @throws {ApiError} When any delete request fails
      */
     async batchDelete(ids: (string | number)[]): Promise<void> {
-      await Promise.all(ids.map(id => apiClient.delete(buildUrl(`/${id}`))));
+      await Promise.all(ids.map(async id => apiClient.delete(buildUrl(`/${id}`))));
 
       // Invalidate caches
       ids.forEach(id => cache.delete(buildCacheKey(`/${id}`)));

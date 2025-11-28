@@ -235,13 +235,23 @@ export function useImageReservation(
   const { reserve, release } = useCLSGuard();
 
   useEffect(() => {
-    setIsLoading(true);
+    // Use requestAnimationFrame to defer state update
+    const frameId = requestAnimationFrame(() => {
+      setIsLoading(true);
+    });
 
     // If dimensions are provided, create reservation immediately
-    if (dimensions) {
+    if (dimensions != null) {
       const res = reserve(id, dimensions);
-      setReservation(res);
+      requestAnimationFrame(() => {
+        setReservation(res);
+      });
     }
+
+    // Return cleanup for the frame
+    const cleanupFrame = (): void => {
+      cancelAnimationFrame(frameId);
+    };
 
     // Load image to get intrinsic dimensions
     const img = new Image();
@@ -251,7 +261,7 @@ export function useImageReservation(
       setIntrinsicDimensions(intrinsic);
 
       // Update reservation if we didn't have dimensions
-      if (!dimensions) {
+      if (dimensions == null) {
         const res = reserve(id, intrinsic);
         setReservation(res);
       }
@@ -266,6 +276,7 @@ export function useImageReservation(
     img.src = src;
 
     return () => {
+      cleanupFrame();
       release(id);
     };
   }, [id, src, dimensions, reserve, release]);

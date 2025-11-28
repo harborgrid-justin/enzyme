@@ -270,8 +270,8 @@ export class CriticalPathAnalyzer {
         url: img.src,
         type: 'image',
         criticality: inViewport ? 'high' : 'low',
-        size: timing?.decodedBodySize || 0,
-        loadTime: timing?.duration || 0,
+        size: timing?.decodedBodySize ?? 0,
+        loadTime: timing?.duration ?? 0,
         inViewport,
         aboveTheFold: inViewport,
         recommendations: this.getImageRecommendations(img, inViewport),
@@ -290,8 +290,8 @@ export class CriticalPathAnalyzer {
         url: font.href,
         type: 'font',
         criticality: 'high',
-        size: timing?.decodedBodySize || 0,
-        loadTime: timing?.duration || 0,
+        size: timing?.decodedBodySize ?? 0,
+        loadTime: timing?.duration ?? 0,
         inViewport: true,
         aboveTheFold: true,
         recommendations: this.getFontRecommendations(font),
@@ -309,8 +309,8 @@ export class CriticalPathAnalyzer {
       return this.getEmptyDOMAnalysis();
     }
 
-    const body = document.body;
-    if (!body) {
+    const {body} = document;
+    if (body == null) {
       return this.getEmptyDOMAnalysis();
     }
 
@@ -324,7 +324,7 @@ export class CriticalPathAnalyzer {
       totalNodes++;
       maxDepth = Math.max(maxDepth, depth);
 
-      const currentCount = levelCounts.get(depth) || 0;
+      const currentCount = levelCounts.get(depth) ?? 0;
       levelCounts.set(depth, currentCount + 1);
 
       if (node instanceof Element && this.isInViewport(node)) {
@@ -426,7 +426,7 @@ export class CriticalPathAnalyzer {
     url: string
   ): PerformanceResourceTiming | undefined {
     try {
-      const entries = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
+      const entries = performance.getEntriesByType('resource');
       return entries.find((entry) => entry.name.includes(url));
     } catch {
       return undefined;
@@ -552,10 +552,16 @@ export class CriticalPathAnalyzer {
     // Render-blocking optimizations
     if (blocking.length > 0) {
       const totalBlockingTime = blocking.reduce((sum, r) => sum + r.blockingTime, 0);
+      let impact: 'high' | 'medium' | 'low' = 'low';
+      if (totalBlockingTime > 500) {
+        impact = 'high';
+      } else if (totalBlockingTime > 200) {
+        impact = 'medium';
+      }
       optimizations.push({
         type: 'render-blocking',
         description: `${blocking.length} render-blocking resources found`,
-        impact: totalBlockingTime > 500 ? 'high' : totalBlockingTime > 200 ? 'medium' : 'low',
+        impact,
         estimatedSavings: Math.min(totalBlockingTime * 0.5, 1000),
         implementation:
           'Defer non-critical scripts, inline critical CSS, use preload for critical resources',
@@ -685,9 +691,7 @@ let analyzerInstance: CriticalPathAnalyzer | null = null;
 export function getCriticalPathAnalyzer(
   config?: Partial<CriticalPathAnalyzerConfig>
 ): CriticalPathAnalyzer {
-  if (!analyzerInstance) {
-    analyzerInstance = new CriticalPathAnalyzer(config);
-  }
+  analyzerInstance ??= new CriticalPathAnalyzer(config);
   return analyzerInstance;
 }
 

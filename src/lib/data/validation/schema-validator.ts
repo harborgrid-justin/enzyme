@@ -251,7 +251,7 @@ export abstract class BaseSchema<TOutput> {
   describe(description: string): this {
     const clone = this._clone();
     clone._description = description;
-    return clone as this;
+    return clone;
   }
 
   /**

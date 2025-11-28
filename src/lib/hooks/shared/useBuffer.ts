@@ -100,18 +100,18 @@ export function useBuffer<T>(options: BufferOptions<T> = {}): UseBufferResult<T>
     bufferRef.current = [];
 
     // Clear timer if exists
-    if (timerRef.current) {
+    if (timerRef.current !== undefined && timerRef.current !== null) {
       clearTimeout(timerRef.current);
       timerRef.current = undefined;
     }
 
     // Call flush callback
-    onFlushRef.current?.(items);
+    void onFlushRef.current?.(items);
   }, [onFlushRef]);
 
   // Start flush timer
   const startTimer = useCallback(() => {
-    if (timerRef.current) {
+    if (timerRef.current !== undefined && timerRef.current !== null) {
       clearTimeout(timerRef.current);
     }
 
@@ -125,7 +125,7 @@ export function useBuffer<T>(options: BufferOptions<T> = {}): UseBufferResult<T>
     const buffer = bufferRef.current;
 
     // Check custom condition
-    if (shouldFlushRef.current?.(buffer)) {
+    if (shouldFlushRef.current?.(buffer) === true) {
       flush();
       return;
     }
@@ -165,7 +165,7 @@ export function useBuffer<T>(options: BufferOptions<T> = {}): UseBufferResult<T>
   // Clear buffer without flushing
   const clear = useCallback(() => {
     bufferRef.current = [];
-    if (timerRef.current) {
+    if (timerRef.current !== undefined && timerRef.current !== null) {
       clearTimeout(timerRef.current);
       timerRef.current = undefined;
     }
@@ -179,15 +179,18 @@ export function useBuffer<T>(options: BufferOptions<T> = {}): UseBufferResult<T>
 
   // Cleanup on unmount
   useEffect(() => {
+    // Capture onFlush reference at effect setup time
+    const capturedOnFlush = onFlushRef.current;
     return () => {
-      if (timerRef.current) {
+      if (timerRef.current !== undefined && timerRef.current !== null) {
         clearTimeout(timerRef.current);
       }
       if (flushOnUnmount && bufferRef.current.length > 0) {
-        onFlushRef.current?.(bufferRef.current);
+        void capturedOnFlush?.(bufferRef.current);
       }
     };
-  }, [flushOnUnmount, onFlushRef]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [flushOnUnmount]);
 
   return {
     add,

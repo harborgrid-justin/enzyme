@@ -240,7 +240,7 @@ function GenericListInner<T extends ListItemBase>({
 
   // Stable click handler using data-* attributes
   const handleItemClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
-    const itemId = event.currentTarget.dataset.itemId;
+    const {itemId} = event.currentTarget.dataset;
     if (itemId && onSelect) {
       onSelect(selectedId === itemId ? null : itemId);
     }
@@ -347,7 +347,7 @@ export interface StatsCardProps {
 /**
  * Stats Card component - memoized for performance
  */
-export const StatsCard = memo(function StatsCard({
+export const StatsCard = memo(({
   label,
   value,
   icon,
@@ -355,7 +355,7 @@ export const StatsCard = memo(function StatsCard({
   onClick,
   className,
   style,
-}: StatsCardProps): React.ReactElement {
+}: StatsCardProps): React.ReactElement => {
   // Memoize container style based on props
   const containerStyle = useMemo<CSSProperties>(() => ({
     padding: '1rem',
@@ -446,13 +446,13 @@ const variantStyles: Record<string, CSSProperties> = {
 /**
  * Action Toolbar component - memoized for performance
  */
-export const ActionToolbar = memo(function ActionToolbar({
+export const ActionToolbar = memo(({
   actions,
   className,
   style,
   size = 'md',
   direction = 'horizontal',
-}: ActionToolbarProps): React.ReactElement {
+}: ActionToolbarProps): React.ReactElement => {
   const getButtonStyle = useCallback(
     (variant: ActionConfig['variant'] = 'secondary', disabled?: boolean): CSSProperties => {
       const base: CSSProperties = {
@@ -483,7 +483,7 @@ export const ActionToolbar = memo(function ActionToolbar({
 
   // Stable click handler using data-* attributes
   const handleButtonClick = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
-    const actionId = event.currentTarget.dataset.actionId;
+    const {actionId} = event.currentTarget.dataset;
     if (actionId) {
       const action = actions.find((a) => a.id === actionId);
       action?.onClick();
@@ -641,7 +641,7 @@ export interface PaginationProps {
 /**
  * Pagination component - memoized for performance
  */
-export const Pagination = memo(function Pagination({
+export const Pagination = memo(({
   currentPage,
   totalPages,
   pageSize,
@@ -653,7 +653,7 @@ export const Pagination = memo(function Pagination({
   showItemCount = true,
   className,
   style,
-}: PaginationProps): React.ReactElement {
+}: PaginationProps): React.ReactElement => {
   const startItem = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const endItem = Math.min(currentPage * pageSize, totalItems);
 
@@ -729,7 +729,7 @@ export const Pagination = memo(function Pagination({
 
   // Stable page number click handler using data-* attributes
   const handlePageClick = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
-    const page = event.currentTarget.dataset.page;
+    const {page} = event.currentTarget.dataset;
     if (page) {
       onPageChange(Number(page));
     }
@@ -808,7 +808,7 @@ Pagination.displayName = 'Pagination';
 // Default State Components
 // ============================================================================
 
-const DefaultLoadingState = memo(function DefaultLoadingState(): React.ReactElement {
+const DefaultLoadingState = memo((): React.ReactElement => {
   return (
     <div style={loadingContainerStyle}>
       <div style={spinnerStyle} />
@@ -825,11 +825,11 @@ const DefaultLoadingState = memo(function DefaultLoadingState(): React.ReactElem
 
 DefaultLoadingState.displayName = 'DefaultLoadingState';
 
-const DefaultEmptyState = memo(function DefaultEmptyState({
+const DefaultEmptyState = memo(({
   message,
 }: {
   message: string;
-}): React.ReactElement {
+}): React.ReactElement => {
   return (
     <div style={emptyStateStyle}>
       <p>{message}</p>
@@ -839,7 +839,7 @@ const DefaultEmptyState = memo(function DefaultEmptyState({
 
 DefaultEmptyState.displayName = 'DefaultEmptyState';
 
-const DefaultErrorState = memo(function DefaultErrorState({ error }: { error: Error }): React.ReactElement {
+const DefaultErrorState = memo(({ error }: { error: Error }): React.ReactElement => {
   return (
     <div style={errorStateStyle}>
       <p style={errorTitleStyle}>Error</p>
@@ -869,14 +869,14 @@ export interface SearchInputProps {
 /**
  * Search Input component with debouncing - memoized for performance
  */
-export const SearchInput = memo(function SearchInput({
+export const SearchInput = memo(({
   value,
   onChange,
   placeholder = 'Search...',
   debounceMs = 300,
   className,
   style,
-}: SearchInputProps): React.ReactElement {
+}: SearchInputProps): React.ReactElement => {
   const [localValue, setLocalValue] = useState(value);
 
   // Memoize input style

@@ -77,7 +77,7 @@ function deepEqual(a: unknown, b: unknown): boolean {
 
   if (Array.isArray(a) || Array.isArray(b)) return false;
 
-  const aKeys = Object.keys(a as object);
+  const aKeys = Object.keys(a);
   const bKeys = Object.keys(b as object);
   if (aKeys.length !== bKeys.length) return false;
 

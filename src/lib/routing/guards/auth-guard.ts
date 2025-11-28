@@ -147,7 +147,7 @@ export class AuthGuard extends BaseRouteGuard {
    */
   private async checkAuthentication(context: GuardContext): Promise<GuardResultObject> {
     // Use custom check if provided
-    if (this.authConfig.checkAuth) {
+    if (this.authConfig.checkAuth !== undefined && this.authConfig.checkAuth !== null) {
       return this.authConfig.checkAuth(context);
     }
 
@@ -159,14 +159,14 @@ export class AuthGuard extends BaseRouteGuard {
     // Check authentication status
     const isAuthenticated = await this.checkAuthStatus(context);
 
-    if (!isAuthenticated) {
+    if (isAuthenticated !== true) {
       return this.buildLoginRedirect(context);
     }
 
     // Check session validity
-    if (this.authConfig.validateSession) {
+    if (this.authConfig.validateSession !== undefined && this.authConfig.validateSession !== null) {
       const isValid = await this.authConfig.validateSession(context);
-      if (!isValid) {
+      if (isValid !== true) {
         return this.buildLoginRedirect(context, 'Session expired');
       }
     }
@@ -182,7 +182,7 @@ export class AuthGuard extends BaseRouteGuard {
    */
   private async checkAuthStatus(context: GuardContext): Promise<boolean> {
     // Use custom isAuthenticated function if provided
-    if (this.authConfig.isAuthenticated) {
+    if (this.authConfig.isAuthenticated !== undefined && this.authConfig.isAuthenticated !== null) {
       return this.authConfig.isAuthenticated(context);
     }
 
@@ -224,7 +224,7 @@ export class AuthGuard extends BaseRouteGuard {
    */
   private buildLoginRedirect(context: GuardContext, reason?: string): GuardResultObject {
     // Use custom redirect builder if provided
-    if (this.authConfig.buildRedirect) {
+    if (this.authConfig.buildRedirect !== undefined && this.authConfig.buildRedirect !== null) {
       const redirectPath = this.authConfig.buildRedirect(context);
       return GuardResult.redirect(redirectPath);
     }

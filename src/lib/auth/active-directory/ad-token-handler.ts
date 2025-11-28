@@ -16,7 +16,7 @@ import type {
 } from './types';
 import { getAuthorityUrl, getConfiguredScopes } from './ad-config';
 import {
-  SecureStorage,
+  type SecureStorage,
   createSecureLocalStorage,
   createSecureSessionStorage,
   isSecureStorageAvailable,
@@ -59,9 +59,7 @@ function generateADSessionKey(): string {
  * Gets or creates the AD session encryption key.
  */
 function getADSessionEncryptionKey(): string {
-  if (!adSessionEncryptionKey) {
-    adSessionEncryptionKey = generateADSessionKey();
-  }
+  adSessionEncryptionKey ??= generateADSessionKey();
   return adSessionEncryptionKey;
 }
 
@@ -230,19 +228,19 @@ export class ADTokenHandler {
 
     // Check cache first (async to support encrypted storage)
     const cached = await this.getFromCache(cacheKey);
-    if (cached && !this.isTokenExpired(cached.tokens)) {
+    if (cached !== undefined && cached !== null && !this.isTokenExpired(cached.tokens)) {
       this.log('Returning cached token');
       return cached.tokens;
     }
 
     // Try to refresh if we have a refresh token
-    if (cached?.tokens.refreshToken) {
+    if (cached?.tokens.refreshToken !== undefined && cached?.tokens.refreshToken !== null) {
       const refreshResult = await this.refreshToken(cached.tokens.refreshToken, request);
-      if (refreshResult.success && refreshResult.tokens) {
+      if (refreshResult.success === true && refreshResult.tokens !== undefined && refreshResult.tokens !== null) {
         return refreshResult.tokens;
       }
 
-      if (refreshResult.requiresInteraction) {
+      if (refreshResult.requiresInteraction === true) {
         return null;
       }
     }
@@ -261,13 +259,13 @@ export class ADTokenHandler {
     request: AcquisitionOptions
   ): Promise<ADTokens> {
     const authority = getAuthorityUrl(this.config);
-    if (!authority) {
-      throw this.createError('config_error', 'No authority URL configured');
+    if (authority == null || authority === '') {
+      throw new Error('No authority URL configured');
     }
 
     const authUrl = this.buildAuthorizationUrl(request);
 
-    if (request.usePopup) {
+    if (request.usePopup === true) {
       return this.acquireTokenPopup(authUrl, request);
     }
 
@@ -295,24 +293,25 @@ export class ADTokenHandler {
         `width=${width},height=${height},left=${left},top=${top},scrollbars=yes`
       );
 
-      if (!popup) {
-        reject(this.createError('popup_blocked', 'Popup window was blocked'));
+      if (popup == null) {
+        reject(new Error('Popup window was blocked'));
         return;
       }
 
       const timeout = request.popupTimeout ?? 120000; // 2 minute default
       const timeoutId = setTimeout(() => {
         popup.close();
-        reject(this.createError('popup_timeout', 'Authentication timed out'));
+        reject(new Error('Authentication timed out'));
       }, timeout);
 
       // Poll for redirect completion
-      const pollTimer = setInterval(async () => {
+      const pollTimer = setInterval(() => {
+        void (async (): Promise<void> => {
         try {
-          if (popup.closed) {
+          if (popup.closed === true) {
             clearInterval(pollTimer);
             clearTimeout(timeoutId);
-            reject(this.createError('popup_closed', 'Popup was closed before authentication completed'));
+            reject(new Error('Popup was closed before authentication completed'));
             return;
           }
 
@@ -325,16 +324,17 @@ export class ADTokenHandler {
             popup.close();
 
             const tokens = this.parseTokenResponse(urlParams);
-            if (tokens) {
+            if (tokens != null) {
               await this.cacheTokens(tokens, request.scopes);
               resolve(tokens);
             } else {
-              reject(this.createError('token_parse_error', 'Failed to parse token response'));
+              reject(new Error('Failed to parse token response'));
             }
           }
         } catch {
           // Cross-origin error - popup is on different domain, keep polling
         }
+        })();
       }, 100);
     });
   }
@@ -369,8 +369,8 @@ export class ADTokenHandler {
    * @returns Tokens if redirect was handled, null otherwise
    */
   async handleRedirectResponse(): Promise<ADTokens | null> {
-    const hash = window.location.hash;
-    if (!hash || !hash.startsWith('#')) {
+    const {hash} = window.location;
+    if ((hash === undefined || hash === null || hash === '') || !hash.startsWith('#')) {
       return null;
     }
 
@@ -378,27 +378,27 @@ export class ADTokenHandler {
 
     // Check for error
     const error = urlParams.get('error');
-    if (error) {
-      const errorDescription = urlParams.get('error_description') || 'Authentication failed';
-      throw this.createError(error, errorDescription);
+    if (error != null && error !== '') {
+      const errorDescription = urlParams.get('error_description') ?? 'Authentication failed';
+      throw new Error(errorDescription);
     }
 
     // Validate state
     const state = urlParams.get('state');
     const storedState = sessionStorage.getItem('ad_auth_state');
     if (state !== storedState) {
-      throw this.createError('state_mismatch', 'State parameter does not match');
+      throw new Error('State parameter does not match');
     }
 
     // Parse tokens
     const tokens = this.parseTokenResponse(urlParams);
-    if (!tokens) {
-      throw this.createError('token_parse_error', 'Failed to parse token response');
+    if (tokens == null) {
+      throw new Error('Failed to parse token response');
     }
 
     // Get stored scopes for caching
     const scopesJson = sessionStorage.getItem('ad_auth_scopes');
-    const scopes = scopesJson ? JSON.parse(scopesJson) : [];
+    const scopes = (scopesJson != null && scopesJson !== '') ? JSON.parse(scopesJson) as string[] : [];
 
     // Cache tokens (encrypted)
     await this.cacheTokens(tokens, scopes);
@@ -436,7 +436,7 @@ export class ADTokenHandler {
 
     // Check for existing refresh promise
     const existingPromise = this.refreshPromises.get(cacheKey);
-    if (existingPromise) {
+    if (existingPromise != null) {
       return existingPromise;
     }
 
@@ -459,7 +459,7 @@ export class ADTokenHandler {
     request?: TokenAcquisitionRequest
   ): Promise<TokenRefreshResult> {
     const authority = getAuthorityUrl(this.config);
-    if (!authority) {
+    if (authority == null || authority === '') {
       return {
         success: false,
         error: this.createError('config_error', 'No authority URL configured'),
@@ -484,21 +484,21 @@ export class ADTokenHandler {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+        const errorData = await response.json().catch(() => ({ error: undefined, error_description: undefined })) as { error?: string; error_description?: string };
 
         const error = this.createError(
-          errorData.error || 'refresh_failed',
-          errorData.error_description || 'Token refresh failed'
+          (errorData.error != null && errorData.error !== '') ? errorData.error : 'refresh_failed',
+          (errorData.error_description != null && errorData.error_description !== '') ? errorData.error_description : 'Token refresh failed'
         );
 
         // Check if interaction is required
-        const requiresInteraction = [
+        const requiresInteraction = errorData.error != null && [
           'invalid_grant',
           'interaction_required',
           'consent_required',
         ].includes(errorData.error);
 
-        this.options.onRefreshFailed(error);
+        this.options.onRefreshFailed?.(error);
 
         return {
           success: false,
@@ -507,19 +507,26 @@ export class ADTokenHandler {
         };
       }
 
-      const data = await response.json();
+      const data = await response.json() as {
+        access_token: string;
+        id_token: string;
+        refresh_token?: string;
+        expires_in: number;
+        scope?: string;
+        token_type?: string;
+      };
       const tokens: ADTokens = {
         accessToken: data.access_token,
         idToken: data.id_token,
-        refreshToken: data.refresh_token || refreshToken,
+        refreshToken: (data.refresh_token != null && data.refresh_token !== '') ? data.refresh_token : refreshToken,
         expiresAt: Date.now() + (data.expires_in * 1000),
-        scopes: data.scope?.split(' ') || scopes,
-        tokenType: data.token_type || 'Bearer',
+        scopes: (data.scope != null && data.scope !== '') ? data.scope.split(' ') : scopes,
+        tokenType: (data.token_type != null && data.token_type !== '') ? data.token_type : 'Bearer',
       };
 
       // Cache (encrypted) and notify
       await this.cacheTokens(tokens, scopes);
-      this.options.onTokenRefresh(tokens);
+      this.options.onTokenRefresh?.(tokens);
       this.scheduleRefresh(tokens);
 
       return { success: true, tokens };
@@ -530,7 +537,7 @@ export class ADTokenHandler {
         error
       );
 
-      this.options.onRefreshFailed(authError);
+      this.options.onRefreshFailed?.(authError);
 
       return { success: false, error: authError };
     }
@@ -540,12 +547,12 @@ export class ADTokenHandler {
    * Schedule automatic token refresh before expiry.
    */
   private scheduleRefresh(tokens: ADTokens): void {
-    if (!this.options.autoRefresh || !tokens.refreshToken) {
+    if (this.options.autoRefresh !== true || (tokens.refreshToken === undefined || tokens.refreshToken === null)) {
       return;
     }
 
     // Clear any existing timer
-    if (this.refreshTimer) {
+    if (this.refreshTimer !== undefined && this.refreshTimer !== null) {
       clearTimeout(this.refreshTimer);
     }
 
@@ -593,10 +600,10 @@ export class ADTokenHandler {
       const storageKey = `${TOKEN_CACHE_PREFIX}${cacheKey}`;
 
       // Use secure storage if available
-      if (this.secureStorage) {
+      if (this.secureStorage !== undefined && this.secureStorage !== null) {
         try {
           const result = await this.secureStorage.setItem(storageKey, entry);
-          if (!result.success) {
+          if (result.success !== true) {
             this.log('Failed to store encrypted AD tokens:', result.error);
             // Fall back to raw storage (logged warning)
             this.fallbackStoreTokens(storageKey, entry);
@@ -636,7 +643,7 @@ export class ADTokenHandler {
   private async getFromCache(cacheKey: string): Promise<TokenCacheEntry | null> {
     // Check memory first
     const memoryEntry = this.memoryCache.get(cacheKey);
-    if (memoryEntry) {
+    if (memoryEntry !== undefined && memoryEntry !== null) {
       return memoryEntry;
     }
 
@@ -645,10 +652,10 @@ export class ADTokenHandler {
       const storageKey = `${TOKEN_CACHE_PREFIX}${cacheKey}`;
 
       // Try secure storage first
-      if (this.secureStorage) {
+      if (this.secureStorage !== undefined && this.secureStorage !== null) {
         try {
           const result = await this.secureStorage.getItem<TokenCacheEntry>(storageKey);
-          if (result.success && result.data) {
+          if (result.success === true && result.data !== undefined && result.data !== null) {
             // Restore to memory cache
             this.memoryCache.set(cacheKey, result.data);
             return result.data;
@@ -661,17 +668,17 @@ export class ADTokenHandler {
       // Fall back to raw storage (for migration from unencrypted)
       const storage = this.getStorage();
       const stored = storage.getItem(storageKey);
-      if (stored) {
+      if (stored !== undefined && stored !== null) {
         try {
           const entry = JSON.parse(stored) as TokenCacheEntry;
           // Restore to memory cache
           this.memoryCache.set(cacheKey, entry);
 
           // Migrate to encrypted storage if available
-          if (this.secureStorage) {
+          if (this.secureStorage !== undefined && this.secureStorage !== null) {
             this.log('Migrating unencrypted AD tokens to secure storage');
             // Store encrypted version (don't await to not block)
-            this.secureStorage.setItem(storageKey, entry).catch(() => {});
+            void this.secureStorage.setItem(storageKey, entry).catch(() => {});
             // Remove unencrypted version
             storage.removeItem(storageKey);
           }
@@ -711,7 +718,7 @@ export class ADTokenHandler {
     // Clear persistent storage
     if (this.options.cacheLocation !== 'memory') {
       // Clear from secure storage if available
-      if (this.secureStorage) {
+      if (this.secureStorage !== undefined && this.secureStorage !== null) {
         try {
           await this.secureStorage.clear();
         } catch (error) {
@@ -725,7 +732,7 @@ export class ADTokenHandler {
 
       for (let i = 0; i < storage.length; i++) {
         const key = storage.key(i);
-        if (key?.startsWith(TOKEN_CACHE_PREFIX)) {
+        if (key !== undefined && key !== null && key.startsWith(TOKEN_CACHE_PREFIX)) {
           keysToRemove.push(key);
         }
       }
@@ -734,7 +741,7 @@ export class ADTokenHandler {
     }
 
     // Clear refresh timer
-    if (this.refreshTimer) {
+    if (this.refreshTimer !== undefined && this.refreshTimer !== null) {
       clearTimeout(this.refreshTimer);
       this.refreshTimer = null;
     }
@@ -748,7 +755,7 @@ export class ADTokenHandler {
    * SECURITY: Retrieves tokens from encrypted storage when available.
    */
   async getCachedTokens(): Promise<ADTokens | null> {
-    if (!this.currentAccountId) {
+    if (this.currentAccountId === undefined || this.currentAccountId === null) {
       return null;
     }
 
@@ -768,7 +775,7 @@ export class ADTokenHandler {
    * Use getCachedTokens() for full encrypted storage support.
    */
   getCachedTokensSync(): ADTokens | null {
-    if (!this.currentAccountId) {
+    if (this.currentAccountId === undefined || this.currentAccountId === null) {
       return null;
     }
 
@@ -805,19 +812,19 @@ export class ADTokenHandler {
       response_mode: 'fragment',
     });
 
-    if (request.prompt) {
+    if (request.prompt !== undefined && request.prompt !== null) {
       params.set('prompt', request.prompt);
     }
 
-    if (request.loginHint) {
+    if (request.loginHint !== undefined && request.loginHint !== null) {
       params.set('login_hint', request.loginHint);
     }
 
-    if (request.domainHint) {
+    if (request.domainHint !== undefined && request.domainHint !== null) {
       params.set('domain_hint', request.domainHint);
     }
 
-    if (request.extraQueryParameters) {
+    if (request.extraQueryParameters !== undefined && request.extraQueryParameters !== null) {
       Object.entries(request.extraQueryParameters).forEach(([key, value]) => {
         params.set(key, value);
       });
@@ -833,7 +840,7 @@ export class ADTokenHandler {
     const accessToken = params.get('access_token');
     const idToken = params.get('id_token');
 
-    if (!accessToken || !idToken) {
+    if ((accessToken === undefined || accessToken === null) || (idToken === undefined || idToken === null)) {
       return null;
     }
 
@@ -943,7 +950,7 @@ export class ADTokenHandler {
    * Cleanup resources.
    */
   dispose(): void {
-    if (this.refreshTimer) {
+    if (this.refreshTimer !== undefined && this.refreshTimer !== null) {
       clearTimeout(this.refreshTimer);
       this.refreshTimer = null;
     }

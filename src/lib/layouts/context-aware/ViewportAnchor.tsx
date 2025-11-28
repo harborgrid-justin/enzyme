@@ -106,7 +106,7 @@ interface AnchorState {
  * ```
  */
 export const ViewportAnchor = forwardRef<HTMLDivElement, ExtendedViewportAnchorProps>(
-  function ViewportAnchor(
+  (
     {
       children,
       className,
@@ -124,7 +124,7 @@ export const ViewportAnchor = forwardRef<HTMLDivElement, ExtendedViewportAnchorP
       'data-testid': testId,
     },
     forwardedRef
-  ) {
+  ) => {
     // Refs
     const containerRef = useRef<HTMLDivElement>(null);
     const unobserveRef = useRef<(() => void) | null>(null);

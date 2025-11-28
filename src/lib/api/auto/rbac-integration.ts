@@ -374,10 +374,10 @@ function matchesRule(path: string, method: HttpMethod, rule: PermissionRule): bo
   if (typeof rule.pattern === 'string') {
     // Simple glob-like matching
     const regex = new RegExp(
-      '^' + rule.pattern
+      `^${  rule.pattern
         .replace(/\*/g, '.*')
         .replace(/:[^/]+/g, '[^/]+')
-        .replace(/\{[^}]+\}/g, '[^/]+') + '$'
+        .replace(/\{[^}]+\}/g, '[^/]+')  }$`
     );
     return regex.test(path);
   }
@@ -407,8 +407,8 @@ function applyRule(
 
   // Template with placeholders
   const template = rule.permission;
-  let resource = template.resource;
-  let action = template.action;
+  let {resource} = template;
+  let {action} = template;
 
   // Replace placeholders
   if (resource === '{resource}') {
@@ -488,7 +488,7 @@ export class RBACIntegration {
     context?: PermissionCheckContext
   ): Promise<RBACCheckResult> {
     const startTime = performance.now();
-    const access = endpoint.access;
+    const {access} = endpoint;
 
     // Public endpoints
     if (access.isPublic) {
@@ -496,7 +496,7 @@ export class RBACIntegration {
     }
 
     // Check authentication
-    if (access.requiresAuth && (!user || !user.isAuthenticated)) {
+    if (access.requiresAuth && (!user?.isAuthenticated)) {
       return this.createResult('requires_auth', 'Authentication required', startTime, false);
     }
 

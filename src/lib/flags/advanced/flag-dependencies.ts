@@ -120,11 +120,15 @@ export class DependencyResolver {
 
     // Add dependencies to nodes
     for (const dep of dependencies) {
-      const sourceNode = this.graph.get(dep.sourceFlag)!;
-      sourceNode.dependencies.set(dep.targetFlag, dep);
+      const sourceNode = this.graph.get(dep.sourceFlag);
+      if (sourceNode != null) {
+        sourceNode.dependencies.set(dep.targetFlag, dep);
+      }
 
-      const targetNode = this.graph.get(dep.targetFlag)!;
-      targetNode.dependents.add(dep.sourceFlag);
+      const targetNode = this.graph.get(dep.targetFlag);
+      if (targetNode != null) {
+        targetNode.dependents.add(dep.sourceFlag);
+      }
     }
   }
 
@@ -136,7 +140,11 @@ export class DependencyResolver {
         dependents: new Set(),
       });
     }
-    return this.graph.get(flagId)!;
+    const node = this.graph.get(flagId);
+    if (node == null) {
+      throw new Error(`Failed to ensure node for flag ${flagId}`);
+    }
+    return node;
   }
 
   /**
@@ -210,13 +218,13 @@ export class DependencyResolver {
     if (node) {
       for (const [targetId, dep] of node.dependencies) {
         const result = this.checkDependency(dep, evaluator);
-        if (!result.satisfied) {
-          unsatisfied.push(result.unsatisfied!);
+        if (!result.satisfied && result.unsatisfied != null) {
+          unsatisfied.push(result.unsatisfied);
         }
-        if (result.implied) {
+        if (result.implied === true) {
           implied.push(targetId);
         }
-        if (result.conflict) {
+        if (result.conflict === true) {
           conflicts.push(targetId);
         }
       }
@@ -260,7 +268,7 @@ export class DependencyResolver {
         }
         // Check variant if specified
         if (
-          dep.requiredVariant &&
+          dep.requiredVariant != null &&
           targetState.variantId !== dep.requiredVariant
         ) {
           return {
@@ -650,9 +658,7 @@ let instance: DependencyResolver | null = null;
  * Get the singleton dependency resolver instance.
  */
 export function getDependencyResolver(): DependencyResolver {
-  if (!instance) {
-    instance = new DependencyResolver();
-  }
+  instance ??= new DependencyResolver();
   return instance;
 }
 

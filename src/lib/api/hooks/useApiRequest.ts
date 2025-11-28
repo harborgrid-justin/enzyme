@@ -545,7 +545,7 @@ export function usePolling<TResponse = unknown>(
   const refetchIntervalFn = useCallback((query: any) => {
     if (shouldStop.current) return false;
 
-    const data = query.state.data;
+    const {data} = query.state;
     if (data && options.stopCondition?.(data)) {
       shouldStop.current = true;
       return false;
@@ -661,7 +661,7 @@ export function useLazyQuery<TResponse = unknown>(
     async (overrides?: Partial<ApiRequestOptions<TResponse>>) => {
       const mergedOptions = { ...options, ...overrides };
 
-      let url = mergedOptions.url;
+      let {url} = mergedOptions;
       if (mergedOptions.pathParams) {
         for (const [key, value] of Object.entries(mergedOptions.pathParams)) {
           url = url.replace(`:${key}`, encodeURIComponent(String(value)));

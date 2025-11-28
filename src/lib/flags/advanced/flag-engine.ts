@@ -571,7 +571,7 @@ export class FlagEngine {
     }
 
     // Check segment prerequisites
-    if (flag.segments && flag.segments.length > 0) {
+    if (flag.segments != null && flag.segments.length > 0) {
       const inSegment = this.checkSegments(flag.segments, context);
       if (!inSegment) {
         const defaultVariant = flag.variants.find(
@@ -591,12 +591,12 @@ export class FlagEngine {
     }
 
     // Evaluate targeting rules
-    if (flag.targetingRules && flag.targetingRules.length > 0) {
+    if (flag.targetingRules != null && flag.targetingRules.length > 0) {
       const ruleResult = this.targetingEngine.evaluate(
         flag.targetingRules,
         context
       );
-      if (ruleResult.matched && ruleResult.variantId) {
+      if (ruleResult.matched && ruleResult.variantId != null) {
         const variant = flag.variants.find((v) => v.id === ruleResult.variantId);
         if (variant) {
           return this.createResult<T>(
@@ -670,16 +670,16 @@ export class FlagEngine {
 
       switch (dep.type) {
         case 'requires':
-          if (dep.requiredVariant) {
+          if (dep.requiredVariant != null) {
             if (targetResult.variantId !== dep.requiredVariant) {
               return { satisfied: false, failedDependency: dep.targetFlag };
             }
-          } else if (!targetResult.value) {
+          } else if (targetResult.value == null || targetResult.value === false) {
             return { satisfied: false, failedDependency: dep.targetFlag };
           }
           break;
         case 'conflicts':
-          if (targetResult.value) {
+          if (targetResult.value != null && targetResult.value !== false) {
             return { satisfied: false, failedDependency: dep.targetFlag };
           }
           break;
@@ -760,7 +760,7 @@ export class FlagEngine {
       message: error instanceof Error ? error.message : String(error),
       isTransient: true,
       stack:
-        this.config.debug && error instanceof Error ? error.stack : undefined,
+        this.config.debug === true && error instanceof Error ? error.stack : undefined,
     };
 
     this.config.onError?.(
@@ -922,7 +922,8 @@ export class FlagEngine {
   }
 
   private log(message: string, data?: unknown): void {
-    if (this.config.debug) {
+    if (this.config.debug === true) {
+      // eslint-disable-next-line no-console
       console.log(`[FlagEngine] ${message}`, data ?? '');
     }
   }
@@ -938,9 +939,7 @@ let instance: FlagEngine | null = null;
  * Get the singleton flag engine instance.
  */
 export function getFlagEngine(): FlagEngine {
-  if (!instance) {
-    instance = new FlagEngine();
-  }
+  instance ??= new FlagEngine();
   return instance;
 }
 

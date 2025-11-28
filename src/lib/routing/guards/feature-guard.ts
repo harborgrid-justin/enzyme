@@ -196,7 +196,7 @@ export class FeatureGuard extends BaseRouteGuard {
    */
   private async performFeatureCheck(context: GuardContext): Promise<FeatureFlagCheckResult> {
     const strategy = this.featureConfig.matchStrategy ?? 'all';
-    const requiredFlags = this.featureConfig.requiredFlags;
+    const {requiredFlags} = this.featureConfig;
 
     const flagStates: Record<string, FeatureFlagState> = {};
     const enabledFlags: string[] = [];

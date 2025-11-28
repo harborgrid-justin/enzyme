@@ -681,7 +681,7 @@ export function checkContrast(
  */
 export function hexToRgb(hex: string): [number, number, number] | null {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return result && result[1] && result[2] && result[3]
+  return result?.[1] && result[2] && result[3]
     ? [
         parseInt(result[1], 16),
         parseInt(result[2], 16),

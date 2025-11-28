@@ -1,3 +1,4 @@
+import React from 'react';
 /**
  * @fileoverview Flag analytics bridge for connecting flags to monitoring systems.
  *
@@ -320,7 +321,7 @@ export function createAnalyticsBridge(
     return Math.random() < sampleRate;
   };
 
-  const scheduleFlush = () => {
+  const scheduleFlush = (): void => {
     if (!batchEnabled || flushTimer) return;
 
     flushTimer = setTimeout(() => {
@@ -390,7 +391,7 @@ export function createAnalyticsBridge(
       if (batchEnabled) {
         exposureBatch.push(fullEvent);
         if (exposureBatch.length >= batchSize) {
-          this.flush();
+          void this.flush();
         } else {
           scheduleFlush();
         }
@@ -419,7 +420,7 @@ export function createAnalyticsBridge(
       if (batchEnabled) {
         evaluationBatch.push(fullEvent);
         if (evaluationBatch.length >= batchSize) {
-          this.flush();
+          void this.flush();
         } else {
           scheduleFlush();
         }
@@ -821,7 +822,7 @@ export function createLocalStorageDestination(
     events = [];
   }
 
-  const save = () => {
+  const save = (): void => {
     try {
       localStorage.setItem(key, JSON.stringify(events.slice(-1000)));
     } catch {

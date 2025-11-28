@@ -231,7 +231,7 @@ export class FeatureBridgeImpl {
     }
 
     if (this.config.debug) {
-      console.debug(`[FeatureBridge] Registered feature: ${registration.name}`, {
+      console.info(`[FeatureBridge] Registered feature: ${registration.name}`, {
         id: registration.id,
         capabilities: Array.from(registration.capabilities.keys()),
       });
@@ -352,7 +352,7 @@ export class FeatureBridgeImpl {
       }
 
       // Check version
-      if (options.minVersion && compareVersions(cap.version, options.minVersion) < 0) {
+      if (options.minVersion != null && compareVersions(cap.version, options.minVersion) < 0) {
         return this.handleMissing<T>(
           `Capability version ${cap.version} is below required ${options.minVersion}`,
           options,
@@ -406,7 +406,7 @@ export class FeatureBridgeImpl {
     // Try first active feature
     for (const id of featureIds) {
       const registration = this.features.get(id);
-      if (registration?.isActive) {
+      if (registration?.isActive === true) {
         return this.invoke<T>(id, capability, args, options);
       }
     }
@@ -521,11 +521,13 @@ export class FeatureBridgeImpl {
         }
 
         // Load the feature
-        await registration.loader!();
+        if (registration.loader != null) {
+          await registration.loader();
+        }
         registration.isActive = true;
 
         if (this.config.debug) {
-          console.debug(`[FeatureBridge] Loaded feature: ${registration.name}`);
+          console.info(`[FeatureBridge] Loaded feature: ${registration.name}`);
         }
       } finally {
         this.loadingPromises.delete(id);
@@ -570,11 +572,14 @@ export class FeatureBridgeImpl {
     options: InvocationOptions,
     startTime: number
   ): InvocationResult<T> {
-    const behavior = options.throwOnMissing
-      ? 'throw'
-      : options.fallback !== undefined
-        ? 'use-fallback'
-        : this.config.defaultFallbackBehavior;
+    let behavior: 'throw' | 'use-fallback' | 'return-undefined';
+    if (options.throwOnMissing === true) {
+      behavior = 'throw';
+    } else if (options.fallback !== undefined) {
+      behavior = 'use-fallback';
+    } else {
+      behavior = this.config.defaultFallbackBehavior;
+    }
 
     switch (behavior) {
       case 'throw':
@@ -623,17 +628,17 @@ export class FeatureBridgeImpl {
               clearTimeout(timeoutId);
               resolve(value);
             })
-            .catch((error) => {
+            .catch((error: unknown) => {
               clearTimeout(timeoutId);
-              reject(error);
+              reject(error instanceof Error ? error : new Error(String(error)));
             });
         } else {
           clearTimeout(timeoutId);
           resolve(result);
         }
-      } catch (error) {
+      } catch (error: unknown) {
         clearTimeout(timeoutId);
-        reject(error);
+        reject(error instanceof Error ? error : new Error(String(error)));
       }
     });
   }
@@ -664,9 +669,7 @@ let globalBridge: FeatureBridgeImpl | null = null;
 export function getFeatureBridge(
   config?: Partial<FeatureBridgeConfig>
 ): FeatureBridgeImpl {
-  if (!globalBridge) {
-    globalBridge = new FeatureBridgeImpl(config);
-  }
+  globalBridge ??= new FeatureBridgeImpl(config);
   return globalBridge;
 }
 

@@ -153,11 +153,11 @@ export class ADClient {
    * @returns Token refresh result
    */
   async refreshTokens(): Promise<TokenRefreshResult> {
-    if (this.tokenRefreshPromise) {
+    if (this.tokenRefreshPromise != null) {
       return this.tokenRefreshPromise;
     }
 
-    if (!this.tokens?.refreshToken) {
+    if (this.tokens?.refreshToken == null || this.tokens.refreshToken === '') {
       return {
         success: false,
         requiresInteraction: true,
@@ -187,7 +187,7 @@ export class ADClient {
    */
   private async performTokenRefresh(): Promise<TokenRefreshResult> {
     const authority = getAuthorityUrl(this.config);
-    if (!authority) {
+    if (authority == null || authority === '') {
       return {
         success: false,
         error: this.createError('config_error', 'No authority URL configured'),
@@ -200,6 +200,11 @@ export class ADClient {
       const tokenEndpoint = `${authority}/oauth2/v2.0/token`;
 
       // Raw fetch is intentional - OAuth requires x-www-form-urlencoded body
+      const {refreshToken} = this.tokens;
+      if (refreshToken == null) {
+        throw new Error('No refresh token available');
+      }
+
       const response = await fetch(tokenEndpoint, {
         method: 'POST',
         headers: {
@@ -207,17 +212,17 @@ export class ADClient {
         },
         body: new URLSearchParams({
           grant_type: 'refresh_token',
-          refresh_token: this.tokens!.refreshToken!,
+          refresh_token: refreshToken,
           client_id: this.getClientId(),
           scope: getConfiguredScopes(this.config).join(' '),
         }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+        const errorData = await response.json().catch(() => ({})) as { error?: string; error_description?: string };
         const error = this.createError(
-          errorData.error || 'token_refresh_failed',
-          errorData.error_description || 'Failed to refresh token'
+          (errorData.error != null && errorData.error !== '') ? errorData.error : 'token_refresh_failed',
+          (errorData.error_description != null && errorData.error_description !== '') ? errorData.error_description : 'Failed to refresh token'
         );
 
         this.onAuthError?.(error);
@@ -229,14 +234,21 @@ export class ADClient {
         };
       }
 
-      const data = await response.json();
+      const data = await response.json() as {
+        access_token: string;
+        id_token: string;
+        refresh_token?: string;
+        expires_in: number;
+        scope?: string;
+        token_type?: string;
+      };
       const newTokens: ADTokens = {
         accessToken: data.access_token,
         idToken: data.id_token,
-        refreshToken: data.refresh_token || this.tokens!.refreshToken,
+        refreshToken: (data.refresh_token != null && data.refresh_token !== '') ? data.refresh_token : (this.tokens.refreshToken ?? ''),
         expiresAt: Date.now() + (data.expires_in * 1000),
-        scopes: data.scope?.split(' ') || [],
-        tokenType: data.token_type || 'Bearer',
+        scopes: (data.scope != null && data.scope !== '') ? data.scope.split(' ') : [],
+        tokenType: (data.token_type != null && data.token_type !== '') ? data.token_type : 'Bearer',
       };
 
       this.tokens = newTokens;
@@ -298,8 +310,13 @@ export class ADClient {
       }
     }
 
+    const accessToken = this.tokens?.accessToken;
+    if (accessToken == null) {
+      throw new GraphAPIClientError('no_token', 'No access token available');
+    }
+
     const headers: Record<string, string> = {
-      'Authorization': `Bearer ${this.tokens!.accessToken}`,
+      'Authorization': `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
       ...request.headers,
     };
@@ -307,7 +324,7 @@ export class ADClient {
     const fetchOptions: RequestInit = {
       method,
       headers,
-      body: request.body ? JSON.stringify(request.body) : undefined,
+      body: (request.body != null) ? JSON.stringify(request.body) : undefined,
     };
 
     return this.executeWithRetry<T>(url, fetchOptions, request.timeout ? ms(request.timeout) : undefined);
@@ -360,7 +377,7 @@ export class ADClient {
         const correlationId = response.headers.get('request-id') ?? undefined;
 
         if (!response.ok) {
-          const errorBody = await response.json().catch(() => ({})) as GraphAPIError;
+          const errorBody = await response.json().catch(() => ({ code: undefined, message: undefined })) as GraphAPIError;
 
           // Don't retry 4xx errors (except 429 rate limiting)
           if (response.status >= 400 && response.status < 500 && response.status !== 429) {
@@ -374,7 +391,7 @@ export class ADClient {
           // Retry 5xx errors and 429
           if (response.status === 429) {
             const retryAfter = response.headers.get('Retry-After');
-            const delay = retryAfter ? parseInt(retryAfter, 10) * 1000 : RETRY_DELAY * (attempt + 1);
+            const delay = (retryAfter != null && retryAfter !== '') ? parseInt(retryAfter, 10) * 1000 : RETRY_DELAY * (attempt + 1);
             await this.delay(delay);
             continue;
           }
@@ -413,14 +430,14 @@ export class ADClient {
       }
     }
 
-    throw lastError || new Error('Request failed after max retries');
+    throw lastError ?? new Error('Request failed after max retries');
   }
 
   /**
    * Extract pagination information from Graph API response.
    */
   private extractPagination(data: unknown): GraphAPIResponse['pagination'] | undefined {
-    if (!data || typeof data !== 'object') return undefined;
+    if (data == null || typeof data !== 'object') return undefined;
 
     const obj = data as Record<string, unknown>;
 
@@ -439,7 +456,7 @@ export class ADClient {
    * Extract skip token from next link URL.
    */
   private extractSkipToken(nextLink: string | undefined): string | undefined {
-    if (!nextLink) return undefined;
+    if (nextLink == null || nextLink === '') return undefined;
 
     try {
       const url = new URL(nextLink);
@@ -509,11 +526,16 @@ export class ADClient {
    */
   async getUserPhoto(): Promise<string | null> {
     try {
+      const accessToken = this.tokens?.accessToken;
+      if (accessToken == null) {
+        return null;
+      }
+
       const response = await fetch(
         `${GRAPH_BASE_URL}/${GRAPH_DEFAULT_VERSION}${GRAPH_ENDPOINTS.ME_PHOTO}`,
         {
           headers: {
-            'Authorization': `Bearer ${this.tokens!.accessToken}`,
+            'Authorization': `Bearer ${accessToken}`,
           },
         }
       );
@@ -556,8 +578,8 @@ export class ADClient {
 
     do {
       const response = await this.graphRequest<GraphGroupListResponse>({
-        endpoint: nextLink ? '' : endpoint,
-        query: nextLink ? undefined : { $top: 100 },
+        endpoint: (nextLink != null && nextLink !== '') ? '' : endpoint,
+        query: (nextLink != null && nextLink !== '') ? undefined : { $top: 100 },
       });
 
       allGroups.push(
@@ -567,7 +589,7 @@ export class ADClient {
       );
 
       nextLink = response.pagination?.nextLink;
-    } while (nextLink);
+    } while (nextLink != null && nextLink !== '');
 
     return this.mapGraphGroups(allGroups);
   }
@@ -657,7 +679,7 @@ export class ADClient {
       description: group.description ?? undefined,
       groupType: this.determineGroupType(group),
       mail: group.mail ?? undefined,
-      membershipType: group.membershipRule ? 'dynamic' : 'assigned',
+      membershipType: (group.membershipRule != null && group.membershipRule !== '') ? 'dynamic' : 'assigned',
       isAssignableToRole: group.isAssignableToRole,
       onPremisesSecurityIdentifier: group.onPremisesSecurityIdentifier ?? undefined,
     }));
@@ -717,7 +739,7 @@ export class ADClient {
   /**
    * Delay helper for retries.
    */
-  private delay(ms: number): Promise<void> {
+  private async delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
@@ -725,7 +747,8 @@ export class ADClient {
    * Log debug messages.
    */
   private log(message: string, ...args: unknown[]): void {
-    if (this.debug) {
+    if (this.debug === true) {
+      // eslint-disable-next-line no-console
       console.log(`[ADClient] ${message}`, ...args);
     }
   }

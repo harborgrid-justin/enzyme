@@ -171,8 +171,10 @@ export class VersionManager {
     this.checkVersion(ver);
 
     switch (this.config.strategy) {
-      case 'header':
-        return { [this.config.headerName!]: ver };
+      case 'header': {
+        const headerName = this.config.headerName ?? DEFAULT_HEADER_NAME;
+        return { [headerName]: ver };
+      }
 
       case 'accept':
         return {
@@ -204,9 +206,11 @@ export class VersionManager {
       case 'url':
         return `${baseUrl}/${ver}${normalizedPath}`;
 
-      case 'query':
+      case 'query': {
         const separator = path.includes('?') ? '&' : '?';
-        return `${baseUrl}${normalizedPath}${separator}${this.config.queryParam}=${ver}`;
+        const queryParam = this.config.queryParam ?? DEFAULT_QUERY_PARAM;
+        return `${baseUrl}${normalizedPath}${separator}${queryParam}=${ver}`;
+      }
 
       case 'header':
       case 'accept':
@@ -224,22 +228,24 @@ export class VersionManager {
    */
   extractVersion(headers?: Record<string, string>, url?: string): string | null {
     // Check header
-    if (headers && this.config.headerName) {
+    if (headers != null && this.config.headerName != null && this.config.headerName !== '') {
       const headerVersion = headers[this.config.headerName];
-      if (headerVersion) return headerVersion;
+      if (headerVersion != null && headerVersion !== '') return headerVersion;
     }
 
     // Check URL for path-based versioning
-    if (url && this.config.strategy === 'url') {
+    if (url != null && url !== '' && this.config.strategy === 'url') {
       const match = url.match(/\/v(\d+(?:\.\d+)*)\//);
-      if (match) return `v${match[1]}`;
+      const matchGroup = match?.[1];
+      if (matchGroup != null) return `v${matchGroup}`;
     }
 
     // Check URL for query-based versioning
-    if (url && this.config.strategy === 'query') {
+    if (url != null && url !== '' && this.config.strategy === 'query') {
       const urlObj = new URL(url, 'http://localhost');
-      const queryVersion = urlObj.searchParams.get(this.config.queryParam!);
-      if (queryVersion) return queryVersion;
+      const queryParam = this.config.queryParam ?? DEFAULT_QUERY_PARAM;
+      const queryVersion = urlObj.searchParams.get(queryParam);
+      if (queryVersion != null && queryVersion !== '') return queryVersion;
     }
 
     return null;
@@ -345,7 +351,7 @@ export class VersionManager {
    * @returns Negative if a < b, positive if a > b, 0 if equal
    */
   compareVersions(a: string, b: string): number {
-    const normalize = (v: string) => {
+    const normalize = (v: string): number[] => {
       const match = v.match(/(\d+)(?:\.(\d+))?(?:\.(\d+))?/);
       if (!match) return [0, 0, 0];
       return [
@@ -359,8 +365,10 @@ export class VersionManager {
     const bParts = normalize(b);
 
     for (let i = 0; i < 3; i++) {
-      if (aParts[i] !== bParts[i]) {
-        return aParts[i]! - bParts[i]!;
+      const aPart = aParts[i] ?? 0;
+      const bPart = bParts[i] ?? 0;
+      if (aPart !== bPart) {
+        return aPart - bPart;
       }
     }
 
@@ -442,7 +450,11 @@ export class VersionManager {
 
     let result = data;
     for (let i = 0; i < path.length - 1; i++) {
-      result = this.migrateResponse(result, path[i]!, path[i + 1]!);
+      const fromVer = path[i];
+      const toVer = path[i + 1];
+      if (fromVer != null && toVer != null) {
+        result = this.migrateResponse(result, fromVer, toVer);
+      }
     }
 
     return result;
@@ -481,7 +493,7 @@ export class VersionManager {
   getDaysUntilSunset(version: string): number {
     const info = this.getVersionInfo(version);
 
-    if (!info?.sunsetAt) {
+    if (info?.sunsetAt == null || info.sunsetAt === '') {
       return -1;
     }
 
@@ -538,9 +550,9 @@ export class VersionManager {
    */
   updateVersionStatus(version: string, status: VersionStatus): void {
     const info = this.getVersionInfo(version);
-    if (info) {
+    if (info != null) {
       info.status = status;
-      if (status === 'deprecated' && !info.deprecatedAt) {
+      if (status === 'deprecated' && (info.deprecatedAt == null || info.deprecatedAt === '')) {
         info.deprecatedAt = new Date().toISOString();
       }
     }
@@ -605,8 +617,11 @@ export function parseSemver(version: string): {
 
   if (!match) return null;
 
+  const majorStr = match[1];
+  if (majorStr == null) return null;
+
   return {
-    major: parseInt(match[1]!, 10),
+    major: parseInt(majorStr, 10),
     minor: parseInt(match[2] ?? '0', 10),
     patch: parseInt(match[3] ?? '0', 10),
     prerelease: match[4],

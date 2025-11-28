@@ -38,7 +38,7 @@ import {
 } from 'react';
 
 import {
-  HydrationScheduler,
+  type HydrationScheduler,
   getHydrationScheduler,
   type SchedulerState,
 } from './hydration-scheduler';

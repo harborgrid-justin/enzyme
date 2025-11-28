@@ -93,7 +93,7 @@ export class PercentageRolloutEngine {
     variants: readonly Variant[]
   ): RolloutResult {
     const hashKey = rollout.hashKey ?? this.getDefaultHashKey(context);
-    if (!hashKey || hashKey.length === 0) {
+    if (hashKey === null || hashKey === undefined || hashKey === '') {
       return { included: false, percentage: rollout.percentage };
     }
 
@@ -147,7 +147,7 @@ export class PercentageRolloutEngine {
     }
 
     const hashKey = this.getDefaultHashKey(context);
-    if (!hashKey || hashKey.length === 0) {
+    if (hashKey === null || hashKey === undefined || hashKey === '') {
       return { included: false, stage: currentStage.name };
     }
 
@@ -191,7 +191,7 @@ export class PercentageRolloutEngine {
     variants: readonly Variant[]
   ): RolloutResult {
     const userId = context.user?.id;
-    if (!userId || userId.length === 0) {
+    if (userId === undefined || userId === null || userId === '') {
       return { included: false };
     }
 
@@ -252,12 +252,12 @@ export class PercentageRolloutEngine {
     variants: readonly Variant[]
   ): RolloutResult {
     const hashKey = this.getDefaultHashKey(context);
-    if (!hashKey || hashKey.length === 0) {
+    if (hashKey === null || hashKey === undefined || hashKey === '') {
       return { included: false };
     }
 
     // Check if user is in canary segment
-    if (rollout.canarySegment && rollout.canarySegment.length > 0) {
+    if (rollout.canarySegment !== undefined && rollout.canarySegment !== null && rollout.canarySegment !== '') {
       // Segment check would be done externally
       // Here we use hash-based bucketing
     }
@@ -285,12 +285,12 @@ export class PercentageRolloutEngine {
     _variants: readonly Variant[]
   ): RolloutResult {
     // Check if experiment has ended
-    if (rollout.endDate && new Date() > rollout.endDate) {
+    if (rollout.endDate !== undefined && rollout.endDate !== null && new Date() > rollout.endDate) {
       return { included: false };
     }
 
     const hashKey = this.getDefaultHashKey(context);
-    if (!hashKey) {
+    if (hashKey === null || hashKey === undefined || hashKey === '') {
       return { included: false };
     }
 
@@ -344,7 +344,8 @@ export class PercentageRolloutEngine {
   ): VariantId {
     // Find the first non-control variant, or use the first variant
     const nonControl = variants.find((v) => v.isControl !== true);
-    return nonControl?.id ?? variants[0]?.id ?? 'default';
+    const firstVariantId = variants[0]?.id;
+    return nonControl?.id ?? firstVariantId ?? 'default';
   }
 
   /**

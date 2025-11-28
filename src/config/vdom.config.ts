@@ -272,12 +272,12 @@ export function getMemoryPressure(): MemoryPressure {
     return 'low';
   }
 
-  const memory = (performance as Performance & {
+  const {memory} = (performance as Performance & {
     memory?: {
       usedJSHeapSize: number;
       jsHeapSizeLimit: number;
     };
-  }).memory;
+  });
 
   if (!memory) return 'low';
 

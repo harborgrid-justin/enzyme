@@ -85,12 +85,12 @@ export class CompositeProvider implements FlagProvider {
     if (this.config.fallback === 'all-must-succeed') {
       // All providers must initialize successfully
       await Promise.all(
-        this.providers.map((p) => p.initialize())
+        this.providers.map(async (p) => p.initialize())
       );
     } else {
       // At least one provider must succeed
       const results = await Promise.allSettled(
-        this.providers.map((p) => p.initialize())
+        this.providers.map(async (p) => p.initialize())
       );
 
       const hasSuccess = results.some((r) => r.status === 'fulfilled');
@@ -362,13 +362,13 @@ export class CompositeProvider implements FlagProvider {
   async isHealthy(): Promise<boolean> {
     if (this.config.fallback === 'all-must-succeed') {
       const results = await Promise.all(
-        this.providers.map((p) => p.isHealthy())
+        this.providers.map(async (p) => p.isHealthy())
       );
       return results.every(Boolean);
     }
 
     const results = await Promise.all(
-      this.providers.map((p) => p.isHealthy())
+      this.providers.map(async (p) => p.isHealthy())
     );
     return results.some(Boolean);
   }
@@ -455,7 +455,7 @@ export class CompositeProvider implements FlagProvider {
 
     // Shutdown all providers
     await Promise.all(
-      this.providers.map((p) => p.shutdown())
+      this.providers.map(async (p) => p.shutdown())
     );
 
     this.ready = false;
@@ -469,6 +469,7 @@ export class CompositeProvider implements FlagProvider {
 
   private log(message: string, ...args: unknown[]): void {
     if (this.config.debug) {
+      // eslint-disable-next-line no-console
       console.log(`[CompositeProvider] ${message}`, ...args);
     }
   }

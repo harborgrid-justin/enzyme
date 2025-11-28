@@ -1173,7 +1173,7 @@ export function isPaginatedResponse<TItem = unknown>(
   }
 
   // Check for pagination metadata
-  const pagination = candidate.pagination;
+  const { pagination } = candidate;
   if (typeof pagination !== 'object' || pagination === null) {
     return false;
   }

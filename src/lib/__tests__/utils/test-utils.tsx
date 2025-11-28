@@ -300,7 +300,7 @@ export async function flushPromises(): Promise<void> {
 /**
  * Wait for a specific amount of time
  */
-export function delay(ms: number): Promise<void> {
+export async function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
@@ -338,7 +338,7 @@ export interface Deferred<T> {
 export function createAsyncSpy<T>(
   defaultResponse?: T
 ): AsyncSpy<T> {
-  const spy = vi.fn().mockImplementation(() => Promise.resolve(defaultResponse));
+  const spy = vi.fn().mockImplementation(async () => Promise.resolve(defaultResponse));
 
   return Object.assign(spy, {
     resolveWith: (value: T) => spy.mockResolvedValue(value),

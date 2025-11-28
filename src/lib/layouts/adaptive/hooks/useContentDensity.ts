@@ -8,6 +8,7 @@
  * @version 1.0.0
  */
 
+import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ContentDensity, Dimensions, UseContentDensityReturn } from '../types.ts';
 
@@ -153,10 +154,10 @@ export function useContentDensity(options: UseContentDensityOptions): UseContent
   // Calculate density
   const recalculate = useCallback(() => {
     const container = containerRef.current;
-    if (!container) return;
+    if (container == null) return;
 
     // Get items
-    const items = itemSelector
+    const items = itemSelector != null && itemSelector !== ''
       ? Array.from(container.querySelectorAll(itemSelector))
       : Array.from(container.children);
 
@@ -230,10 +231,10 @@ export function useContentDensity(options: UseContentDensityOptions): UseContent
 
   // Set up observers
   useEffect(() => {
-    if (!autoRecalculate) return;
+    if (autoRecalculate !== true) return;
 
     const container = containerRef.current;
-    if (!container) return;
+    if (container == null) return;
 
     // Observe size changes
     observerRef.current = new ResizeObserver(debouncedRecalculate);
@@ -243,11 +244,13 @@ export function useContentDensity(options: UseContentDensityOptions): UseContent
     mutationObserverRef.current = new MutationObserver(debouncedRecalculate);
     mutationObserverRef.current.observe(container, {
       childList: true,
-      subtree: Boolean(itemSelector),
+      subtree: itemSelector != null && itemSelector !== '',
     });
 
-    // Initial calculation
-    recalculate();
+    // Initial calculation - use requestAnimationFrame to defer
+    requestAnimationFrame(() => {
+      recalculate();
+    });
 
     return () => {
       observerRef.current?.disconnect();

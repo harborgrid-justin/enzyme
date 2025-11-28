@@ -114,6 +114,7 @@ export function PortalBridge({
   const [portalContext, setPortalContext] = useState<PortalContext | null>(null);
   const [_portalRoot, setPortalRoot] = useState<Element | null>(null);
   const [isReady, setIsReady] = useState(false);
+  const [portalContainer, setPortalContainer] = useState<HTMLDivElement | null>(null);
 
   // Get current DOM context
   const domContext = useDOMContextValue();
@@ -165,15 +166,15 @@ export function PortalBridge({
       z-index: ${zIndex};
     `;
 
-    if (className) {
+    if (className != null && className !== '') {
       container.className = className;
     }
 
-    if (style) {
+    if (style != null) {
       Object.assign(container.style, style);
     }
 
-    if (testId) {
+    if (testId != null && testId !== '') {
       container.setAttribute('data-testid', testId);
     }
 
@@ -197,6 +198,7 @@ export function PortalBridge({
     // Create portal container
     const container = createPortalContainer();
     portalContainerRef.current = container;
+    setPortalContainer(container);
     root.appendChild(container);
 
     // Save scroll position if preserving
@@ -275,13 +277,13 @@ export function PortalBridge({
       />
 
       {/* Portal content */}
-      {isReady && portalContainerRef.current && portalContext && (
-        <PortalBridgeContext.Provider value={portalContext as any}>
+      {isReady && portalContainer != null && portalContext != null && (
+        <PortalBridgeContext.Provider value={portalContext}>
           {createPortal(
             <PortalContent sourceContext={portalContext.sourceContext}>
               {children}
             </PortalContent>,
-            portalContainerRef.current
+            portalContainer
           )}
         </PortalBridgeContext.Provider>
       )}

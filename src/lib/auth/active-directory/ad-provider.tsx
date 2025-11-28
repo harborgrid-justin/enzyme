@@ -13,6 +13,7 @@ import {
   useEffect,
   useMemo,
   useReducer,
+  useRef,
   type ReactNode,
 } from 'react';
 import { useFeatureFlag } from '@/lib/flags';
@@ -34,8 +35,8 @@ import type {
 import type { Role, Permission } from '../types';
 import { createADClient } from './ad-client';
 import { createTokenHandler } from './ad-token-handler';
-import { ADGroupMapper, createGroupMapper } from './ad-groups';
-import { ADAttributeMapper, createAttributeMapper } from './ad-attributes';
+import { type ADGroupMapper, createGroupMapper } from './ad-groups';
+import { type ADAttributeMapper, createAttributeMapper } from './ad-attributes';
 import { createSSOManager } from './ad-sso';
 import { validateADConfig } from './ad-config';
 
@@ -133,7 +134,7 @@ function authReducer(state: ADAuthState, action: ADAuthAction): ADAuthState {
         isAuthenticating: false,
         error: null,
         provider: action.payload.user.adProvider,
-        accountId: action.payload.tokens.accountId || null,
+        accountId: action.payload.tokens.accountId ?? null,
         lastAuthTime: Date.now(),
         tokenExpiresAt: action.payload.tokens.expiresAt,
       };
@@ -167,7 +168,7 @@ function authReducer(state: ADAuthState, action: ADAuthAction): ADAuthState {
         isAuthenticating: false,
         error: null,
         provider: action.payload.user.adProvider,
-        accountId: action.payload.tokens.accountId || null,
+        accountId: action.payload.tokens.accountId ?? null,
         lastAuthTime: Date.now(),
         tokenExpiresAt: action.payload.tokens.expiresAt,
         hasSsoSession: true,
@@ -274,7 +275,7 @@ export function ADProvider({
   onAuthEvent,
   loadingComponent,
   errorComponent,
-}: ADProviderProps) {
+}: ADProviderProps): JSX.Element {
   // Check feature flag
   const isADEnabled = useFeatureFlag(config.featureFlag ?? 'ad-authentication');
 
@@ -285,16 +286,19 @@ export function ADProvider({
   const configValidation = useMemo(() => validateADConfig(config), [config]);
 
   // Create services
+  // Event emitter ref to avoid circular dependency
+  const emitEventRef = useRef<((event: ADAuthEvent) => void) | null>(null);
+
   const adClient = useMemo(
     () =>
       createADClient(config, {
         onTokenRefresh: (tokens) => {
           dispatch({ type: 'TOKEN_REFRESH_SUCCESS', payload: tokens });
-          emitEvent({ type: 'token_refreshed', correlationId: generateCorrelationId() });
+          emitEventRef.current?.({ type: 'token_refreshed', correlationId: generateCorrelationId() });
         },
         onAuthError: (error) => {
           dispatch({ type: 'TOKEN_REFRESH_FAILURE', payload: error });
-          emitEvent({ type: 'error', error, correlationId: generateCorrelationId() });
+          emitEventRef.current?.({ type: 'error', error, correlationId: generateCorrelationId() });
         },
       }),
     [config]
@@ -329,7 +333,7 @@ export function ADProvider({
 
   const ssoManager = useMemo(
     () =>
-      enableSSO
+      enableSSO === true
         ? createSSOManager({
             ...ssoConfig,
             debug: config.debug,
@@ -338,7 +342,7 @@ export function ADProvider({
             },
             onSessionExpired: () => {
               dispatch({ type: 'LOGOUT' });
-              emitEvent({
+              emitEventRef.current?.({
                 type: 'session_expired',
                 correlationId: generateCorrelationId(),
               });
@@ -355,12 +359,16 @@ export function ADProvider({
   const emitEvent = useCallback(
     (event: ADAuthEvent) => {
       onAuthEvent?.(event);
-      if (config.debug) {
+      if (config.debug === true) {
+        // eslint-disable-next-line no-console
         console.log('[ADProvider] Event:', event);
       }
     },
     [onAuthEvent, config.debug]
   );
+
+  // Update the ref
+  emitEventRef.current = emitEvent;
 
   // ===========================================================================
   // Authentication Methods
@@ -508,8 +516,8 @@ export function ADProvider({
           account: options?.account,
         });
 
-        if (!tokens) {
-          throw { code: 'interaction_required', message: 'Silent login failed, interaction required' };
+        if (tokens == null) {
+          throw new Error('Silent login failed, interaction required');
         }
 
         adClient.initialize(tokens);
@@ -540,7 +548,7 @@ export function ADProvider({
 
       try {
         // End SSO session
-        if (ssoManager) {
+        if (ssoManager != null) {
           await ssoManager.endSession();
         }
 
@@ -551,16 +559,16 @@ export function ADProvider({
         dispatch({ type: 'LOGOUT' });
 
         // If not local only, redirect to AD logout
-        if (!options?.localOnly) {
+        if (options?.localOnly !== true) {
           const logoutUrl = buildLogoutUrl(config, options);
-          if (logoutUrl) {
+          if (logoutUrl != null && logoutUrl !== '') {
             window.location.href = logoutUrl;
             return;
           }
         }
 
         emitEvent({ type: 'logout_success', correlationId });
-      } catch (error) {
+      } catch {
         // Ensure we still clear local state on error
         dispatch({ type: 'LOGOUT' });
         emitEvent({ type: 'logout_success', correlationId });
@@ -598,7 +606,7 @@ export function ADProvider({
 
     const cachedTokens = tokenHandler.getCachedTokens();
     const tokens = await cachedTokens;
-    if (!tokens?.refreshToken) {
+    if (tokens?.refreshToken == null || tokens.refreshToken === '') {
       const error: ADAuthError = {
         code: 'no_refresh_token',
         message: 'No refresh token available',
@@ -662,8 +670,8 @@ export function ADProvider({
 
   // Auto-initialize on mount
   useEffect(() => {
-    if (isADEnabled && configValidation.valid) {
-      initialize();
+    if (isADEnabled === true && configValidation.valid === true) {
+      void initialize();
     }
   }, [isADEnabled, configValidation.valid, initialize]);
 
@@ -738,12 +746,12 @@ export function ADProvider({
   }
 
   // Show loading during initialization
-  if (state.isAuthenticating && !state.isAuthenticated && loadingComponent) {
+  if (state.isAuthenticating === true && state.isAuthenticated === false && loadingComponent != null) {
     return <>{loadingComponent}</>;
   }
 
   // Feature flag is disabled
-  if (!isADEnabled) {
+  if (isADEnabled === false) {
     return <>{children}</>;
   }
 
@@ -815,13 +823,13 @@ function buildLogoutUrl(config: ADConfig, options?: ADLogoutOptions): string | n
       return null;
   }
 
-  if (!authority) return null;
+  if (authority == null || authority === '') return null;
 
   const params = new URLSearchParams();
-  if (postLogoutUri) {
+  if (postLogoutUri != null && postLogoutUri !== '') {
     params.set('post_logout_redirect_uri', postLogoutUri);
   }
-  if (options?.logoutHint) {
+  if (options?.logoutHint != null && options.logoutHint !== '') {
     params.set('logout_hint', options.logoutHint);
   }
 
@@ -847,7 +855,7 @@ function applyMappings(
     ...user,
     ...mappedUser,
     roles: role ? [role] : [],
-    permissions: permissions,
+    permissions,
   effectivePermissions: permissions,
   adGroups: user.adGroups,
 };

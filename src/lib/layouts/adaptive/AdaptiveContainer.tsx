@@ -61,7 +61,7 @@ const DENSITY_THRESHOLDS = {
 /**
  * Hook to access container context.
  */
-export function useContainerContext() {
+export function useContainerContext(): ContainerContextValue | undefined {
   return useContext(ContainerContext);
 }
 
@@ -145,7 +145,7 @@ function paddingToCSS(spacing: BoxSpacing): string {
  * </AdaptiveContainer>
  * ```
  */
-export const AdaptiveContainer = memo(function AdaptiveContainer({
+const AdaptiveContainerComponent = ({
   children,
   breakpoints = DEFAULT_BREAKPOINTS,
   detectDensity = true,
@@ -154,7 +154,7 @@ export const AdaptiveContainer = memo(function AdaptiveContainer({
   centered = false,
   className,
   style,
-}: AdaptiveContainerProps): ReactNode {
+}: AdaptiveContainerProps): ReactNode => {
   // Refs
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -186,8 +186,8 @@ export const AdaptiveContainer = memo(function AdaptiveContainer({
     if (!container) return;
 
     const observer = new ResizeObserver((entries) => {
-      const entry = entries[0];
-      if (entry) {
+      const [entry] = entries;
+      if (entry !== undefined) {
         setDimensions({
           width: entry.contentRect.width,
           height: entry.contentRect.height,
@@ -247,11 +247,11 @@ export const AdaptiveContainer = memo(function AdaptiveContainer({
       ...style,
     };
 
-    if (maxWidth) {
+    if (maxWidth !== undefined && maxWidth !== null) {
       baseStyles.maxWidth = typeof maxWidth === 'number' ? `${maxWidth}px` : maxWidth;
     }
 
-    if (centered) {
+    if (centered === true) {
       baseStyles.marginLeft = 'auto';
       baseStyles.marginRight = 'auto';
     }
@@ -289,7 +289,9 @@ export const AdaptiveContainer = memo(function AdaptiveContainer({
       </div>
     </ContainerContext.Provider>
   );
-});
+};
+
+export const AdaptiveContainer = memo(AdaptiveContainerComponent);
 
 AdaptiveContainer.displayName = 'AdaptiveContainer';
 
@@ -316,7 +318,7 @@ AdaptiveContainer.displayName = 'AdaptiveContainer';
 export function useContainerQuery(query: keyof ContainerBreakpoints | number): boolean {
   const context = useContainerContext();
 
-  if (!context) {
+  if (context === undefined || context === null) {
     // If not in a container context, fall back to viewport-based query
     if (typeof query === 'number') {
       return typeof window !== 'undefined' && window.innerWidth >= query;
@@ -325,12 +327,12 @@ export function useContainerQuery(query: keyof ContainerBreakpoints | number): b
   }
 
   if (typeof query === 'number') {
-    return (context as any).dimensions?.width >= query;
+    return context.containerWidth >= query;
   }
 
   const sizeOrder: (keyof ContainerBreakpoints)[] = ['xs', 'sm', 'md', 'lg', 'xl'];
   const queryIndex = sizeOrder.indexOf(query);
-  const currentIndex = sizeOrder.indexOf(context.sizeCategory || 'md');
+  const currentIndex = sizeOrder.indexOf(context.sizeCategory ?? 'md');
 
   return currentIndex >= queryIndex;
 }
@@ -361,7 +363,7 @@ export function useContainerValue<T>(
 ): T | undefined {
   const context = useContainerContext();
 
-  if (!context) {
+  if (context === undefined || context === null) {
     // Return the smallest defined value as fallback
     return values.xs ?? values.sm ?? values.md ?? values.lg ?? values.xl;
   }
@@ -372,7 +374,7 @@ export function useContainerValue<T>(
   // Find the closest defined value at or below current size
   for (let i = currentIndex; i >= 0; i--) {
     const size = sizeOrder[i];
-    if (size && size in values) {
+    if (size !== undefined && size in values) {
       return values[size];
     }
   }

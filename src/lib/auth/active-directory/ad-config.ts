@@ -309,11 +309,11 @@ function validateAzureADConfig(config: AzureADConfig | undefined): ConfigValidat
     errors.push('Azure AD redirectUri must be a valid URL');
   }
 
-  if (!config.scopes || config.scopes.length === 0) {
+  if (config.scopes == null || config.scopes.length === 0) {
     warnings.push('No scopes specified, using default scopes');
   }
 
-  if (config.clientSecret) {
+  if (config.clientSecret != null && config.clientSecret !== '') {
     warnings.push('Client secret should not be used in browser applications');
   }
 
@@ -337,11 +337,11 @@ function validateAzureB2CConfig(config: AzureADB2CConfig | undefined): ConfigVal
       errors.push('Azure AD B2C tenant name is required');
     }
 
-    if (!config.policies?.signUpSignIn) {
+    if (config.policies?.signUpSignIn == null || config.policies.signUpSignIn === '') {
       errors.push('Azure AD B2C signUpSignIn policy is required');
     }
 
-    if (!config.knownAuthorities || config.knownAuthorities.length === 0) {
+    if (config.knownAuthorities == null || config.knownAuthorities.length === 0) {
       errors.push('Azure AD B2C known authorities are required');
     }
   }
@@ -377,7 +377,7 @@ function validateADFSConfig(config: ADFSConfig | undefined): ConfigValidationRes
     errors.push('AD FS redirectUri must be a valid URL');
   }
 
-  if (config.useWia) {
+  if (config.useWia === true) {
     warnings.push('Windows Integrated Authentication requires browser and network support');
   }
 
@@ -458,18 +458,18 @@ export function validateADConfig(config: ADConfig): ConfigValidationResult {
       providerResult = { valid: true, errors: [], warnings: [] };
       break;
     default:
-      errors.push(`Unknown provider type: ${config.providerType}`);
+      errors.push(`Unknown provider type: ${String(config.providerType)}`);
       providerResult = { valid: false, errors: [], warnings: [] };
   }
 
   errors.push(...providerResult.errors);
   warnings.push(...providerResult.warnings);
 
-  if (config.sessionTimeout && config.sessionTimeout < 60000) {
+  if (config.sessionTimeout != null && config.sessionTimeout < 60000) {
     warnings.push('Session timeout less than 1 minute may cause frequent re-authentication');
   }
 
-  if (config.debug) {
+  if (config.debug === true) {
     warnings.push('Debug mode is enabled - disable in production');
   }
 

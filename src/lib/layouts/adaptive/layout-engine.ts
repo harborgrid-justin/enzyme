@@ -810,12 +810,13 @@ export class LayoutEngine implements LayoutEngineInterface {
       ? localStorage.getItem('adaptive-layout-preferences')
       : null;
 
-    if (stored) {
+    if (stored != null && stored !== '') {
       try {
-        const parsed = JSON.parse(stored);
+        const parsed = JSON.parse(stored) as { modePreferences?: Record<string, LayoutMode> };
+        const { modePreferences } = parsed;
         return {
           ...parsed,
-          modePreferences: new Map(Object.entries(parsed.modePreferences || {})),
+          modePreferences: new Map(Object.entries(modePreferences ?? {})),
         };
       } catch {
         // Fall through to default
@@ -885,9 +886,7 @@ let sharedEngine: LayoutEngineInterface | null = null;
  * @returns The shared LayoutEngine instance
  */
 export function getSharedLayoutEngine(config?: Partial<LayoutEngineConfig>): LayoutEngineInterface {
-  if (!sharedEngine) {
-    sharedEngine = createLayoutEngine(config);
-  }
+  sharedEngine ??= createLayoutEngine(config);
   return sharedEngine;
 }
 

@@ -318,12 +318,12 @@ export {
 import { scanApiRoutes, type ScannedApiRoute, type ApiScannerConfig } from './route-scanner';
 import { generateApiEndpoints, type GeneratedEndpoint, type ApiGeneratorConfig } from './api-generator';
 import {
-  EndpointRegistry,
+  type EndpointRegistry,
   createEndpointRegistry,
   type EndpointRegistryConfig,
 } from './endpoint-registry';
 import {
-  RBACIntegration,
+  type RBACIntegration,
   createRBACIntegration,
   type RBACIntegrationConfig,
 } from './rbac-integration';

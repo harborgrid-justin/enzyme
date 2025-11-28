@@ -18,4 +18,4 @@ export { GROUP_MAPPING_PRESETS } from './presets';
 export { createGroupMapper, mergeGroupMappings, validateGroupMapping } from './utils';
 
 // Types are exported from the types module
-export * from './types';
+export type * from './types';

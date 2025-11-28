@@ -29,7 +29,7 @@ import React, { lazy } from 'react';
  * Lazy-loaded RenderTracker
  * Use for development-only render performance debugging
  */
-export const LazyRenderTracker = lazy(() =>
+export const LazyRenderTracker = lazy(async () =>
   import('./render-tracker').then((_module) => {
     // Wrap the class in a functional component
     const RenderTrackerComponent: React.FC<any> = (_props) => {
@@ -43,7 +43,7 @@ export const LazyRenderTracker = lazy(() =>
  * Lazy-loaded Performance Observatory dashboard
  * Use for development-only performance monitoring UI
  */
-export const LazyPerformanceObservatory = lazy(() =>
+export const LazyPerformanceObservatory = lazy(async () =>
   import('./PerformanceObservatory').then((module) => ({
     default: module.PerformanceObservatory,
   }))
@@ -53,7 +53,7 @@ export const LazyPerformanceObservatory = lazy(() =>
  * Lazy-loaded Performance Monitor class
  * Use when monitoring features are needed conditionally
  */
-export const LazyPerformanceMonitor = lazy(() =>
+export const LazyPerformanceMonitor = lazy(async () =>
   import('./performance-monitor').then((module) => {
     // Create a functional component wrapper
     const PerformanceMonitorComponent: React.FC<any> = (_props) => {
@@ -72,7 +72,7 @@ export const LazyPerformanceMonitor = lazy(() =>
  * Lazy-loaded Memory Guardian
  * Heavy component for memory leak detection
  */
-export const LazyMemoryGuardian = lazy(() =>
+export const LazyMemoryGuardian = lazy(async () =>
   import('./memory-guardian').then((module) => ({
     default: () => {
       module.getMemoryGuardian();
@@ -85,7 +85,7 @@ export const LazyMemoryGuardian = lazy(() =>
  * Lazy-loaded Bundle Optimizer
  * Use for runtime bundle optimization features
  */
-export const LazyBundleOptimizer = lazy(() =>
+export const LazyBundleOptimizer = lazy(async () =>
   import('./bundle-optimizer').then((module) => ({
     default: () => {
       module.getBundleOptimizer();

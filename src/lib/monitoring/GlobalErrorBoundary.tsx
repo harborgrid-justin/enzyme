@@ -37,7 +37,7 @@ function DefaultErrorFallback({
   error: AppError;
   onReset: () => void;
   showDetails?: boolean;
-}) {
+}): React.ReactElement {
   return (
     <div
       role="alert"

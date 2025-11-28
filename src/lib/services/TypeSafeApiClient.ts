@@ -392,7 +392,7 @@ export function createTypedApiClient<T extends ApiContract>(
           return validateSchema(endpoint.response, response.data, name, 'response', config.onValidationError);
         }
 
-        return response.data as InferResponse<typeof endpoint>;
+        return response.data;
       } catch (error) {
         if (error instanceof ApiValidationError) {
           throw error;
@@ -688,7 +688,7 @@ export function createUserApiClient(config?: Partial<TypedApiClientConfig>): Typ
     baseUrl: '/api',
     version: 'v1',
     onValidationError: (error, endpoint, direction) => {
-      // eslint-disable-next-line no-console
+       
       console.error(`[API Validation] ${direction} for ${endpoint}:`, error.issues);
     },
     ...config,

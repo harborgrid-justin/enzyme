@@ -601,7 +601,7 @@ export class DataPrefetchManager {
     }
   }
 
-  private sleep(ms: number): Promise<void> {
+  private async sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
@@ -647,7 +647,7 @@ export function resetDataPrefetchManager(): void {
 /**
  * Prefetch data from a URL
  */
-export function prefetchData<T = unknown>(
+export async function prefetchData<T = unknown>(
   url: string,
   options?: PrefetchRequestOptions
 ): Promise<PrefetchResult<T>> {
@@ -657,7 +657,7 @@ export function prefetchData<T = unknown>(
 /**
  * Prefetch a GraphQL query
  */
-export function prefetchGraphQL<T = unknown>(
+export async function prefetchGraphQL<T = unknown>(
   endpoint: string,
   options: GraphQLPrefetchOptions
 ): Promise<PrefetchResult<T>> {

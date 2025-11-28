@@ -274,7 +274,7 @@ export class PollingProvider implements FlagProvider {
   // ==========================================================================
 
   private setupVisibilityHandler(): void {
-    this.visibilityHandler = () => {
+    this.visibilityHandler = (): void => {
       if (document.hidden) {
         this.pausePolling();
       } else {
@@ -342,7 +342,7 @@ export class PollingProvider implements FlagProvider {
   /**
    * Check if the provider is healthy.
    */
-  async isHealthy(): Promise<boolean> {
+  async isHealthy(): boolean {
     return (
       this.consecutiveFailures < this.config.maxFailures &&
       (await this.provider.isHealthy())
@@ -443,6 +443,7 @@ export class PollingProvider implements FlagProvider {
 
   private log(message: string, ...args: unknown[]): void {
     if (this.config.debug) {
+      // eslint-disable-next-line no-console
       console.log(`[PollingProvider] ${message}`, ...args);
     }
   }

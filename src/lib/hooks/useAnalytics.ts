@@ -5,6 +5,7 @@
  */
 
 import { useEffect, useCallback, useRef, useMemo, useState } from 'react';
+import type React from 'react';
 import {
   analytics,
   trackEvent,
@@ -95,16 +96,23 @@ export function useTrackFeature(featureName: string): {
  * @param componentName - Name of the component to track
  */
 export function useTrackRenderPerformance(componentName: string): void {
-  const renderStart = useRef(performance.now());
+  // Initialize with a function to avoid calling performance.now during render
+  const renderStart = useRef<number | null>(null);
   const renderCount = useRef(0);
   const componentNameRef = useRef(componentName);
 
   // Keep component name ref updated
+  // eslint-disable-next-line react-hooks/refs
   componentNameRef.current = componentName;
 
   // Intentionally runs on every render to measure render performance
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
+    // Initialize renderStart on first effect run
+    if (renderStart.current === null) {
+      renderStart.current = performance.now();
+      return;
+    }
+
     const renderTime = performance.now() - renderStart.current;
     renderCount.current++;
 
@@ -172,12 +180,17 @@ export function useTrackForm(formName: string): {
 
   useEffect(() => {
     formStartTime.current = Date.now();
+    // Capture refs for cleanup
+    const fieldsRef = focusedFields;
+    const timeRef = formStartTime;
     return () => {
       // Track abandonment if form was started but not submitted
-      if (focusedFields.current.size > 0) {
+      const fieldsCount = fieldsRef.current.size;
+      const startTime = timeRef.current;
+      if (fieldsCount > 0) {
         trackEvent(`form:${formName}:abandoned`, {
-          fieldsInteracted: focusedFields.current.size,
-          timeSpent: Date.now() - (formStartTime.current ?? Date.now()),
+          fieldsInteracted: fieldsCount,
+          timeSpent: Date.now() - (startTime ?? Date.now()),
         });
       }
     };
@@ -382,7 +395,7 @@ export function useTrackScrollDepth(pageName: string): void {
   useEffect(() => {
     const milestones = [25, 50, 75, 100];
 
-    const handleScroll = () => {
+    const handleScroll = (): void => {
       const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
       const scrollTop = window.scrollY;
       const scrollPercent = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
@@ -411,6 +424,7 @@ const DEFAULT_TIME_INTERVALS = [30, 60, 120, 300];
 export function useTrackTimeOnPage(pageName: string, intervals: number[] = DEFAULT_TIME_INTERVALS): void {
   const trackedIntervals = useRef<Set<number>>(new Set());
   // Memoize intervals to avoid effect re-runs if caller passes unstable reference
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const stableIntervals = useMemo(() => intervals, [JSON.stringify(intervals)]);
 
   useEffect(() => {
@@ -456,26 +470,26 @@ export function useTrackedSection(sectionName: string): {
   const [viewDuration, setViewDuration] = useState(0);
 
   useEffect(() => {
-    if (!sectionRef.current) return;
+    if (sectionRef.current === null || sectionRef.current === undefined) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
-        const entry = entries[0];
-        if (!entry) return;
-        
+        const [entry] = entries;
+        if (entry === undefined || entry === null) return;
+
         if (entry.isIntersecting && !isVisible.current) {
           isVisible.current = true;
           viewStart.current = Date.now();
-          
+
           trackEvent(`section:${sectionName}:enter`);
         } else if (!entry.isIntersecting && isVisible.current) {
           isVisible.current = false;
-          
-          if (viewStart.current) {
+
+          if (viewStart.current !== null && viewStart.current !== undefined) {
             const duration = Date.now() - viewStart.current;
             totalDuration.current += duration;
             setViewDuration(totalDuration.current);
-            
+
             trackEvent(`section:${sectionName}:exit`, {
               viewDuration: duration,
               totalDuration: totalDuration.current,
@@ -490,9 +504,9 @@ export function useTrackedSection(sectionName: string): {
 
     return () => {
       observer.disconnect();
-      
+
       // Track final duration on unmount
-      if (isVisible.current && viewStart.current) {
+      if (isVisible.current && viewStart.current !== null && viewStart.current !== undefined) {
         const duration = Date.now() - viewStart.current;
         trackEvent(`section:${sectionName}:unmount`, {
           viewDuration: duration,
@@ -503,7 +517,8 @@ export function useTrackedSection(sectionName: string): {
   }, [sectionName]);
 
   return {
-    sectionRef: sectionRef as React.RefObject<HTMLElement | null>,
+    sectionRef,
+    // eslint-disable-next-line react-hooks/refs
     isVisible: isVisible.current,
     viewDuration,
   };

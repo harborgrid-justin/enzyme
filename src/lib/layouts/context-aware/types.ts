@@ -819,8 +819,8 @@ export function isPositionType(value: string): value is PositionType {
  */
 export function isScrollContainer(element: Element): boolean {
   const style = getComputedStyle(element);
-  const overflowX = style.overflowX;
-  const overflowY = style.overflowY;
+  const {overflowX} = style;
+  const {overflowY} = style;
   return (
     (overflowX === 'auto' || overflowX === 'scroll') ||
     (overflowY === 'auto' || overflowY === 'scroll')

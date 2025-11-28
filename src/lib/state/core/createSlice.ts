@@ -122,7 +122,7 @@ export function createSlice<
     };
 
     // Create slice-scoped getter that extracts only slice state
-    const sliceGet: SliceGetter<TState> = () => {
+    const sliceGet: SliceGetter<TState> = (): void => {
       const state = get();
       const sliceState = {} as TState;
       for (const key of Object.keys(initialState)) {

@@ -207,7 +207,7 @@ export class PermissionGuard extends BaseRouteGuard {
 
       // Check if this permission is an alias
       const aliasedPerms = aliases[perm];
-      if (aliasedPerms) {
+      if (aliasedPerms !== undefined && aliasedPerms !== null) {
         for (const aliased of aliasedPerms) {
           expand(aliased, visited);
         }
@@ -230,7 +230,7 @@ export class PermissionGuard extends BaseRouteGuard {
 
     // Check if user has wildcard permission
     const wildcard = this.permConfig.wildcardPermission;
-    if (wildcard && userPermissions.includes(wildcard)) {
+    if (wildcard !== undefined && wildcard !== null && userPermissions.includes(wildcard)) {
       return GuardResult.allow({ hasWildcard: true });
     }
 
@@ -248,7 +248,7 @@ export class PermissionGuard extends BaseRouteGuard {
    * Get user permissions from context
    */
   private getUserPermissions(context: GuardContext): readonly Permission[] {
-    if (this.permConfig.getUserPermissions) {
+    if (this.permConfig.getUserPermissions !== undefined && this.permConfig.getUserPermissions !== null) {
       return this.permConfig.getUserPermissions(context);
     }
 
@@ -263,7 +263,7 @@ export class PermissionGuard extends BaseRouteGuard {
     context: GuardContext
   ): Promise<PermissionCheckResult> {
     const strategy = this.permConfig.matchStrategy ?? 'any';
-    const requiredPermissions = this.permConfig.requiredPermissions;
+    const {requiredPermissions} = this.permConfig;
 
     // Expand user permissions with aliases
     const expandedUserPerms = this.expandPermissionsWithAliases(
@@ -320,7 +320,7 @@ export class PermissionGuard extends BaseRouteGuard {
     context: GuardContext
   ): Promise<boolean> {
     // Use custom check if provided
-    if (this.permConfig.checkPermission) {
+    if (this.permConfig.checkPermission !== undefined && this.permConfig.checkPermission !== null) {
       return this.permConfig.checkPermission(
         Array.from(userPerms),
         required,
@@ -336,7 +336,7 @@ export class PermissionGuard extends BaseRouteGuard {
     // Check for wildcard permissions (e.g., posts:* matches posts:read)
     const separator = this.permConfig.separator ?? ':';
     const [resource] = required.split(separator);
-    if (resource && userPerms.has(`${resource}${separator}*`)) {
+    if (resource !== undefined && resource !== null && resource !== '' && userPerms.has(`${resource}${separator}*`)) {
       return true;
     }
 
@@ -518,7 +518,7 @@ export function buildPermission(
   separator = ':'
 ): Permission {
   let perm = `${structured.resource}${separator}${structured.action}`;
-  if (structured.resourceId) {
+  if (structured.resourceId !== undefined && structured.resourceId !== null) {
     perm += `${separator}${structured.resourceId}`;
   }
   return perm;
@@ -549,7 +549,7 @@ export function hasPermission(
 
   // Resource wildcard (e.g., posts:* matches posts:read)
   const [resource] = permission.split(separator);
-  if (resource && userPermissions.includes(`${resource}${separator}*`)) {
+  if (resource !== undefined && resource !== null && resource !== '' && userPermissions.includes(`${resource}${separator}*`)) {
     return true;
   }
 

@@ -25,7 +25,7 @@ interface AuthProviderProps {
 /**
  * Provides auth state, token refresh, session sync.
  */
-export function AuthProvider({ children }: AuthProviderProps) {
+export function AuthProvider({ children }: AuthProviderProps): JSX.Element {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +39,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
    * from SecureStorage into memory cache, then checks authentication status.
    */
   useEffect(() => {
-    const initAuth = async () => {
+    const initAuth = async (): Promise<void> => {
       try {
         // Initialize secure token storage first
         await authService.initialize();
@@ -56,7 +56,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
     };
 
-    initAuth();
+    void initAuth();
   }, []);
 
   /**
@@ -72,13 +72,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    const refreshInterval = setInterval(async () => {
-      try {
-        await authService.refreshTokens();
-      } catch {
-        // If refresh fails, log out the user
-        setUser(null);
-      }
+    const refreshInterval = setInterval(() => {
+      void (async (): Promise<void> => {
+        try {
+          await authService.refreshTokens();
+        } catch {
+          // If refresh fails, log out the user
+          setUser(null);
+        }
+      })();
     }, 4 * 60 * 1000); // Refresh every 4 minutes
 
     return () => clearInterval(refreshInterval);
@@ -212,7 +214,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 /**
  * Hook to access auth context.
  */
-export function useAuthContext() {
+export function useAuthContext(): AuthContextValue {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error('useAuthContext must be used within an AuthProvider');

@@ -81,13 +81,13 @@ const STREAMING_HEADERS = {
  * ```
  */
 export function generateNonce(): string {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+  if (typeof crypto !== 'undefined' && crypto !== null && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID().replace(/-/g, '');
   }
 
   // Fallback for older environments
   const array = new Uint8Array(16);
-  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+  if (typeof crypto !== 'undefined' && crypto !== null && typeof crypto.getRandomValues === 'function') {
     crypto.getRandomValues(array);
   } else {
     // Last resort fallback
@@ -228,10 +228,10 @@ export interface PreloadResource {
 export function createEarlyHints(resources: PreloadResource[]): string[] {
   return resources.map((resource) => {
     let hint = `<${resource.href}>; rel=preload; as=${resource.as}`;
-    if (resource.crossOrigin) {
+    if (resource.crossOrigin != null && resource.crossOrigin !== '') {
       hint += `; crossorigin=${resource.crossOrigin}`;
     }
-    if (resource.type) {
+    if (resource.type != null && resource.type !== '') {
       hint += `; type=${resource.type}`;
     }
     return hint;
@@ -287,7 +287,7 @@ export function createHydrationScript(
   nonce?: string
 ): string {
   const data = JSON.stringify(states);
-  const nonceAttr = nonce ? ` nonce="${nonce}"` : '';
+  const nonceAttr = (nonce != null && nonce !== '') ? ` nonce="${nonce}"` : '';
 
   return `<script${nonceAttr}>
     window.__STREAM_STATE__ = window.__STREAM_STATE__ || [];
@@ -304,7 +304,7 @@ export function createHydrationScript(
 export function deserializeStreamState(
   data: unknown
 ): SerializedStreamState | null {
-  if (!data || typeof data !== 'object') return null;
+  if (data == null || typeof data !== 'object') return null;
 
   const state = data as Partial<SerializedStreamState>;
 
@@ -419,7 +419,7 @@ export function wrapBoundaryContent(
   nonce?: string,
   config?: Partial<StreamConfig>
 ): string {
-  const nonceAttr = nonce ? ` nonce="${nonce}"` : '';
+  const nonceAttr = (nonce != null && nonce !== '') ? ` nonce="${nonce}"` : '';
   const priority = config?.priority ?? StreamPriority.Normal;
 
   return `
@@ -597,7 +597,7 @@ export function createStreamingMiddleware(
     // Set up timeout
     if (mergedOptions.timeoutMs > 0) {
       setTimeout(() => {
-        if (!res.writableEnded) {
+        if (res.writableEnded !== true) {
           context.end();
         }
       }, mergedOptions.timeoutMs);
@@ -721,7 +721,7 @@ export function createShellHtml(options: ShellOptions = {}): {
     rootId = 'root',
   } = options;
 
-  const nonceAttr = nonce ? ` nonce="${nonce}"` : '';
+  const nonceAttr = (nonce != null && nonce !== '') ? ` nonce="${nonce}"` : '';
 
   // Build meta tags
   const metaTags = meta

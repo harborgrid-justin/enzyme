@@ -832,7 +832,7 @@ export function checkMemory(): MemorySnapshot {
 /**
  * Format bytes helper
  */
-export const formatBytes = MemoryGuardian.formatBytes;
+export const {formatBytes} = MemoryGuardian;
 
 // ============================================================================
 // Exports

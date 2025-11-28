@@ -191,7 +191,7 @@ class AuthService {
     }
 
     // Check if currently locked out
-    if (this.rateLimitState.lockedUntil && now < this.rateLimitState.lockedUntil) {
+    if (this.rateLimitState.lockedUntil !== null && now < this.rateLimitState.lockedUntil) {
       return {
         isLimited: true,
         retryAfterMs: this.rateLimitState.lockedUntil - now,
@@ -200,7 +200,7 @@ class AuthService {
     }
 
     // If lockout has expired, reset
-    if (this.rateLimitState.lockedUntil && now >= this.rateLimitState.lockedUntil) {
+    if (this.rateLimitState.lockedUntil !== null && now >= this.rateLimitState.lockedUntil) {
       this.resetRateLimit();
     }
 
@@ -352,7 +352,7 @@ class AuthService {
   async logout(): Promise<void> {
     try {
       const refreshToken = this.getRefreshToken();
-      if (refreshToken) {
+      if (refreshToken !== undefined && refreshToken !== null) {
         await apiClient.post('/auth/logout', { refreshToken });
       }
     } catch {
@@ -373,7 +373,7 @@ class AuthService {
     }
 
     const refreshToken = this.getRefreshToken();
-    if (!refreshToken) {
+    if (refreshToken === undefined || refreshToken === null) {
       throw new Error('No refresh token available');
     }
 
@@ -405,10 +405,10 @@ class AuthService {
    */
   isAuthenticated(): boolean {
     const token = this.getAccessToken();
-    if (!token) return false;
+    if (token === undefined || token === null) return false;
 
     const expiresAt = this.getTokenExpiry();
-    if (!expiresAt) return false;
+    if (expiresAt === undefined || expiresAt === null) return false;
 
     // Check if token is expired (with 1 minute buffer)
     return Date.now() < expiresAt - 60000;
@@ -452,7 +452,7 @@ class AuthService {
   async getAccessTokenAsync(): Promise<string | null> {
     const storage = this.getSecureStorage();
     const result = await storage.getItem<string>(SECURE_TOKEN_KEYS.ACCESS_TOKEN);
-    if (result.success && result.data) {
+    if (result.success === true && result.data !== undefined && result.data !== null) {
       this.tokenCache.accessToken = result.data;
       return result.data;
     }
@@ -470,7 +470,7 @@ class AuthService {
   async getRefreshTokenAsync(): Promise<string | null> {
     const storage = this.getSecureStorage();
     const result = await storage.getItem<string>(SECURE_TOKEN_KEYS.REFRESH_TOKEN);
-    if (result.success && result.data) {
+    if (result.success === true && result.data !== undefined && result.data !== null) {
       this.tokenCache.refreshToken = result.data;
       return result.data;
     }
@@ -497,12 +497,12 @@ class AuthService {
     ]);
 
     // Check for storage failures
-    if (!accessResult.success || !refreshResult.success || !expiryResult.success) {
+    if (accessResult.success !== true || refreshResult.success !== true || expiryResult.success !== true) {
       const errors = [
-        !accessResult.success && `Access token: ${accessResult.error}`,
-        !refreshResult.success && `Refresh token: ${refreshResult.error}`,
-        !expiryResult.success && `Expiry: ${expiryResult.error}`,
-      ].filter(Boolean).join('; ');
+        accessResult.success !== true ? `Access token: ${accessResult.error}` : null,
+        refreshResult.success !== true ? `Refresh token: ${refreshResult.error}` : null,
+        expiryResult.success !== true ? `Expiry: ${expiryResult.error}` : null,
+      ].filter((error): error is string => error !== null).join('; ');
 
       console.error('[AuthService] Failed to store tokens securely:', errors);
       throw new Error('Failed to store authentication tokens securely');

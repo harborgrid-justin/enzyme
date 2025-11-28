@@ -409,7 +409,7 @@ export class PerformanceMonitor {
    * Process a long task entry
    */
   private processLongTask(entry: PerformanceEntry): LongTaskEntry | null {
-    const duration = entry.duration;
+    const {duration} = entry;
     const isCritical = duration >= this.config.longTask.criticalThreshold;
 
     // Extract attribution if available

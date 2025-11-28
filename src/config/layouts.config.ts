@@ -14,11 +14,12 @@
  */
 
 import type { LayoutsConfig, LayoutMode } from './config-validation';
-import { layoutsConfigSchema, LAYOUTS_CONFIG_SCHEMA, morphTransitionSchema } from './config-validation';
+import { layoutsConfigSchema, LAYOUTS_CONFIG_SCHEMA } from './config-validation';
+import type { morphTransitionSchema } from './config-validation';
 import { CONFIG_NAMESPACES } from './types';
 import { autoRegister, createEnvConfig } from './config-discovery';
 import { getConfigRegistry, createTypedNamespace } from './config-registry';
-import { z } from 'zod';
+import { type z } from 'zod';
 
 // =============================================================================
 // Layout Configuration

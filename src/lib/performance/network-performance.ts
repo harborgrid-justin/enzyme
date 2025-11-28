@@ -526,7 +526,7 @@ export class NetworkPerformanceAnalyzer {
    * Analyze all requests matching a pattern
    */
   public analyzeRequestsMatching(pattern: RegExp): RequestTiming[] {
-    const entries = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
+    const entries = performance.getEntriesByType('resource');
     return entries
       .filter((e) => pattern.test(e.name))
       .map((e) => this.processResourceEntry(e))
@@ -725,7 +725,7 @@ export class NetworkPerformanceAnalyzer {
     // Check if preconnect would help
     try {
       const urlObj = new URL(url);
-      const origin = urlObj.origin;
+      const {origin} = urlObj;
       const isCrossOrigin = origin !== window.location.origin;
       if (isCrossOrigin && (recommendedPriority === 'highest' || recommendedPriority === 'high')) {
         shouldPreconnect = true;
@@ -854,8 +854,8 @@ export class NetworkPerformanceAnalyzer {
       `Data Saver: ${quality.saveData ? 'Enabled' : 'Disabled'}`,
       '',
       '--- Bandwidth ---',
-      `Estimated: ${bandwidth ? formatBytes(bandwidth.bandwidth) + '/s' : 'N/A'}`,
-      `Confidence: ${bandwidth ? (bandwidth.confidence * 100).toFixed(0) + '%' : 'N/A'}`,
+      `Estimated: ${bandwidth ? `${formatBytes(bandwidth.bandwidth)  }/s` : 'N/A'}`,
+      `Confidence: ${bandwidth ? `${(bandwidth.confidence * 100).toFixed(0)  }%` : 'N/A'}`,
       `Trend: ${bandwidth?.trend ?? 'N/A'}`,
       '',
       '--- Request Statistics ---',

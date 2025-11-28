@@ -367,7 +367,7 @@ export class LocalProvider implements WritableFlagProvider {
   /**
    * Check if the provider is healthy.
    */
-  async isHealthy(): Promise<boolean> {
+  async isHealthy(): boolean {
     return this.ready;
   }
 
@@ -440,6 +440,7 @@ export class LocalProvider implements WritableFlagProvider {
 
   private log(message: string, ...args: unknown[]): void {
     if (this.config.debug) {
+      // eslint-disable-next-line no-console
       console.log(`[LocalProvider] ${message}`, ...args);
     }
   }

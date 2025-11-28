@@ -275,9 +275,9 @@ class CrashAnalyticsManager {
    * Setup click capture
    */
   private setupClickCapture(): void {
-    const handler = (event: MouseEvent) => {
+    const handler = (event: MouseEvent): void => {
       const target = event.target as HTMLElement;
-      if (!target) return;
+      if (target === null || target === undefined) return;
 
       const selector = this.getElementSelector(target);
       const text = this.getElementText(target);

@@ -318,7 +318,7 @@ export class ParallelRoutes {
       setSlotActive: (slotName: string, active: boolean) => {
         this.updateSlotState(slotName, { isActive: active });
       },
-      getSlotContent: (slotName: string) => {
+      getSlotContent: async (slotName: string) => {
         return this.slotStates.get(slotName)?.content ?? null;
       },
     };

@@ -154,14 +154,14 @@ export class SSOManager {
    * @param tokens - Authentication tokens
    * @returns The created session
    */
-  async startSession(user: ADUser, tokens: ADTokens): Promise<SSOSession> {
+  startSession(user: ADUser, tokens: ADTokens): SSOSession {
     const now = Date.now();
     const session: SSOSession = {
       sessionId: this.generateSessionId(),
       upn: user.adAttributes.upn,
       createdAt: now,
       lastActivity: now,
-      expiresAt: now + this.options.sessionTimeout!,
+      expiresAt: now + this.options.sessionTimeout,
       isValid: true,
       domain: window.location.hostname,
       metadata: {
@@ -193,12 +193,12 @@ export class SSOManager {
   /**
    * End the current SSO session.
    */
-  async endSession(): Promise<void> {
+  endSession(): void {
     if (!this.currentSession) {
       return;
     }
 
-    const sessionId = this.currentSession.sessionId;
+    const {sessionId} = this.currentSession;
 
     // Clear session data
     this.clearSessionData();
@@ -221,7 +221,7 @@ export class SSOManager {
    *
    * @returns Existing session if found and valid, null otherwise
    */
-  async detectSession(): Promise<SSOSession | null> {
+  detectSession(): SSOSession | null {
     const session = this.loadSession();
 
     if (!session) {
@@ -271,7 +271,7 @@ export class SSOManager {
 
     // Extend session if auto-extend is enabled
     if (this.options.autoExtendSession) {
-      this.currentSession.expiresAt = now + this.options.sessionTimeout!;
+      this.currentSession.expiresAt = now + this.options.sessionTimeout;
     }
 
     this.persistSession(this.currentSession);
@@ -296,7 +296,7 @@ export class SSOManager {
       `${this.options.storagePrefix}tokens`
     );
 
-    if (!stored) {
+    if (stored == null || stored === '') {
       return null;
     }
 
@@ -352,7 +352,7 @@ export class SSOManager {
 
     this.broadcastChannel = new BroadcastChannel(SSO_BROADCAST_CHANNEL);
     this.broadcastChannel.onmessage = (event) => {
-      this.handleBroadcastMessage(event.data);
+      this.handleBroadcastMessage(event.data as SSOBroadcastMessage);
     };
 
     this.log('BroadcastChannel initialized');
@@ -383,7 +383,7 @@ export class SSOManager {
 
     switch (message.type) {
       case 'session_created':
-      case 'session_updated':
+      case 'session_updated': {
         // Another tab created/updated a session
         const session = this.loadSession();
         if (session && session.sessionId === message.sessionId) {
@@ -391,6 +391,7 @@ export class SSOManager {
           this.options.onSessionChange(session);
         }
         break;
+      }
 
       case 'session_ended':
         // Another tab ended the session
@@ -421,14 +422,14 @@ export class SSOManager {
    * Handle storage events for fallback sync.
    */
   private handleStorageEvent(event: StorageEvent): void {
-    if (event.key !== `${this.options.storagePrefix}broadcast` || !event.newValue) {
+    if (event.key !== `${this.options.storagePrefix}broadcast` || event.newValue == null || event.newValue === '') {
       return;
     }
 
     try {
-      const message = JSON.parse(event.newValue);
+      const message = JSON.parse(event.newValue) as { tabId?: string } & SSOBroadcastMessage;
       // Ignore messages from this tab
-      if (message.tabId === this.tabId) {
+      if (message.tabId != null && message.tabId === this.tabId) {
         return;
       }
       this.handleBroadcastMessage(message);
@@ -448,7 +449,7 @@ export class SSOManager {
     const activityEvents = ['mousedown', 'keydown', 'scroll', 'touchstart'];
     let lastActivity = Date.now();
 
-    const trackActivity = () => {
+    const trackActivity = (): void => {
       const now = Date.now();
       // Debounce activity updates
       if (now - lastActivity > 10000) { // 10 seconds
@@ -463,16 +464,16 @@ export class SSOManager {
 
     // Periodic activity check
     this.activityTimer = setInterval(() => {
-      if (this.currentSession && this.options.trackActivity) {
+      if (this.currentSession != null && this.options.trackActivity === true) {
         const inactiveTime = Date.now() - this.currentSession.lastActivity;
         // If inactive for more than session timeout, expire the session
-        if (inactiveTime > this.options.sessionTimeout!) {
+        if (inactiveTime > this.options.sessionTimeout) {
           this.log('Session expired due to inactivity');
-          this.endSession();
+          void this.endSession();
           this.options.onSessionExpired();
         }
       }
-    }, this.options.activityCheckInterval!);
+    }, this.options.activityCheckInterval);
   }
 
   /**
@@ -480,9 +481,9 @@ export class SSOManager {
    */
   private startSessionCheck(): void {
     this.sessionCheckTimer = setInterval(() => {
-      if (this.currentSession && !this.isSessionValid(this.currentSession)) {
+      if (this.currentSession != null && !this.isSessionValid(this.currentSession)) {
         this.log('Session expired during check');
-        this.endSession();
+        void this.endSession();
         this.options.onSessionExpired();
       }
     }, SESSION_CHECK_INTERVAL);
@@ -510,7 +511,7 @@ export class SSOManager {
       `${this.options.storagePrefix}session`
     );
 
-    if (!stored) {
+    if (stored == null || stored === '') {
       return null;
     }
 
@@ -540,7 +541,7 @@ export class SSOManager {
 
     for (let i = 0; i < storage.length; i++) {
       const key = storage.key(i);
-      if (key?.startsWith(this.options.storagePrefix!)) {
+      if (key != null && key.startsWith(this.options.storagePrefix)) {
         keysToRemove.push(key);
       }
     }
@@ -576,7 +577,7 @@ export class SSOManager {
 
     // Check domain
     if (
-      this.options.allowedDomains &&
+      this.options.allowedDomains != null &&
       this.options.allowedDomains.length > 0 &&
       !this.options.allowedDomains.includes(session.domain)
     ) {
@@ -608,7 +609,8 @@ export class SSOManager {
    * Log debug message.
    */
   private log(message: string, ...args: unknown[]): void {
-    if (this.options.debug) {
+    if (this.options.debug === true) {
+      // eslint-disable-next-line no-console
       console.log(`[SSOManager] ${message}`, ...args);
     }
   }
@@ -678,8 +680,9 @@ export class CrossDomainSSO {
         return;
       }
 
-      if (event.data?.type === 'sso_session_share') {
-        onSessionReceived(event.data.session, event.data.tokens);
+      const data = event.data as { type?: string; session?: SSOSession; tokens?: ADTokens };
+      if (data.type === 'sso_session_share' && data.session != null && data.tokens != null) {
+        onSessionReceived(data.session, data.tokens);
       }
     };
 

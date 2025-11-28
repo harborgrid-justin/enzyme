@@ -118,7 +118,7 @@ const tabBadgeStyle: CSSProperties = {
 /**
  * Default loading component - memoized
  */
-const DefaultLoading = memo(function DefaultLoading() {
+const DefaultLoading = memo(() => {
   return (
     <div style={loadingContainerStyle}>
       <Spinner size="lg" />
@@ -131,13 +131,13 @@ DefaultLoading.displayName = 'DefaultLoading';
 /**
  * Default error component - memoized
  */
-const DefaultError = memo(function DefaultError({
+const DefaultError = memo(({
   error,
   retry,
 }: {
   error: Error;
   retry: () => void;
-}) {
+}) => {
   return (
     <div style={errorContainerStyle}>
       <h2 style={errorTitleStyle}>Failed to load</h2>
@@ -154,7 +154,7 @@ DefaultError.displayName = 'DefaultError';
 /**
  * Access denied component - memoized
  */
-const AccessDenied = memo(function AccessDenied({ reason }: { reason: string }) {
+const AccessDenied = memo(({ reason }: { reason: string }) => {
   return (
     <div style={statusContainerStyle}>
       <svg
@@ -181,7 +181,7 @@ AccessDenied.displayName = 'AccessDenied';
 /**
  * Feature not available component (feature flag disabled) - memoized
  */
-const FeatureNotAvailable = memo(function FeatureNotAvailable({ featureName }: { featureName: string }) {
+const FeatureNotAvailable = memo(({ featureName }: { featureName: string }) => {
   return (
     <div style={statusContainerStyle}>
       <svg
@@ -210,7 +210,7 @@ FeatureNotAvailable.displayName = 'FeatureNotAvailable';
 /**
  * Page header component - memoized
  */
-const PageHeader = memo(function PageHeader({
+const PageHeader = memo(({
   config,
   activeTab,
   onTabChange,
@@ -218,7 +218,7 @@ const PageHeader = memo(function PageHeader({
   config: FeatureConfig;
   activeTab?: string;
   onTabChange?: (tab: string) => void;
-}) {
+}) => {
   const { metadata, tabs, showTitle = true } = config;
 
   // Memoize title style based on tabs presence
@@ -242,7 +242,7 @@ const PageHeader = memo(function PageHeader({
 
   // Stable tab click handler using data-* attributes
   const handleTabClick = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
-    const tabId = event.currentTarget.dataset.tabId;
+    const {tabId} = event.currentTarget.dataset;
     if (tabId && onTabChange) {
       onTabChange(tabId);
     }

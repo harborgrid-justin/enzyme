@@ -84,7 +84,7 @@ export interface ValidationErrorDetails {
  * Determine error category from error object
  */
 export function categorizeError(error: unknown): ErrorCategory {
-  if (!error) return 'unknown';
+  if (error === null || error === undefined) return 'unknown';
   
   if (error instanceof TypeError) {
     return 'client';

@@ -431,12 +431,12 @@ export class ScrollTracker {
       return this.createDefaultState();
     }
 
-    const scrollLeft = this.element.scrollLeft;
-    const scrollTop = this.element.scrollTop;
-    const scrollWidth = this.element.scrollWidth;
-    const scrollHeight = this.element.scrollHeight;
-    const clientWidth = this.element.clientWidth;
-    const clientHeight = this.element.clientHeight;
+    const {scrollLeft} = this.element;
+    const {scrollTop} = this.element;
+    const {scrollWidth} = this.element;
+    const {scrollHeight} = this.element;
+    const {clientWidth} = this.element;
+    const {clientHeight} = this.element;
 
     // Calculate scroll progress
     const maxScrollX = Math.max(0, scrollWidth - clientWidth);

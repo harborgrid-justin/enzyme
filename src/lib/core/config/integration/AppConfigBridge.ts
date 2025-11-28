@@ -183,9 +183,7 @@ export class AppConfigBridge {
    * Get the singleton instance.
    */
   static getInstance(config?: Partial<BridgeConfig>): AppConfigBridge {
-    if (!AppConfigBridge.instance) {
-      AppConfigBridge.instance = new AppConfigBridge(config);
-    }
+    AppConfigBridge.instance ??= new AppConfigBridge(config);
     return AppConfigBridge.instance;
   }
 
@@ -212,10 +210,14 @@ export class AppConfigBridge {
     const registry = getConfigRegistry();
     const endpointRegistry = getEndpointRegistry();
 
-    const overlay: any = {};
+    const overlay: Partial<{
+      network: unknown;
+      cache: unknown;
+      ui: unknown;
+    }> = {};
 
     // Sync from env config
-    if (env) {
+    if (env !== undefined && env !== null) {
       overlay.network = this.mapEnvToNetworkConfig(env);
 
       // Set endpoint registry base URL
@@ -225,20 +227,20 @@ export class AppConfigBridge {
     }
 
     // Sync from TIMING config
-    if (TIMING) {
+    if (TIMING !== undefined && TIMING !== null) {
       const networkFromTiming = this.mapTimingToNetworkConfig(TIMING);
       const cacheFromTiming = this.mapTimingToCacheConfig(TIMING);
       const uiFromTiming = this.mapTimingToUIConfig(TIMING);
 
-      overlay.network = { ...overlay.network, ...networkFromTiming };
+      overlay.network = { ...(overlay.network as Record<string, unknown>), ...networkFromTiming };
       overlay.cache = cacheFromTiming;
       overlay.ui = uiFromTiming;
     }
 
     // Sync from API_CONFIG
-    if (API_CONFIG) {
+    if (API_CONFIG !== undefined && API_CONFIG !== null) {
       const networkFromApi = this.mapApiConfigToNetworkConfig(API_CONFIG);
-      overlay.network = { ...overlay.network, ...networkFromApi };
+      overlay.network = { ...(overlay.network as Record<string, unknown>), ...networkFromApi };
 
       // Set endpoint registry base URL
       if (API_CONFIG.BASE_URL) {

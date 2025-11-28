@@ -311,7 +311,7 @@ SidebarNavItem.displayName = 'SidebarNavItem';
 /**
  * Sidebar component - memoized for performance
  */
-export const Sidebar = memo(function Sidebar({
+export const Sidebar = memo(({
   items,
   activeId,
   onItemClick,
@@ -321,7 +321,7 @@ export const Sidebar = memo(function Sidebar({
   onCollapsedChange,
   width = 256,
   collapsedWidth = 64,
-}: SidebarProps): React.ReactElement {
+}: SidebarProps): React.ReactElement => {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const navRef = useRef<HTMLElement>(null);
 

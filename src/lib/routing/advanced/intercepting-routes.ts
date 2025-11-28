@@ -259,7 +259,7 @@ export class InterceptingRouteManager {
         // Return fallback if pattern matches but interception condition fails
         return {
           shouldIntercept: false,
-          component: interceptor.config.fallback as ComponentType<unknown>,
+          component: interceptor.config.fallback,
           props: { ...context.params },
           context: null,
           skipReason: 'Interception condition not met',
@@ -475,9 +475,7 @@ let defaultManager: InterceptingRouteManager | null = null;
  * Get the default interception manager
  */
 export function getInterceptionManager(): InterceptingRouteManager {
-  if (!defaultManager) {
-    defaultManager = new InterceptingRouteManager();
-  }
+  defaultManager ??= new InterceptingRouteManager();
   return defaultManager;
 }
 
@@ -544,7 +542,7 @@ export function extractInterceptionFromPattern(
   pattern: string
 ): { level: InterceptionLevel; cleanPattern: string } | null {
   const match = pattern.match(/\((\.+)\)/);
-  if (!match || !match[1]) {
+  if (!match?.[1]) {
     return null;
   }
 

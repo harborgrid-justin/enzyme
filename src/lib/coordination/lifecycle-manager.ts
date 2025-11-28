@@ -521,7 +521,7 @@ export class LifecycleManagerImpl implements LifecycleManager {
     ids: LibraryId[],
     timeout?: number
   ): Promise<void> {
-    const promises = ids.map((id) => this.initializeLibrary(id, timeout));
+    const promises = ids.map(async (id) => this.initializeLibrary(id, timeout));
     await Promise.all(promises);
   }
 

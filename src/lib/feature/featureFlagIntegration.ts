@@ -61,7 +61,7 @@ export function extractFeatureFlags(): string[] {
     const { access, tabs } = feature.config;
 
     // Main feature flag
-    if (access.featureFlag) {
+    if (access.featureFlag !== undefined && access.featureFlag !== null && access.featureFlag !== '') {
       flags.add(access.featureFlag);
     }
 

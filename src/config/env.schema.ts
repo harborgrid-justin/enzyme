@@ -24,12 +24,14 @@ import { z } from 'zod';
  * Application environments
  */
 const AppEnvironment = z.enum(['development', 'staging', 'production']);
+// eslint-disable-next-line no-redeclare
 type AppEnvironment = z.infer<typeof AppEnvironment>;
 
 /**
  * Feature flag source types
  */
 const FeatureFlagSource = z.enum(['local', 'remote', 'launchdarkly']);
+// eslint-disable-next-line no-redeclare
 type FeatureFlagSource = z.infer<typeof FeatureFlagSource>;
 
 // =============================================================================

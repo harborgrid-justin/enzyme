@@ -99,9 +99,7 @@ export class ConfigRegistry {
    * Get the singleton registry instance
    */
   public static getInstance(): ConfigRegistry {
-    if (!ConfigRegistry.instance) {
-      ConfigRegistry.instance = new ConfigRegistry();
-    }
+    ConfigRegistry.instance ??= new ConfigRegistry();
     return ConfigRegistry.instance;
   }
 
@@ -129,7 +127,11 @@ export class ConfigRegistry {
         currentVersion: 1,
       });
     }
-    return this.namespaces.get(namespace)!;
+    const ns = this.namespaces.get(namespace);
+    if (ns == null) {
+      throw new Error(`Failed to initialize namespace: ${String(namespace)}`);
+    }
+    return ns;
   }
 
   /**
@@ -214,7 +216,7 @@ export class ConfigRegistry {
     defaultValue: T
   ): T {
     const value = this.get<T>(namespace, key);
-    return value !== undefined ? value : defaultValue;
+    return value ?? defaultValue;
   }
 
   /**
@@ -296,7 +298,7 @@ export class ConfigRegistry {
     value: T,
     options: ConfigSetOptions = {}
   ): void {
-    if (this.frozen && !options.source?.includes('override')) {
+    if (this.frozen && !(options.source?.includes('override') ?? false)) {
       throw new Error('Cannot modify frozen registry');
     }
 
@@ -304,12 +306,12 @@ export class ConfigRegistry {
     const existingEntry = data.entries.get(key);
 
     // Check if entry is frozen
-    if (existingEntry?.meta.frozen && options.source !== 'override') {
+    if ((existingEntry?.meta.frozen === true) && options.source !== 'override') {
       throw new Error(`Configuration "${namespace}:${key}" is frozen and cannot be modified`);
     }
 
     // Validate if schema provided
-    if (options.schema && !options.skipValidation) {
+    if (options.schema && !(options.skipValidation === true)) {
       const validation = validateConfig(options.schema, value, `${namespace}.${key}`);
       if (!validation.success) {
         throw new Error(
@@ -332,13 +334,13 @@ export class ConfigRegistry {
     };
 
     data.entries.set(key, {
-      value: options.freeze ? Object.freeze(value as object) as T : value,
+      value: (options.freeze === true) ? Object.freeze(value as object) as T : value,
       meta,
       schema: options.schema,
     });
 
     // Notify listeners
-    if (!options.silent) {
+    if (!(options.silent === true)) {
       this.notifyListeners(
         namespace,
         key,
@@ -358,11 +360,11 @@ export class ConfigRegistry {
     options: ConfigSetOptions = {}
   ): void {
     Object.entries(values).forEach(([key, value]) => {
-      this.set(namespace, key, value as ConfigValue, { ...options, silent: true });
+      this.set(namespace, key, value, { ...options, silent: true });
     });
 
     // Send batch notification
-    if (!options.silent) {
+    if (!(options.silent === true)) {
       this.notifyListeners(
         namespace,
         '*',
@@ -438,7 +440,10 @@ export class ConfigRegistry {
     if (!data.listeners.has(key)) {
       data.listeners.set(key, new Set());
     }
-    data.listeners.get(key)!.add(listener);
+    const listenerSet = data.listeners.get(key);
+    if (listenerSet != null) {
+      listenerSet.add(listener);
+    }
 
     return () => {
       data.listeners.get(key)?.delete(listener);
@@ -463,8 +468,15 @@ export class ConfigRegistry {
     newValue: ConfigValue | undefined,
     source: ConfigSource
   ): void {
+    let eventType: 'set' | 'delete';
+    if (newValue === undefined) {
+      eventType = 'delete';
+    } else {
+      eventType = 'set';
+    }
+
     const event: ConfigChangeEvent = {
-      type: newValue === undefined ? 'delete' : previousValue === undefined ? 'set' : 'set',
+      type: eventType,
       namespace,
       key,
       previousValue,
@@ -523,12 +535,12 @@ export class ConfigRegistry {
   /**
    * Run migrations for a namespace
    */
-  public async migrate<T extends ConfigValue>(
+  public migrate<T extends ConfigValue>(
     namespace: ConfigNamespace,
     config: ConfigValue,
     fromVersion: number,
     toVersion: number
-  ): Promise<MigrationResult<T>> {
+  ): MigrationResult<T> {
     const startTime = performance.now();
     const data = this.namespaces.get(namespace);
 
@@ -819,7 +831,7 @@ export function createTypedNamespace<T extends ConfigRecord>(
       value: T[K],
       options?: ConfigSetOptions
     ): void {
-      registry.set(namespace, key, value as ConfigValue, options);
+      registry.set(namespace, key, value, options);
     },
 
     has<K extends keyof T & string>(key: K): boolean {

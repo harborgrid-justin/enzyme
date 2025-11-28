@@ -170,7 +170,7 @@ export class BundleAnalyzer {
    * Stop analyzing
    */
   stop(): void {
-    if (this.resourceObserver) {
+    if (this.resourceObserver !== null) {
       this.resourceObserver.disconnect();
       this.resourceObserver = null;
     }
@@ -179,7 +179,7 @@ export class BundleAnalyzer {
   /**
    * Track a dynamic import
    */
-  trackDynamicImport(
+  async trackDynamicImport(
     modulePath: string,
     importPromise: Promise<unknown>
   ): Promise<unknown> {
@@ -204,8 +204,9 @@ export class BundleAnalyzer {
         this.log(`Dynamic import success: ${modulePath} (${(endTime - startTime).toFixed(2)}ms)`);
         return result;
       })
-      .catch((error) => {
+      .catch((error: unknown) => {
         const endTime = performance.now();
+        const errorMessage = error instanceof Error ? error.message : String(error);
         this.dynamicImports.push({
           modulePath,
           chunkName,
@@ -213,7 +214,7 @@ export class BundleAnalyzer {
           endTime,
           duration: endTime - startTime,
           success: false,
-          error: error.message,
+          error: errorMessage,
         });
         this.log(`Dynamic import failed: ${modulePath}`, error);
         throw error;
@@ -259,7 +260,7 @@ export class BundleAnalyzer {
       .getEntriesByType('resource')
       .filter((entry) => this.isJavaScriptResource(entry.name))
       .map((entry) => {
-        const resourceEntry = entry as PerformanceResourceTiming;
+        const resourceEntry = entry;
         return {
           name: resourceEntry.name,
           entryType: resourceEntry.entryType,
@@ -301,14 +302,14 @@ export class BundleAnalyzer {
 
     const chunkInfo: ChunkInfo = {
       id: chunkId,
-      name: options.name || chunkId,
-      size: options.size || 0,
-      loadTime: options.loadTime || 0,
-      dependencies: options.dependencies || [],
+      name: options.name ?? chunkId,
+      size: options.size ?? 0,
+      loadTime: options.loadTime ?? 0,
+      dependencies: options.dependencies ?? [],
       isAsync: options.isAsync ?? true,
       isEntry: options.isEntry ?? false,
-      loadedAt: options.loadedAt || Date.now(),
-      modules: options.modules || [],
+      loadedAt: options.loadedAt ?? Date.now(),
+      modules: options.modules ?? [],
     };
 
     this.chunks.set(chunkId, chunkInfo);
@@ -389,8 +390,8 @@ export class BundleAnalyzer {
 
   private extractChunkId(url: string): string {
     try {
-      const pathname = new URL(url).pathname;
-      const filename = pathname.split('/').pop() || url;
+      const {pathname} = new URL(url);
+      const filename = pathname.split('/').pop() ?? url;
       // Remove hash and extension
       return filename.replace(/\.[a-f0-9]+\.js$/, '.js').replace(/\.js$/, '');
     } catch {
@@ -409,7 +410,7 @@ export class BundleAnalyzer {
 
     for (const chunk of this.chunks.values()) {
       for (const module of chunk.modules) {
-        const count = moduleCounts.get(module.name) || 0;
+        const count = moduleCounts.get(module.name) ?? 0;
         moduleCounts.set(module.name, count + 1);
       }
     }
@@ -480,6 +481,7 @@ export class BundleAnalyzer {
 
   private log(message: string, ...args: unknown[]): void {
     if (this.config.debug) {
+      // eslint-disable-next-line no-console
       console.log(`[BundleAnalyzer] ${message}`, ...args);
     }
   }
@@ -495,7 +497,7 @@ export class BundleAnalyzer {
 export function createTrackedImport(
   analyzer: BundleAnalyzer
 ): <T>(importFn: () => Promise<T>, modulePath: string) => Promise<T> {
-  return <T>(importFn: () => Promise<T>, modulePath: string): Promise<T> => {
+  return async <T>(importFn: () => Promise<T>, modulePath: string): Promise<T> => {
     return analyzer.trackDynamicImport(modulePath, importFn()) as Promise<T>;
   };
 }
@@ -513,8 +515,9 @@ export function formatBytes(bytes: number): string {
   const k = 1024;
   const sizes = ['B', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
+  const size = sizes[i] ?? 'GB';
 
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${size}`;
 }
 
 /**
@@ -547,9 +550,7 @@ let analyzerInstance: BundleAnalyzer | null = null;
 export function getBundleAnalyzer(
   config?: Partial<BundleAnalyzerConfig>
 ): BundleAnalyzer {
-  if (!analyzerInstance) {
-    analyzerInstance = new BundleAnalyzer(config);
-  }
+  analyzerInstance ??= new BundleAnalyzer(config);
   return analyzerInstance;
 }
 
@@ -557,7 +558,7 @@ export function getBundleAnalyzer(
  * Reset the analyzer instance
  */
 export function resetBundleAnalyzer(): void {
-  if (analyzerInstance) {
+  if (analyzerInstance !== null) {
     analyzerInstance.stop();
     analyzerInstance = null;
   }

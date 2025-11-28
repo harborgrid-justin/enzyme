@@ -77,9 +77,9 @@ function generateFeatureRoute(feature: FeatureRegistryEntry): RouteObject {
   };
   
   // If feature has tabs, generate child routes
-  if (tabs && tabs.length > 0) {
+  if (tabs !== undefined && tabs !== null && tabs.length > 0) {
     baseRoute.children = tabs.map((tab) => ({
-      path: tab.path?.replace(`/${metadata.id}/`, '') || tab.id,
+      path: tab.path?.replace(`/${metadata.id}/`, '') ?? tab.id,
       Component: FeatureComponent,
     }));
   }

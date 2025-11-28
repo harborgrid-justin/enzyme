@@ -144,7 +144,7 @@ export class CoordinationEventBus {
     payload: CoordinationEvents[E]
   ): void {
     if (this.debug) {
-      console.debug(`[CoordinationEventBus] ${event}`, payload);
+      console.info(`[CoordinationEventBus] ${event}`, payload);
     }
 
     const handlers = this.listeners.get(event);
@@ -283,9 +283,7 @@ let globalEventBus: CoordinationEventBus | null = null;
  * @returns Coordination event bus instance
  */
 export function getCoordinationEventBus(): CoordinationEventBus {
-  if (!globalEventBus) {
-    globalEventBus = new CoordinationEventBus();
-  }
+  globalEventBus ??= new CoordinationEventBus();
   return globalEventBus;
 }
 

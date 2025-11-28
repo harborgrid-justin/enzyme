@@ -33,6 +33,8 @@ import {
   useRef,
   useCallback,
   useMemo,
+  useLayoutEffect,
+  type RefObject,
 } from 'react';
 
 import { useOptionalStreamContext } from '../StreamProvider';
@@ -62,7 +64,7 @@ const DEFAULT_OPTIONS: Required<UseDeferredStreamOptions> = {
 const DEFAULT_RESULT: UseDeferredStreamResult = {
   isDeferred: false,
   triggerNow: () => {},
-  ref: { current: null as HTMLElement | null } as any,
+  ref: { current: null as HTMLElement | null } as RefObject<HTMLElement>,
   deferReason: null,
 };
 
@@ -319,7 +321,7 @@ export function useDeferredStream(
       return;
     }
 
-    const handleEvent = () => {
+    const handleEvent = (): void => {
       if (mountedRef.current) {
         setEventFired(true);
       }
@@ -375,7 +377,7 @@ export function useDeferredStream(
   return {
     isDeferred,
     triggerNow,
-    ref: refObject as React.RefObject<HTMLElement>,
+    ref: refObject as RefObject<HTMLElement>,
     deferReason,
   };
 }
@@ -439,12 +441,12 @@ export function useExtendedDeferredStream(
   const base = useDeferredStream(options);
   const [startTime] = useState(() => Date.now());
   const [timeRemaining, setTimeRemaining] = useState<number | null>(
-    options.maxDeferMs ? options.maxDeferMs : null
+    options.maxDeferMs ?? null
   );
   const [resetCount, setResetCount] = useState(0);
 
-  useEffect(() => {
-    if (!options.maxDeferMs || !base.isDeferred) {
+  useLayoutEffect(() => {
+    if ((options.maxDeferMs == null || options.maxDeferMs === 0) || !base.isDeferred) {
       setTimeRemaining(null);
       return;
     }

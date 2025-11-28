@@ -52,8 +52,8 @@ export function streamResponse<T>(
   let inactivityTimer: ReturnType<typeof setTimeout> | null = null;
 
   // Get the body stream
-  const body = response.body;
-  if (!body) {
+  const { body } = response;
+  if (body === null || body === undefined) {
     throw new Error('Response body is not a readable stream');
   }
 
@@ -62,18 +62,18 @@ export function streamResponse<T>(
   let buffer = '';
 
   // Emit event to all subscribers
-  const emit = (event: StreamEvent<T>) => {
+  const emit = (event: StreamEvent<T>): void => {
     for (const subscriber of subscribers) {
       subscriber(event);
     }
   };
 
   // Reset inactivity timer
-  const resetInactivityTimer = () => {
-    if (inactivityTimer) {
+  const resetInactivityTimer = (): void => {
+    if (inactivityTimer !== null) {
       clearTimeout(inactivityTimer);
     }
-    if (opts.inactivityTimeout && opts.inactivityTimeout > 0) {
+    if (opts.inactivityTimeout !== undefined && opts.inactivityTimeout !== null && opts.inactivityTimeout > 0) {
       inactivityTimer = setTimeout(() => {
         emit({
           type: 'error',
@@ -89,31 +89,31 @@ export function streamResponse<T>(
   const parseData = (text: string): void => {
     buffer += text;
 
-    if (opts.sse) {
+    if (opts.sse === true) {
       // Parse Server-Sent Events
       parseSSE(buffer, (data, remainder) => {
         buffer = remainder;
-        if (data) {
+        if (data !== null && data !== undefined) {
           addData(data as T);
         }
       });
-    } else if (opts.ndjson) {
+    } else if (opts.ndjson === true) {
       // Parse NDJSON (newline-delimited JSON)
       parseNDJSON(buffer, (data, remainder) => {
         buffer = remainder;
-        if (data) {
+        if (data !== null && data !== undefined) {
           addData(data as T);
         }
       });
-    } else if (opts.parser) {
+    } else if (opts.parser !== undefined) {
       // Custom parser
       const lines = buffer.split('\n');
       buffer = lines.pop() ?? '';
 
       for (const line of lines) {
-        if (line.trim()) {
+        if (line.trim() !== '') {
           const data = opts.parser(line);
-          if (data) {
+          if (data !== null && data !== undefined) {
             addData(data as T);
           }
         }
@@ -126,9 +126,9 @@ export function streamResponse<T>(
   };
 
   // Add data to buffer and emit
-  const addData = (data: T) => {
+  const addData = (data: T): void => {
     // Limit buffer size
-    if (opts.bufferSize && dataBuffer.length >= opts.bufferSize) {
+    if (opts.bufferSize !== undefined && opts.bufferSize !== null && dataBuffer.length >= opts.bufferSize) {
       dataBuffer.shift();
     }
     dataBuffer.push(data);
@@ -143,7 +143,7 @@ export function streamResponse<T>(
   };
 
   // Cleanup resources
-  const cleanup = () => {
+  const cleanup = (): void => {
     isActive = false;
     if (inactivityTimer) {
       clearTimeout(inactivityTimer);
@@ -155,7 +155,7 @@ export function streamResponse<T>(
   };
 
   // Start reading
-  const read = async () => {
+  const read = async (): Promise<void> => {
     try {
       resetInactivityTimer();
 
@@ -237,9 +237,10 @@ function parseSSE(
       }
     }
 
-    if (data) {
+    if (data !== '') {
       try {
-        callback({ type: eventType, data: JSON.parse(data) }, '');
+        const parsedData: unknown = JSON.parse(data);
+        callback({ type: eventType, data: parsedData }, '');
       } catch {
         callback({ type: eventType, data: data as unknown }, '');
       }

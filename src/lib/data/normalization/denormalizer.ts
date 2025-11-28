@@ -386,7 +386,7 @@ export function denormalizeMany<T extends Entity>(
 ): T[] {
   const context = createContext(entities, options);
   return ids
-    .map((id) => denormalizeEntity<T>(id, schema, context) as T | null)
+    .map((id) => denormalizeEntity<T>(id, schema, context))
     .filter((entity): entity is T => entity !== null);
 
   function denormalizeEntity<U extends Entity>(
@@ -489,20 +489,20 @@ export function canDenormalize(
   function checkValue(value: unknown, schema: Schema): boolean {
     switch (schema._type) {
       case 'entity': {
-        const entitySchema = schema as EntitySchema;
+        const entitySchema = schema;
         const id = String(value);
         return !!entities[entitySchema.name]?.[id];
       }
 
       case 'array': {
-        const arraySchema = schema as ArraySchema;
+        const arraySchema = schema;
         return (value as unknown[]).every((item) =>
           checkValue(item, arraySchema.schema)
         );
       }
 
       case 'object': {
-        const objectSchema = schema as ObjectSchema;
+        const objectSchema = schema;
         const obj = value as Record<string, unknown>;
         return Object.entries(objectSchema.schema).every(([key, fieldSchema]) =>
           checkValue(obj[key], fieldSchema)
@@ -510,7 +510,7 @@ export function canDenormalize(
       }
 
       case 'union': {
-        const unionSchema = schema as UnionSchema;
+        const unionSchema = schema;
         const id = String(value);
         return Object.values(unionSchema.schemas).some(
           (entitySchema) => !!entities[entitySchema.name]?.[id]

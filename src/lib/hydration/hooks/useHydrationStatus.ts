@@ -378,7 +378,7 @@ export function useWaitForHydration(
 ): () => Promise<void> {
   const { isHydrated, hasError } = useHydrationStatus(boundaryId);
 
-  return useCallback((): Promise<void> => {
+  return useCallback(async (): Promise<void> => {
     return new Promise((resolve, reject) => {
       // Already hydrated
       if (isHydrated) {

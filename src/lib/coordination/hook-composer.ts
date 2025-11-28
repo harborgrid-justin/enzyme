@@ -200,7 +200,7 @@ export function useComposedHooks<T extends Record<string, HookDef<unknown>>>(
 
       // Execute hook
       try {
-        // eslint-disable-next-line react-hooks/rules-of-hooks
+         
         const result = def?.hook();
         results[key as string] = def?.selector ? def.selector(result) : result;
       } catch (e) {
@@ -227,7 +227,7 @@ export function useComposedHooks<T extends Record<string, HookDef<unknown>>>(
 
       // Check if result is async-like
       if (
-        result &&
+        result != null &&
         typeof result === 'object' &&
         ('isLoading' in result || 'error' in result)
       ) {
@@ -302,7 +302,7 @@ export function useComposedHooks<T extends Record<string, HookDef<unknown>>>(
   // Debug logging
   useEffect(() => {
     if (opts.debug) {
-      console.debug('[useComposedHooks] Result:', analysis);
+      console.info('[useComposedHooks] Result:', analysis);
     }
   }, [analysis, opts.debug]);
 
@@ -355,13 +355,13 @@ export function useSelectiveHooks<T extends Record<string, HookDef<unknown>>>(
       }
 
       try {
-        // eslint-disable-next-line react-hooks/rules-of-hooks
+         
         const result = def?.hook();
         const value = def?.selector ? def.selector(result) : result;
 
         // Extract data from async result
         if (
-          value &&
+          value != null &&
           typeof value === 'object' &&
           'data' in value &&
           ('isLoading' in value || 'error' in value)
@@ -467,18 +467,9 @@ export function useMemoizedComposition<T>(
   factory: () => T,
   deps: DependencyList
 ): T {
-  const resultRef = useRef<T | null>(null);
-  const depsRef = useRef<DependencyList>(deps);
-
-  // Check if deps changed
-  const depsChanged = deps.some((dep, i) => dep !== depsRef.current[i]);
-
-  if (depsChanged || resultRef.current === null) {
-    resultRef.current = factory();
-    depsRef.current = deps;
-  }
-
-  return resultRef.current;
+  // Use useMemo to properly handle dependencies during render
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  return useMemo(factory, deps);
 }
 
 // ============================================================================
@@ -529,13 +520,13 @@ export function useParallelHooks<T extends Record<string, () => unknown>>(
 
     for (const key of keys) {
       try {
-        // eslint-disable-next-line react-hooks/rules-of-hooks
+         
         const hookFn = hooks[key];
         const result = hookFn ? hookFn() : undefined;
 
         // Check if async result
         if (
-          result &&
+          result != null &&
           typeof result === 'object' &&
           ('isLoading' in result || 'error' in result)
         ) {
@@ -596,19 +587,19 @@ export function useHookSequence<T>(
 
   for (const step of steps) {
     try {
-      // eslint-disable-next-line react-hooks/rules-of-hooks
+       
       const result = step(prevResult);
 
       // Handle async results
       if (
-        result &&
+        result != null &&
         typeof result === 'object' &&
         ('isLoading' in result || 'data' in result)
       ) {
         const asyncResult = result as AsyncHookResult<unknown>;
         results.push(asyncResult.data);
         prevResult = asyncResult.data;
-        if (asyncResult.isLoading || !asyncResult.data) {
+        if (asyncResult.isLoading === true || asyncResult.data == null) {
           isComplete = false;
           break;
         }

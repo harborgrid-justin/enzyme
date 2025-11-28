@@ -178,7 +178,7 @@ export function useApiMutation<
   const mutationFn = useCallback(
     async (variables: MutationVariables<TBody>): Promise<TResponse> => {
       // Build URL with path params
-      let url = config.url;
+      let {url} = config;
       if (variables.pathParams) {
         for (const [key, value] of Object.entries(variables.pathParams)) {
           url = url.replace(`:${key}`, encodeURIComponent(String(value)));
@@ -260,7 +260,7 @@ export function useApiMutation<
       // Invalidate queries
       if (config.invalidateQueries && config.invalidateQueries.length > 0) {
         await Promise.all(
-          config.invalidateQueries.map((queryKey) =>
+          config.invalidateQueries.map(async (queryKey) =>
             queryClient.invalidateQueries({ queryKey })
           )
         );
@@ -269,7 +269,7 @@ export function useApiMutation<
       // Refetch queries
       if (config.refetchQueries && config.refetchQueries.length > 0) {
         await Promise.all(
-          config.refetchQueries.map((queryKey) =>
+          config.refetchQueries.map(async (queryKey) =>
             queryClient.refetchQueries({ queryKey })
           )
         );
@@ -347,7 +347,7 @@ export function useApiMutation<
   );
 
   const mutateAsyncWithBody = useCallback(
-    (body: TBody) => {
+    async (body: TBody) => {
       return mutation.mutateAsync({ body });
     },
     [mutation]
@@ -636,7 +636,7 @@ export function useBatchMutation<TResponse = unknown, TBody = unknown>(
     onSuccess: async () => {
       if (options?.invalidateQueries) {
         await Promise.all(
-          options.invalidateQueries.map((queryKey) =>
+          options.invalidateQueries.map(async (queryKey) =>
             queryClient.invalidateQueries({ queryKey })
           )
         );

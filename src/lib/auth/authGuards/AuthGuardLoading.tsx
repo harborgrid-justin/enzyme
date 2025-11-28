@@ -49,11 +49,11 @@ interface AuthGuardLoadingProps {
  * <AuthGuardLoading className="custom-loading-container" />
  * ```
  */
-export const AuthGuardLoading = memo(function AuthGuardLoading({
+export const AuthGuardLoading = memo(({
   fallback,
   className = 'auth-guard-loading',
   ariaLabel = 'Checking authentication...',
-}: AuthGuardLoadingProps) {
+}: AuthGuardLoadingProps) => {
   // If a custom fallback is provided, render it directly
   if (fallback) {
     return <>{fallback}</>;

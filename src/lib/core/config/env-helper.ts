@@ -64,7 +64,7 @@ export function getEnvironment(): string {
  */
 export function devLog(message: string, ...data: unknown[]): void {
   if (isDev()) {
-    console.log(`[DEV] ${message}`, ...data);
+    console.info(`[DEV] ${message}`, ...data);
   }
 }
 

@@ -213,7 +213,7 @@ if (typeof document !== 'undefined') {
 /**
  * Button component with forwardRef for ref forwarding
  */
-export const Button = memo(forwardRef<HTMLButtonElement, ButtonProps>(function Button(
+export const Button = memo(forwardRef<HTMLButtonElement, ButtonProps>((
   {
     variant = 'primary',
     size = 'md',
@@ -230,7 +230,7 @@ export const Button = memo(forwardRef<HTMLButtonElement, ButtonProps>(function B
     ...props
   },
   ref
-): React.ReactElement {
+): React.ReactElement => {
   const isDisabled = disabled || isLoading;
   const sizeProps = sizeConfig[size];
   const variantProps = variantStyles[variant];
@@ -328,10 +328,10 @@ export interface IconButtonProps extends Omit<ButtonProps, 'leftIcon' | 'rightIc
   'aria-label': string;
 }
 
-export const IconButton = memo(forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
+export const IconButton = memo(forwardRef<HTMLButtonElement, IconButtonProps>((
   { icon, size = 'md', style, ...props },
   ref
-): React.ReactElement {
+): React.ReactElement => {
   // Square padding for icon buttons
   const iconButtonStyle: CSSProperties = {
     ...style,
@@ -376,13 +376,13 @@ const gapMap: Record<'sm' | 'md' | 'lg', string> = {
   lg: tokens.spacing.md,
 };
 
-export const ButtonGroup = memo(function ButtonGroup({
+export const ButtonGroup = memo(({
   children,
   direction = 'horizontal',
   gap = 'sm',
   className,
   style,
-}: ButtonGroupProps): React.ReactElement {
+}: ButtonGroupProps): React.ReactElement => {
   const groupStyle = useMemo((): CSSProperties => ({
     display: 'flex',
     flexDirection: direction === 'vertical' ? 'column' : 'row',

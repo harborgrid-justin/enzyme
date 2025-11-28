@@ -177,7 +177,7 @@ export function ConfigProvider<T extends ConfigRecord = ConfigRecord>({
   useEffect(() => {
     return runtimeConfig.subscribe((event) => {
       if (event.type === 'change' || event.type === 'reload') {
-        const newConfig = runtimeConfig.getConfig() as T;
+        const newConfig = runtimeConfig.getConfig();
         setConfig(newConfig);
         onChange?.(newConfig);
       }

@@ -207,7 +207,7 @@ export class TargetingRulesEngine {
     context: EvaluationContext,
     results: ConditionResult[]
   ): boolean {
-    const conditions = group.conditions;
+    const {conditions} = group;
 
     if (group.operator === 'and') {
       return conditions.every((condition) =>
@@ -231,14 +231,14 @@ export class TargetingRulesEngine {
     if ('operator' in conditionOrGroup && 'conditions' in conditionOrGroup) {
       // It's a nested group
       return this.evaluateConditionGroup(
-        conditionOrGroup as ConditionGroup,
+        conditionOrGroup,
         context,
         results
       );
     } else {
       // It's a condition
       return this.evaluateCondition(
-        conditionOrGroup as TargetingCondition,
+        conditionOrGroup,
         context,
         results
       );
@@ -261,7 +261,7 @@ export class TargetingRulesEngine {
       condition.caseSensitive ?? true
     );
 
-    if (condition.negate) {
+    if (condition.negate === true) {
       matched = !matched;
     }
 
@@ -380,7 +380,7 @@ export class TargetingRulesEngine {
   // ==========================================================================
 
   private normalizeString(value: unknown, caseSensitive: boolean): string {
-    const str = String(value);
+    const str = typeof value === 'object' ? JSON.stringify(value) : String(value);
     return caseSensitive ? str : str.toLowerCase();
   }
 
@@ -675,7 +675,7 @@ export class TargetingRuleBuilder {
    * Set the rule ID.
    */
   id(id: string): this {
-    (this.rule as any).id = id;
+    this.rule.id = id;
     return this;
   }
 
@@ -683,7 +683,7 @@ export class TargetingRuleBuilder {
    * Set the rule name.
    */
   name(name: string): this {
-    (this.rule as any).name = name;
+    this.rule.name = name;
     return this;
   }
 
@@ -691,7 +691,7 @@ export class TargetingRuleBuilder {
    * Set the rule description.
    */
   description(description: string): this {
-    (this.rule as any).description = description;
+    this.rule.description = description;
     return this;
   }
 
@@ -699,7 +699,7 @@ export class TargetingRuleBuilder {
    * Set the rule priority.
    */
   priority(priority: number): this {
-    (this.rule as any).priority = priority;
+    this.rule.priority = priority;
     return this;
   }
 
@@ -707,7 +707,7 @@ export class TargetingRuleBuilder {
    * Set whether the rule is enabled.
    */
   enabled(enabled: boolean): this {
-    (this.rule as any).enabled = enabled;
+    this.rule.enabled = enabled;
     return this;
   }
 
@@ -715,7 +715,7 @@ export class TargetingRuleBuilder {
    * Set the variant to serve when matched.
    */
   variant(variantId: VariantId): this {
-    (this.rule as any).variantId = variantId;
+    this.rule.variantId = variantId;
     return this;
   }
 
@@ -793,7 +793,7 @@ export class TargetingRuleBuilder {
    * Set schedule constraints.
    */
   schedule(schedule: RuleSchedule): this {
-    (this.rule as any).schedule = schedule;
+    this.rule.schedule = schedule;
     return this;
   }
 
@@ -801,13 +801,13 @@ export class TargetingRuleBuilder {
    * Build the targeting rule.
    */
   build(): TargetingRule {
-    if (!this.rule.id) {
+    if (this.rule.id == null || this.rule.id === '') {
       throw new Error('Rule ID is required');
     }
-    if (!this.rule.name) {
+    if (this.rule.name == null || this.rule.name === '') {
       throw new Error('Rule name is required');
     }
-    if (!this.rule.variantId) {
+    if (this.rule.variantId == null || this.rule.variantId === '') {
       throw new Error('Variant ID is required');
     }
 

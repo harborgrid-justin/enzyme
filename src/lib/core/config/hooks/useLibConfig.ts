@@ -9,7 +9,7 @@
  * @module core/config/hooks
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 
 import type {
   LibraryConfig,
@@ -231,7 +231,14 @@ export function useLibConfigState<T>(
  * }
  * ```
  */
-export function useRuntimeConfig() {
+export function useRuntimeConfig(): {
+  manager: ReturnType<typeof getRuntimeConfigManager>;
+  set: (path: ConfigPath, value: unknown) => void;
+  rollback: () => boolean;
+  createSnapshot: (reason?: string) => void;
+  enablePersistence: (storageKey?: string) => void;
+  disablePersistence: () => void;
+} {
   const manager = useMemo(() => getRuntimeConfigManager(), []);
 
   const set = useCallback(
@@ -391,10 +398,17 @@ export function useLibConfigPaths(): string[] {
  */
 export function useLibConfigEnvironment(): string {
   const [env, setEnv] = useState(() => getConfigRegistry().getEnvironment());
+  const initializedRef = useRef(false);
 
   useEffect(() => {
-    setEnv(getConfigRegistry().getEnvironment());
-  }, []);
+    if (!initializedRef.current) {
+      initializedRef.current = true;
+      const currentEnv = getConfigRegistry().getEnvironment();
+      if (currentEnv !== env) {
+        setEnv(currentEnv);
+      }
+    }
+  }, [env]);
 
   return env;
 }

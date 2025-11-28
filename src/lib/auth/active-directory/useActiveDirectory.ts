@@ -163,26 +163,26 @@ export function useActiveDirectory(): UseActiveDirectoryReturn {
   // State Values
   // ===========================================================================
 
-  const user = context.user;
-  const isAuthenticated = context.isAuthenticated;
-  const isAuthenticating = context.isAuthenticating;
-  const isRefreshing = context.isRefreshing;
-  const error = context.error;
-  const provider = context.provider;
-  const tokens = context.tokens;
-  const hasSsoSession = context.hasSsoSession;
-  const initialize = context.initialize;
-  const login = context.login;
-  const loginSilent = context.loginSilent;
-  const logout = context.logout;
-  const acquireToken = context.acquireToken;
-  const refreshTokens = context.refreshTokens;
-  const clearError = context.clearError;
-  const forceReauth = context.forceReauth;
-  const isInGroup = context.isInGroup;
-  const hasAttribute = context.hasAttribute;
-  const getMappedRoles = context.getMappedRoles;
-  const getEffectivePermissions = context.getEffectivePermissions;
+  const {user} = context;
+  const {isAuthenticated} = context;
+  const {isAuthenticating} = context;
+  const {isRefreshing} = context;
+  const {error} = context;
+  const {provider} = context;
+  const {tokens} = context;
+  const {hasSsoSession} = context;
+  const {initialize} = context;
+  const {login} = context;
+  const {loginSilent} = context;
+  const {logout} = context;
+  const {acquireToken} = context;
+  const {refreshTokens} = context;
+  const {clearError} = context;
+  const {forceReauth} = context;
+  const {isInGroup} = context;
+  const {hasAttribute} = context;
+  const {getMappedRoles} = context;
+  const {getEffectivePermissions} = context;
 
   // ===========================================================================
   // Group Helpers

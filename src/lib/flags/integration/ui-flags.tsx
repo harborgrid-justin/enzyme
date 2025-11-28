@@ -566,7 +566,7 @@ export function FlaggedUIComponent<P extends React.JSX.IntrinsicAttributes = Rea
       if (value === flagKey) {
         const key = flagKey.replace('ui-', '').replace(/-enabled$/, '').replace(/-/g, '');
         // Map to config property
-        const configKey = key + 'Enabled';
+        const configKey = `${key  }Enabled`;
         return (config as Record<string, boolean>)[configKey] ?? false;
       }
     }

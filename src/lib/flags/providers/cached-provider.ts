@@ -498,7 +498,7 @@ export class CachedProvider implements FlagProvider {
   /**
    * Check if the provider is healthy.
    */
-  async isHealthy(): Promise<boolean> {
+  async isHealthy(): boolean {
     return this.provider.isHealthy();
   }
 
@@ -585,6 +585,7 @@ export class CachedProvider implements FlagProvider {
 
   private log(message: string, ...args: unknown[]): void {
     if (this.config.debug) {
+      // eslint-disable-next-line no-console
       console.log(`[CachedProvider] ${message}`, ...args);
     }
   }

@@ -131,7 +131,7 @@ export function useLayoutMorph(options: UseLayoutMorphOptions = {}): UseLayoutMo
     const elements = new Map<string, HTMLElement>();
 
     for (const [id, ref] of elementsRef.current) {
-      if (ref.current) {
+      if (ref.current != null) {
         elements.set(id, ref.current);
       }
     }

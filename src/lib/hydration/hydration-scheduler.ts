@@ -20,7 +20,7 @@
 
 import { HydrationPriorityQueue, type PriorityQueueStats } from './priority-queue';
 import {
-  InteractionReplayManager,
+  type InteractionReplayManager,
   getInteractionReplayManager,
 } from './interaction-replay';
 import type {
@@ -97,7 +97,7 @@ function requestIdle(
       timeRemaining: () => 50,
     });
   }, options?.timeout ?? 100);
-  return timeoutId as number;
+  return timeoutId;
 }
 
 /**
@@ -135,7 +135,7 @@ function hasSchedulerYieldAPI(win: Window): win is WindowWithScheduler {
 /**
  * Yields to the main thread.
  */
-function yieldToMain(): Promise<void> {
+async function yieldToMain(): Promise<void> {
   return new Promise((resolve) => {
     if (hasSchedulerYieldAPI(window)) {
       // Use scheduler.yield if available (modern browsers)
@@ -821,7 +821,7 @@ export class HydrationScheduler {
     } else if (nextTask?.priority === 'idle' && this.config.useIdleCallback) {
       // Process idle tasks in idle time
       this.idleCallbackHandle = requestIdle(
-        (deadline) => this.processQueueWithDeadline(deadline),
+        async (deadline) => this.processQueueWithDeadline(deadline),
         { timeout: 5000 }
       );
     } else if (nextTask) {
@@ -864,7 +864,7 @@ export class HydrationScheduler {
         const task = this.queue.extractMin();
         if (task) {
           const boundary = this.boundaries.get(task.id);
-          if (boundary && boundary.status.state === 'pending') {
+          if (boundary?.status.state === 'pending') {
             await this.hydrateTask(boundary);
           }
         }
@@ -916,7 +916,7 @@ export class HydrationScheduler {
         const task = this.queue.extractMin();
         if (task) {
           const boundary = this.boundaries.get(task.id);
-          if (boundary && boundary.status.state === 'pending') {
+          if (boundary?.status.state === 'pending') {
             await this.hydrateTask(boundary);
             tasksProcessed++;
           }

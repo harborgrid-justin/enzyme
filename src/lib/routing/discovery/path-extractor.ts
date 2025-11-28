@@ -441,7 +441,7 @@ export function segmentsToUrlPath(segments: readonly ParsedSegment[]): string {
     }
   }
 
-  return '/' + parts.join('/');
+  return `/${  parts.join('/')}`;
 }
 
 /**
@@ -621,8 +621,8 @@ export function buildPathTree(
   // Freeze the tree structure
   const freezeNode = (node: PathNode): PathNode => ({
     ...node,
-    children: Object.freeze(Array.from(node.children).map(freezeNode)) as readonly PathNode[],
-    files: Object.freeze([...node.files]) as readonly string[],
+    children: Object.freeze(Array.from(node.children).map(freezeNode)),
+    files: Object.freeze([...node.files]),
   });
 
   return Object.freeze(rootNodes.map(freezeNode));
@@ -653,7 +653,7 @@ export function findCommonAncestor(paths: readonly string[]): string {
     }
   }
 
-  return '/' + commonParts.join('/');
+  return `/${  commonParts.join('/')}`;
 }
 
 /**

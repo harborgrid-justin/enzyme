@@ -632,7 +632,7 @@ export class ZIndexManager {
     }
 
     const style = getComputedStyle(element);
-    const position = style.position;
+    const {position} = style;
 
     // z-index on positioned element
     if ((position === 'relative' || position === 'absolute' || position === 'fixed' || position === 'sticky') &&
@@ -663,7 +663,7 @@ export class ZIndexManager {
     }
 
     // will-change with certain values
-    const willChange = style.willChange;
+    const {willChange} = style;
     if (willChange === 'transform' ||
         willChange === 'opacity' ||
         willChange === 'filter') {
@@ -671,7 +671,7 @@ export class ZIndexManager {
     }
 
     // contain
-    const contain = style.contain;
+    const {contain} = style;
     if (contain === 'layout' ||
         contain === 'paint' ||
         contain === 'strict' ||

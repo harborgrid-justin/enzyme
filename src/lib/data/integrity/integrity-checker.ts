@@ -255,10 +255,10 @@ export interface IntegrityChecker {
  * ```
  */
 export function createIntegrityChecker(config: IntegrityCheckerConfig): IntegrityChecker {
-  const relations = [...(config.relations || [])];
-  const constraints = [...(config.constraints || [])];
-  const anomalyRules = [...(config.anomalyRules || [])];
-  const idField = config.idField || 'id';
+  const relations = [...(config.relations ?? [])];
+  const constraints = [...(config.constraints ?? [])];
+  const anomalyRules = [...(config.anomalyRules ?? [])];
+  const idField = config.idField ?? 'id';
 
   /**
    * Check referential integrity for an entity
@@ -274,14 +274,14 @@ export function createIntegrityChecker(config: IntegrityCheckerConfig): Integrit
     for (const relation of entityRelations) {
       const value = entity[relation.field];
 
-      if (relation.isArray) {
+      if (relation.isArray === true) {
         // Array relation
         if (Array.isArray(value)) {
           for (const refId of value) {
-            if (refId && !entities[relation.to]?.[String(refId)]) {
+            if (refId != null && !entities[relation.to]?.[String(refId)]) {
               violations.push({
                 type: 'referential',
-                severity: relation.required ? 'error' : 'warning',
+                severity: relation.required === true ? 'error' : 'warning',
                 entityType,
                 entityId: String(entity[idField]),
                 message: `Missing referenced ${relation.to} with ID "${refId}"`,
@@ -303,17 +303,18 @@ export function createIntegrityChecker(config: IntegrityCheckerConfig): Integrit
       } else {
         // Single relation
         if (value !== null && value !== undefined) {
-          if (!entities[relation.to]?.[String(value)]) {
+          const valueStr = (typeof value !== 'string' && typeof value !== 'number' && typeof value !== 'boolean') ? JSON.stringify(value) : String(value);
+          if (!entities[relation.to]?.[valueStr]) {
             violations.push({
               type: 'referential',
-              severity: relation.required ? 'error' : 'warning',
+              severity: relation.required === true ? 'error' : 'warning',
               entityType,
               entityId: String(entity[idField]),
-              message: `Missing referenced ${relation.to} with ID "${value}"`,
+              message: `Missing referenced ${relation.to} with ID ${valueStr}`,
               field: relation.field,
               related: {
                 entityType: relation.to,
-                entityId: String(value),
+                entityId: valueStr,
               },
               repair: {
                 action: relation.onDelete === 'cascade' ? 'delete' : 'update',
@@ -321,7 +322,7 @@ export function createIntegrityChecker(config: IntegrityCheckerConfig): Integrit
               },
             });
           }
-        } else if (relation.required) {
+        } else if (relation.required === true) {
           violations.push({
             type: 'referential',
             severity: 'error',
@@ -360,7 +361,7 @@ export function createIntegrityChecker(config: IntegrityCheckerConfig): Integrit
 
         violations.push({
           type: 'constraint',
-          severity: constraint.severity || 'error',
+          severity: constraint.severity ?? 'error',
           entityType,
           entityId: String(entity[idField]),
           message: `[${constraint.name}] ${message}`,
@@ -381,7 +382,7 @@ export function createIntegrityChecker(config: IntegrityCheckerConfig): Integrit
    * Detect orphaned entities
    */
   function detectOrphans(entities: NormalizedEntities): IntegrityViolation[] {
-    if (!config.detectOrphans) {
+    if (config.detectOrphans !== true) {
       return [];
     }
 
@@ -403,12 +404,13 @@ export function createIntegrityChecker(config: IntegrityCheckerConfig): Integrit
         for (const relation of entityRelations) {
           const value = entity[relation.field];
 
-          if (relation.isArray && Array.isArray(value)) {
+          if (relation.isArray === true && Array.isArray(value)) {
             for (const refId of value) {
               referencedIds.get(relation.to)?.add(String(refId));
             }
           } else if (value !== null && value !== undefined) {
-            referencedIds.get(relation.to)?.add(String(value));
+            const valueStr = (typeof value !== 'string' && typeof value !== 'number' && typeof value !== 'boolean') ? JSON.stringify(value) : String(value);
+            referencedIds.get(relation.to)?.add(valueStr);
           }
         }
       }
@@ -423,7 +425,7 @@ export function createIntegrityChecker(config: IntegrityCheckerConfig): Integrit
       const entityMap = entities[entityType];
       if (!entityMap) continue;
 
-      const referenced = referencedIds.get(entityType) || new Set();
+      const referenced = referencedIds.get(entityType) ?? new Set();
 
       for (const [entityId] of Object.entries(entityMap)) {
         if (!referenced.has(entityId)) {
@@ -456,11 +458,11 @@ export function createIntegrityChecker(config: IntegrityCheckerConfig): Integrit
       for (const result of results) {
         violations.push({
           type: 'anomaly',
-          severity: rule.severity || 'warning',
+          severity: rule.severity ?? 'warning',
           entityType: result.entityType,
-          entityId: result.entityId || '',
+          entityId: result.entityId ?? '',
           message: `[${rule.name}] ${result.description}`,
-          repair: result.suggestion
+          repair: result.suggestion != null && result.suggestion !== ''
             ? {
                 action: 'update',
                 data: { suggestion: result.suggestion },
@@ -499,23 +501,23 @@ export function createIntegrityChecker(config: IntegrityCheckerConfig): Integrit
         violations.push(...checkConstraints(entityType, entity, entities));
 
         // Early exit if fail fast and has errors
-        if (config.failFast && violations.some((v) => v.severity === 'error')) {
+        if (config.failFast === true && violations.some((v) => v.severity === 'error')) {
           break;
         }
       }
 
-      if (config.failFast && violations.some((v) => v.severity === 'error')) {
+      if (config.failFast === true && violations.some((v) => v.severity === 'error')) {
         break;
       }
     }
 
     // Orphan detection
-    if (!config.failFast || !violations.some((v) => v.severity === 'error')) {
+    if (config.failFast !== true || !violations.some((v) => v.severity === 'error')) {
       violations.push(...detectOrphans(entities));
     }
 
     // Anomaly detection
-    if (!config.failFast || !violations.some((v) => v.severity === 'error')) {
+    if (config.failFast !== true || !violations.some((v) => v.severity === 'error')) {
       violations.push(...runAnomalyDetection(entities));
     }
 
@@ -572,18 +574,18 @@ export function createIntegrityChecker(config: IntegrityCheckerConfig): Integrit
     report: IntegrityReport,
     options: RepairOptions = {}
   ): RepairResult {
-    let repairedEntities: NormalizedEntities = JSON.parse(JSON.stringify(entities));
+    let repairedEntities: NormalizedEntities = JSON.parse(JSON.stringify(entities)) as NormalizedEntities;
     const repairs: RepairResult['repairs'] = [];
     const remaining: IntegrityViolation[] = [];
 
-    const violationsToFix = options.errorsOnly
+    const violationsToFix = options.errorsOnly === true
       ? report.violations.filter((v) => v.severity === 'error')
       : report.violations;
 
     for (const violation of violationsToFix) {
       // Check for custom handler
       if (options.handlers?.[violation.type]) {
-        if (!options.dryRun) {
+        if (options.dryRun !== true) {
           const handler = options.handlers[violation.type];
           if (handler) {
             repairedEntities = handler(violation, repairedEntities);
@@ -600,7 +602,7 @@ export function createIntegrityChecker(config: IntegrityCheckerConfig): Integrit
       }
 
       try {
-        if (!options.dryRun) {
+        if (options.dryRun !== true) {
           const entityTypeMap = repairedEntities[violation.entityType];
           switch (violation.repair.action) {
             case 'delete':
@@ -610,7 +612,7 @@ export function createIntegrityChecker(config: IntegrityCheckerConfig): Integrit
               break;
 
             case 'update':
-              if (entityTypeMap && violation.repair.data) {
+              if (entityTypeMap && violation.repair.data != null) {
                 const existing = entityTypeMap[violation.entityId];
                 entityTypeMap[violation.entityId] = {
                   ...existing,
@@ -620,7 +622,7 @@ export function createIntegrityChecker(config: IntegrityCheckerConfig): Integrit
               break;
 
             case 'nullify':
-              if (entityTypeMap && violation.field) {
+              if (entityTypeMap && violation.field != null && violation.field !== '') {
                 const entity = entityTypeMap[violation.entityId];
                 if (entity) {
                   entity[violation.field] = null;
@@ -636,7 +638,7 @@ export function createIntegrityChecker(config: IntegrityCheckerConfig): Integrit
         }
 
         repairs.push({ violation, action: violation.repair.action, success: true });
-      } catch (error) {
+      } catch {
         repairs.push({ violation, action: violation.repair.action, success: false });
         remaining.push(violation);
       }
@@ -716,10 +718,13 @@ export function createDuplicateDetectionRule(
       const seen = new Map<string, string>();
 
       for (const [id, entity] of Object.entries(entityMap)) {
-        const key = fields.map((f) => String(entity[f] ?? '')).join('|');
+        const key = fields.map((f) => {
+          const val = entity[f] ?? '';
+          return (typeof val !== 'string' && typeof val !== 'number' && typeof val !== 'boolean') ? JSON.stringify(val) : String(val);
+        }).join('|');
         const existing = seen.get(key);
 
-        if (existing) {
+        if (existing != null && existing !== '') {
           results.push({
             entityType,
             entityId: id,
@@ -845,7 +850,8 @@ export function createUniqueConstraint(
     name: `unique-${entityType}-${field}`,
     entity: entityType,
     validate: (entity, entities) => {
-      const value = String(entity[field] ?? '');
+      const fieldVal = entity[field] ?? '';
+      const value = (typeof fieldVal !== 'string' && typeof fieldVal !== 'number' && typeof fieldVal !== 'boolean') ? JSON.stringify(fieldVal) : String(fieldVal);
       const entityId = String(entity.id);
 
       // Rebuild seen values each check for consistency
@@ -854,14 +860,26 @@ export function createUniqueConstraint(
       if (entityMap) {
         for (const [id, e] of Object.entries(entityMap)) {
           if (id === entityId) continue;
-          seenValues.set(String(e[field] ?? ''), id);
+          const eFieldVal = e[field] ?? '';
+          const eValue = (typeof eFieldVal !== 'string' && typeof eFieldVal !== 'number' && typeof eFieldVal !== 'boolean') ? JSON.stringify(eFieldVal) : String(eFieldVal);
+          seenValues.set(eValue, id);
         }
       }
 
       return !seenValues.has(value);
     },
-    message: (entity) =>
-      `Field "${field}" must be unique. Value "${entity[field]}" already exists.`,
+    message: (entity) => {
+      const fieldVal = entity[field];
+      let valueStr: string;
+      if (fieldVal == null) {
+        valueStr = 'null';
+      } else if (typeof fieldVal === 'string' || typeof fieldVal === 'number' || typeof fieldVal === 'boolean') {
+        valueStr = String(fieldVal);
+      } else {
+        valueStr = JSON.stringify(fieldVal);
+      }
+      return `Field "${field}" must be unique. Value ${valueStr} already exists.`;
+    },
     severity: 'error',
   };
 }
@@ -889,7 +907,16 @@ export function createRangeConstraint(
       const bounds = [];
       if (min !== undefined) bounds.push(`>= ${min}`);
       if (max !== undefined) bounds.push(`<= ${max}`);
-      return `Field "${field}" must be ${bounds.join(' and ')}. Got ${entity[field]}.`;
+      const fieldVal = entity[field];
+      let valueStr: string;
+      if (fieldVal == null) {
+        valueStr = 'null';
+      } else if (typeof fieldVal === 'number') {
+        valueStr = String(fieldVal);
+      } else {
+        valueStr = JSON.stringify(fieldVal);
+      }
+      return `Field "${field}" must be ${bounds.join(' and ')}. Got ${valueStr}.`;
     },
     severity: 'error',
   };
@@ -932,8 +959,18 @@ export function createEnumConstraint(
       const value = entity[field];
       return allowedValues.includes(value);
     },
-    message: (entity) =>
-      `Field "${field}" must be one of [${allowedValues.join(', ')}]. Got "${entity[field]}".`,
+    message: (entity) => {
+      const fieldVal = entity[field];
+      let valueStr: string;
+      if (fieldVal == null) {
+        valueStr = 'null';
+      } else if (typeof fieldVal === 'string' || typeof fieldVal === 'number' || typeof fieldVal === 'boolean') {
+        valueStr = String(fieldVal);
+      } else {
+        valueStr = JSON.stringify(fieldVal);
+      }
+      return `Field "${field}" must be one of [${allowedValues.join(', ')}]. Got ${valueStr}.`;
+    },
     severity: 'error',
   };
 }

@@ -65,8 +65,10 @@ const PRIORITY_ORDER: StreamPriority[] = [
  */
 function getHigherPriority(current: StreamPriority): StreamPriority {
   const index = PRIORITY_ORDER.indexOf(current);
-  if (index <= 0) return PRIORITY_ORDER[0]!; // Already at highest
-  return PRIORITY_ORDER[index - 1]!;
+  const [highestPriority] = PRIORITY_ORDER;
+  if (index <= 0) return highestPriority ?? StreamPriority.Critical;
+  const nextPriority = PRIORITY_ORDER[index - 1];
+  return nextPriority ?? StreamPriority.Critical;
 }
 
 /**
@@ -74,8 +76,10 @@ function getHigherPriority(current: StreamPriority): StreamPriority {
  */
 function getLowerPriority(current: StreamPriority): StreamPriority {
   const index = PRIORITY_ORDER.indexOf(current);
-  if (index >= PRIORITY_ORDER.length - 1) return PRIORITY_ORDER[PRIORITY_ORDER.length - 1]!;
-  return PRIORITY_ORDER[index + 1]!;
+  const lowestPriority = PRIORITY_ORDER[PRIORITY_ORDER.length - 1];
+  if (index >= PRIORITY_ORDER.length - 1) return lowestPriority ?? StreamPriority.Low;
+  const nextPriority = PRIORITY_ORDER[index + 1];
+  return nextPriority ?? StreamPriority.Low;
 }
 
 // ============================================================================
@@ -257,7 +261,7 @@ export function useStreamPriority(
   }, [clampPriority, onPriorityChange]);
 
   const deescalate = useCallback(() => {
-    const performDeescalate = () => {
+    const performDeescalate = (): void => {
       setPriorityState((current) => {
         const newPriority = clampPriority(getLowerPriority(current));
         if (newPriority !== current) {

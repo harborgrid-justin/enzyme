@@ -95,7 +95,7 @@ describe('Store', () => {
 
     it('should allow selecting specific state slices', () => {
       // Act
-      const sidebarOpen = useStore.getState().sidebarOpen;
+      const {sidebarOpen} = useStore.getState();
 
       // Assert
       expect(typeof sidebarOpen).toBe('boolean');
@@ -647,7 +647,7 @@ describe('Store', () => {
       const after = Date.now();
 
       // Assert
-      const lastActivity = getStoreState().lastActivity;
+      const {lastActivity} = getStoreState();
       expect(lastActivity).toBeGreaterThanOrEqual(before);
       expect(lastActivity).toBeLessThanOrEqual(after);
     });

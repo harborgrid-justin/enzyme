@@ -202,7 +202,7 @@ export class WebSocketProvider implements FlagProvider {
       return;
     }
 
-    this.socket.onopen = () => {
+    this.socket.onopen = (): void => {
       this.log('WebSocket connected');
       this.connectionState = 'connected';
       this.reconnectAttempts = 0;
@@ -510,7 +510,7 @@ export class WebSocketProvider implements FlagProvider {
   /**
    * Check if the provider is healthy.
    */
-  async isHealthy(): Promise<boolean> {
+  async isHealthy(): boolean {
     return this.connectionState === 'connected';
   }
 
@@ -595,6 +595,7 @@ export class WebSocketProvider implements FlagProvider {
 
   private log(message: string, ...args: unknown[]): void {
     if (this.config.debug) {
+      // eslint-disable-next-line no-console
       console.log(`[WebSocketProvider] ${message}`, ...args);
     }
   }

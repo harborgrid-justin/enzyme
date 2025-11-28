@@ -73,18 +73,20 @@ export function useLayoutMode(options: UseLayoutModeOptions = {}): UseLayoutMode
   // State
   const [mode, setModeState] = useState<LayoutMode>(initialMode);
   const [isLocked, setIsLocked] = useState(initiallyLocked);
+  const [previousMode, setPreviousMode] = useState<LayoutMode | null>(null);
 
   // Refs
   const previousModeRef = useRef<LayoutMode | null>(null);
 
   // Set mode
   const setMode = useCallback((newMode: LayoutMode) => {
-    const previousMode = mode;
+    const prevMode = mode;
 
-    if (newMode !== previousMode) {
-      previousModeRef.current = previousMode;
+    if (newMode !== prevMode) {
+      previousModeRef.current = prevMode;
+      setPreviousMode(prevMode);
       setModeState(newMode);
-      onChange?.(newMode, previousMode);
+      onChange?.(newMode, prevMode);
     }
   }, [mode, onChange]);
 
@@ -100,7 +102,7 @@ export function useLayoutMode(options: UseLayoutModeOptions = {}): UseLayoutMode
 
   return {
     mode,
-    previousMode: previousModeRef.current,
+    previousMode,
     setMode,
     isLocked,
     lockMode,

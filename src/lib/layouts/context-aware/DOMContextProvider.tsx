@@ -149,10 +149,10 @@ export function DOMContextProvider({
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isSSR = typeof window === 'undefined';
 
-  // State
+  // State - generate initial state inline to avoid ref issues
   const [context, setContext] = useState<DOMContext>(() => ({
     ...defaultDOMContext,
-    viewport: initialViewport
+    viewport: initialViewport != null
       ? { ...defaultDOMContext.viewport, ...initialViewport }
       : defaultDOMContext.viewport,
     contextId: contextIdRef.current,
@@ -185,9 +185,9 @@ export function DOMContextProvider({
 
     // Get scroll container
     let scrollContainer: ScrollContainer | null = null;
-    if (trackScrollContainers) {
+    if (trackScrollContainers === true) {
       const scrollTracker = findScrollContainer(element);
-      if (scrollTracker) {
+      if (scrollTracker != null) {
         scrollContainer = scrollTracker.getState();
       }
     }
@@ -198,7 +198,7 @@ export function DOMContextProvider({
 
     // Get z-index context
     let zIndex: ZIndexContext;
-    if (trackZIndex) {
+    if (trackZIndex === true) {
       zIndex = zIndexManager.getZIndexContext(element);
     } else {
       zIndex = defaultDOMContext.zIndex;
@@ -226,8 +226,9 @@ export function DOMContextProvider({
     }
 
     debounceTimerRef.current = setTimeout(() => {
-      if (rafHandleRef.current) {
-        cancelAnimationFrame(rafHandleRef.current);
+      const { current: rafHandle } = rafHandleRef;
+      if (rafHandle != null) {
+        cancelAnimationFrame(rafHandle);
       }
 
       rafHandleRef.current = requestAnimationFrame(() => {
@@ -245,12 +246,14 @@ export function DOMContextProvider({
    * Forces immediate context update (bypasses debounce).
    */
   const forceUpdate = useCallback(() => {
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
+    const { current: debounceTimer } = debounceTimerRef;
+    if (debounceTimer != null) {
+      clearTimeout(debounceTimer);
       debounceTimerRef.current = null;
     }
-    if (rafHandleRef.current) {
-      cancelAnimationFrame(rafHandleRef.current);
+    const { current: rafHandle } = rafHandleRef;
+    if (rafHandle != null) {
+      cancelAnimationFrame(rafHandle);
       rafHandleRef.current = null;
     }
 
@@ -303,11 +306,13 @@ export function DOMContextProvider({
       resizeObserver?.disconnect();
       mutationObserver?.disconnect();
 
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
+      const { current: debounceTimer } = debounceTimerRef;
+      if (debounceTimer != null) {
+        clearTimeout(debounceTimer);
       }
-      if (rafHandleRef.current) {
-        cancelAnimationFrame(rafHandleRef.current);
+      const { current: rafHandle } = rafHandleRef;
+      if (rafHandle != null) {
+        cancelAnimationFrame(rafHandle);
       }
     };
   }, [isSSR, forceUpdate, updateContext]);
@@ -323,7 +328,7 @@ export function DOMContextProvider({
           className={className}
           style={style}
           data-testid={testId}
-          data-dom-context-root={contextIdRef.current}
+          data-dom-context-root={context.contextId}
         >
           {children}
         </div>
@@ -437,9 +442,9 @@ export interface WithDOMContextProps {
 export function withDOMContext<P extends WithDOMContextProps>(
   Component: React.ComponentType<P>
 ): React.ComponentType<Omit<P, 'domContext'>> {
-  const displayName = Component.displayName || Component.name || 'Component';
+  const displayName = (Component.displayName != null && Component.displayName !== '') ? Component.displayName : (Component.name ?? 'Component');
 
-  const WrappedComponent = (props: Omit<P, 'domContext'>) => {
+  const WrappedComponent = (props: Omit<P, 'domContext'>): React.JSX.Element => {
     const domContext = useDOMContextValue();
     return <Component {...(props as P)} domContext={domContext} />;
   };

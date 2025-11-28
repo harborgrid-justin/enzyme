@@ -391,23 +391,23 @@ export class FlagImpactAnalyzer {
     if (!this.metrics.has(name)) {
       this.metrics.set(name, []);
     }
-    const metricList = this.metrics.get(name)!;
+    const metricList = this.metrics.get(name);
     metricList.push(dataPoint);
     this.enforceMaxDataPoints(metricList);
 
     // Store in flag-specific metrics
     if (input.flagKey && input.variantId) {
-      const flagKey = input.flagKey;
+      const {flagKey} = input;
       if (!this.flagMetrics.has(flagKey)) {
         this.flagMetrics.set(flagKey, new Map());
       }
-      const flagMap = this.flagMetrics.get(flagKey)!;
+      const flagMap = this.flagMetrics.get(flagKey);
 
       const key = `${name}:${input.variantId}`;
       if (!flagMap.has(key)) {
         flagMap.set(key, []);
       }
-      const flagMetricList = flagMap.get(key)!;
+      const flagMetricList = flagMap.get(key);
       flagMetricList.push(dataPoint);
       this.enforceMaxDataPoints(flagMetricList);
     }
@@ -766,7 +766,7 @@ export class FlagImpactAnalyzer {
       impactScore > 0 ? 'positive' : impactScore < 0 ? 'negative' : 'neutral';
     parts.push(`Overall impact: ${impactDirection} (score: ${impactScore})`);
 
-    return parts.join('. ') + '.';
+    return `${parts.join('. ')  }.`;
   }
 
   // ==========================================================================
@@ -850,7 +850,7 @@ export class FlagImpactAnalyzer {
    * Enable or disable analysis.
    */
   setEnabled(enabled: boolean): void {
-    (this.config as any).enabled = enabled;
+    this.config.enabled = enabled;
   }
 
   // ==========================================================================
@@ -886,6 +886,7 @@ export class FlagImpactAnalyzer {
 
   private log(message: string, ...args: unknown[]): void {
     if (this.config.debug) {
+      // eslint-disable-next-line no-console
       console.log(`[FlagImpactAnalyzer] ${message}`, ...args);
     }
   }
@@ -901,9 +902,7 @@ let instance: FlagImpactAnalyzer | null = null;
  * Get the singleton impact analyzer instance.
  */
 export function getImpactAnalyzer(): FlagImpactAnalyzer {
-  if (!instance) {
-    instance = new FlagImpactAnalyzer();
-  }
+  instance ??= new FlagImpactAnalyzer();
   return instance;
 }
 

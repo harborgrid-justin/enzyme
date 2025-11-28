@@ -339,7 +339,7 @@ export class LifecycleManager {
    * Get health status for a flag.
    */
   getFlagHealth(flag: FeatureFlag): FlagHealth {
-    const lifecycle = flag.lifecycle;
+    const {lifecycle} = flag;
     const now = new Date();
     const issues: string[] = [];
 
@@ -348,7 +348,7 @@ export class LifecycleManager {
     );
 
     const isOverdueForReview =
-      lifecycle.reviewDate && lifecycle.reviewDate < now;
+      lifecycle.reviewDate != null && lifecycle.reviewDate < now;
     const isApproachingDeprecation =
       lifecycle.deprecationDate &&
       lifecycle.deprecationDate > now &&
@@ -386,17 +386,17 @@ export class LifecycleManager {
       issues.push('Flag is over 6 months old');
     }
 
-    if (!lifecycle.owner) {
+    if (lifecycle.owner == null || lifecycle.owner === '') {
       healthScore -= 10;
       issues.push('No owner assigned');
     }
 
-    if (!lifecycle.documentationUrl) {
+    if (lifecycle.documentationUrl == null || lifecycle.documentationUrl === '') {
       healthScore -= 5;
       issues.push('No documentation link');
     }
 
-    if (!lifecycle.ticketId) {
+    if (lifecycle.ticketId == null || lifecycle.ticketId === '') {
       healthScore -= 5;
       issues.push('No ticket reference');
     }
@@ -440,7 +440,7 @@ export class LifecycleManager {
     const now = new Date();
     return flags.filter(
       (flag) =>
-        flag.lifecycle.reviewDate &&
+        flag.lifecycle.reviewDate != null &&
         flag.lifecycle.reviewDate < now &&
         flag.lifecycle.state !== 'archived'
     );
@@ -454,7 +454,7 @@ export class LifecycleManager {
     return flags.filter(
       (flag) =>
         flag.lifecycle.state === 'deprecated' &&
-        flag.lifecycle.removalDate &&
+        flag.lifecycle.removalDate != null &&
         flag.lifecycle.removalDate < now
     );
   }
@@ -649,7 +649,7 @@ export class LifecycleBuilder {
    * Set ticket/issue reference.
    */
   ticket(ticketId: string): this {
-    (this.lifecycle as any).ticketId = ticketId;
+    this.lifecycle.ticketId = ticketId;
     return this;
   }
 
@@ -657,7 +657,7 @@ export class LifecycleBuilder {
    * Set documentation URL.
    */
   documentation(url: string): this {
-    (this.lifecycle as any).documentationUrl = url;
+    this.lifecycle.documentationUrl = url;
     return this;
   }
 
@@ -665,7 +665,7 @@ export class LifecycleBuilder {
    * Set owner.
    */
   owner(owner: string): this {
-    (this.lifecycle as any).owner = owner;
+    this.lifecycle.owner = owner;
     return this;
   }
 
@@ -673,7 +673,7 @@ export class LifecycleBuilder {
    * Set review date.
    */
   reviewDate(date: Date): this {
-    (this.lifecycle as any).reviewDate = date;
+    this.lifecycle.reviewDate = date;
     return this;
   }
 
@@ -681,7 +681,7 @@ export class LifecycleBuilder {
    * Set deprecation date.
    */
   deprecationDate(date: Date): this {
-    (this.lifecycle as any).deprecationDate = date;
+    this.lifecycle.deprecationDate = date;
     return this;
   }
 
@@ -689,7 +689,7 @@ export class LifecycleBuilder {
    * Set removal date.
    */
   removalDate(date: Date): this {
-    (this.lifecycle as any).removalDate = date;
+    this.lifecycle.removalDate = date;
     return this;
   }
 
@@ -730,9 +730,7 @@ let instance: LifecycleManager | null = null;
  * Get the singleton lifecycle manager instance.
  */
 export function getLifecycleManager(): LifecycleManager {
-  if (!instance) {
-    instance = new LifecycleManager();
-  }
+  instance ??= new LifecycleManager();
   return instance;
 }
 

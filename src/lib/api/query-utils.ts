@@ -153,21 +153,17 @@ export function parseQueryParams(queryString: string): QueryParams {
     // Handle array notation
     if (key.endsWith('[]')) {
       const arrayKey = key.slice(0, -2);
-      if (!params[arrayKey]) {
-        params[arrayKey] = [];
-      }
+      params[arrayKey] ??= [];
       (params[arrayKey] as string[]).push(value);
     }
     // Handle indexed notation
     else if (/\[\d+\]$/.test(key)) {
       const arrayKey = key.replace(/\[\d+\]$/, '');
-      if (!params[arrayKey]) {
-        params[arrayKey] = [];
-      }
+      params[arrayKey] ??= [];
       (params[arrayKey] as string[]).push(value);
     }
     // Handle comma-separated values (if only key exists)
-    else if (value.includes(',') && !params[key]) {
+    else if (value.includes(',') && params[key] === undefined) {
       params[key] = value.split(',');
     }
     // Handle repeated keys

@@ -7,7 +7,7 @@
  * @module core/config/hooks/useEndpoint
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 
 import { ms } from '../../../shared/type-utils';
 
@@ -46,17 +46,21 @@ import {
  */
 export function useEndpoint(name: string): EndpointDefinition | undefined {
   const [endpoint, setEndpoint] = useState(() => getEndpoint(name));
+  const nameRef = useRef(name);
 
   useEffect(() => {
+    // Update state only if name changed
+    if (nameRef.current !== name) {
+      nameRef.current = name;
+      setEndpoint(getEndpoint(name));
+    }
+
     const registry = getEndpointRegistry();
     const unsubscribe = registry.subscribe((event) => {
       if (event.name === name) {
         setEndpoint(event.endpoint);
       }
     });
-
-    // Re-fetch in case it changed
-    setEndpoint(getEndpoint(name));
 
     return unsubscribe;
   }, [name]);
@@ -213,17 +217,22 @@ export function useEndpointHealth(name: string): EndpointHealth | undefined {
   const [health, setHealth] = useState<EndpointHealth | undefined>(() =>
     getEndpointRegistry().getHealth(name)
   );
+  const nameRef = useRef(name);
 
   useEffect(() => {
+    // Update state only if name changed
+    if (nameRef.current !== name) {
+      nameRef.current = name;
+      const registry = getEndpointRegistry();
+      setHealth(registry.getHealth(name));
+    }
+
     const registry = getEndpointRegistry();
     const unsubscribe = registry.subscribe((event) => {
       if (event.name === name && event.type === 'health-changed') {
         setHealth(event.newHealth);
       }
     });
-
-    // Re-fetch in case it changed
-    setHealth(registry.getHealth(name));
 
     return unsubscribe;
   }, [name]);

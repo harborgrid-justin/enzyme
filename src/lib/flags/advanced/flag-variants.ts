@@ -258,7 +258,8 @@ export class VariantManager {
         case 'string':
           if (typeof value === 'string') return value as T;
           if (value === null || value === undefined) return null;
-          return String(value) as T;
+          if (typeof value === 'object') return JSON.stringify(value) as T;
+          return typeof value === 'object' ? JSON.stringify(value) : String(value) as T;
 
         case 'number':
           if (typeof value === 'number') return value as T;
@@ -312,7 +313,7 @@ export class VariantManager {
 
     // Equal weight selection
     const index = Math.floor((bucket / 100) * variants.length);
-    return variants[Math.min(index, variants.length - 1)] || null;
+    return variants[Math.min(index, variants.length - 1)] ?? null;
   }
 
   /**
@@ -321,7 +322,7 @@ export class VariantManager {
   getControlVariant<T extends JsonValue>(
     variants: readonly Variant<T>[]
   ): Variant<T> | null {
-    return variants.find((v) => v.isControl) ?? null;
+    return variants.find((v) => v.isControl === true) ?? null;
   }
 
   /**
@@ -330,7 +331,7 @@ export class VariantManager {
   getTreatmentVariants<T extends JsonValue>(
     variants: readonly Variant<T>[]
   ): Variant<T>[] {
-    return variants.filter((v) => !v.isControl);
+    return variants.filter((v) => v.isControl !== true);
   }
 
   /**
@@ -353,8 +354,8 @@ export class VariantManager {
     variants: readonly Variant[],
     controlPercentage: number = 50
   ): VariantAllocation[] {
-    const control = variants.find((v) => v.isControl);
-    const treatments = variants.filter((v) => !v.isControl);
+    const control = variants.find((v) => v.isControl === true);
+    const treatments = variants.filter((v) => v.isControl !== true);
 
     if (!control || treatments.length === 0) {
       return this.createEqualAllocations(variants);
@@ -386,7 +387,7 @@ export class VariantBuilder<T extends JsonValue = JsonValue> {
    * Set the variant ID.
    */
   id(id: VariantId): this {
-    (this.variant as any).id = id;
+    this.variant.id = id;
     return this;
   }
 
@@ -394,7 +395,7 @@ export class VariantBuilder<T extends JsonValue = JsonValue> {
    * Set the variant name.
    */
   name(name: string): this {
-    (this.variant as any).name = name;
+    this.variant.name = name;
     return this;
   }
 
@@ -402,7 +403,7 @@ export class VariantBuilder<T extends JsonValue = JsonValue> {
    * Set the variant description.
    */
   description(description: string): this {
-    (this.variant as any).description = description;
+    this.variant.description = description;
     return this;
   }
 
@@ -410,8 +411,8 @@ export class VariantBuilder<T extends JsonValue = JsonValue> {
    * Set the variant value.
    */
   value(value: T): this {
-    (this.variant as any).value = value;
-    (this.variant as any).valueType = new VariantManager().inferValueType(value);
+    this.variant.value = value;
+    this.variant.valueType = new VariantManager().inferValueType(value);
     return this;
   }
 
@@ -419,7 +420,7 @@ export class VariantBuilder<T extends JsonValue = JsonValue> {
    * Mark as control variant.
    */
   asControl(): this {
-    (this.variant as any).isControl = true;
+    this.variant.isControl = true;
     return this;
   }
 
@@ -427,7 +428,7 @@ export class VariantBuilder<T extends JsonValue = JsonValue> {
    * Add payload data.
    */
   payload(data: Record<string, JsonValue>): this {
-    (this.variant as any).payload = data;
+    this.variant.payload = data;
     return this;
   }
 
@@ -435,7 +436,7 @@ export class VariantBuilder<T extends JsonValue = JsonValue> {
    * Add attachments.
    */
   attachments(...files: string[]): this {
-    (this.variant as any).attachments = files;
+    this.variant.attachments = files;
     return this;
   }
 
@@ -443,7 +444,7 @@ export class VariantBuilder<T extends JsonValue = JsonValue> {
    * Build the variant.
    */
   build(): Variant<T> {
-    if (!this.variant.id) {
+    if (this.variant.id == null || this.variant.id === '') {
       throw new Error('Variant ID is required');
     }
     if (this.variant.value === undefined) {
@@ -704,8 +705,6 @@ let instance: VariantManager | null = null;
  * Get the singleton variant manager instance.
  */
 export function getVariantManager(): VariantManager {
-  if (!instance) {
-    instance = new VariantManager();
-  }
+  instance ??= new VariantManager();
   return instance;
 }

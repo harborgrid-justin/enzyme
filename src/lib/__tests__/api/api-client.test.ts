@@ -1280,7 +1280,7 @@ describe('ApiClient', () => {
 
       // Simulate slow response
       mockFetch.mockImplementation(
-        () =>
+        async () =>
           new Promise((_, reject) => {
             setTimeout(() => reject(new DOMException('Aborted', 'AbortError')), 50);
           })

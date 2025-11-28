@@ -35,6 +35,10 @@ import {
   useCallback,
   useState,
   type ReactNode,
+  type ReactElement,
+  type DependencyList,
+  type ComponentType,
+  type FC,
   Component,
   type ErrorInfo,
 } from 'react';
@@ -52,7 +56,7 @@ import {
   type StreamContextValue,
   type StreamProviderProps,
   type StreamEventHandler,
-  StreamState,
+  type StreamState,
   DEFAULT_ENGINE_CONFIG,
   DEFAULT_METRICS,
   StreamEventType,
@@ -144,7 +148,7 @@ class StreamErrorBoundary extends Component<
         return fallback(this.state.error, this.handleReset);
       }
 
-      if (fallback) {
+      if (fallback !== undefined && fallback !== null) {
         return fallback;
       }
 
@@ -263,7 +267,7 @@ export function StreamProvider({
   enableMetrics = true,
   onError,
   onMetricsUpdate,
-}: StreamProviderProps): React.ReactElement {
+}: StreamProviderProps): ReactElement {
   // Merge configuration with defaults
   const config = useMemo<EngineConfig>(
     () => ({
@@ -645,7 +649,7 @@ export function useStreamMetrics(): StreamMetrics {
  */
 export function useStreamEvents(
   handler: StreamEventHandler,
-  deps: React.DependencyList = []
+  deps: DependencyList = []
 ): void {
   const context = useStreamContext();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -696,11 +700,11 @@ export interface WithStreamProps {
  * ```
  */
 export function withStream<P extends WithStreamProps>(
-  WrappedComponent: React.ComponentType<P>
-): React.FC<Omit<P, keyof WithStreamProps>> {
-  const displayName = WrappedComponent.displayName || WrappedComponent.name || 'Component';
+  WrappedComponent: ComponentType<P>
+): FC<Omit<P, keyof WithStreamProps>> {
+  const displayName = (WrappedComponent.displayName != null && WrappedComponent.displayName !== '') ? WrappedComponent.displayName : (WrappedComponent.name ?? 'Component');
 
-  const ComponentWithStream: React.FC<Omit<P, keyof WithStreamProps>> = (props) => {
+  const ComponentWithStream: FC<Omit<P, keyof WithStreamProps>> = (props) => {
     const stream = useStreamContext();
     return <WrappedComponent {...(props as P)} stream={stream} />;
   };

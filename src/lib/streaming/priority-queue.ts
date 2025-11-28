@@ -41,9 +41,12 @@ export class PriorityQueue<T extends { priority: number }> {
     if (this.heap.length === 0) return undefined;
     if (this.heap.length === 1) return this.heap.pop();
 
-    const result = this.heap[0];
-    this.heap[0] = this.heap.pop()!;
-    this.bubbleDown(0);
+    const [result] = this.heap;
+    const lastItem = this.heap.pop();
+    if (lastItem !== undefined) {
+      this.heap[0] = lastItem;
+      this.bubbleDown(0);
+    }
 
     return result;
   }
@@ -82,8 +85,9 @@ export class PriorityQueue<T extends { priority: number }> {
 
     this.heap[index] = lastItem;
     const parentIndex = Math.floor((index - 1) / 2);
+    const parentItem = this.heap[parentIndex];
 
-    if (index > 0 && this.heap[index]!.priority < this.heap[parentIndex]!.priority) {
+    if (index > 0 && parentItem != null && this.heap[index].priority < parentItem.priority) {
       this.bubbleUp(index);
     } else {
       this.bubbleDown(index);

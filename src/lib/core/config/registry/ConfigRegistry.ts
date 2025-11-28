@@ -145,12 +145,12 @@ function setAtPath<T extends object>(obj: T, path: string, value: unknown): T {
 
   for (let i = 0; i < parts.length - 1; i++) {
     const part = parts[i];
-    if (part && typeof current[part] === 'object' && current[part] !== null) {
-      current[part] = { ...(current[part] as object) };
-    } else if (part) {
+    if (part !== undefined && part !== null && part !== '' && typeof current[part] === 'object' && current[part] !== null) {
+      current[part] = { ...current[part] };
+    } else if (part !== undefined && part !== null && part !== '') {
       current[part] = {};
     }
-    if (part) {
+    if (part !== undefined && part !== null && part !== '') {
       current = current[part] as Record<string, unknown>;
     }
   }
@@ -202,8 +202,8 @@ function deepMerge<T extends object>(target: T, source: DeepPartial<T>): T {
       !Array.isArray(targetValue)
     ) {
       result[key] = deepMerge(
-        targetValue as object,
-        sourceValue as DeepPartial<object>
+        targetValue,
+        sourceValue
       );
     } else if (sourceValue !== undefined) {
       result[key] = sourceValue;
@@ -223,7 +223,7 @@ function deepFreeze<T extends object>(obj: T): DeepReadonly<T> {
     const value = (obj as Record<string, unknown>)[name];
 
     if (value && typeof value === 'object' && !Object.isFrozen(value)) {
-      deepFreeze(value as object);
+      deepFreeze(value);
     }
   }
 

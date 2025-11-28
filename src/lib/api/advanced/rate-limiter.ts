@@ -146,7 +146,10 @@ export class RateLimiter {
 
     // Check server-imposed limits first
     if (this.isServerLimited(key)) {
-      const serverLimit = this.serverLimits.get(key)!;
+      const serverLimit = this.serverLimits.get(key);
+      if (serverLimit == null) {
+        throw new Error('Server limit not found');
+      }
       const waitTime = serverLimit.resetAt - Date.now();
 
       switch (this.config.strategy) {
@@ -261,7 +264,7 @@ export class RateLimiter {
       this.queue.set(key, keyQueue);
 
       // Start processing queue
-      this.processQueue(key);
+      void this.processQueue(key);
     });
   }
 
@@ -290,7 +293,9 @@ export class RateLimiter {
           continue;
         }
 
-        const entry = keyQueue.shift()!;
+        const entry = keyQueue.shift();
+        if (entry == null) break;
+
         const window = this.getOrCreateWindow(key);
         window.count++;
 
@@ -348,7 +353,7 @@ export class RateLimiter {
     if (remaining !== undefined || reset !== undefined) {
       let resetAt: number;
 
-      if (retryAfter) {
+      if (retryAfter != null && retryAfter !== '') {
         // Retry-After can be seconds or HTTP date
         const seconds = parseInt(retryAfter, 10);
         if (!isNaN(seconds)) {
@@ -356,7 +361,7 @@ export class RateLimiter {
         } else {
           resetAt = new Date(retryAfter).getTime();
         }
-      } else if (reset) {
+      } else if (reset != null && reset !== '') {
         // Reset can be Unix timestamp (seconds) or milliseconds
         const resetValue = parseInt(reset, 10);
         resetAt = resetValue > 1e12 ? resetValue : resetValue * 1000;
@@ -400,7 +405,7 @@ export class RateLimiter {
 
     let resetAt: number;
 
-    if (retryAfter) {
+    if (retryAfter != null && retryAfter !== '') {
       const seconds = parseInt(retryAfter, 10);
       if (!isNaN(seconds)) {
         resetAt = Date.now() + seconds * 1000;
@@ -540,7 +545,7 @@ export class RateLimiter {
   /**
    * Delay execution.
    */
-  private delay(ms: number): Promise<void> {
+  private async delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 }

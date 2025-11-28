@@ -276,7 +276,7 @@ export class ProviderOrchestratorImpl {
    */
   disableProvider(id: string): void {
     const entry = this.providers.get(id);
-    if (entry && entry.isEnabled) {
+    if (entry?.isEnabled) {
       entry.isEnabled = false;
       this.isTreeInvalid = true;
     }

@@ -5,7 +5,7 @@
  * @module config/hooks/useConfigValidation
  */
 
-import { useCallback, useEffect, useState, useMemo } from 'react';
+import { useCallback, useEffect, useState, useMemo, useRef } from 'react';
 import type {
   ConfigNamespace,
   ConfigValidationError,
@@ -103,11 +103,13 @@ export function useConfigValidation(): UseConfigValidationResult {
   }, [getValidationStatus]);
 
   // Update on initialization
+  const initializedRef = useRef(false);
   useEffect(() => {
-    if (isInitialized) {
-      refresh();
+    if (isInitialized && !initializedRef.current) {
+      initializedRef.current = true;
+      setStatus(getValidationStatus());
     }
-  }, [isInitialized, refresh]);
+  }, [isInitialized, getValidationStatus]);
 
   // Compute summary
   const summary = useMemo<ValidationSummary>(() => {

@@ -55,7 +55,19 @@ const DEFAULT_THRESHOLDS: PerformanceThresholds = {
   memoryUsage: 0.9, // 90% of heap limit
 };
 
-export function usePerformanceMonitor(options: UsePerformanceMonitorOptions = {}) {
+export function usePerformanceMonitor(options: UsePerformanceMonitorOptions = {}): {
+  metrics: PerformanceMetrics;
+  trackMetric: (name: string, value: number) => void;
+  markNavigationTiming: (name: string) => (() => void) | undefined;
+  getResourceStats: () => {
+    totalResources: number;
+    totalSize: number;
+    totalDuration: number;
+    byType: Record<string, { count: number; size: number; duration: number }>;
+    slowResources: PerformanceResourceTiming[];
+  };
+  flushMetrics: () => void;
+} {
   const {
     enableWebVitals = true,
     enableResourceTiming = true,
@@ -80,8 +92,8 @@ export function usePerformanceMonitor(options: UsePerformanceMonitorOptions = {}
 
   // Send metrics to reporting endpoint
   const sendMetrics = useCallback(
-    async (metricsToSend: Partial<PerformanceMetrics>[]) => {
-      if (!reportingEndpoint || metricsToSend.length === 0) return;
+    async (metricsToSend: Partial<PerformanceMetrics>[]): Promise<void> => {
+      if (reportingEndpoint == null || metricsToSend.length === 0) return;
 
       try {
         await fetch(reportingEndpoint, {
@@ -119,9 +131,9 @@ export function usePerformanceMonitor(options: UsePerformanceMonitorOptions = {}
   const checkThreshold = useCallback(
     (metricName: string, value: number) => {
       const threshold = thresholds[metricName as keyof PerformanceThresholds];
-      if (threshold && value > threshold) {
+      if (threshold != null && value > threshold) {
         onThresholdExceeded?.(metricName, value, threshold);
-        
+
         // Log critical performance issues
         console.warn(
           `Performance threshold exceeded: ${metricName} = ${value}ms (threshold: ${threshold}ms)`
@@ -158,8 +170,8 @@ export function usePerformanceMonitor(options: UsePerformanceMonitorOptions = {}
       performance.mark(name);
       return () => {
         performance.measure(name, name);
-        const measure = performance.getEntriesByName(name, 'measure')[0];
-        if (measure) {
+        const [measure] = performance.getEntriesByName(name, 'measure');
+        if (measure != null) {
           trackMetric(`navigation.${name}`, measure.duration);
         }
       };
@@ -168,9 +180,15 @@ export function usePerformanceMonitor(options: UsePerformanceMonitorOptions = {}
   );
 
   // Get resource load statistics
-  const getResourceStats = useCallback(() => {
-    const resources = performance.getEntriesByType('resource');
-    
+  const getResourceStats = useCallback((): {
+    totalResources: number;
+    totalSize: number;
+    totalDuration: number;
+    byType: Record<string, { count: number; size: number; duration: number }>;
+    slowResources: PerformanceResourceTiming[];
+  } => {
+    const resources = performance.getEntriesByType('resource') as unknown as PerformanceResourceTiming[];
+
     const stats = {
       totalResources: resources.length,
       totalSize: 0,
@@ -179,13 +197,11 @@ export function usePerformanceMonitor(options: UsePerformanceMonitorOptions = {}
       slowResources: [] as PerformanceResourceTiming[],
     };
 
-    resources.forEach((resource) => {
-      const type = resource.initiatorType || 'other';
-      
-      if (!stats.byType[type]) {
-        stats.byType[type] = { count: 0, size: 0, duration: 0 };
-      }
-      
+    resources.forEach((resource: PerformanceResourceTiming) => {
+      const type = resource.initiatorType ?? 'other';
+
+      stats.byType[type] ??= { count: 0, size: 0, duration: 0 };
+
       stats.byType[type].count++;
       stats.byType[type].size += resource.transferSize || 0;
       stats.byType[type].duration += resource.duration;
@@ -206,7 +222,7 @@ export function usePerformanceMonitor(options: UsePerformanceMonitorOptions = {}
   useEffect(() => {
     if (!enableWebVitals || !shouldCollect()) return;
 
-    const handleMetric = (metric: Metric) => {
+    const handleMetric = (metric: Metric): void => {
       const value = Math.round(metric.value);
       
       setMetrics((prev) => ({
@@ -293,15 +309,23 @@ export function usePerformanceMonitor(options: UsePerformanceMonitorOptions = {}
   useEffect(() => {
     if (!enableMemoryMonitoring || !shouldCollect()) return;
 
-    const checkMemory = () => {
-      // @ts-ignore - memory is a non-standard API
-      if (performance.memory) {
-        // @ts-ignore
-        const {memory} = performance;
+    const checkMemory = (): void => {
+      interface PerformanceMemory {
+        usedJSHeapSize: number;
+        totalJSHeapSize: number;
+        jsHeapSizeLimit: number;
+      }
+
+      interface PerformanceWithMemory extends Performance {
+        memory?: PerformanceMemory;
+      }
+
+      const perf = performance as PerformanceWithMemory;
+      if (perf.memory != null) {
         const usage = {
-          usedJSHeapSize: memory.usedJSHeapSize,
-          totalJSHeapSize: memory.totalJSHeapSize,
-          jsHeapSizeLimit: memory.jsHeapSizeLimit,
+          usedJSHeapSize: perf.memory.usedJSHeapSize,
+          totalJSHeapSize: perf.memory.totalJSHeapSize,
+          jsHeapSizeLimit: perf.memory.jsHeapSizeLimit,
         };
 
         setMetrics((prev) => ({
@@ -311,7 +335,7 @@ export function usePerformanceMonitor(options: UsePerformanceMonitorOptions = {}
 
         // Check memory threshold
         const usageRatio = usage.usedJSHeapSize / usage.jsHeapSizeLimit;
-        if (thresholds.memoryUsage && usageRatio > thresholds.memoryUsage) {
+        if (thresholds.memoryUsage != null && usageRatio > thresholds.memoryUsage) {
           onThresholdExceeded?.(
             'memoryUsage',
             usageRatio * 100,

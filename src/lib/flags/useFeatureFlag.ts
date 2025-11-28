@@ -14,7 +14,13 @@ export function useFeatureFlag(flagKey: FlagKey | string): boolean {
  * Hook: useFeatureFlags().
  * Returns all flags and utilities.
  */
-export function useFeatureFlags() {
+export function useFeatureFlags(): {
+  flags: Record<string, boolean>;
+  isLoading: boolean;
+  isEnabled: (flagKey: FlagKey | string) => boolean;
+  setFlag: (flagKey: string, value: boolean) => void;
+  refreshFlags: () => Promise<void>;
+} {
   const { flags, isLoading, isEnabled, setFlag, refreshFlags } = useFeatureFlagContext();
   return {
     flags,

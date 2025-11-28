@@ -291,7 +291,7 @@ export async function waitForHydration(timeoutMs = 5000): Promise<boolean> {
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
     let unsubscribe: (() => void) | null = null;
 
-    const cleanup = () => {
+    const cleanup = (): void => {
       if (timeoutId !== null) {
         clearTimeout(timeoutId);
         timeoutId = null;

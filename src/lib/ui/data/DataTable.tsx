@@ -418,7 +418,7 @@ function DataTableInner<T>({
 
   // Stable header click handler using data-* attributes
   const handleHeaderClick = useCallback((event: React.MouseEvent<HTMLTableCellElement>) => {
-    const columnKey = event.currentTarget.dataset.columnKey;
+    const {columnKey} = event.currentTarget.dataset;
     const isSortable = event.currentTarget.dataset.sortable === 'true';
     if (columnKey && isSortable) {
       handleSort(columnKey);
@@ -428,7 +428,7 @@ function DataTableInner<T>({
   // Stable header keydown handler using data-* attributes
   const handleHeaderKeyDown = useCallback((event: React.KeyboardEvent<HTMLTableCellElement>) => {
     if (event.key === 'Enter' || event.key === ' ') {
-      const columnKey = event.currentTarget.dataset.columnKey;
+      const {columnKey} = event.currentTarget.dataset;
       const isSortable = event.currentTarget.dataset.sortable === 'true';
       if (columnKey && isSortable) {
         event.preventDefault();
@@ -439,7 +439,7 @@ function DataTableInner<T>({
 
   // Stable row click handler using data-* attributes
   const handleRowClick = useCallback((event: React.MouseEvent<HTMLTableRowElement>) => {
-    const rowIndex = event.currentTarget.dataset.rowIndex;
+    const {rowIndex} = event.currentTarget.dataset;
     if (rowIndex !== undefined && onRowClick) {
       const row = data[Number(rowIndex)];
       if (row) {
@@ -450,7 +450,7 @@ function DataTableInner<T>({
 
   // Stable selection change handler using data-* attributes
   const handleSelectionClick = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const rowKey = event.currentTarget.dataset.rowKey;
+    const {rowKey} = event.currentTarget.dataset;
     if (rowKey) {
       handleSelectRow(rowKey);
     }

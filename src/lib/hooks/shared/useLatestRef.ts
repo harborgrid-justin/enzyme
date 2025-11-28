@@ -39,11 +39,12 @@ import type { MutableRefObject } from 'react';
  */
 export function useLatestRef<T>(value: T): MutableRefObject<T> {
   const ref = useRef(value);
-  
+
   // Update ref during render to ensure it's always current
   // This is safe because we're not causing side effects
+  // eslint-disable-next-line react-hooks/refs
   ref.current = value;
-  
+
   return ref;
 }
 
@@ -75,11 +76,10 @@ export function useLatestCallback<TArgs extends unknown[], TReturn>(
   const callbackRef = useLatestRef(callback);
 
   const stableCallback = useRef<((...args: TArgs) => TReturn) | undefined>(undefined);
-  if (!stableCallback.current) {
-    stableCallback.current = (...args: TArgs): TReturn => {
-      return callbackRef.current(...args);
-    };
-  }
+
+  stableCallback.current ??= (...args: TArgs): TReturn => {
+    return callbackRef.current(...args);
+  };
 
   return stableCallback.current;
 }

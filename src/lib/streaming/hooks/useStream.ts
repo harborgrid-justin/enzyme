@@ -34,6 +34,7 @@ import {
   useCallback,
   useRef,
   useMemo,
+  useLayoutEffect,
 } from 'react';
 
 import { useStreamContext, useOptionalStreamContext } from '../StreamProvider';
@@ -190,7 +191,7 @@ export function useStream(
     mountedRef.current = true;
 
     // Skip if no context or no boundary ID
-    if (!context || !boundaryId) {
+    if (context === null || context === undefined || boundaryId === undefined || boundaryId === null || boundaryId === '') {
       return;
     }
 
@@ -269,22 +270,22 @@ export function useStream(
   // ==========================================================================
 
   const start = useCallback(() => {
-    if (!context || !boundaryId) return;
+    if (context === null || context === undefined || boundaryId === undefined || boundaryId === null || boundaryId === '') return;
     context.startStream(boundaryId);
   }, [context, boundaryId]);
 
   const pause = useCallback(() => {
-    if (!context || !boundaryId) return;
+    if (context === null || context === undefined || boundaryId === undefined || boundaryId === null || boundaryId === '') return;
     context.pauseStream(boundaryId);
   }, [context, boundaryId]);
 
   const resume = useCallback(() => {
-    if (!context || !boundaryId) return;
+    if (context === null || context === undefined || boundaryId === undefined || boundaryId === null || boundaryId === '') return;
     context.resumeStream(boundaryId);
   }, [context, boundaryId]);
 
   const abort = useCallback((reason?: string) => {
-    if (!context || !boundaryId) return;
+    if (context === null || context === undefined || boundaryId === undefined || boundaryId === null || boundaryId === '') return;
     context.abortStream(boundaryId, reason);
   }, [context, boundaryId]);
 
@@ -396,7 +397,7 @@ export function useMultipleStreams(boundaryIds: string[]): UseMultipleStreamsRes
   const context = useOptionalStreamContext();
   const [states, setStates] = useState<Map<string, StreamState>>(new Map());
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!context) return;
 
     // Initialize states
@@ -511,7 +512,7 @@ export function useMultipleStreams(boundaryIds: string[]): UseMultipleStreamsRes
 export function useAwaitStream(boundaryId: string): () => Promise<void> {
   const context = useStreamContext();
 
-  return useCallback(() => {
+  return useCallback(async () => {
     return new Promise<void>((resolve, reject) => {
       // Check if already complete
       const currentState = context.getBoundaryState(boundaryId);
@@ -532,7 +533,7 @@ export function useAwaitStream(boundaryId: string): () => Promise<void> {
           resolve();
         } else if (event.type === StreamEventType.Error) {
           unsubscribe();
-          reject(event.payload);
+          reject(event.payload instanceof Error ? event.payload : new Error(String(event.payload)));
         } else if (event.type === StreamEventType.Abort) {
           unsubscribe();
           reject(new Error('Stream aborted'));

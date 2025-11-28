@@ -132,7 +132,7 @@ function ContextAwareBoxInner<E extends ElementType = 'div'>(
    * Currently unused but kept for future use.
    */
   const _computeBoxContext = useCallback((): BoxContext | null => {
-    if (!resolvedRef.current || !domContext.isInitialized) {
+    if (resolvedRef.current === null || resolvedRef.current === undefined || domContext.isInitialized === false) {
       return null;
     }
 
@@ -165,10 +165,10 @@ function ContextAwareBoxInner<E extends ElementType = 'div'>(
   // Call onContextReady when context is initialized
   useEffect(() => {
     if (
-      domContext.isInitialized &&
-      resolvedRef.current &&
-      onContextReady &&
-      !contextReadyCalledRef.current
+      domContext.isInitialized === true &&
+      resolvedRef.current !== null && resolvedRef.current !== undefined &&
+      onContextReady !== undefined &&
+      contextReadyCalledRef.current === false
     ) {
       contextReadyCalledRef.current = true;
       onContextReady(domContext);
@@ -177,7 +177,7 @@ function ContextAwareBoxInner<E extends ElementType = 'div'>(
 
   // Re-trigger context ready if element changes
   useEffect(() => {
-    if (resolvedRef.current) {
+    if (resolvedRef.current !== null && resolvedRef.current !== undefined) {
       contextReadyCalledRef.current = false;
     }
   }, [resolvedRef]);
@@ -305,12 +305,22 @@ export function FlexBox({
   style,
   ...props
 }: FlexBoxProps): JSX.Element {
+  // Compute flex wrap value
+  let flexWrapValue: 'wrap' | 'wrap-reverse' | undefined;
+  if (wrap === true) {
+    flexWrapValue = 'wrap';
+  } else if (wrap === 'reverse') {
+    flexWrapValue = 'wrap-reverse';
+  } else {
+    flexWrapValue = undefined;
+  }
+
   const flexStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: direction,
-    justifyContent: justify ? mapJustify(justify) : undefined,
-    alignItems: align ? mapAlign(align) : undefined,
-    flexWrap: wrap === true ? 'wrap' : wrap === 'reverse' ? 'wrap-reverse' : undefined,
+    justifyContent: justify !== undefined ? mapJustify(justify) : undefined,
+    alignItems: align !== undefined ? mapAlign(align) : undefined,
+    flexWrap: flexWrapValue,
     gap: typeof gap === 'number' ? `${gap}px` : gap,
     ...style,
   };

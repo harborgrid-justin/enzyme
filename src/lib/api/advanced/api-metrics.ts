@@ -308,7 +308,7 @@ export class APIMetricsCollector {
     const relevantMetrics = this.metrics.filter(
       m =>
         m.endpoint === endpoint &&
-        (!method || m.method === method) &&
+        (method == null || method === '' || m.method === method) &&
         m.timestamp >= windowStart
     );
 
@@ -520,7 +520,7 @@ export class APIMetricsCollector {
 
     for (const m of metrics) {
       statusCodes[m.status] = (statusCodes[m.status] ?? 0) + 1;
-      if (!m.success && m.error) {
+      if (!m.success && m.error != null && m.error !== '') {
         errors[m.error] = (errors[m.error] ?? 0) + 1;
       }
     }
@@ -529,6 +529,9 @@ export class APIMetricsCollector {
     const recentMetrics = metrics.filter(m => m.timestamp >= windowStart);
     const windowSeconds = this.config.windowMs / 1000;
 
+    const minDuration = durations[0];
+    const maxDuration = durations[durations.length - 1];
+
     return {
       endpoint,
       totalRequests: metrics.length,
@@ -536,8 +539,8 @@ export class APIMetricsCollector {
       errorCount: metrics.length - successCount,
       successRate: successCount / metrics.length,
       avgDuration: durations.reduce((a, b) => a + b, 0) / durations.length,
-      minDuration: durations[0]!,
-      maxDuration: durations[durations.length - 1]!,
+      minDuration: minDuration ?? 0,
+      maxDuration: maxDuration ?? 0,
       p50Latency: this.percentile(durations, 50),
       p90Latency: this.percentile(durations, 90),
       p95Latency: this.percentile(durations, 95),
@@ -580,7 +583,8 @@ export class APIMetricsCollector {
     if (sortedValues.length === 0) return 0;
 
     const index = Math.ceil((p / 100) * sortedValues.length) - 1;
-    return sortedValues[Math.max(0, index)]!;
+    const value = sortedValues[Math.max(0, index)];
+    return value ?? 0;
   }
 }
 
@@ -608,14 +612,17 @@ export function createMetricsCollector(config?: MetricsConfig): APIMetricsCollec
 export const consoleReporter: MetricsReporter = {
   report: (metric) => {
     const status = metric.success ? 'OK' : 'ERR';
+    // eslint-disable-next-line no-console
     console.log(
       `[API] ${metric.method} ${metric.endpoint} ${status} ${metric.duration}ms`
     );
   },
   flush: (metrics) => {
+    // eslint-disable-next-line no-console
     console.log(`[API Metrics] Flushing ${metrics.length} metrics`);
   },
   reportAggregated: (metrics) => {
+    // eslint-disable-next-line no-console
     console.log('[API Metrics] Aggregated:', {
       requests: metrics.totalRequests,
       successRate: `${(metrics.successRate * 100).toFixed(1)}%`,
@@ -637,12 +644,12 @@ export function createBatchedReporter(
   let batch: RequestMetric[] = [];
   let timer: ReturnType<typeof setTimeout> | null = null;
 
-  const sendBatch = () => {
+  const sendBatch = (): void => {
     if (batch.length > 0) {
       onBatch([...batch]);
       batch = [];
     }
-    if (timer) {
+    if (timer != null) {
       clearTimeout(timer);
       timer = null;
     }
@@ -654,7 +661,7 @@ export function createBatchedReporter(
 
       if (batch.length >= batchSize) {
         sendBatch();
-      } else if (!timer) {
+      } else if (timer == null) {
         timer = setTimeout(sendBatch, maxWait);
       }
     },

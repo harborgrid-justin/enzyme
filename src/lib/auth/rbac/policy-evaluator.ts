@@ -488,7 +488,7 @@ export class PolicyEvaluator {
     condition: PolicyCondition,
     context: EvaluationContext
   ): boolean {
-    const now = context.now;
+    const {now} = context;
 
     switch (condition.operator) {
       case 'between': {
@@ -590,7 +590,7 @@ export class PolicyEvaluator {
     condition: PolicyCondition,
     request: AccessRequest
   ): boolean {
-    const key = condition.key;
+    const {key} = condition;
     if (!key) return true;
 
     // Check subject attributes first, then resource attributes
@@ -608,7 +608,7 @@ export class PolicyEvaluator {
     request: AccessRequest,
     context: EvaluationContext
   ): boolean {
-    const key = condition.key;
+    const {key} = condition;
     if (!key) return true;
 
     const value =
@@ -923,7 +923,7 @@ export class PolicyEvaluator {
    */
   private matchWildcard(pattern: string, value: string): boolean {
     const regex = new RegExp(
-      '^' + pattern.replace(/\*/g, '.*').replace(/\?/g, '.') + '$'
+      `^${  pattern.replace(/\*/g, '.*').replace(/\?/g, '.')  }$`
     );
     return regex.test(value);
   }

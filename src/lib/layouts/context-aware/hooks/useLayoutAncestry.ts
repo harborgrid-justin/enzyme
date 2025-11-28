@@ -69,7 +69,7 @@ import {
  */
 export function useLayoutAncestry(): UseLayoutAncestryReturn {
   const context = useDOMContextValue();
-  const ancestors = context.ancestors;
+  const {ancestors} = context;
 
   /**
    * Finds the closest ancestor of a specific layout type.

@@ -97,7 +97,7 @@ export const DEFAULT_ATTRIBUTE_MAPPINGS: AttributeMapping[] = [
     source: 'email',
     target: 'email',
     required: true,
-    extract: (source) => source.email || source.upn,
+    extract: (source) => (source.email != null && source.email !== '') ? source.email : (source.upn ?? undefined),
   },
   {
     source: 'givenName',
@@ -117,7 +117,7 @@ export const DEFAULT_ATTRIBUTE_MAPPINGS: AttributeMapping[] = [
   {
     source: 'createdDateTime',
     target: 'createdAt',
-    transform: (value) => value || new Date().toISOString(),
+    transform: (value) => (value != null && value !== '') ? value : new Date().toISOString(),
   },
 ];
 
@@ -178,7 +178,7 @@ export const HEALTHCARE_ATTRIBUTE_MAPPINGS: AttributeMapping[] = [
     target: 'npi',
     extract: (source) => source.extensionAttributes?.['extension_npi'],
     validate: (value) => ({
-      valid: !value || /^\d{10}$/.test(String(value)),
+      valid: value == null || /^\d{10}$/.test(typeof value === 'string' ? value : JSON.stringify(value)),
       error: 'NPI must be a 10-digit number',
     }),
   },
@@ -188,7 +188,7 @@ export const HEALTHCARE_ATTRIBUTE_MAPPINGS: AttributeMapping[] = [
     target: 'deaNumber',
     extract: (source) => source.extensionAttributes?.['extension_deaNumber'],
     validate: (value) => ({
-      valid: !value || /^[A-Z]{2}\d{7}$/.test(String(value)),
+      valid: value == null || /^[A-Z]{2}\d{7}$/.test(typeof value === 'string' ? value : JSON.stringify(value)),
       error: 'DEA number must be 2 letters followed by 7 digits',
     }),
   },
@@ -252,7 +252,7 @@ export class ADAttributeMapper {
 
     // Process each mapping
     for (const mapping of this.config.mappings) {
-      const sourceKey = mapping.source as string;
+      const sourceKey = mapping.source;
       processedKeys.add(sourceKey);
 
       try {
@@ -265,22 +265,22 @@ export class ADAttributeMapper {
         }
 
         // Apply validation if present
-        if (mapping.validate && value !== undefined && value !== null) {
+        if (mapping.validate !== undefined && mapping.validate !== null && value !== undefined && value !== null) {
           const validation = mapping.validate(value, sourceKey);
-          if (!validation.valid) {
+          if (validation.valid !== true) {
             errors.push({
               attribute: sourceKey,
-              error: validation.error || `Validation failed for ${sourceKey}`,
+              error: validation.error ?? `Validation failed for ${sourceKey}`,
             });
 
-            if (mapping.required) {
+            if (mapping.required === true) {
               continue; // Skip required attributes that fail validation
             }
           }
         }
 
         // Check for required attributes
-        if (mapping.required && (value === undefined || value === null)) {
+        if (mapping.required === true && (value === undefined || value === null)) {
           errors.push({
             attribute: sourceKey,
             error: `Required attribute '${sourceKey}' is missing`,
@@ -289,12 +289,12 @@ export class ADAttributeMapper {
         }
 
         // Apply transformation if present
-        if (mapping.transform && value !== undefined) {
+        if (mapping.transform !== undefined && mapping.transform !== null && value !== undefined) {
           value = mapping.transform(value, source);
         }
 
         // Use default value if needed
-        if ((value === undefined || value === null) && mapping.defaultValue !== undefined) {
+        if ((value === undefined || value === null) && (mapping.defaultValue !== undefined && mapping.defaultValue !== null)) {
           value = mapping.defaultValue;
         }
 
@@ -311,7 +311,7 @@ export class ADAttributeMapper {
     }
 
     // Process extension attribute mappings
-    if (this.config.extensionMappings && source.extensionAttributes) {
+    if (this.config.extensionMappings !== undefined && this.config.extensionMappings !== null && source.extensionAttributes !== undefined && source.extensionAttributes !== null) {
       for (const [extAttr, targetAttr] of Object.entries(this.config.extensionMappings)) {
         const value = source.extensionAttributes[extAttr];
         if (value !== undefined && value !== null) {
@@ -322,7 +322,7 @@ export class ADAttributeMapper {
 
     // Collect unmapped attributes if requested
     let unmapped: Record<string, unknown> | undefined;
-    if (this.config.includeUnmapped) {
+    if (this.config.includeUnmapped === true) {
       unmapped = {};
       const excludeSet = new Set(this.config.excludeAttributes);
 
@@ -341,7 +341,7 @@ export class ADAttributeMapper {
     // Determine success based on required attribute errors
     const hasRequiredErrors = errors.some(error =>
       this.config.mappings.some(
-        m => m.source === error.attribute && m.required
+        m => m.source === error.attribute && (m.required === true)
       )
     );
 
@@ -449,7 +449,7 @@ export const attributeTransformers = {
    * Format display name (proper case).
    */
   formatDisplayName: (value: string | undefined): string | undefined => {
-    if (!value) return value;
+    if (value === undefined || value === null || value === '') return value;
     return value
       .split(' ')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
@@ -460,7 +460,7 @@ export const attributeTransformers = {
    * Parse phone number to E.164 format.
    */
   normalizePhone: (value: string | undefined): string | undefined => {
-    if (!value) return value;
+    if (value === undefined || value === null || value === '') return value;
     // Remove all non-numeric characters except leading +
     const cleaned = value.replace(/[^\d+]/g, '');
     // Ensure US numbers start with +1
@@ -474,7 +474,7 @@ export const attributeTransformers = {
    * Convert ISO date string to timestamp.
    */
   dateToTimestamp: (value: string | undefined): number | undefined => {
-    if (!value) return undefined;
+    if (value === undefined || value === null || value === '') return undefined;
     const date = new Date(value);
     return isNaN(date.getTime()) ? undefined : date.getTime();
   },
@@ -494,7 +494,7 @@ export const attributeTransformers = {
    * Parse array from comma-separated string.
    */
   parseArray: (value: string | string[] | undefined): string[] => {
-    if (!value) return [];
+    if (value === undefined || value === null) return [];
     if (Array.isArray(value)) return value;
     return value.split(',').map(item => item.trim()).filter(Boolean);
   },
@@ -503,7 +503,8 @@ export const attributeTransformers = {
    * Mask sensitive data (show last 4 characters).
    */
   maskSensitive: (value: string | undefined): string | undefined => {
-    if (!value || value.length <= 4) return value ? '****' : value;
+    if (value === undefined || value === null) return value;
+    if (value === '' || value.length <= 4) return '****';
     return '*'.repeat(value.length - 4) + value.slice(-4);
   },
 } as const;
@@ -520,7 +521,7 @@ export const attributeValidators = {
    * Validate email format.
    */
   email: (value: string | undefined, attr: string): { valid: boolean; error?: string } => {
-    if (!value) return { valid: true };
+    if (value === undefined || value === null || value === '') return { valid: true };
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return {
       valid: emailRegex.test(value),
@@ -532,7 +533,7 @@ export const attributeValidators = {
    * Validate UPN format.
    */
   upn: (value: string | undefined, attr: string): { valid: boolean; error?: string } => {
-    if (!value) return { valid: true };
+    if (value === undefined || value === null || value === '') return { valid: true };
     const upnRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+$/;
     return {
       valid: upnRegex.test(value),
@@ -544,7 +545,7 @@ export const attributeValidators = {
    * Validate GUID format.
    */
   guid: (value: string | undefined, attr: string): { valid: boolean; error?: string } => {
-    if (!value) return { valid: true };
+    if (value === undefined || value === null || value === '') return { valid: true };
     const guidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     return {
       valid: guidRegex.test(value),
@@ -557,7 +558,7 @@ export const attributeValidators = {
    */
   maxLength: (max: number) =>
     (value: string | undefined, attr: string): { valid: boolean; error?: string } => {
-      if (!value) return { valid: true };
+      if (value === undefined || value === null || value === '') return { valid: true };
       return {
         valid: value.length <= max,
         error: `${attr} must be at most ${max} characters`,
@@ -577,10 +578,10 @@ export const attributeValidators = {
    */
   pattern: (regex: RegExp, message: string) =>
     (value: string | undefined, attr: string): { valid: boolean; error?: string } => {
-      if (!value) return { valid: true };
+      if (value === undefined || value === null || value === '') return { valid: true };
       return {
         valid: regex.test(value),
-        error: message || `${attr} does not match required pattern`,
+        error: (message !== undefined && message !== null && message !== '') ? message : `${attr} does not match required pattern`,
       };
     },
 } as const;
@@ -606,11 +607,11 @@ export function createAttributeMapper(
 ): ADAttributeMapper {
   const mappings = [...DEFAULT_ATTRIBUTE_MAPPINGS];
 
-  if (options.includeExtended) {
+  if (options.includeExtended === true) {
     mappings.push(...EXTENDED_ATTRIBUTE_MAPPINGS);
   }
 
-  if (options.includeHealthcare) {
+  if (options.includeHealthcare === true) {
     mappings.push(...HEALTHCARE_ATTRIBUTE_MAPPINGS);
   }
 

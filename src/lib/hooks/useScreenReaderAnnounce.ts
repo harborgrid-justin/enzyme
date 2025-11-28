@@ -62,9 +62,9 @@ const liveRegions: Record<AnnouncementPriority, HTMLDivElement | null> = {
 function getLiveRegion(priority: AnnouncementPriority): HTMLDivElement {
   if (!liveRegions[priority]) {
     liveRegions[priority] = createLiveRegion(priority);
-    document.body.appendChild(liveRegions[priority]!);
+    document.body.appendChild(liveRegions[priority]);
   }
-  return liveRegions[priority]!;
+  return liveRegions[priority];
 }
 
 /**
@@ -97,7 +97,7 @@ function getLiveRegion(priority: AnnouncementPriority): HTMLDivElement {
  * }
  * ```
  */
-export function useScreenReaderAnnounce() {
+export function useScreenReaderAnnounce(): (message: string, options?: AnnounceOptions) => void {
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Clear any pending timeouts on unmount
@@ -150,14 +150,14 @@ export function useScreenReaderAnnounce() {
  * <ScreenReaderAnnouncementRegion />
  * ```
  */
-export function ScreenReaderAnnouncementRegion(): React.ReactElement {
+export function ScreenReaderAnnouncementRegion(): null {
   useEffect(() => {
     // Initialize both live regions on mount
     getLiveRegion('polite');
     getLiveRegion('assertive');
   }, []);
 
-  return null as unknown as React.ReactElement;
+  return null;
 }
 
 /**
@@ -187,9 +187,9 @@ export function announceToScreenReader(
     region.textContent = message;
   });
 
-if (clearAfter > 0) {
-  setTimeout(() => {
-    region.textContent = '';
-  }, clearAfter);
-}
+  if (clearAfter > 0) {
+    setTimeout(() => {
+      region.textContent = '';
+    }, clearAfter);
+  }
 }

@@ -194,8 +194,8 @@ export function isPromise<T = unknown>(value: unknown): value is Promise<T> {
   return (
     value instanceof Promise ||
     (isObject(value) &&
-      isFunction((value as Record<string, unknown>).then) &&
-      isFunction((value as Record<string, unknown>).catch))
+      isFunction((value).then) &&
+      isFunction((value).catch))
   );
 }
 
@@ -473,7 +473,7 @@ export function createShapeGuard<T extends Record<string, unknown>>(shape: {
     for (const key of Object.keys(shape) as (keyof T)[]) {
       if (
         !(key in value) ||
-        !shape[key]((value as Record<string, unknown>)[key as string])
+        !shape[key]((value)[key as string])
       ) {
         return false;
       }
@@ -495,7 +495,7 @@ export function createPartialShapeGuard<T extends Record<string, unknown>>(
     if (!isObject(value)) return false;
 
     for (const key of Object.keys(shape) as (keyof T)[]) {
-      const propValue = (value as Record<string, unknown>)[key as string];
+      const propValue = (value)[key as string];
       if (propValue !== undefined && !shape[key](propValue)) {
         return false;
       }

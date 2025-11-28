@@ -544,7 +544,7 @@ export class PrefetchQueue {
     }
   }
 
-  private prefetchDocument(item: PrefetchItem): Promise<void> {
+  private async prefetchDocument(item: PrefetchItem): Promise<void> {
     return new Promise((resolve, reject) => {
       const link = document.createElement('link');
       link.rel = 'prefetch';
@@ -558,7 +558,7 @@ export class PrefetchQueue {
     });
   }
 
-  private prefetchScript(item: PrefetchItem): Promise<void> {
+  private async prefetchScript(item: PrefetchItem): Promise<void> {
     return new Promise((resolve, reject) => {
       const link = document.createElement('link');
       link.rel = 'prefetch';
@@ -572,7 +572,7 @@ export class PrefetchQueue {
     });
   }
 
-  private prefetchStyle(item: PrefetchItem): Promise<void> {
+  private async prefetchStyle(item: PrefetchItem): Promise<void> {
     return new Promise((resolve, reject) => {
       const link = document.createElement('link');
       link.rel = 'prefetch';
@@ -586,7 +586,7 @@ export class PrefetchQueue {
     });
   }
 
-  private prefetchImage(item: PrefetchItem): Promise<void> {
+  private async prefetchImage(item: PrefetchItem): Promise<void> {
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => {
@@ -598,7 +598,7 @@ export class PrefetchQueue {
     });
   }
 
-  private prefetchFont(item: PrefetchItem): Promise<void> {
+  private async prefetchFont(item: PrefetchItem): Promise<void> {
     return new Promise((resolve, reject) => {
       const link = document.createElement('link');
       link.rel = 'prefetch';

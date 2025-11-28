@@ -248,7 +248,7 @@ const chevronBaseStyle: CSSProperties = {
 /**
  * Top navigation component - memoized for performance
  */
-export const TopNav = memo(function TopNav({
+export const TopNav = memo(({
   logo,
   items = [],
   activeId,
@@ -259,7 +259,7 @@ export const TopNav = memo(function TopNav({
   fixed = true,
   backgroundColor = '#ffffff',
   height = 64,
-}: TopNavProps): React.ReactElement {
+}: TopNavProps): React.ReactElement => {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   
@@ -322,7 +322,7 @@ export const TopNav = memo(function TopNav({
 
   // Create stable menu item click handlers using data attributes
   const handleMenuItemClick = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
-    const menuItemId = event.currentTarget.dataset.menuItemId;
+    const {menuItemId} = event.currentTarget.dataset;
     if (menuItemId) {
       const menuItem = userMenuItems.find((item) => item.id === menuItemId);
       menuItem?.onClick?.();
@@ -502,10 +502,10 @@ interface NavButtonProps {
 /**
  * Navigation button component - memoized for performance
  */
-const NavButton = memo(function NavButton({
+const NavButton = memo(({
   item,
   isActive,
-}: NavButtonProps): React.ReactElement {
+}: NavButtonProps): React.ReactElement => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const hasDropdown = item.items !== undefined && item.items.length > 0;
@@ -561,7 +561,7 @@ const NavButton = memo(function NavButton({
 
   // Create stable dropdown item click handler using data attributes
   const handleDropdownItemClick = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
-    const childId = event.currentTarget.dataset.childId;
+    const {childId} = event.currentTarget.dataset;
     if (childId && item.items) {
       const child = item.items.find((c) => c.id === childId);
       child?.onClick?.();

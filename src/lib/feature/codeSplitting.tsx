@@ -73,12 +73,10 @@ export function createLazyFeatureComponent<T extends ComponentType<unknown>>(
   let hasLoaded = false;
 
   const load = async (): Promise<{ default: T }> => {
-    if (!loadPromise) {
-      loadPromise = importFn().then((module) => {
-        hasLoaded = true;
-        return module;
-      });
-    }
+    loadPromise ??= importFn().then((module) => {
+      hasLoaded = true;
+      return module;
+    });
     return loadPromise;
   };
 

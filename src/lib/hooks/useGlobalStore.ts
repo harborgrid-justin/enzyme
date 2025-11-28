@@ -67,10 +67,11 @@ export function useGlobalStoreMultiple<T extends Record<string, unknown>>(
   return useStore((state) => {
     const newResult = combinedSelector(state);
 
-    if (resultRef.current !== null) {
+    if (resultRef.current !== null && resultRef.current !== undefined) {
       // Shallow compare the results
       const keys = Object.keys(newResult) as (keyof T)[];
-      const hasChanged = keys.some(key => !Object.is(newResult[key], resultRef.current![key]));
+      const prevResult = resultRef.current;
+      const hasChanged = keys.some(key => !Object.is(newResult[key], prevResult[key]));
       if (!hasChanged) {
         return resultRef.current;
       }
@@ -122,12 +123,12 @@ export function useGlobalStoreComputed<T>(
 /**
  * Hook for store actions
  */
-export function useGlobalStoreActions() {
+export function useGlobalStoreActions(): Record<string, unknown> {
   const actions = useStore((_state) => ({
     // Add your store actions here based on your actual store implementation
     // Example: reset: state.reset,
   }));
-  
+
   return actions;
 }
 
@@ -172,7 +173,7 @@ export function createActionHook<T extends (...args: unknown[]) => unknown>(
 export function useGlobalStoreSubscription<T>(
   selector: Selector<T>,
   callback: (value: T, prevValue: T) => void
-) {
+): { value: T; ref: (node: T | null) => void } {
   const value = useStore(selector);
   const prevValueRef = useCallback(
     (node: T | null) => {
@@ -182,7 +183,7 @@ export function useGlobalStoreSubscription<T>(
     },
     [value, callback]
   );
-  
+
   return { value, ref: prevValueRef };
 }
 
@@ -218,7 +219,7 @@ function getNestedOrDirect<T>(
   defaultValue: T
 ): T {
   const nested = state[nestedPath];
-  if (nested && typeof nested === 'object' && nestedKey in nested) {
+  if (nested != null && typeof nested === 'object' && nestedKey in nested) {
     return (nested as Record<string, unknown>)[nestedKey] as T;
   }
   if (directKey in state) {
@@ -244,7 +245,7 @@ export const globalSelectors = {
   },
   isAuthenticated: (state: StoreState): boolean => {
     const extended = state as StoreState & ExtendedStoreState;
-    return !!extended.user?.current;
+    return extended.user?.current != null;
   },
 
   // Notifications
@@ -261,7 +262,7 @@ export const globalSelectors = {
 /**
  * Pre-built hooks using common selectors
  */
-export const useIsSidebarOpen = () => useGlobalStore(globalSelectors.sidebarOpen);
-export const useCurrentUser = () => useGlobalStore(globalSelectors.currentUser);
-export const useIsAuthenticated = () => useGlobalStore(globalSelectors.isAuthenticated);
-export const useUnreadNotificationCount = () => useGlobalStore(globalSelectors.unreadCount);
+export const useIsSidebarOpen = (): boolean => useGlobalStore(globalSelectors.sidebarOpen);
+export const useCurrentUser = (): unknown => useGlobalStore(globalSelectors.currentUser);
+export const useIsAuthenticated = (): boolean => useGlobalStore(globalSelectors.isAuthenticated);
+export const useUnreadNotificationCount = (): number => useGlobalStore(globalSelectors.unreadCount);

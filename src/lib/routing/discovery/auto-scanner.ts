@@ -490,7 +490,7 @@ export class AutoScanner {
 
           if (entry.isDirectory()) {
             // Check ignore patterns for directory
-            if (matchesPatterns(relativePath + '/', this.config.ignore)) {
+            if (matchesPatterns(`${relativePath  }/`, this.config.ignore)) {
               continue;
             }
 
@@ -600,7 +600,7 @@ export class AutoScanner {
     const path = filePath.replace(/\\/g, '/');
 
     // Check extension
-    const ext = '.' + path.split('.').pop();
+    const ext = `.${  path.split('.').pop()}`;
     if (!this.config.extensions.includes(ext)) {
       return false;
     }

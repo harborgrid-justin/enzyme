@@ -390,10 +390,12 @@ export class RequestBuilder<TResponse = unknown, TBody = unknown> {
    * Add a field to form data
    */
   field(name: string, value: string | Blob): this {
-    if (!this.state.formData) {
+    if (this.state.formData === undefined) {
       this.formData();
     }
-    this.state.formData!.append(name, value);
+    if (this.state.formData !== undefined) {
+      this.state.formData.append(name, value);
+    }
     return this;
   }
 
@@ -408,13 +410,15 @@ export class RequestBuilder<TResponse = unknown, TBody = unknown> {
    * ```
    */
   file(name: string, file: Blob, filename?: string): this {
-    if (!this.state.formData) {
+    if (this.state.formData === undefined) {
       this.formData();
     }
-    if (filename) {
-      this.state.formData!.append(name, file, filename);
-    } else {
-      this.state.formData!.append(name, file);
+    if (this.state.formData !== undefined) {
+      if (filename !== undefined && filename !== null && filename !== '') {
+        this.state.formData.append(name, file, filename);
+      } else {
+        this.state.formData.append(name, file);
+      }
     }
     return this;
   }
@@ -430,12 +434,14 @@ export class RequestBuilder<TResponse = unknown, TBody = unknown> {
    * ```
    */
   files(name: string, files: File[] | FileList): this {
-    if (!this.state.formData) {
+    if (this.state.formData === undefined) {
       this.formData();
     }
-    const fileArray = Array.from(files);
-    for (const file of fileArray) {
-      this.state.formData!.append(name, file, file.name);
+    if (this.state.formData !== undefined) {
+      const fileArray = Array.from(files);
+      for (const file of fileArray) {
+        this.state.formData.append(name, file, file.name);
+      }
     }
     return this;
   }
@@ -992,10 +998,11 @@ export class RequestBuilder<TResponse = unknown, TBody = unknown> {
    * Build URL with path parameter substitution
    */
   private buildUrl(): string {
-    let url = this.state.url;
+    const { url: initialUrl, pathParams } = this.state;
+    let url = initialUrl;
 
     // Substitute path parameters
-    for (const [key, value] of Object.entries(this.state.pathParams)) {
+    for (const [key, value] of Object.entries(pathParams)) {
       url = url.replace(`:${key}`, encodeURIComponent(String(value)));
     }
 
@@ -1007,14 +1014,16 @@ export class RequestBuilder<TResponse = unknown, TBody = unknown> {
    */
   clone(): RequestBuilder<TResponse, TBody> {
     const cloned = new RequestBuilder<TResponse, TBody>();
-    cloned.state = JSON.parse(JSON.stringify(this.state));
+    cloned.state = JSON.parse(JSON.stringify(this.state)) as BuilderState<TBody>;
     cloned.serializationOptions = { ...this.serializationOptions };
 
     // Clone FormData if present
-    if (this.state.formData) {
+    if (this.state.formData !== undefined) {
       cloned.state.formData = new FormData();
       this.state.formData.forEach((value, key) => {
-        cloned.state.formData!.append(key, value);
+        if (cloned.state.formData !== undefined) {
+          cloned.state.formData.append(key, value);
+        }
       });
     }
 
@@ -1230,21 +1239,17 @@ export function parseQueryParams(queryString: string): QueryParams {
     // Handle array notation
     if (key.endsWith('[]')) {
       const arrayKey = key.slice(0, -2);
-      if (!params[arrayKey]) {
-        params[arrayKey] = [];
-      }
+      params[arrayKey] ??= [];
       (params[arrayKey] as string[]).push(value);
     }
     // Handle indexed notation
     else if (/\[\d+\]$/.test(key)) {
       const arrayKey = key.replace(/\[\d+\]$/, '');
-      if (!params[arrayKey]) {
-        params[arrayKey] = [];
-      }
+      params[arrayKey] ??= [];
       (params[arrayKey] as string[]).push(value);
     }
     // Handle comma-separated values (if only key exists)
-    else if (value.includes(',') && !params[key]) {
+    else if (value.includes(',') && params[key] === undefined) {
       params[key] = value.split(',');
     }
     // Handle repeated keys

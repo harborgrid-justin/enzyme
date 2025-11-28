@@ -1,3 +1,4 @@
+import React from 'react';
 /**
  * @fileoverview Unified library integration layer for feature flags.
  *
@@ -213,7 +214,7 @@ export function createLibraryIntegration<TConfig extends Record<string, unknown>
         Object.assign(result, updates);
       } else {
         // Direct property mapping
-        const configKey = mapping as keyof TConfig;
+        const configKey = mapping;
         const transformer = transformers[String(configKey)];
 
         if (transformer) {
@@ -466,7 +467,7 @@ export function LibraryIntegrationProvider({
   useEffect(() => {
     if (!autoSync) return;
 
-    const syncFlags = () => {
+    const syncFlags = (): void => {
       const allIntegrations = integrationRegistry.getAll();
       const allFlagKeys = new Set<string>();
 
@@ -559,10 +560,10 @@ export function useLibraryFlags<TConfig extends Record<string, unknown>>(
     if (!context) return;
 
     // Get initial config
-    setConfig((context as LibraryIntegrationContextValue).getLibraryConfig<TConfig>(libraryId));
+    setConfig((context).getLibraryConfig<TConfig>(libraryId));
 
     // Subscribe to updates
-    return (context as LibraryIntegrationContextValue).subscribeToLibrary<TConfig>(libraryId, (newConfig: TConfig) => {
+    return (context).subscribeToLibrary<TConfig>(libraryId, (newConfig: TConfig) => {
       setConfig(newConfig);
     });
   }, [context, libraryId]);

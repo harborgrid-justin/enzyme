@@ -240,7 +240,7 @@ export class CatchAllRoute {
     const normalizedPath = path.replace(/\/$/, '') || '/';
     const basePath = this.config.basePath.replace(/\/$/, '');
 
-    if (normalizedPath === basePath || normalizedPath === basePath + '/') {
+    if (normalizedPath === basePath || normalizedPath === `${basePath  }/`) {
       return [];
     }
 
@@ -279,14 +279,14 @@ export class CatchAllRoute {
     const segments = this.parseSegments(path);
 
     // Validate segment count
-    if (this.config.maxSegments && segments.length > this.config.maxSegments) {
+    if (this.config.maxSegments != null && segments.length > this.config.maxSegments) {
       errors.push({
         type: 'too-many-segments',
         message: `Too many segments: ${segments.length} (max: ${this.config.maxSegments})`,
       });
     }
 
-    if (this.config.minSegments && segments.length < this.config.minSegments) {
+    if (this.config.minSegments != null && segments.length < this.config.minSegments) {
       errors.push({
         type: 'too-few-segments',
         message: `Too few segments: ${segments.length} (min: ${this.config.minSegments})`,
@@ -295,7 +295,8 @@ export class CatchAllRoute {
 
     // Validate individual segments
     for (let i = 0; i < segments.length; i++) {
-      const segment = segments[i]!;
+      const segment = segments[i];
+      if (segment == null) continue;
 
       // Custom validator
       if (this.config.validateSegment && !this.config.validateSegment(segment)) {
@@ -471,7 +472,11 @@ export class CatchAllRouteManager {
     // Sort by score (descending) - higher score = more specific
     matches.sort((a, b) => b.match.score - a.match.score);
 
-    return matches[0]!;
+    const bestMatch = matches[0];
+    if (bestMatch == null) {
+      throw new Error('No match found');
+    }
+    return bestMatch;
   }
 
   /**
@@ -576,9 +581,7 @@ let defaultManager: CatchAllRouteManager | null = null;
  * Get the default catch-all route manager
  */
 export function getCatchAllManager(): CatchAllRouteManager {
-  if (!defaultManager) {
-    defaultManager = new CatchAllRouteManager();
-  }
+  defaultManager ??= new CatchAllRouteManager();
   return defaultManager;
 }
 
@@ -647,7 +650,7 @@ export function normalizeSegments(segments: readonly string[]): string[] {
  * @returns Joined path
  */
 export function joinSegments(segments: readonly string[]): string {
-  return '/' + segments.join('/');
+  return `/${  segments.join('/')}`;
 }
 
 /**
