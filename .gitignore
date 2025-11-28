@@ -8,5 +8,5 @@ coverage
 .DS_Store
 
 # Demo folder for development testing
-demo/
+demo/node_modules/
 scripts/
