@@ -352,13 +352,11 @@ export function useSlots(slotNames: string[]): Map<
       map.set(name, {
         content,
         fill: (newContent: ReactNode) => fillSlot(name, newContent),
-        clear: () => clearSlot(name),
-        isFilled: content !== null && content !== undefined,
-      });
-    }
+      clear: () => clearSlot(name),
+      isFilled: content !== null && content !== undefined,
+    });
+  }
 
-    return map;
-  }, [slotNames, getSlot, fillSlot, clearSlot]);
+  return map;
+}, [slotNames, getSlot, fillSlot, clearSlot]);
 }
-
-export default useModuleBoundary;

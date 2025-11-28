@@ -549,5 +549,3 @@ export function formatDuration(ms: number): string {
  * Default performance configuration (environment-aware)
  */
 export const performanceConfig = getPerformanceConfig();
-
-export default performanceConfig;

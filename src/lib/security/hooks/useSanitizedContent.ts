@@ -409,5 +409,3 @@ export function useSafeHTMLWithReport(
 
   return { props, report };
 }
-
-export default useSanitizedContent;

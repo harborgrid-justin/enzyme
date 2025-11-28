@@ -496,5 +496,3 @@ export async function waitForServiceWorker(): Promise<ServiceWorkerRegistration 
 export function postMessageToSW(message: unknown): void {
   currentState.registration?.active?.postMessage(message);
 }
-
-export default registerServiceWorker;

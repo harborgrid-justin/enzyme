@@ -392,12 +392,10 @@ export function KeyboardShortcutsHelp({
                   </kbd>
                 </dd>
               </div>
-            ))}
-          </dl>
-        </div>
-      ))}
-    </div>
-  );
+          ))}
+        </dl>
+      </div>
+    ))}
+  </div>
+);
 }
-
-export default useKeyboardShortcuts;

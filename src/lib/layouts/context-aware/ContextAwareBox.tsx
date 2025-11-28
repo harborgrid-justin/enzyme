@@ -408,13 +408,7 @@ function mapAlign(
     end: 'flex-end',
     center: 'center',
     stretch: 'stretch',
-    baseline: 'baseline',
-  };
-  return map[align];
+  baseline: 'baseline',
+};
+return map[align];
 }
-
-// ============================================================================
-// Export
-// ============================================================================
-
-export default ContextAwareBox;

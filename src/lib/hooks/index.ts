@@ -128,8 +128,8 @@ export {
 } from './useAnalytics';
 
 // Smart prefetching hooks
-export { default as useSmartPrefetch } from './useSmartPrefetch';
 export {
+  SmartPrefetchManager,
   createPrefetchConfig,
   type PrefetchTarget,
   type SmartPrefetchOptions,

@@ -570,13 +570,7 @@ export function useADTokens() {
     scopes,
     isExpired,
     timeUntilExpiry,
-    isRefreshing,
-    refreshTokens,
-  };
+  isRefreshing,
+  refreshTokens,
+};
 }
-
-// =============================================================================
-// Default Export
-// =============================================================================
-
-export default useActiveDirectory;

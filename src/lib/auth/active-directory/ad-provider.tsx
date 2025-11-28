@@ -848,13 +848,7 @@ function applyMappings(
     ...mappedUser,
     roles: role ? [role] : [],
     permissions: permissions,
-    effectivePermissions: permissions,
-    adGroups: user.adGroups,
-  };
+  effectivePermissions: permissions,
+  adGroups: user.adGroups,
+};
 }
-
-// =============================================================================
-// Export
-// =============================================================================
-
-export default ADProvider;

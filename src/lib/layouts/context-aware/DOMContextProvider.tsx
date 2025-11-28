@@ -519,14 +519,6 @@ export function NestedDOMContextProvider({
 export function useDOMContextSelector<T>(
   selector: (context: DOMContext) => T
 ): T {
-  const context = useDOMContextValue();
-  return useMemo(() => selector(context), [context, selector]);
+const context = useDOMContextValue();
+return useMemo(() => selector(context), [context, selector]);
 }
-
-// ============================================================================
-// Default Export
-// ============================================================================
-
-export default DOMContextProvider;
-
-

@@ -523,13 +523,7 @@ export function ScrollTrigger({
       onEnterViewport={onTrigger}
       triggerOnce={triggerOnce}
     >
-      {indicator}
-    </ViewportAnchor>
-  );
+    {indicator}
+  </ViewportAnchor>
+);
 }
-
-// ============================================================================
-// Export
-// ============================================================================
-
-export default ViewportAnchor;

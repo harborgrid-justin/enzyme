@@ -534,6 +534,3 @@ export {
   withSuspense,
   setupPrefetching,
 };
-
-// Export only the main function, not the type to avoid conflicts
-export default createRouter;

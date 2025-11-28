@@ -314,12 +314,6 @@ export function monitorNetworkQuality(
   connection.addEventListener('change', handleChange);
 
   return () => {
-    connection.removeEventListener('change', handleChange);
-  };
+  connection.removeEventListener('change', handleChange);
+};
 }
-
-// ============================================================================
-// Default Export
-// ============================================================================
-
-export default SmartPrefetchManager;

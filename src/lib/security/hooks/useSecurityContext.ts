@@ -382,13 +382,11 @@ export function useSecureHandler(): <T extends (...args: unknown[]) => unknown>(
               severity: 'medium',
               blocked: true,
             });
-          }
-          throw error;
         }
-      }) as T;
-    },
-    [csrfToken, reportViolation]
-  );
+        throw error;
+      }
+    }) as T;
+  },
+  [csrfToken, reportViolation]
+);
 }
-
-export default useSecurityContext;

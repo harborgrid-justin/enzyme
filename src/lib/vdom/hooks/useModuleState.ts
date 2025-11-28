@@ -412,13 +412,11 @@ export function useRecordModuleState<K extends string, V>(
       record: state,
       get,
       set,
-      remove,
-      has,
-      clear: resetState,
-      setRecord: setState,
-    }),
-    [state, get, set, remove, has, resetState, setState]
-  );
+    remove,
+    has,
+    clear: resetState,
+    setRecord: setState,
+  }),
+  [state, get, set, remove, has, resetState, setState]
+);
 }
-
-export default useModuleState;

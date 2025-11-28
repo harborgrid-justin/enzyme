@@ -187,11 +187,9 @@ export function announceToScreenReader(
     region.textContent = message;
   });
 
-  if (clearAfter > 0) {
-    setTimeout(() => {
-      region.textContent = '';
-    }, clearAfter);
-  }
+if (clearAfter > 0) {
+  setTimeout(() => {
+    region.textContent = '';
+  }, clearAfter);
 }
-
-export default useScreenReaderAnnounce;
+}

@@ -474,13 +474,7 @@ export function useExtendedStreamStatus(
     formattedBytes,
     formattedElapsed,
     formattedETA,
-    isActive,
-    hasEnded,
-  };
+  isActive,
+  hasEnded,
+};
 }
-
-// ============================================================================
-// Export
-// ============================================================================
-
-export default useStreamStatus;

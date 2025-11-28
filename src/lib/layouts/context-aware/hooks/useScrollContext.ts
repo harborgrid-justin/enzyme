@@ -445,13 +445,7 @@ export function useScrollIntoView(): (
 ) => void {
   return useCallback((element: Element, options?: ScrollIntoViewOptions) => {
     element.scrollIntoView(
-      options || { behavior: 'smooth', block: 'center' }
-    );
-  }, []);
+    options || { behavior: 'smooth', block: 'center' }
+  );
+}, []);
 }
-
-// ============================================================================
-// Export
-// ============================================================================
-
-export default useScrollContext;

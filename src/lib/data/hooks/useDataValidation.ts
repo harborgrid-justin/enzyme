@@ -491,12 +491,10 @@ export function useAsyncValidation<T>(
 
   useEffect(() => {
     validate();
-  }, [...deps, validate]);
+}, [...deps, validate]);
 
-  return {
-    ...state,
-    validate,
-  };
+return {
+  ...state,
+  validate,
+};
 }
-
-export default useDataValidation;

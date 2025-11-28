@@ -441,15 +441,7 @@ export function PopoverPortal({
 
   return (
     <PortalBridge layer="popover" {...props}>
-      {children}
-    </PortalBridge>
-  );
+    {children}
+  </PortalBridge>
+);
 }
-
-// ============================================================================
-// Export
-// ============================================================================
-
-export default PortalBridge;
-
-

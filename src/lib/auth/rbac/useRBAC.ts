@@ -483,12 +483,7 @@ export function useAccessChecks<
       }
     }
 
-    return results as Record<keyof T, boolean>;
-  }, [checks, hasPermission, hasRole, hasAnyRole, canAccess]);
+
+  return results as Record<keyof T, boolean>;
+}, [checks, hasPermission, hasRole, hasAnyRole, canAccess]);
 }
-
-// =============================================================================
-// Default Export
-// =============================================================================
-
-export default useRBAC;

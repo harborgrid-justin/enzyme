@@ -497,13 +497,7 @@ export function useScrollControl() {
     scrollToTop,
     scrollToBottom,
     isScrolling: scrollState?.isScrolling ?? false,
-    scrollDirection: scrollState?.scrollDirection ?? 'none',
-    scrollProgress: scrollState?.scrollProgress ?? { x: 0, y: 0 },
-  };
+  scrollDirection: scrollState?.scrollDirection ?? 'none',
+  scrollProgress: scrollState?.scrollProgress ?? { x: 0, y: 0 },
+};
 }
-
-// ============================================================================
-// Export
-// ============================================================================
-
-export default ScrollAwareContainer;

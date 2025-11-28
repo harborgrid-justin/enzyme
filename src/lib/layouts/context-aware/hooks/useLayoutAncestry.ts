@@ -354,13 +354,7 @@ export function useParentAspectRatio(): number | null {
       if (height > 0) {
         return width / height;
       }
-    }
-    return null;
-  }, [constraints, ancestors]);
+  }
+  return null;
+}, [constraints, ancestors]);
 }
-
-// ============================================================================
-// Export
-// ============================================================================
-
-export default useLayoutAncestry;

@@ -341,13 +341,11 @@ export function useHydrationTiming(options: {
   }, [options.trigger, scheduleHydration]);
 
   return useMemo(
-    () => ({
-      shouldHydrate,
-      scheduleHydration,
-      cancelHydration,
-    }),
-    [shouldHydrate, scheduleHydration, cancelHydration]
-  );
+  () => ({
+    shouldHydrate,
+    scheduleHydration,
+    cancelHydration,
+  }),
+  [shouldHydrate, scheduleHydration, cancelHydration]
+);
 }
-
-export default useModuleHydration;

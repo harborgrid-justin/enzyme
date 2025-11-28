@@ -542,11 +542,9 @@ export function useEntityIntegrity(
     check();
   }, [check]);
 
-  return {
-    isValid: violations.length === 0,
-    violations,
-    check,
-  };
+return {
+  isValid: violations.length === 0,
+  violations,
+  check,
+};
 }
-
-export default useDataIntegrity;

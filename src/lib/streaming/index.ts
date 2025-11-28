@@ -277,37 +277,4 @@ export {
   DEFAULT_METRICS,
 } from './types';
 
-// ============================================================================
-// Default Export
-// ============================================================================
 
-/**
- * Default export containing commonly used items.
- */
-import { StreamingEngine as StreamingEngineClass, createStreamingEngine as createEngine } from './streaming-engine';
-import { StreamProvider as Provider } from './StreamProvider';
-import { StreamBoundary as Boundary, CriticalStreamBoundary as CriticalBoundary, DeferredStreamBoundary as DeferredBoundary } from './StreamBoundary';
-import { useStream as streamHook, useStreamStatus as streamStatusHook, useStreamPriority as streamPriorityHook, useDeferredStream as deferredStreamHook } from './hooks';
-import { StreamPriority as Priority, StreamState as State } from './types';
-
-export default {
-  // Components
-  StreamProvider: Provider,
-  StreamBoundary: Boundary,
-  CriticalStreamBoundary: CriticalBoundary,
-  DeferredStreamBoundary: DeferredBoundary,
-
-  // Hooks
-  useStream: streamHook,
-  useStreamStatus: streamStatusHook,
-  useStreamPriority: streamPriorityHook,
-  useDeferredStream: deferredStreamHook,
-
-  // Engine
-  StreamingEngine: StreamingEngineClass,
-  createStreamingEngine: createEngine,
-
-  // Enums
-  StreamPriority: Priority,
-  StreamState: State,
-};

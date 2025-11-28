@@ -221,13 +221,7 @@ export function useContextEffect<T>(
 ): void {
   const value = useContextSelector(selector);
 
-  useEffect(() => {
-    return effect(value);
-  }, [value, ...deps]);
+useEffect(() => {
+  return effect(value);
+}, [value, ...deps]);
 }
-
-// ============================================================================
-// Export
-// ============================================================================
-
-export default useDOMContext;

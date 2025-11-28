@@ -374,13 +374,11 @@ export function useSecureMessaging(): {
     [isEventAllowed, context]
   );
 
-  return useMemo(
-    () => ({
-      sendSecure,
-      onSecureMessage,
-    }),
-    [sendSecure, onSecureMessage]
-  );
+return useMemo(
+  () => ({
+    sendSecure,
+    onSecureMessage,
+  }),
+  [sendSecure, onSecureMessage]
+);
 }
-
-export default useSecureModule;

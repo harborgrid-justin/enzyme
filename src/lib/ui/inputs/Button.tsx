@@ -398,9 +398,3 @@ export const ButtonGroup = memo(function ButtonGroup({
 });
 
 ButtonGroup.displayName = 'ButtonGroup';
-
-// ============================================================================
-// Exports
-// ============================================================================
-
-export default Button;

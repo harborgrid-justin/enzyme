@@ -372,13 +372,7 @@ export function useZIndexRegistration(layer: ZIndexLayer = 'base'): {
  *   );
  * }
  * ```
- */
+*/
 export function useZIndexLayers(): Record<ZIndexLayer, number> {
-  return Z_INDEX_LAYERS;
+return Z_INDEX_LAYERS;
 }
-
-// ============================================================================
-// Export
-// ============================================================================
-
-export default usePortalContext;

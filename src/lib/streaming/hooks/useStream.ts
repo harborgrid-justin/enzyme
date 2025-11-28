@@ -538,12 +538,6 @@ export function useAwaitStream(boundaryId: string): () => Promise<void> {
           reject(new Error('Stream aborted'));
         }
       });
-    });
-  }, [context, boundaryId]);
+  });
+}, [context, boundaryId]);
 }
-
-// ============================================================================
-// Export
-// ============================================================================
-
-export default useStream;

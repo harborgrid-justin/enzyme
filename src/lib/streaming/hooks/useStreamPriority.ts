@@ -490,13 +490,7 @@ export function useDeferredPriority(
 ): UseStreamPriorityResult {
   return useStreamPriority(boundaryId, {
     ...options,
-    initialPriority: StreamPriority.Low,
-    escalateOnInteraction: true,
-  });
+  initialPriority: StreamPriority.Low,
+  escalateOnInteraction: true,
+});
 }
-
-// ============================================================================
-// Export
-// ============================================================================
-
-export default useStreamPriority;

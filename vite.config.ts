@@ -76,6 +76,12 @@ export default defineConfig({
         'lucide-react',
         'react-window',
         'web-vitals',
+        // Node.js built-in modules (for build-time/SSR usage)
+        'fs',
+        'path',
+        'node:fs',
+        'node:path',
+        'node:module',
       ],
       output: {
         globals: {

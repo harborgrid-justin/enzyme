@@ -419,13 +419,7 @@ export function RBACProvider({
 
   return (
     <RBACContext.Provider value={contextValue}>
-      {children}
-    </RBACContext.Provider>
-  );
+    {children}
+  </RBACContext.Provider>
+);
 }
-
-// =============================================================================
-// Export
-// =============================================================================
-
-export default RBACProvider;

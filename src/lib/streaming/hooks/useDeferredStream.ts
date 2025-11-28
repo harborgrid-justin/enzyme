@@ -555,13 +555,7 @@ export function useDeferUntilEvent(
   options: Omit<UseDeferredStreamOptions, 'deferUntilEvent'> = {}
 ): UseDeferredStreamResult {
   return useDeferredStream({
-    ...options,
-    deferUntilEvent: eventName,
-  });
+  ...options,
+  deferUntilEvent: eventName,
+});
 }
-
-// ============================================================================
-// Export
-// ============================================================================
-
-export default useDeferredStream;

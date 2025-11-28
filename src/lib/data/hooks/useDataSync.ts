@@ -694,12 +694,10 @@ export function useSyncConflicts(engine: SyncEngine): {
   }, [conflicts, resolveConflict]);
 
   return {
-    conflicts,
-    hasConflicts: conflicts.length > 0,
-    resolveConflict,
-    resolveAllLocal,
-    resolveAllRemote,
-  };
+  conflicts,
+  hasConflicts: conflicts.length > 0,
+  resolveConflict,
+  resolveAllLocal,
+  resolveAllRemote,
+};
 }
-
-export default useDataSync;

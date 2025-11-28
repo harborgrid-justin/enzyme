@@ -429,12 +429,6 @@ export function useOrientation(): 'portrait' | 'landscape' {
  * ```
  */
 export function useSafeAreaInsets(): ViewportInfo['safeAreaInsets'] {
-  const viewport = useViewport();
-  return viewport.safeAreaInsets;
+const viewport = useViewport();
+return viewport.safeAreaInsets;
 }
-
-// ============================================================================
-// Export
-// ============================================================================
-
-export default useViewportPosition;

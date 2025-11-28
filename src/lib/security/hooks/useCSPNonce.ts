@@ -175,13 +175,11 @@ export function useNonceStyle(
 } {
   const { nonce } = useCSPNonce();
 
-  return useMemo(
-    () => ({
-      nonce,
-      dangerouslySetInnerHTML: { __html: styleContent },
-    }),
-    [nonce, styleContent]
-  );
+return useMemo(
+  () => ({
+    nonce,
+    dangerouslySetInnerHTML: { __html: styleContent },
+  }),
+  [nonce, styleContent]
+);
 }
-
-export default useCSPNonce;

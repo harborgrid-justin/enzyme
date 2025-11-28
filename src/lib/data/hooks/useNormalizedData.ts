@@ -596,12 +596,10 @@ export function createNormalizedStore(
       listeners.forEach((listener) => listener());
     },
     subscribe: (listener) => {
-      listeners.add(listener);
-      return () => {
-        listeners.delete(listener);
-      };
-    },
-  };
+    listeners.add(listener);
+    return () => {
+      listeners.delete(listener);
+    };
+  },
+};
 }
-
-export default useNormalizedData;

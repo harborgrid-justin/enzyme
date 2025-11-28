@@ -344,12 +344,10 @@ export function PredictiveLink({
       onClick={handleClick}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      onFocus={handleFocus}
-      {...props}
-    >
-      {children}
-    </a>
-  );
+    onFocus={handleFocus}
+    {...props}
+  >
+    {children}
+  </a>
+);
 }
-
-export default usePredictivePrefetch;
