@@ -435,12 +435,12 @@ export function createMockSecureStorage(): MockSecureStorage {
   const store = new Map<string, unknown>();
 
   return {
-    getItem: vi.fn(async <T>(key: string) => {
+    getItem: vi.fn(async (key: string) => {
       const value = store.get(key);
       if (value === undefined) {
         return { success: true, data: undefined };
       }
-      return { success: true, data: value as T };
+      return { success: true, data: value };
     }),
     setItem: vi.fn(async (key: string, value: unknown) => {
       store.set(key, value);
