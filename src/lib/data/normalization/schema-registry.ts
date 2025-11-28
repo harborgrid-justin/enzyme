@@ -275,7 +275,7 @@ export function createSchemaRegistry(config: SchemaRegistryConfig = {}): SchemaR
       case 'array':
         return new ArraySchema(baseSchema);
 
-      case 'union':
+      case 'union': {
         if (!def.schemas) {
           throw new Error('Union relation requires schemas mapping');
         }
@@ -284,6 +284,7 @@ export function createSchemaRegistry(config: SchemaRegistryConfig = {}): SchemaR
           unionSchemas[key] = getOrCreateSchema(schemaName);
         }
         return new UnionSchema(unionSchemas, def.schemaAttribute);
+      }
 
       case 'entity':
       default:
@@ -296,8 +297,9 @@ export function createSchemaRegistry(config: SchemaRegistryConfig = {}): SchemaR
    */
   function getOrCreateSchema(name: string): EntitySchema {
     // Check resolved cache
-    if (resolvedSchemas.has(name)) {
-      return resolvedSchemas.get(name)!;
+    const cachedSchema = resolvedSchemas.get(name);
+    if (cachedSchema != null) {
+      return cachedSchema;
     }
 
     // Check if registered
@@ -335,7 +337,7 @@ export function createSchemaRegistry(config: SchemaRegistryConfig = {}): SchemaR
 
     // Create entity schema
     const schema = new EntitySchema(name, {
-      idAttribute: definition.idAttribute || options.defaultIdAttribute,
+      idAttribute: definition.idAttribute ?? options.defaultIdAttribute,
       relations: relations as Record<string, EntitySchema | ArraySchema | UnionSchema>,
       processStrategy: definition.processStrategy,
       mergeStrategy: definition.mergeStrategy,
@@ -369,7 +371,7 @@ export function createSchemaRegistry(config: SchemaRegistryConfig = {}): SchemaR
 
         // Replace schema with updated relations
         const updatedSchema = new EntitySchema(name, {
-          idAttribute: registered.definition.idAttribute || options.defaultIdAttribute,
+          idAttribute: registered.definition.idAttribute ?? options.defaultIdAttribute,
           relations: newRelations as Record<string, EntitySchema | ArraySchema | UnionSchema>,
           processStrategy: registered.definition.processStrategy,
           mergeStrategy: registered.definition.mergeStrategy,

@@ -166,7 +166,7 @@ export function isObject(value: unknown): value is Record<string, unknown> {
  */
 export function isPlainObject(value: unknown): value is Record<string, unknown> {
   if (!isObject(value)) return false;
-  const prototype = Object.getPrototypeOf(value);
+  const prototype = Object.getPrototypeOf(value) as unknown;
   return prototype === null || prototype === Object.prototype;
 }
 
@@ -466,7 +466,7 @@ export function createAssertion<T>(
 ): TypeAssertion<T> {
   return (value: unknown, message?: string): asserts value is T => {
     if (!guard(value)) {
-      throw new AssertionError(message || defaultMessage, value);
+      throw new AssertionError(message ?? defaultMessage, value);
     }
   };
 }

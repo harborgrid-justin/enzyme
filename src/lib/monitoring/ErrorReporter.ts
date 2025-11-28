@@ -114,12 +114,12 @@ export function reportError(
   }
   
   // Apply sample rate
-  if (config.sampleRate && Math.random() > config.sampleRate) {
+  if (config.sampleRate != null && config.sampleRate > 0 && Math.random() > config.sampleRate) {
     return;
   }
-  
+
   if (isInitialized && config.enabled) {
-    sendErrorReport(finalReport);
+    void sendErrorReport(finalReport);
   } else {
     // Queue error for later
     errorQueue.push(finalReport);
@@ -151,9 +151,9 @@ export function reportWarning(
   if (isDebugModeEnabled()) {
     console.warn('[Warning]', message, context);
   }
-  
+
   if (isInitialized && config.enabled) {
-    sendErrorReport(report);
+    void sendErrorReport(report);
   }
 }
 

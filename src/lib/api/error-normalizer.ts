@@ -115,12 +115,12 @@ function normalizeHttpError(
   let fieldErrors: FieldError[] | undefined;
 
   // Parse response body
-  if (response && typeof response === 'object') {
+  if (response !== null && response !== undefined && typeof response === 'object') {
     const serverError = response as ServerErrorResponse;
 
     // Extract message
-    if (serverError.message) {
-      message = serverError.message;
+    if (serverError.message != null && serverError.message !== '') {
+      ({ message } = serverError);
     } else if (serverError.error) {
       message =
         typeof serverError.error === 'string'

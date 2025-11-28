@@ -139,7 +139,7 @@ export function useLayoutAncestry(): UseLayoutAncestryReturn {
 export function useFlexAncestor(): LayoutAncestor | undefined {
   const { findAncestor } = useLayoutAncestry();
   return useMemo(
-    () => findAncestor('flex') || findAncestor('inline-flex'),
+    () => findAncestor('flex') ?? findAncestor('inline-flex'),
     [findAncestor]
   );
 }

@@ -241,12 +241,12 @@ function GenericListInner<T extends ListItemBase>({
   // Stable click handler using data-* attributes
   const handleItemClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
     const {itemId} = event.currentTarget.dataset;
-    if (itemId && onSelect) {
+    if (itemId != null && itemId.length > 0 && onSelect != null) {
       onSelect(selectedId === itemId ? null : itemId);
     }
   }, [onSelect, selectedId]);
 
-  if (items.length === 0 && emptyState) {
+  if (items.length === 0 && emptyState != null) {
     return <>{emptyState}</>;
   }
 
@@ -302,11 +302,11 @@ function GenericDetailInner<T>({
   renderEmpty,
   renderError,
 }: GenericDetailProps<T>): React.ReactElement {
-  if (isLoading) {
+  if (isLoading === true) {
     return <>{renderLoading?.() || <DefaultLoadingState />}</>;
   }
 
-  if (error) {
+  if (error != null) {
     return <>{renderError?.(error) || <DefaultErrorState error={error} />}</>;
   }
 

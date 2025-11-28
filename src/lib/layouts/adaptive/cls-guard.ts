@@ -405,7 +405,7 @@ export class CLSGuard implements CLSGuardInterface {
   private _extractElementId(sources?: Array<{ node?: Element }>): string | null {
     if (sources == null || sources.length === 0) return null;
 
-    const firstSource = sources[0];
+    const [firstSource] = sources;
     if (firstSource?.node == null) return null;
 
     const { node: element } = firstSource;

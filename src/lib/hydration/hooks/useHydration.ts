@@ -228,19 +228,16 @@ const DEFAULT_CONFIG: HydrationSchedulerConfig = {
 export function useHydration(options: UseHydrationOptions = {}): UseHydrationReturn {
   const { throwIfNoProvider = true } = options;
 
-  // IMPORTANT: Always call both hooks unconditionally to comply with Rules of Hooks.
+  // IMPORTANT: Always call hooks unconditionally to comply with Rules of Hooks.
   // React hooks must be called in the same order on every render.
-  // We call the optional hook first (which never throws), then conditionally
-  // call the required hook only if throwIfNoProvider is true.
   const optionalContext = useOptionalHydrationContext();
 
-  // If throwIfNoProvider is true and no context exists, this will throw.
-  // If throwIfNoProvider is false, we skip this call by using the optional context.
-  // This pattern ensures hooks are called unconditionally while still providing
-  // the throw-on-missing behavior when requested.
+  // If throwIfNoProvider is true and no context exists, throw an error after hooks are called
   if (throwIfNoProvider && optionalContext === null) {
-    // Call the required context hook which will throw with a helpful error
-    useHydrationContext();
+    throw new Error(
+      'useHydration must be used within a HydrationProvider. ' +
+        'Wrap your app with <HydrationProvider> to use hydration features.'
+    );
   }
 
   // Use the optional context result (which may be null if no provider)

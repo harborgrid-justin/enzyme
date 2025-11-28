@@ -354,16 +354,17 @@ function fromErrorObject(obj: {
   [key: string]: unknown;
 }): AppError {
   const category = (obj.category as ErrorCategory) ?? categorizeByStatusCode(obj);
-  const statusCode =
-    typeof obj.statusCode === 'number'
-      ? obj.statusCode
-      : typeof obj.status === 'number'
-        ? obj.status
-        : undefined;
+
+  const { statusCode, status } = obj;
+  const resolvedStatusCode = typeof statusCode === 'number'
+    ? statusCode
+    : typeof status === 'number'
+      ? status
+      : undefined;
 
   return new AppError(obj.message, {
     category,
-    statusCode,
+    statusCode: resolvedStatusCode,
     code: typeof obj.code === 'string' ? obj.code : undefined,
     metadata: obj,
   });
@@ -405,21 +406,21 @@ function categorizeError(error: Error): ErrorCategory {
  * Categorize by HTTP status code.
  */
 function categorizeByStatusCode(obj: Record<string, unknown>): ErrorCategory {
-  const status =
-    typeof obj.statusCode === 'number'
-      ? obj.statusCode
-      : typeof obj.status === 'number'
-        ? obj.status
-        : 0;
+  const { statusCode, status } = obj;
+  const resolvedStatus = typeof statusCode === 'number'
+    ? statusCode
+    : typeof status === 'number'
+      ? status
+      : 0;
 
-  if (status === 400) return 'validation';
-  if (status === 401) return 'authentication';
-  if (status === 403) return 'authorization';
-  if (status === 404) return 'not_found';
-  if (status === 409) return 'conflict';
-  if (status === 429) return 'rate_limit';
-  if (status >= 500) return 'server';
-  if (status >= 400) return 'client';
+  if (resolvedStatus === 400) return 'validation';
+  if (resolvedStatus === 401) return 'authentication';
+  if (resolvedStatus === 403) return 'authorization';
+  if (resolvedStatus === 404) return 'not_found';
+  if (resolvedStatus === 409) return 'conflict';
+  if (resolvedStatus === 429) return 'rate_limit';
+  if (resolvedStatus >= 500) return 'server';
+  if (resolvedStatus >= 400) return 'client';
 
   return 'unknown';
 }

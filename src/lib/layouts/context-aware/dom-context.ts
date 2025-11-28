@@ -114,9 +114,7 @@ export class DOMContextTracker {
    * @returns The singleton instance
    */
   public static getInstance(config?: Partial<ContextTrackingConfig>): DOMContextTracker {
-    if (!DOMContextTracker.instance) {
-      DOMContextTracker.instance = new DOMContextTracker(config);
-    }
+    DOMContextTracker.instance ??= new DOMContextTracker(config);
     return DOMContextTracker.instance;
   }
 
@@ -142,7 +140,7 @@ export class DOMContextTracker {
    */
   public getElementId(element: Element): string {
     let id = this.elementIds.get(element);
-    if (!id) {
+    if (id === null || id === undefined || id === '') {
       id = `dom-ctx-${++elementIdCounter}`;
       this.elementIds.set(element, id);
     }
@@ -286,8 +284,8 @@ export class DOMContextTracker {
   public clearAllCaches(): void {
     // WeakMaps don't have a clear method, so we create new ones
     // The old ones will be garbage collected
-    if (this.config.debug) {
-      console.debug('[DOMContextTracker] Clearing all caches');
+    if (this.config.debug === true) {
+      console.info('[DOMContextTracker] Clearing all caches');
     }
   }
 

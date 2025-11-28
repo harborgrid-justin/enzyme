@@ -124,8 +124,8 @@ export class ResourcePermissionManager {
     };
 
     this.acls.set(aclKey, acl);
-    const firstEntry = acl.entries[0];
-    if (firstEntry) this.indexPermission(firstEntry);
+    const [firstEntry] = acl.entries;
+    if (firstEntry != null) this.indexPermission(firstEntry);
 
     return acl;
   }
@@ -276,8 +276,8 @@ export class ResourcePermissionManager {
     );
 
     if (index !== -1) {
-      const removed = acl.entries.splice(index, 1)[0];
-      if (removed) this.removePermissionIndex(removed);
+      const [removed] = acl.entries.splice(index, 1);
+      if (removed != null) this.removePermissionIndex(removed);
       acl.version++;
       acl.updatedAt = new Date().toISOString();
     }

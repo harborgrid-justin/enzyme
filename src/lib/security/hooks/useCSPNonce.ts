@@ -78,11 +78,16 @@ export function useCSPNonce(
   useEffect(() => {
     if (autoInitialize && !CSPManager.isInitialized()) {
       CSPManager.initialize();
-      try {
-        setNonce(CSPManager.getCurrentNonce());
-      } catch {
-        // Keep the generated nonce
-      }
+      // Schedule nonce update for next render to avoid cascading renders
+      Promise.resolve().then(() => {
+        try {
+          setNonce(CSPManager.getCurrentNonce());
+        } catch {
+          // Keep the generated nonce
+        }
+      }).catch(() => {
+        // Ignore errors
+      });
     }
     return undefined;
   }, [autoInitialize]);

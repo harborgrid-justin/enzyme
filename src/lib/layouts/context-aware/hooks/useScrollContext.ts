@@ -69,7 +69,7 @@ export function useScrollContext(): UseScrollContextReturn {
 
   // Fall back to DOM context
   const domContext = useDOMContextValue();
-  const scrollContainer = containerContext || domContext.scrollContainer;
+  const scrollContainer = containerContext ?? domContext.scrollContainer;
 
   // Create scroll control functions
   const scrollTo = useCallback(

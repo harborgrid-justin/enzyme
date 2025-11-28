@@ -279,9 +279,9 @@ export class RuntimeConfigManager {
    * Enable configuration persistence.
    */
   enablePersistence(storageKey?: string): void {
-    (this.options as any).persist = true;
-    if (storageKey) {
-      (this.options as any).storageKey = storageKey;
+    (this.options as { persist?: boolean; storageKey?: string }).persist = true;
+    if (storageKey != null && storageKey !== '') {
+      (this.options as { persist?: boolean; storageKey?: string }).storageKey = storageKey;
     }
     this.saveToStorage();
   }
@@ -290,7 +290,7 @@ export class RuntimeConfigManager {
    * Disable configuration persistence.
    */
   disablePersistence(): void {
-    (this.options as any).persist = false;
+    (this.options as { persist?: boolean }).persist = false;
   }
 
   /**

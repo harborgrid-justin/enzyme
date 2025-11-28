@@ -232,11 +232,11 @@ export class EndpointRegistry implements IEndpointRegistry {
     });
 
     // Log deprecation warning
-    if (definition.deprecated) {
+    if (definition.deprecated === true) {
       console.warn(
         `[EndpointRegistry] Endpoint "${definition.name}" is deprecated.`,
         definition.deprecationMessage ?? '',
-        definition.replacedBy ? `Use "${definition.replacedBy}" instead.` : ''
+        (definition.replacedBy != null && definition.replacedBy !== '') ? `Use "${definition.replacedBy}" instead.` : ''
       );
     }
   }

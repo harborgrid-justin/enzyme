@@ -402,11 +402,13 @@ export function useLibConfigEnvironment(): string {
 
   useEffect(() => {
     if (!initializedRef.current) {
-      initializedRef.current = true;
-      const currentEnv = getConfigRegistry().getEnvironment();
-      if (currentEnv !== env) {
-        setEnv(currentEnv);
-      }
+      queueMicrotask(() => {
+        initializedRef.current = true;
+        const currentEnv = getConfigRegistry().getEnvironment();
+        if (currentEnv !== env) {
+          setEnv(currentEnv);
+        }
+      });
     }
   }, [env]);
 

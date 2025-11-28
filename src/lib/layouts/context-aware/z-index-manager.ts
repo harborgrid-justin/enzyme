@@ -138,9 +138,7 @@ export class ZIndexManager {
    * Gets the singleton instance.
    */
   public static getInstance(config?: Partial<ContextTrackingConfig>): ZIndexManager {
-    if (!ZIndexManager.instance) {
-      ZIndexManager.instance = new ZIndexManager(config);
-    }
+    ZIndexManager.instance ??= new ZIndexManager(config);
     return ZIndexManager.instance;
   }
 

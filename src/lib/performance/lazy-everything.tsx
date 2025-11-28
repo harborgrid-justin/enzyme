@@ -178,9 +178,7 @@ class ObserverPool {
   }
 
   static getInstance(): ObserverPool {
-    if (!ObserverPool.instance) {
-      ObserverPool.instance = new ObserverPool();
-    }
+    ObserverPool.instance ??= new ObserverPool();
     return ObserverPool.instance;
   }
 

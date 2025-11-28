@@ -3,6 +3,7 @@
  * @description Types for feature configuration (roles, flags, metadata)
  */
 
+import type React from 'react';
 import type { Role } from '../auth/types';
 
 /**

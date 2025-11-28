@@ -34,10 +34,10 @@ export function announceToScreenReader(message: string, priority: 'polite' | 'as
 
   // Update message
   liveRegion.textContent = message;
-  
+
   // Clear after delay to allow re-announcing same message
   setTimeout(() => {
-    if (liveRegion) {
+    if (liveRegion !== null) {
       liveRegion.textContent = '';
     }
   }, 1000);
@@ -82,8 +82,8 @@ export function trapFocus(container: HTMLElement): () => void {
   const focusableElements = container.querySelectorAll<HTMLElement>(
     'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
   );
-  
-  const firstElement = focusableElements[0];
+
+  const [firstElement] = focusableElements;
   const lastElement = focusableElements[focusableElements.length - 1];
   
   const handleKeyDown = (e: KeyboardEvent): void => {
@@ -118,13 +118,13 @@ export function trapFocus(container: HTMLElement): () => void {
 export function getAccessibleLabel(element: HTMLElement): string {
   // Check aria-label
   const ariaLabel = element.getAttribute('aria-label');
-  if (ariaLabel) return ariaLabel;
-  
+  if (ariaLabel !== null && ariaLabel !== '') return ariaLabel;
+
   // Check aria-labelledby
   const labelledBy = element.getAttribute('aria-labelledby');
-  if (labelledBy) {
+  if (labelledBy !== null && labelledBy !== '') {
     const labelElement = document.getElementById(labelledBy);
-    if (labelElement) return labelElement.textContent || '';
+    if (labelElement !== null) return labelElement.textContent ?? '';
   }
   
   // Check associated label
@@ -142,13 +142,13 @@ export function getAccessibleLabel(element: HTMLElement): string {
  */
 export function isFocusable(element: HTMLElement): boolean {
   const tabindex = element.getAttribute('tabindex');
-  if (tabindex && parseInt(tabindex) < 0) return false;
-  
+  if (tabindex !== null && tabindex !== '' && parseInt(tabindex) < 0) return false;
+
   const focusableTags = ['A', 'BUTTON', 'INPUT', 'TEXTAREA', 'SELECT'];
   if (focusableTags.includes(element.tagName)) {
     return !element.hasAttribute('disabled');
   }
-  
+
   return tabindex !== null;
 }
 
@@ -188,11 +188,15 @@ export function prefersReducedMotion(): boolean {
 /**
  * Get ARIA attributes for loading state
  */
-export function getLoadingAriaAttributes(isLoading: boolean, label?: string) {
+export function getLoadingAriaAttributes(isLoading: boolean, label?: string): {
+  'aria-busy': boolean;
+  'aria-live': 'polite';
+  'aria-label'?: string;
+} {
   return {
     'aria-busy': isLoading,
     'aria-live': 'polite' as const,
-    ...(label && { 'aria-label': label }),
+    ...(label !== undefined ? { 'aria-label': label } : {}),
   };
 }
 

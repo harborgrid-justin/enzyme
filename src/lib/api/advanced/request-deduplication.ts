@@ -383,7 +383,7 @@ export function createDeduplicatedFetch(
     } else if (input instanceof URL) {
       url = input.toString();
     } else {
-      url = input.url;
+      ({ url } = input);
     }
 
     const method = init?.method ?? 'GET';

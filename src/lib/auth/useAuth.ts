@@ -4,7 +4,15 @@ import type { Role, Permission } from './types';
 /**
  * Hook exposing { user, roles, login, logout, hasRole }.
  */
-export function useAuth() {
+export function useAuth(): ReturnType<typeof useAuthContext> & {
+  roles: Role[];
+  permissions: Permission[];
+  displayName: string;
+  email: string;
+  avatarUrl: string | undefined;
+  isAdmin: boolean;
+  isManager: boolean;
+} {
   const {
     user,
     isAuthenticated,

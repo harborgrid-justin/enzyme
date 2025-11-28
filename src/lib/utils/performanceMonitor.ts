@@ -548,7 +548,7 @@ export class WebVitalsCollector {
    */
   getVitals(): WebVitals {
     // Calculate TTFB
-    if (typeof window !== 'undefined' && window.performance) {
+    if (typeof window !== 'undefined' && window.performance !== undefined) {
       const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
       if (navigation !== undefined) {
         this.vitals.TTFB = navigation.responseStart - navigation.requestStart;
@@ -598,7 +598,7 @@ export const resourceTiming = {
    * Get all resource timing entries
    */
   getEntries(): PerformanceResourceTiming[] {
-    if (typeof window === 'undefined' || !window.performance) {
+    if (typeof window === 'undefined' || window.performance === undefined) {
       return [];
     }
     return performance.getEntriesByType('resource');

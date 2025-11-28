@@ -10,6 +10,7 @@
  * - Loading state composition
  * - Accessible announcements
  * - Custom spinners and loaders
+ * @refresh reset
  */
 
 import React, {
@@ -469,14 +470,18 @@ export function ProgressiveLoader({
         setTimeout(() => setPhase('spinner'), config.spinnerDelay)
       );
 
-      if (skeletonPlaceholder) {
+      if (skeletonPlaceholder !== undefined && skeletonPlaceholder !== null) {
         phaseTimers.current.push(
-          setTimeout(() => setPhase('skeleton'), config.skeletonDelay)
+          setTimeout(() => {
+            setPhase('skeleton');
+          }, config.skeletonDelay)
         );
       }
 
       phaseTimers.current.push(
-        setTimeout(() => setPhase('message'), config.messageDelay)
+        setTimeout(() => {
+          setPhase('message');
+        }, config.messageDelay)
       );
 
       phaseTimers.current.push(

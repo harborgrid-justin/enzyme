@@ -20,7 +20,7 @@ beforeAll(() => {
     writable: true,
     value: vi.fn().mockImplementation((query: string) => {
       const mediaQueryList = {
-        matches: query === '(prefers-color-scheme: dark)' ? false : false,
+        matches: false,
         media: query,
         onchange: null as ((this: MediaQueryList, ev: MediaQueryListEvent) => unknown) | null,
         addListener: vi.fn(),
@@ -114,7 +114,7 @@ const originalError = console.error;
 beforeAll(() => {
   console.error = (...args: unknown[]) => {
     // Filter out expected React warnings during tests
-    const message = args[0];
+    const [message] = args;
     if (
       typeof message === 'string' &&
       (message.includes('Warning: ReactDOM.render is no longer supported') ||

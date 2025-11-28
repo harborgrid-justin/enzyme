@@ -4,7 +4,8 @@ import {
   useEffect,
   useCallback,
   useMemo,
-  type ReactNode
+  type ReactNode,
+  type JSX
 } from 'react';
 import { AuthContext } from '../contexts/AuthContext';
 import { authService } from './authService';
@@ -214,6 +215,7 @@ export function AuthProvider({ children }: AuthProviderProps): JSX.Element {
 /**
  * Hook to access auth context.
  */
+// @refresh reset
 export function useAuthContext(): AuthContextValue {
   const context = useContext(AuthContext);
   if (!context) {

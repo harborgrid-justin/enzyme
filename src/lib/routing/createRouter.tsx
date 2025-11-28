@@ -59,7 +59,7 @@ function DefaultError(): ReactNode {
   let errorStatus = 500;
 
   if (isRouteErrorResponse(error)) {
-    errorMessage = error.statusText || error.data?.message || errorMessage;
+    errorMessage = error.statusText ?? (error.data?.message as string | undefined) ?? errorMessage;
     errorStatus = error.status;
   } else if (error instanceof Error) {
     errorMessage = error.message;

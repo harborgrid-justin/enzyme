@@ -222,7 +222,7 @@ function deepFreeze<T extends object>(obj: T): DeepReadonly<T> {
   for (const name of propNames) {
     const value = (obj as Record<string, unknown>)[name];
 
-    if (value && typeof value === 'object' && !Object.isFrozen(value)) {
+    if (value != null && typeof value === 'object' && !Object.isFrozen(value)) {
       deepFreeze(value);
     }
   }
@@ -282,9 +282,7 @@ export class ConfigRegistry implements IConfigRegistry {
    * Get the singleton instance.
    */
   static getInstance(): ConfigRegistry {
-    if (!ConfigRegistry.instance) {
-      ConfigRegistry.instance = new ConfigRegistry();
-    }
+    ConfigRegistry.instance ??= new ConfigRegistry();
     return ConfigRegistry.instance;
   }
 

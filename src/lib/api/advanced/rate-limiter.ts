@@ -370,7 +370,7 @@ export class RateLimiter {
       }
 
       this.serverLimits.set(key, {
-        remaining: remaining ? parseInt(remaining, 10) : 0,
+        remaining: (remaining != null && remaining !== '') ? parseInt(remaining, 10) : 0,
         resetAt,
       });
     }

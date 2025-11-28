@@ -195,18 +195,18 @@ export abstract class BaseSchema<TOutput> {
   /**
    * Async parse and validate
    */
-  async parseAsync(value: unknown, options?: ParseOptions): Promise<TOutput> {
-    return this.parse(value, options);
+  parseAsync(value: unknown, options?: ParseOptions): Promise<TOutput> {
+    return Promise.resolve(this.parse(value, options));
   }
 
   /**
    * Async safeParse
    */
-  async safeParseAsync(
+  safeParseAsync(
     value: unknown,
     options?: ParseOptions
   ): AsyncValidationResult<TOutput> {
-    return this.safeParse(value, options);
+    return Promise.resolve(this.safeParse(value, options));
   }
 
   /**
@@ -265,7 +265,7 @@ export abstract class BaseSchema<TOutput> {
   ): ValidationIssue {
     return {
       code,
-      message: this._message || message,
+      message: this._message ?? message,
       path,
       ...context,
     };

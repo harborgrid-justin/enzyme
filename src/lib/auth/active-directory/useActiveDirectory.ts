@@ -301,7 +301,7 @@ export function useActiveDirectory(): UseActiveDirectoryReturn {
   const handleRefreshTokens = useCallback(async () => {
     const result = await refreshTokens();
     if (!result.success && result.error) {
-      throw result.error;
+      throw new Error(result.error.message ?? 'Token refresh failed');
     }
   }, [refreshTokens]);
 
@@ -379,7 +379,12 @@ export function useActiveDirectory(): UseActiveDirectoryReturn {
  * }
  * ```
  */
-export function useADGroups() {
+export function useADGroups(): {
+  groups: ADGroup[];
+  isInGroup: (groupId: string) => boolean;
+  isInAnyGroup: (groupIds: string[]) => boolean;
+  isInAllGroups: (groupIds: string[]) => boolean;
+} {
   const { groups, isInGroup, isInAnyGroup, isInAllGroups } = useActiveDirectory();
   return { groups, isInGroup, isInAnyGroup, isInAllGroups };
 }

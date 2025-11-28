@@ -1,3 +1,4 @@
+/* @refresh reset */
 /**
  * @file With Error Boundary HOC
  * @description HOC to wrap any component with local try/catch UI
@@ -132,8 +133,8 @@ function createErrorBoundary(
         if (typeof options.fallback === 'function') {
           return options.fallback(error, this.handleReset);
         }
-        
-        if (options.fallback) {
+
+        if (options.fallback != null) {
           return options.fallback;
         }
         
@@ -159,9 +160,9 @@ export function withErrorBoundary<P extends object>(
   options: WithErrorBoundaryOptions = {}
 ): ComponentType<P> {
   const componentName =
-    options.componentName ||
-    WrappedComponent.displayName ||
-    WrappedComponent.name ||
+    options.componentName ??
+    WrappedComponent.displayName ??
+    WrappedComponent.name ??
     'Component';
   
   const ErrorBoundary = createErrorBoundary({

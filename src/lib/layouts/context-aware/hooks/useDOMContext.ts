@@ -8,7 +8,7 @@
  * @version 1.0.0
  */
 
-import { useRef, useEffect, useCallback, useMemo } from 'react';
+import { useRef, useEffect, useCallback, useMemo, useState, type RefObject } from 'react';
 
 import type {
   DOMContext,
@@ -111,7 +111,7 @@ export function useDOMContext(): UseDOMContextReturn {
  * ```
  */
 export function useDOMContextWithElement(
-  elementRef: React.RefObject<HTMLElement>
+  elementRef: RefObject<HTMLElement>
 ): {
   ancestors: readonly LayoutAncestor[];
   bounds: ReturnType<typeof getDOMContextTracker.prototype.getBounds> | null;
@@ -122,20 +122,32 @@ export function useDOMContextWithElement(
   const tracker = getDOMContextTracker();
 
   // Get element-specific information
-  const elementInfo = useMemo(() => {
-    if (!elementRef.current || context.isSSR) {
-      return {
+  const [elementInfo, setElementInfo] = useState<{
+    ancestors: readonly LayoutAncestor[];
+    bounds: ReturnType<typeof tracker.getBounds> | null;
+    layoutType: ReturnType<typeof tracker.getLayoutType> | null;
+  }>({
+    ancestors: [] as readonly LayoutAncestor[],
+    bounds: null,
+    layoutType: null,
+  });
+
+  useEffect(() => {
+    const element = elementRef.current;
+    if (!element || context.isSSR) {
+      setElementInfo({
         ancestors: [] as readonly LayoutAncestor[],
         bounds: null,
         layoutType: null,
-      };
+      });
+      return;
     }
 
-    return {
-      ancestors: tracker.getAncestry(elementRef.current),
-      bounds: tracker.getBounds(elementRef.current),
-      layoutType: tracker.getLayoutType(elementRef.current),
-    };
+    setElementInfo({
+      ancestors: tracker.getAncestry(element),
+      bounds: tracker.getBounds(element),
+      layoutType: tracker.getLayoutType(element),
+    });
   }, [elementRef, context.isSSR, context.lastUpdated, tracker]);
 
   // Refresh function

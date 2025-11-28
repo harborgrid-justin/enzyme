@@ -8,6 +8,8 @@
  * - 3.3.5 Help (Level AAA)
  */
 
+/* @refresh reset */
+
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFeatureFlag } from '../flags/useFeatureFlag';
 import { flagKeys } from '../flags/flagKeys';

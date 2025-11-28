@@ -402,5 +402,5 @@ export function useStoreSelector<T>(selector: StoreSelector<T>): T {
  * Use selector with shallow equality (for non-memoized objects/arrays)
  */
 export function useShallowSelector<T>(selector: StoreSelector<T>): T {
-  return useStore(selector as any);
+  return useStore(selector);
 }

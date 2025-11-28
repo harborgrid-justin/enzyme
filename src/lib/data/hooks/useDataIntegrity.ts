@@ -437,7 +437,7 @@ export function useIntegrityMonitor(
   }, [monitor]);
 
   const repair = useCallback(
-    async (options?: RepairOptions) => {
+    (options?: RepairOptions) => {
       return monitor.repair(entitiesRef.current, options);
     },
     [monitor]

@@ -313,7 +313,10 @@ export class DiscoveryEngine {
     if (!this.listeners.has(type)) {
       this.listeners.set(type, new Set());
     }
-    this.listeners.get(type)!.add(listener);
+    const listenersSet = this.listeners.get(type);
+    if (listenersSet) {
+      listenersSet.add(listener);
+    }
 
     // Return unsubscribe function
     return () => {

@@ -2,6 +2,7 @@
  * @file Toasts Component
  * @description Toast manager hooked into global state / error reporting
  * Uses theme tokens for consistent styling and z-index management
+ * @refresh reset
  */
 
 import React, {

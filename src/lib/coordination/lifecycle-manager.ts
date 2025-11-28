@@ -180,9 +180,9 @@ async function withTimeout<T>(
         clearTimeout(timeoutId);
         resolve(result);
       })
-      .catch((error) => {
+      .catch((error: unknown) => {
         clearTimeout(timeoutId);
-        reject(error);
+        reject(error instanceof Error ? error : new Error(String(error)));
       });
   });
 }
@@ -396,7 +396,7 @@ export class LifecycleManagerImpl implements LifecycleManager {
    */
   async suspend(): Promise<void> {
     const suspendable = Array.from(this.libraries.values()).filter(
-      (e) => e.suspend && e.state === 'running'
+      (e) => e.suspend != null && e.state === 'running'
     );
 
     await Promise.all(

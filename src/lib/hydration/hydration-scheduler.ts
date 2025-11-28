@@ -139,7 +139,7 @@ async function yieldToMain(): Promise<void> {
   return new Promise((resolve) => {
     if (hasSchedulerYieldAPI(window)) {
       // Use scheduler.yield if available (modern browsers)
-      window.scheduler.yield().then(resolve);
+      void window.scheduler.yield().then(resolve);
     } else {
       // Fallback to setTimeout
       setTimeout(resolve, 0);
@@ -595,7 +595,10 @@ export class HydrationScheduler {
     if (!this.eventListeners.has(type)) {
       this.eventListeners.set(type, new Set());
     }
-    this.eventListeners.get(type)!.add(listener);
+    const listeners = this.eventListeners.get(type);
+    if (listeners) {
+      listeners.add(listener);
+    }
 
     return () => {
       this.eventListeners.get(type)?.delete(listener);

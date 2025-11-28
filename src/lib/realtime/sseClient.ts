@@ -210,7 +210,7 @@ export class SSEClient {
     // Setup listeners for configured event types
     const eventTypes = [
       ...new Set([
-        ...(this.config.eventTypes || ['message']),
+        ...(this.config.eventTypes ?? ['message']),
         ...this.messageHandlers.keys(),
       ]),
     ];
@@ -245,11 +245,11 @@ export class SSEClient {
    */
   private createEventHandler(eventType: string): (event: MessageEvent) => void {
     return (event: MessageEvent) => {
-      let {data} = event;
-      
+      let data: unknown = event.data;
+
       // Try to parse JSON
       try {
-        data = JSON.parse(event.data as string);
+        data = JSON.parse(event.data as string) as unknown;
       } catch {
         // Keep as string if not valid JSON
       }

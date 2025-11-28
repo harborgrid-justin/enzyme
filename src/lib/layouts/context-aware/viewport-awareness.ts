@@ -156,9 +156,7 @@ export class ViewportTracker {
    * @returns ViewportTracker instance
    */
   public static getInstance(config?: Partial<ContextTrackingConfig>): ViewportTracker {
-    if (!ViewportTracker.instance) {
-      ViewportTracker.instance = new ViewportTracker(config);
-    }
+    ViewportTracker.instance ??= new ViewportTracker(config);
     return ViewportTracker.instance;
   }
 

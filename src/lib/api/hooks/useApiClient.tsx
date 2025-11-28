@@ -145,7 +145,7 @@ export function ApiClientProvider({
   client: customClient,
   onTokenRefresh,
   onError,
-}: ApiClientProviderProps) {
+}: ApiClientProviderProps): JSX.Element {
   // Create or use provided client
   const [client] = useState<ApiClient>(() => {
     if (customClient) return customClient;
@@ -153,7 +153,7 @@ export function ApiClientProvider({
     return apiClient;
   });
 
-  const [currentConfig, setCurrentConfig] = useState<ApiClientConfig | null>(config || null);
+  const [currentConfig, setCurrentConfig] = useState<ApiClientConfig | null>(config ?? null);
 
   // Set up token refresh
   useEffect(() => {

@@ -181,15 +181,13 @@ export function useApiHealth(config?: UseApiHealthConfig): UseApiHealthResult {
 
   // Calculate average latency
   // Using ref for latencyHistory is intentional to avoid re-renders on every update
-   
-  const averageLatency = useMemo(() => {
-     
+  // Calculate directly to avoid React Compiler issues with ref access in useMemo
+  const calculateAverageLatency = (): number | null => {
     if (latencyHistory.current.length === 0) return null;
-     
     const sum = latencyHistory.current.reduce((a, b) => a + b, 0);
-     
     return Math.round(sum / latencyHistory.current.length);
-  }, [latency]);
+  };
+  const averageLatency = calculateAverageLatency();
 
   // Health check function
   const performHealthCheck = useCallback(async (): Promise<HealthCheckResult> => {

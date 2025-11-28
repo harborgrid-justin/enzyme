@@ -266,7 +266,8 @@ export class RuntimeConfig<T extends ConfigRecord = ConfigRecord> {
 
     // Reverse the pending changes
     for (let i = this.pendingChanges.length - 1; i >= 0; i--) {
-      const change = this.pendingChanges[i]!;
+      const change = this.pendingChanges[i];
+      if (change == null) continue;
       if (change.previousValue !== undefined) {
         this.config = setValueAtPath(this.config, change.path, change.previousValue) as T;
       } else {
@@ -305,11 +306,15 @@ export class RuntimeConfig<T extends ConfigRecord = ConfigRecord> {
       return false;
     }
 
-    const entry = this.history.pop()!;
+    const entry = this.history.pop();
+    if (entry == null) {
+      return false;
+    }
 
     // Reverse the changes
     for (let i = entry.changes.length - 1; i >= 0; i--) {
-      const change = entry.changes[i]!;
+      const change = entry.changes[i];
+      if (change == null) continue;
       if (change.previousValue !== undefined) {
         this.config = setValueAtPath(this.config, change.path, change.previousValue) as T;
       } else {

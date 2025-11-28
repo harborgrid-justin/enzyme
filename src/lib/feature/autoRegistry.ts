@@ -225,7 +225,7 @@ export async function initializeFeatureRegistry(): Promise<FeatureDiscoveryResul
     initialized = true;
 
     if (isDev()) {
-      console.log('[FeatureRegistry] Initialization complete:', {
+      console.info('[FeatureRegistry] Initialization complete:', {
         registered: result.registered.length,
         failed: result.failed.length,
         skipped: result.skipped.length,

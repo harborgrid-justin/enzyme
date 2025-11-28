@@ -101,9 +101,12 @@ export class ADGroupMapper {
     const cacheKey = this.getCacheKey(groups);
 
     // Check cache
-    if (this.config.cacheDuration && this.cache.has(cacheKey)) {
+    if ((this.config.cacheDuration != null && this.config.cacheDuration > 0) && this.cache.has(cacheKey)) {
       if (Date.now() < this.cacheExpiry) {
-        return this.cache.get(cacheKey)!;
+        const cachedResult = this.cache.get(cacheKey);
+        if (cachedResult != null) {
+          return cachedResult;
+        }
       }
     }
 

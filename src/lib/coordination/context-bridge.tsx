@@ -1,3 +1,4 @@
+/* @refresh reset */
 /**
  * @file Context Bridge
  * @module coordination/context-bridge

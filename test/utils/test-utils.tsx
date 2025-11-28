@@ -26,7 +26,7 @@ interface TestWrapperProps extends PropsWithChildren {
 /**
  * Default test wrapper with common providers
  */
-function TestWrapper({ children }: TestWrapperProps): ReactElement {
+export function TestWrapper({ children }: TestWrapperProps): ReactElement {
   return <>{children}</>;
 }
 
@@ -51,13 +51,13 @@ interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
  *
  * @example
  * ```tsx
- * const { getByRole } = customRender(<MyComponent />, {
+ * const { getByRole } = renderWithProviders(<MyComponent />, {
  *   authenticated: true,
  *   initialState: { theme: 'dark' }
  * });
  * ```
  */
-export function customRender(
+export function renderWithProviders(
   ui: ReactElement,
   options: CustomRenderOptions = {}
 ): RenderResult {
@@ -70,7 +70,7 @@ export function customRender(
       </TestWrapper>
     );
 
-    if (CustomWrapper) {
+    if (CustomWrapper !== undefined) {
       return <CustomWrapper>{content}</CustomWrapper>;
     }
 
@@ -80,18 +80,22 @@ export function customRender(
   return render(ui, { wrapper: Wrapper, ...renderOptions });
 }
 
+// Keep legacy export for backward compatibility
+// eslint-disable-next-line react-refresh/only-export-components
+export const customRender = renderWithProviders;
+
 /**
  * Custom render hook function with providers
  *
  * @example
  * ```tsx
- * const { result } = customRenderHook(() => useMyHook(), {
+ * const { result } = renderHookWithProviders(() => useMyHook(), {
  *   authenticated: true
  * });
  * expect(result.current.value).toBe('expected');
  * ```
  */
-export function customRenderHook<TResult, TProps>(
+export function renderHookWithProviders<TResult, TProps>(
   hook: (props: TProps) => TResult,
   options: Omit<RenderHookOptions<TProps>, 'wrapper'> & CustomRenderOptions = {}
 ): RenderHookResult<TResult, TProps> {
@@ -107,6 +111,10 @@ export function customRenderHook<TResult, TProps>(
 
   return renderHook(hook, { wrapper: Wrapper, ...hookOptions });
 }
+
+// Keep legacy export for backward compatibility
+// eslint-disable-next-line react-refresh/only-export-components
+export const customRenderHook = renderHookWithProviders;
 
 // ============================================================================
 // Mock Factories
@@ -435,12 +443,12 @@ export function createMockSecureStorage(): MockSecureStorage {
   const store = new Map<string, unknown>();
 
   return {
-    getItem: vi.fn(async (key: string) => {
+    getItem: vi.fn((key: string) => {
       const value = store.get(key);
       if (value === undefined) {
-        return { success: true, data: undefined };
+        return Promise.resolve({ success: true, data: undefined });
       }
-      return { success: true, data: value };
+      return Promise.resolve({ success: true, data: value });
     }),
     setItem: vi.fn(async (key: string, value: unknown) => {
       store.set(key, value);

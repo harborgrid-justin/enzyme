@@ -231,7 +231,7 @@ export const Button = memo(forwardRef<HTMLButtonElement, ButtonProps>((
   },
   ref
 ): React.ReactElement => {
-  const isDisabled = disabled || isLoading;
+  const isDisabled = (disabled ?? false) || isLoading;
   const sizeProps = sizeConfig[size];
   const variantProps = variantStyles[variant];
 
@@ -259,15 +259,15 @@ export const Button = memo(forwardRef<HTMLButtonElement, ButtonProps>((
   const spinnerSize = size === 'lg' ? 'md' : 'sm';
 
   // Render icon with proper sizing
-  const renderIcon = (icon: React.ReactNode, position: 'left' | 'right') => {
-    if (!icon) return null;
+  const renderIcon = (icon: React.ReactNode, position: 'left' | 'right'): React.ReactElement | null => {
+    if (icon === null || icon === undefined) return null;
 
     return (
       <span
         style={{
           ...iconContainerStyle,
-          marginRight: position === 'left' && children ? sizeProps.gap : undefined,
-          marginLeft: position === 'right' && children ? sizeProps.gap : undefined,
+          marginRight: (position === 'left' && (children !== null && children !== undefined)) ? sizeProps.gap : undefined,
+          marginLeft: (position === 'right' && (children !== null && children !== undefined)) ? sizeProps.gap : undefined,
         }}
         aria-hidden="true"
       >

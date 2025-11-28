@@ -389,7 +389,7 @@ export function useDeferredHydration(
 
       // Schedule new hydration
       scheduleTimeoutRef.current = setTimeout(() => {
-        performHydration();
+        void performHydration();
       }, delay);
 
       // Return cancel function
@@ -595,7 +595,7 @@ export function useIdleHydration(
     if ('requestIdleCallback' in window) {
       const handle = window.requestIdleCallback(
         () => {
-          deferredHydration.hydrate();
+          void deferredHydration.hydrate();
         },
         { timeout: idleTimeout }
       );
@@ -604,7 +604,7 @@ export function useIdleHydration(
     } else {
       // Fallback to setTimeout
       const timeoutId = setTimeout(() => {
-        deferredHydration.hydrate();
+        void deferredHydration.hydrate();
       }, idleTimeout);
 
       return () => clearTimeout(timeoutId);

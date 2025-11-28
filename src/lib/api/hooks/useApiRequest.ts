@@ -127,15 +127,8 @@ export function useApiRequest<TResponse = unknown>(
   const { client } = useApiClient();
   const queryClient = useQueryClient();
 
-  // Stabilize query key
-  const queryKeyRef = useRef(options.queryKey);
-  const queryKeyJson = JSON.stringify(options.queryKey);
-
-  if (JSON.stringify(queryKeyRef.current) !== queryKeyJson) {
-    queryKeyRef.current = options.queryKey;
-  }
-
-  const stableQueryKey = queryKeyRef.current;
+  // Stabilize query key using useMemo to avoid ref access during render
+  const stableQueryKey = useMemo(() => options.queryKey, [JSON.stringify(options.queryKey)]);
 
   // Build the request URL with path params
   const url = useMemo(() => {
@@ -540,19 +533,19 @@ export function usePolling<TResponse = unknown>(
   startPolling: () => void;
   stopPolling: () => void;
 } {
-  const shouldStop = useRef(false);
+  const [shouldStop, setShouldStop] = useState(false);
 
   const refetchIntervalFn = useCallback((query: any) => {
-    if (shouldStop.current) return false;
+    if (shouldStop) return false;
 
     const {data} = query.state;
     if (data && options.stopCondition?.(data)) {
-      shouldStop.current = true;
+      setShouldStop(true);
       return false;
     }
 
     return options.interval;
-  }, [options.interval, options.stopCondition]);
+  }, [options.interval, options.stopCondition, shouldStop]);
 
   const result = useApiRequest<TResponse>({
     ...options,
@@ -560,17 +553,17 @@ export function usePolling<TResponse = unknown>(
   });
 
   const startPolling = useCallback(() => {
-    shouldStop.current = false;
+    setShouldStop(false);
     result.refetch();
   }, [result]);
 
   const stopPolling = useCallback(() => {
-    shouldStop.current = true;
+    setShouldStop(true);
   }, []);
 
   return {
     ...result,
-    isPolling: !shouldStop.current && result.isFetching,
+    isPolling: !shouldStop && result.isFetching,
     startPolling,
     stopPolling,
   };

@@ -221,7 +221,7 @@ export function useApiMutation<
 
       return response.data;
     },
-    [client, config.url, config.method, config.requestOptions]
+    [client, config]
   );
 
   // Build onMutate handler with optimistic update support

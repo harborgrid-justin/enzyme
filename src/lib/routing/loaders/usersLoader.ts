@@ -5,12 +5,12 @@ import { usersListQueryOptions, userDetailQueryOptions } from '@/lib/queries/use
 /**
  * Data router loader that prefetches users data before rendering.
  */
-export async function usersLoader({ request, params }: LoaderFunctionArgs) {
+export async function usersLoader({ request, params }: LoaderFunctionArgs): Promise<null> {
   const url = new URL(request.url);
   const userId = params.id;
 
   // If viewing a specific user, prefetch it
-  if (userId) {
+  if (userId !== null && userId !== undefined && userId !== '') {
     await queryClient.prefetchQuery(userDetailQueryOptions(userId));
   } else {
     // Otherwise, prefetch the users list

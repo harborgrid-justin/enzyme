@@ -13,7 +13,7 @@
  * - React 18 concurrent features integration
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type DependencyList } from 'react';
 
 // ============================================================================
 // Utility Hook for Dynamic Dependencies
@@ -23,9 +23,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
  * Custom hook to track dependency array changes with a stable version number.
  * This allows proper ESLint compliance when using dynamic dependency arrays.
  */
-function useDepsVersion(deps: React.DependencyList): number {
+function useDepsVersion(deps: DependencyList): number {
   const versionRef = useRef(0);
-  const prevDepsRef = useRef<React.DependencyList>(deps);
+  const prevDepsRef = useRef<DependencyList>(deps);
 
   // Compare deps and increment version if changed
   const depsChanged =

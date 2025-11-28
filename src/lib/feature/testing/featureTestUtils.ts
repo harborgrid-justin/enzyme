@@ -83,14 +83,14 @@ export function FeatureTestWrapper({
  */
 export function createFeatureRenderer(
   defaultOptions: Partial<FeatureTestWrapperProps> = {}
-) {
+): (ui: ReactElement, options?: Partial<FeatureTestWrapperProps>) => RenderResult {
   return function renderFeature(
     ui: ReactElement,
     options: Partial<FeatureTestWrapperProps> = {}
-  ) {
+  ): RenderResult {
     const mergedOptions = { ...defaultOptions, ...options };
-    const queryClient = mergedOptions.queryClient || createTestQueryClient();
-    const diContainer = mergedOptions.diContainer || new FeatureDIContainer();
+    const queryClient = mergedOptions.queryClient ?? createTestQueryClient();
+    const diContainer = mergedOptions.diContainer ?? new FeatureDIContainer();
 
     return {
       element: React.createElement(

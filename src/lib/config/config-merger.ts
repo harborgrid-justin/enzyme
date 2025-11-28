@@ -201,8 +201,11 @@ export function getValueAtPath<T = ConfigValue>(
     // Handle array indexing
     const arrayMatch = part.match(/^(\w+)\[(\d+)\]$/);
     if (arrayMatch) {
-      const key = arrayMatch[1]!;
-      const index = arrayMatch[2]!;
+      const key = arrayMatch[1];
+      const index = arrayMatch[2];
+      if (key == null || index == null) {
+        return defaultValue as T;
+      }
       const obj = current as Record<string, unknown>;
       const arr = obj[key];
       if (!Array.isArray(arr)) {

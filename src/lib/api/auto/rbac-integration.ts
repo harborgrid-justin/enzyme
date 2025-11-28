@@ -266,7 +266,7 @@ export function extractResourceFromPath(path: string): string {
   // Find the last non-empty segment
   for (let i = segments.length - 1; i >= 0; i--) {
     const segment = segments[i];
-    if (segment && !segment.startsWith(':') && !segment.startsWith('{')) {
+    if ((segment != null && segment !== '') && !segment.startsWith(':') && !segment.startsWith('{')) {
       return segment;
     }
   }
@@ -496,7 +496,7 @@ export class RBACIntegration {
     }
 
     // Check authentication
-    if (access.requiresAuth && (!user?.isAuthenticated)) {
+    if (access.requiresAuth && !(user?.isAuthenticated === true)) {
       return this.createResult('requires_auth', 'Authentication required', startTime, false);
     }
 
@@ -656,7 +656,7 @@ export class RBACIntegration {
     const startTime = performance.now();
     const resourceId = params[check.resourceIdParam];
 
-    if (!resourceId) {
+    if (resourceId == null || resourceId === '') {
       return this.createResult('deny', 'Resource ID not found in params', startTime, false);
     }
 

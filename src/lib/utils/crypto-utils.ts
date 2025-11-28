@@ -200,10 +200,12 @@ export function constantTimeCompare(a: string, b: string): boolean {
     // Still perform comparison to maintain constant time
     // Use a dummy comparison of same length
     const dummy = 'x'.repeat(Math.max(a.length, b.length));
-    let result = 0;
+    let dummyResult = 0;
     for (let i = 0; i < dummy.length; i++) {
-      result |= dummy.charCodeAt(i) ^ dummy.charCodeAt(i);
+      dummyResult |= dummy.charCodeAt(i) ^ dummy.charCodeAt(i);
     }
+    // Suppress unused variable warning
+    void dummyResult;
     return false;
   }
 

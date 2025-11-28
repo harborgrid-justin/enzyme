@@ -179,17 +179,27 @@ export function useSafeInnerHTML(
 
   useEffect(() => {
     if (!content) {
-      setResult({
-        html: '',
-        wasModified: false,
-        removedItems: [],
-        warnings: [],
+      // Schedule state update to avoid cascading renders
+      Promise.resolve().then(() => {
+        setResult({
+          html: '',
+          wasModified: false,
+          removedItems: [],
+          warnings: [],
+        });
+      }).catch(() => {
+        // Ignore errors
       });
       return;
     }
 
     const sanitized = sanitizeHTML(content, options);
-    setResult(sanitized);
+    // Schedule state update to avoid cascading renders
+    Promise.resolve().then(() => {
+      setResult(sanitized);
+    }).catch(() => {
+      // Ignore errors
+    });
   }, [content, options]);
 
   const props = useMemo(
@@ -254,11 +264,16 @@ export function useValidatedInput(
 
   useEffect(() => {
     if (!input) {
-      setState({
-        isValid: true,
-        threats: [],
-        preview: '',
-        sanitized: '',
+      // Schedule state update to avoid cascading renders
+      Promise.resolve().then(() => {
+        setState({
+          isValid: true,
+          threats: [],
+          preview: '',
+          sanitized: '',
+        });
+      }).catch(() => {
+        // Ignore errors
       });
       return;
     }
@@ -269,11 +284,16 @@ export function useValidatedInput(
     // Sanitize for preview
     const result = sanitizeHTML(input, options);
 
-    setState({
-      isValid: !detection.isDangerous,
-      threats: detection.details,
-      preview: result.html,
-      sanitized: result.html,
+    // Schedule state update to avoid cascading renders
+    Promise.resolve().then(() => {
+      setState({
+        isValid: !detection.isDangerous,
+        threats: detection.details,
+        preview: result.html,
+        sanitized: result.html,
+      });
+    }).catch(() => {
+      // Ignore errors
     });
   }, [input, options]);
 
@@ -395,7 +415,7 @@ export function useSafeHTMLWithReport(
     setReport(newReport);
 
     // Call report callback if threats detected
-    if (detection.isDangerous && onReport) {
+    if (detection.isDangerous && onReport != null) {
       onReport({
         originalContent: content,
         threats: detection.details,

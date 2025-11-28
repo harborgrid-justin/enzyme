@@ -305,8 +305,8 @@ export class PolicyEvaluator {
     }
 
     // Evaluate subjects
-    if (policy.subjects?.length) {
-      const subjectMatch = this.evaluateSubjects(policy.subjects, request);
+    if ((policy.subjects?.length ?? 0) > 0) {
+      const subjectMatch = this.evaluateSubjects(policy.subjects!, request);
       if (!subjectMatch) {
         return {
           policyId: policy.id,
@@ -317,7 +317,7 @@ export class PolicyEvaluator {
     }
 
     // Evaluate resources
-    if (policy.resources?.length) {
+    if ((policy.resources?.length ?? 0) > 0) {
       const resourceMatch = this.evaluateResources(policy.resources, request);
       if (!resourceMatch) {
         return {

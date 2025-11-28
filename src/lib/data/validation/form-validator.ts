@@ -176,7 +176,7 @@ export function minLength(length: number, message?: string): FieldRule<string> {
   return (value) => {
     if (typeof value !== 'string') return undefined;
     if (value.length < length) {
-      return message || `Must be at least ${length} characters`;
+      return message ?? `Must be at least ${length} characters`;
     }
     return undefined;
   };
@@ -189,7 +189,7 @@ export function maxLength(length: number, message?: string): FieldRule<string> {
   return (value) => {
     if (typeof value !== 'string') return undefined;
     if (value.length > length) {
-      return message || `Must be at most ${length} characters`;
+      return message ?? `Must be at most ${length} characters`;
     }
     return undefined;
   };

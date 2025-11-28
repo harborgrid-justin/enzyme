@@ -42,7 +42,16 @@ export function useTabParam(
 /**
  * Hook for getting current route information
  */
-export function useRouteInfo() {
+export function useRouteInfo(): {
+  pathname: string;
+  search: string;
+  hash: string;
+  state: unknown;
+  params: Record<string, string | undefined>;
+  query: Record<string, string>;
+  isExactMatch: (path: RoutePath) => boolean;
+  isActiveRoute: (path: string) => boolean;
+} {
   const location = useLocation();
   const params = useParams();
   const [searchParams] = useSearchParams();

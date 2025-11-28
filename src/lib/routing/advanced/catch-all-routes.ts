@@ -472,7 +472,7 @@ export class CatchAllRouteManager {
     // Sort by score (descending) - higher score = more specific
     matches.sort((a, b) => b.match.score - a.match.score);
 
-    const bestMatch = matches[0];
+    const [bestMatch] = matches;
     if (bestMatch == null) {
       throw new Error('No match found');
     }

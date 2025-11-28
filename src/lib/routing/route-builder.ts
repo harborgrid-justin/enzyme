@@ -67,7 +67,7 @@ export function createRouteBuilder<TPath extends string>(
   ): string => {
     // Validate required params
     if (requiredParams.length > 0) {
-      if (!params) {
+      if (params === null || params === undefined) {
         throw new Error(
           `Route "${path}" requires parameters: ${requiredParams.join(', ')}`
         );

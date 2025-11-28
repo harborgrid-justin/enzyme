@@ -1,3 +1,4 @@
+/* @refresh reset */
 /**
  * @file Hierarchical Error Boundary System
  * @description Multi-level error boundaries with context-aware recovery

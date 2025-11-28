@@ -1,3 +1,4 @@
+/* @refresh reset */
 /**
  * @file Create Feature Page
  * @description Factory to generate standardized feature pages (auth + flags + vm + view)

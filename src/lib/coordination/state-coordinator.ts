@@ -215,7 +215,7 @@ export class StateCoordinatorImpl implements StateCoordinator {
     this.slices.set(registration.id, entry as SliceEntry);
 
     if (this.config.debug) {
-      console.debug(`[StateCoordinator] Registered slice: ${registration.id}`);
+      console.info(`[StateCoordinator] Registered slice: ${registration.id}`);
     }
   }
 
@@ -262,7 +262,7 @@ export class StateCoordinatorImpl implements StateCoordinator {
     this.syncRules.set(rule.id, rule as StateSyncRule);
 
     if (this.config.debug) {
-      console.debug(`[StateCoordinator] Added sync rule: ${rule.id}`);
+      console.info(`[StateCoordinator] Added sync rule: ${rule.id}`);
     }
   }
 

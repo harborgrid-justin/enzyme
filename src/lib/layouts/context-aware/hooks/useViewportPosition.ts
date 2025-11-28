@@ -112,7 +112,7 @@ export function useViewportPosition(): UseViewportPositionReturn {
     (options?: ScrollIntoViewOptions) => {
       if (elementRef.current) {
         elementRef.current.scrollIntoView(
-          options || { behavior: 'smooth', block: 'center' }
+          options ?? { behavior: 'smooth', block: 'center' }
         );
       }
     },

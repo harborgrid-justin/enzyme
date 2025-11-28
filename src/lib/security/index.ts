@@ -267,5 +267,5 @@ export {
 // ============================================================================
 
 if (isDev()) {
-  console.debug('[Security] Module loaded successfully');
+  console.info('[Security] Module loaded successfully');
 }

@@ -69,7 +69,7 @@ export async function yieldToMain(): Promise<void> {
   return new Promise((resolve) => {
     if (hasSchedulerYieldAPI(window)) {
       // Use scheduler.yield if available (modern browsers)
-      window.scheduler.yield().then(resolve);
+      void window.scheduler.yield().then(resolve);
     } else {
       // Fallback to setTimeout
       setTimeout(resolve, 0);

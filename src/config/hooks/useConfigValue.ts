@@ -134,10 +134,13 @@ export function useConfigValue<T extends ConfigValue = ConfigValue>(
   const initializedRef = useRef(false);
   useEffect(() => {
     if (isInitialized && !hasValueRef.current && !initializedRef.current) {
-      initializedRef.current = true;
-      setValueState(getValue());
-      setExists(has(namespace, key));
-      hasValueRef.current = true;
+      // Use queueMicrotask to avoid setState during render
+      queueMicrotask(() => {
+        initializedRef.current = true;
+        setValueState(getValue());
+        setExists(has(namespace, key));
+        hasValueRef.current = true;
+      });
     }
   }, [isInitialized, getValue, has, namespace, key]);
 

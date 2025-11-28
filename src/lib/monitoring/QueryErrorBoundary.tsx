@@ -1,3 +1,4 @@
+/* @refresh reset */
 /**
  * @file Query Error Boundary
  * @description Boundary specifically for data-fetch errors
@@ -197,8 +198,8 @@ export class QueryErrorBoundary extends Component<
       if (typeof fallback === 'function') {
         return fallback(fallbackProps);
       }
-      
-      if (fallback) {
+
+      if (fallback != null) {
         return fallback;
       }
       

@@ -182,7 +182,10 @@ export class RoleHierarchyManager {
   getAncestors(roleId: string): Set<string> {
     // Check cache
     if (this.ancestorCache.has(roleId)) {
-      return this.ancestorCache.get(roleId)!;
+      const cachedAncestors = this.ancestorCache.get(roleId);
+      if (cachedAncestors != null) {
+        return cachedAncestors;
+      }
     }
 
     const ancestors = new Set<string>();
@@ -272,7 +275,10 @@ export class RoleHierarchyManager {
   getEffectivePermissions(roleId: string): Set<Permission> {
     // Check cache
     if (this.permissionCache.has(roleId)) {
-      return this.permissionCache.get(roleId)!;
+      const cachedPermissions = this.permissionCache.get(roleId);
+      if (cachedPermissions != null) {
+        return cachedPermissions;
+      }
     }
 
     const permissions = new Set<Permission>();

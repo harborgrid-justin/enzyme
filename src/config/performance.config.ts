@@ -495,7 +495,11 @@ export function getNetworkTier(rtt: number, downlink: number): NetworkTierConfig
     }
   }
   // Default to slowest tier
-  return NETWORK_TIERS[NETWORK_TIERS.length - 1]!;
+  const lastTier = NETWORK_TIERS[NETWORK_TIERS.length - 1];
+  if (lastTier == null) {
+    throw new Error('NETWORK_TIERS array is empty');
+  }
+  return lastTier;
 }
 
 /**

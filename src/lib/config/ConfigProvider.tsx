@@ -21,7 +21,7 @@
  * ```
  */
 
-import {
+import React, {
   createContext,
   useContext,
   useState,
@@ -111,7 +111,7 @@ export function ConfigProvider<T extends ConfigRecord = ConfigRecord>({
   onLoad,
   onChange,
   onError,
-}: ConfigProviderProps<T>) {
+}: ConfigProviderProps<T>): React.JSX.Element {
   const [config, setConfig] = useState<T>(defaultConfig);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);

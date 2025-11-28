@@ -570,21 +570,21 @@ export function getDefinedRoles(matrix: PermissionMatrix): string[] {
 export function validatePermissionMatrix(matrix: PermissionMatrix): string[] {
   const errors: string[] = [];
 
-  if (!matrix.entries || !Array.isArray(matrix.entries)) {
+  if (matrix.entries == null || !Array.isArray(matrix.entries)) {
     errors.push('Matrix entries must be an array');
     return errors;
   }
 
   for (const [index, entry] of matrix.entries.entries()) {
-    if (!entry.roleId) {
+    if (entry.roleId == null || entry.roleId === '') {
       errors.push(`Entry at index ${index}: roleId is required`);
     }
 
-    if (!entry.resource) {
+    if (entry.resource == null || entry.resource === '') {
       errors.push(`Entry at index ${index}: resource is required`);
     }
 
-    if (!entry.allowedActions || !Array.isArray(entry.allowedActions)) {
+    if (entry.allowedActions == null || !Array.isArray(entry.allowedActions)) {
       errors.push(`Entry at index ${index}: allowedActions must be an array`);
     } else {
       for (const action of entry.allowedActions) {

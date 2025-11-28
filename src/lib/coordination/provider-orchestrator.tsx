@@ -117,17 +117,17 @@ function createProviderTree(
     // Wrap from innermost to outermost
     for (let i = sortedProviders.length - 1; i >= 0; i--) {
       const provider = sortedProviders[i];
-      if (!provider?.isEnabled) continue;
+      if (provider?.isEnabled !== true) continue;
 
       const Component = provider.resolvedComponent;
       const props = provider.props ?? {};
 
-      tree = createElement(Component, props as any, tree);
+      tree = createElement(Component, { ...props, children: tree } as { children: ReactNode });
     }
 
     // Wrap with error boundary if provided
     if (errorBoundary) {
-      tree = createElement(errorBoundary, {} as any, tree);
+      tree = createElement(errorBoundary, { children: tree } as { children: ReactNode });
     }
 
     return createElement(Fragment, {}, tree);

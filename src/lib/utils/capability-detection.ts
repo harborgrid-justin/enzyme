@@ -6,7 +6,23 @@
 /**
  * Detect browser capabilities
  */
-export function detectCapabilities() {
+export function detectCapabilities(): {
+  esModules: boolean;
+  asyncAwait: boolean;
+  webGL: boolean;
+  webGL2: boolean;
+  webP: boolean;
+  avif: boolean;
+  serviceWorker: boolean;
+  webWorker: boolean;
+  sharedArrayBuffer: boolean;
+  intersectionObserver: boolean;
+  resizeObserver: boolean;
+  cssGrid: boolean;
+  containerQueries: boolean;
+  cssHas: boolean;
+  viewTransitions: boolean;
+} {
   return {
     esModules: hasESModules(),
     asyncAwait: hasAsyncAwait(),
@@ -24,7 +40,7 @@ export function detectCapabilities() {
     cssHas: CSS.supports('selector(:has(*))'),
     viewTransitions: 'startViewTransition' in document,
     navigationAPI: 'navigation' in window,
-    popoverAPI: HTMLElement.prototype.hasOwnProperty('popover'),
+    popoverAPI: Object.prototype.hasOwnProperty.call(HTMLElement.prototype, 'popover'),
     webAnimations: 'animate' in Element.prototype,
     idleCallback: 'requestIdleCallback' in window,
     intl: typeof Intl !== 'undefined',
@@ -48,8 +64,8 @@ export function hasESModules(): boolean {
  */
 export function hasAsyncAwait(): boolean {
   try {
-     
-    new Function('async () => {}');
+    // Check for async/await support by evaluating syntax
+    eval('(async function(){})');
     return true;
   } catch {
     return false;

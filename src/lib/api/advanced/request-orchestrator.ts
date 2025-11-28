@@ -184,13 +184,14 @@ export class RequestOrchestrator {
       results.push(...batchResults.filter((r): r is GatewayResponse<T> => r !== null));
 
       // Add delay between batches if configured
-      if (config?.batchDelay && i + maxConcurrency < requests.length) {
+      if ((config?.batchDelay != null && config.batchDelay > 0) && i + maxConcurrency < requests.length) {
         await this.delay(config.batchDelay);
       }
     }
 
     if (errors.length > 0 && stopOnError) {
-      throw errors[0];
+      const firstError = errors[0];
+      throw firstError instanceof Error ? firstError : new Error(String(firstError));
     }
 
     return results;
@@ -219,7 +220,10 @@ export class RequestOrchestrator {
       if (result.status === 'fulfilled') {
         fulfilled.push(result.value);
       } else {
-        rejected.push({ request: requests[index]!, error: result.reason });
+        const request = requests[index];
+        if (request != null) {
+          rejected.push({ request, error: result.reason });
+        }
       }
     });
 

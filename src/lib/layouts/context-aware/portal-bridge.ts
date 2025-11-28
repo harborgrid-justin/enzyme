@@ -124,9 +124,7 @@ export class PortalContextManager {
    * Gets the singleton instance.
    */
   public static getInstance(config?: Partial<ContextTrackingConfig>): PortalContextManager {
-    if (!PortalContextManager.instance) {
-      PortalContextManager.instance = new PortalContextManager(config);
-    }
+    PortalContextManager.instance ??= new PortalContextManager(config);
     return PortalContextManager.instance;
   }
 

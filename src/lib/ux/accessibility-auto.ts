@@ -284,7 +284,7 @@ export class FocusManager {
    */
   createFocusTrap(container: HTMLElement): () => void {
     const focusableElements = this.getAllFocusable(container);
-    const firstElement = focusableElements[0];
+    const [firstElement] = focusableElements;
     const lastElement = focusableElements[focusableElements.length - 1];
 
     const handleKeyDown = (e: KeyboardEvent): void => {
@@ -560,7 +560,7 @@ export class AutoAccessibility {
    * Get singleton instance
    */
   static getInstance(config?: AutoAccessibilityConfig): AutoAccessibility {
-    if (!AutoAccessibility.instance) {
+    if (AutoAccessibility.instance === null || AutoAccessibility.instance === undefined) {
       AutoAccessibility.instance = new AutoAccessibility(config);
     }
     return AutoAccessibility.instance;

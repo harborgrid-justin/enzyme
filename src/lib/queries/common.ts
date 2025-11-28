@@ -22,16 +22,18 @@ export interface PrefetchOptions {
 /**
  * Hook to prefetch queries on demand
  */
-export function usePrefetch() {
+export function usePrefetch(): {
+  prefetch: <T>(queryKey: QueryKey, queryFn: () => Promise<T>, options?: PrefetchOptions) => Promise<void>;
+} {
   const queryClient = useQueryClient();
-  
+
   const prefetch = useCallback(
     async <T>(
       queryKey: QueryKey,
       queryFn: () => Promise<T>,
       options?: PrefetchOptions
-    ) => {
-      const { staleTime = 5 * 60 * 1000, force = false } = options || {};
+    ): Promise<void> => {
+      const { staleTime = 5 * 60 * 1000, force = false } = options ?? {};
       
       if (force) {
         await queryClient.fetchQuery({

@@ -277,13 +277,13 @@ export function combineSelectors<TState, TResult extends Record<string, unknown>
 
     for (const key of keys) {
       result[key] = selectors[key](state);
-      if (!hasChanged && !Object.is(result[key], cache![key])) {
+      if (!hasChanged && cache !== null && !Object.is(result[key], cache[key])) {
         hasChanged = true;
       }
     }
 
-    if (!hasChanged) {
-      return cache!;
+    if (!hasChanged && cache !== null) {
+      return cache;
     }
 
     cache = result;

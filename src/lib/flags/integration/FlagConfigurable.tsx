@@ -266,7 +266,7 @@ export function FlagConfigurable({
   );
 
   // Determine content to render
-  const content = useMemo(async () => {
+  const content = useMemo(() => {
     if (typeof children === 'function') {
       return children(renderProps);
     }

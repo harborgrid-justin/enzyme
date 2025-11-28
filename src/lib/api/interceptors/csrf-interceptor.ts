@@ -97,10 +97,10 @@ function parseCookies(cookieString: string): Map<string, string> {
   const pairs = cookieString.split(';');
   for (const pair of pairs) {
     const [name, ...valueParts] = pair.trim().split('=');
-    if (name) {
+    if (name != null && name !== '') {
       // Handle cookies with '=' in the value
       const value = valueParts.join('=');
-      cookies.set(name.trim(), decodeURIComponent(value || ''));
+      cookies.set(name.trim(), decodeURIComponent(value ?? ''));
     }
   }
 
@@ -119,7 +119,7 @@ function getCsrfTokenFromCookie(cookieName: string): string | null {
   }
 
   const cookies = parseCookies(document.cookie);
-  return cookies.get(cookieName) || null;
+  return cookies.get(cookieName) ?? null;
 }
 
 // =============================================================================

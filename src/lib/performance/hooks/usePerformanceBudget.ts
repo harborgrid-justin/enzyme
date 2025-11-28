@@ -109,7 +109,7 @@ export function usePerformanceBudget(
   // Get budget manager instance
   const managerRef = useRef<PerformanceBudgetManager | null>(null);
 
-  if (!managerRef.current) {
+  if (managerRef.current === null) {
     managerRef.current = getBudgetManager({
       debug,
       onViolation: (violation) => {
@@ -126,7 +126,7 @@ export function usePerformanceBudget(
 
   // State
   const [budgetStatuses, setBudgetStatuses] = useState<BudgetStatusSummary[]>([]);
-  const [degradationState, setDegradationState] = useState<DegradationState>(
+  const [degradationState, setDegradationState] = useState<DegradationState>(() =>
     manager.getDegradationState()
   );
   const [healthScore, setHealthScore] = useState<number>(100);
@@ -154,7 +154,9 @@ export function usePerformanceBudget(
     // Periodic updates
     const intervalId = setInterval(updateStatuses, 1000);
 
-    return () => clearInterval(intervalId);
+    return () => {
+      clearInterval(intervalId);
+    };
   }, [manager, budgets]);
 
   // Convert BudgetStatusSummary to BudgetStatus

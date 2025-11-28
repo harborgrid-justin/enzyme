@@ -424,9 +424,9 @@ export class BaseRouteGuard implements RouteGuard {
           clearTimeout(timer);
           resolve(result);
         })
-        .catch((error) => {
+        .catch((error: unknown) => {
           clearTimeout(timer);
-          reject(error);
+          reject(error instanceof Error ? error : new Error(String(error)));
         });
     });
   }
@@ -558,8 +558,8 @@ export function getFirstRedirect(results: readonly GuardResultObject[]): GuardRe
  */
 export function getDenialReasons(results: readonly GuardResultObject[]): string[] {
   return results
-    .filter(r => r.type === 'deny' && r.reason)
-    .map(r => r.reason!);
+    .filter(r => r.type === 'deny' && (r.reason !== null && r.reason !== undefined && r.reason !== ''))
+    .map(r => r.reason ?? '');
 }
 
 // =============================================================================

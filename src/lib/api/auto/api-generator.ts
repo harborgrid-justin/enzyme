@@ -519,19 +519,19 @@ export function computeAccess(
         break;
 
       case 'role':
-        if (modifier.value) {
+        if (modifier.value != null && modifier.value !== '') {
           requiredRoles.push(modifier.value);
         }
         break;
 
       case 'permission':
-        if (modifier.value) {
+        if (modifier.value != null && modifier.value !== '') {
           requiredPermissions.push(modifier.value);
         }
         break;
 
       case 'scope':
-        if (modifier.value) {
+        if (modifier.value != null && modifier.value !== '') {
           scope = modifier.value as PermissionScope;
         }
         break;

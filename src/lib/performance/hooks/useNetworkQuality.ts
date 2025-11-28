@@ -137,7 +137,7 @@ export function useNetworkQuality(
 
   // Get analyzer instance
   const analyzerRef = useRef<NetworkPerformanceAnalyzer | null>(null);
-  if (!analyzerRef.current) {
+  if (analyzerRef.current === null) {
     analyzerRef.current = getNetworkAnalyzer({
       debug,
       onQualityChange: (quality) => {
@@ -207,6 +207,15 @@ export function useNetworkQuality(
 
   // Get loading strategy
   const loadingStrategy = useMemo<AdaptiveLoadingStrategy>(() => {
+    if (analyzer === null) {
+      return {
+        shouldReduceQuality: false,
+        shouldDefer: false,
+        maxConcurrentRequests: 6,
+        prefetchStrategy: 'none' as const,
+        imageQuality: 'high' as const,
+      };
+    }
     return analyzer.getLoadingStrategy();
   }, [analyzer, quality]); // Re-compute when quality changes
 
@@ -238,7 +247,7 @@ export function useNetworkQuality(
   const isSlowConnection = score < slowConnectionThreshold || effectiveType === 'slow-2g' || effectiveType === '2g';
   const isMetered = quality?.isMetered ?? false;
   const shouldPrefetch = loadingStrategy.prefetchStrategy !== 'none' && !isOffline && !saveData;
-  const estimatedBandwidth = analyzer.getEstimatedBandwidth();
+  const estimatedBandwidth = analyzer !== null ? analyzer.getEstimatedBandwidth() : null;
 
   return {
     quality,
@@ -350,8 +359,10 @@ export function useRequestPerformance(url: string): {
   const analyzer = getNetworkAnalyzer();
 
   useEffect(() => {
-    setIsLoading(true);
-    setError(null);
+    queueMicrotask(() => {
+      setIsLoading(true);
+      setError(null);
+    });
 
     // Wait for the request to complete and then analyze it
     const checkForTiming = () => {

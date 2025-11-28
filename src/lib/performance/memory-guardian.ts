@@ -158,9 +158,7 @@ export class MemoryGuardian {
    * Get singleton instance
    */
   static getInstance(config?: MemoryGuardianConfig): MemoryGuardian {
-    if (!MemoryGuardian.instance) {
-      MemoryGuardian.instance = new MemoryGuardian(config);
-    }
+    MemoryGuardian.instance ??= new MemoryGuardian(config);
     return MemoryGuardian.instance;
   }
 

@@ -1,9 +1,10 @@
+/* @refresh reset */
 /**
  * @file Global Error Boundary
  * @description App-wide boundary catching render/runtime errors
  */
 
-import { Component, type ErrorInfo, type ReactNode } from 'react';
+import React, { Component, type ErrorInfo, type ReactNode } from 'react';
 import { ErrorReporter } from './ErrorReporter';
 import type { AppError } from './errorTypes';
 import { normalizeError, getUserFriendlyMessage } from './errorTypes';
@@ -80,8 +81,8 @@ function DefaultErrorFallback({
         >
           {getUserFriendlyMessage(error)}
         </p>
-        
-        {showDetails && error.stack && (
+
+        {(showDetails === true && error.stack != null && error.stack.length > 0) && (
           <pre
             style={{
               textAlign: 'left',

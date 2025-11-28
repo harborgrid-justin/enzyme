@@ -24,7 +24,7 @@ import {
   type ModuleSlotDefinition,
 } from '../types';
 import { useModuleContext, useOptionalModuleContext } from '../ModuleBoundary';
-import { useModuleHierarchy } from '../ModuleProvider';
+import { useModuleHierarchy } from '../ModuleProviderExports';
 
 /**
  * Hook for accessing module boundary information and slot management.

@@ -10,6 +10,7 @@
  * - Progressive degradation
  * - Error context preservation
  * - Analytics integration
+ * @refresh reset
  */
 
 import {

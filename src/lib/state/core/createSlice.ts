@@ -99,7 +99,7 @@ export function createSlice<
       updaterOrPartial: ((state: Draft<TState>) => void) | Partial<TState>,
       actionName?: string
     ) => {
-      const type = actionName ? `${name}/${actionName}` : `${name}/update`;
+      const type = (actionName != null && actionName !== '') ? `${name}/${actionName}` : `${name}/update`;
 
       if (typeof updaterOrPartial === 'function') {
         // Immer-style updater function - the updater for TState is compatible with TStore which extends TState

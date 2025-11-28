@@ -510,9 +510,7 @@ export function useRecovery<T>(
 } {
   const { enabled = true, ...recoveryOptions } = options;
   const engineRef = useRef<RecoveryEngine | null>(null);
-  if (!engineRef.current) {
-    engineRef.current = new RecoveryEngine(recoveryOptions);
-  }
+  engineRef.current ??= new RecoveryEngine(recoveryOptions);
   const engine = engineRef.current;
   const [progress, setProgress] = useState<RecoveryProgress>({
     state: 'idle',
@@ -572,17 +570,17 @@ export function useCircuitBreaker(options: RecoveryOptions = {}): {
   reset: () => void;
 } {
   const engineRef = useRef<RecoveryEngine | null>(null);
-  if (!engineRef.current) {
-    engineRef.current = new RecoveryEngine(options);
-  }
+  engineRef.current ??= new RecoveryEngine(options);
   const engine = engineRef.current;
-  const [state, setState] = useState<CircuitBreakerState>(engine.getCircuitBreakerState());
+  const [state, setState] = useState<CircuitBreakerState>(() => engine.getCircuitBreakerState());
 
   useEffect(() => {
     const interval = setInterval(() => {
       setState(engine.getCircuitBreakerState());
     }, 1000);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+    };
   }, [engine]);
 
   const reset = useCallback(() => {

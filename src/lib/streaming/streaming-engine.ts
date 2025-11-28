@@ -1323,7 +1323,7 @@ export class StreamingEngine {
 
   private log(...args: unknown[]): void {
     if (this.config.debug) {
-      console.log('[StreamingEngine]', ...args);
+      console.info('[StreamingEngine]', ...args);
     }
   }
 }

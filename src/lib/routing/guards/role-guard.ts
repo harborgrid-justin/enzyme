@@ -495,11 +495,11 @@ export function hasRole(
     return true;
   }
 
-  if (hierarchy) {
+  if (hierarchy !== null && hierarchy !== undefined) {
     // Check if user has a parent role
     for (const userRole of userRoles) {
       const parents = hierarchy[role];
-      if (parents?.includes(userRole)) {
+      if (parents?.includes(userRole) === true) {
         return true;
       }
     }

@@ -301,8 +301,10 @@ export function HydrationBoundary({
     });
   }, [onHydrationStart, replayCapturedInteractions]);
 
-  // Store in ref for scheduler
-  hydrationCallbackRef.current = performHydration;
+  // Store in ref for scheduler (in effect to avoid ref access during render)
+  useEffect(() => {
+    hydrationCallbackRef.current = performHydration;
+  }, [performHydration]);
 
   // ==========================================================================
   // Scheduler Registration

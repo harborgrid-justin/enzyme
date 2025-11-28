@@ -13,7 +13,7 @@
  * @version 1.0.0
  */
 
-import type { CSSProperties, RefObject, ReactNode } from 'react';
+import React, { type CSSProperties, type RefObject, type ReactNode } from 'react';
 
 // ============================================================================
 // Layout Type Definitions

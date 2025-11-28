@@ -138,13 +138,21 @@ export function useFeatureFlag(
 
   // Build evaluation context
   const context: FeatureFlagContext = useMemo(
-    () => ({
-      userId,
-      userRole,
-      environment: (env.appEnv as ConfigEnvironment) ?? 'development',
-      attributes,
-      sessionId: typeof window !== 'undefined' ? (sessionStorage.getItem('session_id') !== null && sessionStorage.getItem('session_id') !== '' ? sessionStorage.getItem('session_id') : undefined) : undefined,
-    }),
+    () => {
+      let sessionId: string | undefined;
+      if (typeof window !== 'undefined') {
+        const storedSessionId = sessionStorage.getItem('session_id');
+        sessionId = (storedSessionId != null && storedSessionId !== '') ? storedSessionId : undefined;
+      }
+
+      return {
+        userId,
+        userRole,
+        environment: (env.appEnv as ConfigEnvironment) ?? 'development',
+        attributes,
+        sessionId,
+      };
+    },
     [userId, userRole, attributes]
   );
 
@@ -443,12 +451,15 @@ export function useRemoteConfig<T extends import('../types').ConfigValue>(key: s
 
   useEffect(() => {
     if (isInitialized && !initializedRef.current) {
-      initializedRef.current = true;
-      const config = dynamicConfig.getRuntimeConfig<T>(
-        'features' as unknown as import('../types').ConfigNamespace,
-        key
-      );
-      setValue(config ?? defaultValue);
+      // Use queueMicrotask to avoid setState during render
+      queueMicrotask(() => {
+        initializedRef.current = true;
+        const config = dynamicConfig.getRuntimeConfig<T>(
+          'features' as unknown as import('../types').ConfigNamespace,
+          key
+        );
+        setValue(config ?? defaultValue);
+      });
     }
   }, [dynamicConfig, key, defaultValue, isInitialized]);
 

@@ -152,10 +152,13 @@ export function useConfig<T extends ConfigRecord>(
   const initializedRef = useRef(false);
   useEffect(() => {
     if (isInitialized && !initializedRef.current) {
-      initializedRef.current = true;
-      const newConfig = getConfig();
-      prevConfigRef.current = newConfig;
-      setConfig(newConfig);
+      // Use queueMicrotask to avoid setState during render
+      queueMicrotask(() => {
+        initializedRef.current = true;
+        const newConfig = getConfig();
+        prevConfigRef.current = newConfig;
+        setConfig(newConfig);
+      });
     }
   }, [isInitialized, getConfig]);
 

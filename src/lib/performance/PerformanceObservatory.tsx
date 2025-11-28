@@ -105,6 +105,7 @@ export interface PerformanceProviderProps {
 /**
  * Hook to access performance observatory context
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function usePerformanceObservatory(): PerformanceObservatoryContextValue {
   const context = useContext(PerformanceObservatoryContext);
   if (!context) {

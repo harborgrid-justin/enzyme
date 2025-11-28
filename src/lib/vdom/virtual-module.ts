@@ -303,7 +303,7 @@ export class VirtualModuleManager {
    * @param to - Target state
    * @throws Error if transition is invalid
    */
-  private async transitionTo(to: ModuleLifecycleState): Promise<void> {
+  private transitionTo(to: ModuleLifecycleState): void {
     const from = this.state.lifecycleState;
 
     if (!this.isValidTransition(from, to)) {
@@ -328,7 +328,7 @@ export class VirtualModuleManager {
 
     const event = eventMap[to];
     if (event) {
-      await this.emitLifecycleEvent(event);
+      this.emitLifecycleEvent(event);
     }
   }
 
@@ -346,12 +346,12 @@ export class VirtualModuleManager {
     this.markPerf('init:start');
 
     try {
-      await this.transitionTo(ModuleLifecycleState.INITIALIZING);
-      await this.emitLifecycleEvent(ModuleLifecycleEvent.BEFORE_INIT);
+      this.transitionTo(ModuleLifecycleState.INITIALIZING);
+      this.emitLifecycleEvent(ModuleLifecycleEvent.BEFORE_INIT);
 
       // Execute initialization hook
       if (this.hooks.onBeforeInit) {
-        await this.hooks.onBeforeInit();
+        await Promise.resolve(this.hooks.onBeforeInit());
       }
 
       // Resolve dependencies
@@ -359,12 +359,12 @@ export class VirtualModuleManager {
 
       // Execute after init hook
       if (this.hooks.onAfterInit) {
-        await this.hooks.onAfterInit();
+        await Promise.resolve(this.hooks.onAfterInit());
       }
 
-      await this.transitionTo(ModuleLifecycleState.INITIALIZED);
+      this.transitionTo(ModuleLifecycleState.INITIALIZED);
     } catch (error) {
-      await this.handleError(error instanceof Error ? error : new Error(String(error)));
+      this.handleError(error instanceof Error ? error : new Error(String(error)));
       throw error;
     } finally {
       this.markPerf('init:end');
@@ -392,11 +392,11 @@ export class VirtualModuleManager {
     this.markPerf('mount:start');
 
     try {
-      await this.transitionTo(ModuleLifecycleState.MOUNTING);
-      await this.emitLifecycleEvent(ModuleLifecycleEvent.BEFORE_MOUNT);
+      this.transitionTo(ModuleLifecycleState.MOUNTING);
+      this.emitLifecycleEvent(ModuleLifecycleEvent.BEFORE_MOUNT);
 
       if (this.hooks.onBeforeMount) {
-        await this.hooks.onBeforeMount();
+        await Promise.resolve(this.hooks.onBeforeMount());
       }
 
       this.container = container;
@@ -412,7 +412,7 @@ export class VirtualModuleManager {
       }
 
       if (this.hooks.onAfterMount) {
-        await this.hooks.onAfterMount();
+        await Promise.resolve(this.hooks.onAfterMount());
       }
 
       this.state = {
@@ -420,9 +420,9 @@ export class VirtualModuleManager {
         isActive: true,
       };
 
-      await this.transitionTo(ModuleLifecycleState.MOUNTED);
+      this.transitionTo(ModuleLifecycleState.MOUNTED);
     } catch (error) {
-      await this.handleError(error instanceof Error ? error : new Error(String(error)));
+      this.handleError(error instanceof Error ? error : new Error(String(error)));
       throw error;
     } finally {
       this.markPerf('mount:end');
@@ -439,11 +439,11 @@ export class VirtualModuleManager {
     }
 
     try {
-      await this.transitionTo(ModuleLifecycleState.UNMOUNTING);
-      await this.emitLifecycleEvent(ModuleLifecycleEvent.BEFORE_UNMOUNT);
+      this.transitionTo(ModuleLifecycleState.UNMOUNTING);
+      this.emitLifecycleEvent(ModuleLifecycleEvent.BEFORE_UNMOUNT);
 
       if (this.hooks.onBeforeUnmount) {
-        await this.hooks.onBeforeUnmount();
+        await Promise.resolve(this.hooks.onBeforeUnmount());
       }
 
       // Unmount child modules first
@@ -458,7 +458,7 @@ export class VirtualModuleManager {
       this.portals.clear();
 
       if (this.hooks.onAfterUnmount) {
-        await this.hooks.onAfterUnmount();
+        await Promise.resolve(this.hooks.onAfterUnmount());
       }
 
       this.state = {
@@ -466,9 +466,9 @@ export class VirtualModuleManager {
         isActive: false,
       };
 
-      await this.transitionTo(ModuleLifecycleState.UNMOUNTED);
+      this.transitionTo(ModuleLifecycleState.UNMOUNTED);
     } catch (error) {
-      await this.handleError(error instanceof Error ? error : new Error(String(error)));
+      this.handleError(error instanceof Error ? error : new Error(String(error)));
       throw error;
     }
   }
@@ -491,7 +491,7 @@ export class VirtualModuleManager {
       await this.unmount();
     }
 
-    await this.transitionTo(ModuleLifecycleState.SUSPENDED);
+    this.transitionTo(ModuleLifecycleState.SUSPENDED);
   }
 
   /**
@@ -508,10 +508,10 @@ export class VirtualModuleManager {
         await this.unmount();
       }
 
-      await this.emitLifecycleEvent(ModuleLifecycleEvent.DISPOSE);
+      this.emitLifecycleEvent(ModuleLifecycleEvent.DISPOSE);
 
       if (this.hooks.onDispose) {
-        await this.hooks.onDispose();
+        await Promise.resolve(this.hooks.onDispose());
       }
 
       // Dispose child modules
@@ -527,7 +527,7 @@ export class VirtualModuleManager {
       this.resolvedDependencies = null;
       this.parent = null;
 
-      await this.transitionTo(ModuleLifecycleState.DISPOSED);
+      this.transitionTo(ModuleLifecycleState.DISPOSED);
     } catch {
       // Even if disposal fails, mark as disposed
       this.state = {
@@ -546,7 +546,7 @@ export class VirtualModuleManager {
    * @param error - The error that occurred
    * @param errorInfo - React error info (optional)
    */
-  async handleError(error: Error, errorInfo?: ErrorInfo): Promise<void> {
+  handleError(error: Error, errorInfo?: ErrorInfo): void {
     this.state = {
       ...this.state,
       error,
@@ -559,12 +559,12 @@ export class VirtualModuleManager {
     }
 
     // Emit error event
-    await this.emitLifecycleEvent(ModuleLifecycleEvent.ERROR);
+    this.emitLifecycleEvent(ModuleLifecycleEvent.ERROR);
 
     // Transition to error state if not already
     if (this.state.lifecycleState !== ModuleLifecycleState.ERROR) {
       try {
-        await this.transitionTo(ModuleLifecycleState.ERROR);
+        this.transitionTo(ModuleLifecycleState.ERROR);
       } catch {
         // Force error state even if transition fails
         this.state = {

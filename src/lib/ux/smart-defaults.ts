@@ -464,9 +464,7 @@ export class SmartDefaultsManager {
    * Get singleton instance
    */
   static getInstance(): SmartDefaultsManager {
-    if (SmartDefaultsManager.instance === undefined) {
-      SmartDefaultsManager.instance = new SmartDefaultsManager();
-    }
+    SmartDefaultsManager.instance ??= new SmartDefaultsManager();
     return SmartDefaultsManager.instance;
   }
 

@@ -318,7 +318,8 @@ export class OptionalSegmentRouteBuilder {
 
     // Resolve each segment
     for (let i = 0; i < this.orderedSegments.length; i++) {
-      const segment = this.orderedSegments[i]!;
+      const segment = this.orderedSegments[i];
+      if (!segment) continue;
       const rawValue = match[i + 1]; // +1 because match[0] is full match
 
       const resolution = segment.resolve(rawValue);

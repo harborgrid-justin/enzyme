@@ -156,7 +156,7 @@ export const Breadcrumbs = memo(({
   
   // Generate or use custom items
   const items = useMemo(() => {
-    if (customItems) {
+    if (customItems !== undefined && customItems.length > 0) {
       return customItems;
     }
     return generateBreadcrumbs(
@@ -164,7 +164,7 @@ export const Breadcrumbs = memo(({
       pathLabels,
       homePath,
       homeLabel,
-      homeIcon || <DefaultHomeIcon />
+      homeIcon ?? <DefaultHomeIcon />
     );
   }, [customItems, location.pathname, pathLabels, homePath, homeLabel, homeIcon]);
   

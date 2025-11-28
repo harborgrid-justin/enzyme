@@ -64,7 +64,7 @@ export class ConfigLoader {
       remoteUrl: options.remoteUrl ?? '',
       watch: options.watch ?? false,
       debug: options.debug ?? false,
-      detectEnvironment: options.detectEnvironment ?? this.defaultDetectEnvironment,
+      detectEnvironment: options.detectEnvironment ?? this.defaultDetectEnvironment.bind(this),
     };
   }
 

@@ -38,7 +38,7 @@
  * ```
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, type RefObject } from 'react';
 
 import { useOptionalHydrationContext } from '../HydrationProvider';
 import { getHydrationScheduler } from '../hydration-scheduler';
@@ -408,13 +408,13 @@ export function useHydrationPriority(
  */
 export function useAdaptiveHydrationPriority(
   boundaryId: string | HydrationBoundaryId,
-  elementRef: React.RefObject<HTMLElement>
+  elementRef: RefObject<HTMLElement>
 ): UseHydrationPriorityReturn {
   const priorityControl = useHydrationPriority(boundaryId);
 
   useEffect(() => {
     const element = elementRef.current;
-    if (!element) return;
+    if (element === null || element === undefined) return;
 
     // Hover handler - boost on hover
     const handleMouseEnter = () => {

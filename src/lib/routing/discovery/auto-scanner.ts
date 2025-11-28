@@ -362,7 +362,7 @@ export class AutoScanner {
    */
   async scan(forceRefresh = false): Promise<ScanResult> {
     // Check cache first
-    if (!forceRefresh && this.config.cache && this.cache) {
+    if (forceRefresh !== true && this.config.cache === true && this.cache) {
       const configHash = hashConfig(this.config);
       if (this.cache.configHash === configHash && Date.now() < this.cache.expiresAt) {
         return { ...this.cache.result, fromCache: true };

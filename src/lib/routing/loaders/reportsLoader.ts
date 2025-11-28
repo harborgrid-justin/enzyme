@@ -5,7 +5,7 @@ import { apiClient } from '@/lib/api';
 /**
  * Fetch single report by ID using the centralized API client
  */
-async function fetchReport(id: string) {
+async function fetchReport(id: string): Promise<unknown> {
   const response = await apiClient.get(`/api/reports/${id}`);
   return response.data;
 }

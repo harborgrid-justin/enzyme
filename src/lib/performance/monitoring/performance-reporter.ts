@@ -218,7 +218,7 @@ export class PerformanceReporter {
    * Get latest report
    */
   getLatestReport(): PerformanceReport | null {
-    return this.reportHistory[this.reportHistory.length - 1] || null;
+    return this.reportHistory[this.reportHistory.length - 1] ?? null;
   }
 
   /**

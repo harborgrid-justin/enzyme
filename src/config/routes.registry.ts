@@ -216,7 +216,9 @@ export function buildRouteWithQuery<T extends keyof RouteQueryParams>(
 
   for (const [key, value] of Object.entries(query)) {
     if (value !== undefined && value !== null && value !== '') {
-      searchParams.set(key, String(value));
+      // Handle different value types properly
+      const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
+      searchParams.set(key, stringValue);
     }
   }
 
@@ -342,7 +344,7 @@ export function extractParams(
     const patternPart = patternParts[i];
     const pathPart = pathParts[i];
 
-    if (!patternPart || !pathPart) {
+    if (patternPart == null || patternPart === '' || pathPart == null || pathPart === '') {
       return null;
     }
 

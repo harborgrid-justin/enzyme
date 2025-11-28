@@ -233,7 +233,7 @@ export function useLongTaskDetector(
       averageDuration: durations.reduce((a, b) => a + b, 0) / durations.length,
       maxDuration: Math.max(...durations),
       ratePerMinute: recentTasks.length,
-      timeSinceLastTask: lastTaskTime ? Date.now() - lastTaskTime : null,
+      timeSinceLastTask: lastTaskTime !== null && lastTaskTime !== 0 ? Date.now() - lastTaskTime : null,
     };
   }, [longTasks, threshold, lastTaskTime]);
 
@@ -279,7 +279,7 @@ export function useLongTaskDetector(
       return null;
     }
 
-    const attr = lastTask.attribution[0];
+    const [attr] = lastTask.attribution;
     if (attr?.containerSrc) {
       return attr.containerSrc;
     }

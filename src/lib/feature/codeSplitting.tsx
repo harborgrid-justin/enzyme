@@ -106,7 +106,7 @@ export function createResilientLazyComponent<T extends ComponentType<unknown>>(
   const { maxRetries = 3, retryDelay = 1000, onError } = options;
 
   const loadWithRetry = async (): Promise<{ default: T }> => {
-    let lastError: Error | undefined;
+    let lastError: Error = new Error('Unknown error');
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
@@ -123,7 +123,7 @@ export function createResilientLazyComponent<T extends ComponentType<unknown>>(
       }
     }
 
-    throw lastError;
+    throw new Error(lastError.message, { cause: lastError });
   };
 
   return createLazyFeatureComponent(featureId, loadWithRetry);
@@ -262,14 +262,14 @@ export class FeatureChunkManager {
     if ('requestIdleCallback' in window) {
       (window as Window & { requestIdleCallback: (cb: IdleRequestCallback) => number }).requestIdleCallback(
         () => {
-          this.preloadAll(featureIds);
+          void this.preloadAll(featureIds);
         },
         { timeout: 5000 }
       );
     } else {
       // Fallback for browsers without requestIdleCallback
       setTimeout(() => {
-        this.preloadAll(featureIds);
+        void this.preloadAll(featureIds);
       }, 1000);
     }
   }

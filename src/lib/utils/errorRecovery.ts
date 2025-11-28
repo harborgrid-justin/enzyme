@@ -145,7 +145,13 @@ export class ErrorRecovery<T> {
       },
     });
 
-    throw errorToThrow;
+    if (errorToThrow instanceof Error) {
+      throw errorToThrow;
+    }
+    const errorMessage = typeof errorToThrow === 'object' && errorToThrow !== null
+      ? JSON.stringify(errorToThrow)
+      : String(errorToThrow);
+    throw new Error(`Recovery failed: ${errorMessage}`);
   }
 
   /**

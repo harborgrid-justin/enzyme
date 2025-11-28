@@ -217,7 +217,7 @@ export class WatchMode {
       directoriesWatched: this.config.watchPaths?.length ?? 0,
       changesProcessed: this.stats.changesProcessed,
       rediscoveries: this.stats.rediscoveries,
-      avgRediscoveryMs: this.stats.rediscoveries > 0
+      avgRediscoveryMs: (this.stats.rediscoveries !== null && this.stats.rediscoveries !== undefined && this.stats.rediscoveries > 0)
         ? this.stats.totalRediscoveryMs / this.stats.rediscoveries
         : 0,
       uptimeMs: this.startedAt ? Date.now() - this.startedAt : 0,

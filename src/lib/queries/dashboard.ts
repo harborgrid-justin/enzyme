@@ -185,14 +185,14 @@ export function activitySuspenseQueryOptions(page: number = 1): UseSuspenseQuery
 /**
  * Hook to fetch dashboard stats
  */
-export function useDashboardStats() {
+export function useDashboardStats(): ReturnType<typeof useQuery<DashboardStats>> {
   return useQuery(dashboardStatsQueryOptions());
 }
 
 /**
  * Hook to fetch dashboard stats with Suspense
  */
-export function useDashboardStatsSuspense() {
+export function useDashboardStatsSuspense(): ReturnType<typeof useSuspenseQuery<DashboardStats>> {
   return useSuspenseQuery(dashboardStatsSuspenseQueryOptions());
 }
 

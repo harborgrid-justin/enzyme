@@ -342,7 +342,7 @@ export function clearPrefixedStorage(
 
     for (let i = 0; i < storage.length; i++) {
       const key = storage.key(i);
-      if (key && key.startsWith(prefix)) {
+      if (key != null && key !== '' && key.startsWith(prefix)) {
         keysToRemove.push(key);
       }
     }

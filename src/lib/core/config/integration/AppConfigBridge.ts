@@ -221,7 +221,7 @@ export class AppConfigBridge {
       overlay.network = this.mapEnvToNetworkConfig(env);
 
       // Set endpoint registry base URL
-      if (env.apiBaseUrl) {
+      if (env.apiBaseUrl != null && env.apiBaseUrl !== '') {
         endpointRegistry.setBaseUrl(env.apiBaseUrl);
       }
     }
@@ -243,7 +243,7 @@ export class AppConfigBridge {
       overlay.network = { ...(overlay.network as Record<string, unknown>), ...networkFromApi };
 
       // Set endpoint registry base URL
-      if (API_CONFIG.BASE_URL) {
+      if (API_CONFIG.BASE_URL != null && API_CONFIG.BASE_URL !== '') {
         endpointRegistry.setBaseUrl(API_CONFIG.BASE_URL);
       }
     }

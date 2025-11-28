@@ -668,7 +668,7 @@ export class SkeletonFactory {
 
       const childContainerStyle: CSSProperties = {
         ...style,
-        ...(element.type === 'list' || element.className?.includes('row') ? rowStyle : containerStyle),
+        ...(element.type === 'list' || (element.className?.includes('row') ?? false) ? rowStyle : containerStyle),
       };
 
       return React.createElement(

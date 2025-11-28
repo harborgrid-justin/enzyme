@@ -1,3 +1,4 @@
+/* @refresh reset */
 /**
  * @file Stream Provider Component
  * @description React context provider for the Dynamic HTML Streaming Engine.

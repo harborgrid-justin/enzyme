@@ -235,14 +235,14 @@ export function userProfileSuspenseQueryOptions(): UseSuspenseQueryOptions<User>
 /**
  * Hook to fetch users list with Suspense
  */
-export function useUsersSuspense(filters?: UserFilters) {
+export function useUsersSuspense(filters?: UserFilters): ReturnType<typeof useSuspenseQuery<User[]>> {
   return useSuspenseQuery(usersListSuspenseQueryOptions(filters));
 }
 
 /**
  * Hook to fetch users list
  */
-export function useUsers(filters?: UserFilters) {
+export function useUsers(filters?: UserFilters): ReturnType<typeof useQuery<User[]>> {
   return useQuery(usersListQueryOptions(filters));
 }
 
