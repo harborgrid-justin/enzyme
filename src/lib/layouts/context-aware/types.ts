@@ -529,7 +529,7 @@ export interface DOMContextProviderProps extends ContextAwareComponentProps {
  */
 export interface ContextAwareBoxProps extends ContextAwareComponentProps {
   /** HTML element to render */
-  as?: keyof JSX.IntrinsicElements;
+  as?: keyof React.JSX.IntrinsicElements;
   /** Ref to the underlying element */
   ref?: RefObject<HTMLElement>;
   /** Whether to provide context to children */
@@ -616,7 +616,7 @@ export interface UseDOMContextReturn {
   /** Whether context is loading */
   isLoading: boolean;
   /** Ref to attach to observed element */
-  ref: RefObject<HTMLElement>;
+  ref: RefObject<HTMLElement | null>;
   /** Force context update */
   refresh: () => void;
 }
@@ -650,7 +650,7 @@ export interface UseViewportPositionReturn {
   /** Current visibility state */
   visibility: VisibilityState;
   /** Ref to attach to observed element */
-  ref: RefObject<HTMLElement>;
+  ref: RefObject<HTMLElement | null>;
   /** Scroll element into view */
   scrollIntoView: (options?: ScrollIntoViewOptions) => void;
 }

@@ -460,7 +460,7 @@ export function FlaggedModuleLoader<P extends Record<string, unknown> = Record<s
   loadingFallback = null,
   errorFallback,
   getFlag,
-}: FlaggedComponentProps<P>): JSX.Element | null {
+}: FlaggedComponentProps<P>): React.JSX.Element | null {
   const {
     module: LoadedComponent,
     isLoading,
@@ -502,7 +502,7 @@ export function SuspenseFlaggedLoader<P extends Record<string, unknown> = Record
   componentProps,
   loadingFallback = null,
   getFlag,
-}: Omit<FlaggedComponentProps<P>, 'errorFallback'>): JSX.Element {
+}: Omit<FlaggedComponentProps<P>, 'errorFallback'>): React.JSX.Element {
   const { Component } = useFlaggedLazyComponent<P>({
     flagKey,
     enabledModule: enabledComponent,
@@ -539,7 +539,7 @@ export function createFlaggedComponent<P extends Record<string, unknown> = Recor
 }): ComponentType<P> {
   const { flagKey, enabledComponent, fallbackComponent, loadingFallback, getFlag } = config;
 
-  function FlaggedComponent(props: P): JSX.Element {
+  function FlaggedComponent(props: P): React.JSX.Element {
     return (
       <FlaggedModuleLoader<P>
         flagKey={flagKey}
@@ -692,3 +692,6 @@ export function createFlaggedRouteLoaders<T>(
 
   return loaders;
 }
+
+
+

@@ -203,7 +203,7 @@ export function parseEnvOrThrow(rawEnv: Record<string, unknown>): ValidatedEnvCo
   const result = parseEnv(rawEnv);
 
   if (!result.success) {
-    const errorMessages = result.errors.errors
+    const errorMessages = result.errors.issues
       .map((err) => `  - ${err.path.join('.')}: ${err.message}`)
       .join('\n');
 
@@ -220,7 +220,7 @@ export function parseEnvOrThrow(rawEnv: Record<string, unknown>): ValidatedEnvCo
  * Format environment validation errors for display
  */
 export function formatEnvErrors(errors: z.ZodError<RawEnvVars>): string[] {
-  return errors.errors.map((err) => {
+  return errors.issues.map((err) => {
     const path = err.path.join('.');
     return `${path}: ${err.message}`;
   });

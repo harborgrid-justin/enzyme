@@ -396,7 +396,7 @@ interface ScrollIndicatorProps {
 /**
  * Visual indicator showing scroll direction availability.
  */
-function ScrollIndicator({ position }: ScrollIndicatorProps): JSX.Element {
+function ScrollIndicator({ position }: ScrollIndicatorProps): React.JSX.Element {
   const style: React.CSSProperties = {
     position: 'absolute',
     pointerEvents: 'none',

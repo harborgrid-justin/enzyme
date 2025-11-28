@@ -20,7 +20,7 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react';
-import { AdaptiveLayoutContext } from '../../contexts/AdaptiveLayoutContext.ts';
+import { AdaptiveLayoutContext } from '../../contexts/AdaptiveLayoutContext';
 import type {
   AdaptiveLayoutProps,
   CLSGuardConfig,
@@ -31,12 +31,12 @@ import type {
   LayoutMode,
   LayoutState,
   MorphTransitionConfig,
-} from './types.ts';
-import { DEFAULT_LAYOUT_ENGINE_CONFIG, DEFAULT_MORPH_TRANSITION_CONFIG, DEFAULT_CLS_GUARD_CONFIG } from './types.ts';
-import { createLayoutEngine } from './layout-engine.ts';
-import { createMorphController } from './morph-transition.ts';
-import { createCLSGuard } from './cls-guard.ts';
-import { createConstraintSolver } from './constraint-solver.ts';
+} from './types';
+import { DEFAULT_LAYOUT_ENGINE_CONFIG, DEFAULT_MORPH_TRANSITION_CONFIG, DEFAULT_CLS_GUARD_CONFIG } from './types';
+import { createLayoutEngine } from './layout-engine';
+import { createMorphController } from './morph-transition';
+import { createCLSGuard } from './cls-guard';
+import { createConstraintSolver } from './constraint-solver';
 
 // =============================================================================
 // CONTEXT

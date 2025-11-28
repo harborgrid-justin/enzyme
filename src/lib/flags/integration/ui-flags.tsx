@@ -27,7 +27,7 @@
  * ```
  */
 
-import { useMemo, type ComponentType, type ReactNode } from 'react';
+import React, { useMemo, type ComponentType, type ReactNode } from 'react';
 import {
   createLibraryIntegration,
   useLibraryFlags,
@@ -548,14 +548,14 @@ export interface FlaggedUIComponentProps<P = unknown> {
 /**
  * Render component based on flag state
  */
-export function FlaggedUIComponent<P extends JSX.IntrinsicAttributes = JSX.IntrinsicAttributes>({
+export function FlaggedUIComponent<P extends React.JSX.IntrinsicAttributes = React.JSX.IntrinsicAttributes>({
   flagKey,
   enabledComponent: EnabledComponent,
   disabledComponent: DisabledComponent,
   componentProps,
   fallback = null,
   getFlag,
-}: FlaggedUIComponentProps<P>): JSX.Element | null {
+}: FlaggedUIComponentProps<P>): React.JSX.Element | null {
   const config = useUiFlagConfig();
 
   const isEnabled = useMemo(() => {
@@ -598,7 +598,7 @@ export function withUiFlag<P extends object>(
 ): ComponentType<P> {
   const { fallback: FallbackComponent, getFlag } = options;
 
-  function WithUiFlag(props: P): JSX.Element | null {
+  function WithUiFlag(props: P): React.JSX.Element | null {
     return (
       <FlaggedUIComponent<P>
         flagKey={flagKey}
@@ -662,3 +662,5 @@ export function applyUiFlagsToDocument(config: UiFlagConfig): void {
 // =============================================================================
 
 export { uiIntegration };
+
+

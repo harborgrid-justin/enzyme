@@ -26,8 +26,8 @@ import type {
   MorphControllerInterface,
   MorphTransitionConfig,
   Transform3D,
-} from './types.ts';
-import { DEFAULT_MORPH_TRANSITION_CONFIG } from './types.ts';
+} from './types';
+import { DEFAULT_MORPH_TRANSITION_CONFIG } from './types';
 
 // =============================================================================
 // CONSTANTS

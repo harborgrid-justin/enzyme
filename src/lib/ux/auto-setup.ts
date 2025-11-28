@@ -191,15 +191,13 @@ export function detectEnvironment(): EnvironmentInfo {
     type = 'test';
   }
 
-  // Check process.env for additional config if available
-  if (typeof process !== 'undefined' && process.env) {
-    if (process.env.REACT_APP_API_URL) {
-      apiEndpoint = process.env.REACT_APP_API_URL;
-    }
+  // Check import.meta.env for additional config if available
+  if (import.meta.env.VITE_API_URL) {
+    apiEndpoint = import.meta.env.VITE_API_URL;
+  }
 
-    if (process.env.REACT_APP_VERSION) {
-      version = process.env.REACT_APP_VERSION;
-    }
+  if (import.meta.env.VITE_APP_VERSION) {
+    version = import.meta.env.VITE_APP_VERSION;
   }
 
   return {

@@ -953,7 +953,7 @@ export interface UseModuleStateReturn<T> {
  */
 export interface UseModuleBoundaryReturn {
   /** Boundary element ref */
-  readonly boundaryRef: React.RefObject<HTMLElement>;
+  readonly boundaryRef: React.RefObject<HTMLElement | null>;
   /** Slot definitions */
   readonly slots: ReadonlyArray<ModuleSlotDefinition>;
   /** Get slot content */

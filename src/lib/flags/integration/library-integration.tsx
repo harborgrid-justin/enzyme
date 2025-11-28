@@ -453,7 +453,7 @@ export function LibraryIntegrationProvider({
   flags: externalFlags = {},
   autoSync = true,
   syncInterval = 5000,
-}: LibraryIntegrationProviderProps): JSX.Element {
+}: LibraryIntegrationProviderProps): React.JSX.Element {
   const [flags, setFlags] = useState<Record<string, boolean>>(externalFlags);
 
   // Sync flags from external source
@@ -703,3 +703,6 @@ export function createFlagImpactReport(flagKey: string): {
 
   return { affectedLibraries, configChanges };
 }
+
+
+

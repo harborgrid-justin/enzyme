@@ -114,7 +114,7 @@ export function useModuleBoundary(): UseModuleBoundaryReturn {
 
     // Create a simplified parent boundary interface
     return {
-      boundaryRef: { current: null } as React.RefObject<HTMLElement>,
+      boundaryRef: { current: null } as React.RefObject<HTMLElement | null>,
       slots: context.parent.config.slots ?? [],
       getSlot: context.parent.getSlot,
       fillSlot: context.parent.setSlot,

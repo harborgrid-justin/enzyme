@@ -176,7 +176,7 @@ export {
   DEFAULT_MORPH_TRANSITION_CONFIG,
   DEFAULT_CLS_GUARD_CONFIG,
   DEFAULT_PERFORMANCE_BUDGET,
-} from './types.ts';
+} from './types';
 
 // =============================================================================
 // CORE ENGINE EXPORTS
@@ -187,26 +187,26 @@ export {
   createLayoutEngine,
   getSharedLayoutEngine,
   resetSharedLayoutEngine,
-} from './layout-engine.ts';
+} from './layout-engine';
 
 export {
   MorphController,
   createMorphController,
   createElementFLIP,
   performFLIP,
-} from './morph-transition.ts';
+} from './morph-transition';
 
 export {
   ConstraintSolver,
   createConstraintSolver,
-} from './constraint-solver.ts';
+} from './constraint-solver';
 
 export {
   CLSGuard,
   createCLSGuard,
   predictCLSImpact,
   createOptimizedReservations,
-} from './cls-guard.ts';
+} from './cls-guard';
 
 // =============================================================================
 // COMPONENT EXPORTS
@@ -216,18 +216,18 @@ export {
   AdaptiveLayout,
   AdaptiveLayoutContext,
   useAdaptiveLayoutContext,
-} from './AdaptiveLayout.tsx';
+} from './AdaptiveLayout';
 
 export {
   AdaptiveGrid,
-} from './AdaptiveGrid.tsx';
+} from './AdaptiveGrid';
 
 export {
   AdaptiveStack,
   HStack,
   VStack,
   ResponsiveStack,
-} from './AdaptiveStack.tsx';
+} from './AdaptiveStack';
 
 export {
   AdaptiveContainer,
@@ -235,12 +235,12 @@ export {
   useContainerContext,
   useContainerQuery,
   useContainerValue,
-} from './AdaptiveContainer.tsx';
+} from './AdaptiveContainer';
 
 export {
   MorphTransition,
   AnimatedPresence,
-} from './MorphTransition.tsx';
+} from './MorphTransition';
 
 // =============================================================================
 // HOOK EXPORTS
@@ -268,4 +268,4 @@ export {
   type UseLayoutMorphOptions,
   type UseContentDensityOptions,
   type UseCLSGuardOptions,
-} from './hooks/index.ts';
+} from './hooks/index';

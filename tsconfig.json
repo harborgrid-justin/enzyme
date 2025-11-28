@@ -67,7 +67,7 @@
     // ==========================================================================
     // Type Definitions
     // ==========================================================================
-    "types": ["vite/client", "vitest/globals"]
+    "types": ["vite/client", "vitest/globals", "node"]
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist", "coverage", "**/*.stories.tsx", "*.config.ts"],

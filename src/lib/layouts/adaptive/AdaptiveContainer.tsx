@@ -20,8 +20,8 @@ import {
   type CSSProperties,
   type ReactNode,
 } from 'react';
-import { ContainerContext, type ContainerContextValue } from '../../contexts/ContainerContext.ts';
-import type { AdaptiveContainerProps, BoxSpacing, ContainerBreakpoints, ContentDensity, Dimensions } from './types.ts';
+import { ContainerContext, type ContainerContextValue } from '../../contexts/ContainerContext';
+import type { AdaptiveContainerProps, BoxSpacing, ContainerBreakpoints, ContentDensity, Dimensions } from './types';
 
 // =============================================================================
 // CONSTANTS

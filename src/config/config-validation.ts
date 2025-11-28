@@ -96,7 +96,7 @@ export const streamingConfigSchema = z.object({
     highWaterMark: z.number().int().min(1024).default(32768),
     /** Low water mark for resuming */
     lowWaterMark: z.number().int().min(512).default(8192),
-  }).default({}),
+  }).optional(),
   /** Timing configuration */
   timing: z.object({
     /** Flush interval (ms) */
@@ -118,7 +118,7 @@ export const streamingConfigSchema = z.object({
     maxRetries: z.number().int().min(0).max(5).default(2),
     /** Show error boundaries on failure */
     showErrorBoundary: z.boolean().default(true),
-  }).default({}),
+  }).optional(),
   /** Performance optimizations */
   performance: z.object({
     /** Enable compression */
@@ -175,7 +175,7 @@ export const hydrationConfigSchema = z.object({
   /** Enable selective hydration */
   enabled: z.boolean().default(true),
   /** Default hydration priority */
-  defaultPriority: hydrationPrioritySchema.default({}),
+  defaultPriority: hydrationPrioritySchema.default({ level: 3, trigger: 'visible', threshold: 0.1, rootMargin: '100px' }),
   /** Scheduler configuration */
   scheduler: z.object({
     /** Maximum concurrent hydration tasks */
@@ -197,7 +197,7 @@ export const hydrationConfigSchema = z.object({
     defaultThreshold: z.number().min(0).max(1).default(0.1),
     /** Default root margin */
     defaultRootMargin: z.string().default('50px'),
-  }).default({}),
+  }).default({ useIntersectionObserver: true, defaultThreshold: 0.1, defaultRootMargin: '50px' }),
   /** Interaction handling */
   interaction: z.object({
     /** Events that trigger hydration */
@@ -217,7 +217,7 @@ export const hydrationConfigSchema = z.object({
     reportToPerformanceAPI: z.boolean().default(true),
     /** Custom metric name prefix */
     metricPrefix: z.string().default('hydration'),
-  }).default({}),
+  }).default({ trackTiming: true, reportToPerformanceAPI: true, metricPrefix: 'hydration' }),
 });
 
 export type HydrationConfig = z.infer<typeof hydrationConfigSchema>;
@@ -271,12 +271,12 @@ export const layoutsConfigSchema = z.object({
   morphing: z.object({
     enabled: z.boolean().default(true),
     /** Default transition configuration */
-    transition: morphTransitionSchema.default({}),
+    transition: morphTransitionSchema.default({ duration: 300, easing: 'ease-out', useGPU: true, respectReducedMotion: true }),
     /** Enable layout animations */
     animate: z.boolean().default(true),
     /** Use FLIP technique */
     useFLIP: z.boolean().default(true),
-  }).default({}),
+  }).default({ enabled: true, transition: { duration: 300, easing: 'ease-out', useGPU: true, respectReducedMotion: true }, animate: true, useFLIP: true }),
   /** CLS (Cumulative Layout Shift) prevention */
   clsGuard: z.object({
     enabled: z.boolean().default(true),
@@ -286,7 +286,7 @@ export const layoutsConfigSchema = z.object({
     defaultAspectRatio: z.number().positive().default(1.5),
     /** Skeleton loading */
     useSkeleton: z.boolean().default(true),
-  }).default({}),
+  }).default({ enabled: true, reserveSpace: true, defaultAspectRatio: 1.5, useSkeleton: true }),
   /** Context-aware layouts */
   context: z.object({
     enabled: z.boolean().default(true),
@@ -296,7 +296,7 @@ export const layoutsConfigSchema = z.object({
     bridgePortals: z.boolean().default(true),
     /** Max ancestry depth to track */
     maxDepth: z.number().int().min(1).max(20).default(10),
-  }).default({}),
+  }).default({ enabled: true, trackAncestry: true, bridgePortals: true, maxDepth: 10 }),
 });
 
 export type LayoutsConfig = z.infer<typeof layoutsConfigSchema>;
@@ -319,7 +319,7 @@ export const vdomConfigSchema = z.object({
     maxModuleSize: z.number().int().min(10).max(10000).default(1000),
     /** Module boundary detection threshold */
     boundaryThreshold: z.number().min(0).max(1).default(0.7),
-  }).default({}),
+  }).default({ auto: true, maxModuleSize: 1000, boundaryThreshold: 0.7 }),
   /** Memory management */
   memory: z.object({
     /** Enable DOM pooling */
@@ -341,7 +341,7 @@ export const vdomConfigSchema = z.object({
     useRAF: z.boolean().default(true),
     /** Diff algorithm */
     diffAlgorithm: z.enum(['simple', 'keyed', 'lis']).default('lis'),
-  }).default({}),
+  }).default({ batchUpdates: true, maxBatchSize: 50, useRAF: true, diffAlgorithm: 'lis' }),
   /** Module boundaries */
   boundaries: z.object({
     /** Enable sandboxing */
@@ -350,7 +350,7 @@ export const vdomConfigSchema = z.object({
     cspIntegration: z.boolean().default(true),
     /** XSS prevention */
     xssPrevention: z.boolean().default(true),
-  }).default({}),
+  }).default({ sandbox: false, cspIntegration: true, xssPrevention: true }),
 });
 
 export type VDOMConfig = z.infer<typeof vdomConfigSchema>;
@@ -380,7 +380,7 @@ export const performanceConfigSchema = z.object({
     trackFCP: z.boolean().default(true),
     /** Reporting threshold */
     reportingThreshold: z.number().min(0).max(1).default(1),
-  }).default({}),
+  }).default({ enabled: true, trackLCP: true, trackINP: true, trackCLS: true, trackTTFB: true, trackFCP: true, reportingThreshold: 1 }),
   /** Targets for performance metrics */
   targets: z.object({
     /** LCP target (ms) */
@@ -406,7 +406,7 @@ export const performanceConfigSchema = z.object({
     preload: z.boolean().default(true),
     /** Enable modulepreload */
     modulepreload: z.boolean().default(true),
-  }).default({}),
+  }).default({ preconnect: true, prefetch: true, preload: true, modulepreload: true }),
   /** Code splitting */
   codeSplitting: z.object({
     /** Enable route-based splitting */
@@ -430,7 +430,7 @@ export const performanceConfigSchema = z.object({
     responsive: z.boolean().default(true),
     /** Default quality */
     quality: percentage(80),
-  }).default({}),
+  }).default({ lazyLoad: true, useNativeLazy: true, useLQIP: true, responsive: true, quality: 80 }),
   /** Caching strategy */
   caching: z.object({
     /** Enable service worker */
@@ -493,7 +493,7 @@ export const securityConfigSchema = z.object({
     useNonce: z.boolean().default(true),
     /** Nonce length */
     nonceLength: z.number().int().min(16).max(64).default(32),
-  }).default({}),
+  }).default({ enabled: true, reportOnly: false, directives: { 'default-src': ["'self'"], 'script-src': ["'self'"], 'style-src': ["'self'", "'unsafe-inline'"], 'img-src': ["'self'", 'data:', 'https:'], 'connect-src': ["'self'"] }, useNonce: true, nonceLength: 32 }),
   /** XSS prevention */
   xss: z.object({
     enabled: z.boolean().default(true),
@@ -507,11 +507,11 @@ export const securityConfigSchema = z.object({
       'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'code', 'pre',
     ]),
     /** Allowed attributes */
-    allowedAttributes: z.record(z.array(z.string())).default({
+    allowedAttributes: z.record(z.string(), z.array(z.string())).default({
       a: ['href', 'title', 'target', 'rel'],
       img: ['src', 'alt', 'title', 'width', 'height'],
     }),
-  }).default({}),
+  }).default({ enabled: true, sanitizeInput: true, escapeOutput: true, allowedTags: ['a', 'b', 'i', 'u', 'em', 'strong', 'p', 'br', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'code', 'pre'], allowedAttributes: { a: ['href', 'title', 'target', 'rel'], img: ['src', 'alt', 'title', 'width', 'height'] } }),
   /** CSRF protection */
   csrf: z.object({
     enabled: z.boolean().default(true),
@@ -552,18 +552,18 @@ export const securityConfigSchema = z.object({
       'unsafe-url',
     ]).default('strict-origin-when-cross-origin'),
     /** Permissions-Policy */
-    permissionsPolicy: z.record(z.string()).default({
+    permissionsPolicy: z.record(z.string(), z.string()).default({
       camera: '()',
       microphone: '()',
       geolocation: '()',
     }),
-  }).default({}),
+  }).default({ frameOptions: 'DENY', contentTypeOptions: 'nosniff', xssProtection: '1; mode=block', referrerPolicy: 'strict-origin-when-cross-origin', permissionsPolicy: { camera: '()', microphone: '()', geolocation: '()' } }),
   /** Subresource integrity */
   sri: z.object({
     enabled: z.boolean().default(true),
     /** Hash algorithm */
     algorithm: z.enum(['sha256', 'sha384', 'sha512']).default('sha384'),
-  }).default({}),
+  }).default({ enabled: true, algorithm: 'sha384' }),
 });
 
 export type SecurityConfig = z.infer<typeof securityConfigSchema>;
@@ -577,17 +577,17 @@ export type SecurityConfig = z.infer<typeof securityConfigSchema>;
  */
 export const masterConfigSchema = z.object({
   /** Streaming configuration */
-  streaming: streamingConfigSchema.default({}),
+  streaming: streamingConfigSchema.optional(),
   /** Hydration configuration */
-  hydration: hydrationConfigSchema.default({}),
+  hydration: hydrationConfigSchema.optional(),
   /** Layout configuration */
-  layouts: layoutsConfigSchema.default({}),
+  layouts: layoutsConfigSchema.optional(),
   /** Virtual DOM configuration */
-  vdom: vdomConfigSchema.default({}),
+  vdom: vdomConfigSchema.optional(),
   /** Performance configuration */
-  performance: performanceConfigSchema.default({}),
+  performance: performanceConfigSchema.optional(),
   /** Security configuration */
-  security: securityConfigSchema.default({}),
+  security: securityConfigSchema.optional(),
 });
 
 export type MasterConfig = z.infer<typeof masterConfigSchema>;
@@ -651,7 +651,7 @@ export function validateConfig<T extends z.ZodTypeAny>(
     };
   }
 
-  const errors: ConfigValidationError[] = result.error.errors.map((err) => ({
+  const errors: ConfigValidationError[] = result.error.issues.map((err) => ({
     path: err.path.join('.') || namespace,
     message: err.message,
     code: mapZodErrorToCode(err.code),
@@ -820,7 +820,7 @@ export function generateSchemaDocumentation(
  * Get human-readable type name from Zod schema
  */
 function getTypeName(schema: z.ZodTypeAny): string {
-  const typeName = schema._def.typeName;
+  const typeName = (schema._def as any).typeName as string;
 
   switch (typeName) {
     case 'ZodString':
@@ -830,7 +830,7 @@ function getTypeName(schema: z.ZodTypeAny): string {
     case 'ZodBoolean':
       return 'boolean';
     case 'ZodEnum':
-      return (schema as z.ZodEnum<[string, ...string[]]>).options.join(' \\| ');
+      return (schema as any).options.join(' \\| ');
     case 'ZodObject':
       return 'object';
     case 'ZodArray':
@@ -849,7 +849,7 @@ function getTypeName(schema: z.ZodTypeAny): string {
  */
 function getDefaultValue(schema: z.ZodTypeAny): string {
   if (schema instanceof z.ZodDefault) {
-    const defaultValue = schema._def.defaultValue();
+    const defaultValue = (schema._def.defaultValue as () => any)();
     if (typeof defaultValue === 'object') {
       return '`{...}`';
     }

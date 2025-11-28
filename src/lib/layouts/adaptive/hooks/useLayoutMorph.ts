@@ -9,9 +9,9 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
-import type { LayoutRect, LayoutState, MorphTransitionConfig, UseLayoutMorphReturn } from '../types.ts';
-import { DEFAULT_MORPH_TRANSITION_CONFIG } from '../types.ts';
-import { createMorphController } from '../morph-transition.ts';
+import type { LayoutRect, LayoutState, MorphTransitionConfig, UseLayoutMorphReturn } from '../types';
+import { DEFAULT_MORPH_TRANSITION_CONFIG } from '../types';
+import { createMorphController } from '../morph-transition';
 
 // =============================================================================
 // HOOK IMPLEMENTATION
@@ -220,7 +220,7 @@ export function useLayoutMorph(options: UseLayoutMorphOptions = {}): UseLayoutMo
 export function useMorphElement(
   morphHook: Pick<UseLayoutMorphReturn, 'registerElement' | 'unregisterElement'>,
   id: string
-): RefObject<HTMLDivElement> {
+): RefObject<HTMLDivElement | null> {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

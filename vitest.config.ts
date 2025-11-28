@@ -11,7 +11,7 @@ export default defineConfig({
     globals: true,
 
     // Setup files
-    setupFiles: ['./src/test/setup.ts'],
+    setupFiles: ['./test/setup.ts'],
 
     // Include patterns
     include: [

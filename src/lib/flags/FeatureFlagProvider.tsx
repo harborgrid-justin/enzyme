@@ -7,8 +7,8 @@ import {
   type ReactNode
 } from 'react';
 import { FeatureFlagContext } from '../contexts/FeatureFlagContext';
-import { env } from '@/config/env';
-import { getDefaultFlags } from '@/config/featureFlagConfig';
+import { env } from '../../config/env';
+import { getDefaultFlags } from '../../config/featureFlagConfig';
 import type { FlagKey } from './flagKeys';
 import { _setFlagProviderInitialized, _updateRuntimeFlags, _resetFlagProvider } from './debugMode';
 

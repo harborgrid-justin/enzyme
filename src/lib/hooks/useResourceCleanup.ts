@@ -22,7 +22,7 @@ export function useDisposable(): {
   unregister: (disposable: Disposable) => void;
   disposeAll: () => void;
 } {
-  const registryRef = useRef<DisposableRegistry>();
+  const registryRef = useRef<DisposableRegistry | undefined>(undefined);
 
   // Initialize registry lazily
   if (!registryRef.current) {
@@ -367,7 +367,7 @@ export function useWebSocketCleanup(
 } {
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectAttemptsRef = useRef(0);
-  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const connect = useCallback(() => {
     const wsUrl = typeof url === 'function' ? url() : url;

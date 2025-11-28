@@ -160,7 +160,7 @@ export function useVisibility(): {
   isVisible: boolean;
   isFullyVisible: boolean;
   visibility: VisibilityState;
-  ref: React.RefObject<HTMLElement>;
+  ref: React.RefObject<HTMLElement | null>;
 } {
   const { isVisible, isFullyVisible, visibility, ref } = useViewportPosition();
   return { isVisible, isFullyVisible, visibility, ref };
@@ -189,7 +189,7 @@ export function useVisibility(): {
  */
 export function useIntersectionRatio(): {
   ratio: number;
-  ref: React.RefObject<HTMLElement>;
+  ref: React.RefObject<HTMLElement | null>;
 } {
   const { position, ref } = useViewportPosition();
   const ratio = position?.intersectionRatio || 0;
@@ -216,7 +216,7 @@ export function useIntersectionRatio(): {
  */
 export function useDistanceFromViewport(): {
   distance: ViewportPosition['distanceFromViewport'] | null;
-  ref: React.RefObject<HTMLElement>;
+  ref: React.RefObject<HTMLElement | null>;
 } {
   const { position, ref } = useViewportPosition();
   const distance = position?.distanceFromViewport || null;
@@ -248,7 +248,7 @@ export function useDistanceFromCenter(): {
   distanceFromCenter: number;
   ref: React.RefObject<HTMLElement>;
 } {
-  const elementRef = useRef<HTMLElement>(null);
+  const elementRef = useRef<HTMLElement>(null!);
   const context = useDOMContextValue();
   const [distanceFromCenter, setDistanceFromCenter] = useState(Infinity);
 

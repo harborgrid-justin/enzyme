@@ -33,6 +33,7 @@
  * ```
  */
 
+import type { ReactNode } from 'react';
 import {
   Suspense,
   useEffect,
@@ -42,7 +43,6 @@ import {
   useCallback,
   useMemo,
   memo,
-  type ReactNode,
 } from 'react';
 
 import {
@@ -70,7 +70,7 @@ import {
  * A minimal placeholder with CSS animation that matches
  * the skeleton pattern used throughout the application.
  */
-function DefaultPlaceholder(): JSX.Element {
+function DefaultPlaceholder(): React.ReactElement {
   return (
     <div
       className="stream-boundary-placeholder"
@@ -112,7 +112,7 @@ interface NonStreamingFallbackProps {
 function NonStreamingFallback({
   children,
   fallback,
-}: NonStreamingFallbackProps): JSX.Element {
+}: NonStreamingFallbackProps): React.ReactElement {
   if (fallback) {
     return <>{fallback}</>;
   }
@@ -150,7 +150,7 @@ function StreamBoundaryWrapper({
   onStreamError,
   className,
   testId,
-}: StreamBoundaryWrapperProps): JSX.Element {
+}: StreamBoundaryWrapperProps): React.ReactElement {
   const boundaryId = id ?? generatedId;
   const stream = useStreamContext();
   const [state, setState] = useState<StreamState>(StreamState.Idle);
@@ -388,7 +388,7 @@ function StreamBoundaryComponent({
   onStreamError,
   className,
   testId,
-}: StreamBoundaryProps): JSX.Element {
+}: StreamBoundaryProps): React.ReactElement {
   // Generate a stable ID if not provided
   const generatedId = useId();
   const boundaryId = id ?? `stream-${generatedId}`;
@@ -481,7 +481,7 @@ export function CriticalStreamBoundary({
   deferMs = 0,
   ssr = true,
   ...props
-}: StreamBoundaryProps): JSX.Element {
+}: StreamBoundaryProps): React.ReactElement {
   return (
     <StreamBoundary
       {...props}
@@ -512,7 +512,7 @@ export function DeferredStreamBoundary({
   priority = StreamPriority.Low,
   deferMs = 100,
   ...props
-}: StreamBoundaryProps): JSX.Element {
+}: StreamBoundaryProps): React.ReactElement {
   return (
     <StreamBoundary
       {...props}
@@ -552,7 +552,7 @@ export function ConditionalStreamBoundary({
   children,
   fallback,
   ...props
-}: ConditionalStreamBoundaryProps): JSX.Element {
+}: ConditionalStreamBoundaryProps): React.ReactElement {
   if (!condition) {
     return <>{fallback ?? children}</>;
   }

@@ -182,7 +182,7 @@ export function LoadingProvider({
   config: configOverride,
   onTimeout,
   onError,
-}: LoadingProviderProps): JSX.Element {
+}: LoadingProviderProps): React.ReactElement {
   const config = useMemo(
     () => ({ ...DEFAULT_CONFIG, ...configOverride }),
     [configOverride]
@@ -353,7 +353,7 @@ export function LoadingIndicator({
   overlay = false,
   fullScreen = false,
   className = '',
-}: LoadingIndicatorProps): JSX.Element | null {
+}: LoadingIndicatorProps): React.ReactElement | null {
   const [visible, setVisible] = useState(false);
   const loadingStartTime = useRef<number>(0);
   const delayTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -443,7 +443,7 @@ export function ProgressiveLoader({
   errorFallback,
   config: configOverride,
   onRetry,
-}: ProgressiveLoaderProps): JSX.Element {
+}: ProgressiveLoaderProps): React.ReactElement {
   const config = useMemo(
     () => ({ ...DEFAULT_CONFIG, ...configOverride }),
     [configOverride]
@@ -581,7 +581,7 @@ interface DefaultSpinnerProps {
  * This consolidates spinner implementations to a single source of truth.
  * Use Spinner directly for more control over variants and colors.
  */
-function DefaultSpinner({ size = 'md' }: DefaultSpinnerProps): JSX.Element {
+function DefaultSpinner({ size = 'md' }: DefaultSpinnerProps): React.ReactElement {
   return <Spinner size={size} variant="primary" label="Loading" />;
 }
 
@@ -623,7 +623,7 @@ export function ProgressBar({
   indeterminate = false,
   label,
   className = '',
-}: ProgressBarProps): JSX.Element {
+}: ProgressBarProps): React.ReactElement {
   const clampedValue = Math.max(0, Math.min(100, value));
 
   const containerClasses = [

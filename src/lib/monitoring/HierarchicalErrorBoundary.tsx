@@ -481,7 +481,7 @@ function DefaultHierarchicalFallback({
   onAction,
   isRecovering,
   retryCount,
-}: ErrorFallbackProps): JSX.Element {
+}: ErrorFallbackProps): React.JSX.Element {
   // Use focus trap to keep focus within the error UI for critical/feature levels
   const shouldTrapFocus = level === 'critical' || level === 'feature';
   const focusTrapRef = useFocusTrap(shouldTrapFocus);
@@ -659,7 +659,7 @@ type PartialBoundaryProps = Omit<HierarchicalErrorBoundaryProps, 'level'>;
 export function CriticalErrorBoundary({
   children,
   ...props
-}: PartialBoundaryProps): JSX.Element {
+}: PartialBoundaryProps): React.JSX.Element {
   return (
     <HierarchicalErrorBoundary level="critical" {...props}>
       {children}
@@ -674,7 +674,7 @@ export function CriticalErrorBoundary({
 export function FeatureErrorBoundary({
   children,
   ...props
-}: PartialBoundaryProps): JSX.Element {
+}: PartialBoundaryProps): React.JSX.Element {
   return (
     <HierarchicalErrorBoundary level="feature" {...props}>
       {children}
@@ -689,7 +689,7 @@ export function FeatureErrorBoundary({
 export function ComponentErrorBoundary({
   children,
   ...props
-}: PartialBoundaryProps): JSX.Element {
+}: PartialBoundaryProps): React.JSX.Element {
   return (
     <HierarchicalErrorBoundary level="component" {...props}>
       {children}
@@ -704,7 +704,7 @@ export function ComponentErrorBoundary({
 export function WidgetErrorBoundary({
   children,
   ...props
-}: PartialBoundaryProps): JSX.Element {
+}: PartialBoundaryProps): React.JSX.Element {
   return (
     <HierarchicalErrorBoundary level="widget" {...props}>
       {children}
@@ -731,7 +731,7 @@ export function withHierarchicalErrorBoundary<P extends object>(
 ): ComponentType<P> {
   const displayName = WrappedComponent.displayName || WrappedComponent.name || 'Component';
 
-  function WithErrorBoundary(props: P): JSX.Element {
+  function WithErrorBoundary(props: P): React.JSX.Element {
     return (
       <HierarchicalErrorBoundary
         level={level}

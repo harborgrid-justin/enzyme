@@ -360,7 +360,7 @@ export function ErrorRecovery({
   fullScreen = false,
   compact = false,
   className = '',
-}: ErrorRecoveryProps): JSX.Element {
+}: ErrorRecoveryProps): React.ReactElement {
   const [retryCount, setRetryCount] = useState(0);
   const [isRetrying, setIsRetrying] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
@@ -571,7 +571,7 @@ export function OfflineRecovery({
   onForceRetry,
   children,
   offlineMessage,
-}: OfflineRecoveryProps): JSX.Element {
+}: OfflineRecoveryProps): React.ReactElement {
   const [isOnline, setIsOnline] = useState(
     typeof navigator !== 'undefined' ? navigator.onLine : true
   );
@@ -680,7 +680,7 @@ export function DegradedState({
   estimatedRecoveryTime,
   children,
   onDismiss,
-}: DegradedStateProps): JSX.Element {
+}: DegradedStateProps): React.ReactElement {
   const [dismissed, setDismissed] = useState(false);
 
   const handleDismiss = useCallback(() => {
@@ -731,7 +731,7 @@ export function DegradedState({
 // Helper Components
 // ============================================================================
 
-function ErrorIcon({ severity }: { severity: ErrorSeverity }): JSX.Element {
+function ErrorIcon({ severity }: { severity: ErrorSeverity }): React.ReactElement {
   const color = {
     info: '#3b82f6',
     warning: '#f59e0b',
@@ -755,7 +755,7 @@ function ErrorIcon({ severity }: { severity: ErrorSeverity }): JSX.Element {
   );
 }
 
-function OfflineIcon(): JSX.Element {
+function OfflineIcon(): React.ReactElement {
   return (
     <svg
       width="20"
@@ -776,7 +776,7 @@ function OfflineIcon(): JSX.Element {
   );
 }
 
-function OnlineIcon(): JSX.Element {
+function OnlineIcon(): React.ReactElement {
   return (
     <svg
       width="20"
@@ -797,7 +797,7 @@ function OnlineIcon(): JSX.Element {
   );
 }
 
-function WarningIcon(): JSX.Element {
+function WarningIcon(): React.ReactElement {
   return (
     <svg
       width="20"

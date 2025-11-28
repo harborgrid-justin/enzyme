@@ -6,6 +6,11 @@
  * error recovery, accessibility, responsive design, and animations.
  */
 
+import { loadingStateStyles } from './loading-states';
+import { errorRecoveryStyles } from './error-recovery-ui';
+import { accessibilityStyles } from './accessibility-enhancer';
+import { responsiveStyles } from './responsive-optimizer';
+
 // ============================================================================
 // Loading States
 // ============================================================================
@@ -271,11 +276,6 @@ export function initUXSystem(config: UXSystemConfig = {}): {
  * Get combined CSS for all UX components
  */
 export function getUXStyles(): string {
-  const { loadingStateStyles } = require('./loading-states');
-  const { errorRecoveryStyles } = require('./error-recovery-ui');
-  const { accessibilityStyles } = require('./accessibility-enhancer');
-  const { responsiveStyles } = require('./responsive-optimizer');
-
   return `
     /* Loading States */
     ${loadingStateStyles}

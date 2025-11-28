@@ -35,7 +35,7 @@
  * ```
  */
 
-import {
+import React, {
   createContext,
   type ReactNode,
   type ComponentType,
@@ -107,7 +107,7 @@ export interface FlagConfigurableProps {
   /** Loading component while flag is being evaluated */
   readonly loading?: ReactNode;
   /** Wrapper element type */
-  readonly as?: keyof JSX.IntrinsicElements;
+  readonly as?: keyof React.JSX.IntrinsicElements;
   /** Additional wrapper props */
   readonly wrapperProps?: Record<string, unknown>;
   /** Debug mode - logs flag evaluation */

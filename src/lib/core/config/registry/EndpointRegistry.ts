@@ -77,7 +77,7 @@ const EndpointDefinitionSchema = z.object({
   rateLimit: EndpointRateLimitSchema.optional(),
   tags: z.array(z.string()).optional(),
   baseUrl: z.string().url().optional(),
-  headers: z.record(z.string()).optional(),
+  headers: z.record(z.string(), z.string()).optional(),
   requestSchema: z.unknown().optional(),
   responseSchema: z.unknown().optional(),
   deprecated: z.boolean().optional(),
@@ -107,7 +107,7 @@ const EndpointHealthSchema = z.object({
  */
 const EndpointRegistryImportSchema = z.object({
   endpoints: z.array(EndpointDefinitionSchema),
-  health: z.record(EndpointHealthSchema).optional(),
+  health: z.record(z.string(), EndpointHealthSchema).optional(),
 }).strict();
 
 // =============================================================================
@@ -638,7 +638,7 @@ export class EndpointRegistry implements IEndpointRegistry {
     const validationResult = EndpointRegistryImportSchema.safeParse(rawData);
 
     if (!validationResult.success) {
-      const errorMessage = validationResult.error.errors
+      const errorMessage = validationResult.error.issues
         .map((e) => `${e.path.join('.')}: ${e.message}`)
         .join('; ');
       console.error('[EndpointRegistry] JSON validation failed:', errorMessage);

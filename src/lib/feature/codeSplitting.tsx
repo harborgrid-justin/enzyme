@@ -358,8 +358,8 @@ export function useFeatureChunkStatus(featureId: string): FeatureChunkInfo {
 export function usePreloadOnVisible(
   featureIds: string[],
   options: IntersectionObserverInit = {}
-): React.RefObject<HTMLDivElement> {
-  const ref = React.useRef<HTMLDivElement>(null);
+): React.RefObject<HTMLDivElement | null> {
+  const ref = React.useRef<HTMLDivElement | null>(null);
   const [hasPreloaded, setHasPreloaded] = useState(false);
 
   useEffect(() => {

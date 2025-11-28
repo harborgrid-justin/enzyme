@@ -14,33 +14,33 @@
 export {
   useAdaptiveLayout,
   type UseAdaptiveLayoutOptions,
-} from './useAdaptiveLayout.ts';
+} from './useAdaptiveLayout';
 
 export {
   useLayoutMode,
   useIsLayoutMode,
   useLayoutModeValue,
   type UseLayoutModeOptions,
-} from './useLayoutMode.ts';
+} from './useLayoutMode';
 
 export {
   useLayoutMorph,
   useMorphElement,
   type UseLayoutMorphOptions,
-} from './useLayoutMorph.ts';
+} from './useLayoutMorph';
 
 export {
   useContentDensity,
   useDensityThreshold,
   type UseContentDensityOptions,
-} from './useContentDensity.ts';
+} from './useContentDensity';
 
 export {
   useCLSGuard,
   useImageReservation,
   useCLSMonitor,
   type UseCLSGuardOptions,
-} from './useCLSGuard.ts';
+} from './useCLSGuard';
 
 // =============================================================================
 // TYPE RE-EXPORTS

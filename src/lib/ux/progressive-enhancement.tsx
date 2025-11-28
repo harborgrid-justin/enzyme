@@ -268,7 +268,7 @@ export function ProgressiveEnhancementProvider({
   children,
   features: initialFeatures = [],
   onCapabilitiesDetected,
-}: ProgressiveEnhancementProviderProps): JSX.Element {
+}: ProgressiveEnhancementProviderProps): React.ReactElement {
   const [capabilities, setCapabilities] = useState<BrowserCapabilities>(detectCapabilities);
   const [featureDefinitions] = useState<Map<string, FeatureDefinition>>(
     () => new Map(initialFeatures.map((f) => [f.id, f]))
@@ -526,7 +526,7 @@ export function CapabilityGate({
   capability,
   children,
   fallback = null,
-}: CapabilityGateProps): JSX.Element {
+}: CapabilityGateProps): React.ReactElement {
   const hasCapability = useCapability(capability);
   return <>{hasCapability ? children : fallback}</>;
 }
@@ -548,7 +548,7 @@ export function FeatureGate({
   loading: loadingFallback = null,
   fallback = null,
   errorFallback,
-}: FeatureGateProps): JSX.Element {
+}: FeatureGateProps): React.ReactElement {
   const { module, level, loading, error } = useProgressiveFeature(featureId);
 
   if (loading) return <>{loadingFallback}</>;

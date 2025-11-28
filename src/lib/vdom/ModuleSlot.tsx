@@ -18,7 +18,9 @@ import {
   type ReactNode,
   type FC,
   type ComponentType,
+  type ElementType,
 } from 'react';
+import { createPortal } from 'react-dom';
 import { createModuleId } from './types';
 import { useModuleContext, useOptionalModuleContext } from './ModuleBoundary';
 import { useModuleSystem } from './ModuleProvider';
@@ -43,7 +45,7 @@ export interface ModuleSlotProps {
   /** Placeholder when slot is empty and not required */
   placeholder?: ReactNode;
   /** Wrapper element */
-  as?: keyof JSX.IntrinsicElements;
+  as?: ElementType;
   /** Additional class name */
   className?: string;
   /** Additional styles */
@@ -69,7 +71,7 @@ export interface DynamicModuleSlotProps {
   /** Callback on load error */
   onError?: (error: Error) => void;
   /** Wrapper element */
-  as?: keyof JSX.IntrinsicElements;
+  as?: ElementType;
   /** Additional class name */
   className?: string;
   /** Additional styles */
@@ -85,7 +87,7 @@ export interface ModuleOutletProps {
   /** Default content */
   children?: ReactNode;
   /** Wrapper element */
-  as?: keyof JSX.IntrinsicElements;
+  as?: ElementType;
   /** Additional class name */
   className?: string;
   /** Additional styles */
@@ -303,7 +305,7 @@ export interface LazyModuleSlotProps {
   /** Fallback during loading */
   fallback?: ReactNode;
   /** Wrapper element */
-  as?: keyof JSX.IntrinsicElements;
+  as?: ElementType;
   /** Additional class name */
   className?: string;
   /** Additional styles */
@@ -492,8 +494,7 @@ export const ModulePortalSlot: FC<ModulePortalSlotProps> = ({
     return null;
   }
 
-  // Use React.createPortal when available
-  const { createPortal } = require('react-dom');
+  // Use React.createPortal
   return createPortal(children, targetElement);
 };
 

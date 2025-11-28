@@ -775,7 +775,7 @@ export class LongTaskObserver {
    */
   export const performanceMonitor = new PerformanceMonitor({
     reporter: (metrics) => {
-      if (process.env['NODE_ENV'] === 'development') {
+      if (import.meta.env.DEV) {
         console.info('[Performance]', metrics);
       }
     },

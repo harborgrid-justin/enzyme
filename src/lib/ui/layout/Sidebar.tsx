@@ -11,7 +11,7 @@ import React, { type ReactNode, useState, useCallback, useMemo, memo, type CSSPr
  * Handles ArrowUp, ArrowDown, Home, End keys for menu item navigation
  */
 function useSidebarKeyboardNavigation(
-  containerRef: React.RefObject<HTMLElement>,
+  containerRef: React.RefObject<HTMLElement | null>,
   onToggleExpand?: (itemId: string) => void
 ): (event: ReactKeyboardEvent, item: SidebarItem) => void {
   return useCallback((event: ReactKeyboardEvent, item: SidebarItem) => {

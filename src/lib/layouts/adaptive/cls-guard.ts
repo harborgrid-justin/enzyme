@@ -24,8 +24,8 @@ import type {
   LayoutReservation,
   LayoutShiftEntry,
   ReservationStrategy,
-} from './types.ts';
-import { DEFAULT_CLS_GUARD_CONFIG } from './types.ts';
+} from './types';
+import { DEFAULT_CLS_GUARD_CONFIG } from './types';
 
 // =============================================================================
 // CONSTANTS

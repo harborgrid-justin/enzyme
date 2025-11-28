@@ -272,7 +272,7 @@ export const ContextAwareBox = forwardRef(ContextAwareBoxInner) as <
 /**
  * Props for FlexBox component.
  */
-export interface FlexBoxProps extends Omit<ContextAwareBoxProps, 'layoutHint'> {
+export interface FlexBoxProps extends Omit<ContextAwareBoxProps, 'layoutHint' | 'as'> {
   /** Flex direction */
   direction?: 'row' | 'column' | 'row-reverse' | 'column-reverse';
   /** Justify content */
@@ -321,7 +321,7 @@ export function FlexBox({
 /**
  * Props for GridBox component.
  */
-export interface GridBoxProps extends Omit<ContextAwareBoxProps, 'layoutHint'> {
+export interface GridBoxProps extends Omit<ContextAwareBoxProps, 'layoutHint' | 'as'> {
   /** Number of columns or template string */
   columns?: number | string;
   /** Number of rows or template string */

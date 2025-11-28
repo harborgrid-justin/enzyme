@@ -16,9 +16,9 @@ import type {
   LayoutReservation,
   ReservationStrategy,
   UseCLSGuardReturn,
-} from '../types.ts';
-import { DEFAULT_CLS_GUARD_CONFIG } from '../types.ts';
-import { createCLSGuard, type CLSGuard } from '../cls-guard.ts';
+} from '../types';
+import { DEFAULT_CLS_GUARD_CONFIG } from '../types';
+import { createCLSGuard, type CLSGuard } from '../cls-guard';
 
 // =============================================================================
 // HOOK IMPLEMENTATION

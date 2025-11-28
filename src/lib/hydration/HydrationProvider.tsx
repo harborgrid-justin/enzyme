@@ -118,7 +118,7 @@ export function HydrationProvider({
   onMetric,
   autoStart = true,
   integrateWithPerformance = true,
-}: HydrationProviderProps): JSX.Element {
+}: HydrationProviderProps): React.JSX.Element {
   // ==========================================================================
   // Refs
   // ==========================================================================
@@ -466,3 +466,6 @@ export function useOptionalHydrationContext(): HydrationContextValue | null {
 
 export { HydrationContext };
 export type { HydrationContextValue, HydrationProviderProps };
+
+
+

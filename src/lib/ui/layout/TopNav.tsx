@@ -10,7 +10,7 @@ import React, { type ReactNode, useState, useRef, useEffect, useCallback, memo, 
  * Handles ArrowUp, ArrowDown, Home, End, and Escape keys
  */
 function useDropdownKeyboardNavigation(
-  menuRef: React.RefObject<HTMLDivElement>,
+  menuRef: React.RefObject<HTMLDivElement | null>,
   isOpen: boolean,
   onClose: () => void
 ): (event: ReactKeyboardEvent) => void {

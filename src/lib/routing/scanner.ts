@@ -3,6 +3,7 @@
  * @description Discovers routes from file system with convention-based parsing and caching
  */
 
+import type { Dirent } from 'fs';
 import type {
   DiscoveredRoute,
   ParsedRouteSegment,
@@ -210,15 +211,15 @@ async function scanDirectory(
 ): Promise<DiscoveredRoute[]> {
   const routes: DiscoveredRoute[] = [];
 
-  let entries: ReturnType<typeof fs.readdir> extends Promise<infer T> ? T : never;
+  let entries: Dirent[];
   try {
-    entries = await fs.readdir(dirPath, { withFileTypes: true }) as unknown as typeof entries;
+    entries = await fs.readdir(dirPath, { withFileTypes: true }) as Dirent[];
   } catch {
     return routes;
   }
 
   for (const entry of entries) {
-    const entryName = typeof entry.name === 'string' ? entry.name : entry.name.toString();
+    const entryName = typeof entry.name === 'string' ? entry.name : String(entry.name);
     const entryPath = path.join(dirPath, entryName);
     const relativePath = path.relative(basePath, entryPath);
 
@@ -441,55 +442,17 @@ export async function scanRouteFilesParallel(
     }
   }
 
-  // Process queue with concurrency control
-  async function processQueue(): Promise<void> {
-    while (dirQueue.length > 0 || inProgress.size > 0) {
-      // Fill up to max concurrency
-      while (dirQueue.length > 0 && inProgress.size < maxConcurrency) {
-        const item = dirQueue.shift();
-        if (item) {
-          inProgress.add(item.dirPath);
-          processDirectory(item.dirPath, item.basePath).then(() => {
-            inProgress.delete(item.dirPath);
-            scannedDirs++;
-          }).catch(() => {
-            inProgress.delete(item.dirPath);
-            scannedDirs++;
-          });
-        }
-      }
-
-      // Wait a tick for progress
-      await new Promise((resolve) => setTimeout(resolve, 1));
-
-      // Report progress
-      if (onProgress) {
-        onProgress({
-          totalDirs,
-          scannedDirs,
-          routesFound: routes.length,
-          currentDir: Array.from(inProgress)[0] || '',
-          elapsedMs: Date.now() - startTime,
-        });
-      }
-
-      // Check timeout
-      if (Date.now() - startTime > scanTimeout) {
-        throw new Error(`Route scanning timed out after ${scanTimeout}ms`);
-      }
-    }
-  }
-
+  // Process directory and add subdirectories to queue
   async function processDirectory(dirPath: string, basePath: string): Promise<void> {
-    let entries: ReturnType<typeof fs.readdir> extends Promise<infer T> ? T : never;
+    let entries: Dirent[];
     try {
-      entries = await fs.readdir(dirPath, { withFileTypes: true }) as unknown as typeof entries;
+      entries = await fs.readdir(dirPath, { withFileTypes: true }) as Dirent[];
     } catch {
       return;
     }
 
     for (const entry of entries) {
-      const entryName = typeof entry.name === 'string' ? entry.name : entry.name.toString();
+      const entryName = typeof entry.name === 'string' ? entry.name : String(entry.name);
       const entryPath = path.join(dirPath, entryName);
       const relativePath = path.relative(basePath, entryPath);
 
@@ -531,6 +494,45 @@ export async function scanRouteFilesParallel(
         };
 
         routes.push(route);
+      }
+    }
+  }
+
+  // Process queue with concurrency control
+  async function processQueue(): Promise<void> {
+    while (dirQueue.length > 0 || inProgress.size > 0) {
+      // Fill up to max concurrency
+      while (dirQueue.length > 0 && inProgress.size < maxConcurrency) {
+        const item = dirQueue.shift();
+        if (item) {
+          inProgress.add(item.dirPath);
+          processDirectory(item.dirPath, item.basePath).then(() => {
+            inProgress.delete(item.dirPath);
+            scannedDirs++;
+          }).catch(() => {
+            inProgress.delete(item.dirPath);
+            scannedDirs++;
+          });
+        }
+      }
+
+      // Wait a tick for progress
+      await new Promise((resolve) => setTimeout(resolve, 1));
+
+      // Report progress
+      if (onProgress) {
+        onProgress({
+          totalDirs,
+          scannedDirs,
+          routesFound: routes.length,
+          currentDir: Array.from(inProgress)[0] || '',
+          elapsedMs: Date.now() - startTime,
+        });
+      }
+
+      // Check timeout
+      if (Date.now() - startTime > scanTimeout) {
+        throw new Error(`Route scanning timed out after ${scanTimeout}ms`);
       }
     }
   }

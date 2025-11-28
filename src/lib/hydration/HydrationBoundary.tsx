@@ -40,7 +40,7 @@
  * ```
  */
 
-import {
+import React, {
   useRef,
   useState,
   useEffect,
@@ -102,7 +102,7 @@ function generateBoundaryId(providedId: string | undefined, reactId: string): Hy
 /**
  * Default placeholder for loading state.
  */
-function DefaultPlaceholder(): JSX.Element {
+function DefaultPlaceholder(): React.JSX.Element {
   return (
     <div
       className="hydration-placeholder"
@@ -118,7 +118,7 @@ function DefaultPlaceholder(): JSX.Element {
 /**
  * Default error fallback.
  */
-function DefaultErrorFallback({ error }: { error: Error }): JSX.Element {
+function DefaultErrorFallback({ error }: { error: Error }): React.JSX.Element {
   return (
     <div
       className="hydration-error"
@@ -170,7 +170,7 @@ export function HydrationBoundary({
   aboveTheFold = false,
   className,
   style,
-}: HydrationBoundaryProps): JSX.Element {
+}: HydrationBoundaryProps): React.JSX.Element {
   // ==========================================================================
   // Refs and IDs
   // ==========================================================================
@@ -542,7 +542,7 @@ export function withHydrationBoundary<P extends object>(
     estimatedCost: optionEstimatedCost,
   } = options;
 
-  function WrappedComponent(props: P & Partial<HydrationBoundaryProps>): JSX.Element {
+  function WrappedComponent(props: P & Partial<HydrationBoundaryProps>): React.JSX.Element {
     const {
       priority = defaultPriority,
       trigger = defaultTrigger,
@@ -635,7 +635,7 @@ export function LazyHydration<P extends object>({
   factory,
   componentProps,
   boundaryProps = {},
-}: LazyHydrationProps<P>): JSX.Element {
+}: LazyHydrationProps<P>): React.JSX.Element {
   // Create lazy component once with proper typing
   const LazyComponent = useMemo(
     () => lazy(factory) as React.LazyExoticComponent<ComponentType<P>>,
@@ -661,3 +661,6 @@ export function LazyHydration<P extends object>({
 // ============================================================================
 
 export type { HydrationBoundaryProps, WithHydrationBoundaryOptions, LazyHydrationProps };
+
+
+

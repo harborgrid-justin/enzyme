@@ -684,11 +684,11 @@ export class ConsoleAnalyticsProvider implements AnalyticsProvider {
  * Global analytics manager instance
  */
 export const analytics = new AnalyticsManager({
-  debug: process.env['NODE_ENV'] === 'development',
+  debug: import.meta.env.DEV,
 });
 
 // Register console provider in development
-if (process.env['NODE_ENV'] === 'development') {
+if (import.meta.env.DEV) {
   void analytics.registerProvider(new ConsoleAnalyticsProvider());
 }
 

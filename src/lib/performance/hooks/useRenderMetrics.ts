@@ -193,8 +193,8 @@ export function useRenderMetrics(
   }));
 
   // Track props for change detection
-  const prevPropsRef = useRef<Record<string, unknown> | undefined>();
-  const prevStateRef = useRef<Record<string, unknown> | undefined>();
+  const prevPropsRef = useRef<Record<string, unknown> | undefined>(undefined);
+  const prevStateRef = useRef<Record<string, unknown> | undefined>(undefined);
 
   // Update metrics from tracker
   const updateMetrics = useCallback(() => {

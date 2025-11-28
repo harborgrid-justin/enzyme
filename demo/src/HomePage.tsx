@@ -2,21 +2,21 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 const examples = [
-  { id: '01', name: 'Basic Routing', path: '/example-01', desc: 'Enzyme routing system fundamentals' },
-  { id: '02', name: 'State Management', path: '/example-02', desc: 'Zustand integration' },
-  { id: '03', name: 'Auth & RBAC', path: '/example-03', desc: 'Authentication and role-based access' },
-  { id: '04', name: 'Feature Flags', path: '/example-04', desc: 'A/B testing and feature toggles' },
-  { id: '05', name: 'Error Boundaries', path: '/example-05', desc: 'Error handling and recovery' },
-  { id: '06', name: 'React Query', path: '/example-06', desc: 'Data fetching and caching' },
-  { id: '07', name: 'Performance Monitoring', path: '/example-07', desc: 'Core Web Vitals tracking' },
-  { id: '08', name: 'Theme System', path: '/example-08', desc: 'Dynamic theming' },
-  { id: '09', name: 'Layout System', path: '/example-09', desc: 'Adaptive layouts' },
-  { id: '10', name: 'Security & Validation', path: '/example-10', desc: 'Input sanitization' },
-  { id: '11', name: 'Streaming Data', path: '/example-11', desc: 'Progressive rendering' },
-  { id: '12', name: 'Real-time Sync', path: '/example-12', desc: 'Multi-tab synchronization' },
-  { id: '13', name: 'Hydration & SSR', path: '/example-13', desc: 'Server-side rendering' },
-  { id: '14', name: 'VDOM Modules', path: '/example-14', desc: 'Virtual DOM system' },
-  { id: '15', name: 'Full Integration', path: '/example-15', desc: 'All features combined' },
+  { id: '01', name: 'Basic Routing', path: '/example-01', desc: 'Enzyme routing system fundamentals', available: true },
+  { id: '02', name: 'State Management', path: '/example-02', desc: 'Zustand integration', available: true },
+  { id: '03', name: 'Auth & RBAC', path: '/example-03', desc: 'Authentication and role-based access', available: true },
+  { id: '04', name: 'Feature Flags', path: '/example-04', desc: 'A/B testing and feature toggles', available: false },
+  { id: '05', name: 'Error Boundaries', path: '/example-05', desc: 'Error handling and recovery', available: false },
+  { id: '06', name: 'React Query', path: '/example-06', desc: 'Data fetching and caching', available: false },
+  { id: '07', name: 'Performance Monitoring', path: '/example-07', desc: 'Core Web Vitals tracking', available: false },
+  { id: '08', name: 'Theme System', path: '/example-08', desc: 'Dynamic theming', available: false },
+  { id: '09', name: 'Layout System', path: '/example-09', desc: 'Adaptive layouts', available: false },
+  { id: '10', name: 'Security & Validation', path: '/example-10', desc: 'Input sanitization', available: false },
+  { id: '11', name: 'Streaming Data', path: '/example-11', desc: 'Progressive rendering', available: false },
+  { id: '12', name: 'Real-time Sync', path: '/example-12', desc: 'Multi-tab synchronization', available: false },
+  { id: '13', name: 'Hydration & SSR', path: '/example-13', desc: 'Server-side rendering', available: false },
+  { id: '14', name: 'VDOM Modules', path: '/example-14', desc: 'Virtual DOM system', available: false },
+  { id: '15', name: 'Full Integration', path: '/example-15', desc: 'All features combined', available: false },
 ];
 
 export default function HomePage() {
@@ -95,7 +95,8 @@ export default function HomePage() {
         )}
 
         <div className="mt-12 text-center text-sm text-gray-500">
-          <p>Built with ❤️ using @missionfabric-js/enzyme v1.0.1</p>
+          <p>Built with ❤️ using @missionfabric-js/enzyme v1.0.3</p>
+          <p className="mt-2">Comprehensive React Enterprise Framework</p>
         </div>
       </div>
     </div>

@@ -547,9 +547,9 @@ export function shutdownSystem(): void {
  * Uses feature flag utilities for debug mode detection
  */
 export const defaultSystemConfig: SystemConfig = {
-  environment: process.env['NODE_ENV'] === 'production'
+  environment: import.meta.env.MODE === 'production'
     ? 'production'
-    : process.env['NODE_ENV'] === 'test'
+    : import.meta.env.MODE === 'test'
     ? 'staging'
     : 'development',
   debug: isDebugModeEnabled(),

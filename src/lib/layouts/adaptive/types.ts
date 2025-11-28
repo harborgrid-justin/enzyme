@@ -775,7 +775,7 @@ export interface UseAdaptiveLayoutReturn {
   /** Trigger layout recomputation */
   readonly recompute: () => void;
   /** Container ref to attach */
-  readonly containerRef: RefObject<HTMLDivElement>;
+  readonly containerRef: RefObject<HTMLDivElement | null>;
 }
 
 /**

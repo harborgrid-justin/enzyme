@@ -856,7 +856,7 @@ export function useField<T>(
   const [dirty, setDirty] = useState(false);
   const [validating, setValidating] = useState(false);
 
-  const debounceTimer = useRef<ReturnType<typeof setTimeout>>();
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const validate = useCallback(
     async (val: T | undefined): Promise<FieldError[]> => {

@@ -98,7 +98,7 @@ export function usePredictivePrefetch(
   const location = useLocation();
   const navigate = useNavigate();
   const prevPathRef = useRef<string>('');
-  const prefetchTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const prefetchTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   // Get the singleton engine instance
   const engine = useMemo(
@@ -250,12 +250,12 @@ export function PredictiveLink({
   loader,
   children,
   ...props
-}: PredictiveLinkProps): JSX.Element {
+}: PredictiveLinkProps): React.JSX.Element {
   const navigate = useNavigate();
   const engine = useMemo(() => getPredictivePrefetchEngine(), []);
   const elementRef = useRef<HTMLAnchorElement>(null);
   const hasPrefetchedRef = useRef(false);
-  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   // Trigger prefetch
   const triggerPrefetch = useCallback(() => {

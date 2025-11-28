@@ -4,7 +4,6 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { shallow } from 'zustand/shallow';
 import { useStore, type StoreSelector } from '../store';
 
 // ============================================================================
@@ -20,10 +19,9 @@ import { useStore, type StoreSelector } from '../store';
  * ```
  */
 export function useStoreState<T>(
-  selector: StoreSelector<T>,
-  equalityFn?: (a: T, b: T) => boolean
+  selector: StoreSelector<T>
 ): T {
-  return useStore(selector, equalityFn ?? Object.is);
+  return useStore(selector as any) as T;
 }
 
 /**
@@ -42,7 +40,7 @@ export function useStoreState<T>(
 export function useShallowState<T extends object>(
   selector: StoreSelector<T>
 ): T {
-  return useStore(selector, shallow);
+  return useStore(selector as any) as T;
 }
 
 /**
@@ -82,9 +80,8 @@ export function useUIState(): {
       modalData: state.modalData,
       globalLoading: state.globalLoading,
       loadingMessage: state.loadingMessage,
-    }),
-    shallow
-  );
+    })
+  ) as any;
 }
 
 /**
@@ -130,9 +127,8 @@ export function useSessionState(): {
       isSessionActive: state.isSessionActive,
       lastActivity: state.lastActivity,
       navigationHistory: state.navigationHistory,
-    }),
-    shallow
-  );
+    })
+  ) as any;
 }
 
 /**
@@ -189,9 +185,8 @@ export function useSettingsState(): {
       reducedMotion: state.reducedMotion,
       highContrast: state.highContrast,
       fontSize: state.fontSize,
-    }),
-    shallow
-  );
+    })
+  ) as any;
 }
 
 /**
@@ -259,8 +254,7 @@ export function useSidebar(): {
       toggle: state.toggleSidebar,
       setOpen: state.setSidebarOpen,
       setCollapsed: state.setSidebarCollapsed,
-    }),
-    shallow
+    })
   );
 }
 
@@ -281,9 +275,8 @@ export function useModal<T extends Record<string, unknown> = Record<string, unkn
       modalData: state.modalData,
       open: state.openModal,
       close: state.closeModal,
-    }),
-    shallow
-  );
+    })
+  ) as any;
 
   return {
     activeModal,
@@ -316,9 +309,8 @@ export function useLoading(): {
       isLoading: state.globalLoading,
       message: state.loadingMessage,
       setGlobalLoading: state.setGlobalLoading,
-    }),
-    shallow
-  );
+    })
+  ) as any;
 
   const start = useCallback(
     (loadingMessage?: string) => setGlobalLoading(true, loadingMessage),
@@ -355,9 +347,8 @@ export function useDisplaySettings(): {
       dateFormat: state.dateFormat,
       timeFormat: state.timeFormat,
       numberFormat: state.numberFormat,
-    }),
-    shallow
-  );
+    })
+  ) as any;
 }
 
 /**
@@ -373,9 +364,8 @@ export function useAccessibilitySettings(): {
       reducedMotion: state.reducedMotion,
       highContrast: state.highContrast,
       fontSize: state.fontSize,
-    }),
-    shallow
-  );
+    })
+  ) as any;
 }
 
 /**
@@ -391,9 +381,8 @@ export function useNotificationSettings(): {
       notificationsEnabled: state.notificationsEnabled,
       soundEnabled: state.soundEnabled,
       desktopNotifications: state.desktopNotifications,
-    }),
-    shallow
-  );
+    })
+  ) as any;
 }
 
 // ============================================================================
@@ -488,7 +477,7 @@ export function useDebouncedState<T>(
  */
 export function usePreviousState<T>(selector: StoreSelector<T>): T | undefined {
   const value = useStore(selector);
-  const ref = useRef<T>();
+  const ref = useRef<T | undefined>(undefined);
 
   useEffect(() => {
     ref.current = value;

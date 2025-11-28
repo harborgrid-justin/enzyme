@@ -376,7 +376,7 @@ export function LazyLoad({
   minHeight,
   className,
   style,
-}: LazyLoadProps): JSX.Element {
+}: LazyLoadProps): React.JSX.Element {
   const [isLoaded, setIsLoaded] = useState(false);
 
   const handleEnterViewport = useCallback(() => {
@@ -442,7 +442,7 @@ export function StickyHeader({
   onStickyChange,
   className,
   style,
-}: StickyHeaderProps): JSX.Element {
+}: StickyHeaderProps): React.JSX.Element {
   const handleVisibilityChange = useCallback(
     (visibility: VisibilityState) => {
       // Sticky when partially visible (top is outside viewport)
@@ -513,7 +513,7 @@ export function ScrollTrigger({
   triggerOnce = false,
   indicator,
   className,
-}: ScrollTriggerProps): JSX.Element {
+}: ScrollTriggerProps): React.JSX.Element {
   return (
     <ViewportAnchor
       className={className}

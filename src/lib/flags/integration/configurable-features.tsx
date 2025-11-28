@@ -550,7 +550,7 @@ export function ConfigurableFeaturesProvider({
   initialFeatures = [],
   getFlag,
   flags = {},
-}: ConfigurableFeaturesProviderProps): JSX.Element {
+}: ConfigurableFeaturesProviderProps): React.JSX.Element {
   const [features, setFeatures] = useState<ConfigurableFeature[]>([]);
 
   // Register initial features
@@ -817,3 +817,5 @@ export function validateFeatures(features: FeatureDefinition[]): {
     errors,
   };
 }
+
+

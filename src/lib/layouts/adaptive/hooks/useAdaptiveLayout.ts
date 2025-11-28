@@ -17,9 +17,9 @@ import type {
   LayoutMode,
   LayoutState,
   UseAdaptiveLayoutReturn,
-} from '../types.ts';
-import { DEFAULT_LAYOUT_ENGINE_CONFIG } from '../types.ts';
-import { createLayoutEngine } from '../layout-engine.ts';
+} from '../types';
+import { DEFAULT_LAYOUT_ENGINE_CONFIG } from '../types';
+import { createLayoutEngine } from '../layout-engine';
 
 // =============================================================================
 // HOOK IMPLEMENTATION

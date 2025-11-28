@@ -650,7 +650,7 @@ export function FlagAnalyticsProvider({
   bridge: providedBridge,
   config,
   getFlags,
-}: FlagAnalyticsProviderProps): JSX.Element {
+}: FlagAnalyticsProviderProps): React.JSX.Element {
   const bridge = useMemo(() => {
     if (providedBridge) return providedBridge;
     if (config) return createAnalyticsBridge({ ...config, getFlags });
@@ -924,3 +924,5 @@ export function createHttpDestination(config: {
     },
   };
 }
+
+

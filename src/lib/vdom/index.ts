@@ -336,9 +336,6 @@ export {
   useSecureScriptProps,
   useIsEventAllowed,
   useSecureMessaging,
-
-  // Hooks convenience object
-  hooks,
 } from './hooks';
 
 export type { UseModuleStateOptions } from './hooks';

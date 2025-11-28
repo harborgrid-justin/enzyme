@@ -148,7 +148,7 @@ export function useContentDensity(options: UseContentDensityOptions): UseContent
   // Refs
   const observerRef = useRef<ResizeObserver | null>(null);
   const mutationObserverRef = useRef<MutationObserver | null>(null);
-  const debounceTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   // Calculate density
   const recalculate = useCallback(() => {

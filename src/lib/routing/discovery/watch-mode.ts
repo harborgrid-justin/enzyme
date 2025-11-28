@@ -333,7 +333,7 @@ export class WatchMode {
         const fsWatcher = watch(
           watchPath,
           { recursive: true },
-          (eventType, filename) => {
+          (eventType: string, filename: string | null) => {
             if (!filename) return;
 
             const fullPath = path.join(watchPath, filename);

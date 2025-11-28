@@ -1,19 +1,41 @@
 {
-  "name": "demo",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "@missionfabric-js/enzyme-demo",
+  "version": "1.0.4",
+  "description": "Interactive examples for @missionfabric-js/enzyme framework",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
+  "keywords": [
+    "enzyme",
+    "react",
+    "demo",
+    "examples"
+  ],
+  "author": "MissionFabric",
+  "license": "MIT",
   "dependencies": {
-    "@missionfabric-js/enzyme": "^1.0.1",
+    "@missionfabric-js/enzyme": "^1.0.4",
+    "@tanstack/react-query": "^5.60.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^7.9.6"
+    "react-error-boundary": "^6.0.0",
+    "react-router-dom": "^6.26.2",
+    "zustand": "^5.0.2"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.17",
+    "@types/node": "^24.10.1",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^5.1.1",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^4.1.17",
+    "typescript": "^5.7.2",
+    "vite": "^7.2.4"
   }
 }

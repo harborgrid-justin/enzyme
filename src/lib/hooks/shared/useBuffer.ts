@@ -88,7 +88,7 @@ export function useBuffer<T>(options: BufferOptions<T> = {}): UseBufferResult<T>
   } = options;
 
   const bufferRef = useRef<T[]>([]);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const onFlushRef = useLatestRef(onFlush);
   const shouldFlushRef = useLatestRef(shouldFlush);
 

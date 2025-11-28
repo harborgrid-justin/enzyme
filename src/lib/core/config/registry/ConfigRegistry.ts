@@ -591,7 +591,16 @@ export function subscribeToLibConfig(listener: ConfigChangeListener): Unsubscrib
 /**
  * Type-safe accessors for configuration domains.
  */
-export const LIB_CONFIG = {
+export const LIB_CONFIG: {
+  readonly network: DeepReadonly<LibraryConfig['network']>;
+  readonly cache: DeepReadonly<LibraryConfig['cache']>;
+  readonly flags: DeepReadonly<LibraryConfig['flags']>;
+  readonly auth: DeepReadonly<LibraryConfig['auth']>;
+  readonly layouts: DeepReadonly<LibraryConfig['layouts']>;
+  readonly vdom: DeepReadonly<LibraryConfig['vdom']>;
+  readonly ui: DeepReadonly<LibraryConfig['ui']>;
+  readonly monitoring: DeepReadonly<LibraryConfig['monitoring']>;
+} = {
   get network() {
     return getConfigRegistry().getConfig().network;
   },
@@ -616,4 +625,4 @@ export const LIB_CONFIG = {
   get monitoring() {
     return getConfigRegistry().getConfig().monitoring;
   },
-} as const;
+};

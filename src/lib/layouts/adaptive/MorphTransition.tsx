@@ -23,9 +23,9 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react';
-import type { LayoutRect, MorphTransitionConfig, MorphTransitionProps } from './types.ts';
-import { DEFAULT_MORPH_TRANSITION_CONFIG } from './types.ts';
-// import { createMorphController } from './morph-transition.ts';
+import type { LayoutRect, MorphTransitionConfig, MorphTransitionProps } from './types';
+import { DEFAULT_MORPH_TRANSITION_CONFIG } from './types';
+// import { createMorphController } from './morph-transition';
 
 // =============================================================================
 // CONSTANTS

@@ -213,9 +213,9 @@ export function useOptimisticSync<T>(
   const [error, setError] = useState<Error | null>(null);
 
   // Refs
-  const debounceTimer = useRef<ReturnType<typeof setTimeout>>();
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const batchQueue = useRef<Partial<T>[]>([]);
-  const batchTimer = useRef<ReturnType<typeof setTimeout>>();
+  const batchTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const isMounted = useRef(true);
 
   // Cleanup

@@ -323,7 +323,7 @@ export function useOptimizedRender<T>(
 
   const [isInitial, setIsInitial] = useState(defer);
   const [isPending, startTransition] = useTransition();
-  const debounceTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const cancelScheduleRef = useRef<(() => void) | null>(null);
 
   // Track dependency changes with stable version number

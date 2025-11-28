@@ -104,7 +104,7 @@ export function PortalBridge({
   className,
   style,
   'data-testid': testId,
-}: PortalBridgeProps): JSX.Element | null {
+}: PortalBridgeProps): React.JSX.Element | null {
   // Refs
   const sourceRef = useRef<HTMLDivElement>(null);
   const portalContainerRef = useRef<HTMLDivElement | null>(null);
@@ -304,7 +304,7 @@ interface PortalContentProps {
 /**
  * Wraps portal content and provides source context information.
  */
-function PortalContent({ children, sourceContext }: PortalContentProps): JSX.Element {
+function PortalContent({ children, sourceContext }: PortalContentProps): React.JSX.Element {
   return (
     <div
       data-portal-content="true"
@@ -354,7 +354,7 @@ export function ModalPortal({
   ariaLabelledBy,
   ariaDescribedBy,
   ...props
-}: ModalPortalProps): JSX.Element | null {
+}: ModalPortalProps): React.JSX.Element | null {
   if (!isOpen) {
     return null;
   }
@@ -398,7 +398,7 @@ export function TooltipPortal({
   isVisible,
   children,
   ...props
-}: TooltipPortalProps): JSX.Element | null {
+}: TooltipPortalProps): React.JSX.Element | null {
   if (!isVisible) {
     return null;
   }
@@ -434,7 +434,7 @@ export function PopoverPortal({
   isOpen,
   children,
   ...props
-}: PopoverPortalProps): JSX.Element | null {
+}: PopoverPortalProps): React.JSX.Element | null {
   if (!isOpen) {
     return null;
   }
@@ -451,3 +451,5 @@ export function PopoverPortal({
 // ============================================================================
 
 export default PortalBridge;
+
+

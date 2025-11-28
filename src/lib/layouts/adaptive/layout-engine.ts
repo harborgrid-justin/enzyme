@@ -33,8 +33,8 @@ import type {
   LayoutState,
   ListLayoutConfig,
   UserLayoutPreferences,
-} from './types.ts';
-import { DEFAULT_LAYOUT_ENGINE_CONFIG } from './types.ts';
+} from './types';
+import { DEFAULT_LAYOUT_ENGINE_CONFIG } from './types';
 
 // =============================================================================
 // CONSTANTS

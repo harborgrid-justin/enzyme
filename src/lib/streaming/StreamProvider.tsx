@@ -263,7 +263,7 @@ export function StreamProvider({
   enableMetrics = true,
   onError,
   onMetricsUpdate,
-}: StreamProviderProps): JSX.Element {
+}: StreamProviderProps): React.ReactElement {
   // Merge configuration with defaults
   const config = useMemo<EngineConfig>(
     () => ({

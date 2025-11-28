@@ -128,7 +128,7 @@ export function PerformanceProvider({
   debug = false,
   onMetric,
   onViolation,
-}: PerformanceProviderProps): JSX.Element {
+}: PerformanceProviderProps): React.JSX.Element {
   const [isCollecting, setIsCollecting] = useState(false);
 
   const collector = useMemo(
@@ -193,7 +193,7 @@ function MetricGauge({
 }: {
   name: VitalMetricName;
   entry: VitalMetricEntry | undefined;
-}): JSX.Element {
+}): React.JSX.Element {
   const budget = DEFAULT_BUDGETS[name];
   const value = entry?.value ?? 0;
   const rating = entry?.rating ?? 'good';
@@ -265,7 +265,7 @@ function MetricGauge({
 /**
  * Resource breakdown component
  */
-function ResourceBreakdown({ stats }: { stats: ResourceStats }): JSX.Element {
+function ResourceBreakdown({ stats }: { stats: ResourceStats }): React.JSX.Element {
   const sortedTypes = Object.entries(stats.byType)
     .sort(([, a], [, b]) => b.size - a.size);
 
@@ -308,7 +308,7 @@ function ResourceBreakdown({ stats }: { stats: ResourceStats }): JSX.Element {
 /**
  * Long tasks monitor
  */
-function LongTasksMonitor({ tasks }: { tasks: LongTaskEntry[] }): JSX.Element {
+function LongTasksMonitor({ tasks }: { tasks: LongTaskEntry[] }): React.JSX.Element {
   const recentTasks = tasks.slice(-5);
 
   if (recentTasks.length === 0) {
@@ -344,7 +344,7 @@ function ScoreDisplay({
 }: {
   score: number;
   rating: PerformanceRating;
-}): JSX.Element {
+}): React.JSX.Element {
   const scoreCircleStyle = useMemo(
     (): CSSProperties => ({
       ...styles.scoreCircle,
@@ -380,7 +380,7 @@ export function PerformanceObservatory({
   defaultCollapsed = true,
   position = 'bottom-right',
   zIndex = 9999,
-}: PerformanceObservatoryProps): JSX.Element | null {
+}: PerformanceObservatoryProps): React.JSX.Element | null {
   const { isObserving } = usePerformanceObservatory();
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
   const [activeTab, setActiveTab] = useState<'vitals' | 'resources' | 'tasks'>('vitals');

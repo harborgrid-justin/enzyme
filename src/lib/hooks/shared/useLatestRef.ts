@@ -74,7 +74,7 @@ export function useLatestCallback<TArgs extends unknown[], TReturn>(
 ): (...args: TArgs) => TReturn {
   const callbackRef = useLatestRef(callback);
 
-  const stableCallback = useRef<((...args: TArgs) => TReturn) | undefined>();
+  const stableCallback = useRef<((...args: TArgs) => TReturn) | undefined>(undefined);
   if (!stableCallback.current) {
     stableCallback.current = (...args: TArgs): TReturn => {
       return callbackRef.current(...args);

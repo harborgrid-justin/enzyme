@@ -667,7 +667,7 @@ export function LazyImage({
   onLoad,
   onError,
   ...props
-}: LazyImageConfig & React.ImgHTMLAttributes<HTMLImageElement>): JSX.Element {
+}: LazyImageConfig & React.ImgHTMLAttributes<HTMLImageElement>): React.JSX.Element {
   const [isInView, setIsInView] = useState(strategy === 'immediate');
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);

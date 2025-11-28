@@ -368,7 +368,7 @@ export function BridgeSource<TSource>({
   bridgeId,
   context,
   children,
-}: BridgeSourceProps<TSource>): JSX.Element {
+}: BridgeSourceProps<TSource>): React.JSX.Element {
   const manager = useBridgeManager();
   const sourceValue = useContext(context);
 
@@ -397,7 +397,7 @@ export interface BridgeConsumerProps<TTarget> {
 export function BridgeConsumer<TTarget>({
   bridgeId,
   children,
-}: BridgeConsumerProps<TTarget>): JSX.Element {
+}: BridgeConsumerProps<TTarget>): React.JSX.Element {
   const value = useBridgedContext<TTarget>(bridgeId);
   return <>{children(value)}</>;
 }

@@ -177,7 +177,7 @@ export function useBufferedRealtimeStream<T = unknown>(
   const [bufferedMessages, setBufferedMessages] = useState<T[]>([]);
   const [lastMessage, setLastMessage] = useState<T | null>(null);
   const bufferRef = useRef<T[]>([]);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const flushBuffer = useCallback(() => {
     if (bufferRef.current.length > 0) {

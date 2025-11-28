@@ -62,7 +62,7 @@ const DEFAULT_OPTIONS: Required<UseDeferredStreamOptions> = {
 const DEFAULT_RESULT: UseDeferredStreamResult = {
   isDeferred: false,
   triggerNow: () => {},
-  ref: { current: null },
+  ref: { current: null as HTMLElement | null } as any,
   deferReason: null,
 };
 

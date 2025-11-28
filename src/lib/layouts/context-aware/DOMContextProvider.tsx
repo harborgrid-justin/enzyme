@@ -141,7 +141,7 @@ export function DOMContextProvider({
   trackZIndex = true,
   onContextUpdate,
   'data-testid': testId,
-}: DOMContextProviderProps): JSX.Element {
+}: DOMContextProviderProps): React.JSX.Element {
   // Refs
   const containerRef = useRef<HTMLDivElement>(null);
   const contextIdRef = useRef<string>(generateContextId());
@@ -357,7 +357,7 @@ export interface DOMContextConsumerProps {
  * </DOMContextConsumer>
  * ```
  */
-export function DOMContextConsumer({ children }: DOMContextConsumerProps): JSX.Element {
+export function DOMContextConsumer({ children }: DOMContextConsumerProps): React.JSX.Element {
   const context = useContext(DOMContextReactContext);
   return <>{children(context)}</>;
 }
@@ -481,7 +481,7 @@ export function NestedDOMContextProvider({
   children,
   inheritParent = true,
   ...props
-}: NestedDOMContextProviderProps): JSX.Element {
+}: NestedDOMContextProviderProps): React.JSX.Element {
   const parentContext = useDOMContextValue();
 
   // If inheriting and parent is initialized, merge viewport
@@ -528,3 +528,5 @@ export function useDOMContextSelector<T>(
 // ============================================================================
 
 export default DOMContextProvider;
+
+

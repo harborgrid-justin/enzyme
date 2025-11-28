@@ -20,7 +20,6 @@ import {
   createObjectSelector,
   createParameterizedSelector,
 } from '../core/createSelectors';
-import { shallow } from 'zustand/shallow';
 
 // ============================================================================
 // Primitive Selectors (No memoization needed - identity equality)
@@ -403,5 +402,5 @@ export function useStoreSelector<T>(selector: StoreSelector<T>): T {
  * Use selector with shallow equality (for non-memoized objects/arrays)
  */
 export function useShallowSelector<T>(selector: StoreSelector<T>): T {
-  return useStore(selector, shallow);
+  return useStore(selector as any) as T;
 }

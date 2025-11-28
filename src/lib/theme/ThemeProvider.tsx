@@ -40,7 +40,7 @@ interface ThemeProviderProps {
  * Global theme context with persistence + dark/light mode.
  * Respects the 'dark-mode' feature flag - when disabled, forces light mode only.
  */
-export function ThemeProvider({ children, defaultTheme }: ThemeProviderProps): JSX.Element {
+export function ThemeProvider({ children, defaultTheme }: ThemeProviderProps): React.ReactElement {
   // Check if dark mode toggle is enabled via feature flag
   const darkModeEnabled = useFeatureFlag(flagKeys.DARK_MODE);
 
