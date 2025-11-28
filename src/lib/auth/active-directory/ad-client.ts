@@ -17,13 +17,14 @@ import type {
   GraphAPIRequest,
   GraphAPIResponse,
   GraphAPIError,
-  TokenAcquisitionRequest,
+
   TokenRefreshResult,
   ADAuthError,
-  ADProviderType,
+
 } from './types';
-import type { Role, Permission } from '../types';
+
 import { getAuthorityUrl, getConfiguredScopes } from './ad-config';
+import { ms } from '../../shared/type-utils';
 import {
   GRAPH_API,
   DEFAULT_TIMEOUT,
@@ -309,7 +310,7 @@ export class ADClient {
       body: request.body ? JSON.stringify(request.body) : undefined,
     };
 
-    return this.executeWithRetry<T>(url, fetchOptions, request.timeout);
+    return this.executeWithRetry<T>(url, fetchOptions, request.timeout ? ms(request.timeout) : undefined);
   }
 
   /**

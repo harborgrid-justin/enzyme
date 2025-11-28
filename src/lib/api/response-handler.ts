@@ -41,7 +41,7 @@ import type {
   ResponseHeaders,
   StreamController,
   StreamEvent,
-  StreamEventType,
+
   StreamOptions,
   FieldError,
   ServerErrorResponse,
@@ -535,7 +535,7 @@ function parseCacheControlHeader(header: string): Record<string, string> {
 
   for (const part of parts) {
     const [key, value] = part.split('=').map((s) => s.trim());
-    directives[key.toLowerCase()] = value || 'true';
+    if (key) directives[key.toLowerCase()] = value || 'true';
   }
 
   return directives;
@@ -1011,9 +1011,10 @@ function parseLinkHeader(header: string): Record<string, string> {
     if (match) {
       const [, url, rel] = match;
       // Extract cursor from URL if present
+      if (!url) continue;
       const urlParams = new URLSearchParams(url.split('?')[1] || '');
       const cursor = urlParams.get('cursor') || urlParams.get('after') || url;
-      links[rel] = cursor;
+      if (rel) links[rel] = cursor;
     }
   }
 
@@ -1076,9 +1077,10 @@ export function mergePaginatedResponses<T>(
   return {
     items,
     pagination: {
-      ...lastResponse.pagination,
+      ...(lastResponse?.pagination ?? {}),
       page: responses.length,
       pageSize: Math.ceil(items.length / responses.length),
+      total: lastResponse?.pagination?.total ?? items.length,
     },
   };
 }
@@ -1147,7 +1149,7 @@ export const transformers = {
       const result = { ...data };
       for (const field of fields) {
         if (field in result && typeof result[field] === 'string') {
-          result[field] = new Date(result[field] as string) as T[string & keyof T];
+          (result as Record<string, unknown>)[field as string] = new Date(result[field] as string);
         }
       }
       return result;

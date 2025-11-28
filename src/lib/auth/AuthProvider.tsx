@@ -176,7 +176,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Alias for context compatibility
   const refreshToken = refreshSession;
 
-  // PERFORMANCE: Memoize context value to prevent unnecessary re-renders
   const value: AuthContextValue = useMemo(() => ({
     user,
     isAuthenticated,

@@ -17,11 +17,8 @@
 
 import {
   type LibraryId,
-  type ServiceId,
-  createLibraryId,
-  createServiceId,
 } from './types';
-import { getCoordinationEventBus, publishEvent, subscribeToEvent } from './event-bus';
+// import { getCoordinationEventBus, publishEvent, subscribeToEvent } from './event-bus';
 
 // ============================================================================
 // Types

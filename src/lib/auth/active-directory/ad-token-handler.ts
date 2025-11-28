@@ -13,7 +13,6 @@ import type {
   TokenAcquisitionRequest,
   TokenRefreshResult,
   ADAuthError,
-  ADProviderType,
 } from './types';
 import { getAuthorityUrl, getConfiguredScopes } from './ad-config';
 import {

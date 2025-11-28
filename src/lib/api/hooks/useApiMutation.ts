@@ -24,7 +24,7 @@
  * ```
  */
 
-import { useMemo, useCallback, useRef } from 'react';
+import { useMemo, useCallback } from 'react';
 import {
   useMutation,
   useQueryClient,
@@ -37,8 +37,6 @@ import type {
   ApiError,
   RequestConfig,
   QueryParams,
-  HttpMethod,
-  UseApiMutationOptions,
 } from '../types';
 
 // =============================================================================
@@ -109,7 +107,7 @@ export interface ApiMutationConfig<TResponse = unknown, TBody = unknown, TContex
  * Return type for useApiMutation
  */
 export interface UseApiMutationResult<TResponse, TBody = unknown>
-  extends UseMutationResult<TResponse, ApiError, MutationVariables<TBody>> {
+  extends Omit<UseMutationResult<TResponse, ApiError, MutationVariables<TBody>, unknown>, never> {
   /** Execute mutation with just body */
   mutateWithBody: (body: TBody) => void;
   /** Execute mutation async with just body */

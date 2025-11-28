@@ -32,7 +32,6 @@ import {
 } from '@tanstack/react-query';
 import { useApiClient } from './useApiClient';
 import type {
-  ApiResponse,
   ApiError,
   RequestConfig,
   QueryParams,
@@ -172,7 +171,7 @@ export function useApiRequest<TResponse = unknown>(
     retry: options.retry,
     retryDelay: options.retryDelay,
     select: options.select,
-    placeholderData: options.placeholderData,
+    placeholderData: options.placeholderData as unknown as UseQueryResult<TResponse, ApiError>['placeholderData'],
   });
 
   // Invalidate query
@@ -202,7 +201,7 @@ export function useApiRequest<TResponse = unknown>(
       invalidate,
       setData,
       getCachedData,
-    }),
+    } as UseApiRequestResult<TResponse>),
     [queryResult, invalidate, setData, getCachedData]
   );
 }
@@ -387,16 +386,16 @@ export function useParallelRequests<TResponses extends unknown[]>(
 
   // Use useQueries for parallel execution - single hook call, no Rules of Hooks violation
   const queryClient = useQueryClient();
-  const queriesResult = useMemo(() => {
-    // Execute all queries in parallel using queryClient
-    return queryConfigs.map((config) => {
-      const state = queryClient.getQueryState(config.queryKey);
-      return {
-        queryKey: config.queryKey,
-        state,
-      };
-    });
-  }, [queryClient, queryConfigs]);
+  // const queriesResult = useMemo(() => {
+  //   // Execute all queries in parallel using queryClient
+  //   return queryConfigs.map((config) => {
+  //     const state = queryClient.getQueryState(config.queryKey);
+  //     return {
+  //       queryKey: config.queryKey,
+  //       state,
+  //     };
+  //   });
+  // }, [queryClient, queryConfigs]);
 
   // Track loading states with a single query observer per request
   const [results, setResults] = useState<ParallelRequestResult<unknown>[]>(() =>
@@ -546,7 +545,7 @@ export function usePolling<TResponse = unknown>(
 
   const result = useApiRequest<TResponse>({
     ...options,
-    refetchInterval: (query) => {
+    refetchInterval: (query: any) => {
       if (shouldStop.current) return false;
 
       const data = query.state.data;

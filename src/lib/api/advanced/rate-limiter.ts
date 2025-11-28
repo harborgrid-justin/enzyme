@@ -120,7 +120,7 @@ export class RateLimiter {
       strategy: 'queue',
       maxQueueSize: 100,
       maxDelay: 30000,
-      keyGenerator: (endpoint) => endpoint.split('?')[0],
+      keyGenerator: (endpoint) => endpoint.split('?')[0] ?? endpoint,
       ...config,
     };
 
@@ -492,7 +492,7 @@ export class RateLimiter {
    */
   clearAll(): void {
     // Reject all queued requests
-    for (const [key, keyQueue] of this.queue) {
+    for (const [, keyQueue] of this.queue) {
       for (const entry of keyQueue) {
         entry.reject(new Error('Rate limiter cleared'));
       }

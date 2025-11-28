@@ -622,8 +622,8 @@ export class PolicyEvaluator {
    */
   private evaluateCustomCondition(
     condition: PolicyCondition,
-    request: AccessRequest,
-    context: EvaluationContext
+    _request: AccessRequest,
+    _context: EvaluationContext
   ): boolean {
     // Custom conditions can be implemented by extending this class
     this.log('Custom condition evaluation not implemented:', condition);

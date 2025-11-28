@@ -16,7 +16,6 @@ import type {
   DeepPartial,
   ConfigPath,
   ConfigSource,
-  ConfigChangeEvent,
   ConfigChangeListener,
   RuntimeConfigOptions,
   Unsubscribe,

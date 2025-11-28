@@ -12,11 +12,11 @@
  * @module core/config/constants/timing
  */
 
-import { ms, px } from '../../shared/type-utils';
+import { ms, px, sec } from '../../../shared/type-utils';
 
 import type {
   Milliseconds,
-  Seconds,
+  // Seconds,
   NetworkConfig,
   CacheConfig,
   FeatureFlagsConfig,
@@ -54,24 +54,24 @@ export const HOUR: Milliseconds = ms(60 * MINUTE);
  */
 export const DEFAULT_NETWORK_CONFIG: NetworkConfig = {
   // Request timeouts
-  defaultTimeout: 30 * SECOND,        // Standard API requests
-  longTimeout: 2 * MINUTE,            // File uploads, report generation
-  shortTimeout: 10 * SECOND,          // Quick endpoints
-  healthCheckTimeout: 5 * SECOND,     // Health checks
+  defaultTimeout: ms(30 * SECOND),        // Standard API requests
+  longTimeout: ms(2 * MINUTE),            // File uploads, report generation
+  shortTimeout: ms(10 * SECOND),          // Quick endpoints
+  healthCheckTimeout: ms(5 * SECOND),     // Health checks
 
   // Retry configuration
-  retryBaseDelay: 1 * SECOND,
-  retryMaxDelay: 30 * SECOND,
+  retryBaseDelay: ms(1 * SECOND),
+  retryMaxDelay: ms(30 * SECOND),
   maxRetryAttempts: 3,
   retryJitter: 0.25,                  // 25% jitter
 
   // WebSocket configuration
-  websocketPingInterval: 30 * SECOND,
-  websocketReconnectDelay: 3 * SECOND,
+  websocketPingInterval: ms(30 * SECOND),
+  websocketReconnectDelay: ms(3 * SECOND),
   websocketMaxReconnectAttempts: 10,
 
   // SSE configuration
-  sseReconnectDelay: 5 * SECOND,
+  sseReconnectDelay: ms(5 * SECOND),
   sseMaxReconnectAttempts: 10,
 } as const;
 
@@ -90,15 +90,15 @@ export const DEFAULT_NETWORK_CONFIG: NetworkConfig = {
  */
 export const DEFAULT_CACHE_CONFIG: CacheConfig = {
   // TTL tiers
-  shortTTL: 1 * MINUTE,
-  defaultTTL: 5 * MINUTE,
-  longTTL: 30 * MINUTE,
-  extendedTTL: 1 * HOUR,
+  shortTTL: ms(1 * MINUTE),
+  defaultTTL: ms(5 * MINUTE),
+  longTTL: ms(30 * MINUTE),
+  extendedTTL: ms(1 * HOUR),
 
   // Cache management
   maxSize: 1000,                      // Max LRU cache entries
-  staleWhileRevalidate: 1 * HOUR,     // Background revalidation window
-  gcInterval: 5 * MINUTE,             // Garbage collection interval
+  staleWhileRevalidate: ms(1 * HOUR),     // Background revalidation window
+  gcInterval: ms(5 * MINUTE),             // Garbage collection interval
   memoryPressureThreshold: 50 * 1024 * 1024, // 50MB
 } as const;
 
@@ -110,13 +110,13 @@ export const DEFAULT_CACHE_CONFIG: CacheConfig = {
  * Default feature flags configuration values.
  */
 export const DEFAULT_FLAGS_CONFIG: FeatureFlagsConfig = {
-  pollingInterval: 1 * MINUTE,
-  websocketPingInterval: 30 * SECOND,
-  cacheTTL: 5 * MINUTE,
+  pollingInterval: ms(1 * MINUTE),
+  websocketPingInterval: ms(30 * SECOND),
+  cacheTTL: ms(5 * MINUTE),
   maxFailures: 5,
   jitter: 0.1,                        // 10% jitter
-  fetchTimeout: 10 * SECOND,
-  evaluationTimeout: 50,              // 50ms max for rule evaluation
+  fetchTimeout: ms(10 * SECOND),
+  evaluationTimeout: ms(50),              // 50ms max for rule evaluation
   maxCachedFlags: 1000,
   storageKey: 'feature-flags',
 } as const;
@@ -129,14 +129,14 @@ export const DEFAULT_FLAGS_CONFIG: FeatureFlagsConfig = {
  * Default authentication timing configuration.
  */
 export const DEFAULT_AUTH_CONFIG: AuthConfig = {
-  tokenRefreshBuffer: 5 * MINUTE,     // Refresh 5 min before expiry
-  sessionTimeout: 30 * MINUTE,        // 30 min inactivity timeout
-  sessionCheckInterval: 1 * MINUTE,   // Check session every minute
-  defaultTokenLifetime: 3600 as Seconds, // 1 hour in seconds
-  logoutRedirectDelay: 1500,          // 1.5 seconds
-  lockoutDuration: 15 * MINUTE,       // 15 min lockout after failed attempts
+  tokenRefreshBuffer: ms(5 * MINUTE),     // Refresh 5 min before expiry
+  sessionTimeout: ms(30 * MINUTE),        // 30 min inactivity timeout
+  sessionCheckInterval: ms(1 * MINUTE),   // Check session every minute
+  defaultTokenLifetime: sec(3600), // 1 hour in seconds
+  logoutRedirectDelay: ms(1500),          // 1.5 seconds
+  lockoutDuration: ms(15 * MINUTE),       // 15 min lockout after failed attempts
   maxLoginAttempts: 5,
-  tokenCheckInterval: 1 * MINUTE,
+  tokenCheckInterval: ms(1 * MINUTE),
 } as const;
 
 // =============================================================================
@@ -148,10 +148,10 @@ export const DEFAULT_AUTH_CONFIG: AuthConfig = {
  */
 export const DEFAULT_LAYOUTS_CONFIG: LayoutsConfig = {
   // Responsive defaults
-  defaultBreakpoint: 768,             // Mobile/desktop breakpoint (px)
-  defaultGap: 16,                     // Default spacing (px)
-  defaultPadding: 16,                 // Default padding (px)
-  minColumnWidth: 200,                // Grid minimum column width (px)
+  defaultBreakpoint: px(768),             // Mobile/desktop breakpoint (px)
+  defaultGap: px(16),                     // Default spacing (px)
+  defaultPadding: px(16),                 // Default padding (px)
+  minColumnWidth: px(200),            // Grid minimum column width (px)
 
   // CLS (Cumulative Layout Shift) timing
   clsEntryMaxAge: ms(5 * SECOND),
@@ -180,7 +180,7 @@ export const DEFAULT_LAYOUTS_CONFIG: LayoutsConfig = {
 export const DEFAULT_VDOM_CONFIG: VDOMConfig = {
   // Pool management
   poolSize: 100,
-  gcInterval: 5 * MINUTE,
+  gcInterval: ms(5 * MINUTE),
   memoryLimit: 100 * 1024 * 1024,     // 100MB
 
   // Batching
@@ -189,8 +189,8 @@ export const DEFAULT_VDOM_CONFIG: VDOMConfig = {
   // Streaming
   streamBufferSize: 64 * 1024,        // 64KB
   streamHighWaterMark: 16 * 1024,     // 16KB
-  streamTimeout: 1 * MINUTE,
-  streamRetryDelay: 1 * SECOND,
+  streamTimeout: ms(1 * MINUTE),
+  streamRetryDelay: ms(1 * SECOND),
 } as const;
 
 // =============================================================================
@@ -202,26 +202,26 @@ export const DEFAULT_VDOM_CONFIG: VDOMConfig = {
  */
 export const DEFAULT_UI_CONFIG: UIConfig = {
   // Debounce values
-  inputDebounce: 300,
-  formDebounce: 500,
-  searchDebounce: 300,
-  resizeDebounce: 150,
+  inputDebounce: ms(300),
+  formDebounce: ms(500),
+  searchDebounce: ms(300),
+  resizeDebounce: ms(150),
 
   // Throttle values
-  scrollThrottle: 16,                 // ~60fps
+  scrollThrottle: ms(16),                 // ~60fps
 
   // Animation durations
-  animationFast: 100,
-  animationStandard: 200,
-  animationSlow: 300,
+  animationFast: ms(100),
+  animationStandard: ms(200),
+  animationSlow: ms(300),
 
   // Feedback timing
-  toastDuration: 5 * SECOND,
-  spinnerDelay: 200,                  // Prevent flash of spinner
-  skeletonMinDisplay: 500,            // Prevent flash of content
+  toastDuration: ms(5 * SECOND),
+  spinnerDelay: ms(200),                  // Prevent flash of spinner
+  skeletonMinDisplay: ms(500),            // Prevent flash of content
 
   // Focus management
-  focusTrapDelay: 50,
+  focusTrapDelay: ms(50),
 } as const;
 
 // =============================================================================
@@ -232,13 +232,13 @@ export const DEFAULT_UI_CONFIG: UIConfig = {
  * Default monitoring configuration.
  */
 export const DEFAULT_MONITORING_CONFIG: MonitoringConfig = {
-  metricsFlushInterval: 30 * SECOND,
+  metricsFlushInterval: ms(30 * SECOND),
   samplingRate: 1.0,                  // 100% sampling in dev, adjust in prod
-  slowRequestThreshold: 1 * SECOND,
+  slowRequestThreshold: ms(1 * SECOND),
   latencyBuckets: [10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000],
-  memoryCheckInterval: 30 * SECOND,
-  fpsSamplingInterval: 100,
-  longTaskThreshold: 50,              // 50ms (Web Performance standard)
+  memoryCheckInterval: ms(30 * SECOND),
+  fpsSamplingInterval: ms(100),
+  longTaskThreshold: ms(50),              // 50ms (Web Performance standard)
   maxStoredMetrics: 1000,
 } as const;
 

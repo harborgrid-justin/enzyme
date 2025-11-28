@@ -23,6 +23,7 @@ import React, {
   forwardRef,
   type ElementType,
   type ComponentPropsWithoutRef,
+  type JSX,
 } from 'react';
 
 import type {
@@ -104,7 +105,7 @@ function ContextAwareBoxInner<E extends ElementType = 'div'>(
     children,
     className,
     style,
-    provideContext = false,
+    provideContext: _provideContext = false,
     onContextReady,
     layoutHint,
     'data-testid': testId,
@@ -113,7 +114,7 @@ function ContextAwareBoxInner<E extends ElementType = 'div'>(
   forwardedRef: React.ForwardedRef<HTMLElement>
 ): JSX.Element {
   // Determine the component to render
-  const Component = as || 'div';
+  const Component = as ?? 'div';
 
   // Refs
   const internalRef = useRef<HTMLElement>(null);
@@ -124,12 +125,13 @@ function ContextAwareBoxInner<E extends ElementType = 'div'>(
   // const _refreshContext = useDOMContextRefresh();
 
   // Resolve ref
-  const resolvedRef = (forwardedRef || internalRef) as React.RefObject<HTMLElement>;
+  const resolvedRef = (forwardedRef ?? internalRef) as React.RefObject<HTMLElement>;
 
   /**
    * Computes box-specific context information.
+   * Currently unused but kept for future use.
    */
-  const computeBoxContext = useCallback((): BoxContext | null => {
+  const _computeBoxContext = useCallback((): BoxContext | null => {
     if (!resolvedRef.current || !domContext.isInitialized) {
       return null;
     }
@@ -156,6 +158,9 @@ function ContextAwareBoxInner<E extends ElementType = 'div'>(
       contextDepth,
     };
   }, [domContext, resolvedRef]);
+
+  // Suppress unused variable warning
+  void _computeBoxContext;
 
   // Call onContextReady when context is initialized
   useEffect(() => {

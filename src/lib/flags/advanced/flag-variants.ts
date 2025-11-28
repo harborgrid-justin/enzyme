@@ -30,7 +30,7 @@ import type {
   JsonValue,
   VariantAllocation,
 } from './types';
-import type { Mutable } from '../../utils/types';
+// import type { Mutable } from '../../utils/types';
 
 // ============================================================================
 // Types

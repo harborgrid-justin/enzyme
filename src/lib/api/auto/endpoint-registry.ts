@@ -44,7 +44,6 @@ import type { HttpMethod } from '../types';
 import type {
   GeneratedEndpoint,
   ComputedAccess,
-  UserContext,
   OpenAPIDocument,
   OpenAPIInfo,
   OpenAPIServer,
@@ -256,7 +255,7 @@ export function matchPath(
   caseSensitive: boolean = true
 ): PathMatchResult {
   const testPath = caseSensitive ? path : path.toLowerCase();
-  const testPattern = caseSensitive ? matcher.pattern : matcher.pattern.toLowerCase();
+  // const testPattern = caseSensitive ? matcher.pattern : matcher.pattern.toLowerCase();
 
   // Quick check: static prefix
   if (matcher.staticPrefix && !testPath.startsWith(caseSensitive ? matcher.staticPrefix : matcher.staticPrefix.toLowerCase())) {

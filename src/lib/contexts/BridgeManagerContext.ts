@@ -3,25 +3,19 @@
  * @description Context for context bridge management (Fast Refresh compliant).
  */
 
-import { createContext, type Context } from 'react';
-
-/**
- * Bridge configuration
- */
-export interface BridgeConfig<TSource, TTarget> {
-  sourceContext: Context<TSource>;
-  targetContext: Context<TTarget>;
-  transform?: (source: TSource) => TTarget;
-}
+import { createContext } from 'react';
+import type { ContextBridgeDefinition } from '../coordination/types';
 
 /**
  * Context bridge implementation
  */
 export interface ContextBridgeImpl {
-  createBridge: <TSource, TTarget>(id: string, config: BridgeConfig<TSource, TTarget>) => void;
-  removeBridge: (id: string) => void;
-  getBridge: (id: string) => BridgeConfig<unknown, unknown> | undefined;
-  hasBridge: (id: string) => boolean;
+  registerBridge: <TSource, TTarget>(definition: ContextBridgeDefinition<TSource, TTarget>) => void;
+  unregisterBridge: (id: string) => void;
+  updateBridge: <TSource>(id: string, sourceValue: TSource) => void;
+  subscribe: <TTarget>(id: string, callback: (value: TTarget) => void) => () => void;
+  getValue: <TTarget>(id: string) => TTarget | null;
+  dispose: () => void;
 }
 
 /**

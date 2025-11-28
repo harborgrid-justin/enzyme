@@ -48,7 +48,7 @@ import type {
   RequestPriority,
   RequestMeta,
 } from './types';
-import { API_CONFIG, TIMING } from '@/config';
+import { API_CONFIG } from '@/config';
 
 // =============================================================================
 // TYPES
@@ -982,7 +982,7 @@ export class RequestBuilder<TResponse = unknown, TBody = unknown> {
     }
 
     if (this.state.retry) {
-      config.retry = this.state.retry;
+      config.retry = this.state.retry as RetryConfig;
     }
 
     return config;

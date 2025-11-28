@@ -1096,6 +1096,10 @@ export class HydrationScheduler {
       return;
     }
 
+    const thresholdValue = this.config.visibility.threshold;
+    const threshold = (Array.isArray(thresholdValue)
+      ? [...thresholdValue]
+      : (thresholdValue ?? 0)) as number | number[];
     this.visibilityObserver = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
@@ -1107,9 +1111,7 @@ export class HydrationScheduler {
       {
         root: this.config.visibility.root ?? null,
         rootMargin: this.config.visibility.rootMargin ?? '100px 0px',
-        threshold: Array.isArray(this.config.visibility.threshold)
-          ? [...this.config.visibility.threshold] as number[]
-          : (this.config.visibility.threshold ?? 0),
+        threshold,
       }
     );
   }

@@ -10,7 +10,6 @@
 import { useContext, useCallback, useMemo } from 'react';
 import { RBACContext } from './rbac-context';
 import type {
-  RBACContextValue,
   Permission,
   PermissionAction,
   RoleDefinition,

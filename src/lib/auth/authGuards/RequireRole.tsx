@@ -56,8 +56,8 @@ export const RequireRole = memo(function RequireRole({
     return <Navigate to={routes.login} replace />;
   }
 
-  // Check single role
-  if (role && !hasRole(role)) {
+  // Check single role - cast to any since Role and UserRole have compatible values
+  if (role && !hasRole(role as Parameters<typeof hasRole>[0])) {
     if (fallback) return <>{fallback}</>;
     return <Navigate to={redirectTo} replace />;
   }

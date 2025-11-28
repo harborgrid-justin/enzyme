@@ -18,10 +18,8 @@
 
 import {
   type ServiceId,
-  type ServiceScope,
   type ServiceLifecycle,
   type ServiceContract,
-  type ServiceRegistration,
   type ServiceRegistrationOptions,
   type ServiceFactory,
   type DependencyContainer,

@@ -331,7 +331,6 @@ export function createSyncEngine(config: SyncEngineConfig): SyncEngine {
   const subscribers = new Set<(event: SyncEvent) => void>();
   let isOnlineState = typeof navigator !== 'undefined' ? navigator.onLine : true;
   let syncIntervalId: ReturnType<typeof setInterval> | null = null;
-  let isDestroyed = false;
 
   // Sort sources by priority
   const sortedSources = [...sources].sort((a, b) => a.priority - b.priority);
@@ -601,12 +600,13 @@ export function createSyncEngine(config: SyncEngineConfig): SyncEngine {
         // Potential conflict
         if (!options.skipConflictResolution) {
           const conflict: SyncConflict = {
+            id: crypto.randomUUID(),
             entityType,
             entityId: id,
             localData,
             remoteData,
             localModifiedAt: meta.localModifiedAt,
-            remoteModifiedAt: remoteModifiedAt || Date.now(),
+            remoteModifiedAt: remoteModifiedAt ?? Date.now(),
           };
 
           finalData = await resolveConflict(entityType, conflict);
@@ -900,7 +900,6 @@ export function createSyncEngine(config: SyncEngineConfig): SyncEngine {
     metadata.clear();
     pendingOperations.length = 0;
     subscribers.clear();
-    isDestroyed = true;
     log('Destroyed');
   }
 

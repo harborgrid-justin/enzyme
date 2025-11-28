@@ -171,6 +171,7 @@ export function ApiClientProvider({
       });
       return removeInterceptor;
     }
+    return undefined;
   }, [client, onError]);
 
   // Memoized request methods

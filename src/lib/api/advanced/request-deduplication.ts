@@ -404,11 +404,6 @@ export function deduplicateFunction<TArgs extends unknown[], TResult>(
   keyGenerator: (...args: TArgs) => string,
   config?: Omit<DeduplicationConfig, 'keyGenerator'>
 ): (...args: TArgs) => Promise<TResult> {
-  const dedup = new RequestDeduplicator({
-    ...config,
-    keyGenerator: () => '', // Will be overridden per call
-  });
-
   const cache = new Map<string, Promise<TResult>>();
 
   return async (...args: TArgs): Promise<TResult> => {

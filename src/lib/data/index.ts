@@ -95,7 +95,7 @@ export {
   SchemaValidationError,
 
   // Types
-  // type Schema as ValidationSchema,
+  type Schema as ValidationSchema,
   type ValidationResult,
   type ValidationIssue,
 
@@ -113,14 +113,14 @@ export {
   assertBoolean,
   assertArray,
   assertObject,
-  assertFunction,
+  // assertFunction,
   assertDefined,
-  assertNonNull,
-  assertInstanceOf,
+  // assertNonNull,
+  // assertInstanceOf,
 
   // Brand Types
   type Brand,
-  type Branded,
+  // type Branded,
 
   // Form Validator
   rules,

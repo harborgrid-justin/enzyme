@@ -666,11 +666,11 @@ export class CriticalPathAnalyzer {
     };
   }
 
-  private log(message: string, ...args: unknown[]): void {
-    if (this.config.debug) {
-      console.log(`[CriticalPathAnalyzer] ${message}`, ...args);
-    }
-  }
+  // private log(message: string, ...args: unknown[]): void {
+  //   if (this.config.debug) {
+  //     console.log(`[CriticalPath] ${message}`, ...args);
+  //   }
+  // }
 }
 
 // ============================================================================

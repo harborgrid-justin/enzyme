@@ -8,13 +8,13 @@
  */
 
 import {
+  createContext,
   useCallback,
   useEffect,
   useMemo,
   useReducer,
   type ReactNode,
 } from 'react';
-import { ADContext } from '../../contexts/ADContext';
 import { useFeatureFlag } from '@/lib/flags';
 import type {
   ADConfig,
@@ -24,7 +24,7 @@ import type {
   ADGroup,
   ADTokens,
   ADAuthError,
-  ADProviderType,
+
   ADLogoutOptions,
   TokenAcquisitionRequest,
   TokenRefreshResult,
@@ -32,11 +32,11 @@ import type {
   ADAuthEvent,
 } from './types';
 import type { Role, Permission } from '../types';
-import { ADClient, createADClient } from './ad-client';
-import { ADTokenHandler, createTokenHandler } from './ad-token-handler';
+import { createADClient } from './ad-client';
+import { createTokenHandler } from './ad-token-handler';
 import { ADGroupMapper, createGroupMapper } from './ad-groups';
 import { ADAttributeMapper, createAttributeMapper } from './ad-attributes';
-import { SSOManager, createSSOManager } from './ad-sso';
+import { createSSOManager } from './ad-sso';
 import { validateADConfig } from './ad-config';
 
 // =============================================================================
@@ -276,7 +276,7 @@ export function ADProvider({
   errorComponent,
 }: ADProviderProps) {
   // Check feature flag
-  const isADEnabled = useFeatureFlag(config.featureFlag ?? 'ad-authentication', true);
+  const isADEnabled = useFeatureFlag(config.featureFlag ?? 'ad-authentication');
 
   // State
   const [state, dispatch] = useReducer(authReducer, initialState);
@@ -499,7 +499,7 @@ export function ADProvider({
 
   const loginSilent = useCallback(
     async (options?: TokenAcquisitionRequest) => {
-      const correlationId = generateCorrelationId();
+      generateCorrelationId(); // Generate for logging/tracking
       dispatch({ type: 'LOGIN_START' });
 
       try {
@@ -597,7 +597,8 @@ export function ADProvider({
     dispatch({ type: 'TOKEN_REFRESH_START' });
 
     const cachedTokens = tokenHandler.getCachedTokens();
-    if (!cachedTokens?.refreshToken) {
+    const tokens = await cachedTokens;
+    if (!tokens?.refreshToken) {
       const error: ADAuthError = {
         code: 'no_refresh_token',
         message: 'No refresh token available',
@@ -608,7 +609,7 @@ export function ADProvider({
       return { success: false, error, requiresInteraction: true };
     }
 
-    return tokenHandler.refreshToken(cachedTokens.refreshToken);
+    return tokenHandler.refreshToken(tokens.refreshToken);
   }, [tokenHandler]);
 
   const getUserGroups = useCallback(async (): Promise<ADGroup[]> => {
@@ -652,8 +653,8 @@ export function ADProvider({
 
   const forceReauth = useCallback(async () => {
     await logout({ localOnly: true });
-    await login({ prompt: 'login' });
-  }, [logout, login]);
+    await login({ prompt: 'login', scopes: getDefaultScopes(config) });
+  }, [logout, login, config]);
 
   // ===========================================================================
   // Effects
@@ -834,7 +835,7 @@ function applyMappings(
   attributeMapper: ADAttributeMapper
 ): ADUser {
   // Apply group to role mapping
-  const { role, permissions, matchedGroups } = groupMapper.mapUserGroups(
+  const { role, permissions } = groupMapper.mapUserGroups(
     user.adGroups,
     user
   );

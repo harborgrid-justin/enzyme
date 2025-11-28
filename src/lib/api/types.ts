@@ -537,7 +537,7 @@ export type InferEndpointPathParams<T extends ApiEndpoint> = T extends ApiEndpoi
  */
 export type InferEndpointQueryParams<T extends ApiEndpoint> = T extends ApiEndpoint<
   unknown,
-  unknown,
+  Record<string, string | number>,
   unknown,
   infer Q
 >
@@ -635,6 +635,8 @@ export interface ApiClientConfig {
   credentials?: RequestCredentials;
   /** Custom fetch implementation */
   fetch?: typeof fetch;
+  /** Rate limiting configuration */
+  rateLimit?: RateLimitConfig | keyof typeof import('./rate-limiter').RATE_LIMIT_PRESETS | string;
 }
 
 /**

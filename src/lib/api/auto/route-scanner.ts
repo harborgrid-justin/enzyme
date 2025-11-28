@@ -549,7 +549,7 @@ export async function scanApiRoutes(
 
   // First pass: collect metadata files
   async function collectMetadataFiles(dirPath: string): Promise<void> {
-    let entries: Awaited<ReturnType<typeof fs.readdir>>;
+    let entries: any[];
     try {
       entries = await fs.readdir(dirPath, { withFileTypes: true });
     } catch {
@@ -581,7 +581,7 @@ export async function scanApiRoutes(
     basePath: string,
     parentSegments: ParsedApiSegment[] = []
   ): Promise<void> {
-    let entries: Awaited<ReturnType<typeof fs.readdir>>;
+    let entries: any[];
     try {
       entries = await fs.readdir(dirPath, { withFileTypes: true });
     } catch {

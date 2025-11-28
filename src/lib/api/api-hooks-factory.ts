@@ -44,17 +44,16 @@ import {
   useQueryClient,
   type UseQueryOptions,
   type UseMutationOptions,
-  type UseInfiniteQueryOptions,
   type QueryKey,
   type QueryClient,
 } from '@tanstack/react-query';
 import { useMemo, useCallback, useRef } from 'react';
 import type {
   ApiEndpoint,
-  ApiResponse,
   ApiError,
   RequestConfig,
   QueryParams,
+  ApiResponse,
   PaginatedResponse,
   PaginationMeta,
 } from './types';
@@ -348,6 +347,7 @@ function createQueryHook<TResponse>(
   endpointName: string,
   endpoint: ApiEndpoint,
   defaultStaleTime: number,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   globalOnError?: (error: ApiError) => void
 ) {
   return (params?: QueryRequestParams, hookConfig?: QueryHookConfig<TResponse>) => {
@@ -382,7 +382,7 @@ function createQueryHook<TResponse>(
       refetchInterval: hookConfig?.refetchInterval,
       retry: hookConfig?.retry,
       select: hookConfig?.select,
-      placeholderData: hookConfig?.placeholderData,
+      placeholderData: hookConfig?.placeholderData as UseQueryOptions<TResponse, ApiError>['placeholderData'],
       initialData: hookConfig?.initialData,
     });
   };
@@ -547,7 +547,7 @@ export function createInfiniteQueryHook<TResponse>(config: {
 
         const response = await client.get<TResponse>(url, {
           params: {
-            ...params?.queryParams,
+            ...(params?.queryParams as Record<string, unknown>),
             [pageParamName]: pageParam,
           },
           timeout: endpoint.timeout,
@@ -557,8 +557,8 @@ export function createInfiniteQueryHook<TResponse>(config: {
         return response.data;
       },
       initialPageParam: undefined,
-      getNextPageParam: hookConfig?.getNextPageParam || getNextPageParam,
-      getPreviousPageParam: hookConfig?.getPreviousPageParam || getPreviousPageParam,
+      getNextPageParam: (hookConfig?.getNextPageParam || getNextPageParam) as any,
+      getPreviousPageParam: (hookConfig?.getPreviousPageParam || getPreviousPageParam) as any,
       enabled: hookConfig?.enabled,
       staleTime: hookConfig?.staleTime,
       gcTime: hookConfig?.gcTime,

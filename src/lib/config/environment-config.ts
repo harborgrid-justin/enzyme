@@ -23,7 +23,6 @@ import type {
   ConfigRecord,
   Environment,
   EnvironmentConfig as EnvironmentConfigType,
-  DeepPartial,
 } from './types';
 import { ConfigMerger } from './config-merger';
 
@@ -162,11 +161,11 @@ export class EnvironmentConfigManager<T extends ConfigRecord = ConfigRecord> {
   ): T {
     const overrides = envOverrides[this.environment];
 
-    if (!overrides) {
+    if (overrides === undefined || overrides === null) {
       return baseConfig;
     }
 
-    return this.merger.mergeTwo(baseConfig, overrides as ConfigRecord) as T;
+    return this.merger.mergeTwo(baseConfig, overrides as unknown as ConfigRecord) as T;
   }
 
   /**

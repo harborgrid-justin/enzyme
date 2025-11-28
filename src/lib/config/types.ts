@@ -32,14 +32,6 @@ export type ConfigValue =
  */
 export type ConfigRecord = Record<string, ConfigValue>;
 
-/**
- * Deep partial type for configuration.
- *
- * @deprecated Import from '../shared/type-utils' instead.
- * This re-export is provided for backward compatibility.
- */
-export type { DeepPartial } from '../shared/type-utils';
-
 // ============================================================================
 // Configuration Schema
 // ============================================================================
@@ -171,6 +163,13 @@ export interface ConfigSource {
  * Application environments.
  */
 export type Environment = 'development' | 'staging' | 'production' | 'test';
+
+/**
+ * Deep partial type
+ */
+export type DeepPartial<T> = T extends object
+  ? { [P in keyof T]?: DeepPartial<T[P]> }
+  : T;
 
 /**
  * Environment-specific configuration overrides.

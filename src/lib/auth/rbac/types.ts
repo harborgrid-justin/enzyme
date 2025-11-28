@@ -7,7 +7,8 @@
  * @module auth/rbac/types
  */
 
-import type { Role, Permission, User } from '../types';
+import type { Permission } from '../types';
+export type { Permission };
 
 // =============================================================================
 // Core RBAC Types

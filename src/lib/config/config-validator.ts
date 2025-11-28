@@ -25,7 +25,6 @@ import type {
   ConfigSchema,
   ConfigFieldSchema,
   ConfigRecord,
-  ConfigValue,
   ValidationResult,
   ValidationError,
   ValidationRule,

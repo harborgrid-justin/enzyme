@@ -20,7 +20,6 @@ import type {
   ConfigRecord,
   ConfigValue,
   MergeOptions,
-  MergeStrategy,
 } from './types';
 
 // ============================================================================
@@ -202,7 +201,8 @@ export function getValueAtPath<T = ConfigValue>(
     // Handle array indexing
     const arrayMatch = part.match(/^(\w+)\[(\d+)\]$/);
     if (arrayMatch) {
-      const [, key, index] = arrayMatch;
+      const key = arrayMatch[1]!;
+      const index = arrayMatch[2]!;
       const obj = current as Record<string, unknown>;
       const arr = obj[key];
       if (!Array.isArray(arr)) {
@@ -231,20 +231,23 @@ export function setValueAtPath(
 
   for (let i = 0; i < parts.length - 1; i++) {
     const part = parts[i];
+    if (!part) continue;
 
     // Handle array indexing
     const arrayMatch = part.match(/^(\w+)\[(\d+)\]$/);
-    if (arrayMatch) {
-      const [, key, index] = arrayMatch;
+    if (arrayMatch && arrayMatch[1] && arrayMatch[2]) {
+      const key = arrayMatch[1];
+      const index = arrayMatch[2];
       if (!Array.isArray(current[key])) {
         current[key] = [];
       }
       const arr = [...(current[key] as unknown[])];
       current[key] = arr;
-      if (typeof arr[parseInt(index, 10)] !== 'object') {
-        arr[parseInt(index, 10)] = {};
+      const idx = parseInt(index, 10);
+      if (typeof arr[idx] !== 'object') {
+        arr[idx] = {};
       }
-      current = arr[parseInt(index, 10)] as Record<string, unknown>;
+      current = arr[idx] as Record<string, unknown>;
     } else {
       if (typeof current[part] !== 'object' || current[part] === null) {
         current[part] = {};
@@ -256,9 +259,12 @@ export function setValueAtPath(
   }
 
   const lastPart = parts[parts.length - 1];
+  if (!lastPart) return result;
+
   const arrayMatch = lastPart.match(/^(\w+)\[(\d+)\]$/);
-  if (arrayMatch) {
-    const [, key, index] = arrayMatch;
+  if (arrayMatch && arrayMatch[1] && arrayMatch[2]) {
+    const key = arrayMatch[1];
+    const index = arrayMatch[2];
     if (!Array.isArray(current[key])) {
       current[key] = [];
     }
@@ -283,14 +289,14 @@ export function deleteValueAtPath(
   const result = { ...config };
 
   if (parts.length === 1) {
-    delete result[parts[0]];
+    delete result[parts[0]!];
     return result;
   }
 
   let current: Record<string, unknown> = result;
 
   for (let i = 0; i < parts.length - 1; i++) {
-    const part = parts[i];
+    const part = parts[i]!;
     if (typeof current[part] !== 'object' || current[part] === null) {
       return result; // Path doesn't exist
     }
@@ -298,7 +304,7 @@ export function deleteValueAtPath(
     current = current[part] as Record<string, unknown>;
   }
 
-  delete current[parts[parts.length - 1]];
+  delete current[parts[parts.length - 1]!];
   return result;
 }
 

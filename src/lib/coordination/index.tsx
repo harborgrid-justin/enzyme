@@ -58,11 +58,12 @@ import {
   useMemo,
   useCallback,
   useRef,
+  createContext,
   type ReactNode,
   type FC,
   type ComponentType,
 } from 'react';
-import { CoordinationContext } from '../contexts/CoordinationContext';
+// import { CoordinationContext } from '../contexts/CoordinationContext';
 
 // ============================================================================
 // Type Exports
@@ -177,13 +178,13 @@ export {
 // ============================================================================
 
 export {
-  CoordinationEventBusImpl,
+  // CoordinationEventBusImpl,
   getCoordinationEventBus,
   setCoordinationEventBus,
   resetCoordinationEventBus,
   publishEvent,
   subscribeToEvent,
-  createLibraryScopedBus,
+  // createLibraryScopedBus,
 } from './event-bus';
 
 // ============================================================================
@@ -328,7 +329,7 @@ export {
 // Coordination Context
 // ============================================================================
 
-import type { CoordinationContextValue, KnownEventType, EventPayload, EventHandler, EventSubscription, EventSubscriptionOptions, ServiceContract } from './types';
+import type { CoordinationContextValue, KnownEventType, EventPayload, EventHandler, EventSubscriptionOptions, ServiceContract } from './types';
 import { createLibraryId } from './types';
 import { getCoordinationEventBus } from './event-bus';
 import { getGlobalContainer } from './dependency-injector';
@@ -424,7 +425,7 @@ export const CoordinationProvider: FC<CoordinationProviderComponentProps> = ({
 
   // Create context value
   const contextValue = useMemo<CoordinationContextValue>(() => ({
-    eventBus: getCoordinationEventBus({ debug }),
+    eventBus: getCoordinationEventBus() as unknown as import('./types').CoordinationEventBus,
     container: getGlobalContainer(),
     lifecycle: getLifecycleManager(),
     stateCoordinator: getStateCoordinator({ debug }),
@@ -722,7 +723,7 @@ export async function initCoordination(options: {
   const { debug = false } = options;
 
   // Initialize event bus
-  const eventBus = getCoordinationEventBus({ debug });
+  const eventBus = getCoordinationEventBus();
 
   // Initialize lifecycle
   const lifecycle = getLifecycleManager();

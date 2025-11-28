@@ -11,7 +11,7 @@
  * @version 1.0.0
  */
 
-import type { ComponentType, Context, ReactNode, FC } from 'react';
+import type { ComponentType, Context, ReactNode } from 'react';
 
 // ============================================================================
 // Branded Types - Compile-time safety for string identifiers
@@ -1091,7 +1091,7 @@ export type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
  * @deprecated Import from '../../shared/type-utils' instead.
  * This re-export is provided for backward compatibility.
  */
-export type { DeepPartial } from '../../shared/type-utils';
+export type { DeepPartial } from '../shared/type-utils';
 
 /**
  * Extracts the payload type from an event.
@@ -1118,38 +1118,38 @@ export interface Disposable {
 /**
  * Result type for operations that can fail.
  *
- * @deprecated Import from '../../shared/type-utils' instead.
+ * @deprecated Import from '../shared/type-utils' instead.
  * This re-export is provided for backward compatibility.
  */
-export type { Result } from '../../shared/type-utils';
+export type { Result } from '../shared/type-utils';
 
 /**
  * Creates a successful result.
  *
- * @deprecated Import from '../../shared/type-utils' instead.
+ * @deprecated Import from '../shared/type-utils' instead.
  */
-export { ok } from '../../shared/type-utils';
+export { ok } from '../shared/type-utils';
 
 /**
  * Creates a failed result.
  *
- * @deprecated Import from '../../shared/type-utils' instead.
+ * @deprecated Import from '../shared/type-utils' instead.
  */
-export { err } from '../../shared/type-utils';
+export { err } from '../shared/type-utils';
 
 /**
  * Type guard to check if a Result is successful.
  *
- * @deprecated Import from '../../shared/type-utils' instead.
+ * @deprecated Import from '../shared/type-utils' instead.
  */
-export { isOk } from '../../shared/type-utils';
+export { isOk } from '../shared/type-utils';
 
 /**
  * Type guard to check if a Result is a failure.
  *
- * @deprecated Import from '../../shared/type-utils' instead.
+ * @deprecated Import from '../shared/type-utils' instead.
  */
-export { isErr } from '../../shared/type-utils';
+export { isErr } from '../shared/type-utils';
 
 // ============================================================================
 // Type Guards

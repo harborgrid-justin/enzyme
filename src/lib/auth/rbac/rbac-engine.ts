@@ -10,17 +10,17 @@
 import type {
   RBACConfig,
   RoleDefinition,
-  Permission,
+
   PermissionAction,
   PermissionScope,
-  StructuredPermission,
+
   AccessRequest,
   EvaluationResult,
   PolicyResult,
   RBACAuditEvent,
   RBACAuditHandler,
 } from './types';
-import type { Role } from '../types';
+
 
 // =============================================================================
 // Constants
@@ -51,7 +51,7 @@ const REGEX_METACHARACTERS = /[.+^${}()|[\]\\]/g;
  *
  * SECURITY: Limits execution time for regex operations to prevent DoS.
  */
-const PATTERN_MATCH_TIMEOUT_MS = 100;
+
 
 // =============================================================================
 // RBAC Engine Class
@@ -326,7 +326,7 @@ export class RBACEngine {
    */
   checkResourcePermission(
     resourceType: string,
-    resourceId: string,
+    _resourceId: string,
     action: PermissionAction,
     context?: Record<string, unknown>
   ): boolean {
@@ -722,7 +722,8 @@ export class RBACEngine {
    * @param pattern - Glob-like pattern
    * @returns Safe regex pattern string (without anchors)
    */
-  private escapePatternToRegex(pattern: string): string {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private _escapePatternToRegex(pattern: string): string {
     // First, escape all regex metacharacters (except * and ?)
     let escaped = pattern.replace(REGEX_METACHARACTERS, '\\$&');
 

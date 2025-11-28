@@ -524,10 +524,14 @@ export class MockServer {
       const patternPart = patternParts[i];
       const pathPart = pathParts[i];
 
+      if (!patternPart) continue;
+
       if (patternPart.startsWith(':')) {
         // Parameter match
         const paramName = patternPart.slice(1);
-        params[paramName] = decodeURIComponent(pathPart);
+        if (paramName) {
+          params[paramName] = decodeURIComponent(pathPart || '');
+        }
       } else if (patternPart === '*') {
         // Wildcard match
         continue;
@@ -923,7 +927,11 @@ export const mockData = {
    * Pick a random item from array
    */
   pick: <T>(items: T[]): T => {
-    return items[Math.floor(Math.random() * items.length)];
+    const item = items[Math.floor(Math.random() * items.length)];
+    if (item === undefined) {
+      throw new Error('Cannot pick from empty array');
+    }
+    return item;
   },
 
   /**
@@ -1144,7 +1152,7 @@ export function createCrudHandlers<T extends { id: string }>(config: {
         }
 
         const updated = { ...data[index], ...body };
-        data[index] = updated;
+        data[index] = updated as T;
 
         return { status: 200, data: updated };
       },

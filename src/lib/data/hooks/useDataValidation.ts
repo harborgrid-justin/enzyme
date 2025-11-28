@@ -40,7 +40,7 @@
  */
 
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import type { Schema, ValidationResult, ValidationError, ValidationIssue } from '../validation/schema-validator';
+import type { Schema, ValidationResult, ValidationIssue } from '../validation/schema-validator';
 
 // =============================================================================
 // TYPES
@@ -194,7 +194,7 @@ export function useDataValidation<T>(
     const dataToValidate = transformBeforeValidation ? transformBeforeValidation(data) : data;
     const result = schemaRef.current.safeParse(dataToValidate);
 
-    const fieldErrors = result.success ? {} : extractFieldErrors(result.error.issues);
+    const fieldErrors = result.success ? {} : extractFieldErrors(result.issues);
 
     setState((prev) => ({
       ...prev,
@@ -202,7 +202,7 @@ export function useDataValidation<T>(
       isValidating: false,
       isValid: result.success,
       lastValidatedData: data,
-      errors: result.success ? [] : result.error.issues,
+      errors: result.success ? [] : result.issues,
       fieldErrors,
       lastValidatedAt: Date.now(),
     }));
@@ -210,7 +210,7 @@ export function useDataValidation<T>(
     if (result.success) {
       onValid?.(result.data);
     } else {
-      onInvalid?.(result.error.issues);
+      onInvalid?.(result.issues);
     }
 
     return result;
@@ -223,7 +223,7 @@ export function useDataValidation<T>(
     const dataToValidate = transformBeforeValidation ? transformBeforeValidation(data) : data;
     const result = await schemaRef.current.safeParseAsync(dataToValidate);
 
-    const fieldErrors = result.success ? {} : extractFieldErrors(result.error.issues);
+    const fieldErrors = result.success ? {} : extractFieldErrors(result.issues);
 
     setState((prev) => ({
       ...prev,
@@ -231,7 +231,7 @@ export function useDataValidation<T>(
       isValidating: false,
       isValid: result.success,
       lastValidatedData: data,
-      errors: result.success ? [] : result.error.issues,
+      errors: result.success ? [] : result.issues,
       fieldErrors,
       lastValidatedAt: Date.now(),
     }));
@@ -239,7 +239,7 @@ export function useDataValidation<T>(
     if (result.success) {
       onValid?.(result.data);
     } else {
-      onInvalid?.(result.error.issues);
+      onInvalid?.(result.issues);
     }
 
     return result;
@@ -406,7 +406,7 @@ export function useValidateOnChange<T>(
       const validationResult = schema.safeParse(data);
       setResult({
         isValid: validationResult.success,
-        errors: validationResult.success ? [] : validationResult.error.issues,
+        errors: validationResult.success ? [] : validationResult.issues,
         isValidating: false,
       });
     }, debounceMs);
@@ -439,7 +439,7 @@ export function useValidateValue<T>(
     const result = schema.safeParse(value);
     return {
       isValid: result.success,
-      error: result.success ? null : result.error.issues[0]?.message || 'Invalid value',
+      error: result.success ? null : result.issues[0]?.message || 'Invalid value',
     };
   }, [schema, value]);
 }
@@ -483,7 +483,7 @@ export function useAsyncValidation<T>(
     setState({
       isValid: result.success,
       isValidating: false,
-      errors: result.success ? [] : result.error.issues,
+      errors: result.success ? [] : result.issues,
     });
 
     return result;

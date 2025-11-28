@@ -58,7 +58,7 @@ export type { HydrationContextValue, HydrationStatus, HydrationPriority } from '
 export type { FeatureDIContainer, ServiceContract } from './DIContext';
 export type { FeatureFlagContextValue } from './FeatureFlagContext';
 export type { CoordinationContextValue, CoordinationEvent } from './CoordinationContext';
-export type { ContextBridgeImpl, BridgeConfig } from './BridgeManagerContext';
+export type { ContextBridgeImpl } from './BridgeManagerContext';
 export type { RBACContextValue, Role, Permission } from './RBACContext';
 export type { AuthContextValue, User, UserRole } from './AuthContext';
 export type { ConfigContextValue, ConfigValue, ConfigRecord } from './ConfigContext';

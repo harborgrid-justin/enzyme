@@ -43,7 +43,7 @@ import type {
   VariantId,
   JsonValue,
 } from './types';
-import type { Mutable } from '../../utils/types';
+// import type { Mutable } from '../../utils/types';
 
 // ============================================================================
 // Types

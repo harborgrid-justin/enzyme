@@ -425,7 +425,7 @@ export function createIntegrityChecker(config: IntegrityCheckerConfig): Integrit
 
       const referenced = referencedIds.get(entityType) || new Set();
 
-      for (const [entityId, _entity] of Object.entries(entityMap)) {
+      for (const [entityId] of Object.entries(entityMap)) {
         if (!referenced.has(entityId)) {
           violations.push({
             type: 'orphan',
@@ -601,17 +601,18 @@ export function createIntegrityChecker(config: IntegrityCheckerConfig): Integrit
 
       try {
         if (!options.dryRun) {
+          const entityTypeMap = repairedEntities[violation.entityType];
           switch (violation.repair.action) {
             case 'delete':
-              if (repairedEntities[violation.entityType]?.[violation.entityId]) {
-                delete repairedEntities[violation.entityType][violation.entityId];
+              if (entityTypeMap?.[violation.entityId]) {
+                delete entityTypeMap[violation.entityId];
               }
               break;
 
             case 'update':
-              if (repairedEntities[violation.entityType] && violation.repair.data) {
-                const existing = repairedEntities[violation.entityType][violation.entityId];
-                repairedEntities[violation.entityType][violation.entityId] = {
+              if (entityTypeMap && violation.repair.data) {
+                const existing = entityTypeMap[violation.entityId];
+                entityTypeMap[violation.entityId] = {
                   ...existing,
                   ...(violation.repair.data as Record<string, unknown>),
                 } as Entity;
@@ -619,8 +620,8 @@ export function createIntegrityChecker(config: IntegrityCheckerConfig): Integrit
               break;
 
             case 'nullify':
-              if (repairedEntities[violation.entityType] && violation.field) {
-                const entity = repairedEntities[violation.entityType][violation.entityId];
+              if (entityTypeMap && violation.field) {
+                const entity = entityTypeMap[violation.entityId];
                 if (entity) {
                   entity[violation.field] = null;
                 }

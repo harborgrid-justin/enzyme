@@ -26,7 +26,6 @@ import {
   type Context,
   type ReactNode,
   type FC,
-  type Provider,
 } from 'react';
 import { BridgeManagerContext } from '../contexts/BridgeManagerContext';
 
@@ -75,43 +74,6 @@ export type ComposedContextValue<T extends Record<string, unknown>> = T;
  * Context selector function.
  */
 export type ContextSelector<TContext, TSelected> = (context: TContext) => TSelected;
-
-// ============================================================================
-// Helper Functions
-// ============================================================================
-
-/**
- * Default equality check (shallow).
- */
-function defaultEquality<T>(prev: T, next: T): boolean {
-  if (prev === next) return true;
-  if (typeof prev !== 'object' || typeof next !== 'object') return false;
-  if (prev === null || next === null) return false;
-
-  const prevKeys = Object.keys(prev);
-  const nextKeys = Object.keys(next);
-  if (prevKeys.length !== nextKeys.length) return false;
-
-  return prevKeys.every(
-    (key) =>
-      (prev as Record<string, unknown>)[key] ===
-      (next as Record<string, unknown>)[key]
-  );
-}
-
-/**
- * Creates a debounced function.
- */
-function debounce<T extends (...args: unknown[]) => void>(
-  fn: T,
-  delay: number
-): T {
-  let timeoutId: ReturnType<typeof setTimeout> | null = null;
-  return ((...args: unknown[]) => {
-    if (timeoutId) clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => fn(...args), delay);
-  }) as T;
-}
 
 // ============================================================================
 // ContextBridgeImpl Class
@@ -363,12 +325,12 @@ ContextBridgeProvider.displayName = 'ContextBridgeProvider';
 /**
  * Hook to access the bridge manager.
  */
-export function useBridgeManager(): ContextBridgeImpl {
+export function useBridgeManager(): import('../contexts/BridgeManagerContext').ContextBridgeImpl {
   const manager = useContext(BridgeManagerContext);
   if (!manager) {
     throw new Error('useBridgeManager must be used within a ContextBridgeProvider');
   }
-  return manager as ContextBridgeImpl;
+  return manager;
 }
 
 /**
@@ -528,7 +490,7 @@ export function useMultiContextSelector<TResult>(
   }
 
   const getContext = useCallback(<T,>(context: Context<T | null>): T | null => {
-    return contextValues.current.get(context) as T | null;
+    return contextValues.current.get(context as Context<unknown>) as T | null;
   }, []);
 
   return useMemo(() => selector(getContext), [selector, getContext]);

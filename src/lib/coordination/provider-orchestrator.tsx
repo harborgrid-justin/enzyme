@@ -48,15 +48,15 @@ interface ProviderEntry extends ProviderDefinition {
   order: number;
 }
 
-/**
- * Orchestrator state.
- */
-interface OrchestratorState {
-  /** Ordered providers */
-  providers: ProviderEntry[];
-  /** Provider tree component */
-  tree: ComponentType<{ children: ReactNode }>;
-}
+// /**
+//  * Orchestrator state.
+//  */
+// interface OrchestratorState {
+//   /** Ordered providers */
+//   providers: ProviderEntry[];
+//   /** Provider tree component */
+//   tree: ComponentType<{ children: ReactNode }>;
+// }
 
 /**
  * Fallback loading component props.
@@ -239,17 +239,17 @@ function createProviderTree(
     // Wrap from innermost to outermost
     for (let i = sortedProviders.length - 1; i >= 0; i--) {
       const provider = sortedProviders[i];
-      if (!provider.isEnabled) continue;
+      if (!provider?.isEnabled) continue;
 
       const Component = provider.resolvedComponent;
       const props = provider.props ?? {};
 
-      tree = createElement(Component, props, tree);
+      tree = createElement(Component, props as any, tree);
     }
 
     // Wrap with error boundary if provided
     if (errorBoundary) {
-      tree = createElement(errorBoundary, {}, tree);
+      tree = createElement(errorBoundary, {} as any, tree);
     }
 
     return createElement(Fragment, {}, tree);

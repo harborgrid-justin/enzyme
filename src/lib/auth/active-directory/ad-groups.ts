@@ -223,6 +223,8 @@ export class ADGroupMapper {
 
     if (index >= 0) {
       this.config.mappings[index] = {
+        groupIdentifier: updates.groupIdentifier ?? this.config.mappings[index]?.groupIdentifier ?? '',
+        matchType: updates.matchType ?? this.config.mappings[index]?.matchType ?? 'exact',
         ...this.config.mappings[index],
         ...updates,
       };
@@ -266,6 +268,14 @@ export class ADGroupMapper {
 
     // Get highest priority role
     const highestPriorityMapping = matchedMappings[0];
+    if (!highestPriorityMapping) {
+      return {
+        role: undefined,
+        permissions: [],
+        matchedGroups: [],
+        appliedMappings: [],
+      };
+    }
     const role = highestPriorityMapping.mapping.role;
 
     // Collect all permissions from all matched mappings

@@ -21,7 +21,7 @@
 
 import type {
   Entity,
-  EntityMap,
+  // EntityMap,
   NormalizedEntities,
   EntitySchema,
   ArraySchema,

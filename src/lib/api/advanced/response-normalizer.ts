@@ -462,25 +462,25 @@ export class ResponseNormalizer {
       // Handle Spring's 'first' field (inverted)
       hasPrevPage = mapping.hasPrev === 'first' ? !hasPrevValue : !!hasPrevValue;
     } else {
-      hasPrevPage = (currentPage ?? 1) > 1;
+      hasPrevPage = ((currentPage as number) ?? 1) > 1;
     }
 
     return {
-      currentPage: currentPage ?? 1,
-      totalPages: totalPages ?? 1,
-      pageSize: pageSize ?? 20,
-      totalItems: totalItems ?? 0,
+      currentPage: (currentPage as number) ?? 1,
+      totalPages: (totalPages as number) ?? 1,
+      pageSize: (pageSize as number) ?? 20,
+      totalItems: (totalItems as number) ?? 0,
       hasNextPage,
       hasPrevPage,
-      cursor: this.getNestedValue(paginationSource, mapping.cursor ?? 'cursor'),
+      cursor: this.getNestedValue(paginationSource, mapping.cursor ?? 'cursor') as string | undefined,
       nextCursor: this.getNestedValue(
         paginationSource,
         mapping.nextCursor ?? 'nextCursor'
-      ),
+      ) as string | undefined,
       prevCursor: this.getNestedValue(
         paginationSource,
         mapping.prevCursor ?? 'prevCursor'
-      ),
+      ) as string | undefined,
     };
   }
 

@@ -197,6 +197,71 @@ export class CoordinationEventBus {
   }
 
   /**
+   * Subscribes to multiple event types.
+   * @param events - Event names
+   * @param handler - Event handler
+   * @returns Array of unsubscribe functions
+   */
+  subscribeMany<E extends CoordinationEventName>(
+    events: E[],
+    handler: CoordinationEventHandler<E>
+  ): (() => void)[] {
+    return events.map(event => this.subscribe(event, handler));
+  }
+
+  /**
+   * Request-response pattern.
+   * @param requestEvent - Request event name
+   * @param responseEvent - Response event name
+   * @param payload - Request payload
+   * @param timeout - Timeout in milliseconds
+   * @returns Promise that resolves with the response payload
+   */
+  async request<TReq extends CoordinationEventName, TRes extends CoordinationEventName>(
+    requestEvent: TReq,
+    responseEvent: TRes,
+    payload: CoordinationEvents[TReq],
+    timeout = 5000
+  ): Promise<CoordinationEvents[TRes]> {
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        unsubscribe();
+        reject(new Error(`Request timeout after ${timeout}ms`));
+      }, timeout);
+
+      const unsubscribe = this.once(responseEvent, (responsePayload) => {
+        clearTimeout(timer);
+        resolve(responsePayload);
+      });
+
+      this.publish(requestEvent, payload);
+    });
+  }
+
+  /**
+   * Get event bus statistics.
+   * @returns Event bus statistics
+   */
+  getStats(): {
+    totalPublished: number;
+    totalDelivered: number;
+    totalFailures: number;
+    activeSubscriptions: number;
+  } {
+    let totalSubscriptions = 0;
+    for (const handlers of this.listeners.values()) {
+      totalSubscriptions += handlers.size;
+    }
+
+    return {
+      totalPublished: 0, // Could track this with a counter if needed
+      totalDelivered: 0, // Could track this with a counter if needed
+      totalFailures: 0,  // Could track this with a counter if needed
+      activeSubscriptions: totalSubscriptions,
+    };
+  }
+
+  /**
    * Disposes the event bus.
    */
   dispose(): void {

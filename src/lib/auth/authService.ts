@@ -1,10 +1,6 @@
-import { env } from '@/config/env';
-import { apiClient, type ApiError } from '@/lib/api';
-import {
-  SecureStorage,
-  createSecureLocalStorage,
-  generateEncryptionKey
-} from '@/lib/security/secure-storage';
+import { apiClient } from '@/lib/api';
+import type { SecureStorage } from '@/lib/security/secure-storage';
+import { createSecureLocalStorage } from '@/lib/security/secure-storage';
 import type {
   User,
   AuthTokens,
@@ -96,9 +92,7 @@ export function initializeSessionSecurity(): string {
  * @returns The current session encryption key
  */
 function getSessionEncryptionKey(): string {
-  if (!sessionEncryptionKey) {
-    sessionEncryptionKey = initializeSessionSecurity();
-  }
+  sessionEncryptionKey ??= initializeSessionSecurity();
   return sessionEncryptionKey;
 }
 

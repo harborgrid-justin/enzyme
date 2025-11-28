@@ -8,13 +8,13 @@
  */
 
 import {
+  createContext,
   useCallback,
   useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from 'react';
-import { RBACContext } from '../../contexts/RBACContext';
 import { useFeatureFlag } from '@/lib/flags';
 import type {
   RBACConfig,
@@ -26,8 +26,8 @@ import type {
   AccessRequest,
   EvaluationResult,
 } from './types';
-import type { Role, User } from '../types';
-import { RBACEngine, createRBACEngine } from './rbac-engine';
+import type { User } from '../types';
+import { createRBACEngine } from './rbac-engine';
 
 // =============================================================================
 // Context
@@ -125,7 +125,7 @@ export function RBACProvider({
   onAccessCheck,
 }: RBACProviderProps) {
   // Check feature flag
-  const isRBACEnabled = useFeatureFlag(config.featureFlag ?? 'rbac', true);
+  const isRBACEnabled = useFeatureFlag(config.featureFlag ?? 'rbac');
 
   // State
   const [state, setState] = useState<RBACState>({

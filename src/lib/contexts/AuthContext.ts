@@ -4,39 +4,14 @@
  */
 
 import { createContext } from 'react';
+import type { AuthContextValue, User, Role } from '../auth/types';
 
 /**
  * User role type
  */
-export type UserRole = 'admin' | 'nurse' | 'counselor' | 'staff' | 'guest';
+export type UserRole = Role;
 
-/**
- * User data
- */
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  displayName?: string;
-  firstName?: string;
-  lastName?: string;
-  role: UserRole;
-  permissions: string[];
-}
-
-/**
- * Auth context value
- */
-export interface AuthContextValue {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  refreshToken: () => Promise<void>;
-  hasPermission: (permission: string) => boolean;
-  hasRole: (role: UserRole) => boolean;
-}
+export type { User, AuthContextValue };
 
 /**
  * Auth context - extracted for Fast Refresh compliance

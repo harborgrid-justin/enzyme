@@ -10,7 +10,6 @@
 import { useContext, useCallback, useMemo } from 'react';
 import { ADContext } from './ad-provider';
 import type {
-  ADContextValue,
   ADUser,
   ADGroup,
   ADTokens,
@@ -164,28 +163,26 @@ export function useActiveDirectory(): UseActiveDirectoryReturn {
   // State Values
   // ===========================================================================
 
-  const {
-    user,
-    isAuthenticated,
-    isAuthenticating,
-    isRefreshing,
-    error,
-    provider,
-    tokens,
-    hasSsoSession,
-    initialize,
-    login,
-    loginSilent,
-    logout,
-    acquireToken,
-    refreshTokens,
-    clearError,
-    forceReauth,
-    isInGroup,
-    hasAttribute,
-    getMappedRoles,
-    getEffectivePermissions,
-  } = context;
+  const user = context.user;
+  const isAuthenticated = context.isAuthenticated;
+  const isAuthenticating = context.isAuthenticating;
+  const isRefreshing = context.isRefreshing;
+  const error = context.error;
+  const provider = context.provider;
+  const tokens = context.tokens;
+  const hasSsoSession = context.hasSsoSession;
+  const initialize = context.initialize;
+  const login = context.login;
+  const loginSilent = context.loginSilent;
+  const logout = context.logout;
+  const acquireToken = context.acquireToken;
+  const refreshTokens = context.refreshTokens;
+  const clearError = context.clearError;
+  const forceReauth = context.forceReauth;
+  const isInGroup = context.isInGroup;
+  const hasAttribute = context.hasAttribute;
+  const getMappedRoles = context.getMappedRoles;
+  const getEffectivePermissions = context.getEffectivePermissions;
 
   // ===========================================================================
   // Group Helpers

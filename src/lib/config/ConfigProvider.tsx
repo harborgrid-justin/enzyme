@@ -22,6 +22,7 @@
  */
 
 import {
+  createContext,
   useContext,
   useState,
   useEffect,
@@ -29,11 +30,9 @@ import {
   useMemo,
   type ReactNode,
 } from 'react';
-import { ConfigContext } from '../contexts/ConfigContext';
 import type {
   ConfigRecord,
   ConfigValue,
-  ConfigContextValue,
   ConfigEventListener,
   ConfigSchema,
 } from './types';
@@ -44,6 +43,19 @@ import { getValueAtPath, hasPath } from './config-merger';
 // ============================================================================
 // Context
 // ============================================================================
+
+/**
+ * Config context value type
+ */
+export interface ConfigContextValue<T extends ConfigRecord = ConfigRecord> {
+  config: T;
+  get: <V = ConfigValue>(path: string, defaultValue?: V) => V;
+  set: (path: string, value: ConfigValue) => void;
+  has: (path: string) => boolean;
+  reset: () => void;
+  isLoading: boolean;
+  error: Error | null;
+}
 
 const ConfigContext = createContext<ConfigContextValue | null>(null);
 

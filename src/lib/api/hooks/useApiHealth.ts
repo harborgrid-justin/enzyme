@@ -27,7 +27,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useLatestRef } from '../../hooks/shared/useLatestRef';
 import { useApiClient } from './useApiClient';
-import type { HealthStatus, HealthCheckResult, HealthMonitorConfig } from '../types';
+import type { HealthStatus, HealthCheckResult } from '../types';
 import { API_CONFIG, TIMING } from '@/config';
 
 // =============================================================================
@@ -371,6 +371,7 @@ export function useApiHealth(config?: UseApiHealthConfig): UseApiHealthResult {
         }
       };
     }
+    return undefined;
   }, [isMonitoring, mergedConfig.interval]); // Removed performHealthCheck - using ref instead
 
   // Cleanup on unmount

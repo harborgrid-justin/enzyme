@@ -29,8 +29,9 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { ConfigRecord, ConfigValue, ConfigChange } from './types';
-import { useConfigContext, useOptionalConfigContext } from './ConfigProvider';
+import type { ConfigRecord, ConfigValue } from './types';
+import type { ConfigChangeEvent, ConfigChange } from '../contexts/ConfigContext';
+import { useConfigContext } from './ConfigProvider';
 
 // ============================================================================
 // Basic Hooks
@@ -148,7 +149,7 @@ export function useConfigChange(
   const { subscribe, get } = useConfigContext();
 
   useEffect(() => {
-    return subscribe((event) => {
+    return subscribe((event: ConfigChangeEvent) => {
       if (event.type !== 'change' || !event.changes) {
         return;
       }
@@ -177,7 +178,7 @@ export function useWatchConfig<T = ConfigValue>(
     setValue(get<T>(path, defaultValue));
 
     // Subscribe to changes
-    return subscribe((event) => {
+    return subscribe((event: ConfigChangeEvent) => {
       if (event.type !== 'change' || !event.changes) {
         return;
       }

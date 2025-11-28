@@ -7,6 +7,7 @@
 // Schema Validator
 export {
   // Types
+  type Schema,
   type ValidationIssue,
   type ValidationResult,
   type AsyncValidationResult,
@@ -33,6 +34,7 @@ export {
 
   // Error
   SchemaValidationError,
+  ValidationError,
 
   // Factory
   v,

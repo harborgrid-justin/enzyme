@@ -24,10 +24,9 @@
  * ```
  */
 
-import type { HttpMethod, ApiEndpoint, ContentType, ResponseType, RetryConfig } from '../types';
+import type { HttpMethod, ContentType } from '../types';
 import type {
   ScannedApiRoute,
-  GroupModifier,
   ApiFileType,
 } from './route-scanner';
 
@@ -618,9 +617,13 @@ export function createHandlerConfig(
     loader: config.lazyLoadHandlers
       ? async () => {
           if (config.handlerResolver) {
-            return config.handlerResolver(route.filePath, exportName);
+            const handler = await config.handlerResolver(route.filePath, exportName);
+            if (!handler) {
+              throw new Error(`Handler not found for ${route.filePath}`);
+            }
+            return handler;
           }
-          return undefined;
+          throw new Error('Handler resolver not configured');
         }
       : undefined,
   };
@@ -629,7 +632,7 @@ export function createHandlerConfig(
 /**
  * Get export name for HTTP method
  */
-export function getExportNameForMethod(fileType: ApiFileType, method: HttpMethod): string {
+export function getExportNameForMethod(_fileType: ApiFileType, method: HttpMethod): string {
   // Common pattern: export named handlers for each method
   const methodExports: Record<HttpMethod, string> = {
     GET: 'GET',

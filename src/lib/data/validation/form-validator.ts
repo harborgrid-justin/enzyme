@@ -597,11 +597,10 @@ export function useFormValidation<T extends Record<string, unknown>>(
         for (const [field, fieldErrors] of Object.entries(errors)) {
           const prevState = prev[field as keyof T];
           newStates[field] = {
-            ...newStates[field],
+            value: prevState?.value ?? null,
             errors: fieldErrors as FieldError[],
             validating: false,
             valid: (fieldErrors as FieldError[]).length === 0,
-            value: prevState?.value ?? null,
             touched: prevState?.touched ?? false,
             dirty: prevState?.dirty ?? false,
           };

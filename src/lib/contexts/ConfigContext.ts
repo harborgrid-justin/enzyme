@@ -24,8 +24,27 @@ export interface ConfigContextValue<T extends ConfigRecord = ConfigRecord> {
   set: (path: string, value: ConfigValue) => void;
   has: (path: string) => boolean;
   reset: () => void;
+  reload: () => Promise<void>;
+  subscribe: (callback: (event: ConfigChangeEvent) => void) => () => void;
   isLoading: boolean;
   error: Error | null;
+}
+
+/**
+ * Configuration change event
+ */
+export interface ConfigChangeEvent {
+  type: 'change' | 'reset' | 'reload';
+  changes?: ConfigChange[];
+}
+
+/**
+ * Configuration change
+ */
+export interface ConfigChange {
+  path: string;
+  oldValue: ConfigValue;
+  newValue: ConfigValue;
 }
 
 /**

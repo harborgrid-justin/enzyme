@@ -331,7 +331,7 @@ export function createHealthcareMatrix(): PermissionMatrix {
       resource: 'patients',
       allowedActions: ['read', 'list'],
       conditions: [
-        { field: 'assignedProvider', operator: 'equals', contextKey: 'userId' },
+        { field: 'assignedProvider', operator: 'equals', value: null, contextKey: 'userId' },
       ],
     })
     .addEntry({
@@ -339,7 +339,7 @@ export function createHealthcareMatrix(): PermissionMatrix {
       resource: 'medical_records',
       allowedActions: ['create', 'read', 'update'],
       conditions: [
-        { field: 'assignedProvider', operator: 'equals', contextKey: 'userId' },
+        { field: 'assignedProvider', operator: 'equals', value: null, contextKey: 'userId' },
       ],
     })
     .addEntry({
@@ -347,7 +347,7 @@ export function createHealthcareMatrix(): PermissionMatrix {
       resource: 'prescriptions',
       allowedActions: ['create', 'read', 'update'],
       conditions: [
-        { field: 'prescriberId', operator: 'equals', contextKey: 'userId' },
+        { field: 'prescriberId', operator: 'equals', value: null, contextKey: 'userId' },
       ],
     })
     .addEntry({
@@ -368,7 +368,7 @@ export function createHealthcareMatrix(): PermissionMatrix {
       resource: 'patients',
       allowedActions: ['read', 'list', 'update'],
       conditions: [
-        { field: 'unit', operator: 'equals', contextKey: 'assignedUnit' },
+        { field: 'unit', operator: 'equals', value: null, contextKey: 'assignedUnit' },
       ],
     })
     .addEntry({

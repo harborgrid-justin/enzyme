@@ -17,7 +17,6 @@
  */
 
 import {
-  type LibraryId,
   type StateSliceId,
   type StateChange,
   type StateSubscriber,
@@ -27,7 +26,6 @@ import {
   type StateCoordinatorConfig,
   DEFAULT_STATE_COORDINATOR_CONFIG,
   createStateSliceId,
-  createLibraryId,
 } from './types';
 import { publishEvent } from './event-bus';
 
@@ -111,6 +109,8 @@ function setAtPath<T>(obj: T, path: string[], value: unknown): T {
 
   const [head, ...tail] = path;
   const current = obj as Record<string, unknown>;
+
+  if (head === undefined) return value as T;
 
   return {
     ...current,

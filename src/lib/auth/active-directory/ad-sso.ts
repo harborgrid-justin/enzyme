@@ -11,7 +11,6 @@ import type {
   SSOSession,
   SSOConfig,
   ADTokens,
-  ADAuthError,
   ADUser,
 } from './types';
 import { DEFAULT_SSO_CONFIG } from './ad-config';
@@ -20,7 +19,6 @@ import { DEFAULT_SSO_CONFIG } from './ad-config';
 // Constants
 // =============================================================================
 
-const SSO_STORAGE_PREFIX = 'ad_sso_';
 const SSO_BROADCAST_CHANNEL = 'ad_sso_sync';
 const SESSION_CHECK_INTERVAL = 60000; // 1 minute
 
@@ -119,8 +117,13 @@ export class SSOManager {
    */
   constructor(options: Partial<SSOManagerOptions> = {}) {
     this.options = {
-      ...DEFAULT_SSO_CONFIG,
-      ...options,
+      crossTabSync: (options.crossTabSync ?? DEFAULT_SSO_CONFIG.crossTabSync) as boolean,
+      storagePrefix: (options.storagePrefix ?? DEFAULT_SSO_CONFIG.storagePrefix) as string,
+      sessionTimeout: (options.sessionTimeout ?? DEFAULT_SSO_CONFIG.sessionTimeout) as number,
+      trackActivity: (options.trackActivity ?? DEFAULT_SSO_CONFIG.trackActivity) as boolean,
+      activityCheckInterval: (options.activityCheckInterval ?? DEFAULT_SSO_CONFIG.activityCheckInterval) as number,
+      autoExtendSession: (options.autoExtendSession ?? DEFAULT_SSO_CONFIG.autoExtendSession) as boolean,
+      allowedDomains: options.allowedDomains ?? [],
       onSessionChange: options.onSessionChange ?? (() => {}),
       onTokenSync: options.onTokenSync ?? (() => {}),
       onSessionExpired: options.onSessionExpired ?? (() => {}),

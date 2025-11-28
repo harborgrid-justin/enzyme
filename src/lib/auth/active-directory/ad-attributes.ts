@@ -261,7 +261,7 @@ export class ADAttributeMapper {
         if (mapping.extract) {
           value = mapping.extract(source);
         } else {
-          value = this.getNestedValue(source, sourceKey);
+          value = this.getNestedValue(source as unknown as Record<string, unknown>, sourceKey);
         }
 
         // Apply validation if present

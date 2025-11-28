@@ -8,7 +8,7 @@ import { createContext } from 'react';
 /**
  * Service contract
  */
-export interface ServiceContract<T> {
+export interface ServiceContract {
   id: symbol;
   name: string;
 }
@@ -17,7 +17,7 @@ export interface ServiceContract<T> {
  * Service registration
  */
 export interface ServiceRegistration<T> {
-  contract: ServiceContract<T>;
+  contract: ServiceContract;
   factory: () => T;
   singleton?: boolean;
   tags?: string[];
@@ -28,9 +28,9 @@ export interface ServiceRegistration<T> {
  */
 export interface FeatureDIContainer {
   register: <T>(registration: ServiceRegistration<T>) => void;
-  resolve: <T>(contract: ServiceContract<T>) => T;
-  tryResolve: <T>(contract: ServiceContract<T>) => T | undefined;
-  has: <T>(contract: ServiceContract<T>) => boolean;
+  resolve: <T>(contract: ServiceContract) => T;
+  tryResolve: <T>(contract: ServiceContract) => T | undefined;
+  has: (contract: ServiceContract) => boolean;
   resolveByTag: <T>(tag: string) => T[];
   clear: () => void;
 }

@@ -191,6 +191,13 @@ export type PathKeys<T, D extends number = 5> = [D] extends [never]
 type Prev = [never, 0, 1, 2, 3, 4, ...0[]];
 
 /**
+ * Make all properties optional recursively
+ */
+export type DeepPartial<T> = T extends object
+  ? { [P in keyof T]?: DeepPartial<T[P]> }
+  : T;
+
+/**
  * Mutable type (remove readonly)
  */
 export type Mutable<T> = {

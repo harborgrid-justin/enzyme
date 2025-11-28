@@ -162,13 +162,15 @@ export function createAzureB2CConfig(
   const authority = config.authority ??
     `https://${config.b2cTenantName}.b2clogin.com/${config.b2cTenantName}.onmicrosoft.com/${policies.signUpSignIn}`;
 
-  return {
+  const result: AzureADB2CConfig = {
     ...DEFAULT_AZURE_B2C_CONFIG,
     ...config,
     policies,
     authority,
     knownAuthorities: config.knownAuthorities ?? [`${config.b2cTenantName}.b2clogin.com`],
+    scopes: config.scopes ?? DEFAULT_AZURE_B2C_CONFIG.scopes ?? [],
   };
+  return result;
 }
 
 /**

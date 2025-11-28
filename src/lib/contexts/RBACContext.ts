@@ -42,6 +42,11 @@ export interface RBACContextValue {
   hasAnyPermission: (resource: Resource, actions: Action[]) => boolean;
   hasAllPermissions: (resource: Resource, actions: Action[]) => boolean;
   canAccess: (resource: Resource) => boolean;
+  getEffectivePermissions: () => Permission[];
+  getRoleDefinitions: () => Role[];
+  refreshPermissions: () => Promise<void>;
+  clearCache: () => void;
+  checkResourcePermission: (resourceType: string, resourceId: string, action: Action) => boolean;
 }
 
 /**

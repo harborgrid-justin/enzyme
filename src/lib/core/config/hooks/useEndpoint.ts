@@ -9,6 +9,8 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 
+import { ms } from '../../../shared/type-utils';
+
 import type {
   EndpointDefinition,
   EndpointHealth,
@@ -18,7 +20,6 @@ import type {
 import {
   getEndpointRegistry,
   getEndpoint,
-  buildEndpointUrl,
 } from '../registry/EndpointRegistry';
 
 // =============================================================================
@@ -413,7 +414,7 @@ export function useEndpointRegistry() {
 
   const markHealthy = useCallback(
     (name: string, responseTime?: number) => {
-      registry.markHealthy(name, responseTime);
+      registry.markHealthy(name, responseTime ? ms(responseTime) : undefined);
     },
     [registry]
   );

@@ -482,7 +482,7 @@ function createApiError(
 /**
  * Parse server error response into normalized format
  */
-function parseServerError(response: ServerErrorResponse, status: number): Partial<ApiError> {
+function parseServerError(response: ServerErrorResponse, _status: number): Partial<ApiError> {
   let message = 'An unexpected error occurred';
   let code: string | undefined;
   const fieldErrors: Array<{ field: string; message: string }> = [];
@@ -646,10 +646,10 @@ export class ApiClient {
       startTime: Date.now(),
     };
 
-    let processedConfig = { ...config, meta };
+    let processedConfig: RequestConfig<unknown> & { meta: RequestMeta } = { ...config, meta };
 
     // Run request interceptors
-    processedConfig = await this.runRequestInterceptors(processedConfig);
+    processedConfig = await this.runRequestInterceptors(processedConfig) as typeof processedConfig;
 
     // Build URL for rate limiting key
     const url = this.buildUrl(processedConfig);

@@ -155,7 +155,10 @@ function setAtPath<T extends object>(obj: T, path: string, value: unknown): T {
     }
   }
 
-  current[parts[parts.length - 1]] = value;
+  const lastPart = parts[parts.length - 1];
+  if (lastPart !== undefined) {
+    current[lastPart] = value;
+  }
   return result as T;
 }
 

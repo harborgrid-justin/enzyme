@@ -212,7 +212,7 @@ export class AppConfigBridge {
     const registry = getConfigRegistry();
     const endpointRegistry = getEndpointRegistry();
 
-    const overlay: DeepPartial<LibraryConfig> = {};
+    const overlay: any = {};
 
     // Sync from env config
     if (env) {
@@ -279,7 +279,7 @@ export class AppConfigBridge {
   // ===========================================================================
 
   private mapEnvToNetworkConfig(env: Partial<AppEnvConfig>): Partial<NetworkConfig> {
-    const config: Partial<NetworkConfig> = {};
+    const config: any = {};
 
     if (env.apiTimeout !== undefined) {
       config.defaultTimeout = env.apiTimeout;
@@ -305,7 +305,7 @@ export class AppConfigBridge {
   }
 
   private mapTimingToNetworkConfig(timing: Partial<AppTimingConfig>): Partial<NetworkConfig> {
-    const config: Partial<NetworkConfig> = {};
+    const config: any = {};
     const api = timing.API;
 
     if (api) {

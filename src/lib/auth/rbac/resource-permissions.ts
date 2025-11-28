@@ -11,7 +11,7 @@ import type {
   ResourcePermission,
   ResourceACL,
   PermissionAction,
-  PermissionScope,
+
 } from './types';
 
 // =============================================================================
@@ -124,7 +124,8 @@ export class ResourcePermissionManager {
     };
 
     this.acls.set(aclKey, acl);
-    this.indexPermission(acl.entries[0]);
+    const firstEntry = acl.entries[0];
+    if (firstEntry) this.indexPermission(firstEntry);
 
     return acl;
   }
@@ -276,7 +277,7 @@ export class ResourcePermissionManager {
 
     if (index !== -1) {
       const removed = acl.entries.splice(index, 1)[0];
-      this.removePermissionIndex(removed);
+      if (removed) this.removePermissionIndex(removed);
       acl.version++;
       acl.updatedAt = new Date().toISOString();
     }

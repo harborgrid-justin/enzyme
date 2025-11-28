@@ -70,7 +70,7 @@ export interface SyncState<T extends Entity> {
   /** Pending changes count */
   pendingChanges: number;
   /** Active conflicts */
-  conflicts: SyncConflict<T>[];
+  conflicts: SyncConflict<unknown>[];
   /** Last error */
   error: Error | null;
 }
@@ -94,7 +94,7 @@ export interface UseDataSyncOptions<T extends Entity> {
   /** Custom conflict resolver */
   onConflict?: (conflict: SyncConflict) => Promise<ConflictResolutionResult<unknown>>;
   /** Callback on sync success */
-  onSyncSuccess?: (result: SyncResult<T>) => void;
+  onSyncSuccess?: (result: SyncResult<unknown>) => void;
   /** Callback on sync error */
   onSyncError?: (error: Error) => void;
   /** Callback on data change */
@@ -124,11 +124,11 @@ export interface UseDataSyncReturn<T extends Entity> {
   /** Has conflicts */
   hasConflicts: boolean;
   /** Active conflicts */
-  conflicts: SyncConflict[];
+  conflicts: SyncConflict<unknown>[];
   /** Last error */
   error: Error | null;
   /** Trigger sync */
-  sync: (options?: SyncOptions) => Promise<SyncResult<T>>;
+  sync: (options?: SyncOptions) => Promise<SyncResult<unknown>>;
   /** Create entity */
   create: (data: Omit<T, 'id'>) => Promise<T>;
   /** Update entity */
@@ -179,7 +179,7 @@ export function useDataSync<T extends Entity>(
   // State
   const [state, setState] = useState<SyncState<T>>({
     data: initialData,
-    status: 'idle',
+    status: 'synced',
     isLoading: autoSync,
     isSyncing: false,
     isOffline: !navigator.onLine,
@@ -216,7 +216,7 @@ export function useDataSync<T extends Entity>(
       if (!mountedRef.current) return;
 
       switch (event.type) {
-        case 'sync-start' as SyncEventType:
+        case 'sync:start':
           setState((prev) => ({
             ...prev,
             isSyncing: true,
@@ -248,7 +248,7 @@ export function useDataSync<T extends Entity>(
         case 'sync:conflict':
           setState((prev) => ({
             ...prev,
-            conflicts: [...prev.conflicts, event.data as SyncConflict],
+            conflicts: [...prev.conflicts, event.data as SyncConflict<T>],
           }));
           break;
 
@@ -267,7 +267,7 @@ export function useDataSync<T extends Entity>(
   }, [engine]);
 
   // Sync function - defined before effects that depend on it
-  const sync = useCallback(async (syncOptions?: SyncOptions): Promise<SyncResult<T>> => {
+  const sync = useCallback(async (syncOptions?: SyncOptions): Promise<SyncResult<unknown>> => {
     setState((prev) => ({
       ...prev,
       isSyncing: true,
@@ -275,7 +275,7 @@ export function useDataSync<T extends Entity>(
     }));
 
     try {
-      const result = await engineRef.current.sync<T>(entityType, syncOptions);
+      const result = await engineRef.current.syncAll(entityType, syncOptions);
 
       if (mountedRef.current) {
         setState((prev) => ({
@@ -290,10 +290,10 @@ export function useDataSync<T extends Entity>(
         }));
 
         onDataChange?.(result.data as T[]);
-        onSyncSuccess?.(result as SyncResult<T>);
+        onSyncSuccess?.(result);
       }
 
-      return result as SyncResult<T>;
+      return result;
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error));
 
@@ -355,7 +355,7 @@ export function useDataSync<T extends Entity>(
     }
 
     try {
-      const created = await engineRef.current.create<T>(entityType, data as Partial<T>);
+      const created = await engineRef.current.create(entityType, data as Partial<T>) as T;
 
       if (mountedRef.current) {
         setState((prev) => ({
@@ -398,7 +398,7 @@ export function useDataSync<T extends Entity>(
     }
 
     try {
-      const updated = await engineRef.current.update<T>(entityType, id, data);
+      const updated = await engineRef.current.update(entityType, id, data) as T;
 
       if (mountedRef.current) {
         setState((prev) => ({
@@ -607,7 +607,7 @@ export function useSyncStatus(engine: SyncEngine): {
   pendingChanges: number;
   lastSyncAt: number | null;
 } {
-  const [status, setStatus] = useState<SyncStatus>('idle');
+  const [status, setStatus] = useState<SyncStatus>('synced');
   const [pendingChanges, setPendingChanges] = useState(0);
   const [lastSyncAt, setLastSyncAt] = useState<number | null>(null);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -654,18 +654,18 @@ export function useSyncStatus(engine: SyncEngine): {
  * @returns Conflict management methods
  */
 export function useSyncConflicts(engine: SyncEngine): {
-  conflicts: SyncConflict[];
+  conflicts: SyncConflict<unknown>[];
   hasConflicts: boolean;
   resolveConflict: (id: string, data: Entity) => Promise<void>;
   resolveAllLocal: () => Promise<void>;
   resolveAllRemote: () => Promise<void>;
 } {
-  const [conflicts, setConflicts] = useState<SyncConflict[]>([]);
+  const [conflicts, setConflicts] = useState<SyncConflict<unknown>[]>([]);
 
   useEffect(() => {
     const unsubscribe = engine.subscribe((event: SyncEvent) => {
       if (event.type === 'sync:conflict') {
-        setConflicts((prev) => [...prev, event.data as SyncConflict]);
+        setConflicts((prev) => [...prev, event.data as SyncConflict<unknown>]);
       }
       if (event.type === 'conflict-resolved') {
         const { id } = event.data as { id: string };
@@ -683,13 +683,13 @@ export function useSyncConflicts(engine: SyncEngine): {
 
   const resolveAllLocal = useCallback(async () => {
     for (const conflict of conflicts) {
-      await resolveConflict(conflict.id, conflict.localData);
+      await resolveConflict(conflict.id, conflict.localData as Entity);
     }
   }, [conflicts, resolveConflict]);
 
   const resolveAllRemote = useCallback(async () => {
     for (const conflict of conflicts) {
-      await resolveConflict(conflict.id, conflict.remoteData);
+      await resolveConflict(conflict.id, conflict.remoteData as Entity);
     }
   }, [conflicts, resolveConflict]);
 

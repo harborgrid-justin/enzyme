@@ -308,7 +308,11 @@ export function getHydrationMetrics(): import('./types').HydrationMetricsSnapsho
       failedCount: 0,
       averageHydrationDuration: 0,
       p95HydrationDuration: 0,
-      // successRate: 0,
+      totalReplayedInteractions: 0,
+      timeToFullHydration: 0,
+      timeToAboveFoldHydration: 0,
+      queueSize: 0,
+      timestamp: Date.now(),
     };
   } catch {
     return {

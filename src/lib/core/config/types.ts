@@ -16,27 +16,16 @@
 
 // Import branded numeric types from shared utilities
 import type {
-  Milliseconds as BrandedMilliseconds,
-  Seconds as BrandedSeconds,
-  Pixels as BrandedPixels,
-  Percentage as BrandedPercentage,
-  DeepPartial as SharedDeepPartial,
-  DeepReadonly as SharedDeepReadonly,
+  Milliseconds,
+  Seconds,
+  Pixels,
+  Percentage,
+  DeepPartial,
+  DeepReadonly,
 } from '../../shared/type-utils';
 
 // Re-export branded types for module consumers
-export type { BrandedMilliseconds as Milliseconds };
-export type { BrandedSeconds as Seconds };
-export type { BrandedPixels as Pixels };
-export type { BrandedPercentage as Percentage };
-
-// Local type aliases for use within this file
-type Milliseconds = BrandedMilliseconds;
-type Seconds = BrandedSeconds;
-type Pixels = BrandedPixels;
-type Percentage = BrandedPercentage;
-type DeepPartial<T> = SharedDeepPartial<T>;
-type DeepReadonly<T> = SharedDeepReadonly<T>;
+export type { Milliseconds, Seconds, Pixels, Percentage, DeepPartial, DeepReadonly };
 
 // Re-export type constructors for convenience
 export { ms, sec, px, pct } from '../../shared/type-utils';
@@ -651,21 +640,6 @@ export interface RuntimeConfigOptions {
 // =============================================================================
 // Utility Types
 // =============================================================================
-
-/**
- * Deep partial type for configuration overrides.
- *
- * @deprecated Import from '../../shared/type-utils' instead.
- * This re-export is provided for backward compatibility.
- */
-export type { SharedDeepPartial as DeepPartial };
-
-/**
- * Deep readonly type for immutable configuration.
- *
- * Re-exported from shared utilities for consistency.
- */
-export type { DeepReadonly } from '../../shared/type-utils';
 
 /**
  * Path type for dot-notation access.

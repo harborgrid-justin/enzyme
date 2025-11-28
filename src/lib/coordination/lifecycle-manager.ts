@@ -29,7 +29,7 @@ import {
   createLibraryId,
   createPhaseId,
 } from './types';
-import { getCoordinationEventBus, publishEvent } from './event-bus';
+import { publishEvent } from './event-bus';
 
 // ============================================================================
 // Internal Types
@@ -96,7 +96,8 @@ function topologicalSort(
 
     const entry = libraries.get(id);
     if (!entry) {
-      result.missing.push({ library: path[path.length - 1], dependency: id });
+      const lastPathElement = path[path.length - 1];
+      result.missing.push({ library: createLibraryId(lastPathElement ?? ''), dependency: id });
       return true; // Continue despite missing dependency
     }
 

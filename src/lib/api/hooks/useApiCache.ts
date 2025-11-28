@@ -37,7 +37,7 @@ import {
   type QueryState,
   type Query,
 } from '@tanstack/react-query';
-import type { CacheStats, CacheEntry } from '../types';
+import type { CacheStats } from '../types';
 
 // =============================================================================
 // TYPES
@@ -498,6 +498,7 @@ export function useCacheMonitor(options?: {
       const unsubscribe = subscribe(refresh);
       return unsubscribe;
     }
+    return undefined;
   }, [isMonitoring, subscribe, refresh]);
 
   // Polling interval
@@ -506,6 +507,7 @@ export function useCacheMonitor(options?: {
       const timer = setInterval(refresh, options.interval);
       return () => clearInterval(timer);
     }
+    return undefined;
   }, [isMonitoring, options?.interval, refresh]);
 
   return {
@@ -603,7 +605,8 @@ export function useBulkCacheOperations(): {
       await queryClient.invalidateQueries({
         predicate: (query) => {
           const meta = query.meta as Record<string, unknown> | undefined;
-          return meta?.tag === tag || meta?.tags?.includes?.(tag);
+          const tags = meta?.tags as string[] | undefined;
+          return meta?.tag === tag || tags?.includes?.(tag);
         },
       });
     },

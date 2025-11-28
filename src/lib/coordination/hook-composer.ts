@@ -193,7 +193,7 @@ export function useComposedHooks<T extends Record<string, HookDef<unknown>>>(
       const def = definitions[key];
 
       // Check if enabled
-      if (def.enabled === false) {
+      if (def?.enabled === false) {
         results[key as string] = undefined;
         continue;
       }
@@ -201,8 +201,8 @@ export function useComposedHooks<T extends Record<string, HookDef<unknown>>>(
       // Execute hook
       try {
         // eslint-disable-next-line react-hooks/rules-of-hooks
-        const result = def.hook();
-        results[key as string] = def.selector ? def.selector(result) : result;
+        const result = def?.hook();
+        results[key as string] = def?.selector ? def.selector(result) : result;
       } catch (e) {
         results[key as string] = { error: e, isLoading: false, data: undefined };
       }
@@ -349,15 +349,15 @@ export function useSelectiveHooks<T extends Record<string, HookDef<unknown>>>(
 
     for (const key of keys) {
       const def = definitions[key];
-      if (def.enabled === false) {
+      if (def?.enabled === false) {
         data[key as string] = undefined;
         continue;
       }
 
       try {
         // eslint-disable-next-line react-hooks/rules-of-hooks
-        const result = def.hook();
-        const value = def.selector ? def.selector(result) : result;
+        const result = def?.hook();
+        const value = def?.selector ? def.selector(result) : result;
 
         // Extract data from async result
         if (
@@ -530,7 +530,8 @@ export function useParallelHooks<T extends Record<string, () => unknown>>(
     for (const key of keys) {
       try {
         // eslint-disable-next-line react-hooks/rules-of-hooks
-        const result = hooks[key]();
+        const hookFn = hooks[key];
+        const result = hookFn ? hookFn() : undefined;
 
         // Check if async result
         if (
