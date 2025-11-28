@@ -6,7 +6,7 @@
 import { useMemo, type FC, type ReactNode } from 'react';
 import type { ModuleId } from '../types';
 import { ModuleHierarchyContext } from '../ModuleProvider';
-import { useModuleHierarchy } from './useModuleSystem';
+import { useModuleHierarchy } from '../hooks/useModuleSystem';
 
 /**
  * Internal provider for module hierarchy tracking.
@@ -21,10 +21,10 @@ export const ModuleHierarchyProvider: FC<{
   const value = useMemo(
     () => ({
       moduleId,
-      depth: parent.depth + 1,
-      path: [...parent.path, moduleId],
+      depth: (parent?.depth ?? -1) + 1,
+      path: [...(parent?.path ?? []), moduleId],
     }),
-    [moduleId, parent.depth, parent.path]
+    [moduleId, parent]
   );
 
   return (

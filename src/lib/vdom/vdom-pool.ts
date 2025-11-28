@@ -279,7 +279,11 @@ export class VDOMPool {
     let node: VirtualNode;
 
     if (this.freeNodes.length > 0) {
-      node = this.freeNodes.pop()!;
+      const poppedNode = this.freeNodes.pop();
+      if (!poppedNode) {
+        throw new Error('Unexpected: freeNodes.pop() returned undefined');
+      }
+      node = poppedNode;
     } else {
       node = createEmptyNode(this.generation);
       this.allNodes.set(node.id, node);

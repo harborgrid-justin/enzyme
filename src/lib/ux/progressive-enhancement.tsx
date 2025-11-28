@@ -11,8 +11,7 @@
  * - Polyfill coordination
  */
 
-import {
-  useContext,
+import React, {
   useState,
   useEffect,
   useCallback,
@@ -23,6 +22,20 @@ import {
   ProgressiveEnhancementContext,
   type ProgressiveEnhancementContextValue
 } from '../contexts/ProgressiveEnhancementContext';
+import {
+  checkWebPSupport,
+  checkAVIFSupport,
+  detectCapabilities,
+  createFeature as createFeatureUtil,
+  type BrowserCapabilities
+} from './progressive-enhancement-utils';
+import {
+  useProgressiveEnhancement,
+  useProgressiveFeature,
+  useCapability,
+  useCapabilities,
+  useCapabilityConditional
+} from './progressive-enhancement-hooks';
 
 // ============================================================================
 // Types
@@ -33,51 +46,8 @@ import {
  */
 export type CapabilityLevel = 'full' | 'partial' | 'fallback' | 'none';
 
-/**
- * Browser feature capabilities
- */
-export interface BrowserCapabilities {
-  /** Supports ES modules */
-  esModules: boolean;
-  /** Supports async/await */
-  asyncAwait: boolean;
-  /** Supports WebGL */
-  webGL: boolean;
-  /** Supports WebGL2 */
-  webGL2: boolean;
-  /** Supports WebP images */
-  webP: boolean;
-  /** Supports AVIF images */
-  avif: boolean;
-  /** Supports Service Workers */
-  serviceWorker: boolean;
-  /** Supports Web Workers */
-  webWorker: boolean;
-  /** Supports SharedArrayBuffer */
-  sharedArrayBuffer: boolean;
-  /** Supports IntersectionObserver */
-  intersectionObserver: boolean;
-  /** Supports ResizeObserver */
-  resizeObserver: boolean;
-  /** Supports CSS Grid */
-  cssGrid: boolean;
-  /** Supports CSS Container Queries */
-  containerQueries: boolean;
-  /** Supports CSS :has() */
-  cssHas: boolean;
-  /** Supports View Transitions API */
-  viewTransitions: boolean;
-  /** Supports Navigation API */
-  navigationAPI: boolean;
-  /** Supports Popover API */
-  popoverAPI: boolean;
-  /** Supports Web Animations API */
-  webAnimations: boolean;
-  /** Supports requestIdleCallback */
-  idleCallback: boolean;
-  /** Supports Intl API */
-  intl: boolean;
-}
+// Re-export BrowserCapabilities from utils for convenience
+export type { BrowserCapabilities } from './progressive-enhancement-utils';
 
 /**
  * Feature definition
@@ -120,136 +90,6 @@ export interface FeatureStatus {
 }
 
 // ============================================================================
-// Capability Detection
-// ============================================================================
-
-/**
- * Detect browser capabilities
- */
-export function detectCapabilities(): BrowserCapabilities {
-  if (typeof window === 'undefined') {
-    // SSR - assume modern browser
-    return getDefaultCapabilities();
-  }
-
-  return {
-    esModules: 'noModule' in HTMLScriptElement.prototype,
-    asyncAwait: hasAsyncAwait(),
-    webGL: hasWebGL(),
-    webGL2: hasWebGL2(),
-    webP: false, // Detected asynchronously
-    avif: false, // Detected asynchronously
-    serviceWorker: 'serviceWorker' in navigator,
-    webWorker: 'Worker' in window,
-    sharedArrayBuffer: 'SharedArrayBuffer' in window,
-    intersectionObserver: 'IntersectionObserver' in window,
-    resizeObserver: 'ResizeObserver' in window,
-    cssGrid: CSS.supports('display', 'grid'),
-    containerQueries: CSS.supports('container-type', 'inline-size'),
-    cssHas: CSS.supports('selector(:has(*))'),
-    viewTransitions: 'startViewTransition' in document,
-    navigationAPI: 'navigation' in window,
-    popoverAPI: 'popover' in HTMLElement.prototype,
-    webAnimations: 'animate' in Element.prototype,
-    idleCallback: 'requestIdleCallback' in window,
-    intl: 'Intl' in window,
-  };
-}
-
-/**
- * Get default capabilities for SSR
- */
-function getDefaultCapabilities(): BrowserCapabilities {
-  return {
-    esModules: true,
-    asyncAwait: true,
-    webGL: true,
-    webGL2: true,
-    webP: true,
-    avif: true,
-    serviceWorker: true,
-    webWorker: true,
-    sharedArrayBuffer: true,
-    intersectionObserver: true,
-    resizeObserver: true,
-    cssGrid: true,
-    containerQueries: true,
-    cssHas: true,
-    viewTransitions: true,
-    navigationAPI: true,
-    popoverAPI: true,
-    webAnimations: true,
-    idleCallback: true,
-    intl: true,
-  };
-}
-
-/**
- * Check async/await support
- */
-function hasAsyncAwait(): boolean {
-  try {
-     
-    new Function('async () => {}');
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Check WebGL support
- */
-function hasWebGL(): boolean {
-  try {
-    const canvas = document.createElement('canvas');
-    return !!(canvas.getContext('webgl') || canvas.getContext('experimental-webgl'));
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Check WebGL2 support
- */
-function hasWebGL2(): boolean {
-  try {
-    const canvas = document.createElement('canvas');
-    return !!canvas.getContext('webgl2');
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Check WebP support asynchronously
- */
-export async function checkWebPSupport(): Promise<boolean> {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => resolve(img.width > 0 && img.height > 0);
-    img.onerror = () => resolve(false);
-    img.src = 'data:image/webp;base64,UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEADsD+JaQAA3AAAAAA';
-  });
-}
-
-/**
- * Check AVIF support asynchronously
- */
-export async function checkAVIFSupport(): Promise<boolean> {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => resolve(img.width > 0 && img.height > 0);
-    img.onerror = () => resolve(false);
-    img.src = 'data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAADybWV0YQAAAAAAAAAoaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAGxpYmF2aWYAAAAADnBpdG0AAAAAAAEAAAAeaWxvYwAAAABEAAABAAEAAAABAAABGgAAAB0AAAAoaWluZgAAAAAAAQAAABppbmZlAgAAAAABAABhdjAxQ29sb3IAAAAAamlwcnAAAABLaXBjbwAAABRpc3BlAAAAAAAAAAIAAAACAAAAEHBpeGkAAAAAAwgICAAAAAxhdjFDgQ0MAAAAABNjb2xybmNseAACAAIAAYAAAAAXaXBtYQAAAAAAAAABAAEEAQKDBAAAACVtZGF0EgAKBzgADlAgIGkyCR/wAABAAACvcA==';
-  });
-}
-
-// ============================================================================
-// Context
-// ============================================================================
-
-// ============================================================================
 // Provider
 // ============================================================================
 
@@ -269,7 +109,9 @@ export function ProgressiveEnhancementProvider({
   features: initialFeatures = [],
   onCapabilitiesDetected,
 }: ProgressiveEnhancementProviderProps): React.ReactElement {
-  const [capabilities, setCapabilities] = useState<BrowserCapabilities>(detectCapabilities);
+  const [capabilities, setCapabilities] = useState<BrowserCapabilities>(() => {
+    return detectCapabilities();
+  });
   const [featureDefinitions] = useState<Map<string, FeatureDefinition>>(
     () => new Map(initialFeatures.map((f) => [f.id, f]))
   );
@@ -283,14 +125,14 @@ export function ProgressiveEnhancementProvider({
         checkAVIFSupport(),
       ]);
 
-      setCapabilities((prev) => {
-        const updated = { ...prev, webP, avif };
+      setCapabilities((prev: BrowserCapabilities) => {
+        const updated: BrowserCapabilities = { ...prev, webP, avif };
         onCapabilitiesDetected?.(updated);
         return updated;
       });
     }
 
-    detectAsyncCapabilities();
+    void detectAsyncCapabilities();
   }, [onCapabilitiesDetected]);
 
   /**
@@ -298,7 +140,7 @@ export function ProgressiveEnhancementProvider({
    */
   const hasCapability = useCallback(
     (capability: keyof BrowserCapabilities): boolean => {
-      return capabilities[capability];
+      return capabilities[capability] === true;
     },
     [capabilities]
   );
@@ -334,7 +176,7 @@ export function ProgressiveEnhancementProvider({
 
       // Check existing status
       const existing = featureStatuses.get(id);
-      if (existing?.loaded) {
+      if (existing?.loaded === true) {
         return existing.module;
       }
 
@@ -416,100 +258,6 @@ export function ProgressiveEnhancementProvider({
 }
 
 // ============================================================================
-// Hooks
-// ============================================================================
-
-/**
- * Use progressive enhancement context
- */
-export function useProgressiveEnhancement(): ProgressiveEnhancementContextValue {
-  const context = useContext(ProgressiveEnhancementContext);
-  if (!context) {
-    throw new Error('useProgressiveEnhancement must be used within a ProgressiveEnhancementProvider');
-  }
-  return context;
-}
-
-/**
- * Use feature with progressive loading
- */
-export function useProgressiveFeature<T = unknown>(
-  featureId: string,
-  options: {
-    autoLoad?: boolean;
-    fallback?: T;
-  } = {}
-): {
-  module: T | null;
-  level: CapabilityLevel;
-  loading: boolean;
-  error: Error | null;
-  load: () => Promise<T>;
-} {
-  const { autoLoad = true, fallback } = options;
-  const { features, loadFeature, getFeatureLevel } = useProgressiveEnhancement();
-
-  const status = features.get(featureId) ?? null;
-  const level = getFeatureLevel(featureId);
-
-  useEffect(() => {
-    if (autoLoad && status && !status.loaded && !status.loading && level !== 'none') {
-      loadFeature(featureId).catch(() => {
-        // Error handled in state
-      });
-    }
-  }, [autoLoad, featureId, level, loadFeature, status]);
-
-  const load = useCallback(async (): Promise<T> => {
-    return loadFeature(featureId) as Promise<T>;
-  }, [featureId, loadFeature]);
-
-  return {
-    module: (status?.module as T) ?? fallback ?? null,
-    level,
-    loading: status?.loading ?? false,
-    error: status?.error ?? null,
-    load,
-  };
-}
-
-/**
- * Use capability check
- */
-export function useCapability(capability: keyof BrowserCapabilities): boolean {
-  const { hasCapability } = useProgressiveEnhancement();
-  return hasCapability(capability);
-}
-
-/**
- * Use multiple capabilities
- */
-export function useCapabilities(
-  capabilities: Array<keyof BrowserCapabilities>
-): Record<string, boolean> {
-  const { hasCapability } = useProgressiveEnhancement();
-  return useMemo(() => {
-    const result: Record<string, boolean> = {};
-    capabilities.forEach((cap) => {
-      result[cap] = hasCapability(cap);
-    });
-    return result;
-  }, [capabilities, hasCapability]);
-}
-
-/**
- * Use conditional render based on capability
- */
-export function useCapabilityConditional<T>(
-  capability: keyof BrowserCapabilities,
-  enhanced: T,
-  fallback: T
-): T {
-  const hasCapability = useCapability(capability);
-  return hasCapability ? enhanced : fallback;
-}
-
-// ============================================================================
 // Components
 // ============================================================================
 
@@ -551,38 +299,17 @@ export function FeatureGate({
 }: FeatureGateProps): React.ReactElement {
   const { module, level, loading, error } = useProgressiveFeature(featureId);
 
-  if (loading) return <>{loadingFallback}</>;
-  if (error) {
-    if (errorFallback) {
+  if (loading === true) return <>{loadingFallback}</>;
+  if (error != null) {
+    if (errorFallback != null) {
       return <>{typeof errorFallback === 'function' ? errorFallback(error) : errorFallback}</>;
     }
     return <>{fallback}</>;
   }
   if (level === 'none') return <>{fallback}</>;
-  if (!module) return <>{fallback}</>;
+  if (module == null) return <>{fallback}</>;
 
   return <>{typeof children === 'function' ? children(module) : children}</>;
-}
-
-// ============================================================================
-// Utility Functions
-// ============================================================================
-
-/**
- * Create a progressive feature definition
- */
-export function createFeature(
-  id: string,
-  config: Omit<FeatureDefinition, 'id'>
-): FeatureDefinition {
-  return { id, ...config };
-}
-
-/**
- * Get capabilities without React
- */
-export function getCapabilities(): BrowserCapabilities {
-  return detectCapabilities();
 }
 
 // ============================================================================
@@ -598,9 +325,7 @@ export default {
   useCapabilityConditional,
   CapabilityGate,
   FeatureGate,
-  createFeature,
-  detectCapabilities,
-  getCapabilities,
+  createFeature: createFeatureUtil,
   checkWebPSupport,
   checkAVIFSupport,
 };

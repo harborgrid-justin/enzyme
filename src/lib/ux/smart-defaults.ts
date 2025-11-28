@@ -181,11 +181,11 @@ export function detectDeviceTier(): DeviceTier {
     hardwareConcurrency?: number;
   };
 
-  const cores = nav.hardwareConcurrency || 2;
-  const memory = nav.deviceMemory || 4;
+  const cores = nav.hardwareConcurrency ?? 2;
+  const memory = nav.deviceMemory ?? 4;
 
   // High-end: 8+ cores or 8+ GB memory
-  if (cores >= 8 || memory >= 8) return 'high';
+  if ((cores !== null && cores >= 8) || (memory !== null && memory >= 8)) return 'high';
 
   // Low-end: 2 or fewer cores or less than 4 GB memory
   if (cores <= 2 || memory < 4) return 'low';
@@ -201,21 +201,21 @@ export function detectNetworkTier(): NetworkTier {
 
   if (!navigator.onLine) return 'offline';
 
-  const connection = (navigator as Navigator & {
+  const { connection } = navigator as Navigator & {
     connection?: {
       effectiveType?: string;
       downlink?: number;
       saveData?: boolean;
     };
-  }).connection;
+  };
 
   if (!connection) return 'moderate';
 
   // Respect data saver
-  if (connection.saveData) return 'slow';
+  if (connection.saveData === true) return 'slow';
 
-  const effectiveType = connection.effectiveType;
-  if (effectiveType === '4g' && (connection.downlink || 0) > 5) return 'fast';
+  const { effectiveType, downlink } = connection;
+  if (effectiveType === '4g' && (downlink ?? 0) > 5) return 'fast';
   if (effectiveType === '4g' || effectiveType === '3g') return 'moderate';
   return 'slow';
 }
@@ -388,14 +388,38 @@ function calculatePerformanceDefaults(
   deviceTier: DeviceTier,
   networkTier: NetworkTier
 ): PerformanceDefaults {
+  const getPrefetchDistance = (): number => {
+    if (deviceTier === 'high') return 3;
+    if (deviceTier === 'medium') return 2;
+    return 1;
+  };
+
+  const getVirtualListThreshold = (): number => {
+    if (deviceTier === 'high') return 100;
+    if (deviceTier === 'medium') return 50;
+    return 20;
+  };
+
+  const getDebounceDelay = (): number => {
+    if (deviceTier === 'high') return 150;
+    if (deviceTier === 'medium') return 200;
+    return 300;
+  };
+
+  const getThrottleDelay = (): number => {
+    if (deviceTier === 'high') return 100;
+    if (deviceTier === 'medium') return 150;
+    return 200;
+  };
+
   return {
     monitoring: true,
     prefetch: networkTier !== 'offline' && networkTier !== 'slow',
-    prefetchDistance: deviceTier === 'high' ? 3 : deviceTier === 'medium' ? 2 : 1,
+    prefetchDistance: getPrefetchDistance(),
     codeSplitting: true,
-    virtualListThreshold: deviceTier === 'high' ? 100 : deviceTier === 'medium' ? 50 : 20,
-    debounceDelay: deviceTier === 'high' ? 150 : deviceTier === 'medium' ? 200 : 300,
-    throttleDelay: deviceTier === 'high' ? 100 : deviceTier === 'medium' ? 150 : 200,
+    virtualListThreshold: getVirtualListThreshold(),
+    debounceDelay: getDebounceDelay(),
+    throttleDelay: getThrottleDelay(),
   };
 }
 
@@ -403,11 +427,17 @@ function calculatePerformanceDefaults(
  * Calculate render defaults
  */
 function calculateRenderDefaults(deviceTier: DeviceTier): RenderDefaults {
+  const getSuspenseTimeout = (): number => {
+    if (deviceTier === 'high') return 3000;
+    if (deviceTier === 'medium') return 5000;
+    return 10000;
+  };
+
   return {
     batchUpdates: true,
     deferNonCritical: deviceTier !== 'high',
     concurrent: deviceTier !== 'low',
-    suspenseTimeout: deviceTier === 'high' ? 3000 : deviceTier === 'medium' ? 5000 : 10000,
+    suspenseTimeout: getSuspenseTimeout(),
     trackRenders: deviceTier !== 'low',
   };
 }
@@ -434,7 +464,7 @@ export class SmartDefaultsManager {
    * Get singleton instance
    */
   static getInstance(): SmartDefaultsManager {
-    if (!SmartDefaultsManager.instance) {
+    if (SmartDefaultsManager.instance === undefined) {
       SmartDefaultsManager.instance = new SmartDefaultsManager();
     }
     return SmartDefaultsManager.instance;
@@ -475,9 +505,9 @@ export class SmartDefaultsManager {
     if (typeof window === 'undefined') return;
 
     // Network changes
-    const connection = (navigator as Navigator & {
+    const { connection } = navigator as Navigator & {
       connection?: EventTarget;
-    }).connection;
+    };
 
     if (connection) {
       connection.addEventListener('change', () => this.recalculate());

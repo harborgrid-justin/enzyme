@@ -236,6 +236,9 @@ export type {
 // ModuleProvider
 export {
   ModuleProvider,
+} from './ModuleProvider';
+
+export {
   useModuleSystem,
   useModuleHierarchy,
   ModuleHierarchyProvider,
@@ -244,12 +247,12 @@ export {
   useModuleLoader,
   useEventBus,
   useDevMode,
-} from './ModuleProvider';
+} from './ModuleProviderExports';
 
 export type {
   ModuleSystemContextValue,
   ModuleProviderProps,
-} from './ModuleProvider';
+} from './ModuleProviderContext';
 
 // ModuleBoundary
 export {
@@ -268,10 +271,13 @@ export {
   ModuleOutlet,
   ConditionalModuleSlot,
   ModulePortalSlot,
+} from './ModuleSlot';
+
+export {
   useFillSlot,
   useSlotContent,
   useIsSlotFilled,
-} from './ModuleSlot';
+} from './ModuleSlotExports';
 
 export type {
   ModuleSlotProps,
@@ -372,7 +378,7 @@ export function initializeVDOM(config?: Partial<import('./types').ModuleProvider
   getDefaultEventBus();
 
   // Log initialization in development
-  if (config?.devMode || isDev()) {
+  if ((config?.devMode ?? false) === true || isDev()) {
     devLog('[VDOM] Virtual Modular DOM System initialized', {
       poolStats: pool.getStats(),
       registrySize: registry.size,

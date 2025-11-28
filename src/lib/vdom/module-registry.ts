@@ -16,6 +16,8 @@ import {
   type ModuleRegistryEntry,
   type ModuleQueryOptions,
   type ModuleDependency,
+  type ModuleSecurityConfig,
+  type HydrationConfig,
   createModuleId,
 } from './types';
 
@@ -126,7 +128,10 @@ export class ModuleRegistry {
       config,
       loader: options.loader
         ? async () => {
-            const module = await options.loader!();
+            if (!options.loader) {
+              throw new Error('Loader became undefined');
+            }
+            const module = await options.loader();
             return module.default;
           }
         : undefined,
@@ -248,7 +253,10 @@ export class ModuleRegistry {
 
     const loadPromise = (async () => {
       try {
-        const component = await entry.loader!();
+        if (!entry.loader) {
+          throw new Error(`No loader available for module: ${moduleId}`);
+        }
+        const component = await entry.loader();
         entry.component = component;
         entry.loadingState = 'loaded';
         entry.loadingError = null;
@@ -280,7 +288,7 @@ export class ModuleRegistry {
    * @param moduleIds - Module IDs to preload
    */
   async preloadMany(moduleIds: ModuleId[]): Promise<void> {
-    await Promise.all(moduleIds.map((id) => this.preload(id)));
+    await Promise.all(moduleIds.map(async (id) => await this.preload(id)));
   }
 
   // ==========================================================================
@@ -302,7 +310,10 @@ export class ModuleRegistry {
         if (!this.reverseDependencyGraph.has(dep.moduleId)) {
           this.reverseDependencyGraph.set(dep.moduleId, new Set());
         }
-        this.reverseDependencyGraph.get(dep.moduleId)!.add(config.id);
+        const reverseSet = this.reverseDependencyGraph.get(dep.moduleId);
+        if (reverseSet) {
+          reverseSet.add(config.id);
+        }
       }
     }
 
@@ -368,9 +379,9 @@ export class ModuleRegistry {
             continue;
           }
 
-          if (!visit(depId, depth + 1)) {
+          if (visit(depId, depth + 1) === false) {
             // If required dependency failed, propagate failure
-            if (depConfig?.required) {
+            if (depConfig?.required === true) {
               failed.push({
                 moduleId: id,
                 reason: `Required dependency failed: ${depId}`,
@@ -437,7 +448,7 @@ export class ModuleRegistry {
     newComponent: ComponentType<unknown>
   ): void {
     const entry = this.modules.get(moduleId);
-    if (!entry || !entry.hmrEnabled) {
+    if (!entry?.hmrEnabled) {
       return;
     }
 
@@ -462,7 +473,7 @@ export class ModuleRegistry {
     const dependents = this.getDependents(moduleId);
     for (const depId of dependents) {
       const depEntry = this.modules.get(depId);
-      if (depEntry?.hmrEnabled) {
+      if (depEntry?.hmrEnabled === true) {
         // Trigger re-render of dependents
         const depVersion = this.moduleVersions.get(depId) ?? 1;
         this.moduleVersions.set(depId, depVersion + 1);
@@ -581,9 +592,7 @@ let defaultRegistry: ModuleRegistry | null = null;
  * @returns Default ModuleRegistry instance
  */
 export function getDefaultRegistry(): ModuleRegistry {
-  if (!defaultRegistry) {
-    defaultRegistry = new ModuleRegistry();
-  }
+  defaultRegistry ??= new ModuleRegistry();
   return defaultRegistry;
 }
 
@@ -645,7 +654,18 @@ export async function getModuleComponent(
  *   .register();
  * ```
  */
-export function createModuleRegistration(id: string, name: string) {
+type ModuleRegistrationBuilder = {
+  withLoader: (loader: () => Promise<{ default: ComponentType<unknown> }>) => ModuleRegistrationBuilder;
+  withComponent: (component: ComponentType<unknown>) => ModuleRegistrationBuilder;
+  withDependency: (moduleId: ModuleId, required?: boolean) => ModuleRegistrationBuilder;
+  withSecurity: (security: Partial<ModuleSecurityConfig>) => ModuleRegistrationBuilder;
+  withHydration: (hydration: Partial<HydrationConfig>) => ModuleRegistrationBuilder;
+  withHMR: (enabled?: boolean) => ModuleRegistrationBuilder;
+  withVersion: (version: string) => ModuleRegistrationBuilder;
+  register: (registry?: ModuleRegistry) => boolean;
+};
+
+export function createModuleRegistration(id: string, name: string): ModuleRegistrationBuilder {
   const moduleId = createModuleId(id);
   const config: ModuleBoundaryConfig = { id: moduleId, name };
   const options: ModuleRegistrationOptions = {};

@@ -10,13 +10,10 @@
  */
 
 import {
-  createContext,
-  useContext,
-  useRef,
+  useState,
   useCallback,
   useMemo,
   useEffect,
-  type ReactNode,
   type FC,
 } from 'react';
 import {
@@ -40,84 +37,18 @@ import {
   setDefaultEventBus,
 } from './event-bus';
 import {
-  SecuritySandbox,
+  type SecuritySandbox,
   createSecuritySandbox,
   createStrictSecurityConfig,
   createRelaxedSecurityConfig,
 } from './security-sandbox';
-import { isDev } from '@/lib/core/config/env-helper';
-
-// ============================================================================
-// Types
-// ============================================================================
-
-/**
- * Module system context value.
- */
-export interface ModuleSystemContextValue {
-  /** Configuration */
-  readonly config: ModuleProviderConfig;
-  /** VDOM pool instance */
-  readonly pool: VDOMPool;
-  /** Module registry instance */
-  readonly registry: ModuleRegistry;
-  /** Module loader instance */
-  readonly loader: ModuleLoader;
-  /** Event bus instance */
-  readonly eventBus: ModuleEventBus;
-  /** Global security sandbox */
-  readonly security: SecuritySandbox;
-  /** Whether system is initialized */
-  readonly isInitialized: boolean;
-  /** Report performance metrics */
-  readonly reportMetrics: (moduleId: ModuleId, metrics: ModulePerformanceMetrics) => void;
-  /** Check performance budget */
-  readonly checkBudget: (moduleId: ModuleId, metrics: ModulePerformanceMetrics) => void;
-}
-
-/**
- * Module provider props.
- */
-export interface ModuleProviderProps {
-  /** Child components */
-  children: ReactNode;
-  /** Provider configuration */
-  config?: Partial<ModuleProviderConfig>;
-  /** Custom VDOM pool (optional) */
-  pool?: VDOMPool;
-  /** Custom registry (optional) */
-  registry?: ModuleRegistry;
-  /** Custom loader (optional) */
-  loader?: ModuleLoader;
-  /** Custom event bus (optional) */
-  eventBus?: ModuleEventBus;
-  /** Callback when system is ready */
-  onReady?: () => void;
-  /** Callback on system error */
-  onError?: (error: Error) => void;
-}
-
-// ============================================================================
-// Context
-// ============================================================================
-
-/**
- * Module system context.
- */
-export const ModuleSystemContext = createContext<ModuleSystemContextValue | null>(null);
-
-/**
- * Internal module hierarchy context for tracking module nesting.
- */
-export const ModuleHierarchyContext = createContext<{
-  moduleId: ModuleId | null;
-  depth: number;
-  path: ModuleId[];
-}>({
-  moduleId: null,
-  depth: 0,
-  path: [],
-});
+import { isDev, devWarn } from '@/lib/core/config/env-helper';
+import {
+  ModuleSystemContext,
+  ModuleHierarchyContext,
+  type ModuleSystemContextValue,
+  type ModuleProviderProps,
+} from './ModuleProviderContext';
 
 // ============================================================================
 // Default Configuration
@@ -182,7 +113,7 @@ export const ModuleProvider: FC<ModuleProviderProps> = ({
   loader: userLoader,
   eventBus: userEventBus,
   onReady,
-  onError,
+  onError: _onError,
 }) => {
   // Determine if development mode
   const isDevMode = userConfig?.devMode ?? isDev();
@@ -203,58 +134,52 @@ export const ModuleProvider: FC<ModuleProviderProps> = ({
     };
   }, [isDevMode, userConfig]);
 
-  // Initialize services
-  const poolRef = useRef<VDOMPool | null>(null);
-  const registryRef = useRef<ModuleRegistry | null>(null);
-  const loaderRef = useRef<ModuleLoader | null>(null);
-  const eventBusRef = useRef<ModuleEventBus | null>(null);
-  const securityRef = useRef<SecuritySandbox | null>(null);
-  const isInitializedRef = useRef(false);
+  // Initialize services with useState
+  const [pool] = useState<VDOMPool>(() => {
+    const instance = userPool ?? new VDOMPool(config.poolConfig as VDOMPoolConfig);
+    setDefaultPool(instance);
+    return instance;
+  });
 
-  // Initialize on first render
-  if (!isInitializedRef.current) {
-    try {
-      // Initialize pool
-      poolRef.current =
-        userPool ?? new VDOMPool(config.poolConfig as VDOMPoolConfig);
-      setDefaultPool(poolRef.current);
+  const [registry] = useState<ModuleRegistry>(() => {
+    const instance = userRegistry ?? new ModuleRegistry();
+    setDefaultRegistry(instance);
+    return instance;
+  });
 
-      // Initialize registry
-      registryRef.current = userRegistry ?? new ModuleRegistry();
-      setDefaultRegistry(registryRef.current);
+  const [loader] = useState<ModuleLoader>(() => {
+    const instance = userLoader ?? new ModuleLoader(registry);
+    setDefaultLoader(instance);
+    return instance;
+  });
 
-      // Initialize loader
-      loaderRef.current =
-        userLoader ?? new ModuleLoader(registryRef.current);
-      setDefaultLoader(loaderRef.current);
+  const [eventBus] = useState<ModuleEventBus>(() => {
+    const instance = userEventBus ?? new ModuleEventBus({
+      enableSecurity: true,
+    });
+    setDefaultEventBus(instance);
+    return instance;
+  });
 
-      // Initialize event bus
-      eventBusRef.current = userEventBus ?? new ModuleEventBus({
-        enableSecurity: true,
-      });
-      setDefaultEventBus(eventBusRef.current);
+  const [security] = useState<SecuritySandbox>(() =>
+    createSecuritySandbox(
+      '__root__' as ModuleId,
+      config.security as ModuleSecurityConfig
+    )
+  );
 
-      // Initialize security
-      securityRef.current = createSecuritySandbox(
-        '__root__' as ModuleId,
-        config.security as ModuleSecurityConfig
-      );
-
-      isInitializedRef.current = true;
-    } catch (error) {
-      onError?.(error instanceof Error ? error : new Error(String(error)));
-    }
-  }
+  // Services are initialized synchronously in useState, so we're always initialized
+  const isInitialized = true;
 
   // Callback to report metrics
   const reportMetrics = useCallback(
     (moduleId: ModuleId, metrics: ModulePerformanceMetrics) => {
-      if (config.enableTelemetry && config.telemetryReporter) {
+      if (config.enableTelemetry === true && config.telemetryReporter !== undefined) {
         config.telemetryReporter(metrics);
       }
 
-      if (config.devMode) {
-        console.debug(`[Module ${moduleId}] Metrics:`, metrics);
+      if (config.devMode === true) {
+        devWarn(`[Module ${moduleId}] Metrics:`, metrics);
       }
     },
     [config]
@@ -274,7 +199,7 @@ export const ModuleProvider: FC<ModuleProviderProps> = ({
         budget: number;
       }> = [];
 
-      if (budget.maxInitTime && metrics.initTime > budget.maxInitTime) {
+      if (budget.maxInitTime !== undefined && budget.maxInitTime !== null && metrics.initTime > budget.maxInitTime) {
         violations.push({
           metric: 'maxInitTime',
           value: metrics.initTime,
@@ -282,7 +207,7 @@ export const ModuleProvider: FC<ModuleProviderProps> = ({
         });
       }
 
-      if (budget.maxMountTime && metrics.mountTime > budget.maxMountTime) {
+      if (budget.maxMountTime !== undefined && budget.maxMountTime !== null && metrics.mountTime > budget.maxMountTime) {
         violations.push({
           metric: 'maxMountTime',
           value: metrics.mountTime,
@@ -290,7 +215,7 @@ export const ModuleProvider: FC<ModuleProviderProps> = ({
         });
       }
 
-      if (budget.maxRenderTime && metrics.avgRenderTime > budget.maxRenderTime) {
+      if (budget.maxRenderTime !== undefined && budget.maxRenderTime !== null && metrics.avgRenderTime > budget.maxRenderTime) {
         violations.push({
           metric: 'maxRenderTime',
           value: metrics.avgRenderTime,
@@ -299,7 +224,8 @@ export const ModuleProvider: FC<ModuleProviderProps> = ({
       }
 
       if (
-        budget.maxHydrationTime &&
+        budget.maxHydrationTime !== undefined &&
+        budget.maxHydrationTime !== null &&
         metrics.hydrationTime > budget.maxHydrationTime
       ) {
         violations.push({
@@ -309,7 +235,7 @@ export const ModuleProvider: FC<ModuleProviderProps> = ({
         });
       }
 
-      if (budget.maxVNodes && metrics.vNodeCount > budget.maxVNodes) {
+      if (budget.maxVNodes !== undefined && budget.maxVNodes !== null && metrics.vNodeCount > budget.maxVNodes) {
         violations.push({
           metric: 'maxVNodes',
           value: metrics.vNodeCount,
@@ -317,7 +243,7 @@ export const ModuleProvider: FC<ModuleProviderProps> = ({
         });
       }
 
-      if (budget.maxMemory && metrics.memoryEstimate > budget.maxMemory) {
+      if (budget.maxMemory !== undefined && budget.maxMemory !== null && metrics.memoryEstimate > budget.maxMemory) {
         violations.push({
           metric: 'maxMemory',
           value: metrics.memoryEstimate,
@@ -327,7 +253,7 @@ export const ModuleProvider: FC<ModuleProviderProps> = ({
 
       // Report violations
       for (const violation of violations) {
-        if (config.devMode) {
+        if (config.devMode === true) {
           console.warn(
             `[Module ${moduleId}] Performance budget exceeded:`,
             violation
@@ -348,16 +274,16 @@ export const ModuleProvider: FC<ModuleProviderProps> = ({
   const contextValue = useMemo<ModuleSystemContextValue>(
     () => ({
       config,
-      pool: poolRef.current!,
-      registry: registryRef.current!,
-      loader: loaderRef.current!,
-      eventBus: eventBusRef.current!,
-      security: securityRef.current!,
-      isInitialized: isInitializedRef.current,
+      pool,
+      registry,
+      loader,
+      eventBus,
+      security,
+      isInitialized,
       reportMetrics,
       checkBudget,
     }),
-    [config, reportMetrics, checkBudget]
+    [config, pool, registry, loader, eventBus, security, isInitialized, reportMetrics, checkBudget]
   );
 
   // Hierarchy context for root
@@ -370,12 +296,11 @@ export const ModuleProvider: FC<ModuleProviderProps> = ({
     []
   );
 
-  // Call onReady after initialization
+  // Call onReady after mount (services are initialized)
   useEffect(() => {
-    if (isInitializedRef.current) {
-      onReady?.();
-    }
-  }, [onReady]);
+    onReady?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only call once on mount
 
   // Cleanup on unmount
   useEffect(() => {
@@ -384,10 +309,6 @@ export const ModuleProvider: FC<ModuleProviderProps> = ({
       // Don't dispose shared instances as they may be used elsewhere
     };
   }, []);
-
-  if (!isInitializedRef.current) {
-    return null; // Or render a loading state
-  }
 
   return (
     <ModuleSystemContext.Provider value={contextValue}>
@@ -399,19 +320,3 @@ export const ModuleProvider: FC<ModuleProviderProps> = ({
 };
 
 ModuleProvider.displayName = 'ModuleProvider';
-
-// ============================================================================
-// Re-export hooks and components from separate files
-// ============================================================================
-
-export {
-  useModuleSystem,
-  useModuleHierarchy,
-  useVDOMPool,
-  useModuleRegistry,
-  useModuleLoader,
-  useEventBus,
-  useDevMode,
-} from './hooks/useModuleSystem';
-
-export { ModuleHierarchyProvider } from './components/ModuleHierarchyProvider';

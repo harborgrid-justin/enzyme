@@ -9,6 +9,7 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
+    "downlevelIteration": true,
 
     // ==========================================================================
     // Maximum Strictness Configuration
@@ -69,7 +70,7 @@
     // ==========================================================================
     "types": ["vite/client", "vitest/globals", "node"]
   },
-  "include": ["src"],
+  "include": ["src", "test"],
   "exclude": ["node_modules", "dist", "coverage", "**/*.stories.tsx", "*.config.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

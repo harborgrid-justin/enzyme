@@ -180,11 +180,11 @@ export class SkeletonFactory {
     const pattern: SkeletonPattern = {
       name: 'custom',
       elements,
-      animation: options.animation || this.config.defaultAnimation,
-      baseColor: options.baseColor || this.config.baseColor,
-      highlightColor: options.highlightColor || this.config.highlightColor,
-      speed: options.speed || this.config.speed,
-      direction: options.direction || 'ltr',
+      animation: options.animation ?? this.config.defaultAnimation,
+      baseColor: options.baseColor ?? this.config.baseColor,
+      highlightColor: options.highlightColor ?? this.config.highlightColor,
+      speed: options.speed ?? this.config.speed,
+      direction: options.direction ?? 'ltr',
     };
 
     return this.createSkeletonElement(pattern);
@@ -199,16 +199,17 @@ export class SkeletonFactory {
     gap?: string | number;
     lastLineWidth?: string;
   } = {}): ReactElement {
-    const lines = options.lines || 1;
+    const lines = options.lines ?? 1;
     const elements: SkeletonElement[] = [];
 
     for (let i = 0; i < lines; i++) {
       const isLast = i === lines - 1;
+      const hasLastLineWidth = options.lastLineWidth !== null && options.lastLineWidth !== undefined && options.lastLineWidth !== '';
       elements.push({
         type: 'text',
-        width: isLast && options.lastLineWidth
+        width: isLast && hasLastLineWidth
           ? options.lastLineWidth
-          : options.width || '100%',
+          : options.width ?? '100%',
         height: this.config.textHeight,
       });
     }
@@ -225,12 +226,12 @@ export class SkeletonFactory {
     lines?: number;
     lineVariation?: boolean;
   } = {}): ReactElement {
-    const lines = options.lines || 4;
-    const widths = options.lineVariation
+    const lines = options.lines ?? 4;
+    const widths = options.lineVariation === true
       ? this.generateLineWidths(lines)
       : Array(lines).fill('100%');
 
-    const elements: SkeletonElement[] = widths.map((width) => ({
+    const elements: SkeletonElement[] = widths.map((width: string | number) => ({
       type: 'text',
       width,
       height: this.config.textHeight,
@@ -246,13 +247,15 @@ export class SkeletonFactory {
     size?: string | number;
     shape?: 'circle' | 'square' | 'rounded';
   } = {}): ReactElement {
-    const size = options.size || this.config.avatarSize;
-    const borderRadius =
-      options.shape === 'circle'
-        ? '50%'
-        : options.shape === 'rounded'
-          ? '8px'
-          : '0';
+    const size = options.size ?? this.config.avatarSize;
+    let borderRadius: string;
+    if (options.shape === 'circle') {
+      borderRadius = '50%';
+    } else if (options.shape === 'rounded') {
+      borderRadius = '8px';
+    } else {
+      borderRadius = '0';
+    }
 
     return this.createFromElements([
       {
@@ -277,16 +280,16 @@ export class SkeletonFactory {
   } = {}): ReactElement {
     const elements: SkeletonElement[] = [];
 
-    if (options.hasImage !== false) {
+    if (options.hasImage === undefined || options.hasImage === true) {
       elements.push({
         type: 'image',
         width: '100%',
-        height: options.imageHeight || '200px',
+        height: options.imageHeight ?? '200px',
         borderRadius: '0',
       });
     }
 
-    if (options.hasTitle !== false) {
+    if (options.hasTitle === undefined || options.hasTitle === true) {
       elements.push({
         type: 'heading',
         width: '70%',
@@ -294,7 +297,7 @@ export class SkeletonFactory {
       });
     }
 
-    if (options.hasSubtitle) {
+    if (options.hasSubtitle === true) {
       elements.push({
         type: 'text',
         width: '50%',
@@ -311,7 +314,7 @@ export class SkeletonFactory {
       });
     }
 
-    if (options.hasButton) {
+    if (options.hasButton === true) {
       elements.push({
         type: 'button',
         width: '120px',
@@ -330,13 +333,13 @@ export class SkeletonFactory {
     hasAvatar?: boolean;
     hasSecondaryText?: boolean;
   } = {}): ReactElement {
-    const items = options.items || 5;
+    const items = options.items ?? 5;
     const elements: SkeletonElement[] = [];
 
     for (let i = 0; i < items; i++) {
       const children: SkeletonElement[] = [];
 
-      if (options.hasAvatar) {
+      if (options.hasAvatar === true) {
         children.push({
           type: 'avatar',
           width: '40px',
@@ -351,7 +354,7 @@ export class SkeletonFactory {
         height: this.config.textHeight,
       });
 
-      if (options.hasSecondaryText) {
+      if (options.hasSecondaryText === true) {
         children.push({
           type: 'text',
           width: '40%',
@@ -377,12 +380,12 @@ export class SkeletonFactory {
     columns?: number;
     hasHeader?: boolean;
   } = {}): ReactElement {
-    const rows = options.rows || 5;
-    const columns = options.columns || 4;
+    const rows = options.rows ?? 5;
+    const columns = options.columns ?? 4;
     const elements: SkeletonElement[] = [];
 
     // Header
-    if (options.hasHeader !== false) {
+    if (options.hasHeader === undefined || options.hasHeader === true) {
       const headerChildren: SkeletonElement[] = [];
       for (let col = 0; col < columns; col++) {
         headerChildren.push({
@@ -680,7 +683,7 @@ export class SkeletonFactory {
     }
 
     // Handle count (multiple of same element)
-    if (element.count && element.count > 1) {
+    if (element.count !== null && element.count !== undefined && element.count > 1) {
       const repeatedElements = Array(element.count)
         .fill(null)
         .map(() =>
@@ -709,16 +712,16 @@ export class SkeletonFactory {
   private createElementStyle(element: SkeletonElement, pattern: SkeletonPattern): CSSProperties {
     const style: CSSProperties = {
       ...skeletonBaseStyle,
-      backgroundColor: pattern.baseColor || this.config.baseColor,
+      backgroundColor: pattern.baseColor ?? this.config.baseColor,
     };
 
-    if (element.width) {
+    if (element.width !== null && element.width !== undefined) {
       style.width = typeof element.width === 'number'
         ? `${element.width}px`
         : element.width;
     }
 
-    if (element.height) {
+    if (element.height !== null && element.height !== undefined) {
       style.height = typeof element.height === 'number'
         ? `${element.height}px`
         : element.height;
@@ -733,11 +736,11 @@ export class SkeletonFactory {
           break;
         case 'avatar':
           style.height = this.config.avatarSize;
-          style.width = style.width || this.config.avatarSize;
+          style.width = style.width ?? this.config.avatarSize;
           break;
         case 'thumbnail':
           style.height = this.config.thumbnailSize;
-          style.width = style.width || this.config.thumbnailSize;
+          style.width = style.width ?? this.config.thumbnailSize;
           break;
         case 'input':
           style.height = '40px';
@@ -748,7 +751,7 @@ export class SkeletonFactory {
       }
     }
 
-    if (element.borderRadius) {
+    if (element.borderRadius !== null && element.borderRadius !== undefined) {
       style.borderRadius = typeof element.borderRadius === 'number'
         ? `${element.borderRadius}px`
         : element.borderRadius;
@@ -769,7 +772,7 @@ export class SkeletonFactory {
       }
     }
 
-    if (element.gap) {
+    if (element.gap !== null && element.gap !== undefined) {
       style.gap = typeof element.gap === 'number'
         ? `${element.gap}px`
         : element.gap;
@@ -789,14 +792,14 @@ export class SkeletonFactory {
     customClass?: string
   ): string {
     const classes = ['skeleton', `skeleton-${type}`, animationClass];
-    if (customClass) {
+    if (customClass !== null && customClass !== undefined && customClass !== '') {
       classes.push(customClass);
     }
     return classes.filter(Boolean).join(' ');
   }
 
   private getAnimationClass(animation?: SkeletonAnimation): string {
-    switch (animation || this.config.defaultAnimation) {
+    switch (animation ?? this.config.defaultAnimation) {
       case 'pulse':
         return 'skeleton-pulse';
       case 'wave':
@@ -835,9 +838,7 @@ let factoryInstance: SkeletonFactory | null = null;
 export function getSkeletonFactory(
   config?: Partial<SkeletonFactoryConfig>
 ): SkeletonFactory {
-  if (!factoryInstance) {
-    factoryInstance = new SkeletonFactory(config);
-  }
+  factoryInstance ??= new SkeletonFactory(config);
   return factoryInstance;
 }
 

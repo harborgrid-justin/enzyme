@@ -34,12 +34,12 @@ import {
   type SecurityContext,
   type ModuleSlotDefinition,
   ModuleLifecycleState,
-  ModuleLifecycleEvent,
+  type ModuleLifecycleEvent,
   HydrationState,
   DEFAULT_HYDRATION_CONFIG,
 } from './types';
+import type { VirtualModuleManager } from './virtual-module';
 import {
-  VirtualModuleManager,
   createVirtualModule,
   createValidatedModuleId,
 } from './virtual-module';
@@ -156,7 +156,7 @@ class ModuleErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySta
         return fallback(this.state.error, this.reset);
       }
 
-      if (fallback) {
+      if (fallback !== null && fallback !== undefined) {
         return fallback;
       }
 
@@ -312,7 +312,13 @@ const ModuleBoundaryInner: FC<
 
   // Create security context
   const securityContext = useMemo<SecurityContext>(
-    () => securityRef.current!.createContext(),
+    () => {
+      const security = securityRef.current;
+      if (!security) {
+        throw new Error('Security not initialized');
+      }
+      return security.createContext();
+    },
     []
   );
 
@@ -564,14 +570,14 @@ const ModuleBoundaryInner: FC<
       }
     };
 
-    initAndMount();
+    void initAndMount();
 
-    return () => {
-      const cleanup = async () => {
+    return (): void => {
+      const cleanup = async (): Promise<void> => {
         await manager.unmount();
         await manager.dispose();
       };
-      cleanup();
+      void cleanup();
       onUnmount?.();
       system.registry.unregister(moduleId);
     };
@@ -600,7 +606,7 @@ const ModuleBoundaryInner: FC<
             isVisible &&
             state.hydrationState === HydrationState.DEHYDRATED
           ) {
-            hydrate();
+            void hydrate();
           }
         }
       },
@@ -633,7 +639,7 @@ const ModuleBoundaryInner: FC<
   const handleError = useCallback(
     (error: Error, errorInfo: ErrorInfo) => {
       dispatch({ type: 'SET_ERROR', error, errorInfo });
-      managerRef.current?.handleError(error, errorInfo);
+      void managerRef.current?.handleError(error, errorInfo);
       onError?.(error, errorInfo);
     },
     [dispatch, onError]
@@ -649,7 +655,7 @@ const ModuleBoundaryInner: FC<
     state.hydrationState === HydrationState.PENDING ||
     state.hydrationState === HydrationState.HYDRATING
   ) {
-    if (loading) {
+    if (loading !== null && loading !== undefined) {
       return <>{loading}</>;
     }
   }
@@ -668,7 +674,7 @@ const ModuleBoundaryInner: FC<
             data-module-name={name}
             data-module-state={state.lifecycleState}
             data-hydration-state={state.hydrationState}
-            style={isolated ? { contain: 'content' } : undefined}
+            style={isolated === true ? { contain: 'content' } : undefined}
           >
             {children}
           </div>

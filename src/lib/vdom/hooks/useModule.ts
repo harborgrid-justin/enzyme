@@ -73,13 +73,10 @@ export function useModule(): UseModuleReturn {
     state,
   } = context;
 
-  // Derived state
-  const lifecycleState = state.lifecycleState;
+  // Derived state - use destructuring
+  const { lifecycleState, isVisible, error, metrics } = state;
   const isMounted = lifecycleState === ModuleLifecycleState.MOUNTED;
-  const isVisible = state.isVisible;
-  const hasError = state.error !== null;
-  const error = state.error;
-  const metrics = state.metrics;
+  const hasError = error !== null;
 
   // Event emission
   const emit = useCallback(
@@ -98,9 +95,9 @@ export function useModule(): UseModuleReturn {
     ): EventSubscription => {
       const subscriptionId = `${moduleId}-${name}-${Date.now()}`;
       let isActive = true;
-      const unsubscribeFn = eventBus.subscribe(name, handler as any, moduleId);
+      const unsubscribeFn = eventBus.subscribe(name, handler, moduleId);
       
-      const unsubscribe = () => {
+      const unsubscribe = (): void => {
         if (isActive) {
           isActive = false;
           unsubscribeFn();

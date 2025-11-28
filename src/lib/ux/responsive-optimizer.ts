@@ -121,7 +121,7 @@ export class ResponsiveManager {
 
   constructor(config: ResponsiveConfig = {}) {
     this.config = {
-      breakpoints: config.breakpoints || DEFAULT_BREAKPOINTS,
+      breakpoints: config.breakpoints ?? DEFAULT_BREAKPOINTS,
       networkAware: config.networkAware ?? true,
       detectCapabilities: config.detectCapabilities ?? true,
       resizeDebounce: config.resizeDebounce ?? 100,
@@ -190,16 +190,25 @@ export class ResponsiveManager {
       touchScreen: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
       highDPI: window.devicePixelRatio > 1,
       prefersReducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-      prefersColorScheme: window.matchMedia('(prefers-color-scheme: dark)').matches
-        ? 'dark'
-        : window.matchMedia('(prefers-color-scheme: light)').matches
-          ? 'light'
-          : 'no-preference',
-      saveData: nav.connection?.saveData || false,
-      effectiveType: (nav.connection?.effectiveType as DeviceCapabilities['effectiveType']) || 'unknown',
-      deviceMemory: nav.deviceMemory || null,
-      hardwareConcurrency: navigator.hardwareConcurrency || null,
+      prefersColorScheme: this.getColorScheme(),
+      saveData: nav.connection?.saveData ?? false,
+      effectiveType: (nav.connection?.effectiveType as DeviceCapabilities['effectiveType']) ?? 'unknown',
+      deviceMemory: nav.deviceMemory ?? null,
+      hardwareConcurrency: navigator.hardwareConcurrency ?? null,
     };
+  }
+
+  /**
+   * Get color scheme preference
+   */
+  private getColorScheme(): 'light' | 'dark' | 'no-preference' {
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      return 'dark';
+    }
+    if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+      return 'light';
+    }
+    return 'no-preference';
   }
 
   /**
@@ -331,7 +340,8 @@ export class ResponsiveManager {
   getValue<T>(values: Partial<Record<string, T>>, defaultValue: T): T {
     // Check current breakpoint first
     if (this.currentBreakpoint in values) {
-      return values[this.currentBreakpoint]!;
+      const value = values[this.currentBreakpoint];
+      if (value !== undefined) return value;
     }
 
     // Fall back to smaller breakpoints
@@ -339,7 +349,8 @@ export class ResponsiveManager {
       const bp = this.breakpoints[i];
       if (!bp) continue;
       if (bp.name in values) {
-        return values[bp.name]!;
+        const value = values[bp.name];
+        if (value !== undefined) return value;
       }
     }
 
@@ -413,7 +424,7 @@ export class ResponsiveManager {
         }
       }
     }
-    return this.breakpoints[0]?.name || 'unknown';
+    return this.breakpoints[0]?.name ?? 'unknown';
   }
 
   private notifyListeners(): void {
@@ -528,7 +539,7 @@ export function generateSrcSet(
   return widths
     .map((width) => {
       const url = baseUrl.replace('{w}', String(width)).replace('{width}', String(width));
-      const finalUrl = format ? url.replace(/\.[^.]+$/, `.${format}`) : url;
+      const finalUrl = (format !== null && format !== undefined && format !== '') ? url.replace(/\.[^.]+$/, `.${format}`) : url;
       return `${finalUrl} ${width}w`;
     })
     .join(', ');
@@ -566,7 +577,11 @@ export function getOptimalImageWidth(
   }
 
   // Return largest available
-  return widths[widths.length - 1]!;
+  const lastWidth = widths[widths.length - 1];
+  if (lastWidth === undefined) {
+    throw new Error('No widths available');
+  }
+  return lastWidth;
 }
 
 // ============================================================================
@@ -640,9 +655,7 @@ let managerInstance: ResponsiveManager | null = null;
  * Get or create the global responsive manager
  */
 export function getResponsiveManager(config?: ResponsiveConfig): ResponsiveManager {
-  if (!managerInstance) {
-    managerInstance = new ResponsiveManager(config);
-  }
+  managerInstance ??= new ResponsiveManager(config);
   return managerInstance;
 }
 

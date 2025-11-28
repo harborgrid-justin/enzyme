@@ -9,7 +9,8 @@
  * @version 1.0.0
  */
 
-import type { ReactNode, ComponentType, ErrorInfo } from 'react';
+import type { ReactNode, ComponentType, ErrorInfo, RefObject } from 'react';
+import type * as _React from 'react';
 
 // ============================================================================
 // Utility Types
@@ -68,8 +69,6 @@ export const VNodeType = {
   SUSPENSE: 'suspense',
   MODULE_BOUNDARY: 'module_boundary',
 } as const;
-
-export type VNodeType = (typeof VNodeType)[keyof typeof VNodeType];
 
 /**
  * Virtual node properties interface.
@@ -168,9 +167,6 @@ export const ModuleLifecycleState = {
   DISPOSED: 'disposed',
 } as const;
 
-export type ModuleLifecycleState =
-  (typeof ModuleLifecycleState)[keyof typeof ModuleLifecycleState];
-
 /**
  * Module lifecycle event types.
  */
@@ -186,9 +182,6 @@ export const ModuleLifecycleEvent = {
   ERROR: 'error',
   DISPOSE: 'dispose',
 } as const;
-
-export type ModuleLifecycleEvent =
-  (typeof ModuleLifecycleEvent)[keyof typeof ModuleLifecycleEvent];
 
 /**
  * Lifecycle hook callback type.
@@ -243,8 +236,6 @@ export const HydrationState = {
   FAILED: 'failed',
 } as const;
 
-export type HydrationState = (typeof HydrationState)[keyof typeof HydrationState];
-
 /**
  * Hydration priority levels.
  * Lower numbers indicate higher priority.
@@ -262,9 +253,6 @@ export const HydrationPriority = {
   DEFERRED: 5,
 } as const;
 
-export type HydrationPriority =
-  (typeof HydrationPriority)[keyof typeof HydrationPriority];
-
 /**
  * Hydration trigger types.
  */
@@ -280,9 +268,6 @@ export const HydrationTrigger = {
   /** Hydrate only when explicitly triggered */
   MANUAL: 'manual',
 } as const;
-
-export type HydrationTrigger =
-  (typeof HydrationTrigger)[keyof typeof HydrationTrigger];
 
 /**
  * Hydration configuration for a module.
@@ -535,8 +520,6 @@ export const EventPriority = {
   LOW: 3,
 } as const;
 
-export type EventPriority = (typeof EventPriority)[keyof typeof EventPriority];
-
 /**
  * Base event message interface.
  */
@@ -721,8 +704,6 @@ export const LoadingPriority = {
   /** Prefetch - load in background */
   PREFETCH: 4,
 } as const;
-
-export type LoadingPriority = (typeof LoadingPriority)[keyof typeof LoadingPriority];
 
 /**
  * Module loading options.
@@ -953,7 +934,7 @@ export interface UseModuleStateReturn<T> {
  */
 export interface UseModuleBoundaryReturn {
   /** Boundary element ref */
-  readonly boundaryRef: React.RefObject<HTMLElement | null>;
+  readonly boundaryRef: RefObject<HTMLElement | null>;
   /** Slot definitions */
   readonly slots: ReadonlyArray<ModuleSlotDefinition>;
   /** Get slot content */
@@ -1093,3 +1074,28 @@ export const DEFAULT_SECURITY_CONFIG: ModuleSecurityConfig = {
   maxMessageSize: 1024 * 1024, // 1MB
   validateOrigins: true,
 } as const;
+
+// ============================================================================
+// Derived Types (must be at end to avoid redeclaration errors)
+// ============================================================================
+
+// eslint-disable-next-line no-redeclare -- Valid TypeScript pattern for const/type with same name
+export type VNodeType = (typeof VNodeType)[keyof typeof VNodeType];
+// eslint-disable-next-line no-redeclare -- Valid TypeScript pattern for const/type with same name
+export type ModuleLifecycleState =
+  (typeof ModuleLifecycleState)[keyof typeof ModuleLifecycleState];
+// eslint-disable-next-line no-redeclare -- Valid TypeScript pattern for const/type with same name
+export type ModuleLifecycleEvent =
+  (typeof ModuleLifecycleEvent)[keyof typeof ModuleLifecycleEvent];
+// eslint-disable-next-line no-redeclare -- Valid TypeScript pattern for const/type with same name
+export type HydrationState = (typeof HydrationState)[keyof typeof HydrationState];
+// eslint-disable-next-line no-redeclare -- Valid TypeScript pattern for const/type with same name
+export type HydrationPriority =
+  (typeof HydrationPriority)[keyof typeof HydrationPriority];
+// eslint-disable-next-line no-redeclare -- Valid TypeScript pattern for const/type with same name
+export type HydrationTrigger =
+  (typeof HydrationTrigger)[keyof typeof HydrationTrigger];
+// eslint-disable-next-line no-redeclare -- Valid TypeScript pattern for const/type with same name
+export type EventPriority = (typeof EventPriority)[keyof typeof EventPriority];
+// eslint-disable-next-line no-redeclare -- Valid TypeScript pattern for const/type with same name
+export type LoadingPriority = (typeof LoadingPriority)[keyof typeof LoadingPriority];

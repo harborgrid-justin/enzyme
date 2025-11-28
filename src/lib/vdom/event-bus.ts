@@ -91,10 +91,11 @@ export class ModuleEventBus {
     const unsubscribe = this.emitter.on(eventType, handler as EventHandler<ModuleEventMessage>);
 
     // Track subscription by module if provided
-    if (moduleId) {
+    if (moduleId !== null && moduleId !== undefined && moduleId !== '') {
       if (!this.moduleSubscriptions.has(moduleId)) {
         this.moduleSubscriptions.set(moduleId, new Set());
       }
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       this.moduleSubscriptions.get(moduleId)!.add(unsubscribe);
     }
 
@@ -174,9 +175,7 @@ let defaultEventBus: ModuleEventBus | null = null;
  * Get the default event bus instance
  */
 export function getDefaultEventBus(): ModuleEventBus {
-  if (!defaultEventBus) {
-    defaultEventBus = new ModuleEventBus();
-  }
+  defaultEventBus ??= new ModuleEventBus();
   return defaultEventBus;
 }
 

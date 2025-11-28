@@ -12,7 +12,7 @@
  * - Custom spinners and loaders
  */
 
-import {
+import React, {
   useContext,
   useState,
   useEffect,
@@ -215,7 +215,7 @@ export function LoadingProvider({
       loadingStartTime.current = Date.now();
       setState('loading');
       setPhase('initial');
-      setMessage(loadingMessage || null);
+      setMessage(loadingMessage ?? null);
       setProgressValue(null);
       setErrorValue(null);
 
@@ -377,7 +377,9 @@ export function LoadingIndicator({
         if (remaining > 0) {
           setTimeout(() => setVisible(false), remaining);
         } else {
-          setVisible(false);
+          void Promise.resolve().then(() => {
+            setVisible(false);
+          });
         }
       }
     }
@@ -402,11 +404,11 @@ export function LoadingIndicator({
   const containerClasses = [
     'loading-indicator',
     sizeClasses[size],
-    overlay && 'loading-indicator--overlay',
-    fullScreen && 'loading-indicator--fullscreen',
+    overlay ? 'loading-indicator--overlay' : null,
+    fullScreen ? 'loading-indicator--fullscreen' : null,
     className,
   ]
-    .filter(Boolean)
+    .filter((cls): cls is string => typeof cls === 'string' && cls !== '')
     .join(' ');
 
   return (

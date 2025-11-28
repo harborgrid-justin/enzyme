@@ -15,14 +15,16 @@ import {
   useMemo,
   useEffect,
   useState,
+  useLayoutEffect,
   type ReactNode,
   type FC,
   type ComponentType,
   type ElementType,
 } from 'react';
+import React from 'react';
 import { createPortal } from 'react-dom';
 import { createModuleId } from './types';
-import { useModuleContext, useOptionalModuleContext } from './ModuleBoundary';
+import { useOptionalModuleContext } from './ModuleBoundary';
 import { useModuleSystem } from './ModuleProvider';
 import { devWarn } from '@/lib/core/config/env-helper';
 
@@ -139,17 +141,17 @@ export const ModuleSlot: FC<ModuleSlotProps> = ({
   // Determine what to render
   let content: ReactNode;
 
-  if (slotContent !== null && slotContent !== undefined) {
+  if (slotContent != null) {
     // Slot has been filled
     content = slotContent;
-  } else if (children) {
+  } else if (children != null) {
     // Use default children
     content = children;
   } else if (required) {
     // Required slot without content
     devWarn(`Required slot "${name}" is empty`);
     content = null;
-  } else if (placeholder) {
+  } else if (placeholder != null) {
     // Show placeholder
     content = placeholder;
   } else {
@@ -168,7 +170,7 @@ export const ModuleSlot: FC<ModuleSlotProps> = ({
   };
 
   // Don't render wrapper if no content
-  if (content === null && !className && !style) {
+  if (content == null && !Boolean(className) && !Boolean(style)) {
     return null;
   }
 
@@ -228,7 +230,7 @@ export const DynamicModuleSlot: FC<DynamicModuleSlotProps> = ({
   useEffect(() => {
     let isMounted = true;
 
-    const loadModule = async () => {
+    const loadModule = async (): Promise<void> => {
       try {
         const component = await system.loader.load(moduleId);
 
@@ -253,7 +255,7 @@ export const DynamicModuleSlot: FC<DynamicModuleSlotProps> = ({
       }
     };
 
-    loadModule();
+    void loadModule();
 
     return () => {
       isMounted = false;
@@ -312,6 +314,9 @@ export interface LazyModuleSlotProps {
   style?: React.CSSProperties;
 }
 
+// Create a cache for lazy components to avoid recreating them
+const lazyComponentCache = new Map<() => Promise<{ default: ComponentType<unknown> }>, ReturnType<typeof lazy>>();
+
 /**
  * Slot that lazily loads a component using React.lazy().
  *
@@ -332,8 +337,13 @@ export const LazyModuleSlot: FC<LazyModuleSlotProps> = ({
   className,
   style,
 }) => {
-  // Create lazy component
-  const LazyComponent = useMemo(() => lazy(loader), [loader]);
+  // Get or create lazy component from cache
+  const LazyComponent = useMemo(() => {
+    if (!lazyComponentCache.has(loader)) {
+      lazyComponentCache.set(loader, lazy(loader));
+    }
+    return lazyComponentCache.get(loader)!;
+  }, [loader]);
 
   return (
     <Wrapper className={className} style={style}>
@@ -481,10 +491,13 @@ export const ModulePortalSlot: FC<ModulePortalSlotProps> = ({
 }) => {
   const [targetElement, setTargetElement] = useState<Element | null>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const element = document.getElementById(target);
     if (element) {
-      setTargetElement(element);
+      // Use microtask to avoid synchronous setState in effect
+      void Promise.resolve().then(() => {
+        setTargetElement(element);
+      });
     } else {
       devWarn(`Portal target "${target}" not found`);
     }
@@ -499,9 +512,3 @@ export const ModulePortalSlot: FC<ModulePortalSlotProps> = ({
 };
 
 ModulePortalSlot.displayName = 'ModulePortalSlot';
-
-// ============================================================================
-// Re-export hooks from separate files
-// ============================================================================
-
-export { useFillSlot, useSlotContent, useIsSlotFilled } from './hooks/useSlot';

@@ -528,7 +528,7 @@ export class VirtualModuleManager {
       this.parent = null;
 
       await this.transitionTo(ModuleLifecycleState.DISPOSED);
-    } catch (error) {
+    } catch {
       // Even if disposal fails, mark as disposed
       this.state = {
         ...this.state,
@@ -613,13 +613,13 @@ export class VirtualModuleManager {
    * Resolves module dependencies using topological sort.
    */
   private async resolveDependencies(): Promise<void> {
-    if (!this.config.dependencies?.length) {
+    if (this.config.dependencies == null || this.config.dependencies.length === 0) {
       this.resolvedDependencies = new Map();
       return;
     }
 
     // Build dependency graph
-    const dependencies = this.config.dependencies;
+    const { dependencies } = this.config;
     const resolved = new Map<ModuleId, VirtualModuleManager>();
     const visited = new Set<ModuleId>();
     const inProgress = new Set<ModuleId>();
@@ -938,7 +938,7 @@ export class VirtualModuleManager {
    * Emits a lifecycle event.
    * @param event - Lifecycle event type
    */
-  private async emitLifecycleEvent(event: ModuleLifecycleEvent): Promise<void> {
+  private emitLifecycleEvent(event: ModuleLifecycleEvent): void {
     const listeners = this.listeners.get(event);
     if (!listeners) {
       return;

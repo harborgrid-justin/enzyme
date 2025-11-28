@@ -28,11 +28,10 @@ import type {
   ConfigValidationStatus,
   ConfigValidationResult as _ConfigValidationResult,
 } from './types';
-import { getConfigRegistry, type ConfigRegistry } from './config-registry';
+import { getConfigRegistry } from './config-registry';
 import {
   getDynamicConfig,
   initializeDynamicConfig,
-  type DynamicConfigManager,
 } from './dynamic-config';
 import { initializeConfigDiscovery } from './config-discovery';
 import { env } from './env';
@@ -178,8 +177,8 @@ export function ConfigProvider({
   );
 
   const getNamespace = useCallback(
-    <T extends ConfigRecord>(namespace: ConfigNamespace): Readonly<T> => {
-      return registry.getNamespaceConfig<T>(namespace) as Readonly<T>;
+    <T extends ConfigRecord>(namespace: ConfigNamespace): T => {
+      return registry.getNamespaceConfig<T>(namespace) as T;
     },
     [registry]
   );

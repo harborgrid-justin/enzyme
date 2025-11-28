@@ -222,7 +222,7 @@ function VirtualizedRowInner<T>({
   style,
   data: rowData,
 }: ListChildComponentProps): React.ReactElement {
-  const { data, columns, rowKey, onRowClick, focusedIndex, onRowFocus, onKeyDown } = rowData;
+  const { data, columns, rowKey, onRowClick, focusedIndex, onRowFocus, onKeyDown } = rowData as RowData<T>;
   const row = data[index];
   const key = getRowKey(row, rowKey);
   const rowRef = useRef<HTMLDivElement>(null);

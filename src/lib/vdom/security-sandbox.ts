@@ -785,7 +785,7 @@ export class EventValidator {
    */
   isPayloadSizeValid(payload: unknown): boolean {
     try {
-      const size = new Blob([JSON.stringify(payload)]).size;
+      const { size } = new Blob([JSON.stringify(payload)]);
       return size <= this.maxMessageSize;
     } catch {
       return false;
@@ -926,7 +926,7 @@ export class SecuritySandbox {
   async sanitizeHydrationData(
     data: Omit<HydrationData, 'sanitized' | 'checksum'>
   ): Promise<HydrationData> {
-    if (!this.config.sanitizeHydration) {
+    if (this.config.sanitizeHydration !== true) {
       return {
         ...data,
         sanitized: false,

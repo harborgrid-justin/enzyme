@@ -4,7 +4,7 @@
  */
 
 import { useContext } from 'react';
-import type { ModuleId, ReactNode } from '../types';
+import type { ModuleId } from '../types';
 import type { ModuleSystemContextValue } from '../ModuleProvider';
 import { ModuleSystemContext, ModuleHierarchyContext } from '../ModuleProvider';
 import type { VDOMPool } from '../vdom-pool';

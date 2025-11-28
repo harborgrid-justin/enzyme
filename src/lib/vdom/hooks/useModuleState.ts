@@ -92,14 +92,14 @@ export function useModuleState<T>(
     }
 
     // Check storage if persistence is enabled
-    if (storageKey) {
+    if (storageKey !== null && storageKey !== undefined && storageKey !== '') {
       try {
         const storage = useSessionStorage ? sessionStorage : localStorage;
         const stored = storage.getItem(storageKey);
-        if (stored) {
-          const parsed = deserialize(stored);
-          if (!validate || validate(parsed)) {
-            return parsed;
+        if (stored !== null && stored !== undefined && stored !== '') {
+          const parsed: unknown = deserialize(stored);
+          if (!validate || validate(parsed as T)) {
+            return parsed as T;
           }
         }
       } catch (error) {
@@ -124,7 +124,7 @@ export function useModuleState<T>(
 
   // Persist to storage when state changes
   useEffect(() => {
-    if (!storageKey) {
+    if (storageKey === null || storageKey === undefined || storageKey === '') {
       return;
     }
 
@@ -194,7 +194,7 @@ export function useModuleState<T>(
     setError(null);
 
     // Clear from storage
-    if (storageKey) {
+    if (storageKey !== null && storageKey !== undefined && storageKey !== '') {
       try {
         const storage = useSessionStorage ? sessionStorage : localStorage;
         storage.removeItem(storageKey);

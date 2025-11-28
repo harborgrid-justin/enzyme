@@ -782,7 +782,6 @@ export {
 // Configuration Provider (React)
 export {
   ConfigProvider,
-  ConfigContext,
   useConfigContext,
   ConfigReady,
   FeatureFlag,

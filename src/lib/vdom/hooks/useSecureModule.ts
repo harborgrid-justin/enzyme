@@ -18,6 +18,7 @@ import {
   type UseSecureModuleReturn,
   type SecurityViolation,
   type SecurityNonce,
+  ModuleLifecycleEvent,
 } from '../types';
 import { useModuleContext } from '../ModuleBoundary';
 import { devWarn } from '@/lib/core/config/env-helper';
@@ -68,9 +69,11 @@ export function useSecureModule(): UseSecureModuleReturn {
     () => [...securityContext.violations]
   );
 
-  // Sync with context violations
+  // Sync with context violations using queueMicrotask to avoid synchronous setState
   useEffect(() => {
-    setViolations([...securityContext.violations]);
+    queueMicrotask(() => {
+      setViolations([...securityContext.violations]);
+    });
   }, [securityContext.violations]);
 
   // Report a new violation
@@ -366,7 +369,7 @@ export function useSecureMessaging(): {
       }
 
       // Subscribe to lifecycle events as a proxy for secure messaging
-      return context.subscribe('afterUpdate' as any, () => {
+      return context.subscribe(ModuleLifecycleEvent.AFTER_UPDATE, () => {
         // This is a simplified implementation
         // Real implementation would use the event bus with validation
       });

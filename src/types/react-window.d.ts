@@ -1,10 +1,10 @@
 declare module 'react-window' {
-  import { ComponentType, CSSProperties, PureComponent } from 'react';
+  import type { ComponentType, CSSProperties, PureComponent, Ref } from 'react';
 
   export interface ListChildComponentProps {
     index: number;
     style: CSSProperties;
-    data: any;
+    data: unknown;
     isScrolling?: boolean;
   }
 
@@ -14,12 +14,12 @@ declare module 'react-window' {
     direction?: 'ltr' | 'rtl' | 'horizontal' | 'vertical';
     height: number | string;
     initialScrollOffset?: number;
-    innerElementType?: string | ComponentType<any>;
-    innerRef?: React.Ref<any>;
+    innerElementType?: string | ComponentType<unknown>;
+    innerRef?: Ref<unknown>;
     innerTagName?: string; // deprecated
     itemCount: number;
-    itemData?: any;
-    itemKey?: (index: number, data: any) => any;
+    itemData?: unknown;
+    itemKey?: (index: number, data: unknown) => string | number;
     itemSize: number;
     layout?: 'vertical' | 'horizontal';
     onItemsRendered?: (props: {
@@ -27,14 +27,14 @@ declare module 'react-window' {
       overscanStopIndex: number;
       visibleStartIndex: number;
       visibleStopIndex: number;
-    }) => any;
+    }) => void;
     onScroll?: (props: {
       scrollDirection: 'forward' | 'backward';
       scrollOffset: number;
       scrollUpdateWasRequested: boolean;
-    }) => any;
-    outerElementType?: string | ComponentType<any>;
-    outerRef?: React.Ref<any>;
+    }) => void;
+    outerElementType?: string | ComponentType<unknown>;
+    outerRef?: Ref<unknown>;
     outerTagName?: string; // deprecated
     overscanCount?: number;
     style?: CSSProperties;

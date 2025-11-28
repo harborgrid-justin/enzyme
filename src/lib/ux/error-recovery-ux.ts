@@ -12,7 +12,7 @@
  * - Graceful degradation messaging
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 
 // ============================================================================
 // Types
@@ -461,7 +461,7 @@ export class RecoveryEngine {
   /**
    * Delay helper
    */
-  private delay(ms: number): Promise<void> {
+  private async delay(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
@@ -509,7 +509,11 @@ export function useRecovery<T>(
   reset: () => void;
 } {
   const { enabled = true, ...recoveryOptions } = options;
-  const engine = useMemo(() => new RecoveryEngine(recoveryOptions), []);
+  const engineRef = useRef<RecoveryEngine | null>(null);
+  if (!engineRef.current) {
+    engineRef.current = new RecoveryEngine(recoveryOptions);
+  }
+  const engine = engineRef.current;
   const [progress, setProgress] = useState<RecoveryProgress>({
     state: 'idle',
     attempt: 0,
@@ -567,7 +571,11 @@ export function useCircuitBreaker(options: RecoveryOptions = {}): {
   isOpen: boolean;
   reset: () => void;
 } {
-  const engine = useMemo(() => new RecoveryEngine(options), []);
+  const engineRef = useRef<RecoveryEngine | null>(null);
+  if (!engineRef.current) {
+    engineRef.current = new RecoveryEngine(options);
+  }
+  const engine = engineRef.current;
   const [state, setState] = useState<CircuitBreakerState>(engine.getCircuitBreakerState());
 
   useEffect(() => {
@@ -641,7 +649,7 @@ export function createRecoveryEngine(options?: RecoveryOptions): RecoveryEngine 
 /**
  * Execute with recovery
  */
-export function executeWithRecovery<T>(
+export async function executeWithRecovery<T>(
   operation: () => Promise<T>,
   options?: RecoveryOptions
 ): Promise<T> {

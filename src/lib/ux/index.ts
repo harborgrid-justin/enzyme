@@ -359,19 +359,6 @@ export {
   ProgressiveEnhancementProvider,
   CapabilityGate,
   FeatureGate,
-  // Hooks
-  useProgressiveEnhancement,
-  useProgressiveFeature,
-  useCapability,
-  useCapabilities,
-  useCapabilityConditional,
-  // Detection
-  detectCapabilities,
-  getCapabilities,
-  checkWebPSupport,
-  checkAVIFSupport,
-  // Utilities
-  createFeature,
   // Types
   type CapabilityLevel,
   type BrowserCapabilities,
@@ -379,6 +366,24 @@ export {
   type FeatureStatus,
   type ProgressiveEnhancementProviderProps,
 } from './progressive-enhancement';
+
+export {
+  // Hooks
+  useProgressiveEnhancement,
+  useProgressiveFeature,
+  useCapability,
+  useCapabilities,
+  useCapabilityConditional,
+} from './progressive-enhancement-hooks';
+
+export {
+  // Detection and Utilities
+  detectCapabilities,
+  getCapabilities,
+  checkWebPSupport,
+  checkAVIFSupport,
+  createFeature,
+} from './progressive-enhancement-utils';
 
 export type { ProgressiveEnhancementContextValue } from '../contexts/ProgressiveEnhancementContext';
 

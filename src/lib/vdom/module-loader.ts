@@ -250,7 +250,7 @@ export class ModuleLoader {
       this.queues.set(opts.priority, queue);
 
       // Process queue
-      this.processQueue();
+      void this.processQueue();
     });
   }
 
@@ -424,8 +424,8 @@ export class ModuleLoader {
    * @param element - Element to observe
    */
   private observeForHover(moduleId: ModuleId, element: Element): void {
-    const handler = () => {
-      this.triggerPrefetch(moduleId);
+    const handler = (): void => {
+      void this.triggerPrefetch(moduleId);
       element.removeEventListener('mouseenter', handler);
     };
 
@@ -439,7 +439,7 @@ export class ModuleLoader {
   /**
    * Processes the loading queue.
    */
-  private async processQueue(): Promise<void> {
+  private processQueue(): void {
     if (this.isProcessing) {
       return;
     }
@@ -454,11 +454,28 @@ export class ModuleLoader {
         }
 
         // Don't await - allow concurrent processing
-        this.executeTask(task);
+        void this.executeTask(task);
       }
     } finally {
       this.isProcessing = false;
+
+      // Schedule next check if there are still items
+      if (this.hasQueuedTasks()) {
+        void Promise.resolve().then(() => this.processQueue());
+      }
     }
+  }
+
+  /**
+   * Checks if there are any tasks in queues.
+   */
+  private hasQueuedTasks(): boolean {
+    for (const queue of this.queues.values()) {
+      if (queue.length > 0) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -466,14 +483,17 @@ export class ModuleLoader {
    * @returns Next task or null
    */
   private getNextTask(): LoadingTask | null {
-    const priorities = Object.values(LoadingPriority)
+    const priorities: readonly LoadingPriority[] = Object.values(LoadingPriority)
       .filter((v): v is LoadingPriority => typeof v === 'number')
       .sort((a, b) => a - b);
 
     for (const priority of priorities) {
       const queue = this.queues.get(priority);
-      if (queue && queue.length > 0) {
-        return queue.shift()!;
+      if (queue !== undefined && queue.length > 0) {
+        const task = queue.shift();
+        if (task !== undefined) {
+          return task;
+        }
       }
     }
 
@@ -503,7 +523,7 @@ export class ModuleLoader {
 
     try {
       // Load dependencies first if configured
-      if (options.preloadDependencies) {
+      if (options.preloadDependencies === true) {
         await this.loadDependencies(moduleId, options);
       }
 
@@ -557,7 +577,7 @@ export class ModuleLoader {
           const queue = this.queues.get(task.priority) ?? [];
           queue.push(task);
           this.queues.set(task.priority, queue);
-          this.processQueue();
+          void this.processQueue();
         }, options.retryDelay);
 
         return;
@@ -577,11 +597,11 @@ export class ModuleLoader {
         dependenciesTotal: 0,
       });
 
-      options.onError?.(err);
+      options?.onError?.(err);
       task.reject(err);
     } finally {
       this.loading.delete(moduleId);
-      this.processQueue(); // Continue processing
+      void this.processQueue(); // Continue processing
     }
   }
 
@@ -595,11 +615,11 @@ export class ModuleLoader {
     options: ModuleLoadOptions
   ): Promise<void> {
     const config = this.registry.getConfig(moduleId);
-    if (!config?.dependencies?.length) {
+    if (!config?.dependencies || config.dependencies.length === 0) {
       return;
     }
 
-    const deps = config.dependencies.filter((d) => !d.lazy);
+    const deps = config.dependencies.filter((d) => d.lazy !== true);
     let loaded = 0;
 
     await Promise.all(
@@ -733,9 +753,7 @@ let defaultLoader: ModuleLoader | null = null;
  * @returns Default ModuleLoader instance
  */
 export function getDefaultLoader(): ModuleLoader {
-  if (!defaultLoader) {
-    defaultLoader = new ModuleLoader();
-  }
+  defaultLoader ??= new ModuleLoader();
   return defaultLoader;
 }
 

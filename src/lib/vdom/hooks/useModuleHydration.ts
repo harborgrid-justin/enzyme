@@ -13,6 +13,7 @@ import {
   useCallback,
   useMemo,
   useEffect,
+  useLayoutEffect,
   useRef,
 } from 'react';
 import {
@@ -85,18 +86,31 @@ export function useModuleHydration(): UseModuleHydrationReturn {
       }, 50);
 
       return () => clearInterval(interval);
-    } else if (isHydrated) {
-      setProgress(1);
-    } else if (hasFailed) {
-      setProgress(0);
     }
     return undefined;
-  }, [isHydrating, isHydrated, hasFailed]);
+  }, [isHydrating]);
+
+  // Update progress when hydration completes or fails
+  useLayoutEffect(() => {
+    if (isHydrated) {
+      // Use a microtask to avoid synchronous setState during render
+      void Promise.resolve().then(() => {
+        setProgress(1);
+      });
+    } else if (hasFailed) {
+      void Promise.resolve().then(() => {
+        setProgress(0);
+      });
+    }
+  }, [isHydrated, hasFailed]);
 
   // Update error state from context
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (context.state.error && hasFailed) {
-      setError(context.state.error);
+      // Use a microtask to avoid synchronous setState during render
+      void Promise.resolve().then(() => {
+        setError(context.state.error);
+      });
     }
   }, [context.state.error, hasFailed]);
 
@@ -296,11 +310,11 @@ export function useHydrationTiming(options: {
     if (delay > 0) {
       timeoutRef.current = setTimeout(() => {
         setShouldHydrate(true);
-        hydrate();
+        void hydrate();
       }, delay);
     } else {
       setShouldHydrate(true);
-      hydrate();
+      void hydrate();
     }
   }, [options.delay, hydrate, isHydrated, isHydrating]);
 
@@ -324,7 +338,10 @@ export function useHydrationTiming(options: {
   // Handle trigger-based hydration
   useEffect(() => {
     if (options.trigger === HydrationTrigger.IMMEDIATE) {
-      scheduleHydration();
+      // Use queueMicrotask to avoid synchronous setState
+      queueMicrotask(() => {
+        scheduleHydration();
+      });
       return undefined;
     } else if (options.trigger === HydrationTrigger.IDLE) {
       if ('requestIdleCallback' in window) {

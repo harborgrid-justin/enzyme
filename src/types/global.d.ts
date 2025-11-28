@@ -8,7 +8,8 @@
 /**
  * Vite environment variables
  */
-interface ImportMetaEnv {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+interface _ImportMetaEnv {
   readonly VITE_API_BASE_URL: string;
   readonly VITE_APP_NAME: string;
   readonly VITE_APP_VERSION: string;

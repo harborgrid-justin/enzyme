@@ -20,7 +20,7 @@ beforeAll(() => {
     writable: true,
     value: vi.fn().mockImplementation((query: string) => {
       const mediaQueryList = {
-        matches: query === '(prefers-color-scheme: dark)' ? false : false,
+        matches: false,
         media: query,
         onchange: null as ((this: MediaQueryList, ev: MediaQueryListEvent) => unknown) | null,
         addListener: vi.fn(),

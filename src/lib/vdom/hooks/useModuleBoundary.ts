@@ -8,7 +8,7 @@
  * @version 1.0.0
  */
 
-import {
+import React, {
   useRef,
   useState,
   useCallback,
@@ -64,8 +64,6 @@ import { useModuleHierarchy } from '../ModuleProvider';
  */
 export function useModuleBoundary(): UseModuleBoundaryReturn {
   const context = useModuleContext();
-  // Get module hierarchy context (call but don't store)
-  useModuleHierarchy();
 
   // Boundary element ref
   const boundaryRef = useRef<HTMLElement>(null);
@@ -118,7 +116,11 @@ export function useModuleBoundary(): UseModuleBoundaryReturn {
       slots: context.parent.config.slots ?? [],
       getSlot: context.parent.getSlot,
       fillSlot: context.parent.setSlot,
-      clearSlot: (name: string) => context.parent!.setSlot(name, null),
+      clearSlot: (name: string): void => {
+        if (context.parent) {
+          context.parent.setSlot(name, null);
+        }
+      },
       dimensions: null,
       isVisible: context.parent.state.isVisible,
       parentBoundary: null, // Don't recurse infinitely
@@ -132,7 +134,7 @@ export function useModuleBoundary(): UseModuleBoundaryReturn {
       return;
     }
 
-    const updateDimensions = () => {
+    const updateDimensions = (): void => {
       setDimensions(element.getBoundingClientRect());
     };
 
@@ -147,7 +149,7 @@ export function useModuleBoundary(): UseModuleBoundaryReturn {
     resizeObserver.observe(element);
 
     // Also update on window resize/scroll
-    const handleViewportChange = () => {
+    const handleViewportChange = (): void => {
       updateDimensions();
     };
 
@@ -251,7 +253,7 @@ export function useModuleDepth(): number {
  */
 export function useModulePath(): string[] {
   const hierarchy = useModuleHierarchy();
-  return hierarchy.path;
+  return [...hierarchy.path];
 }
 
 /**
