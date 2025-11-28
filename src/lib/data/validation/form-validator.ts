@@ -598,9 +598,9 @@ export function useFormValidation<T extends Record<string, unknown>>(
           const prevState = prev[field as keyof T];
           newStates[field] = {
             value: prevState?.value ?? null,
-            errors: fieldErrors as FieldError[],
+            errors: fieldErrors,
             validating: false,
-            valid: (fieldErrors as FieldError[]).length === 0,
+            valid: (fieldErrors).length === 0,
             touched: prevState?.touched ?? false,
             dirty: prevState?.dirty ?? false,
           };
@@ -746,15 +746,15 @@ export function useFormValidation<T extends Record<string, unknown>>(
 
   // Compute derived state
   const isValid = useMemo(() => {
-    return Object.values(fieldStates).every((state) => (state as FieldState).valid);
+    return Object.values(fieldStates).every((state) => (state).valid);
   }, [fieldStates]);
 
   const isDirty = useMemo(() => {
-    return Object.values(fieldStates).some((state) => (state as FieldState).dirty);
+    return Object.values(fieldStates).some((state) => (state).dirty);
   }, [fieldStates]);
 
   const isTouched = useMemo(() => {
-    return Object.values(fieldStates).some((state) => (state as FieldState).touched);
+    return Object.values(fieldStates).some((state) => (state).touched);
   }, [fieldStates]);
 
   // Get field errors (respects showErrorsAfterSubmit)
@@ -931,7 +931,7 @@ export function useField<T>(
     dirty,
     validating,
     isValid: errors.length === 0,
-    validate: () => validate(value),
+    validate: async () => validate(value),
     handleBlur,
     reset,
     inputProps: {

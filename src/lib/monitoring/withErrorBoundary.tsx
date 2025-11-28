@@ -37,7 +37,7 @@ function InlineErrorFallback({
   error: AppError;
   onReset: () => void;
   showReset?: boolean;
-}) {
+}): React.ReactElement {
   return (
     <div
       role="alert"
@@ -69,7 +69,7 @@ function InlineErrorFallback({
           />
         </svg>
         <span>{getUserFriendlyMessage(error)}</span>
-        {showReset && (
+        {(showReset === true) && (
           <button
             onClick={onReset}
             style={{

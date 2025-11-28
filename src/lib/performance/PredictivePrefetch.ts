@@ -146,8 +146,9 @@ function getTimeOfDay(): 'morning' | 'afternoon' | 'evening' | 'night' {
  */
 function normalizePath(path: string): string {
   // Remove trailing slash and query params
-  const pathWithoutQuery = path.split('?')[0];
-  return (pathWithoutQuery || '').replace(/\/$/, '') || '/';
+  const pathParts = path.split('?');
+  const pathWithoutQuery = pathParts[0] ?? '';
+  return (pathWithoutQuery !== '' ? pathWithoutQuery : '').replace(/\/$/, '') || '/';
 }
 
 /**
@@ -254,8 +255,9 @@ export class PredictivePrefetchEngine {
       this.transitionMatrix.set(from, new Map());
     }
 
-    const transitions = this.transitionMatrix.get(from)!;
-    const currentCount = transitions.get(to) || 0;
+    const transitions = this.transitionMatrix.get(from);
+    if (transitions == null) return;
+    const currentCount = transitions.get(to) ?? 0;
     transitions.set(to, currentCount + 1);
 
     // Apply decay to all transitions from this page
@@ -607,21 +609,27 @@ export class PredictivePrefetchEngine {
   private loadPersistedPatterns(): void {
     try {
       const stored = localStorage.getItem(this.config.storageKey);
-      if (!stored) return;
+      if (stored == null || stored === '') return;
 
-      const data = JSON.parse(stored);
+      const data = JSON.parse(stored) as {
+        transitionMatrix?: unknown;
+        timePatterns?: unknown;
+        version?: number;
+      };
       if (data.version !== 1) return;
 
       // Restore transition matrix
-      this.transitionMatrix = new Map(
-        data.transitionMatrix.map(([from, transitions]: [string, [string, number][]]) => [
-          from,
-          new Map(transitions),
-        ])
-      );
+      if (Array.isArray(data.transitionMatrix)) {
+        this.transitionMatrix = new Map(
+          (data.transitionMatrix as Array<[string, Array<[string, number]>]>).map(([from, transitions]) => [
+            from,
+            new Map(transitions),
+          ])
+        );
+      }
 
       // Restore time patterns
-      this.timePatterns = data.timePatterns || [];
+      this.timePatterns = (Array.isArray(data.timePatterns) ? data.timePatterns : []) as TimePattern[];
 
       this.log('Loaded persisted patterns');
     } catch (error) {
@@ -658,7 +666,7 @@ export class PredictivePrefetchEngine {
 
     this.transitionMatrix.forEach((transitions) => {
       transitions.forEach((count, route) => {
-        routeVisits.set(route, (routeVisits.get(route) || 0) + count);
+        routeVisits.set(route, (routeVisits.get(route) ?? 0) + count);
       });
     });
 
@@ -688,6 +696,7 @@ export class PredictivePrefetchEngine {
 
   private log(message: string, ...args: unknown[]): void {
     if (this.config.debug) {
+      // eslint-disable-next-line no-console
       console.log(`[PredictivePrefetch] ${message}`, ...args);
     }
   }
@@ -705,9 +714,7 @@ let engineInstance: PredictivePrefetchEngine | null = null;
 export function getPredictivePrefetchEngine(
   config?: PredictivePrefetchConfig
 ): PredictivePrefetchEngine {
-  if (!engineInstance) {
-    engineInstance = new PredictivePrefetchEngine(config);
-  }
+  engineInstance ??= new PredictivePrefetchEngine(config);
   return engineInstance;
 }
 
@@ -745,7 +752,7 @@ export function createNavigationListener(
       // Trigger prefetch after delay
       if (autoPrefetch) {
         setTimeout(() => {
-          engine.prefetchPredictedRoutes(currentPath);
+          void engine.prefetchPredictedRoutes(currentPath);
         }, prefetchDelay);
       }
     }

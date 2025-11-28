@@ -177,10 +177,8 @@ export function getFeaturesByCategory(): Record<string, FeatureRegistryEntry[]> 
   const byCategory: Record<string, FeatureRegistryEntry[]> = {};
 
   for (const feature of features) {
-    const category = feature.config.metadata.category || 'general';
-    if (!byCategory[category]) {
-      byCategory[category] = [];
-    }
+    const category = feature.config.metadata.category ?? 'general';
+    byCategory[category] ??= [];
     byCategory[category].push(feature);
   }
 

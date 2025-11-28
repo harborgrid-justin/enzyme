@@ -275,7 +275,7 @@ export class DependencyInjectorImpl implements DependencyContainer {
     };
 
     for (const entry of this.services.values()) {
-      if (entry.options.tags?.includes(tag)) {
+      if (entry.options.tags != null && entry.options.tags.includes(tag)) {
         try {
           const instance = this.resolveEntry(entry, context);
           results.push(instance as T);
@@ -353,7 +353,7 @@ export class DependencyInjectorImpl implements DependencyContainer {
 
     // Initialize in order
     for (const entry of entries) {
-      if (entry.options.scope === 'singleton' && !entry.instance) {
+      if (entry.options.scope === 'singleton' && entry.instance == null) {
         await this.resolveEntryAsync(entry, context);
       }
     }
@@ -374,7 +374,7 @@ export class DependencyInjectorImpl implements DependencyContainer {
     // Dispose in reverse order
     for (const entry of entries) {
       const instance = entry.instance as { dispose?: () => void | Promise<void> };
-      if (instance && typeof instance.dispose === 'function') {
+      if (instance != null && typeof instance.dispose === 'function') {
         try {
           await instance.dispose();
         } catch (error) {
@@ -621,9 +621,7 @@ let globalContainer: DependencyInjectorImpl | null = null;
  * @returns Global container instance
  */
 export function getGlobalContainer(): DependencyInjectorImpl {
-  if (!globalContainer) {
-    globalContainer = new DependencyInjectorImpl();
-  }
+  globalContainer ??= new DependencyInjectorImpl();
   return globalContainer;
 }
 
@@ -633,7 +631,7 @@ export function getGlobalContainer(): DependencyInjectorImpl {
  */
 export function setGlobalContainer(container: DependencyInjectorImpl): void {
   if (globalContainer) {
-    globalContainer.dispose().catch(console.error);
+    void globalContainer.dispose().catch(console.error);
   }
   globalContainer = container;
 }
@@ -643,7 +641,7 @@ export function setGlobalContainer(container: DependencyInjectorImpl): void {
  */
 export function resetGlobalContainer(): void {
   if (globalContainer) {
-    globalContainer.dispose().catch(console.error);
+    void globalContainer.dispose().catch(console.error);
     globalContainer = null;
   }
 }
@@ -694,7 +692,7 @@ export interface ILogger {
 export const LoggerContract = createServiceContract<ILogger>(
   'coordination:logger',
   {
-    debug: (msg, data) => console.debug(msg, data),
+    debug: (msg, data) => console.info(msg, data),
     info: (msg, data) => console.info(msg, data),
     warn: (msg, data) => console.warn(msg, data),
     error: (msg, err, data) => console.error(msg, err, data),

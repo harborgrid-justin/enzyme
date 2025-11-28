@@ -170,7 +170,7 @@ export const ModuleSlot: FC<ModuleSlotProps> = ({
   };
 
   // Don't render wrapper if no content
-  if (content == null && !Boolean(className) && !Boolean(style)) {
+  if (content == null && !className && !style) {
     return null;
   }
 

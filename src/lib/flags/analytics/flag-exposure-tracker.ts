@@ -208,7 +208,7 @@ export class ExposureTracker {
     if (!this.userExposures.has(userId)) {
       this.userExposures.set(userId, new Map());
     }
-    const userMap = this.userExposures.get(userId)!;
+    const userMap = this.userExposures.get(userId);
 
     // Check for existing exposure
     const existing = userMap.get(exposureKey);
@@ -261,7 +261,7 @@ export class ExposureTracker {
 
     // Flush if batch size reached
     if (this.pendingExposures.length >= this.config.batchSize) {
-      this.flush();
+      void this.flush();
     }
 
     this.log(`Tracked exposure: ${flagKey}/${variantId} for ${userId}`);
@@ -556,7 +556,7 @@ export class ExposureTracker {
     }
 
     this.flushTimer = setInterval(() => {
-      this.flush();
+      void this.flush();
     }, this.config.flushInterval);
   }
 
@@ -666,7 +666,7 @@ export class ExposureTracker {
    * Enable or disable tracking.
    */
   setEnabled(enabled: boolean): void {
-    (this.config as any).enabled = enabled;
+    this.config.enabled = enabled;
     if (enabled) {
       this.startFlushTimer();
     } else {
@@ -680,6 +680,7 @@ export class ExposureTracker {
 
   private log(message: string, ...args: unknown[]): void {
     if (this.config.debug) {
+      // eslint-disable-next-line no-console
       console.log(`[ExposureTracker] ${message}`, ...args);
     }
   }
@@ -695,9 +696,7 @@ let instance: ExposureTracker | null = null;
  * Get the singleton exposure tracker instance.
  */
 export function getExposureTracker(): ExposureTracker {
-  if (!instance) {
-    instance = new ExposureTracker();
-  }
+  instance ??= new ExposureTracker();
   return instance;
 }
 

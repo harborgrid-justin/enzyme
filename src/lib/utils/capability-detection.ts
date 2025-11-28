@@ -48,7 +48,7 @@ export function hasESModules(): boolean {
  */
 export function hasAsyncAwait(): boolean {
   try {
-    // eslint-disable-next-line no-new-func
+     
     new Function('async () => {}');
     return true;
   } catch {
@@ -83,7 +83,7 @@ export function hasWebGL2(): boolean {
 /**
  * Check WebP support asynchronously
  */
-export function checkWebPSupport(): Promise<boolean> {
+export async function checkWebPSupport(): Promise<boolean> {
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => resolve(img.width > 0 && img.height > 0);
@@ -95,7 +95,7 @@ export function checkWebPSupport(): Promise<boolean> {
 /**
  * Check AVIF support asynchronously
  */
-export function checkAVIFSupport(): Promise<boolean> {
+export async function checkAVIFSupport(): Promise<boolean> {
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => resolve(img.width > 0 && img.height > 0);

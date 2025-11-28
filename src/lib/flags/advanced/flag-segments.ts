@@ -140,7 +140,7 @@ export class SegmentMatcher {
     }
 
     // Check explicit exclusions first
-    if (userId && segment.excludedUsers?.includes(userId)) {
+    if (userId != null && userId !== '' && segment.excludedUsers?.includes(userId) === true) {
       this.cacheResult(cacheKey, false);
       return {
         matched: false,
@@ -154,7 +154,7 @@ export class SegmentMatcher {
     }
 
     // Check explicit inclusions
-    if (userId && segment.includedUsers?.includes(userId)) {
+    if (userId != null && userId !== '' && segment.includedUsers?.includes(userId) === true) {
       this.cacheResult(cacheKey, true);
       return {
         matched: true,
@@ -251,13 +251,13 @@ export class SegmentMatcher {
   ): boolean {
     if ('operator' in conditionOrGroup && 'conditions' in conditionOrGroup) {
       return this.evaluateConditionGroup(
-        conditionOrGroup as ConditionGroup,
+        conditionOrGroup,
         context,
         matchedConditions
       );
     } else {
       return this.evaluateCondition(
-        conditionOrGroup as TargetingCondition,
+        conditionOrGroup,
         context,
         matchedConditions
       );
@@ -277,7 +277,7 @@ export class SegmentMatcher {
       condition.caseSensitive ?? true
     );
 
-    if (condition.negate) {
+    if (condition.negate === true) {
       matched = !matched;
     }
 
@@ -456,7 +456,7 @@ export class SegmentBuilder {
    * Set the segment ID.
    */
   id(id: SegmentId): this {
-    (this.segment as any).id = id;
+    this.segment.id = id;
     return this;
   }
 
@@ -464,7 +464,7 @@ export class SegmentBuilder {
    * Set the segment name.
    */
   name(name: string): this {
-    (this.segment as any).name = name;
+    this.segment.name = name;
     return this;
   }
 
@@ -472,7 +472,7 @@ export class SegmentBuilder {
    * Set the segment description.
    */
   description(description: string): this {
-    (this.segment as any).description = description;
+    this.segment.description = description;
     return this;
   }
 
@@ -543,7 +543,7 @@ export class SegmentBuilder {
    * Add users to explicitly include.
    */
   include(...userIds: UserId[]): this {
-    (this.segment as any).includedUsers = [
+    this.segment.includedUsers = [
       ...(this.segment.includedUsers ?? []),
       ...userIds,
     ];
@@ -554,7 +554,7 @@ export class SegmentBuilder {
    * Add users to explicitly exclude.
    */
   exclude(...userIds: UserId[]): this {
-    (this.segment as any).excludedUsers = [
+    this.segment.excludedUsers = [
       ...(this.segment.excludedUsers ?? []),
       ...userIds,
     ];
@@ -565,7 +565,7 @@ export class SegmentBuilder {
    * Add tags.
    */
   tag(...tags: string[]): this {
-    (this.segment as any).tags = [...(this.segment.tags ?? []), ...tags];
+    this.segment.tags = [...(this.segment.tags ?? []), ...tags];
     return this;
   }
 
@@ -573,7 +573,7 @@ export class SegmentBuilder {
    * Set estimated size.
    */
   estimatedSize(size: number): this {
-    (this.segment as any).estimatedSize = size;
+    this.segment.estimatedSize = size;
     return this;
   }
 
@@ -581,10 +581,10 @@ export class SegmentBuilder {
    * Build the segment.
    */
   build(): Segment {
-    if (!this.segment.id) {
+    if (this.segment.id == null || this.segment.id === '') {
       throw new Error('Segment ID is required');
     }
-    if (!this.segment.name) {
+    if (this.segment.name == null || this.segment.name === '') {
       throw new Error('Segment name is required');
     }
 
@@ -744,13 +744,15 @@ export function composeSegments(
     case 'intersection':
       return matcher.matchesAll(segmentList, context);
 
-    case 'difference':
+    case 'difference': {
       if (segmentList.length < 2) return false;
       const [first, ...rest] = segmentList;
+      const firstSegment = first ?? { id: 'dummy', name: 'dummy', rules: { operator: 'and', conditions: [] }, createdAt: new Date(), updatedAt: new Date() } as Segment;
       return (
-        matcher.matches(first ?? { id: 'dummy', name: 'dummy', rules: { operator: 'and', conditions: [] }, createdAt: new Date(), updatedAt: new Date() } as Segment, context) &&
+        matcher.matches(firstSegment, context) &&
         !matcher.matchesAny(rest, context).matched
       );
+    }
 
     default:
       return false;

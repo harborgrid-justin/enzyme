@@ -8,7 +8,8 @@
  * @version 1.0.0
  */
 
-import React, {
+import type React from 'react';
+import {
   useRef,
   useState,
   useCallback,

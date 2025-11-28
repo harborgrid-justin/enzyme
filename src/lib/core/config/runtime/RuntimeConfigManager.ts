@@ -100,9 +100,7 @@ export class RuntimeConfigManager {
    * Get the singleton instance.
    */
   static getInstance(options?: RuntimeConfigOptions): RuntimeConfigManager {
-    if (!RuntimeConfigManager.instance) {
-      RuntimeConfigManager.instance = new RuntimeConfigManager(options);
-    }
+    RuntimeConfigManager.instance ??= new RuntimeConfigManager(options);
     return RuntimeConfigManager.instance;
   }
 
@@ -224,7 +222,7 @@ export class RuntimeConfigManager {
 
     this.snapshots.push({
       timestamp: new Date(),
-      config: JSON.parse(JSON.stringify(config)),
+      config: JSON.parse(JSON.stringify(config)) as typeof config,
       reason,
     });
 
@@ -243,7 +241,10 @@ export class RuntimeConfigManager {
       return false;
     }
 
-    const snapshot = this.snapshots.pop()!;
+    const snapshot = this.snapshots.pop();
+    if (snapshot === undefined) {
+      return false;
+    }
     const registry = getConfigRegistry();
     registry.reset();
     registry.applyOverlay(snapshot.config, 'runtime');

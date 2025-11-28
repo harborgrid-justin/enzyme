@@ -34,7 +34,7 @@
  * ```
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import type { NormalizedEntities } from '../normalization/normalizer';
 import type {
   IntegrityChecker,
@@ -184,8 +184,16 @@ export function useDataIntegrity(
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const checkerRef = useRef(checker);
   const entitiesRef = useRef(entities);
-  checkerRef.current = checker;
-  entitiesRef.current = entities;
+  const repairRef = useRef<((repairOptions?: RepairOptions) => RepairResult) | null>(null);
+
+  // Update refs without causing re-renders
+  useEffect(() => {
+    checkerRef.current = checker;
+  }, [checker]);
+
+  useEffect(() => {
+    entitiesRef.current = entities;
+  }, [entities]);
 
   // Group violations by severity
   const groupViolations = useCallback((violations: IntegrityViolation[]) => {
@@ -220,10 +228,12 @@ export function useDataIntegrity(
     if (report.violations.length > 0) {
       onViolations?.(report.violations);
 
-      if (autoRepair) {
+      if (autoRepair && repairRef.current != null) {
         // Defer repair to next tick
         setTimeout(() => {
-          repair({ errorsOnly: repairErrorsOnly });
+          if (repairRef.current != null) {
+            repairRef.current({ errorsOnly: repairErrorsOnly });
+          }
         }, 0);
       }
     } else {
@@ -244,7 +254,7 @@ export function useDataIntegrity(
   // Repair violations
   const repair = useCallback(
     (repairOptions?: RepairOptions): RepairResult => {
-      if (!state.lastReport) {
+      if (state.lastReport == null) {
         // Run check first if no report
         const report = checkIntegrity();
         if (report.valid) {
@@ -260,7 +270,7 @@ export function useDataIntegrity(
 
       const result = checkerRef.current.repair(
         entitiesRef.current,
-        state.lastReport!,
+        state.lastReport as IntegrityReport,
         repairOptions
       );
 
@@ -280,6 +290,11 @@ export function useDataIntegrity(
     },
     [state.lastReport, checkIntegrity, groupViolations, onRepair]
   );
+
+  // Update repair ref
+  useEffect(() => {
+    repairRef.current = repair;
+  }, [repair]);
 
   // Clear state
   const clear = useCallback(() => {
@@ -324,6 +339,7 @@ export function useDataIntegrity(
     if (autoCheck) {
       checkIntegrity();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Check on entity changes with debounce
@@ -392,7 +408,11 @@ export function useIntegrityMonitor(
   const [snapshots, setSnapshots] = useState<StateSnapshot[]>(monitor.getSnapshots());
 
   const entitiesRef = useRef(entities);
-  entitiesRef.current = entities;
+
+  // Update ref without causing re-renders
+  useEffect(() => {
+    entitiesRef.current = entities;
+  }, [entities]);
 
   useEffect(() => {
     const unsubscribe = monitor.subscribe((event) => {
@@ -433,7 +453,7 @@ export function useIntegrityMonitor(
   return {
     status,
     isValid: status === 'valid',
-    violations: lastReport?.violations || [],
+    violations: lastReport?.violations ?? [],
     lastReport,
     check,
     repair,
@@ -464,7 +484,11 @@ export function useIntegrityDrift(
   const [snapshots, setSnapshots] = useState<StateSnapshot[]>(monitor.getSnapshots());
 
   const entitiesRef = useRef(entities);
-  entitiesRef.current = entities;
+
+  // Update ref without causing re-renders
+  useEffect(() => {
+    entitiesRef.current = entities;
+  }, [entities]);
 
   useEffect(() => {
     const unsubscribe = monitor.subscribe((event) => {
@@ -530,21 +554,25 @@ export function useEntityIntegrity(
   violations: IntegrityViolation[];
   check: () => IntegrityViolation[];
 } {
-  const [violations, setViolations] = useState<IntegrityViolation[]>([]);
+  // Use useMemo to compute violations from dependencies
+  const violations = useMemo(() => {
+    return checker.checkEntity(entityType, entityId, entities);
+  }, [checker, entities, entityType, entityId]);
+
+  const [manualViolations, setManualViolations] = useState<IntegrityViolation[] | null>(null);
 
   const check = useCallback(() => {
     const result = checker.checkEntity(entityType, entityId, entities);
-    setViolations(result);
+    setManualViolations(result);
     return result;
   }, [checker, entities, entityType, entityId]);
 
-  useEffect(() => {
-    check();
-  }, [check]);
+  // Use manual violations if available, otherwise use auto-computed
+  const activeViolations = manualViolations ?? violations;
 
 return {
-  isValid: violations.length === 0,
-  violations,
+  isValid: activeViolations.length === 0,
+  violations: activeViolations,
   check,
 };
 }

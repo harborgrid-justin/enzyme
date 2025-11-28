@@ -266,7 +266,7 @@ export function FlagConfigurable({
   );
 
   // Determine content to render
-  const content = useMemo(() => {
+  const content = useMemo(async () => {
     if (typeof children === 'function') {
       return children(renderProps);
     }
@@ -418,7 +418,7 @@ export function FlagConfigurableMulti({
   strategy = 'first',
   getFlag: customGetFlag,
 }: FlagConfigurableMultiProps): ReactElement | null {
-  const hookGetFlag = () => {
+  const hookGetFlag = (): void => {
     // This is a simplified version - in real use, integrate with useFeatureFlags
     return false;
   };

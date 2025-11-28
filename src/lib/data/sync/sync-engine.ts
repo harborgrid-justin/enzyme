@@ -1116,7 +1116,7 @@ export function createLocalStorageSource(
 
   function getAllKeys(entityType: string): string[] {
     const keys: string[] = [];
-    const keyPrefix = getKey(entityType) + ':';
+    const keyPrefix = `${getKey(entityType)  }:`;
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (key?.startsWith(keyPrefix)) {

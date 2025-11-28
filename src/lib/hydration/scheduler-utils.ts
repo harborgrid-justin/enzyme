@@ -65,7 +65,7 @@ function hasSchedulerYieldAPI(win: Window): win is WindowWithScheduler {
 /**
  * Yields to the main thread.
  */
-export function yieldToMain(): Promise<void> {
+export async function yieldToMain(): Promise<void> {
   return new Promise((resolve) => {
     if (hasSchedulerYieldAPI(window)) {
       // Use scheduler.yield if available (modern browsers)

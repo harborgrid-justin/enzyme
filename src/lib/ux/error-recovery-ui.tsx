@@ -539,7 +539,7 @@ export function ErrorRecovery({
             <button
               key={action.id}
               type="button"
-              onClick={() => action.action()}
+              onClick={async () => action.action()}
               disabled={isRetrying && action.id === 'retry'}
               className={[
                 'error-recovery__action',

@@ -445,7 +445,7 @@ export class RemoteProvider implements FlagProvider {
   /**
    * Check if the provider is healthy.
    */
-  async isHealthy(): Promise<boolean> {
+  async isHealthy(): boolean {
     return this.health.healthy;
   }
 
@@ -514,12 +514,13 @@ export class RemoteProvider implements FlagProvider {
     };
   }
 
-  private sleep(ms: number): Promise<void> {
+  private async sleep(ms: number): void {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   private log(message: string, ...args: unknown[]): void {
     if (this.config.debug) {
+      // eslint-disable-next-line no-console
       console.log(`[RemoteProvider] ${message}`, ...args);
     }
   }

@@ -1,3 +1,4 @@
+import React from 'react';
 /**
  * @fileoverview Flag-driven module loading for conditional imports.
  *
@@ -606,7 +607,7 @@ export function preloadModule(config: ModulePreloadConfig): () => void {
     }
   };
 
-  const schedulePreload = () => {
+  const schedulePreload = (): void => {
     if (priority === 'high') {
       setTimeout(doPreload, delay);
     } else if (priority === 'idle' && 'requestIdleCallback' in window) {

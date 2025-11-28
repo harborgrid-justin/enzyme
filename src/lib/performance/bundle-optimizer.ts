@@ -160,7 +160,7 @@ const COMMON_POLYFILLS: PolyfillConfig[] = [
   {
     feature: 'IntersectionObserver',
     detect: () => 'IntersectionObserver' in window,
-    load: () => Promise.resolve().then(() => {}), // Polyfill loaded via script
+    load: async () => Promise.resolve().then(() => {}), // Polyfill loaded via script
     size: 7 * 1024,
   },
   // NOTE: ResizeObserver polyfill commented out - module not available
@@ -177,7 +177,7 @@ const COMMON_POLYFILLS: PolyfillConfig[] = [
   {
     feature: 'requestIdleCallback',
     detect: () => 'requestIdleCallback' in window,
-    load: () => Promise.resolve().then(() => {
+    load: async () => Promise.resolve().then(() => {
       if (!('requestIdleCallback' in window)) {
         (window as Window & { requestIdleCallback: typeof requestIdleCallback }).requestIdleCallback = (cb) =>
           setTimeout(() => cb({ didTimeout: false, timeRemaining: () => 50 }), 1) as unknown as number;
@@ -201,8 +201,8 @@ export function detectDeviceCapabilities(): DeviceCapabilities {
     hardwareConcurrency?: number;
   };
 
-  const cpuCores = nav.hardwareConcurrency || 2;
-  const deviceMemory = nav.deviceMemory || null;
+  const cpuCores = nav.hardwareConcurrency ?? 2;
+  const deviceMemory = nav.deviceMemory ?? null;
   const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
   // WebGL detection
@@ -214,18 +214,18 @@ export function detectDeviceCapabilities(): DeviceCapabilities {
   try {
     const canvas = document.createElement('canvas');
     const gl2 = canvas.getContext('webgl2');
-    const gl = gl2 || canvas.getContext('webgl');
+    const gl = gl2 ?? canvas.getContext('webgl');
 
-    if (gl) {
+    if (gl != null) {
       supportsWebGL = true;
-      supportsWebGL2 = !!gl2;
+      supportsWebGL2 = gl2 != null;
 
       const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-      if (debugInfo) {
-        gpu = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+      if (debugInfo != null) {
+        gpu = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) as string | null;
       }
 
-      maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+      maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE) as number | null;
     }
   } catch {
     // WebGL not available
@@ -257,17 +257,17 @@ export function detectDeviceCapabilities(): DeviceCapabilities {
  * Detect network conditions
  */
 export function detectNetworkConditions(): NetworkConditions {
-  const connection = (navigator as Navigator & {
+  const {connection} = (navigator as Navigator & {
     connection?: {
       effectiveType?: string;
       downlink?: number;
       rtt?: number;
       saveData?: boolean;
     };
-  }).connection;
+  });
 
   return {
-    effectiveType: (connection?.effectiveType as NetworkConditions['effectiveType']) || 'unknown',
+    effectiveType: (connection?.effectiveType as NetworkConditions['effectiveType']) ?? 'unknown',
     downlink: connection?.downlink ?? null,
     rtt: connection?.rtt ?? null,
     saveData: connection?.saveData ?? false,
@@ -296,8 +296,8 @@ export class BundleOptimizer {
     this.config = {
       detectDevice: config.detectDevice ?? true,
       monitorNetwork: config.monitorNetwork ?? true,
-      polyfills: [...COMMON_POLYFILLS, ...(config.polyfills || [])],
-      alternatives: config.alternatives || [],
+      polyfills: [...COMMON_POLYFILLS, ...(config.polyfills ?? [])],
+      alternatives: config.alternatives ?? [],
       debug: config.debug ?? false,
     };
 
@@ -317,7 +317,7 @@ export class BundleOptimizer {
    * Get singleton instance
    */
   static getInstance(config?: BundleOptimizerConfig): BundleOptimizer {
-    if (!BundleOptimizer.instance) {
+    if (BundleOptimizer.instance == null) {
       BundleOptimizer.instance = new BundleOptimizer(config);
     }
     return BundleOptimizer.instance;
@@ -351,15 +351,22 @@ export class BundleOptimizer {
    * Calculate optimal loading strategy
    */
   private calculateLoadingStrategy(): LoadingStrategy {
-    const tier = this.deviceCapabilities.tier;
-    const effectiveType = this.networkConditions.effectiveType;
+    const {tier} = this.deviceCapabilities;
+    const {effectiveType} = this.networkConditions;
 
     const maxChunkSize = CHUNK_SIZE_LIMITS[tier][effectiveType];
+
+    let preloadDistance = 1;
+    if (tier === 'high-end') {
+      preloadDistance = 3;
+    } else if (tier === 'mid-range') {
+      preloadDistance = 2;
+    }
 
     return {
       maxChunkSize,
       preload: !this.networkConditions.saveData && effectiveType !== 'slow-2g',
-      preloadDistance: tier === 'high-end' ? 3 : tier === 'mid-range' ? 2 : 1,
+      preloadDistance,
       useCompression: true,
       priorityBoost: tier !== 'low-end',
       deferNonCritical: tier === 'low-end' || effectiveType === '2g' || effectiveType === 'slow-2g',
@@ -371,11 +378,11 @@ export class BundleOptimizer {
    * Start network monitoring
    */
   private startNetworkMonitoring(): void {
-    const connection = (navigator as Navigator & {
+    const {connection} = (navigator as Navigator & {
       connection?: EventTarget & { addEventListener: (type: string, handler: () => void) => void };
-    }).connection;
+    });
 
-    if (connection) {
+    if (connection != null) {
       connection.addEventListener('change', () => {
         this.networkConditions = detectNetworkConditions();
         this.loadingStrategy = this.calculateLoadingStrategy();
@@ -479,7 +486,7 @@ export class BundleOptimizer {
     const { priority = 'normal', moduleId, timeout = 30000 } = options;
 
     // Check if already loading
-    if (moduleId && this.importQueue.has(moduleId)) {
+    if (moduleId != null && moduleId !== '' && this.importQueue.has(moduleId)) {
       return this.importQueue.get(moduleId) as Promise<T>;
     }
 
@@ -501,7 +508,7 @@ export class BundleOptimizer {
       ),
     ]);
 
-    if (moduleId) {
+    if (moduleId != null && moduleId !== '') {
       this.importQueue.set(moduleId, importPromise);
     }
 
@@ -509,7 +516,7 @@ export class BundleOptimizer {
       const result = await importPromise;
       return result;
     } finally {
-      if (moduleId) {
+      if (moduleId != null && moduleId !== '') {
         this.importQueue.delete(moduleId);
       }
     }
@@ -556,7 +563,7 @@ export class BundleOptimizer {
     largestResources: Array<{ name: string; size: number; type: string }>;
     slowestResources: Array<{ name: string; duration: number; type: string }>;
   } {
-    const entries = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
+    const entries = performance.getEntriesByType('resource');
 
     let totalSize = 0;
     let jsSize = 0;
@@ -632,6 +639,7 @@ export class BundleOptimizer {
    */
   private log(message: string, ...args: unknown[]): void {
     if (this.config.debug) {
+      // eslint-disable-next-line no-console
       console.log(`[BundleOptimizer] ${message}`, ...args);
     }
   }
@@ -696,27 +704,37 @@ export function useConditionalLoad<T>(
   const { condition = true, priority = 'normal', fallback, onError } = options;
   const optimizer = useRef(BundleOptimizer.getInstance());
   const [data, setData] = useState<T | undefined>(fallback);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(condition);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     if (!condition) {
-      setData(fallback);
       return;
     }
 
-    setLoading(true);
-    setError(null);
+    let cancelled = false;
 
     optimizer.current
       .importWithPriority(loader, { priority })
-      .then(setData)
-      .catch((err) => {
-        setError(err);
-        onError?.(err);
-        if (fallback !== undefined) setData(fallback);
+      .then((result) => {
+        if (!cancelled) {
+          setData(result);
+          setLoading(false);
+        }
       })
-      .finally(() => setLoading(false));
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          const error = err instanceof Error ? err : new Error(String(err));
+          setError(error);
+          onError?.(error);
+          if (fallback !== undefined) setData(fallback);
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [condition, loader, priority, fallback, onError]);
 
   return { data, loading, error };

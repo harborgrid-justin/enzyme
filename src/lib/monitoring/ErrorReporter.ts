@@ -31,7 +31,7 @@ export interface ErrorReporterConfig {
  */
 const defaultConfig: ErrorReporterConfig = {
   enabled: !isDevelopmentEnv(),
-  environment: process.env['NODE_ENV'] || 'development',
+  environment: (process.env['NODE_ENV'] !== undefined && process.env['NODE_ENV'] !== null && process.env['NODE_ENV'] !== '') ? process.env['NODE_ENV'] : 'development',
   version: '1.0.0',
   sampleRate: 1.0,
   ignoredErrors: [

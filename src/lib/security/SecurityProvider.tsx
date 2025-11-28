@@ -90,13 +90,13 @@ function generateViolationId(): string {
  * Get or generate encryption key
  */
 function getEncryptionKey(providedKey?: string): string {
-  if (providedKey) {
+  if (providedKey != null && providedKey !== '') {
     return providedKey;
   }
 
   // Try to get from sessionStorage
   const storedKey = sessionStorage.getItem('__security_key__');
-  if (storedKey) {
+  if (storedKey != null && storedKey !== '') {
     return storedKey;
   }
 
@@ -234,8 +234,8 @@ export function SecurityProvider({
         const nonce = CSPManager.getCurrentNonce();
 
         // Initialize CSRF Protection
-        await CSRFProtection.initialize();
-        const csrfToken = await CSRFProtection.getToken();
+        CSRFProtection.initialize();
+        const csrfToken = CSRFProtection.getToken();
 
         // Initialize Secure Storage
         let storageAvailable = false;
@@ -344,7 +344,7 @@ export function SecurityProvider({
       // Report to server if enabled
       // Note: Raw fetch is intentional - security reporting must be independent
       // and use keepalive for reliability when page is unloading
-      if (config.reportToServer && config.reportEndpoint) {
+      if (config.reportToServer === true && config.reportEndpoint != null && config.reportEndpoint !== '') {
         void fetch(config.reportEndpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -375,7 +375,7 @@ export function SecurityProvider({
    * Regenerate CSRF token
    */
   const regenerateCsrfToken = useCallback(async (): Promise<string> => {
-    const newToken = await CSRFProtection.regenerateToken();
+    const newToken = CSRFProtection.regenerateToken();
 
     setState((prev) => ({ ...prev, csrfToken: newToken }));
     emitEvent('token-rotated', { tokenType: 'csrf' });

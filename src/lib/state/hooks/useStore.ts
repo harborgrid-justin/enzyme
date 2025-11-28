@@ -21,7 +21,7 @@ import { useStore, type StoreSelector } from '../store';
 export function useStoreState<T>(
   selector: StoreSelector<T>
 ): T {
-  return useStore(selector as any) as T;
+  return useStore(selector as any);
 }
 
 /**
@@ -40,7 +40,7 @@ export function useStoreState<T>(
 export function useShallowState<T extends object>(
   selector: StoreSelector<T>
 ): T {
-  return useStore(selector as any) as T;
+  return useStore(selector as any);
 }
 
 /**

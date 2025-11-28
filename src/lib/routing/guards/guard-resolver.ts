@@ -457,7 +457,7 @@ export class GuardResolver {
 
       for (let i = 0; i < results.length; i++) {
         const result = results[i]!;
-        const guard = guards[i]!.guard;
+        const {guard} = (guards[i]!);
 
         guardResults.push(result);
 

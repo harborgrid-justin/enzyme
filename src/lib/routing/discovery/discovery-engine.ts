@@ -28,13 +28,13 @@
  */
 
 import {
-  AutoScanner,
+  type AutoScanner,
   createAutoScanner,
   type AutoScannerConfig,
   type ScanResult,
 } from './auto-scanner';
 import {
-  RouteTransformer,
+  type RouteTransformer,
   createRouteTransformer,
   type TransformerConfig,
   type TransformedRoute,

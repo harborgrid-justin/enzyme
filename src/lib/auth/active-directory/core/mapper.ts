@@ -296,7 +296,7 @@ export class ADGroupMapper {
         appliedMappings: [],
       };
     }
-    const role = highestPriorityMapping.mapping.role;
+    const {role} = highestPriorityMapping.mapping;
 
     // Collect all permissions from all matched mappings
     const permissionSet = new Set<Permission>();

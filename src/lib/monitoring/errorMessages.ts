@@ -76,7 +76,7 @@ const MESSAGE_TEMPLATES: Record<ErrorCategory, MessageTemplate> = {
   network: {
     title: 'Connection Issue',
     description: (ctx) =>
-      ctx?.userAction
+      (ctx?.userAction !== undefined && ctx?.userAction !== null && ctx?.userAction !== '')
         ? `We couldn't ${ctx.userAction} because of a network issue.`
         : 'Unable to connect to our servers.',
     suggestions: () => [
@@ -101,7 +101,7 @@ const MESSAGE_TEMPLATES: Record<ErrorCategory, MessageTemplate> = {
   authorization: {
     title: 'Access Denied',
     description: (ctx) =>
-      ctx?.resource
+      (ctx?.resource !== undefined && ctx?.resource !== null && ctx?.resource !== '')
         ? `You don't have permission to access ${ctx.resource}.`
         : "You don't have permission to perform this action.",
     suggestions: () => [

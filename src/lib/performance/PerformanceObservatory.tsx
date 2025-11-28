@@ -12,11 +12,11 @@
  * @webhint-disable no-inline-styles
  */
 
-import {
+import React, {
   useState,
-  useEffect,
   useMemo,
   useContext,
+  useLayoutEffect,
   type ReactNode,
   type CSSProperties,
 } from 'react';
@@ -129,7 +129,7 @@ export function PerformanceProvider({
   onMetric,
   onViolation,
 }: PerformanceProviderProps): React.JSX.Element {
-  const [isCollecting, setIsCollecting] = useState(false);
+  const [isCollecting, setIsCollecting] = useState(true);
 
   const collector = useMemo(
     () =>
@@ -149,9 +149,8 @@ export function PerformanceProvider({
   );
 
   // Initialize vitals collection
-  useEffect(() => {
+  useLayoutEffect(() => {
     const cleanup = collector.init();
-    setIsCollecting(true);
 
     return () => {
       cleanup();
@@ -170,7 +169,7 @@ export function PerformanceProvider({
       startObserving: () => setIsCollecting(true),
       stopObserving: () => setIsCollecting(false),
     }),
-    [isCollecting, collector]
+    [isCollecting]
   );
 
   return (
@@ -240,12 +239,14 @@ function MetricGauge({
       <div style={styles.metricHeader}>
         <span style={styles.metricName}>{name}</span>
         <span style={badgeStyle}>
-          {rating === 'good' ? 'Pass' : rating === 'needs-improvement' ? 'Warn' : 'Fail'}
+          {rating === 'good' && 'Pass'}
+          {rating === 'needs-improvement' && 'Warn'}
+          {rating === 'poor' && 'Fail'}
         </span>
       </div>
 
       <div style={styles.metricValue}>
-        {entry ? formatMetricValue(name, value) : '--'}
+        {entry != null ? formatMetricValue(name, value) : '--'}
       </div>
 
       <div style={styles.gaugeContainer}>
@@ -388,14 +389,7 @@ export function PerformanceObservatory({
   const [resourceStats] = useState<ResourceStats | null>(null);
   const [longTasks] = useState<LongTaskEntry[]>([]);
 
-  // Check if we should render
-  const isDevEnvironment = import.meta.env?.DEV ?? isDev();
-  if (devOnly && !isDevEnvironment) {
-    return null;
-  }
-
   const isCollecting = isObserving;
-
   const positionStyles = getPositionStyles(position);
 
   const collapsedButtonStyle = useMemo(
@@ -418,10 +412,16 @@ export function PerformanceObservatory({
 
   const scoreColorStyle = useMemo(
     (): CSSProperties => ({
-      color: snapshot ? getRatingColor(snapshot.rating) : '#fff',
+      color: snapshot != null ? getRatingColor(snapshot.rating) : '#fff',
     }),
     [snapshot]
   );
+
+  // Check if we should render
+  const isDevEnvironment = import.meta.env?.DEV ?? isDev();
+  if (devOnly && !isDevEnvironment) {
+    return null;
+  }
 
   if (isCollapsed) {
     return (
@@ -431,7 +431,7 @@ export function PerformanceObservatory({
         title="Open Performance Observatory"
       >
         <span style={styles.collapsedIcon}>
-          {snapshot ? (
+          {snapshot != null ? (
             <span style={scoreColorStyle}>
               {snapshot.score}
             </span>
@@ -483,7 +483,7 @@ export function PerformanceObservatory({
       <div style={styles.content}>
         {activeTab === 'vitals' && (
           <>
-            {snapshot && (
+            {snapshot != null && (
               <ScoreDisplay score={snapshot.score} rating={snapshot.rating} />
             )}
             <div style={styles.metricsGrid}>
@@ -498,7 +498,7 @@ export function PerformanceObservatory({
           </>
         )}
 
-        {activeTab === 'resources' && resourceStats && (
+        {activeTab === 'resources' && resourceStats != null && (
           <ResourceBreakdown stats={resourceStats} />
         )}
 
@@ -509,7 +509,7 @@ export function PerformanceObservatory({
       <div style={styles.footer}>
         <span style={styles.footerPath}>{snapshot?.path ?? '/'}</span>
         <span style={styles.footerTime}>
-          {snapshot
+          {snapshot != null
             ? new Date(snapshot.timestamp).toLocaleTimeString()
             : '--'}
         </span>

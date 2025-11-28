@@ -446,7 +446,7 @@ export class PortalContextManager {
     const viewport: ViewportInfo = viewportTracker.getViewport();
 
     // Find scroll container (simplified for snapshot)
-    let scrollContainer: ScrollContainer | null = null;
+    const scrollContainer: ScrollContainer | null = null;
     // Note: In a full implementation, we would get this from ScrollContainerRegistry
 
     // Get z-index context (simplified)

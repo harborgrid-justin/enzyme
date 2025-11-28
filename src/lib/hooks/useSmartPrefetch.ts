@@ -115,7 +115,7 @@ export function shouldAllowPrefetch(
   const networkInfo = getNetworkInfo();
 
   // Respect data saver mode
-  if (respectDataSaver && networkInfo.saveData) {
+  if (respectDataSaver && networkInfo.saveData === true) {
     return false;
   }
 
@@ -211,14 +211,18 @@ export class SmartPrefetchManager {
     if ('requestIdleCallback' in globalThis) {
       sorted.forEach((target) => {
         requestIdleCallback(
-          async () => this.prefetch(target),
+          () => {
+            void this.prefetch(target);
+          },
           { timeout: 5000 } // 5 second timeout
         );
       });
     } else {
       // Fallback: staggered setTimeout
       sorted.forEach((target, index) => {
-        setTimeout(async () => this.prefetch(target), 1000 + index * 200);
+        setTimeout(() => {
+          void this.prefetch(target);
+        }, 1000 + index * 200);
       });
     }
   }
@@ -279,13 +283,13 @@ export function createDebouncedPrefetch(
 
     // Clear existing timeout
     const existingTimeout = timeouts.get(key);
-    if (existingTimeout) {
+    if (existingTimeout !== undefined && existingTimeout !== null) {
       clearTimeout(existingTimeout);
     }
 
     // Set new timeout
     const timeout = setTimeout(() => {
-      manager.prefetch(target);
+      void manager.prefetch(target);
       timeouts.delete(key);
     }, delay);
 
@@ -307,7 +311,7 @@ export function monitorNetworkQuality(
     return () => {};
   }
 
-  const handleChange = () => {
+  const handleChange = (): void => {
     callback(getNetworkInfo());
   };
 

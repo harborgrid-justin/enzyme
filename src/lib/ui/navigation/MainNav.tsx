@@ -108,12 +108,12 @@ interface NavItemProps {
 /**
  * Navigation item component - memoized for performance
  */
-const NavItem = memo(function NavItem({
+const NavItem = memo(({
   route,
   isActive,
   direction,
   roles,
-}: NavItemProps): React.ReactElement | null {
+}: NavItemProps): React.ReactElement | null => {
   // Check feature flag - always call with consistent pattern to avoid Rules of Hooks violation
   // Use sentinel value '__ALWAYS_ENABLED__' when no feature flag is specified
   const flagEnabled = useFeatureFlag(route.featureFlag || '__ALWAYS_ENABLED__');

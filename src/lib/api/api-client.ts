@@ -67,7 +67,7 @@ import type {
 } from './types';
 import { API_CONFIG, TIMING, calculateBackoffWithJitter } from '@/config';
 import {
-  SecureStorage,
+  type SecureStorage,
   createSecureLocalStorage,
   isSecureStorageAvailable,
 } from '@/lib/security/secure-storage';
@@ -123,8 +123,8 @@ const inflightRequests = new Map<string, Promise<ApiResponse>>();
  */
 function generateRequestKey(config: RequestConfig): string {
   const { method, url, params, body } = config;
-  const paramsStr = params ? JSON.stringify(sortObject(params)) : '';
-  const bodyStr = body ? JSON.stringify(body) : '';
+  const paramsStr = params != null ? JSON.stringify(sortObject(params)) : '';
+  const bodyStr = body != null ? JSON.stringify(body) : '';
   return `${method}:${url}:${paramsStr}:${bodyStr}`;
 }
 
@@ -200,9 +200,7 @@ function generateApiSessionKey(): string {
  * Gets or creates the API session encryption key.
  */
 function getApiSessionEncryptionKey(): string {
-  if (!apiSessionEncryptionKey) {
-    apiSessionEncryptionKey = generateApiSessionKey();
-  }
+  apiSessionEncryptionKey ??= generateApiSessionKey();
   return apiSessionEncryptionKey;
 }
 
@@ -220,9 +218,7 @@ function getSecureApiStorage(): SecureStorage | null {
   if (!isSecureStorageAvailable()) {
     return null;
   }
-  if (!secureApiTokenStorage) {
-    secureApiTokenStorage = createSecureLocalStorage(getApiSessionEncryptionKey());
-  }
+  secureApiTokenStorage ??= createSecureLocalStorage(getApiSessionEncryptionKey());
   return secureApiTokenStorage;
 }
 
@@ -258,19 +254,19 @@ const tokenCache: {
 const defaultTokenProvider: TokenProvider = {
   getAccessToken: async (): Promise<string | null> => {
     // Return cached value for sync-compatible fast path
-    if (tokenCache.accessToken) {
+    if (tokenCache.accessToken != null && tokenCache.accessToken !== '') {
       return tokenCache.accessToken;
     }
 
     const storage = getSecureApiStorage();
-    if (!storage) {
+    if (storage == null) {
       // Fallback: no secure storage available (SSR or unsupported browser)
       return null;
     }
 
     try {
       const result = await storage.getItem<string>(SECURE_API_TOKEN_KEYS.ACCESS_TOKEN);
-      if (result.success && result.data) {
+      if (result.success && result.data != null && result.data !== '') {
         tokenCache.accessToken = result.data;
         return result.data;
       }
@@ -283,18 +279,18 @@ const defaultTokenProvider: TokenProvider = {
 
   getRefreshToken: async (): Promise<string | null> => {
     // Return cached value for sync-compatible fast path
-    if (tokenCache.refreshToken) {
+    if (tokenCache.refreshToken != null && tokenCache.refreshToken !== '') {
       return tokenCache.refreshToken;
     }
 
     const storage = getSecureApiStorage();
-    if (!storage) {
+    if (storage == null) {
       return null;
     }
 
     try {
       const result = await storage.getItem<string>(SECURE_API_TOKEN_KEYS.REFRESH_TOKEN);
-      if (result.success && result.data) {
+      if (result.success && result.data != null && result.data !== '') {
         tokenCache.refreshToken = result.data;
         return result.data;
       }
@@ -369,7 +365,7 @@ const defaultTokenProvider: TokenProvider = {
 function createTokenRefreshFn(tokenProvider: TokenProvider): () => Promise<string> {
   return async function tokenRefresh(): Promise<string> {
     const refreshToken = await Promise.resolve(tokenProvider.getRefreshToken());
-    if (!refreshToken) {
+    if (refreshToken == null || refreshToken === '') {
       throw new Error('No refresh token available');
     }
 
@@ -383,9 +379,9 @@ function createTokenRefreshFn(tokenProvider: TokenProvider): () => Promise<strin
       throw new Error('Token refresh failed');
     }
 
-    const data = await response.json();
+    const data = await response.json() as { accessToken: string; refreshToken?: string };
     await Promise.resolve(tokenProvider.setAccessToken(data.accessToken));
-    if (data.refreshToken) {
+    if (data.refreshToken != null && data.refreshToken !== '') {
       await Promise.resolve(tokenProvider.setRefreshToken(data.refreshToken));
     }
 
@@ -463,7 +459,7 @@ function createApiError(
   const error = new Error(message) as ApiError;
   error.name = 'ApiError';
   error.status = status;
-  error.code = options.code || `HTTP_${status}`;
+  error.code = options.code ?? `HTTP_${status}`;
   error.message = message;
   error.category = category;
   error.severity = severity;
@@ -491,13 +487,15 @@ function parseServerError(response: ServerErrorResponse, _status: number): Parti
     message = response.message;
   } else if (typeof response.error === 'string') {
     message = response.error;
-  } else if (response.error && typeof response.error.message === 'string') {
-    message = response.error.message;
-    code = response.error.code;
+  } else if (response.error != null && typeof response.error.message === 'string') {
+    const { message: errorMessage, code: errorCode } = response.error;
+    message = errorMessage;
+    code = errorCode;
   }
 
-  if (response.code) {
-    code = response.code;
+  if (response.code != null && response.code !== '') {
+    const { code: responseCode } = response;
+    code = responseCode;
   }
 
   if (Array.isArray(response.errors)) {
@@ -533,20 +531,20 @@ export class ApiClient {
 
   constructor(config: ApiClientConfig) {
     // Store token provider (use default if not provided)
-    this.tokenProvider = config.tokenProvider || defaultTokenProvider;
+    this.tokenProvider = config.tokenProvider ?? defaultTokenProvider;
 
     this.config = {
       ...DEFAULT_CLIENT_CONFIG,
       ...config,
       retry: { ...DEFAULT_RETRY_CONFIG, ...config.retry },
       headers: { ...DEFAULT_CLIENT_CONFIG.headers, ...config.headers },
-      requestInterceptors: config.requestInterceptors || [],
-      responseInterceptors: config.responseInterceptors || [],
-      errorInterceptors: config.errorInterceptors || [],
-      onError: config.onError || (() => {}),
-      onRequestStart: config.onRequestStart || (() => {}),
-      onRequestEnd: config.onRequestEnd || (() => {}),
-      fetch: config.fetch || fetch.bind(globalThis),
+      requestInterceptors: config.requestInterceptors ?? [],
+      responseInterceptors: config.responseInterceptors ?? [],
+      errorInterceptors: config.errorInterceptors ?? [],
+      onError: config.onError ?? (() => {}),
+      onRequestStart: config.onRequestStart ?? (() => {}),
+      onRequestEnd: config.onRequestEnd ?? (() => {}),
+      fetch: config.fetch ?? fetch.bind(globalThis),
       tokenProvider: this.tokenProvider,
     } as Required<ApiClientConfig>;
 
@@ -559,7 +557,7 @@ export class ApiClient {
     this.tokenRefreshFn = createTokenRefreshFn(this.tokenProvider);
 
     // Initialize rate limiter if configured
-    if (config.rateLimit) {
+    if (config.rateLimit != null) {
       const rateLimitConfig: RateLimitConfig =
         typeof config.rateLimit === 'string'
           ? RATE_LIMIT_PRESETS[config.rateLimit as keyof typeof RATE_LIMIT_PRESETS]
@@ -929,7 +927,7 @@ export class ApiClient {
         method: config.method,
         headers,
         signal: abortController.signal,
-        credentials: config.credentials || this.config.credentials,
+        credentials: config.credentials ?? this.config.credentials,
         cache: config.cache,
       };
 
@@ -939,7 +937,7 @@ export class ApiClient {
       }
 
       // Set up timeout
-      const timeout = config.timeout || this.config.timeout;
+      const timeout = config.timeout != null && config.timeout !== 0 ? config.timeout : this.config.timeout;
       const timeoutId = setTimeout(() => abortController.abort(), timeout);
 
       try {
@@ -954,12 +952,12 @@ export class ApiClient {
         };
 
         // Update rate limiter from response headers
-        if (this.rateLimiter) {
+        if (this.rateLimiter != null) {
           const rateLimitHeaders = {
-            'x-ratelimit-remaining': response.headers.get('x-ratelimit-remaining') || undefined,
-            'x-ratelimit-limit': response.headers.get('x-ratelimit-limit') || undefined,
-            'x-ratelimit-reset': response.headers.get('x-ratelimit-reset') || undefined,
-            'retry-after': response.headers.get('retry-after') || undefined,
+            'x-ratelimit-remaining': response.headers.get('x-ratelimit-remaining') ?? undefined,
+            'x-ratelimit-limit': response.headers.get('x-ratelimit-limit') ?? undefined,
+            'x-ratelimit-reset': response.headers.get('x-ratelimit-reset') ?? undefined,
+            'retry-after': response.headers.get('retry-after') ?? undefined,
           };
           this.rateLimiter.updateFromHeaders(url, rateLimitHeaders);
         }
@@ -969,7 +967,7 @@ export class ApiClient {
           const errorResponse = await this.parseErrorResponse(response);
           const apiError = createApiError(
             response.status,
-            errorResponse.message || `HTTP ${response.status}`,
+            errorResponse.message ?? `HTTP ${response.status}`,
             {
               code: errorResponse.code,
               response: errorResponse,
@@ -980,8 +978,8 @@ export class ApiClient {
           );
 
           // Handle 429 rate limit response
-          if (response.status === 429 && this.rateLimiter) {
-            const retryAfter = response.headers.get('retry-after') || undefined;
+          if (response.status === 429 && this.rateLimiter != null) {
+            const retryAfter = response.headers.get('retry-after') ?? undefined;
             this.rateLimiter.handle429(url, retryAfter);
           }
 
@@ -1000,13 +998,13 @@ export class ApiClient {
           if (
             apiError.retryable &&
             attempt < retryConfig.maxAttempts - 1 &&
-            !config.meta?.skipRetry
+            config.meta?.skipRetry !== true
           ) {
-            const shouldRetry = retryConfig.shouldRetry
+            const shouldRetry = retryConfig.shouldRetry != null
               ? retryConfig.shouldRetry(apiError, attempt)
               : true;
 
-            if (shouldRetry) {
+            if (shouldRetry === true) {
               retryConfig.onRetry?.(apiError, attempt);
               const delay = calculateBackoffWithJitter(
                 attempt,
@@ -1071,9 +1069,9 @@ export class ApiClient {
 
         // Retry network errors
         if (
-          retryConfig.retryOnNetworkError &&
+          retryConfig.retryOnNetworkError === true &&
           attempt < retryConfig.maxAttempts - 1 &&
-          !config.meta?.skipRetry
+          config.meta?.skipRetry !== true
         ) {
           retryConfig.onRetry?.(apiError, attempt);
           const delay = calculateBackoffWithJitter(
@@ -1116,7 +1114,7 @@ export class ApiClient {
    * Build the full URL with path params and query string
    */
   private buildUrl(config: RequestConfig): string {
-    let url = config.url;
+    let {url} = config;
 
     // Substitute path parameters
     if (config.pathParams) {
@@ -1170,45 +1168,45 @@ export class ApiClient {
 
     // Add default headers
     for (const [key, value] of Object.entries(this.config.headers)) {
-      if (value) {
+      if (value != null && value !== '') {
         headers.set(key, value);
       }
     }
 
     // Add config-specific headers
-    if (config.headers) {
+    if (config.headers != null) {
       for (const [key, value] of Object.entries(config.headers)) {
-        if (value) {
+        if (value != null && value !== '') {
           headers.set(key, value);
         }
       }
     }
 
     // Add content type if body exists
-    if (config.body !== undefined && config.contentType) {
+    if (config.body !== undefined && config.contentType != null && config.contentType !== '') {
       headers.set('Content-Type', config.contentType);
     }
 
     // Add authorization header using token provider
-    if (!config.meta?.skipAuth) {
+    if (config.meta?.skipAuth !== true) {
       const token = await Promise.resolve(this.tokenProvider.getAccessToken());
-      if (token) {
+      if (token != null && token !== '') {
         headers.set('Authorization', `Bearer ${token}`);
       }
     }
 
     // Add request ID
-    if (config.meta?.requestId) {
+    if (config.meta?.requestId != null && config.meta.requestId !== '') {
       headers.set('X-Request-ID', config.meta.requestId);
     }
 
     // Add correlation ID
-    if (config.meta?.correlationId) {
+    if (config.meta?.correlationId != null && config.meta.correlationId !== '') {
       headers.set('X-Correlation-ID', config.meta.correlationId);
     }
 
     // Add idempotency key
-    if (config.meta?.idempotencyKey) {
+    if (config.meta?.idempotencyKey != null && config.meta.idempotencyKey !== '') {
       headers.set('X-Idempotency-Key', config.meta.idempotencyKey);
     }
 
@@ -1263,7 +1261,7 @@ export class ApiClient {
       }
 
       case 'text/plain':
-        return String(body);
+        return typeof body === 'string' ? body : JSON.stringify(body);
 
       case 'application/json':
       default:
@@ -1275,7 +1273,7 @@ export class ApiClient {
    * Parse response based on content type and config
    */
   private async parseResponse<T>(response: Response, config: RequestConfig): Promise<T> {
-    const responseType = config.responseType || 'json';
+    const responseType = config.responseType ?? 'json';
 
     switch (responseType) {
       case 'json': {
@@ -1284,7 +1282,7 @@ export class ApiClient {
           return undefined as T;
         }
         try {
-          return JSON.parse(text);
+          return JSON.parse(text) as T;
         } catch {
           return text as T;
         }
@@ -1396,7 +1394,7 @@ export class ApiClient {
   /**
    * Promise-based delay utility
    */
-  private delay(ms: number): Promise<void> {
+  private async delay(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }

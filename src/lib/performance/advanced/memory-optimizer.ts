@@ -129,7 +129,7 @@ export class MemoryMonitor {
    * Start monitoring memory
    */
   start(intervalMs: number = 5000): void {
-    if (this.monitorInterval) {
+    if (this.monitorInterval !== null) {
       return;
     }
 
@@ -156,7 +156,7 @@ export class MemoryMonitor {
    */
   getStats(): MemoryStats | null {
     const memory = this.getMemoryInfo();
-    if (!memory) {
+    if (memory === null) {
       return null;
     }
 
@@ -217,12 +217,12 @@ export class MemoryMonitor {
       };
     };
 
-    return perf.memory || null;
+    return perf.memory ?? null;
   }
 
   private checkMemory(): void {
     const stats = this.getStats();
-    if (!stats) {
+    if (stats === null) {
       return;
     }
 
@@ -287,7 +287,10 @@ export class ObjectPool<T> {
     this.activeCount++;
 
     if (this.pool.length > 0) {
-      return this.pool.pop()!;
+      const obj = this.pool.pop();
+      if (obj !== undefined) {
+        return obj;
+      }
     }
 
     return this.config.create();
@@ -389,7 +392,7 @@ export class MemoryAwareCache<K, V> {
   get(key: K): V | undefined {
     const entry = this.cache.get(key);
 
-    if (!entry) {
+    if (entry === undefined) {
       return undefined;
     }
 
@@ -457,7 +460,7 @@ export class MemoryAwareCache<K, V> {
    */
   has(key: K): boolean {
     const entry = this.cache.get(key);
-    if (!entry) {
+    if (entry === undefined) {
       return false;
     }
     if (Date.now() > entry.expiresAt) {
@@ -568,7 +571,7 @@ export class MemoryAwareCache<K, V> {
     }
   }
 
-  private selectLRUCandidate(): K {
+  private selectLRUCandidate(): K | undefined {
     let oldestKey: K | undefined;
     let oldestAccess = Infinity;
 
@@ -579,10 +582,10 @@ export class MemoryAwareCache<K, V> {
       }
     }
 
-    return oldestKey!;
+    return oldestKey;
   }
 
-  private selectLFUCandidate(): K {
+  private selectLFUCandidate(): K | undefined {
     let leastKey: K | undefined;
     let leastCount = Infinity;
 
@@ -593,10 +596,10 @@ export class MemoryAwareCache<K, V> {
       }
     }
 
-    return leastKey!;
+    return leastKey;
   }
 
-  private selectFIFOCandidate(): K {
+  private selectFIFOCandidate(): K | undefined {
     let oldestKey: K | undefined;
     let oldestCreated = Infinity;
 
@@ -607,7 +610,7 @@ export class MemoryAwareCache<K, V> {
       }
     }
 
-    return oldestKey!;
+    return oldestKey;
   }
 
   private estimateSize(value: V): number {
@@ -656,7 +659,7 @@ export class CleanupOrchestrator {
    */
   async cleanup(id: string): Promise<void> {
     const callback = this.cleanupCallbacks.get(id);
-    if (callback) {
+    if (callback !== undefined) {
       await callback();
     }
   }
@@ -704,7 +707,7 @@ export class WeakRefManager<T extends object> {
     this.finalizationRegistry = new FinalizationRegistry((key: string) => {
       this.refs.delete(key);
       const callback = this.cleanupCallbacks.get(key);
-      if (callback) {
+      if (callback !== undefined) {
         callback();
         this.cleanupCallbacks.delete(key);
       }
@@ -716,14 +719,14 @@ export class WeakRefManager<T extends object> {
    */
   set(key: string, value: T, onCleanup?: () => void): void {
     const existingRef = this.refs.get(key);
-    if (existingRef) {
+    if (existingRef !== undefined) {
       // Cannot unregister from FinalizationRegistry, so we just overwrite
     }
 
     this.refs.set(key, new WeakRef(value));
     this.finalizationRegistry.register(value, key);
 
-    if (onCleanup) {
+    if (onCleanup !== undefined) {
       this.cleanupCallbacks.set(key, onCleanup);
     }
   }
@@ -905,9 +908,7 @@ let cleanupOrchestratorInstance: CleanupOrchestrator | null = null;
  * Get the global memory monitor instance
  */
 export function getMemoryMonitor(): MemoryMonitor {
-  if (!memoryMonitorInstance) {
-    memoryMonitorInstance = new MemoryMonitor();
-  }
+  memoryMonitorInstance ??= new MemoryMonitor();
   return memoryMonitorInstance;
 }
 
@@ -915,8 +916,6 @@ export function getMemoryMonitor(): MemoryMonitor {
  * Get the global cleanup orchestrator instance
  */
 export function getCleanupOrchestrator(): CleanupOrchestrator {
-  if (!cleanupOrchestratorInstance) {
-    cleanupOrchestratorInstance = new CleanupOrchestrator();
-  }
+  cleanupOrchestratorInstance ??= new CleanupOrchestrator();
   return cleanupOrchestratorInstance;
 }

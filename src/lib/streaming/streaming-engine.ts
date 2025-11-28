@@ -108,9 +108,12 @@ class PriorityQueue<T extends { priority: number }> {
     if (this.heap.length === 0) return undefined;
     if (this.heap.length === 1) return this.heap.pop();
 
-    const result = this.heap[0];
-    this.heap[0] = this.heap.pop()!;
-    this.bubbleDown(0);
+    const [result] = this.heap;
+    const lastItem = this.heap.pop();
+    if (lastItem !== undefined) {
+      this.heap[0] = lastItem;
+      this.bubbleDown(0);
+    }
 
     return result;
   }
@@ -149,8 +152,9 @@ class PriorityQueue<T extends { priority: number }> {
     
     this.heap[index] = lastItem;
     const parentIndex = Math.floor((index - 1) / 2);
+    const parentItem = this.heap[parentIndex];
 
-    if (index > 0 && this.heap[index]!.priority < this.heap[parentIndex]!.priority) {
+    if (index > 0 && parentItem != null && this.heap[index].priority < parentItem.priority) {
       this.bubbleUp(index);
     } else {
       this.bubbleDown(index);
@@ -244,7 +248,7 @@ class StreamBuffer {
   constructor(capacity: number, highWaterMark: number) {
     this.capacity = capacity;
     this.highWaterMark = highWaterMark;
-    this.buffer = new Array(capacity);
+    this.buffer = new Array<StreamChunk | undefined>(capacity);
   }
 
   /**
@@ -307,8 +311,8 @@ class StreamBuffer {
 
     const chunk = this.buffer[this.head];
     if (!chunk) return undefined;
-    
-    this.buffer[this.head] = undefined!;
+
+    this.buffer[this.head] = undefined;
     this.head = (this.head + 1) % this.capacity;
     this.count--;
     this.totalBytes -= chunk.size;
@@ -327,7 +331,7 @@ class StreamBuffer {
    * Clears all chunks from the buffer.
    */
   clear(): void {
-    this.buffer = new Array(this.capacity);
+    this.buffer = new Array<StreamChunk | undefined>(this.capacity);
     this.head = 0;
     this.tail = 0;
     this.count = 0;
@@ -437,11 +441,12 @@ export class StreamingEngine {
    */
   registerBoundary(id: string, config: StreamConfig): void {
     if (this.boundaries.has(id)) {
-      throw createStreamError(
+      const error: Error = createStreamError(
         StreamErrorCode.ConfigError,
         `Boundary with ID "${id}" already exists`,
         { boundaryId: id }
       );
+      throw error;
     }
 
     const boundaryData: StreamBoundaryData = {
@@ -528,19 +533,21 @@ export class StreamingEngine {
   start(id: string): void {
     const boundary = this.boundaries.get(id);
     if (!boundary) {
-      throw createStreamError(
+      const error: Error = createStreamError(
         StreamErrorCode.ConfigError,
         `Boundary "${id}" not found`,
         { boundaryId: id }
       );
+      throw error;
     }
 
     if (!this.canTransitionTo(boundary.state, StreamState.Pending)) {
-      throw createStreamError(
+      const error: Error = createStreamError(
         StreamErrorCode.StateError,
         `Cannot start boundary "${id}" from state "${boundary.state}"`,
         { boundaryId: id }
       );
+      throw error;
     }
 
     this.transitionState(boundary, StreamState.Pending);
@@ -553,8 +560,8 @@ export class StreamingEngine {
    */
   startAll(): void {
     for (const id of this.boundaries.keys()) {
-      const boundary = this.boundaries.get(id)!;
-      if (boundary.state === StreamState.Idle) {
+      const boundary = this.boundaries.get(id);
+      if (boundary != null && boundary.state === StreamState.Idle) {
         this.start(id);
       }
     }
@@ -569,19 +576,21 @@ export class StreamingEngine {
   pause(id: string): void {
     const boundary = this.boundaries.get(id);
     if (!boundary) {
-      throw createStreamError(
+      const error: Error = createStreamError(
         StreamErrorCode.ConfigError,
         `Boundary "${id}" not found`,
         { boundaryId: id }
       );
+      throw error;
     }
 
     if (!this.canTransitionTo(boundary.state, StreamState.Paused)) {
-      throw createStreamError(
+      const error: Error = createStreamError(
         StreamErrorCode.StateError,
         `Cannot pause boundary "${id}" from state "${boundary.state}"`,
         { boundaryId: id }
       );
+      throw error;
     }
 
     this.transitionState(boundary, StreamState.Paused);
@@ -599,19 +608,21 @@ export class StreamingEngine {
   resume(id: string): void {
     const boundary = this.boundaries.get(id);
     if (!boundary) {
-      throw createStreamError(
+      const error: Error = createStreamError(
         StreamErrorCode.ConfigError,
         `Boundary "${id}" not found`,
         { boundaryId: id }
       );
+      throw error;
     }
 
     if (boundary.state !== StreamState.Paused) {
-      throw createStreamError(
+      const error: Error = createStreamError(
         StreamErrorCode.StateError,
         `Cannot resume boundary "${id}" from state "${boundary.state}"`,
         { boundaryId: id }
       );
+      throw error;
     }
 
     this.transitionState(boundary, StreamState.Streaming);
@@ -764,11 +775,13 @@ export class StreamingEngine {
 
     while (this.buffer.size > 0) {
       const chunk = this.buffer.peek();
-      if (!chunk || chunk.boundaryId !== boundaryId) break;
+      if (chunk?.boundaryId !== boundaryId) break;
 
-      const deliveredChunk = this.buffer.shift()!;
-      delivered.push(deliveredChunk);
-      boundary.bytesDelivered += deliveredChunk.size;
+      const deliveredChunk = this.buffer.shift();
+      if (deliveredChunk != null) {
+        delivered.push(deliveredChunk);
+        boundary.bytesDelivered += deliveredChunk.size;
+      }
     }
 
     return delivered;
@@ -872,7 +885,7 @@ export class StreamingEngine {
     if (this.isProcessing) return;
     this.isProcessing = true;
 
-    const processNext = () => {
+    const processNext = (): void => {
       // Check if we can process more streams
       if (this.activeStreams >= this.config.maxConcurrentStreams) {
         this.isProcessing = false;
@@ -930,8 +943,8 @@ export class StreamingEngine {
     boundary.config.onStreamStart?.();
 
     // Set up timeout
-    if (boundary.config.timeoutMs || this.config.globalTimeoutMs) {
-      const timeout = boundary.config.timeoutMs ?? this.config.globalTimeoutMs;
+    if ((boundary.config.timeoutMs != null && boundary.config.timeoutMs > 0) || (this.config.globalTimeoutMs != null && this.config.globalTimeoutMs > 0)) {
+      const timeout = boundary.config.timeoutMs ?? this.config.globalTimeoutMs ?? 0;
       setTimeout(() => {
         if (this.isActiveState(boundary.state)) {
           this.handleTimeout(boundary);
@@ -942,7 +955,7 @@ export class StreamingEngine {
     this.log(`Started streaming: ${boundary.id}`);
   }
 
-  private async completeStream(boundary: StreamBoundaryData): Promise<void> {
+  private completeStream(boundary: StreamBoundaryData): void {
     boundary.endTime = Date.now();
     this.transitionState(boundary, StreamState.Completed);
     this.activeStreams--;
@@ -983,12 +996,14 @@ export class StreamingEngine {
         await this.waitForBufferDrain();
         break;
 
-      case BackpressureStrategy.Error:
-        throw createStreamError(
+      case BackpressureStrategy.Error: {
+        const error: Error = createStreamError(
           StreamErrorCode.BufferOverflow,
           'Buffer overflow - backpressure strategy is error',
           { boundaryId: boundary.id }
         );
+        throw error;
+      }
     }
   }
 
@@ -998,16 +1013,17 @@ export class StreamingEngine {
       return false;
     }
 
-    throw createStreamError(
+    const error: Error = createStreamError(
       StreamErrorCode.BufferOverflow,
       'Buffer full and backpressure strategy does not allow dropping',
       { boundaryId: boundary.id, chunkId: chunk.id }
     );
+    throw error;
   }
 
-  private waitForBufferDrain(): Promise<void> {
+  private async waitForBufferDrain(): Promise<void> {
     return new Promise((resolve) => {
-      const checkBuffer = () => {
+      const checkBuffer = (): void => {
         if (!this.buffer.shouldApplyBackpressure) {
           resolve();
         } else {
@@ -1201,13 +1217,14 @@ export class StreamingEngine {
     this.metrics.activeStreams = this.activeStreams;
 
     switch (action) {
-      case 'register':
+      case 'register': {
         const boundary = this.boundaries.get(boundaryId);
         if (boundary) {
           const priority = this.normalizePriority(boundary.config.priority);
           this.metrics.streamsByPriority[priority]++;
         }
         break;
+      }
 
       case 'unregister':
         // Metrics are preserved for historical analysis
@@ -1241,7 +1258,7 @@ export class StreamingEngine {
   private recordBoundaryMetrics(boundary: StreamBoundaryData): void {
     const duration = (boundary.endTime ?? Date.now()) - (boundary.startTime ?? Date.now());
 
-    const firstChunk = boundary.chunks[0];
+    const [firstChunk] = boundary.chunks;
     const metrics: BoundaryMetrics = {
       boundaryId: boundary.id,
       timeToFirstChunk: firstChunk
@@ -1284,7 +1301,7 @@ export class StreamingEngine {
       try {
         handler(event);
       } catch (error) {
-        this.log(`Event handler error: ${error}`);
+        this.log(`Event handler error: ${error instanceof Error ? error.message : String(error)}`);
       }
     }
   }

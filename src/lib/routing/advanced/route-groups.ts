@@ -464,7 +464,7 @@ export class RouteGroupManager {
    */
   canAccess(groupName: string, user: RouteGroupUser | undefined): boolean {
     const group = this.groups.get(groupName);
-    if (!group || !group.enabled) return false;
+    if (!group?.enabled) return false;
 
     const meta = group.computedMeta;
 
@@ -644,9 +644,7 @@ let defaultManager: RouteGroupManager | null = null;
  * Get the default route group manager
  */
 export function getRouteGroupManager(): RouteGroupManager {
-  if (!defaultManager) {
-    defaultManager = new RouteGroupManager();
-  }
+  defaultManager ??= new RouteGroupManager();
   return defaultManager;
 }
 
@@ -722,7 +720,7 @@ export function extractGroupsFromPath(path: string): string[] {
 export function stripGroupsFromPath(path: string): string {
   const segments = splitPath(path);
   const cleanSegments = segments.filter(s => !isGroupSegment(s));
-  return '/' + cleanSegments.join('/');
+  return `/${  cleanSegments.join('/')}`;
 }
 
 // =============================================================================

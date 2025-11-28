@@ -570,7 +570,7 @@ export function resetRoutePrefetchManager(): void {
 /**
  * Prefetch a route by path
  */
-export function prefetchRoute(path: string): Promise<RoutePrefetchResult> {
+export async function prefetchRoute(path: string): Promise<RoutePrefetchResult> {
   return getRoutePrefetchManager().prefetchRoute(path);
 }
 

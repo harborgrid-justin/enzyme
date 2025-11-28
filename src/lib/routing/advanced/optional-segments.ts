@@ -608,9 +608,7 @@ let defaultManager: OptionalSegmentManager | null = null;
  * Get the default optional segment manager
  */
 export function getOptionalSegmentManager(): OptionalSegmentManager {
-  if (!defaultManager) {
-    defaultManager = new OptionalSegmentManager();
-  }
+  defaultManager ??= new OptionalSegmentManager();
   return defaultManager;
 }
 

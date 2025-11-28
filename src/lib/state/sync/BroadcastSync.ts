@@ -549,7 +549,7 @@ export function createBroadcastSync<TState extends object>(
   };
 
   // Become leader
-  const becomeLeader = () => {
+  const becomeLeader = (): void => {
     isLeaderTab = true;
     lastKnownLeader = tabId;
     onSyncStateChange?.('leader');

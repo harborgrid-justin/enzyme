@@ -862,10 +862,10 @@ export function useScheduledWork(): {
     [scheduler]
   );
 
-  const yieldToMain = useCallback(() => scheduler.yieldToMain(), [scheduler]);
+  const yieldToMain = useCallback(async () => scheduler.yieldToMain(), [scheduler]);
 
   const runInChunks = useCallback(
-    <T,>(
+    async <T,>(
       items: T[],
       processor: (item: T, index: number) => void,
       options?: { chunkSize?: number; yieldAfter?: number }
@@ -951,7 +951,7 @@ export function cancelWork(taskId: string): boolean {
 /**
  * Yield to main thread
  */
-export function yieldToMain(): Promise<void> {
+export async function yieldToMain(): Promise<void> {
   return RenderScheduler.getInstance().yieldToMain();
 }
 

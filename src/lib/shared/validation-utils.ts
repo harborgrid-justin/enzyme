@@ -620,7 +620,7 @@ export function validateSchema(
     // Nested object schema
     if (fieldSchema.schema && isObject(value)) {
       const nestedResult = validateSchema(
-        value as Record<string, unknown>,
+        value,
         fieldSchema.schema
       );
       if (!nestedResult.valid) {
@@ -632,7 +632,7 @@ export function validateSchema(
 
     // Array item schema
     if (fieldSchema.items && isArray(value)) {
-      (value as unknown[]).forEach((item, index) => {
+      (value).forEach((item, index) => {
         if (fieldSchema.items!.type && !checkType(item, fieldSchema.items!.type)) {
           const key = `${field}[${index}]`;
           errors[key] = errors[key] ?? [];

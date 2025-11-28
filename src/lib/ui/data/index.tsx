@@ -34,7 +34,7 @@ export {
  * </Suspense>
  * ```
  */
-export const LazyDataTable = lazy(() =>
+export const LazyDataTable = lazy(async () =>
   import('./DataTable').then((module) => ({ default: module.DataTable as ComponentType<unknown> }))
 );
 

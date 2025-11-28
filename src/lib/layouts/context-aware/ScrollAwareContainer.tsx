@@ -32,7 +32,7 @@ import type {
   ScrollAwareContainerProps,
 } from './types';
 import {
-  ScrollTracker,
+  type ScrollTracker,
   ScrollContainerRegistry,
   type ScrollCallback,
   type ScrollEdgeCallback,
@@ -116,7 +116,7 @@ interface ScrollIndicators {
  * ```
  */
 export const ScrollAwareContainer = forwardRef<HTMLDivElement, ExtendedScrollAwareContainerProps>(
-  function ScrollAwareContainer(
+  (
     {
       children,
       className,
@@ -136,7 +136,7 @@ export const ScrollAwareContainer = forwardRef<HTMLDivElement, ExtendedScrollAwa
       'data-testid': testId,
     },
     forwardedRef
-  ) {
+  ) => {
     // Refs
     const containerRef = useRef<HTMLDivElement>(null);
     const trackerRef = useRef<ScrollTracker | null>(null);
@@ -293,7 +293,7 @@ export const ScrollAwareContainer = forwardRef<HTMLDivElement, ExtendedScrollAwa
     /**
      * Renders virtualized content.
      */
-    const renderVirtualized = useCallback(() => {
+    const renderVirtualized = useCallback(async () => {
       if (!virtualize || !itemHeight || !scrollState) {
         return children;
       }

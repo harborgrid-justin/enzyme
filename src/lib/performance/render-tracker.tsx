@@ -211,7 +211,9 @@ function generateComponentId(componentName: string): string {
 function percentile(sortedArr: number[], p: number): number {
   if (sortedArr.length === 0) return 0;
   const index = Math.ceil((p / 100) * sortedArr.length) - 1;
-  return sortedArr[Math.max(0, Math.min(index, sortedArr.length - 1))]!;
+  const safeIndex = Math.max(0, Math.min(index, sortedArr.length - 1));
+  const value = sortedArr[safeIndex];
+  return value ?? 0;
 }
 
 /**
@@ -228,7 +230,7 @@ function getChangedKeys(
   prev: Record<string, unknown> | undefined,
   next: Record<string, unknown> | undefined
 ): string[] {
-  if (!prev || !next) return [];
+  if (prev === undefined || prev === null || next === undefined || next === null) return [];
 
   const changed: string[] = [];
   const allKeys = new Set([...Object.keys(prev), ...Object.keys(next)]);
@@ -451,9 +453,9 @@ export class RenderTracker {
     stateChanged?: string[]
   ): RenderReason {
     if (activeRender.isInitial) return 'initial';
-    if (propsChanged && propsChanged.length > 0) return 'props-change';
-    if (stateChanged && stateChanged.length > 0) return 'state-change';
-    if (activeRender.parentId) return 'parent-render';
+    if (propsChanged !== undefined && propsChanged.length > 0) return 'props-change';
+    if (stateChanged !== undefined && stateChanged.length > 0) return 'state-change';
+    if (activeRender.parentId !== undefined) return 'parent-render';
     return 'unknown';
   }
 
@@ -475,8 +477,8 @@ export class RenderTracker {
         return true;
       }
       // Re-render with no props/state changes
-      if ((!propsChanged || propsChanged.length === 0) &&
-          (!stateChanged || stateChanged.length === 0)) {
+      if ((propsChanged === undefined || propsChanged.length === 0) &&
+          (stateChanged === undefined || stateChanged.length === 0)) {
         return true;
       }
     }
@@ -608,6 +610,11 @@ export class RenderTracker {
       rendersByReason[r.reason]++;
     });
 
+    const minDuration = durations[0] ?? 0;
+    const maxDuration = durations[durations.length - 1] ?? 0;
+    const lastRender = renders[renders.length - 1];
+    const lastDuration = lastRender?.duration ?? 0;
+
     return {
       componentName,
       totalRenders: renders.length,
@@ -617,12 +624,12 @@ export class RenderTracker {
       wastedRenderRate: (wastedCount / renders.length) * 100,
       totalRenderTime: totalTime,
       averageRenderTime: totalTime / renders.length,
-      minRenderTime: durations[0]!,
-      maxRenderTime: durations[durations.length - 1]!,
+      minRenderTime: minDuration,
+      maxRenderTime: maxDuration,
       p50RenderTime: percentile(durations, 50),
       p95RenderTime: percentile(durations, 95),
       isSlowComponent: percentile(durations, 50) > this.config.slowThreshold,
-      lastRenderTime: renders[renders.length - 1]!.duration,
+      lastRenderTime: lastDuration,
       rendersByReason,
     };
   }
@@ -685,10 +692,12 @@ export class RenderTracker {
 
     // Filter by time range
     if (options.startTime !== undefined) {
-      renders = renders.filter((r) => r.startTime >= options.startTime!);
+      const {startTime} = options;
+      renders = renders.filter((r) => r.startTime >= startTime);
     }
     if (options.endTime !== undefined) {
-      renders = renders.filter((r) => r.endTime <= options.endTime!);
+      const {endTime} = options;
+      renders = renders.filter((r) => r.endTime <= endTime);
     }
 
     if (renders.length === 0) return [];
@@ -951,7 +960,7 @@ export function withRenderTracking<P extends object>(
 
     // For now, we'll stop tracking immediately after render phase
     // A real implementation would hook into React's profiler
-    Promise.resolve().then(stopTracking);
+    void Promise.resolve().then(stopTracking);
 
     return <Component {...props} />;
   };

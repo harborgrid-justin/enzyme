@@ -248,7 +248,7 @@ export class DOMContextTracker {
     }
 
     const style = getComputedStyle(element);
-    const position = style.position;
+    const {position} = style;
     return isPositionType(position) ? position : 'static';
   }
 
@@ -483,7 +483,7 @@ export class DOMContextTracker {
   private computeConstraints(element: Element): LayoutConstraints {
     const style = getComputedStyle(element);
     const rect = element.getBoundingClientRect();
-    const position = style.position;
+    const {position} = style;
 
     // Parse dimension constraints
     const width = this.parseDimensionBounds(
@@ -596,7 +596,7 @@ export class DOMContextTracker {
     }
 
     // will-change
-    const willChange = style.willChange;
+    const {willChange} = style;
     if (
       willChange === 'transform' ||
       willChange === 'opacity' ||

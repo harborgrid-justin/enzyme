@@ -11,6 +11,7 @@
  * @author Harbor Framework Team
  */
 
+import type React from 'react';
 import type { ReactNode } from 'react';
 
 // ============================================================================

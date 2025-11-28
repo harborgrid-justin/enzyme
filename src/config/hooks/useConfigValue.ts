@@ -97,13 +97,13 @@ export function useConfigValue<T extends ConfigValue = ConfigValue>(
   // Get current value
   const getValue = useCallback((): T => {
     const rawValue = get<T>(namespace, key);
-    const finalValue = rawValue !== undefined ? rawValue : (defaultValue as T);
+    const finalValue = rawValue ?? (defaultValue as T);
 
-    if (transform && finalValue !== undefined) {
+    if (transform !== undefined && transform !== null && finalValue !== undefined) {
       return transform(finalValue);
     }
 
-    return finalValue as T;
+    return finalValue;
   }, [get, namespace, key, defaultValue, transform]);
 
   const [value, setValueState] = useState<T>(getValue);
@@ -115,7 +115,7 @@ export function useConfigValue<T extends ConfigValue = ConfigValue>(
       return;
     }
 
-    const handleChange = (event: ConfigChangeEvent) => {
+    const handleChange = (event: ConfigChangeEvent): void => {
       // Only react to changes for this specific key
       if (event.key === key || event.key === '*') {
         setValueState(getValue());
@@ -131,8 +131,10 @@ export function useConfigValue<T extends ConfigValue = ConfigValue>(
   }, [namespace, key, subscribe, shouldSubscribe, getValue, has]);
 
   // Sync with context when initialized
+  const initializedRef = useRef(false);
   useEffect(() => {
-    if (isInitialized && !hasValueRef.current) {
+    if (isInitialized && !hasValueRef.current && !initializedRef.current) {
+      initializedRef.current = true;
       setValueState(getValue());
       setExists(has(namespace, key));
       hasValueRef.current = true;
@@ -386,7 +388,7 @@ export function useConfigEnum<T extends string>(
   );
 
   // Ensure current value is valid
-  const validValue = allowedValues.includes(value as T) ? (value as T) : defaultValue;
+  const validValue = allowedValues.includes(value) ? (value) : defaultValue;
 
   return {
     value: validValue,

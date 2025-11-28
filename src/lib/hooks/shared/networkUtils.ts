@@ -129,7 +129,7 @@ export function shouldAllowPrefetch(
   const networkInfo = getNetworkInfo();
 
   // Respect data saver mode
-  if (respectDataSaver && networkInfo.saveData) {
+  if (respectDataSaver && networkInfo.saveData === true) {
     return false;
   }
 
@@ -175,7 +175,7 @@ export function monitorNetworkQuality(
     return () => {};
   }
 
-  const handleChange = () => {
+  const handleChange = (): void => {
     callback(getNetworkInfo());
   };
 
@@ -203,7 +203,7 @@ export function isSlowConnection(threshold?: {
   const { maxDownlink = 1.5, maxRtt = 300 } = threshold ?? {};
 
   return (
-    info.saveData ||
+    info.saveData === true ||
     info.effectiveType === '2g' ||
     info.effectiveType === 'slow-2g' ||
     (info.downlink !== undefined && info.downlink < maxDownlink) ||

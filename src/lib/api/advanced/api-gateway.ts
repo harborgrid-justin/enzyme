@@ -330,7 +330,7 @@ export class APIGateway {
 
     try {
       // Build middleware chain
-      const executeRequest = () => this.executeRequest<T>(processedRequest, startTime);
+      const executeRequest = async (): Promise<GatewayResponse<T>> => this.executeRequest<T>(processedRequest, startTime);
       const chain = this.buildMiddlewareChain(processedRequest, executeRequest);
 
       // Execute request through middleware
@@ -384,7 +384,7 @@ export class APIGateway {
         method: request.method,
         headers,
         signal,
-        body: request.body ? JSON.stringify(request.body) : undefined,
+        body: request.body != null ? JSON.stringify(request.body) : undefined,
       };
 
       const response = await this.fetchWithRetry<T>(url, fetchOptions, request);
@@ -528,7 +528,7 @@ export class APIGateway {
     const middleware = [...this.middleware];
 
     const chain = middleware.reduceRight<() => Promise<GatewayResponse>>(
-      (next, mw) => () => mw(request, next),
+      (next, mw) => async () => mw(request, next),
       execute
     );
 
@@ -576,9 +576,9 @@ export class APIGateway {
     };
 
     // Add authentication header
-    if (!request.skipAuth && this.config.getAuthToken) {
+    if (request.skipAuth !== true && this.config.getAuthToken != null) {
       const token = await this.config.getAuthToken();
-      if (token) {
+      if (token != null && token !== '') {
         headers['Authorization'] = `Bearer ${token}`;
       }
     }
@@ -602,9 +602,9 @@ export class APIGateway {
     // Check if expired
     if (Date.now() > cached.expiresAt) {
       // Stale-while-revalidate
-      if (request.cache?.staleWhileRevalidate) {
+      if (request.cache?.staleWhileRevalidate === true) {
         // Return stale data and trigger revalidation in background
-        this.revalidateCache(request);
+        void this.revalidateCache(request);
         return { ...cached.data, fromCache: true } as GatewayResponse<T>;
       }
       this.cache.delete(cacheKey);
@@ -643,9 +643,9 @@ export class APIGateway {
    * Get cache key for a request.
    */
   private getCacheKey(request: GatewayRequest): string {
-    if (request.cache?.key) return request.cache.key;
+    if (request.cache?.key != null && request.cache.key !== '') return request.cache.key;
 
-    const params = request.params
+    const params = request.params != null
       ? JSON.stringify(Object.entries(request.params).sort())
       : '';
     return `${request.method}:${request.path}:${params}`;
@@ -655,7 +655,7 @@ export class APIGateway {
    * Clear the cache.
    */
   clearCache(pattern?: string): void {
-    if (!pattern) {
+    if (pattern == null || pattern === '') {
       this.cache.clear();
       return;
     }
@@ -679,7 +679,7 @@ export class APIGateway {
     const contentType = response.headers.get('content-type') ?? '';
 
     if (contentType.includes('application/json')) {
-      return response.json();
+      return response.json() as Promise<T>;
     }
 
     if (contentType.includes('text/')) {
@@ -723,7 +723,7 @@ export class APIGateway {
     let code = `HTTP_${response.status}`;
 
     try {
-      const body = await response.json();
+      const body = await response.json() as { message?: string; error?: string; code?: string };
       message = body.message ?? body.error ?? message;
       code = body.code ?? code;
     } catch {
@@ -769,13 +769,13 @@ export class APIGateway {
     attempt: number,
     config: RetryConfig
   ): boolean {
-    if (config.shouldRetry) {
+    if (config.shouldRetry != null) {
       return config.shouldRetry(error, attempt);
     }
 
     if (!error.retryable) return false;
 
-    if (error.status && config.retryStatusCodes) {
+    if (error.status != null && config.retryStatusCodes != null) {
       return config.retryStatusCodes.includes(error.status);
     }
 
@@ -797,7 +797,7 @@ export class APIGateway {
   /**
    * Delay helper.
    */
-  private delay(ms: number): Promise<void> {
+  private async delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
@@ -823,7 +823,8 @@ export class APIGateway {
    * @internal Used for debug logging when config.debug is enabled
    */
   protected log(message: string, ...args: unknown[]): void {
-    if (this.config.debug) {
+    if (this.config.debug === true) {
+      // eslint-disable-next-line no-console
       console.log(`[APIGateway] ${message}`, ...args);
     }
   }
@@ -852,10 +853,12 @@ export function createAPIGateway(config: GatewayConfig): APIGateway {
  */
 export const loggingMiddleware: GatewayMiddleware = async (request, next) => {
   const startTime = Date.now();
+  // eslint-disable-next-line no-console
   console.log(`[Request] ${request.method} ${request.path}`);
 
   try {
     const response = await next();
+    // eslint-disable-next-line no-console
     console.log(
       `[Response] ${request.method} ${request.path} - ${response.status} (${Date.now() - startTime}ms)`
     );

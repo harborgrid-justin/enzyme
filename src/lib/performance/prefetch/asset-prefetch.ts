@@ -505,7 +505,7 @@ export class AssetPrefetchManager {
     }
   }
 
-  private prefetchImageUrl(url: string): Promise<number> {
+  private async prefetchImageUrl(url: string): Promise<number> {
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => {
@@ -666,7 +666,7 @@ export function resetAssetPrefetchManager(): void {
 /**
  * Prefetch an image
  */
-export function prefetchImage(url: string, priority?: PrefetchPriority): Promise<AssetPrefetchResult> {
+export async function prefetchImage(url: string, priority?: PrefetchPriority): Promise<AssetPrefetchResult> {
   return getAssetPrefetchManager().prefetch({
     url,
     type: 'image',
@@ -677,14 +677,14 @@ export function prefetchImage(url: string, priority?: PrefetchPriority): Promise
 /**
  * Prefetch images
  */
-export function prefetchImages(urls: string[]): Promise<AssetPrefetchResult[]> {
+export async function prefetchImages(urls: string[]): Promise<AssetPrefetchResult[]> {
   return getAssetPrefetchManager().prefetchImages(urls);
 }
 
 /**
  * Prefetch a font
  */
-export function prefetchFont(font: FontAsset): Promise<AssetPrefetchResult> {
+export async function prefetchFont(font: FontAsset): Promise<AssetPrefetchResult> {
   return getAssetPrefetchManager().prefetchFont(font);
 }
 

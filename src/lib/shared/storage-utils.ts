@@ -114,7 +114,7 @@ export class StorageWrapper {
 
     try {
       const raw = this.storage.getItem(fullKey);
-      if (!raw) return defaultValue;
+      if (raw === null || raw === undefined || raw === '') return defaultValue;
 
       const item = JSON.parse(raw) as unknown;
       if (!this.isStorageItem(item)) {

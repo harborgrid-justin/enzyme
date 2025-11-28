@@ -95,8 +95,8 @@ const EndpointHealthStatusSchema = z.enum(['healthy', 'degraded', 'unhealthy', '
  */
 const EndpointHealthSchema = z.object({
   status: EndpointHealthStatusSchema,
-  lastSuccess: z.string().datetime().optional().transform(val => val ? new Date(val) : undefined),
-  lastFailure: z.string().datetime().optional().transform(val => val ? new Date(val) : undefined),
+  lastSuccess: z.string().datetime().optional().transform(val => (val !== undefined && val !== null && val !== '') ? new Date(val) : undefined),
+  lastFailure: z.string().datetime().optional().transform(val => (val !== undefined && val !== null && val !== '') ? new Date(val) : undefined),
   failureCount: z.number().int().min(0),
   avgResponseTime: z.number().positive().optional(),
   errorMessage: z.string().optional(),
@@ -174,9 +174,7 @@ export class EndpointRegistry implements IEndpointRegistry {
    * Get the singleton instance.
    */
   static getInstance(): EndpointRegistry {
-    if (!EndpointRegistry.instance) {
-      EndpointRegistry.instance = new EndpointRegistry();
-    }
+    EndpointRegistry.instance ??= new EndpointRegistry();
     return EndpointRegistry.instance;
   }
 
@@ -646,7 +644,7 @@ export class EndpointRegistry implements IEndpointRegistry {
     }
 
     // Step 3: Process validated data
-    const data = validationResult.data;
+    const {data} = validationResult;
 
     this.registerBatch(data.endpoints as EndpointDefinition[]);
 

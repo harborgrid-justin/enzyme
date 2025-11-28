@@ -39,13 +39,13 @@ interface RequireRoleProps {
  * </RequireRole>
  * ```
  */
-export const RequireRole = memo(function RequireRole({
+export const RequireRole = memo(({
   children,
   role,
   roles,
   redirectTo = routes.dashboard,
   fallback
-}: RequireRoleProps) {
+}: RequireRoleProps) => {
   const { isAuthenticated, isLoading, hasRole, hasAnyRole } = useAuth();
 
   if (isLoading) {
@@ -57,14 +57,14 @@ export const RequireRole = memo(function RequireRole({
   }
 
   // Check single role - cast to any since Role and UserRole have compatible values
-  if (role && !hasRole(role as Parameters<typeof hasRole>[0])) {
-    if (fallback) return <>{fallback}</>;
+  if (role !== undefined && role !== null && !hasRole(role)) {
+    if (fallback !== undefined && fallback !== null) return <>{fallback}</>;
     return <Navigate to={redirectTo} replace />;
   }
 
   // Check multiple roles
-  if (roles && !hasAnyRole(roles)) {
-    if (fallback) return <>{fallback}</>;
+  if (roles !== undefined && roles !== null && !hasAnyRole(roles)) {
+    if (fallback !== undefined && fallback !== null) return <>{fallback}</>;
     return <Navigate to={redirectTo} replace />;
   }
 

@@ -46,14 +46,14 @@ interface RequirePermissionProps {
  * </RequirePermission>
  * ```
  */
-export const RequirePermission = memo(function RequirePermission({
+export const RequirePermission = memo(({
   children,
   permission,
   permissions,
   anyPermission,
   redirectTo = routes.dashboard,
   fallback
-}: RequirePermissionProps) {
+}: RequirePermissionProps) => {
   const { isAuthenticated, isLoading, hasPermission, hasAnyPermission } = useAuth();
 
   if (isLoading) {
@@ -65,20 +65,20 @@ export const RequirePermission = memo(function RequirePermission({
   }
 
   // Check single permission
-  if (permission && !hasPermission(permission)) {
-    if (fallback) return <>{fallback}</>;
+  if (permission !== undefined && permission !== null && !hasPermission(permission)) {
+    if (fallback !== undefined && fallback !== null) return <>{fallback}</>;
     return <Navigate to={redirectTo} replace />;
   }
 
   // Check all permissions required
-  if (permissions && !permissions.every(hasPermission)) {
-    if (fallback) return <>{fallback}</>;
+  if (permissions !== undefined && permissions !== null && !permissions.every(hasPermission)) {
+    if (fallback !== undefined && fallback !== null) return <>{fallback}</>;
     return <Navigate to={redirectTo} replace />;
   }
 
   // Check any permission required
-  if (anyPermission && !hasAnyPermission(anyPermission)) {
-    if (fallback) return <>{fallback}</>;
+  if (anyPermission !== undefined && anyPermission !== null && !hasAnyPermission(anyPermission)) {
+    if (fallback !== undefined && fallback !== null) return <>{fallback}</>;
     return <Navigate to={redirectTo} replace />;
   }
 

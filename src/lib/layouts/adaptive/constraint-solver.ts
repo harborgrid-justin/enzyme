@@ -313,7 +313,7 @@ export class ConstraintSolver implements ConstraintSolverInterface {
     state: SolverState
   ): number {
     // const _weight = PRIORITY_WEIGHTS[constraint.priority];
-    const params = constraint.params;
+    const {params} = constraint;
 
     switch (constraint.type) {
       case 'min-width':
@@ -439,16 +439,18 @@ export class ConstraintSolver implements ConstraintSolverInterface {
 
     // Horizontal alignment
     switch (params.horizontal) {
-      case 'center':
+      case 'center': {
         const centerX = (state.containerDimensions.width - item.size.width) / 2;
         deltaX = Math.abs(centerX - item.position.x);
         item.position = { ...item.position, x: centerX };
         break;
-      case 'end':
+      }
+      case 'end': {
         const endX = state.containerDimensions.width - item.size.width;
         deltaX = Math.abs(endX - item.position.x);
         item.position = { ...item.position, x: endX };
         break;
+      }
       case 'start':
         deltaX = Math.abs(item.position.x);
         item.position = { ...item.position, x: 0 };
@@ -462,16 +464,18 @@ export class ConstraintSolver implements ConstraintSolverInterface {
 
     // Vertical alignment
     switch (params.vertical) {
-      case 'center':
+      case 'center': {
         const centerY = (state.containerDimensions.height - item.size.height) / 2;
         deltaY = Math.abs(centerY - item.position.y);
         item.position = { ...item.position, y: centerY };
         break;
-      case 'end':
+      }
+      case 'end': {
         const endY = state.containerDimensions.height - item.size.height;
         deltaY = Math.abs(endY - item.position.y);
         item.position = { ...item.position, y: endY };
         break;
+      }
       case 'start':
         deltaY = Math.abs(item.position.y);
         item.position = { ...item.position, y: 0 };
@@ -678,7 +682,7 @@ export class ConstraintSolver implements ConstraintSolverInterface {
     let message = '';
 
     for (const [id, size] of solution.sizes) {
-      const params = constraint.params;
+      const {params} = constraint;
 
       switch (constraint.type) {
         case 'min-width':

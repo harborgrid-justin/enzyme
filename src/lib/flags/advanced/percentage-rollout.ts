@@ -149,17 +149,18 @@ export class PercentageRolloutEngine {
     variants: readonly Variant[]
   ): RolloutResult {
     const hashKey = rollout.hashKey ?? this.getDefaultHashKey(context);
-    if (!hashKey) {
+    if (hashKey == null || hashKey === '') {
       return { included: false, percentage: rollout.percentage };
     }
 
     let bucket: number;
 
     // Check for sticky bucket
-    if (rollout.sticky) {
+    if (rollout.sticky === true) {
       const stickyKey = `${flagKey}:${hashKey}`;
-      if (this.stickyBuckets.has(stickyKey)) {
-        bucket = this.stickyBuckets.get(stickyKey)!;
+      const existingBucket = this.stickyBuckets.get(stickyKey);
+      if (existingBucket != null) {
+        bucket = existingBucket;
       } else {
         bucket = this.hashFunction(
           `${flagKey}:${hashKey}`,
@@ -202,7 +203,7 @@ export class PercentageRolloutEngine {
     }
 
     const hashKey = this.getDefaultHashKey(context);
-    if (!hashKey) {
+    if (hashKey == null || hashKey === '') {
       return { included: false, stage: currentStage.name };
     }
 
@@ -246,7 +247,7 @@ export class PercentageRolloutEngine {
     variants: readonly Variant[]
   ): RolloutResult {
     const userId = context.user?.id;
-    if (!userId) {
+    if (userId == null || userId === '') {
       return { included: false };
     }
 
@@ -307,12 +308,12 @@ export class PercentageRolloutEngine {
     variants: readonly Variant[]
   ): RolloutResult {
     const hashKey = this.getDefaultHashKey(context);
-    if (!hashKey) {
+    if (hashKey == null || hashKey === '') {
       return { included: false };
     }
 
     // Check if user is in canary segment
-    if (rollout.canarySegment) {
+    if (rollout.canarySegment != null && rollout.canarySegment !== '') {
       // Segment check would be done externally
       // Here we use hash-based bucketing
     }
@@ -345,7 +346,7 @@ export class PercentageRolloutEngine {
     }
 
     const hashKey = this.getDefaultHashKey(context);
-    if (!hashKey) {
+    if (hashKey == null || hashKey === '') {
       return { included: false };
     }
 
@@ -398,7 +399,7 @@ export class PercentageRolloutEngine {
     variants: readonly Variant[]
   ): VariantId {
     // Find the first non-control variant, or use the first variant
-    const nonControl = variants.find((v) => !v.isControl);
+    const nonControl = variants.find((v) => v.isControl !== true);
     return nonControl?.id ?? variants[0]?.id ?? 'default';
   }
 

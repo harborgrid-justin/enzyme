@@ -140,14 +140,14 @@ const loadingOverlayFocusStyles = `
 /**
  * Spinner component - memoized for performance
  */
-export const Spinner = memo(function Spinner({
+export const Spinner = memo(({
   size = 'md',
   variant = 'default',
   color,
   label = 'Loading...',
   className,
   centered = false,
-}: SpinnerProps): React.ReactElement {
+}: SpinnerProps): React.ReactElement => {
   const { size: dimension, border } = sizeMap[size];
   const spinnerColor = color ?? colorMap[variant];
 
@@ -193,7 +193,7 @@ Spinner.displayName = 'Spinner';
 /**
  * Inline spinner with text - memoized for performance
  */
-export const SpinnerWithText = memo(function SpinnerWithText({
+export const SpinnerWithText = memo(({
   text = 'Loading...',
   size = 'sm',
   variant = 'default',
@@ -203,7 +203,7 @@ export const SpinnerWithText = memo(function SpinnerWithText({
   size?: SpinnerSize;
   variant?: SpinnerVariant;
   className?: string;
-}): React.ReactElement {
+}): React.ReactElement => {
   // Memoize text style based on size
   const textStyle = useMemo((): CSSProperties => ({
     fontSize: size === 'xs' ? '0.75rem' : '0.875rem',
@@ -225,7 +225,7 @@ SpinnerWithText.displayName = 'SpinnerWithText';
  * Full page loading overlay - memoized for performance
  * Includes focus trap to prevent interaction with background content
  */
-export const LoadingOverlay = memo(function LoadingOverlay({
+export const LoadingOverlay = memo(({
   visible = true,
   text = 'Loading...',
   blur = true,
@@ -233,7 +233,7 @@ export const LoadingOverlay = memo(function LoadingOverlay({
   visible?: boolean;
   text?: string;
   blur?: boolean;
-}): React.ReactElement | null {
+}): React.ReactElement | null => {
   const overlayRef = useRef<HTMLDivElement>(null);
   const previousActiveElement = useRef<HTMLElement | null>(null);
 

@@ -69,8 +69,8 @@ export function useCSRFToken(
 
   // Get configuration
   const config = CSRFProtection.getConfig();
-  const headerName = config.headerName;
-  const fieldName = config.fieldName;
+  const {headerName} = config;
+  const {fieldName} = config;
 
   // Initialize CSRF protection
   useEffect(() => {
@@ -80,10 +80,10 @@ export function useCSRFToken(
 
     const init = async (): Promise<void> => {
       if (!CSRFProtection.isInitialized()) {
-        await CSRFProtection.initialize();
+        CSRFProtection.initialize();
       }
 
-      const currentToken = await CSRFProtection.getToken();
+      const currentToken = CSRFProtection.getToken();
       setToken(currentToken);
       setIsInitialized(true);
     };
@@ -93,7 +93,7 @@ export function useCSRFToken(
 
   // Regenerate token function
   const regenerate = useCallback(async (): Promise<string> => {
-    const newToken = await CSRFProtection.regenerateToken();
+    const newToken = CSRFProtection.regenerateToken();
     setToken(newToken);
     return newToken;
   }, []);

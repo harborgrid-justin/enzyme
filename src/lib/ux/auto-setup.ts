@@ -13,7 +13,8 @@
  * - Accessibility auto-enhancement
  */
 
-import React, { createElement, type ReactNode, type ComponentType } from 'react';
+import type React from 'react';
+import { createElement, type ReactNode, type ComponentType } from 'react';
 import { isDev, isTest } from '@/lib/core/config/env-helper';
 
 // ============================================================================
@@ -137,7 +138,7 @@ export function detectEnvironment(): EnvironmentInfo {
   let version: string | null = null;
 
   if (isBrowser) {
-    const hostname = window.location.hostname;
+    const {hostname} = window.location;
     baseUrl = window.location.origin;
 
     // Detect environment from hostname
@@ -255,7 +256,7 @@ export function composeProviders(
   return function ComposedProvider({ children }: { children: ReactNode }) {
     return activeProviders.reduceRight((acc, { Provider, props }) => {
       return createElement(Provider, { ...props, children: acc });
-    }, children as React.ReactElement) as React.ReactElement;
+    }, children as React.ReactElement);
   };
 }
 
@@ -420,7 +421,7 @@ export class AutoSetup {
       features: this.features,
       Provider: composeProviders(this.providers),
       cleanup: () => this.cleanup(),
-      reinit: () => this.reinit(),
+      reinit: async () => this.reinit(),
     };
   }
 

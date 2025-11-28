@@ -14,6 +14,7 @@
  * @version 1.0.0
  */
 
+import type React from 'react';
 import type {
   CSRFToken,
   CSRFConfig,
@@ -205,9 +206,7 @@ class CSRFProtectionClass {
    * Get singleton instance
    */
   static getInstance(config?: CSRFConfig): CSRFProtectionClass {
-    if (!CSRFProtectionClass.instance) {
-      CSRFProtectionClass.instance = new CSRFProtectionClass(config);
-    }
+    CSRFProtectionClass.instance ??= new CSRFProtectionClass(config);
     return CSRFProtectionClass.instance;
   }
 
@@ -229,7 +228,7 @@ class CSRFProtectionClass {
    * Initialize CSRF protection
    * Generates initial token and sets up cookie if using double-submit pattern
    */
-  async initialize(): Promise<void> {
+  initialize(): void {
     if (this.initialized) {
       return;
     }
@@ -237,11 +236,11 @@ class CSRFProtectionClass {
     // Try to load existing token from cookie
     const existingToken = this.loadTokenFromCookie();
 
-    if (existingToken && this.isTokenValid(existingToken)) {
+    if (existingToken != null && this.isTokenValid(existingToken)) {
       this.currentToken = existingToken;
     } else {
       // Generate new token
-      await this.regenerateToken();
+      this.regenerateToken();
     }
 
     this.initialized = true;
@@ -265,7 +264,7 @@ class CSRFProtectionClass {
   /**
    * Generate a new CSRF token
    */
-  async regenerateToken(): Promise<ValidatedCSRFToken> {
+  regenerateToken(): ValidatedCSRFToken {
     const token: CSRFToken = {
       token: generateTokenValue(),
       createdAt: Date.now(),
@@ -287,8 +286,8 @@ class CSRFProtectionClass {
    * Get the current CSRF token
    * Regenerates if expired
    */
-  async getToken(): Promise<ValidatedCSRFToken> {
-    if (!this.currentToken || !this.isTokenValid(this.currentToken)) {
+  getToken(): ValidatedCSRFToken {
+    if (this.currentToken == null || !this.isTokenValid(this.currentToken)) {
       return this.regenerateToken();
     }
 
@@ -518,7 +517,7 @@ class CSRFProtectionClass {
       }
 
       // Get current token
-      const token = await this.getToken();
+      const token = this.getToken();
 
       // Add token to headers
       const headers = new Headers(config.headers);
@@ -559,7 +558,7 @@ class CSRFProtectionClass {
       // Skip CSRF for excluded paths
       // Raw fetch is intentional - this IS the CSRF wrapper
       try {
-        const pathname = new URL(url, window.location.origin).pathname;
+        const {pathname} = new URL(url, window.location.origin);
         if (isCSRFExcludedPath(pathname)) {
           return fetch(input, init);
         }
@@ -598,7 +597,7 @@ class CSRFProtectionClass {
    * Get headers object with CSRF token
    */
   async getHeaders(): Promise<Record<string, string>> {
-    const token = await this.getToken();
+    const token = this.getToken();
     return {
       [this.config.headerName]: token,
     };
@@ -696,7 +695,7 @@ export async function createSecureRequestInit(
 
   // Add CSRF token for protected methods
   if (requiresCSRFProtection(method)) {
-    const token = await CSRFProtection.getToken();
+    const token = CSRFProtection.getToken();
     headers[csrfConfig.headerName] = token;
   }
 
@@ -738,7 +737,7 @@ export function createProtectedFormHandler(
 
     // Rotate token if needed
     if (validation.shouldRotate) {
-      await CSRFProtection.regenerateToken();
+      CSRFProtection.regenerateToken();
     }
   };
 }
@@ -763,7 +762,7 @@ export function validateRequest(
 
   // Skip excluded paths
   try {
-    const pathname = new URL(url, window.location.origin).pathname;
+    const {pathname} = new URL(url, window.location.origin);
     if (isCSRFExcludedPath(pathname)) {
       return { isValid: true, shouldRotate: false };
     }
@@ -836,7 +835,7 @@ export async function createCSRFInputProps(): Promise<{
   name: string;
   value: string;
 }> {
-  const token = await CSRFProtection.getToken();
+  const token = CSRFProtection.getToken();
   return {
     type: 'hidden',
     name: csrfConfig.fieldName,
@@ -852,7 +851,7 @@ export async function createCSRFMetaProps(): Promise<{
   name: string;
   content: string;
 }> {
-  const token = await CSRFProtection.getToken();
+  const token = CSRFProtection.getToken();
   return {
     name: 'csrf-token',
     content: token,

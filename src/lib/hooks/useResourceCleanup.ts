@@ -25,9 +25,7 @@ export function useDisposable(): {
   const registryRef = useRef<DisposableRegistry | undefined>(undefined);
 
   // Initialize registry lazily
-  if (!registryRef.current) {
-    registryRef.current = new DisposableRegistry();
-  }
+  registryRef.current ??= new DisposableRegistry();
 
   // Cleanup on unmount
   useEffect(() => {
@@ -38,15 +36,18 @@ export function useDisposable(): {
   }, []);
 
   const register = useCallback(<T extends Disposable>(disposable: T): T => {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     return registryRef.current!.register(disposable);
   }, []);
 
   const registerFn = useCallback((cleanup: () => void): Disposable => {
     const disposable = createDisposable(cleanup);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     return registryRef.current!.register(disposable);
   }, []);
 
   const unregister = useCallback((disposable: Disposable): void => {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     registryRef.current!.unregister(disposable);
   }, []);
 
@@ -206,7 +207,7 @@ export function useEventListener(): {
   ): () => void => {
     target.addEventListener(type, listener as EventListener, options);
 
-    const cleanup = () => {
+    const cleanup = (): void => {
       target.removeEventListener(type, listener as EventListener, options);
       cleanupsRef.current.delete(cleanup);
     };
@@ -280,6 +281,7 @@ export function useSubscription(): {
  */
 export function useUnmountEffect(effect: () => void): void {
   const effectRef = useRef(effect);
+  // eslint-disable-next-line react-hooks/refs
   effectRef.current = effect;
 
   useEffect(() => {
@@ -326,9 +328,7 @@ export function useRefCleanup<T>(
   cleanupRef.current = cleanup;
 
   // Initialize
-  if (ref.current === null) {
-    ref.current = factory();
-  }
+  ref.current ??= factory();
 
   // Cleanup - uses ref to always call latest cleanup function
   useEffect(() => {
@@ -378,58 +378,61 @@ export function useWebSocketCleanup(
       options?.onOpen?.(event);
     };
 
-    ws.onmessage = options?.onMessage ?? (() => {});
-    ws.onerror = options?.onError ?? (() => {});
+    ws.onmessage = options?.onMessage ?? ((): void => {});
+    ws.onerror = options?.onError ?? ((): void => {});
 
     ws.onclose = (event) => {
       options?.onClose?.(event);
 
       // Auto reconnect
       if (
-        options?.reconnect &&
-        !event.wasClean &&
+        options?.reconnect === true &&
+        event.wasClean !== true &&
         reconnectAttemptsRef.current < (options?.maxReconnectAttempts ?? 5)
       ) {
         reconnectAttemptsRef.current++;
         reconnectTimeoutRef.current = setTimeout(
-          connect,
+          (): void => {
+            connect();
+          },
           options?.reconnectInterval ?? 3000
         );
       }
     };
 
     wsRef.current = ws;
-  }, [url, options]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [url]);
 
   // Connect on mount
   useEffect(() => {
     connect();
 
     return () => {
-      if (reconnectTimeoutRef.current) {
+      if (reconnectTimeoutRef.current !== undefined && reconnectTimeoutRef.current !== null) {
         clearTimeout(reconnectTimeoutRef.current);
       }
-      if (wsRef.current) {
+      if (wsRef.current !== null && wsRef.current !== undefined) {
         wsRef.current.close(1000, 'Component unmounted');
         wsRef.current = null;
       }
     };
   }, [connect]);
 
-  const send = useCallback((data: string | ArrayBuffer | Blob) => {
+  const send = useCallback((data: string | ArrayBuffer | Blob): void => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       wsRef.current.send(data);
     }
   }, []);
 
-  const close = useCallback((code?: number, reason?: string) => {
+  const close = useCallback((code?: number, reason?: string): void => {
     reconnectAttemptsRef.current = Infinity; // Prevent reconnect
     wsRef.current?.close(code, reason);
   }, []);
 
-  const manualReconnect = useCallback(() => {
+  const manualReconnect = useCallback((): void => {
     reconnectAttemptsRef.current = 0;
-    if (wsRef.current) {
+    if (wsRef.current != null) {
       wsRef.current.close();
     }
     connect();
@@ -534,7 +537,8 @@ export function useAsync<T, Args extends unknown[]>(
     }
 
     return undefined;
-  }, deps); // eslint-disable-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
 
   const cancel = useCallback(() => {
     abortControllerRef.current?.abort();

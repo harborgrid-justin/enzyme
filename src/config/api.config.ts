@@ -783,8 +783,8 @@ export interface EnvironmentApiConfig {
  * Get API configuration for specific environment
  */
 export function getEnvironmentApiConfig(): EnvironmentApiConfig {
-  const isDev = env.isDev;
-  const isProd = env.isProd;
+  const {isDev} = env;
+  const {isProd} = env;
 
   return {
     baseUrl: env.apiBaseUrl,
@@ -877,15 +877,18 @@ export function buildListParams(params: ListRequestParams): Record<string, strin
 
   if (params.page !== undefined) query.page = params.page;
   if (params.pageSize !== undefined) query.pageSize = params.pageSize;
-  if (params.sort) query.sort = params.sort;
+  if (params.sort != null) query.sort = params.sort;
   if (params.order) query.order = params.order;
-  if (params.search) query.search = params.search;
+  if (params.search != null) query.search = params.search;
 
   // Flatten filters
   if (params.filters) {
     for (const [key, value] of Object.entries(params.filters)) {
       if (value !== undefined && value !== null) {
-        query[`filter[${key}]`] = String(value);
+        // Only stringify primitive values
+        if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+          query[`filter[${key}]`] = String(value);
+        }
       }
     }
   }

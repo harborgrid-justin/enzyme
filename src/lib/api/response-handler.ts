@@ -209,7 +209,7 @@ export function createTransformPipeline<T, U = T>(
 
   return {
     pipe: <V>(nextFn: ResponseTransformer<U, V>) => {
-      const combined = (data: T) => nextFn(transform(data));
+      const combined = (data: T): V => nextFn(transform(data));
       return createTransformPipeline(combined);
     },
     execute: (data: T) => transform(data),
@@ -227,13 +227,13 @@ export const transformers = {
     fields: string[]
   ): ResponseTransformer<T, T> => {
     return (data: T) => {
-      const result = { ...data };
+      const result: Record<string, unknown> = { ...data };
       for (const field of fields) {
         if (field in result && typeof result[field] === 'string') {
-          (result as Record<string, unknown>)[field as string] = new Date(result[field] as string);
+          result[field] = new Date(result[field]);
         }
       }
-      return result;
+      return result as T;
     };
   },
 

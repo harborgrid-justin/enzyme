@@ -240,7 +240,7 @@ export class CLSGuard implements CLSGuardInterface {
 
     // Remove reservation element
     const element = this._reservationElements.get(id);
-    if (element && element.parentNode) {
+    if (element?.parentNode) {
       element.parentNode.removeChild(element);
     }
     this._reservationElements.delete(id);
@@ -356,11 +356,14 @@ export class CLSGuard implements CLSGuardInterface {
 
     // Session window logic for CLS calculation
     // https://web.dev/cls/#what-is-a-good-cls-score
+    const lastEntry = this._sessionEntries[this._sessionEntries.length - 1];
+
     if (
       this._sessionStart === 0 ||
       now - this._sessionStart > MAX_SESSION_WINDOW_MS ||
       (this._sessionEntries.length > 0 &&
-        now - this._sessionEntries[this._sessionEntries.length - 1]!.startTime > SESSION_WINDOW_GAP_MS)
+        lastEntry != null &&
+        now - lastEntry.startTime > SESSION_WINDOW_GAP_MS)
     ) {
       // Start new session
       this._sessionStart = now;
@@ -400,13 +403,15 @@ export class CLSGuard implements CLSGuardInterface {
    * Extracts element ID from layout shift sources.
    */
   private _extractElementId(sources?: Array<{ node?: Element }>): string | null {
-    if (!sources || sources.length === 0) return null;
+    if (sources == null || sources.length === 0) return null;
 
     const firstSource = sources[0];
-    if (!firstSource?.node) return null;
+    if (firstSource?.node == null) return null;
 
-    const element = firstSource.node;
-    return element.id || element.getAttribute('data-layout-id') || null;
+    const { node: element } = firstSource;
+    const elementId = element.id;
+    const dataLayoutId = element.getAttribute('data-layout-id');
+    return (elementId != null && elementId !== '') ? elementId : dataLayoutId ?? null;
   }
 
   /**
@@ -434,7 +439,7 @@ export class CLSGuard implements CLSGuardInterface {
         `;
         break;
 
-      case 'aspect-ratio':
+      case 'aspect-ratio': {
         const aspectRatio = dimensions.width / dimensions.height;
         element.style.cssText = `
           width: 100%;
@@ -443,6 +448,7 @@ export class CLSGuard implements CLSGuardInterface {
           visibility: hidden;
         `;
         break;
+      }
 
       case 'minimum':
         element.style.cssText = `
@@ -581,10 +587,10 @@ export function createOptimizedReservations(
     let dimensions: Dimensions;
     let strategy: ReservationStrategy;
 
-    if (hint.expectedDimensions) {
+    if (hint.expectedDimensions != null) {
       dimensions = hint.expectedDimensions;
       strategy = 'dimensions';
-    } else if (hint.aspectRatio) {
+    } else if (hint.aspectRatio != null) {
       // Use aspect ratio with reasonable default width
       const defaultWidth = hint.type === 'video' ? 640 : 400;
       dimensions = {

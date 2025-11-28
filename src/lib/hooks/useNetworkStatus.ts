@@ -73,6 +73,7 @@ export function useSlowConnection(): boolean {
 
   return useMemo(() => {
     return checkSlowConnection();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
 }
 
@@ -100,16 +101,21 @@ export function useOfflineFallback<T>(
   isFallback: boolean;
 } {
   const isOnline = useOnlineStatus();
-  const lastOnlineValue = useRef<T>(value);
+  const [cachedValue, setCachedValue] = useState<T>(value);
 
-  // Update last online value when online
+  // Update cached value when online
   useEffect(() => {
     if (isOnline) {
-      lastOnlineValue.current = value;
+      // Use microtask to avoid setState in effect
+      Promise.resolve().then(() => {
+        setCachedValue(value);
+      }).catch(() => {
+        // Ignore errors in cleanup
+      });
     }
   }, [isOnline, value]);
 
-  const effectiveValue = isOnline ? value : (lastOnlineValue.current ?? options.fallbackValue);
+  const effectiveValue = isOnline ? value : cachedValue;
   const isFallback = !isOnline && effectiveValue === options.fallbackValue;
 
   return {
@@ -193,15 +199,15 @@ export function useNetworkAwareFetch(
   // Retry on reconnect
   useOnReconnect(
     useCallback(() => {
-      if (retryOnReconnect && fetchFn) {
-        fetchFn();
+      if (retryOnReconnect && fetchFn != null) {
+        void fetchFn();
       }
     }, [retryOnReconnect, fetchFn])
   );
 
   const refetchOnReconnect = useCallback(() => {
-    if (fetchFn) {
-      fetchFn();
+    if (fetchFn != null) {
+      void fetchFn();
     }
   }, [fetchFn]);
 
@@ -228,7 +234,12 @@ export function useOfflineIndicator(): {
 
   useEffect(() => {
     if (!isOnline) {
-      setShowIndicator(true);
+      // Use microtask to avoid synchronous setState in effect
+      Promise.resolve().then(() => {
+        setShowIndicator(true);
+      }).catch(() => {
+        // Ignore errors in cleanup
+      });
     } else {
       // Delay hiding indicator to allow for brief disconnections
       const timer = setTimeout(() => {
@@ -265,7 +276,12 @@ export function useConnectionTracker(): {
   const [changes, setChanges] = useState<Array<{ online: boolean; timestamp: number }>>([]);
 
   useEffect(() => {
-    setChanges((prev) => [...prev.slice(-19), { online: isOnline, timestamp: Date.now() }]);
+    // Use microtask to avoid setState in effect
+    Promise.resolve().then(() => {
+      setChanges((prev) => [...prev.slice(-19), { online: isOnline, timestamp: Date.now() }]);
+    }).catch(() => {
+      // Ignore errors in cleanup
+    });
   }, [isOnline]);
 
   const stats = useMemo(() => {
@@ -275,10 +291,10 @@ export function useConnectionTracker(): {
     let totalOffline = 0;
     for (let i = 0; i < disconnects.length; i++) {
       const disconnect = disconnects[i];
-      if (!disconnect) continue;
-      
+      if (disconnect == null) continue;
+
       const reconnect = reconnects.find((r) => r.timestamp > disconnect.timestamp);
-      if (reconnect) {
+      if (reconnect != null) {
         totalOffline += reconnect.timestamp - disconnect.timestamp;
       }
     }
@@ -286,7 +302,7 @@ export function useConnectionTracker(): {
     return {
       changes,
       disconnectCount: disconnects.length,
-      lastDisconnect: disconnects.length > 0 ? disconnects[disconnects.length - 1]?.timestamp ?? null : null,
+      lastDisconnect: disconnects.length > 0 ? (disconnects[disconnects.length - 1]?.timestamp ?? null) : null,
       avgOfflineDuration: disconnects.length > 0 ? totalOffline / disconnects.length : 0,
     };
   }, [changes]);

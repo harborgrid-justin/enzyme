@@ -245,7 +245,7 @@ export class SSEClient {
    */
   private createEventHandler(eventType: string): (event: MessageEvent) => void {
     return (event: MessageEvent) => {
-      let data: unknown = event.data;
+      let {data} = event;
       
       // Try to parse JSON
       try {
@@ -286,7 +286,7 @@ export class SSEClient {
       const delay = this.calculateBackoff();
       this.reconnectAttempts++;
       
-      // eslint-disable-next-line no-console
+       
       console.info(`[SSE] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`);    this.reconnectTimeout = setTimeout(() => {
       this.connect();
     }, delay);

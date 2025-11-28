@@ -180,7 +180,7 @@ export function createFeatureStore<TState extends object>(
   const devtoolsName = `Feature/${name}`;
 
   // Store will be properly typed after creation
-  let store: any;
+  let store: unknown;
 
   if (persistConfig !== undefined) {
     const storageKey = persistConfig.key ?? `feature-${name}`;
@@ -214,7 +214,7 @@ export function createFeatureStore<TState extends object>(
   // Enhance store with feature-specific methods
   const enhancedStore = store as EnhancedStore<TState>;
   enhancedStore.featureName = name;
-  enhancedStore.unregister = () => {
+  enhancedStore.unregister = (): void => {
     if (register) {
       featureStoreRegistry.unregister(name);
     }
@@ -277,9 +277,7 @@ export function createLazyFeatureStore<TState extends object>(
     featureName: config.name,
 
     getStore: () => {
-      if (!store) {
-        store = createFeatureStore(initializer, config);
-      }
+      store ??= createFeatureStore(initializer, config);
       return store;
     },
 
@@ -312,7 +310,11 @@ export function createLazyFeatureStore<TState extends object>(
  */
 export function createFeatureStoreHooks<TState extends object>(
   useStore: EnhancedStore<TState>
-) {
+): {
+  useStore: EnhancedStore<TState>;
+  useSelector: <T>(selector: (state: TState) => T) => T;
+  useActions: <TActions extends Record<string, (...args: never[]) => unknown>>() => TActions;
+} {
   // Create a stable selector for actions that uses shallow equality
   // to prevent returning new object references on every render
   let cachedActions: Record<string, unknown> | null = null;
@@ -333,9 +335,10 @@ export function createFeatureStoreHooks<TState extends object>(
     if (
       cachedActions !== null &&
       actionKeys.length === cachedActionKeys.length &&
-      actionKeys.every((key, i) =>
-        key === cachedActionKeys[i] && actions[key] === cachedActions![key]
-      )
+      actionKeys.every((key, i) => {
+        const currentCachedActions = cachedActions;
+        return key === cachedActionKeys[i] && currentCachedActions != null && actions[key] === currentCachedActions[key];
+      })
     ) {
       return cachedActions;
     }

@@ -32,7 +32,7 @@ interface FeatureFlagProviderProps {
 export function FeatureFlagProvider({
   children,
   initialFlags
-}: FeatureFlagProviderProps) {
+}: FeatureFlagProviderProps): JSX.Element {
   const [flags, setFlags] = useState<Record<string, boolean>>(() => {
     const initial = {
       ...getDefaultFlags(),
@@ -65,7 +65,7 @@ export function FeatureFlagProvider({
       // Fetch from remote feature flag service
       const response = await fetch(`${env.apiBaseUrl}/feature-flags`);
       if (response.ok) {
-        const remoteFlags = await response.json();
+        const remoteFlags = await response.json() as Record<string, boolean>;
         setFlags((current) => ({
           ...current,
           ...remoteFlags,
@@ -82,13 +82,13 @@ export function FeatureFlagProvider({
   useEffect(() => {
     if (!env.featureFlagsEnabled) return;
 
-    const loadFlags = async () => {
+    const loadFlags = async (): Promise<void> => {
       if (env.featureFlagsSource === 'remote') {
         await refreshFlags();
       }
     };
 
-    loadFlags();
+    void loadFlags();
   }, [refreshFlags]);
 
   const isEnabled = useCallback(
@@ -124,7 +124,7 @@ export function FeatureFlagProvider({
 /**
  * Hook to access the feature flag context.
  */
-export function useFeatureFlagContext() {
+export function useFeatureFlagContext(): FeatureFlagContextValue {
   const context = useContext(FeatureFlagContext);
   if (!context) {
     throw new Error('useFeatureFlagContext must be used within a FeatureFlagProvider');

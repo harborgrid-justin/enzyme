@@ -162,9 +162,21 @@ export function useStreamStatus(
 
   const context = useOptionalStreamContext();
 
-  // State
-  const [state, setState] = useState<StreamState>(StreamState.Idle);
-  const [isRegistered, setIsRegistered] = useState(false);
+  // State - Initialize based on current boundary state
+  const [state, setState] = useState<StreamState>(() => {
+    if (context !== null && context !== undefined) {
+      const currentState = context.getBoundaryState(boundaryId);
+      return currentState ?? StreamState.Idle;
+    }
+    return StreamState.Idle;
+  });
+  const [isRegistered, setIsRegistered] = useState(() => {
+    if (context !== null && context !== undefined) {
+      const currentState = context.getBoundaryState(boundaryId);
+      return currentState !== null;
+    }
+    return false;
+  });
   const [bytesTransferred, setBytesTransferred] = useState(0);
   const [chunksReceived, setChunksReceived] = useState(0);
   const [elapsedTime, setElapsedTime] = useState<number | null>(null);
@@ -185,13 +197,6 @@ export function useStreamStatus(
   useEffect(() => {
     if (!context) return;
 
-    // Check if boundary exists
-    const currentState = context.getBoundaryState(boundaryId);
-    setIsRegistered(currentState !== null);
-    if (currentState !== null) {
-      setState(currentState);
-    }
-
     // Subscribe to events
     const unsubscribe = context.subscribe((event) => {
       if (event.boundaryId !== boundaryId) return;
@@ -202,7 +207,7 @@ export function useStreamStatus(
           setState(payload.to);
 
           // Track timing on state changes
-          if (payload.to === StreamState.Streaming && !startTimeRef.current) {
+          if (payload.to === StreamState.Streaming && startTimeRef.current == null) {
             startTimeRef.current = performance.now();
           } else if (
             payload.to === StreamState.Completed ||
@@ -233,7 +238,7 @@ export function useStreamStatus(
 
             // Calculate bytes per second for ETA
             const now = performance.now();
-            if (previousTimeRef.current) {
+            if (previousTimeRef.current != null) {
               const timeDelta = now - previousTimeRef.current;
               if (timeDelta > 100) {
                 // Only update rate every 100ms
@@ -251,7 +256,7 @@ export function useStreamStatus(
 
         case StreamEventType.Complete: {
           // Final elapsed time
-          if (startTimeRef.current) {
+          if (startTimeRef.current != null) {
             setElapsedTime(performance.now() - startTimeRef.current);
           }
           setEstimatedTimeRemaining(0);
@@ -277,7 +282,7 @@ export function useStreamStatus(
     if (state !== StreamState.Streaming) return;
 
     intervalRef.current = setInterval(() => {
-      if (startTimeRef.current) {
+      if (startTimeRef.current != null) {
         const elapsed = performance.now() - startTimeRef.current;
         setElapsedTime(elapsed);
 

@@ -1,4 +1,5 @@
 import { type ComponentType } from 'react';
+import type { JSX } from 'react';
 import { useFeatureFlag } from './useFeatureFlag';
 import type { FlagKey } from './flagKeys';
 
@@ -15,14 +16,14 @@ interface WithFeatureFlagOptions {
 export function withFeatureFlag<P extends object>(
   Component: ComponentType<P>,
   options: WithFeatureFlagOptions
-) {
+): ComponentType<P> {
   const { flag, fallback: FallbackComponent } = options;
 
-  return function WithFeatureFlag(props: P) {
+  return function WithFeatureFlag(props: P): JSX.Element | null {
     const isEnabled = useFeatureFlag(flag);
 
     if (!isEnabled) {
-      return FallbackComponent ? <FallbackComponent /> : null;
+      return FallbackComponent !== undefined ? <FallbackComponent /> : null;
     }
 
     return <Component {...props} />;
@@ -35,14 +36,14 @@ export function withFeatureFlag<P extends object>(
 export function withoutFeatureFlag<P extends object>(
   Component: ComponentType<P>,
   options: WithFeatureFlagOptions
-) {
+): ComponentType<P> {
   const { flag, fallback: FallbackComponent } = options;
 
-  return function WithoutFeatureFlag(props: P) {
+  return function WithoutFeatureFlag(props: P): JSX.Element | null {
     const isEnabled = useFeatureFlag(flag);
 
     if (isEnabled) {
-      return FallbackComponent ? <FallbackComponent /> : null;
+      return FallbackComponent !== undefined ? <FallbackComponent /> : null;
     }
 
     return <Component {...props} />;

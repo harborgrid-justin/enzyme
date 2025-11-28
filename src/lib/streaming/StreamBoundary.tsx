@@ -33,6 +33,7 @@
  * ```
  */
 
+import type React from 'react';
 import type { ReactNode } from 'react';
 import {
   Suspense,
@@ -113,7 +114,7 @@ function NonStreamingFallback({
   children,
   fallback,
 }: NonStreamingFallbackProps): React.ReactElement {
-  if (fallback) {
+  if (fallback != null) {
     return <>{fallback}</>;
   }
 
@@ -397,7 +398,7 @@ function StreamBoundaryComponent({
   const streamContext = useOptionalStreamContext();
 
   // If no streaming context or not supported, use fallback mode
-  if (!streamContext || !streamContext.isStreamingSupported) {
+  if (streamContext?.isStreamingSupported !== true) {
     return (
       <div
         className={`stream-boundary stream-boundary--no-streaming ${className ?? ''}`}
@@ -600,7 +601,7 @@ export function createBoundaryActivationScript(
     })();
   `.trim();
 
-  return nonce
+  return (nonce != null && nonce !== '')
     ? `<script nonce="${nonce}">${script}</script>`
     : `<script>${script}</script>`;
 }

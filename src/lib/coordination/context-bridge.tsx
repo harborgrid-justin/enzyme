@@ -14,7 +14,7 @@
  * @version 1.0.0
  */
 
-import {
+import React, {
   createContext,
   useContext,
   useState,
@@ -436,11 +436,11 @@ export function createComposedContext<T extends Record<string, unknown>>(config:
       const source = config.sources[key];
       // eslint-disable-next-line react-hooks/rules-of-hooks
       const value = useContext(source.context);
-      sourceValues[key] = (source.selector && value ? source.selector(value) : value) as T[keyof T];
+      sourceValues[key] = (source.selector != null && value != null ? source.selector(value) : value) as T[keyof T];
     }
 
     const composedValue = useMemo(() => sourceValues as T, [
-      // eslint-disable-next-line react-hooks/exhaustive-deps
+      // eslint-disable-next-line react-hooks/exhaustive-deps, @typescript-eslint/no-unsafe-assignment
       ...Object.values(sourceValues),
     ]);
 
@@ -541,9 +541,7 @@ let globalBridgeManager: ContextBridgeImpl | null = null;
  * Gets the global context bridge manager.
  */
 export function getContextBridgeManager(): ContextBridgeImpl {
-  if (!globalBridgeManager) {
-    globalBridgeManager = new ContextBridgeImpl();
-  }
+  globalBridgeManager ??= new ContextBridgeImpl();
   return globalBridgeManager;
 }
 

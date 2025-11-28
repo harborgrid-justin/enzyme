@@ -111,7 +111,7 @@ export const routeMetadata: Partial<Record<RoutePath, RouteAuthConfig>> = {
 export function getRouteAuthConfig(path: string): RouteAuthConfig {
   // Try exact match first
   const exactMatch = routeMetadata[path as RoutePath];
-  if (exactMatch) return exactMatch;
+  if (exactMatch !== undefined && exactMatch !== null) return exactMatch;
 
   // Try to find a matching pattern
   for (const [routePath, config] of Object.entries(routeMetadata)) {
@@ -156,13 +156,13 @@ export function canAccessRoute(
   user: { roles: Role[]; permissions: Permission[] } | null
 ): boolean {
   // Route doesn't require auth
-  if (!routeConfig.requireAuth) return true;
+  if (routeConfig.requireAuth !== true) return true;
 
   // No user, can't access protected routes
-  if (!user) return false;
+  if (user === undefined || user === null) return false;
 
   // Check minimum role
-  if (routeConfig.minRole) {
+  if (routeConfig.minRole !== undefined && routeConfig.minRole !== null) {
     const roleHierarchy: Role[] = ['guest', 'user', 'manager', 'admin'];
     const minRoleIndex = roleHierarchy.indexOf(routeConfig.minRole);
     const hasMinRole = user.roles.some(
@@ -172,19 +172,19 @@ export function canAccessRoute(
   }
 
   // Check allowed roles
-  if (routeConfig.allowedRoles?.length) {
+  if (routeConfig.allowedRoles !== undefined && routeConfig.allowedRoles !== null && routeConfig.allowedRoles.length > 0) {
     const hasAllowedRole = routeConfig.allowedRoles.some((role) =>
       user.roles.includes(role)
     );
-    if (!hasAllowedRole) return false;
+    if (hasAllowedRole !== true) return false;
   }
 
   // Check required permissions
-  if (routeConfig.requiredPermissions?.length) {
+  if (routeConfig.requiredPermissions !== undefined && routeConfig.requiredPermissions !== null && routeConfig.requiredPermissions.length > 0) {
     const hasAllPermissions = routeConfig.requiredPermissions.every((perm) =>
       user.permissions.includes(perm)
     );
-    if (!hasAllPermissions) return false;
+    if (hasAllPermissions !== true) return false;
   }
 
   return true;

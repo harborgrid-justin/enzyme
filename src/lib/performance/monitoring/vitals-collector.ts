@@ -627,7 +627,7 @@ export class EnhancedVitalsCollector {
 
   private observeTTFB(): void {
     try {
-      const navEntries = performance.getEntriesByType('navigation') as PerformanceNavigationTiming[];
+      const navEntries = performance.getEntriesByType('navigation');
       const navEntry = navEntries[0];
 
       if (navEntry) {
@@ -703,7 +703,7 @@ export class EnhancedVitalsCollector {
   }
 
   private getNavigationType(): string {
-    const navEntries = performance.getEntriesByType('navigation') as PerformanceNavigationTiming[];
+    const navEntries = performance.getEntriesByType('navigation');
     return navEntries[0]?.type || 'unknown';
   }
 

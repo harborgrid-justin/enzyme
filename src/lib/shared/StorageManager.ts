@@ -401,7 +401,7 @@ export class StorageManager {
 
         request.onerror = () => reject(request.error);
         request.onsuccess = () => {
-          const result = request.result;
+          const {result} = request;
           if (!result) {
             resolve(undefined);
             return;
@@ -555,7 +555,7 @@ export class StorageManager {
   /**
    * Open IndexedDB connection
    */
-  private openDatabase(): Promise<IDBDatabase> {
+  private async openDatabase(): Promise<IDBDatabase> {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(this.dbName, this.dbVersion);
 

@@ -248,7 +248,7 @@ export function parseApiSegment(name: string): ParsedApiSegment {
 
   // Group segments (parentheses)
   const groupMatch = trimmed.match(/^\(([^)]+)\)$/);
-  if (groupMatch && groupMatch[1]) {
+  if (groupMatch?.[1]) {
     const groupName = groupMatch[1];
     return {
       type: 'group',
@@ -261,7 +261,7 @@ export function parseApiSegment(name: string): ParsedApiSegment {
 
   // Catch-all segments [[...param]] or [...param]
   const catchAllMatch = trimmed.match(/^\[{1,2}\.\.\.([^\]]+)\]{1,2}$/);
-  if (catchAllMatch && catchAllMatch[1]) {
+  if (catchAllMatch?.[1]) {
     const isOptional = trimmed.startsWith('[[');
     return {
       type: 'catchAll',
@@ -274,7 +274,7 @@ export function parseApiSegment(name: string): ParsedApiSegment {
 
   // Optional dynamic segments [[param]]
   const optionalMatch = trimmed.match(/^\[\[([^\]]+)\]\]$/);
-  if (optionalMatch && optionalMatch[1]) {
+  if (optionalMatch?.[1]) {
     return {
       type: 'optional',
       name: `:${optionalMatch[1]}?`,
@@ -286,7 +286,7 @@ export function parseApiSegment(name: string): ParsedApiSegment {
 
   // Dynamic segments [param]
   const dynamicMatch = trimmed.match(/^\[([^\]]+)\]$/);
-  if (dynamicMatch && dynamicMatch[1]) {
+  if (dynamicMatch?.[1]) {
     return {
       type: 'dynamic',
       name: `:${dynamicMatch[1]}`,

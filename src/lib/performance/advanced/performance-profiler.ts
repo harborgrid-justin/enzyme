@@ -263,17 +263,17 @@ export class PerformanceProfiler {
     this.log('Stopping performance profiler');
     this.isRunning = false;
 
-    if (this.longTaskObserver) {
+    if (this.longTaskObserver !== null) {
       this.longTaskObserver.disconnect();
       this.longTaskObserver = null;
     }
 
-    if (this.frameRateTimer) {
+    if (this.frameRateTimer !== null) {
       clearInterval(this.frameRateTimer);
       this.frameRateTimer = null;
     }
 
-    if (this.memoryTimer) {
+    if (this.memoryTimer !== null) {
       clearInterval(this.memoryTimer);
       this.memoryTimer = null;
     }
@@ -351,17 +351,17 @@ export class PerformanceProfiler {
     }
 
     const start = this.marks.get(startMark);
-    const endTime = endMark ? this.marks.get(endMark)?.startTime : performance.now();
+    const endTime = endMark !== undefined ? this.marks.get(endMark)?.startTime : performance.now();
 
-    if (!start || endTime === undefined) {
-      this.log(`Cannot create measure: marks not found (${startMark}, ${endMark})`);
+    if (start === undefined || endTime === undefined) {
+      this.log(`Cannot create measure: marks not found (${startMark}, ${endMark ?? 'undefined'})`);
       return null;
     }
 
     const measure: PerformanceMeasure = {
       name,
       startMark,
-      endMark: endMark || 'now',
+      endMark: endMark ?? 'now',
       duration: endTime - start.startTime,
       startTime: start.startTime,
     };
@@ -437,7 +437,7 @@ export class PerformanceProfiler {
    * Export profiling data as JSON
    */
   exportData(): string {
-    return JSON.stringify(this.getSnapshot(), (_key, value) => {
+    return JSON.stringify(this.getSnapshot(), (_key, value: unknown): unknown => {
       if (value instanceof Set) {
         return Array.from(value);
       }
@@ -467,7 +467,7 @@ export class PerformanceProfiler {
             name: entry.name,
             duration: entry.duration,
             startTime: entry.startTime,
-            attribution: taskEntry.attribution || [],
+            attribution: taskEntry.attribution ?? [],
             timestamp: Date.now(),
           };
 
@@ -527,15 +527,15 @@ export class PerformanceProfiler {
 
   private startMemoryMonitoring(): void {
     const measureMemory = (): void => {
-      const memory = (performance as Performance & {
+      const {memory} = (performance as Performance & {
         memory?: {
           usedJSHeapSize: number;
           totalJSHeapSize: number;
           jsHeapSizeLimit: number;
         };
-      }).memory;
+      });
 
-      if (!memory) {
+      if (memory === undefined) {
         this.log('Memory API not available');
         return;
       }
@@ -586,8 +586,8 @@ export class PerformanceProfiler {
   private markNavigationTimings(): void {
     if (typeof window === 'undefined') return;
 
-    const timing = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-    if (!timing) return;
+    const timing = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
+    if (timing === undefined) return;
 
     this.mark('domInteractive', { source: 'navigation' });
     this.mark('domContentLoaded', { source: 'navigation' });
@@ -607,9 +607,10 @@ export class PerformanceProfiler {
         ? fpsSamples.reduce((a, b) => a + b, 0) / fpsSamples.length
         : 60;
 
+    const lastMemorySample = this.memorySamples[this.memorySamples.length - 1];
     const memoryTrend =
-      this.memorySamples.length > 0
-        ? this.memorySamples[this.memorySamples.length - 1]?.trend
+      this.memorySamples.length > 0 && lastMemorySample !== undefined
+        ? lastMemorySample.trend
         : 'unknown';
 
     // Detect potential memory leak (consistently increasing memory)
@@ -630,7 +631,7 @@ export class PerformanceProfiler {
       averageFPS: avgFPS,
       minFPS: Math.min(...fpsSamples, 60),
       jankFrames: this.frameRateSamples.filter((s) => s.jank).length,
-      memoryTrend: memoryTrend as 'increasing' | 'stable' | 'decreasing' | 'unknown',
+      memoryTrend,
       potentialMemoryLeak,
     };
   }
@@ -652,6 +653,7 @@ export class PerformanceProfiler {
 
   private log(message: string, ...args: unknown[]): void {
     if (this.config.debug) {
+      // eslint-disable-next-line no-console
       console.log(`[PerformanceProfiler] ${message}`, ...args);
     }
   }
@@ -669,9 +671,7 @@ let profilerInstance: PerformanceProfiler | null = null;
 export function getPerformanceProfiler(
   config?: Partial<ProfilerConfig>
 ): PerformanceProfiler {
-  if (!profilerInstance) {
-    profilerInstance = new PerformanceProfiler(config);
-  }
+  profilerInstance ??= new PerformanceProfiler(config);
   return profilerInstance;
 }
 
@@ -679,7 +679,7 @@ export function getPerformanceProfiler(
  * Reset the profiler instance (for testing)
  */
 export function resetPerformanceProfiler(): void {
-  if (profilerInstance) {
+  if (profilerInstance !== null) {
     profilerInstance.stop();
     profilerInstance = null;
   }

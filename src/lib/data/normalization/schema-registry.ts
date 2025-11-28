@@ -266,7 +266,7 @@ export function createSchemaRegistry(config: SchemaRegistryConfig = {}): SchemaR
     }
 
     // Relation definition
-    const def = relation as RelationDefinition;
+    const def = relation;
     const baseSchema = typeof def.schema === 'string'
       ? getOrCreateSchema(def.schema)
       : def.schema;
@@ -302,7 +302,7 @@ export function createSchemaRegistry(config: SchemaRegistryConfig = {}): SchemaR
 
     // Check if registered
     const registered = registeredSchemas.get(name);
-    if (registered && registered.schema) {
+    if (registered?.schema) {
       return registered.schema;
     }
 
@@ -503,7 +503,7 @@ export function createSchemaRegistry(config: SchemaRegistryConfig = {}): SchemaR
     const usedSchemas = new Set<string>();
 
     for (const [name, registered] of registeredSchemas) {
-      const definition = registered.definition;
+      const {definition} = registered;
 
       // Check relations
       if (definition.relations) {
@@ -737,7 +737,7 @@ export function createSchemaRegistry(config: SchemaRegistryConfig = {}): SchemaR
 
     // Apply migrations
     let migratedEntity = { ...entity };
-    const migrate = registered.definition.migrate;
+    const {migrate} = registered.definition;
 
     if (migrate) {
       for (let v = fromVersion; v < currentVersion; v++) {

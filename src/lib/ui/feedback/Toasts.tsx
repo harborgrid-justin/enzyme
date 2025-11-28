@@ -152,11 +152,11 @@ function getAnimationName(position: ToastPosition): string {
 /**
  * Toast container component - memoized for performance
  */
-const ToastContainer = memo(function ToastContainer({
+const ToastContainer = memo(({
   toasts,
   position,
   onRemove,
-}: ToastContainerProps): React.ReactElement | null {
+}: ToastContainerProps): React.ReactElement | null => {
   // Position styles - uses theme token for z-index
   const positionStyles: React.CSSProperties = {
     position: 'fixed',
@@ -310,11 +310,11 @@ if (typeof document !== 'undefined') {
 /**
  * Individual toast item - memoized for performance
  */
-const ToastItem = memo(function ToastItem({
+const ToastItem = memo(({
   toast,
   position,
   onRemove,
-}: ToastItemProps): React.ReactElement {
+}: ToastItemProps): React.ReactElement => {
   // Auto-dismiss
   useEffect(() => {
     if (toast.duration !== undefined && toast.duration !== null && toast.duration > 0) {

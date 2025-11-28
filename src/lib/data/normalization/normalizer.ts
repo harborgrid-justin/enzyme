@@ -542,7 +542,7 @@ export function updateEntity<T extends Entity>(
   updates: Partial<T>
 ): NormalizedEntities {
   const entityMap = entities[entityType];
-  if (!entityMap || !entityMap[id]) {
+  if (!entityMap?.[id]) {
     return entities;
   }
 
@@ -564,7 +564,7 @@ export function removeEntity(
   id: string
 ): NormalizedEntities {
   const entityMap = entities[entityType];
-  if (!entityMap || !entityMap[id]) {
+  if (!entityMap?.[id]) {
     return entities;
   }
 

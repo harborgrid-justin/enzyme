@@ -60,7 +60,7 @@ export interface UseKeyboardShortcutsOptions {
  */
 function parseKeyCombo(keys: string): ParsedKeys {
   const parts = keys.toLowerCase().split('+');
-  const key = parts.pop() || '';
+  const key = parts.pop() ?? '';
 
   return {
     ctrlKey: parts.includes('ctrl') || parts.includes('control'),
@@ -214,10 +214,8 @@ export function useKeyboardShortcuts(
   const shortcutsByCategory = useMemo(() => {
     const grouped: Record<string, KeyboardShortcut[]> = {};
     shortcuts.forEach((shortcut) => {
-      const category = shortcut.category || 'General';
-      if (!grouped[category]) {
-        grouped[category] = [];
-      }
+      const category = shortcut.category ?? 'General';
+      grouped[category] ??= [];
       grouped[category].push(shortcut);
     });
     return grouped;
@@ -227,7 +225,7 @@ export function useKeyboardShortcuts(
   useEffect(() => {
     if (!effectivelyEnabled) return;
 
-    const handleKeyDown = (event: KeyboardEvent) => {
+    const handleKeyDown = (event: KeyboardEvent): void => {
       // Don't trigger shortcuts when typing in inputs
       const target = event.target as HTMLElement;
       if (
@@ -243,7 +241,7 @@ export function useKeyboardShortcuts(
       }
 
       for (const shortcut of parsedShortcuts) {
-        if (!enabledShortcuts[shortcut.id]) continue;
+        if (enabledShortcuts[shortcut.id] !== true) continue;
 
         if (matchesKeyCombo(event, shortcut.parsed)) {
           if (preventDefault) {
@@ -258,7 +256,7 @@ export function useKeyboardShortcuts(
       }
     };
 
-    const element = scope || document;
+    const element = scope ?? document;
     element.addEventListener('keydown', handleKeyDown as EventListener);
 
     return () => {
@@ -275,7 +273,7 @@ export function useKeyboardShortcuts(
   }, []);
 
   const toggleShortcut = useCallback((id: string) => {
-    setEnabledShortcuts((prev) => ({ ...prev, [id]: !prev[id] }));
+    setEnabledShortcuts((prev) => ({ ...prev, [id]: prev[id] !== true }));
   }, []);
 
   return {
@@ -316,8 +314,8 @@ export function KeyboardShortcutsHelp({
   const grouped = useMemo(() => {
     const result: Record<string, KeyboardShortcut[]> = {};
     shortcuts.forEach((s) => {
-      const cat = s.category || 'General';
-      if (!result[cat]) result[cat] = [];
+      const cat = s.category ?? 'General';
+      result[cat] ??= [];
       result[cat].push(s);
     });
     return result;

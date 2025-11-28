@@ -10,7 +10,7 @@
  * - Error toast management
  */
 
-import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { normalizeError, isRetryableError, type AppError } from '../monitoring/errorTypes';
 import { ErrorReporter } from '../monitoring/ErrorReporter';
 import { networkMonitor } from '../utils/networkStatus';
@@ -130,6 +130,9 @@ export function useAsyncWithRecovery<T>(
   const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const retryCountRef = useRef(0);
 
+  // Define execute before using it in the effect
+  const executeRef = useRef<(() => Promise<T | null>) | null>(null);
+
   useEffect(() => {
     return () => {
       if (retryTimeoutRef.current) {
@@ -186,10 +189,10 @@ export function useAsyncWithRecovery<T>(
         if (autoRetry && isRetryableError(appError) && newRetryCount < maxRetries) {
           const delay = retryDelay * Math.pow(2, newRetryCount);
           retryTimeoutRef.current = setTimeout(() => {
-            if (isMounted()) {
+            if (isMounted() && executeRef.current != null) {
               retryCountRef.current++;
               onRetry?.(retryCountRef.current);
-              void execute();
+              void executeRef.current();
             }
           }, delay);
         }
@@ -198,6 +201,10 @@ export function useAsyncWithRecovery<T>(
       return null;
     }
   }, [asyncFn, autoRetry, isMounted, maxRetries, onError, onRetry, onSuccess, retryDelay]);
+
+  // Store execute in ref for use in timeout
+  // eslint-disable-next-line react-hooks/refs
+  executeRef.current = execute;
 
   const retry = useCallback(async (): Promise<T | null> => {
     if (!isMounted()) return null;
@@ -210,7 +217,7 @@ export function useAsyncWithRecovery<T>(
 
     onRetry?.(retryCountRef.current);
     return execute();
-  }, [execute, onRetry]);
+  }, [execute, isMounted, onRetry]);
 
   const reset = useCallback(() => {
     if (retryTimeoutRef.current) {
@@ -789,8 +796,13 @@ export interface ErrorContext {
  * }
  * ```
  */
-export function useErrorContext(context: ErrorContext) {
+export function useErrorContext(context: ErrorContext): {
+  context: ErrorContext;
+  reportError: (error: unknown) => void;
+  createContextualError: (error: unknown) => AppError;
+} {
   const contextRef = useRef(context);
+  // eslint-disable-next-line react-hooks/refs
   contextRef.current = context;
 
   const reportError = useCallback((error: unknown) => {
@@ -816,12 +828,9 @@ export function useErrorContext(context: ErrorContext) {
     []
   );
 
-  return useMemo(
-    () => ({
-      context: contextRef.current,
-      reportError,
-      createContextualError,
-    }),
-    [reportError, createContextualError]
-  );
+  return {
+    context,
+    reportError,
+    createContextualError,
+  };
 }

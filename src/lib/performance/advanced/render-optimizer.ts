@@ -134,7 +134,7 @@ export class RenderBatchManager<T = unknown> {
       timestamp: Date.now(),
     };
 
-    const updates = this.pendingUpdates.get(key) || [];
+    const updates = this.pendingUpdates.get(key) ?? [];
     updates.push(entry);
     this.pendingUpdates.set(key, updates);
     this.stats.batchedUpdates++;
@@ -162,7 +162,7 @@ export class RenderBatchManager<T = unknown> {
    * Subscribe to value changes
    */
   subscribe(key: string, callback: (value: T) => void): () => void {
-    const subs = this.subscribers.get(key) || new Set();
+    const subs = this.subscribers.get(key) ?? new Set();
     subs.add(callback);
     this.subscribers.set(key, subs);
 
@@ -205,7 +205,7 @@ export class RenderBatchManager<T = unknown> {
    * Flush all pending updates immediately
    */
   flush(): void {
-    if (this.batchTimer) {
+    if (this.batchTimer !== null) {
       clearTimeout(this.batchTimer);
       this.batchTimer = null;
     }
@@ -217,7 +217,7 @@ export class RenderBatchManager<T = unknown> {
   // ============================================================================
 
   private scheduleBatchProcess(): void {
-    if (this.batchTimer || this.isProcessing) {
+    if (this.batchTimer !== null || this.isProcessing) {
       return;
     }
 
@@ -343,7 +343,7 @@ export class RenderBatchManager<T = unknown> {
 
   private notifySubscribers(key: string, value: T): void {
     const subs = this.subscribers.get(key);
-    if (subs) {
+    if (subs !== undefined) {
       subs.forEach((callback) => callback(value));
     }
   }
@@ -461,10 +461,10 @@ export function createSelector<TInput, TOutput>(
   let isInitialized = false;
 
   return (input: TInput): TOutput => {
-    if (!isInitialized || !Object.is(input, lastInput)) {
+    if (isInitialized === false || !Object.is(input, lastInput)) {
       const newOutput = selector(input);
 
-      if (!isInitialized || !equalityFn(lastOutput as TOutput, newOutput)) {
+      if (isInitialized === false || lastOutput === undefined || !equalityFn(lastOutput, newOutput)) {
         lastOutput = newOutput;
       }
 
@@ -490,7 +490,7 @@ export function memoizeWithLRU<TArgs extends unknown[], TResult>(
     const key = keyFn(...args);
     const cached = cache.get(key);
 
-    if (cached) {
+    if (cached !== undefined) {
       // Update timestamp for LRU
       cached.timestamp = Date.now();
       return cached.value;
@@ -654,7 +654,7 @@ export function trackRender(
 
   let info = renderTracking.get(componentName);
 
-  if (!info) {
+  if (info === undefined) {
     info = {
       componentName,
       renderCount: 0,
@@ -670,14 +670,14 @@ export function trackRender(
   info.totalRenderTime += renderTime;
   info.averageRenderTime = info.totalRenderTime / info.renderCount;
   info.lastRenderTime = renderTime;
-  info.lastRenderReason = reason || null;
+  info.lastRenderReason = reason ?? null;
 
   if (renderTrackingConfig.logToConsole) {
     const isSlowRender = renderTime > renderTrackingConfig.slowRenderThreshold;
-    const logFn = isSlowRender ? console.warn : console.log;
+    const logFn = isSlowRender ? console.warn : console.log; // eslint-disable-line no-console
     logFn(
       `[RenderTracker] ${componentName} rendered in ${renderTime.toFixed(2)}ms`,
-      reason ? `(reason: ${reason})` : ''
+      reason !== undefined ? `(reason: ${reason})` : ''
     );
   }
 }

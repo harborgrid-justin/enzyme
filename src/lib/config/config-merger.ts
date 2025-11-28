@@ -235,7 +235,7 @@ export function setValueAtPath(
 
     // Handle array indexing
     const arrayMatch = part.match(/^(\w+)\[(\d+)\]$/);
-    if (arrayMatch && arrayMatch[1] && arrayMatch[2]) {
+    if (arrayMatch?.[1] && arrayMatch[2]) {
       const key = arrayMatch[1];
       const index = arrayMatch[2];
       if (!Array.isArray(current[key])) {
@@ -252,7 +252,7 @@ export function setValueAtPath(
       if (typeof current[part] !== 'object' || current[part] === null) {
         current[part] = {};
       } else {
-        current[part] = { ...(current[part] as object) };
+        current[part] = { ...(current[part]) };
       }
       current = current[part] as Record<string, unknown>;
     }
@@ -262,7 +262,7 @@ export function setValueAtPath(
   if (!lastPart) return result;
 
   const arrayMatch = lastPart.match(/^(\w+)\[(\d+)\]$/);
-  if (arrayMatch && arrayMatch[1] && arrayMatch[2]) {
+  if (arrayMatch?.[1] && arrayMatch[2]) {
     const key = arrayMatch[1];
     const index = arrayMatch[2];
     if (!Array.isArray(current[key])) {
@@ -300,7 +300,7 @@ export function deleteValueAtPath(
     if (typeof current[part] !== 'object' || current[part] === null) {
       return result; // Path doesn't exist
     }
-    current[part] = { ...(current[part] as object) };
+    current[part] = { ...(current[part]) };
     current = current[part] as Record<string, unknown>;
   }
 

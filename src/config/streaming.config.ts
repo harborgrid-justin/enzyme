@@ -139,7 +139,7 @@ export function getStreamTimingByPriority(priority: StreamPriority): {
   maxFlushDelay: number;
 } {
   const config = streaming.getAll();
-  const baseTiming = config.timing || streamingConfig.timing;
+  const baseTiming = config.timing ?? streamingConfig.timing;
 
   const multipliers: Record<StreamPriority, number> = {
     critical: 0.5,

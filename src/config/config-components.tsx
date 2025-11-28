@@ -25,7 +25,7 @@ export function ConfigReady({
   const { isInitialized } = useConfigContext();
 
   if (!isInitialized) {
-    return fallback ? <>{fallback}</> : null;
+    return fallback != null ? <>{fallback}</> : null;
   }
 
   return <>{children}</>;
@@ -49,7 +49,7 @@ export function FeatureFlag({
   const isEnabled = dynamicConfig.isFlagEnabled(flag);
 
   if (!isEnabled) {
-    return fallback ? <>{fallback}</> : null;
+    return fallback != null ? <>{fallback}</> : null;
   }
 
   return <>{children}</>;
@@ -74,13 +74,13 @@ export function ABTest({
   const { dynamicConfig } = useConfigContext();
   const variant = dynamicConfig.getVariant(testId, userId);
 
-  if (!variant) {
-    return fallback ? <>{fallback}</> : null;
+  if (variant == null) {
+    return fallback != null ? <>{fallback}</> : null;
   }
 
   const content = variants[variant.id];
-  if (!content) {
-    return fallback ? <>{fallback}</> : null;
+  if (content == null) {
+    return fallback != null ? <>{fallback}</> : null;
   }
 
   return <>{content}</>;

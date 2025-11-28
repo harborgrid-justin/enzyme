@@ -45,8 +45,8 @@ import { createConstraintSolver } from './constraint-solver';
 /**
  * Context for sharing adaptive layout state and controls.
  */
-type AdaptiveLayoutContextValue = any;
-type AdaptiveLayoutContextValueInternal = any;
+type AdaptiveLayoutContextValue = unknown;
+type AdaptiveLayoutContextValueInternal = unknown;
 
 /**
  * Hook to access the adaptive layout context.
@@ -92,7 +92,7 @@ function createChildRegistry(): ChildRegistry {
     getElements: () => {
       const result = new Map<string, HTMLElement>();
       for (const [id, ref] of elements) {
-        if (ref.current) {
+        if (ref.current !== null && ref.current !== undefined) {
           result.set(id, ref.current);
         }
       }
@@ -224,7 +224,7 @@ export function AdaptiveLayout({
           setCurrentMode(selectedMode);
 
           // Force reflow
-          container.offsetHeight;
+          void container.offsetHeight;
 
           const last = morphController.snapshotLast(elements);
           const context = morphController.createAnimation(first, last, elements);
@@ -266,11 +266,13 @@ export function AdaptiveLayout({
     const cleanup = engine.observe(container, () => {
       // Debounce layout computation
       clearTimeout(timeoutId);
-      timeoutId = setTimeout(computeLayout, engineConfig.resizeDebounceMs);
+      timeoutId = setTimeout(() => {
+        void computeLayout();
+      }, engineConfig.resizeDebounceMs);
     });
 
     // Initial computation
-    computeLayout();
+    void computeLayout();
 
     return () => {
       cleanup();
@@ -297,12 +299,12 @@ export function AdaptiveLayout({
   }, []);
 
   // Context value
-  const contextValue = useMemo<AdaptiveLayoutContextValueInternal>(
+  const contextValue = useMemo(
     () => ({
-      engine: engine as unknown as AdaptiveLayoutContextValueInternal['engine'],
-      morphController: morphController as unknown as AdaptiveLayoutContextValueInternal['morphController'],
-      clsGuard: clsGuard as unknown as AdaptiveLayoutContextValueInternal['clsGuard'],
-      constraintSolver: constraintSolver as unknown as AdaptiveLayoutContextValueInternal['constraintSolver'],
+      engine,
+      morphController,
+      clsGuard,
+      constraintSolver,
       config: engineConfig,
       layoutState,
       registerChild,
@@ -325,7 +327,7 @@ export function AdaptiveLayout({
         return {
           ...baseStyles,
           display: 'grid',
-          gridTemplateColumns: `repeat(auto-fit, minmax(${layoutState?.gridConfig?.columns ? `calc(100% / ${layoutState.gridConfig.columns} - ${layoutState.gridConfig.gap}px)` : '200px'}, 1fr))`,
+          gridTemplateColumns: `repeat(auto-fit, minmax(${(layoutState?.gridConfig?.columns !== undefined && layoutState.gridConfig.columns !== null && layoutState.gridConfig.columns !== 0) ? `calc(100% / ${layoutState.gridConfig.columns} - ${layoutState.gridConfig.gap ?? 0}px)` : '200px'}, 1fr))`,
           gap: `${layoutState?.gridConfig?.gap ?? 16}px`,
         };
       case 'list':

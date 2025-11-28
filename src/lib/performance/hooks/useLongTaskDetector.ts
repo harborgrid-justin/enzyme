@@ -129,9 +129,7 @@ export function useLongTaskDetector(
 
   // Get monitor instance
   const monitorRef = useRef<PerformanceMonitor | null>(null);
-  if (!monitorRef.current) {
-    monitorRef.current = getPerformanceMonitor({ debug });
-  }
+  monitorRef.current ??= getPerformanceMonitor({ debug });
   const monitor = monitorRef.current;
 
   // State
@@ -180,6 +178,7 @@ export function useLongTaskDetector(
       }
 
       if (debug) {
+        // eslint-disable-next-line no-console
         console.log(
           `[useLongTaskDetector] Long task detected: ${task.duration.toFixed(2)}ms`,
           task.isCritical ? '(CRITICAL)' : ''

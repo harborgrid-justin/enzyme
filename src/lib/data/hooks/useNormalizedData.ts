@@ -295,7 +295,7 @@ export function useNormalizedData(
 
       if (trackChanges && onEntityChange) {
         const entity = getEntityFromState<T>(updated, entityType, entityId);
-        onEntityChange(entityType, entityId, entity || null);
+        onEntityChange(entityType, entityId, entity ?? null);
       }
     },
     [state.entities, trackChanges, onEntityChange, validateData]
@@ -331,7 +331,7 @@ export function useNormalizedData(
   // Clear entities of type
   const clearType = useCallback(
     (entityType: string): void => {
-      const { [entityType]: removed, ...rest } = state.entities;
+      const { [entityType]: _removed, ...rest } = state.entities;
       storeRef.current.setEntities(rest);
     },
     [state.entities]
@@ -340,7 +340,7 @@ export function useNormalizedData(
   // Get entity count
   const getCount = useCallback(
     (entityType: string): number => {
-      return state.entityCounts[entityType] || 0;
+      return state.entityCounts[entityType] ?? 0;
     },
     [state.entityCounts]
   );
@@ -394,13 +394,13 @@ export function useEntity<T extends Entity>(
   options?: DenormalizeOptions
 ): T | null {
   return useMemo(() => {
-    if (!entityId) return null;
+    if (entityId == null || entityId === '') return null;
 
-    if (schema) {
+    if (schema !== undefined) {
       return denormalize<T>(entityId, schema, entities, options);
     }
 
-    return getEntityFromState<T>(entities, entityType, entityId) || null;
+    return getEntityFromState<T>(entities, entityType, entityId) ?? null;
   }, [entities, entityType, entityId, schema, options]);
 }
 
@@ -473,9 +473,11 @@ export function useAllEntities<T extends Entity>(
 export function useEntitySelector<T>(
   entities: NormalizedEntities,
   selector: (entities: NormalizedEntities) => T,
-  deps: unknown[] = []
+  _deps: unknown[] = []
 ): T {
-  return useMemo(() => selector(entities), [entities, ...deps]);
+  // Note: deps parameter is kept for API compatibility but not used
+  // Users should memoize their selector function instead
+  return useMemo(() => selector(entities), [entities, selector]);
 }
 
 /**
@@ -514,14 +516,14 @@ export function useNormalizedCrud<T extends Entity>(
 
   const getById = useCallback(
     (id: string): T | null => {
-      return denormalize<T>(id, schema, entities) || null;
+      return denormalize<T>(id, schema, entities) ?? null;
     },
     [entities, schema]
   );
 
   const create = useCallback(
     (data: Omit<T, 'id'> & { id?: string }): T => {
-      const id = data.id || `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const id = (data.id != null && data.id !== '') ? data.id : `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const entity = { ...data, id } as T;
       const result = normalizeAndMerge(entity, schema, entities);
       store.setEntities(result.entities);

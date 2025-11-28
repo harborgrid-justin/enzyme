@@ -204,7 +204,7 @@ const MAX_RECOMMENDED_DEPTH = 5;
  */
 function defaultGenerateId(_filePath: string, extracted: ExtractedPath): string {
   // Create ID from URL path
-  const urlPath = extracted.urlPath;
+  const {urlPath} = extracted;
   if (urlPath === '/') return 'INDEX';
 
   return urlPath
@@ -240,11 +240,11 @@ function defaultGenerateComponentName(filePath: string): string {
   }
 
   // Convert to PascalCase
-  return name
+  return `${name
     .replace(/[[\]()@.]/g, '')
     .replace(/[-_](\w)/g, (_, c) => c.toUpperCase())
     .replace(/^(\w)/, (_, c) => c.toUpperCase())
-    + 'Route';
+     }Route`;
 }
 
 /**

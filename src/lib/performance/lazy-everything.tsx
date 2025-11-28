@@ -340,13 +340,13 @@ export function getNetworkTier(): NetworkTier {
 
   if (!navigator.onLine) return 'offline';
 
-  const connection = (navigator as Navigator & {
+  const {connection} = (navigator as Navigator & {
     connection?: {
       effectiveType?: string;
       downlink?: number;
       saveData?: boolean;
     };
-  }).connection;
+  });
 
   if (!connection) return 'high';
 
@@ -354,7 +354,7 @@ export function getNetworkTier(): NetworkTier {
   if (connection.saveData) return 'low';
 
   // Check effective type
-  const effectiveType = connection.effectiveType;
+  const {effectiveType} = connection;
   if (effectiveType === '4g') return 'high';
   if (effectiveType === '3g') return 'medium';
   return 'low';
@@ -551,7 +551,7 @@ export function createLazyComponent<P extends object = object>(
   /**
    * Get or create load promise
    */
-  const getLoadPromise = (): Promise<{ default: ComponentType<P> }> => {
+  const getLoadPromise = async (): Promise<{ default: ComponentType<P> }> => {
     if (loadedModule) {
       return Promise.resolve(loadedModule);
     }
@@ -859,9 +859,9 @@ export function useNetworkAwareLoading(priority: LoadingPriority = 'normal'): {
     window.addEventListener('online', updateTier);
     window.addEventListener('offline', updateTier);
 
-    const connection = (navigator as Navigator & {
+    const {connection} = (navigator as Navigator & {
       connection?: { addEventListener: (type: string, handler: () => void) => void };
-    }).connection;
+    });
 
     connection?.addEventListener('change', updateTier);
 
@@ -885,7 +885,7 @@ export function useNetworkAwareLoading(priority: LoadingPriority = 'normal'): {
 /**
  * Preload a component imperatively
  */
-export function preloadComponent<P extends object>(
+export async function preloadComponent<P extends object>(
   config: LazyComponentConfig<P>
 ): Promise<void> {
   const LazyComponent = createLazyComponent(config);

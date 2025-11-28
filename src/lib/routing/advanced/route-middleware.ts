@@ -360,7 +360,7 @@ export class MiddlewareChain {
 
       try {
         await this.executeWithTimeout(
-          () => current.handler(context, executeNext),
+          async () => current.handler(context, executeNext),
           timeout,
           current.name
         );
@@ -771,7 +771,7 @@ export function parallel(...middleware: MiddlewareFunction[]): MiddlewareFunctio
     };
 
     // Run all middleware in parallel
-    await Promise.all(middleware.map(mw => mw(ctx, sharedNext)));
+    await Promise.all(middleware.map(async mw => mw(ctx, sharedNext)));
   };
 }
 

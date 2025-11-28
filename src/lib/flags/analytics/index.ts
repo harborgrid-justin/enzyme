@@ -291,7 +291,7 @@ export function connectAnalytics(
   if (trackEvaluations && trackExposures) {
     const unsubscribe = suite.analytics.subscribe((events) => {
       for (const event of events) {
-        if (event.userId) {
+        if (event.userId != null && event.userId !== '') {
           suite.exposure.trackExposure({
             flagKey: event.flagKey,
             variantId: event.variantId,

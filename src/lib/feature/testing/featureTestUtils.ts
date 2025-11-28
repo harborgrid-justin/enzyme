@@ -270,7 +270,7 @@ export function createMockService<
   for (const [key, impl] of Object.entries(implementations)) {
     const typedKey = key as keyof T;
     if (typeof impl === 'function' && 'mockImplementation' in impl) {
-      service[typedKey] = impl as Mock;
+      service[typedKey] = impl;
     } else {
       service[typedKey] = vi.fn().mockImplementation(impl as MockFn);
     }

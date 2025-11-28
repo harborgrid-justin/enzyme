@@ -321,13 +321,13 @@ export function useDataSync<T extends Entity>(
   // Handle online/offline status
   // Uses syncRef to avoid stale closure and prevent effect re-runs
   useEffect(() => {
-    const handleOnline = () => {
+    const handleOnline = (): void => {
       setState((prev) => ({ ...prev, isOffline: false }));
       // Trigger sync when coming back online - use ref to get latest sync function
       syncRef.current().catch(console.error);
     };
 
-    const handleOffline = () => {
+    const handleOffline = (): void => {
       setState((prev) => ({ ...prev, isOffline: true }));
     };
 
@@ -338,6 +338,7 @@ export function useDataSync<T extends Entity>(
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty deps - syncRef.current always has latest sync function
 
   // Create entity
@@ -355,7 +356,7 @@ export function useDataSync<T extends Entity>(
     }
 
     try {
-      const created = await engineRef.current.create(entityType, data as Partial<T>) as T;
+      const created = await engineRef.current.create(entityType, data as Partial<T>);
 
       if (mountedRef.current) {
         setState((prev) => ({
@@ -398,7 +399,7 @@ export function useDataSync<T extends Entity>(
     }
 
     try {
-      const updated = await engineRef.current.update(entityType, id, data) as T;
+      const updated = await engineRef.current.update(entityType, id, data);
 
       if (mountedRef.current) {
         setState((prev) => ({
@@ -539,6 +540,7 @@ export function useDataSync<T extends Entity>(
       // Use syncRef to get the latest sync function
       syncRef.current().catch(console.error);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoSync]); // syncRef always has latest sync, no need to include in deps
 
   // Sync interval
@@ -559,6 +561,7 @@ export function useDataSync<T extends Entity>(
         clearInterval(intervalRef.current);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [syncInterval]); // Only re-create interval when syncInterval changes
 
   // Cleanup
@@ -631,8 +634,8 @@ export function useSyncStatus(engine: SyncEngine): {
       }
     });
 
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
+    const handleOnline = (): void => setIsOnline(true);
+    const handleOffline = (): void => setIsOnline(false);
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);

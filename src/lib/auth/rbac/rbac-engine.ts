@@ -772,7 +772,7 @@ export class RBACEngine {
     condition: import('./types').PolicyCondition,
     request: AccessRequest
   ): boolean {
-    const key = condition.key;
+    const {key} = condition;
     if (!key) return true;
 
     const value = request.subject.attributes?.[key] ??
@@ -801,7 +801,7 @@ export class RBACEngine {
     condition: import('./types').PolicyCondition,
     request: AccessRequest
   ): boolean {
-    const key = condition.key;
+    const {key} = condition;
     if (!key) return true;
 
     const value = request.context?.attributes?.[key];

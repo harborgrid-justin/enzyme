@@ -14,6 +14,7 @@ import {
   cloneElement,
   isValidElement,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -148,8 +149,8 @@ export function AdaptiveStack({
     if (!container) return;
 
     const observer = new ResizeObserver((entries) => {
-      const entry = entries[0];
-      if (entry) {
+      const [entry] = entries;
+      if (entry !== undefined) {
         setContainerWidth(entry.contentRect.width);
       }
     });
@@ -160,17 +161,28 @@ export function AdaptiveStack({
   }, [direction]);
 
   // Handle direction transitions
-  useEffect(() => {
+  // Use layout effect to ensure state updates happen synchronously before paint
+  useLayoutEffect(() => {
     if (effectiveDirection !== previousDirectionRef.current) {
-      setIsTransitioning(true);
+      let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
-      // Reset transition state after animation
-      const timeoutId = setTimeout(() => {
-        setIsTransitioning(false);
-        previousDirectionRef.current = effectiveDirection;
-      }, 300); // Match transition duration
+      // Use requestAnimationFrame to defer state update after render
+      const frameId = requestAnimationFrame(() => {
+        setIsTransitioning(true);
 
-      return () => clearTimeout(timeoutId);
+        // Reset transition state after animation
+        timeoutId = setTimeout(() => {
+          setIsTransitioning(false);
+          previousDirectionRef.current = effectiveDirection;
+        }, 300); // Match transition duration
+      });
+
+      return () => {
+        cancelAnimationFrame(frameId);
+        if (timeoutId !== null) {
+          clearTimeout(timeoutId);
+        }
+      };
     }
     return undefined;
   }, [effectiveDirection]);
@@ -195,7 +207,7 @@ export function AdaptiveStack({
 
   // Render children with layout IDs
   const renderedChildren = useMemo(() => {
-    return Children.map(children, (child, index) => {
+    return Children.map(children, (child, index): ReactNode => {
       if (!isValidElement(child)) return child;
 
       const itemId = generateItemId(index);

@@ -392,7 +392,7 @@ export function isAllowedOrigin(origin: string): boolean {
   return csrfConfig.allowedOrigins.some((allowed) => {
     if (allowed.includes('*')) {
       const pattern = new RegExp(
-        '^' + allowed.replace(/\*/g, '.*') + '$'
+        `^${  allowed.replace(/\*/g, '.*')  }$`
       );
       return pattern.test(origin);
     }

@@ -30,7 +30,7 @@ import {
   type ReactNode,
 } from 'react';
 import { ApiClientContext as ImportedApiClientContext } from '../../contexts/ApiClientContext';
-import { ApiClient, apiClient, createApiClient } from '../api-client';
+import { type ApiClient, apiClient, createApiClient } from '../api-client';
 import type {
   ApiClientConfig,
   ApiResponse,
@@ -176,37 +176,37 @@ export function ApiClientProvider({
 
   // Memoized request methods
   const get = useCallback(
-    <T,>(url: string, options?: Partial<RequestConfig>) =>
+    async <T,>(url: string, options?: Partial<RequestConfig>) =>
       client.get<T>(url, options),
     [client]
   );
 
   const post = useCallback(
-    <T, B = unknown>(url: string, body?: B, options?: Partial<RequestConfig>) =>
+    async <T, B = unknown>(url: string, body?: B, options?: Partial<RequestConfig>) =>
       client.post<T, B>(url, body, options),
     [client]
   );
 
   const put = useCallback(
-    <T, B = unknown>(url: string, body?: B, options?: Partial<RequestConfig>) =>
+    async <T, B = unknown>(url: string, body?: B, options?: Partial<RequestConfig>) =>
       client.put<T, B>(url, body, options),
     [client]
   );
 
   const patch = useCallback(
-    <T, B = unknown>(url: string, body?: B, options?: Partial<RequestConfig>) =>
+    async <T, B = unknown>(url: string, body?: B, options?: Partial<RequestConfig>) =>
       client.patch<T, B>(url, body, options),
     [client]
   );
 
   const del = useCallback(
-    <T,>(url: string, options?: Partial<RequestConfig>) =>
+    async <T,>(url: string, options?: Partial<RequestConfig>) =>
       client.delete<T>(url, options),
     [client]
   );
 
   const request = useCallback(
-    <T,>(requestConfig: RequestConfig) => client.request<T>(requestConfig),
+    async <T,>(requestConfig: RequestConfig) => client.request<T>(requestConfig),
     [client]
   );
 
@@ -327,12 +327,12 @@ export function useApiClient(): ApiClientContextValue {
       client: apiClient,
       isConfigured: true,
       config: null,
-      get: (url, options) => apiClient.get(url, options),
-      post: (url, body, options) => apiClient.post(url, body, options),
-      put: (url, body, options) => apiClient.put(url, body, options),
-      patch: (url, body, options) => apiClient.patch(url, body, options),
-      del: (url, options) => apiClient.delete(url, options),
-      request: (config) => apiClient.request(config),
+      get: async (url, options) => apiClient.get(url, options),
+      post: async (url, body, options) => apiClient.post(url, body, options),
+      put: async (url, body, options) => apiClient.put(url, body, options),
+      patch: async (url, body, options) => apiClient.patch(url, body, options),
+      del: async (url, options) => apiClient.delete(url, options),
+      request: async (config) => apiClient.request(config),
       addRequestInterceptor: (interceptor) => apiClient.addRequestInterceptor(interceptor),
       addResponseInterceptor: (interceptor) => apiClient.addResponseInterceptor(interceptor),
       addErrorInterceptor: (interceptor) => apiClient.addErrorInterceptor(interceptor),

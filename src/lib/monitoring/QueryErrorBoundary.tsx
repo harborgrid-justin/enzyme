@@ -45,7 +45,7 @@ function DefaultQueryErrorFallback({
   reset,
   retry,
   isRetryable,
-}: QueryErrorFallbackProps) {
+}: QueryErrorFallbackProps): React.ReactElement {
   return (
     <div
       role="alert"

@@ -37,7 +37,7 @@
  */
 export async function sleep(ms: number, signal?: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
-    if (signal?.aborted) {
+    if (signal?.aborted === true) {
       reject(new Error('Aborted'));
       return;
     }
@@ -912,7 +912,7 @@ export async function pMap<T, R>(
 
   await Promise.all(
     items.map(async (item, index) => {
-      const result = await semaphore.runWithPermit(() => mapper(item, index));
+      const result = await semaphore.runWithPermit(async () => mapper(item, index));
       results[index] = result;
     })
   );

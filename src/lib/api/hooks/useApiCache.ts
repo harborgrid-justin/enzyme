@@ -268,7 +268,7 @@ export function useApiCache(): UseApiCacheResult {
     let totalSize = 0;
 
     for (const query of queries) {
-      const state = query.state;
+      const { state } = query;
       if (state.data !== undefined) {
         hits++;
         // Estimate size (rough approximation)
@@ -503,7 +503,7 @@ export function useCacheMonitor(options?: {
 
   // Polling interval
   useEffect(() => {
-    if (isMonitoring && options?.interval) {
+    if (isMonitoring === true && options?.interval !== undefined && options.interval !== null && options.interval > 0) {
       const timer = setInterval(refresh, options.interval);
       return () => clearInterval(timer);
     }
@@ -557,9 +557,12 @@ export function useCacheEntry<TData = unknown>(queryKey: QueryKey): {
   }, [subscribe, refresh]);
 
   // Update when query key changes
+  const serializedKey = JSON.stringify(queryKey);
   useEffect(() => {
+    // Refresh is intentionally called here to update cache entry when query key changes
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     refresh();
-  }, [refresh, JSON.stringify(queryKey)]);
+  }, [refresh, serializedKey]);
 
   return {
     entry,
@@ -604,9 +607,9 @@ export function useBulkCacheOperations(): {
     async (tag: string): Promise<void> => {
       await queryClient.invalidateQueries({
         predicate: (query) => {
-          const meta = query.meta as Record<string, unknown> | undefined;
+          const { meta } = query;
           const tags = meta?.tags as string[] | undefined;
-          return Boolean(meta?.tag === tag || tags?.includes?.(tag));
+          return Boolean(meta?.tag === tag || tags?.includes(tag));
         },
       });
     },
@@ -617,7 +620,7 @@ export function useBulkCacheOperations(): {
     async (prefix: string): Promise<void> => {
       await queryClient.invalidateQueries({
         predicate: (query) => {
-          const firstKey = query.queryKey[0];
+          const [firstKey] = query.queryKey;
           return typeof firstKey === 'string' && firstKey.startsWith(prefix);
         },
       });

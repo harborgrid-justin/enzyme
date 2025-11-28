@@ -110,7 +110,7 @@ export class RequestDeduplicator {
    */
   constructor(config: DeduplicationConfig = {}) {
     this.config = {
-      keyGenerator: this.defaultKeyGenerator,
+      keyGenerator: this.defaultKeyGenerator.bind(this),
       ttl: 5000,
       maxSize: 1000,
       dedupeMutations: false,
@@ -311,7 +311,7 @@ export class RequestDeduplicator {
    */
   private defaultKeyGenerator(request: DeduplicationRequest): string {
     const { url, method, body } = request;
-    const bodyHash = body ? this.hashBody(body) : '';
+    const bodyHash = body != null ? this.hashBody(body) : '';
     return `${method.toUpperCase()}:${url}:${bodyHash}`;
   }
 
@@ -338,7 +338,8 @@ export class RequestDeduplicator {
    * Log debug message.
    */
   private log(message: string): void {
-    if (this.config.debug) {
+    if (this.config.debug === true) {
+      // eslint-disable-next-line no-console
       console.log(`[RequestDeduplicator] ${message}`);
     }
   }
@@ -376,17 +377,20 @@ export function createDeduplicatedFetch(
   const dedup = new RequestDeduplicator(config);
 
   return async (input: RequestInfo | URL, init?: RequestInit) => {
-    const url = typeof input === 'string'
-      ? input
-      : input instanceof URL
-        ? input.toString()
-        : input.url;
+    let url: string;
+    if (typeof input === 'string') {
+      url = input;
+    } else if (input instanceof URL) {
+      url = input.toString();
+    } else {
+      url = input.url;
+    }
 
     const method = init?.method ?? 'GET';
 
     return dedup.dedupe(
       { url, method, body: init?.body, headers: init?.headers as Record<string, string> },
-      () => fetch(input, init)
+      async () => fetch(input, init)
     );
   };
 }
@@ -402,7 +406,7 @@ export function createDeduplicatedFetch(
 export function deduplicateFunction<TArgs extends unknown[], TResult>(
   fn: (...args: TArgs) => Promise<TResult>,
   keyGenerator: (...args: TArgs) => string,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   _config?: Omit<DeduplicationConfig, 'keyGenerator'>
 ): (...args: TArgs) => Promise<TResult> {
   const cache = new Map<string, Promise<TResult>>();
@@ -443,7 +447,7 @@ export class ReactQueryDeduplicator extends RequestDeduplicator {
   ): () => Promise<T> {
     const key = JSON.stringify(queryKey);
 
-    return () =>
+    return async () =>
       this.dedupe(
         { url: key, method: 'GET' },
         fetcher

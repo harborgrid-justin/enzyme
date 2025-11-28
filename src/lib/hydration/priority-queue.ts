@@ -293,7 +293,7 @@ export class HydrationPriorityQueue {
 
       // Re-heapify (might need to bubble up or down)
       const parent = Math.floor((index - 1) / 2);
-      if (index > 0 && this.heap[index] && this.heap[parent] && this.config.comparator(this.heap[index]!, this.heap[parent]!) < 0) {
+      if (index > 0 && this.heap[index] && this.heap[parent] && this.config.comparator(this.heap[index], this.heap[parent]) < 0) {
         this.bubbleUp(index);
       } else {
         this.bubbleDown(index);
@@ -517,7 +517,7 @@ export class HydrationPriorityQueue {
    * Bubbles down an element to maintain heap property.
    */
   private bubbleDown(index: number): void {
-    const length = this.heap.length;
+    const {length} = this.heap;
 
     while (true) {
       const leftChild = 2 * index + 1;

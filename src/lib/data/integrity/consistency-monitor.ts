@@ -146,7 +146,7 @@ export interface ConsistencyMonitor {
   /** Run check now */
   check: (entities: NormalizedEntities) => Promise<IntegrityReport>;
   /** Repair violations */
-  repair: (entities: NormalizedEntities, options?: RepairOptions) => Promise<RepairResult>;
+  repair: (entities: NormalizedEntities, options?: RepairOptions) => RepairResult;
   /** Create snapshot */
   createSnapshot: (entities: NormalizedEntities, label?: string) => StateSnapshot;
   /** Get snapshots */
@@ -337,14 +337,14 @@ export function createConsistencyMonitor(config: ConsistencyMonitorConfig): Cons
         onViolation?.(report.violations);
 
         if (autoRepair) {
-          await repair(entities, repairOptions);
+          repair(entities, repairOptions);
         }
       } else {
         setStatus('valid');
       }
 
       emit('check-complete', { report });
-      return report;
+      return await Promise.resolve(report);
     } catch (error) {
       setStatus('error');
       emit('error', { error });
@@ -356,10 +356,10 @@ export function createConsistencyMonitor(config: ConsistencyMonitorConfig): Cons
   /**
    * Repair violations
    */
-  async function repair(
+  function repair(
     entities: NormalizedEntities,
     options: RepairOptions = {}
-  ): Promise<RepairResult> {
+  ): RepairResult {
     if (!lastReport) {
       const report = integrityChecker.check(entities);
       lastReport = report;
@@ -396,7 +396,7 @@ export function createConsistencyMonitor(config: ConsistencyMonitorConfig): Cons
       timestamp: Date.now(),
       entityCounts: countEntities(entities),
       hash: hashState(entities),
-      report: lastReport || undefined,
+      report: lastReport ?? undefined,
       label,
     };
 
@@ -452,8 +452,8 @@ export function createConsistencyMonitor(config: ConsistencyMonitorConfig): Cons
     let totalChanges = 0;
 
     for (const type of allTypes) {
-      const sourceCount = sourceSnapshot.entityCounts[type] || 0;
-      const targetCount = targetSnapshot.entityCounts[type] || 0;
+      const sourceCount = sourceSnapshot.entityCounts[type] ?? 0;
+      const targetCount = targetSnapshot.entityCounts[type] ?? 0;
 
       if (sourceCount !== targetCount) {
         const diff = targetCount - sourceCount;
@@ -636,7 +636,7 @@ export function useConsistencyMonitor(
   isChecking: boolean;
   isRepairing: boolean;
   checkNow: () => Promise<IntegrityReport>;
-  repair: (options?: RepairOptions) => Promise<RepairResult>;
+  repair: (options?: RepairOptions) => RepairResult;
   createSnapshot: (label?: string) => StateSnapshot;
   snapshots: StateSnapshot[];
 } {
@@ -647,7 +647,11 @@ export function useConsistencyMonitor(
   const [snapshots, setSnapshots] = useState<StateSnapshot[]>(monitor.getSnapshots());
 
   const entitiesRef = useRef(entities);
-  entitiesRef.current = entities;
+
+  // Update entities ref when entities change
+  useEffect(() => {
+    entitiesRef.current = entities;
+  }, [entities]);
 
   // Subscribe to monitor events
   useEffect(() => {
@@ -673,6 +677,7 @@ export function useConsistencyMonitor(
     if (checkOnMount) {
       monitor.check(entities).catch(console.error);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Auto check on entity changes
@@ -687,7 +692,7 @@ export function useConsistencyMonitor(
   }, [monitor]);
 
   const repairFn = useCallback(
-    async (repairOptions?: RepairOptions) => {
+    (repairOptions?: RepairOptions) => {
       return monitor.repair(entitiesRef.current, repairOptions);
     },
     [monitor]
@@ -701,7 +706,7 @@ export function useConsistencyMonitor(
   );
 
   const violations = useMemo(
-    () => lastReport?.violations || [],
+    () => lastReport?.violations ?? [],
     [lastReport]
   );
 
@@ -740,7 +745,11 @@ export function useDriftDetection(
   const [snapshots, setSnapshots] = useState<StateSnapshot[]>(monitor.getSnapshots());
 
   const entitiesRef = useRef(entities);
-  entitiesRef.current = entities;
+
+  // Update entities ref when entities change
+  useEffect(() => {
+    entitiesRef.current = entities;
+  }, [entities]);
 
   useEffect(() => {
     const unsubscribe = monitor.subscribe((event) => {
@@ -817,7 +826,11 @@ export function useIntegrityValidation(
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const entitiesRef = useRef(entities);
-  entitiesRef.current = entities;
+
+  // Update entities ref when entities change
+  useEffect(() => {
+    entitiesRef.current = entities;
+  }, [entities]);
 
   const validate = useCallback(() => {
     setIsValidating(true);

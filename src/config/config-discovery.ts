@@ -292,7 +292,7 @@ export class ConfigDiscovery {
         const config = await this.resolveConfig(module);
 
         // Register in namespace
-        if (module.merge) {
+        if (module.merge === true) {
           const existing = this.registry.getNamespaceConfig(namespace);
           const merged = deepMerge(existing as ConfigRecord, config);
           this.registerNamespaceConfig(namespace, merged, 'file');
@@ -698,9 +698,7 @@ let discoveryInstance: ConfigDiscovery | null = null;
 export function getConfigDiscovery(
   options?: ConfigDiscoveryOptions
 ): ConfigDiscovery {
-  if (!discoveryInstance) {
-    discoveryInstance = new ConfigDiscovery(options);
-  }
+  discoveryInstance ??= new ConfigDiscovery(options);
   return discoveryInstance;
 }
 

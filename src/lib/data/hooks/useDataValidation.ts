@@ -172,7 +172,11 @@ export function useDataValidation<T>(
   // Refs
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const schemaRef = useRef(schema);
-  schemaRef.current = schema;
+
+  // Update ref without causing re-renders
+  useEffect(() => {
+    schemaRef.current = schema;
+  }, [schema]);
 
   // Extract field errors from validation issues
   const extractFieldErrors = useCallback((issues: ValidationIssue[]): FieldErrors => {
@@ -180,9 +184,7 @@ export function useDataValidation<T>(
 
     for (const issue of issues) {
       const path = issue.path.join('.');
-      if (!fieldErrors[path]) {
-        fieldErrors[path] = [];
-      }
+      fieldErrors[path] ??= [];
       fieldErrors[path].push(issue.message);
     }
 
@@ -312,7 +314,7 @@ export function useDataValidation<T>(
   // Reset to initial state
   const reset = useCallback(() => {
     clearValidation();
-    if (initialData) {
+    if (initialData !== undefined && initialData !== null) {
       validate(initialData);
     }
   }, [clearValidation, initialData, validate]);
@@ -320,7 +322,7 @@ export function useDataValidation<T>(
   // Get field errors
   const getFieldErrors = useCallback(
     (field: string): string[] => {
-      return state.fieldErrors[field] || [];
+      return state.fieldErrors[field] ?? [];
     },
     [state.fieldErrors]
   );
@@ -328,7 +330,7 @@ export function useDataValidation<T>(
   // Check if field has errors
   const hasFieldError = useCallback(
     (field: string): boolean => {
-      return (state.fieldErrors[field]?.length || 0) > 0;
+      return (state.fieldErrors[field]?.length ?? 0) > 0;
     },
     [state.fieldErrors]
   );
@@ -340,9 +342,10 @@ export function useDataValidation<T>(
 
   // Cleanup debounce on unmount
   useEffect(() => {
+    const currentDebounce = debounceRef.current;
     return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
+      if (currentDebounce != null) {
+        clearTimeout(currentDebounce);
       }
     };
   }, []);
@@ -390,16 +393,16 @@ export function useValidateOnChange<T>(
   const [result, setResult] = useState<{
     isValid: boolean;
     errors: ValidationIssue[];
+    lastValidatedData: T | null;
     isValidating: boolean;
-  }>({ isValid: true, errors: [], isValidating: false });
+  }>({ isValid: true, errors: [], lastValidatedData: null, isValidating: false });
 
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    setResult((prev) => ({ ...prev, isValidating: true }));
-
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
+    const timeout = timeoutRef.current;
+    if (timeout !== null) {
+      clearTimeout(timeout);
     }
 
     timeoutRef.current = setTimeout(() => {
@@ -407,18 +410,27 @@ export function useValidateOnChange<T>(
       setResult({
         isValid: validationResult.success,
         errors: validationResult.success ? [] : validationResult.issues,
+        lastValidatedData: data,
         isValidating: false,
       });
     }, debounceMs);
 
     return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
+      const cleanupTimeout = timeoutRef.current;
+      if (cleanupTimeout !== null) {
+        clearTimeout(cleanupTimeout);
       }
     };
   }, [schema, data, debounceMs]);
 
-  return result;
+  // Derive isValidating from whether data has changed since last validation
+  const isValidating = result.lastValidatedData !== data;
+
+  return {
+    isValid: result.isValid,
+    errors: result.errors,
+    isValidating,
+  };
 }
 
 /**
@@ -439,7 +451,7 @@ export function useValidateValue<T>(
     const result = schema.safeParse(value);
     return {
       isValid: result.success,
-      error: result.success ? null : result.issues[0]?.message || 'Invalid value',
+      error: result.success ? null : (result.issues[0]?.message ?? 'Invalid value'),
     };
   }, [schema, value]);
 }
@@ -473,7 +485,11 @@ export function useAsyncValidation<T>(
   });
 
   const dataRef = useRef(data);
-  dataRef.current = data;
+
+  // Update ref without causing re-renders
+  useEffect(() => {
+    dataRef.current = data;
+  }, [data]);
 
   const validate = useCallback(async () => {
     setState((prev) => ({ ...prev, isValidating: true }));
@@ -490,7 +506,8 @@ export function useAsyncValidation<T>(
   }, [validateFn]);
 
   useEffect(() => {
-    validate();
+    void validate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
 }, [...deps, validate]);
 
 return {

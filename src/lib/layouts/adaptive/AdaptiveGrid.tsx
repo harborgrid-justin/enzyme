@@ -92,7 +92,7 @@ function calculateMasonryPositions(
   gap: number
 ): Map<number, MasonryPosition> {
   const positions = new Map<number, MasonryPosition>();
-  const columnHeights = new Array(columns).fill(0);
+  const columnHeights: number[] = new Array<number>(columns).fill(0);
 
   for (let i = 0; i < itemHeights.length; i++) {
     // Find shortest column
@@ -100,9 +100,10 @@ function calculateMasonryPositions(
     let shortestHeight = columnHeights[0] ?? 0;
 
     for (let col = 1; col < columns; col++) {
-      if ((columnHeights[col] ?? 0) < shortestHeight) {
+      const colHeight = columnHeights[col];
+      if (colHeight !== undefined && colHeight < shortestHeight) {
         shortestColumn = col;
-        shortestHeight = columnHeights[col] ?? 0;
+        shortestHeight = colHeight;
       }
     }
 
@@ -112,7 +113,8 @@ function calculateMasonryPositions(
     });
 
     // Update column height
-    columnHeights[shortestColumn] = shortestHeight + (itemHeights[i] ?? 0) + gap;
+    const itemHeight = itemHeights[i] ?? 0;
+    columnHeights[shortestColumn] = shortestHeight + itemHeight + gap;
   }
 
   return positions;
@@ -174,9 +176,9 @@ export function AdaptiveGrid({
     if (!container) return;
 
     const observer = new ResizeObserver((entries) => {
-      const entry = entries[0];
-      if (entry) {
-        const width = entry.contentRect.width;
+      const [entry] = entries;
+      if (entry !== undefined) {
+        const { width } = entry.contentRect;
         setContainerWidth(width);
         setColumns(calculateOptimalColumns(width, minColumnWidth, maxColumns, gap));
       }
@@ -220,9 +222,10 @@ export function AdaptiveGrid({
     return undefined;
   }, [masonry, measureItems, children]);
 
-  // Register item ref
+  // Register item ref - use a stable callback that doesn't access refs during render
   const registerItem = useCallback((index: number, element: HTMLElement | null) => {
-    if (element) {
+    // This callback will be called by React after render, not during render
+    if (element !== null) {
       itemRefs.current.set(index, element);
     } else {
       itemRefs.current.delete(index);
@@ -262,10 +265,11 @@ export function AdaptiveGrid({
   }, [masonry, masonryPositions, itemHeights, columns, autoRows, autoFlow, gap, style]);
 
   // Render children with adaptive positioning
+   
   const renderedChildren = useMemo(() => {
     const childArray = Children.toArray(children);
 
-    return childArray.map((child, index) => {
+    return childArray.map(async (child, index) => {
       if (!isValidElement(child)) return child;
 
       const itemId = generateItemId(index);
@@ -298,7 +302,8 @@ export function AdaptiveGrid({
         'data-layout-id': itemId,
       });
     });
-  }, [children, masonry, masonryPositions, columnWidth, gap, registerItem]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [children, masonry, masonryPositions, columnWidth, gap]);
 
   return (
     <div

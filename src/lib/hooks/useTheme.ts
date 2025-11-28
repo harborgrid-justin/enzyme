@@ -121,11 +121,16 @@ export function useSystemThemePreference(): {
   
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    
+
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    setPrefersDark(mediaQuery.matches);
-    
-    const handler = (e: MediaQueryListEvent) => {
+    // Use microtask to avoid synchronous setState in effect
+    Promise.resolve().then(() => {
+      setPrefersDark(mediaQuery.matches);
+    }).catch(() => {
+      // Ignore errors in cleanup
+    });
+
+    const handler = (e: MediaQueryListEvent): void => {
       setPrefersDark(e.matches);
     };
     

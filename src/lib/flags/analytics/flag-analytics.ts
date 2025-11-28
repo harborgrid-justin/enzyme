@@ -209,7 +209,7 @@ export class FlagAnalytics {
 
     // Check if we should flush
     if (this.events.length >= this.config.batchSize) {
-      this.flush();
+      void this.flush();
     }
 
     // Enforce max events
@@ -250,12 +250,12 @@ export class FlagAnalytics {
     metrics.variantCounts.set(event.variantId, currentCount + 1);
 
     // Track unique users
-    if (event.userId) {
+    if (event.userId != null && event.userId !== '') {
       metrics.uniqueUsers.add(event.userId);
     }
 
     // Track unique sessions
-    if (event.sessionId) {
+    if (event.sessionId != null && event.sessionId !== '') {
       metrics.uniqueSessions.add(event.sessionId);
     }
 
@@ -265,7 +265,7 @@ export class FlagAnalytics {
     }
 
     // Track cache hits
-    if (event.cached) {
+    if (event.cached === true) {
       metrics.cacheHits++;
     }
   }
@@ -284,7 +284,7 @@ export class FlagAnalytics {
         lastSeen: new Date(),
       });
     }
-    return this.flagMetrics.get(flagKey)!;
+    return this.flagMetrics.get(flagKey);
   }
 
   // ==========================================================================
@@ -351,7 +351,7 @@ export class FlagAnalytics {
     }
 
     this.flushTimer = setInterval(() => {
-      this.flush();
+      void this.flush();
     }, this.config.flushInterval);
   }
 
@@ -503,7 +503,7 @@ export class FlagAnalytics {
    * Enable or disable analytics.
    */
   setEnabled(enabled: boolean): void {
-    (this.config as any).enabled = enabled;
+    this.config.enabled = enabled;
     if (enabled) {
       this.startFlushTimer();
     } else {
@@ -517,6 +517,7 @@ export class FlagAnalytics {
 
   private log(message: string, ...args: unknown[]): void {
     if (this.config.debug) {
+      // eslint-disable-next-line no-console
       console.log(`[FlagAnalytics] ${message}`, ...args);
     }
   }
@@ -532,9 +533,7 @@ let instance: FlagAnalytics | null = null;
  * Get the singleton analytics instance.
  */
 export function getFlagAnalytics(): FlagAnalytics {
-  if (!instance) {
-    instance = new FlagAnalytics();
-  }
+  instance ??= new FlagAnalytics();
   return instance;
 }
 

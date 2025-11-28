@@ -69,7 +69,7 @@ export function useViewportPosition(): UseViewportPositionReturn {
   const [position, setPosition] = useState<ViewportPosition | null>(null);
 
   const context = useDOMContextValue();
-  const isSSR = context.isSSR;
+  const {isSSR} = context;
 
   /**
    * Handles visibility changes.

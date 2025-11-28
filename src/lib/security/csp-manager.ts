@@ -42,7 +42,7 @@ const MAX_VIOLATIONS_STORED = 100;
 /**
  * Debounce time for violation reports in milliseconds
  */
-const VIOLATION_REPORT_DEBOUNCE = SECURITY_TIMING.VIOLATION_REPORT_DEBOUNCE;
+const {VIOLATION_REPORT_DEBOUNCE} = SECURITY_TIMING;
 
 // ============================================================================
 // Cryptographic Utilities
@@ -131,9 +131,7 @@ class CSPManagerClass {
    * Get singleton instance of CSP Manager
    */
   static getInstance(config?: CSPManagerConfig): CSPManagerClass {
-    if (!CSPManagerClass.instance) {
-      CSPManagerClass.instance = new CSPManagerClass(config);
-    }
+    CSPManagerClass.instance ??= new CSPManagerClass(config);
     return CSPManagerClass.instance;
   }
 
@@ -314,7 +312,7 @@ class CSPManagerClass {
     }
 
     // Add report-uri if configured
-    if (this.config.reportUri) {
+    if (this.config.reportUri != null && this.config.reportUri !== '') {
       policy['report-uri'] = [this.config.reportUri];
     }
 
@@ -330,13 +328,13 @@ class CSPManagerClass {
     const directives: string[] = [];
 
     for (const [directive, values] of Object.entries(policy)) {
-      if (values && values.length > 0) {
+      if (values != null && values.length > 0) {
         // Some directives don't have values (e.g., upgrade-insecure-requests)
         const valueStr = values.length > 0 && values[0] !== ''
           ? ` ${values.join(' ')}`
           : '';
         directives.push(`${directive}${valueStr}`);
-      } else if (values) {
+      } else if (values != null) {
         // Directive without values (boolean-like)
         directives.push(directive);
       }
@@ -456,7 +454,7 @@ class CSPManagerClass {
     });
 
     // Queue for reporting
-    if (this.config.reportUri) {
+    if (this.config.reportUri != null && this.config.reportUri !== '') {
       this.queueViolationReport(violation);
     }
   }
@@ -474,7 +472,7 @@ class CSPManagerClass {
 
     // Set up debounced report
     this.reportDebounceTimer = setTimeout(() => {
-      this.flushViolationReports();
+      void this.flushViolationReports();
     }, VIOLATION_REPORT_DEBOUNCE);
   }
 
@@ -489,7 +487,7 @@ class CSPManagerClass {
    * @see {@link @/lib/api/api-client} for application API calls
    */
   private async flushViolationReports(): Promise<void> {
-    if (this.pendingReports.length === 0 || !this.config.reportUri) {
+    if (this.pendingReports.length === 0 || this.config.reportUri == null || this.config.reportUri === '') {
       return;
     }
 
@@ -659,7 +657,7 @@ export function parseCSPString(cspString: string): CSPPolicy {
 
     const parts = directive.split(/\s+/);
     const name = parts[0] as CSPDirective;
-    const values = parts.slice(1) as CSPSourceValue[];
+    const values = parts.slice(1);
 
     policy[name] = values.length > 0 ? values : [];
   }
@@ -744,7 +742,7 @@ export function validateCSPPolicy(policy: CSPPolicy): {
     if (!values) continue;
 
     for (const { value, message } of dangerousValues) {
-      if (values.includes(value as CSPSourceValue)) {
+      if (values.includes(value)) {
         warnings.push(`${directive}: ${message}`);
       }
     }

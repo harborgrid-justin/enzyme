@@ -1238,7 +1238,7 @@ export function createScopedEmitter<Events extends Record<string, unknown>>(
     const originalEmit = scoped.emit.bind(scoped);
     scoped.emit = async <K extends keyof Events>(event: K, data: Events[K]) => {
       await originalEmit(event, data);
-      await baseEmitter.emit(`${namespace}:${String(event)}` as keyof Record<string, unknown>, data);
+      await baseEmitter.emit(`${namespace}:${String(event)}`, data);
     };
   }
 
@@ -1284,7 +1284,7 @@ export function dedupeHandler<T>(
 ): EventHandler<T> {
   const seen = new Map<string, number>();
 
-  return (data: T) => {
+  return async (data: T) => {
     const key = keyFn(data);
     const now = Date.now();
     const lastSeen = seen.get(key);
@@ -1343,7 +1343,7 @@ export function filterHandler<T>(
   handler: EventHandler<T>,
   predicate: (data: T) => boolean
 ): EventHandler<T> {
-  return (data: T) => {
+  return async (data: T) => {
     if (predicate(data)) {
       return handler(data);
     }
@@ -1357,7 +1357,7 @@ export function mapHandler<T, U>(
   handler: EventHandler<U>,
   transform: (data: T) => U
 ): EventHandler<T> {
-  return (data: T) => {
+  return async (data: T) => {
     return handler(transform(data));
   };
 }

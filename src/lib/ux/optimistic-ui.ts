@@ -231,7 +231,7 @@ export class OptimisticUpdateManager<T> {
     ...args: TArgs
   ): Promise<void> {
     const update = this.updates.get(id);
-    if (!update || update.status !== 'failed') {
+    if (update?.status !== 'failed') {
       return;
     }
 
@@ -413,7 +413,7 @@ export class OptimisticUpdateManager<T> {
     return `opt-${Date.now()}-${++this.idCounter}`;
   }
 
-  private sleep(ms: number): Promise<void> {
+  private async sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 

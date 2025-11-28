@@ -30,7 +30,7 @@ export function defer<T = void>(): Deferred<T> {
 /**
  * Delay execution for a specified time
  */
-export function delay(ms: number): Promise<void> {
+export async function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
@@ -159,7 +159,7 @@ export function debounceAsync<T extends (...args: unknown[]) => Promise<unknown>
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
   let pendingPromise: Promise<unknown> | null = null;
 
-  return ((...args: unknown[]) => {
+  return (async (...args: unknown[]) => {
     if (timeoutId) {
       clearTimeout(timeoutId);
     }
@@ -190,7 +190,7 @@ export function throttleAsync<T extends (...args: unknown[]) => Promise<unknown>
   let lastExecution = 0;
   let pendingPromise: Promise<unknown> | null = null;
 
-  return ((...args: unknown[]) => {
+  return (async (...args: unknown[]) => {
     const now = Date.now();
     const timeSinceLast = now - lastExecution;
 

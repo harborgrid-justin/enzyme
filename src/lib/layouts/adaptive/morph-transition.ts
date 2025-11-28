@@ -113,7 +113,7 @@ function createSpringEasing(stiffness: number, damping: number, mass: number): (
  */
 function parseCubicBezier(bezierStr: string): (t: number) => number {
   const match = bezierStr.match(/cubic-bezier\(([^)]+)\)/);
-  if (!match?.[1]) return EASING_FUNCTIONS.ease as (t: number) => number;
+  if (match?.[1] == null) return EASING_FUNCTIONS.ease as (t: number) => number;
 
   const [p1x, p1y, p2x, p2y] = match[1].split(',').map((s) => parseFloat(s.trim()));
   if (p1x === undefined || p1y === undefined || p2x === undefined || p2y === undefined) {
@@ -172,7 +172,7 @@ function getLayoutRect(element: HTMLElement): LayoutRect {
   const style = getComputedStyle(element);
 
   // Parse current transform
-  const transform = style.transform;
+  const {transform} = style;
   let scaleX = 1;
   let scaleY = 1;
   let rotation = 0;
@@ -379,7 +379,10 @@ export class MorphController implements MorphControllerInterface {
 
     // Force layout to ensure transforms are applied
     if (elements.size > 0) {
-      elements.values().next().value?.offsetHeight;
+      const firstElement = elements.values().next().value;
+      if (firstElement != null) {
+        void firstElement.offsetHeight;
+      }
     }
 
     const context: AnimationContext = {
@@ -404,15 +407,15 @@ export class MorphController implements MorphControllerInterface {
     this._assertNotDestroyed();
 
     // Cancel any existing animation
-    if (this._activeContext?.isRunning) {
-      if (this._config.interruptible) {
+    if (this._activeContext?.isRunning === true) {
+      if (this._config.interruptible === true) {
         this.cancel();
       } else {
         // Wait for current animation to complete
         return new Promise((resolve) => {
-          const checkComplete = () => {
-            if (!this._activeContext?.isRunning) {
-              this.play(context).then(resolve);
+          const checkComplete = (): void => {
+            if (this._activeContext?.isRunning !== true) {
+              void this.play(context).then(resolve);
             } else {
               requestAnimationFrame(checkComplete);
             }
@@ -434,8 +437,8 @@ export class MorphController implements MorphControllerInterface {
       const elements = this._collectElements(context.snapshots);
       const easingFn = getEasingFunction(this._config.easing);
 
-      const animate = (timestamp: number) => {
-        if (!this._activeContext || !this._activeContext.isRunning) {
+      const animate = (timestamp: number): void => {
+        if (this._activeContext?.isRunning !== true) {
           resolve();
           return;
         }
@@ -524,7 +527,7 @@ export class MorphController implements MorphControllerInterface {
       this._animationFrameId = null;
     }
 
-    if (this._activeContext?.isRunning) {
+    if (this._activeContext?.isRunning === true) {
       const elements = this._collectElements(this._activeContext.snapshots);
       this._cleanupAnimation(elements);
 
@@ -562,8 +565,8 @@ export class MorphController implements MorphControllerInterface {
     const elements = new Map<string, HTMLElement>();
 
     for (const [id] of snapshots) {
-      const element = document.querySelector(`[data-layout-id="${id}"]`) as HTMLElement | null;
-      if (element) {
+      const element = document.querySelector(`[data-layout-id="${id}"]`);
+      if (element instanceof HTMLElement) {
         elements.set(id, element);
       }
     }
@@ -684,9 +687,9 @@ export async function performFLIP(
 
   // Ensure all elements have layout IDs
   for (const element of elements) {
-    let id = element.getAttribute('data-layout-id');
-    if (!id) {
-      id = `flip_${Math.random().toString(36).substring(2, 9)}`;
+    const existingId = element.getAttribute('data-layout-id');
+    const id = existingId != null && existingId !== '' ? existingId : `flip_${Math.random().toString(36).substring(2, 9)}`;
+    if (existingId == null || existingId === '') {
       element.setAttribute('data-layout-id', id);
     }
     elementMap.set(id, element);

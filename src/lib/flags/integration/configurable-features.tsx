@@ -1,3 +1,4 @@
+import React from 'react';
 /**
  * @fileoverview Configurable features system for dynamic feature management.
  *

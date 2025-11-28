@@ -532,7 +532,7 @@ export class WebVitalsCollector {
         const entry = list.getEntries()[0] as PerformanceEntry & {
           processingStart?: number;
         };
-        if (entry !== undefined && entry.processingStart !== undefined) {
+        if (entry?.processingStart !== undefined) {
           this.vitals.FID = entry.processingStart - entry.startTime;
           this.notify();
         }

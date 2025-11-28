@@ -116,10 +116,10 @@ export function useConfig<T extends ConfigRecord>(
   // Get initial config
   const getConfig = useCallback((): DeepReadonly<T> => {
     const fullConfig = getNamespace<T>(namespace);
-    if (selector) {
-      return selector(fullConfig as T) as DeepReadonly<T>;
+    if (selector !== undefined && selector !== null) {
+      return selector(fullConfig) as DeepReadonly<T>;
     }
-    return fullConfig as DeepReadonly<T>;
+    return fullConfig;
   }, [getNamespace, namespace, selector]);
 
   const [config, setConfig] = useState<DeepReadonly<T>>(getConfig);
@@ -131,11 +131,11 @@ export function useConfig<T extends ConfigRecord>(
       return;
     }
 
-    const handleChange = (event: ConfigChangeEvent) => {
+    const handleChange = (event: ConfigChangeEvent): void => {
       const newConfig = getConfig();
 
       // Only update if config actually changed
-      if (!prevConfigRef.current || !isEqual(prevConfigRef.current as T, newConfig as T)) {
+      if (!prevConfigRef.current || !isEqual(prevConfigRef.current, newConfig)) {
         prevConfigRef.current = newConfig;
         setConfig(newConfig);
         setLastUpdated(event.timestamp);
@@ -149,15 +149,15 @@ export function useConfig<T extends ConfigRecord>(
   }, [namespace, subscribe, shouldSubscribe, getConfig, isEqual]);
 
   // Sync with context when initialized
+  const initializedRef = useRef(false);
   useEffect(() => {
-    if (isInitialized) {
+    if (isInitialized && !initializedRef.current) {
+      initializedRef.current = true;
       const newConfig = getConfig();
-      if (!prevConfigRef.current || !isEqual(prevConfigRef.current as T, newConfig as T)) {
-        prevConfigRef.current = newConfig;
-        setConfig(newConfig);
-      }
+      prevConfigRef.current = newConfig;
+      setConfig(newConfig);
     }
-  }, [isInitialized, getConfig, isEqual]);
+  }, [isInitialized, getConfig]);
 
   // Refresh function
   const refresh = useCallback(() => {

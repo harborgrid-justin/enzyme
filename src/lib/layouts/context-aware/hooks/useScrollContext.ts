@@ -17,7 +17,7 @@ import type {
 } from '../types';
 import { useDOMContextValue } from '../DOMContextProvider';
 import {
-  ScrollTracker,
+  type ScrollTracker,
   ScrollContainerRegistry,
   type ScrollCallback,
 } from '../scroll-tracker';

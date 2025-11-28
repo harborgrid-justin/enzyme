@@ -148,8 +148,8 @@ export class IdleScheduler {
 
     const task: IdleTask<T> = {
       id,
-      name: options.name || `task-${id}`,
-      priority: options.priority || 'normal',
+      name: options.name ?? `task-${id}`,
+      priority: options.priority ?? 'normal',
       work,
       timeout: options.timeout ?? this.config.defaultTimeout,
       onComplete: options.onComplete,
@@ -174,7 +174,7 @@ export class IdleScheduler {
   /**
    * Schedule a task and return a promise for its completion
    */
-  scheduleAsync<T>(
+  async scheduleAsync<T>(
     work: (deadline: IdleDeadline) => T | Promise<T>,
     options: Partial<Omit<IdleTask<T>, 'id' | 'work'>> = {}
   ): Promise<T> {
@@ -192,7 +192,7 @@ export class IdleScheduler {
       });
 
       // Store callback for potential cancellation
-      const callbacks = this.completionCallbacks.get(id) || [];
+      const callbacks = this.completionCallbacks.get(id) ?? [];
       callbacks.push(resolve as (result: unknown) => void);
       this.completionCallbacks.set(id, callbacks);
     });
@@ -204,7 +204,7 @@ export class IdleScheduler {
   cancel(taskId: string): boolean {
     const entry = this.taskQueue.get(taskId);
 
-    if (!entry || entry.status !== 'pending') {
+    if (entry?.status !== 'pending') {
       return false;
     }
 
@@ -213,7 +213,7 @@ export class IdleScheduler {
 
     // Notify callbacks
     const callbacks = this.completionCallbacks.get(taskId);
-    if (callbacks) {
+    if (callbacks !== undefined) {
       // Don't reject, just remove
       this.completionCallbacks.delete(taskId);
     }
@@ -245,7 +245,7 @@ export class IdleScheduler {
    */
   getTaskStatus(taskId: string): IdleTaskStatus | null {
     const entry = this.taskQueue.get(taskId);
-    return entry?.status || null;
+    return entry?.status ?? null;
   }
 
   /**
@@ -256,10 +256,10 @@ export class IdleScheduler {
 
     const completed = entries.filter((e) => e.status === 'completed');
     const waitTimes = completed
-      .filter((e) => e.startedAt)
+      .filter((e) => e.startedAt != null)
       .map((e) => (e.startedAt as number) - e.createdAt);
     const execTimes = completed
-      .filter((e) => e.completedAt && e.startedAt)
+      .filter((e) => e.completedAt != null && e.startedAt != null)
       .map((e) => (e.completedAt as number) - (e.startedAt as number));
 
     return {
@@ -296,7 +296,7 @@ export class IdleScheduler {
    * Stop the scheduler
    */
   stop(): void {
-    if (!this.isRunning) {
+    if (this.isRunning === false) {
       return;
     }
 
@@ -329,7 +329,7 @@ export class IdleScheduler {
   // ============================================================================
 
   private ensureSchedulerRunning(): void {
-    if (!this.isRunning) {
+    if (this.isRunning === false) {
       this.start();
     } else if (this.idleCallbackId === null && this.fallbackTimer === null) {
       this.scheduleIdleCallback();
@@ -337,7 +337,7 @@ export class IdleScheduler {
   }
 
   private scheduleIdleCallback(): void {
-    if (!this.isRunning) {
+    if (this.isRunning === false) {
       return;
     }
 
@@ -378,7 +378,7 @@ export class IdleScheduler {
         break;
       }
 
-      this.executeTask(entry, deadline);
+      void this.executeTask(entry, deadline);
       processed++;
     }
 
@@ -410,7 +410,7 @@ export class IdleScheduler {
         break;
       }
 
-      this.executeTask(entry, deadline);
+      void this.executeTask(entry, deadline);
       processed++;
     }
 
@@ -434,7 +434,7 @@ export class IdleScheduler {
       entry.result = result;
 
       this.log(
-        `Task completed: ${task.name} (${entry.completedAt - (entry.startedAt || 0)}ms)`
+        `Task completed: ${task.name} (${entry.completedAt - (entry.startedAt ?? 0)}ms)`
       );
 
       task.onComplete?.(result);
@@ -476,7 +476,7 @@ export class IdleScheduler {
     let minTimeout = this.config.defaultTimeout;
 
     for (const entry of this.taskQueue.values()) {
-      if (entry.status === 'pending' && entry.task.timeout) {
+      if (entry.status === 'pending' && entry.task.timeout !== undefined) {
         minTimeout = Math.min(minTimeout, entry.task.timeout);
       }
     }
@@ -505,6 +505,7 @@ export class IdleScheduler {
 
   private log(message: string, ...args: unknown[]): void {
     if (this.config.debug) {
+      // eslint-disable-next-line no-console
       console.log(`[IdleScheduler] ${message}`, ...args);
     }
   }
@@ -522,9 +523,7 @@ let schedulerInstance: IdleScheduler | null = null;
 export function getIdleScheduler(
   config?: Partial<IdleSchedulerConfig>
 ): IdleScheduler {
-  if (!schedulerInstance) {
-    schedulerInstance = new IdleScheduler(config);
-  }
+  schedulerInstance ??= new IdleScheduler(config);
   return schedulerInstance;
 }
 
@@ -532,7 +531,7 @@ export function getIdleScheduler(
  * Reset the scheduler instance
  */
 export function resetIdleScheduler(): void {
-  if (schedulerInstance) {
+  if (schedulerInstance !== null) {
     schedulerInstance.stop();
     schedulerInstance = null;
   }
@@ -545,7 +544,7 @@ export function resetIdleScheduler(): void {
 /**
  * Execute work during idle time (convenience function)
  */
-export function runWhenIdle<T>(
+export async function runWhenIdle<T>(
   work: (deadline: IdleDeadline) => T | Promise<T>,
   options?: Partial<Omit<IdleTask<T>, 'id' | 'work'>>
 ): Promise<T> {
@@ -575,7 +574,7 @@ export function* createYieldingIterator<T>(
     yield i + 1;
 
     // Yield control if deadline is approaching
-    if (!deadline.didTimeout && deadline.timeRemaining() < 2) {
+    if (deadline.didTimeout === false && deadline.timeRemaining() < 2) {
       return;
     }
   }
@@ -597,7 +596,7 @@ export async function processInIdleChunks<T>(
       const end = Math.min(processed + chunkSize, items.length);
 
       while (processed < end) {
-        if (!deadline.didTimeout && deadline.timeRemaining() < 2) {
+        if (deadline.didTimeout === false && deadline.timeRemaining() < 2) {
           break;
         }
         const item = items[processed];
@@ -619,7 +618,7 @@ export function debounceToIdle<T extends (...args: unknown[]) => void>(
   const scheduler = getIdleScheduler();
 
   return (...args: Parameters<T>) => {
-    if (taskId) {
+    if (taskId !== null) {
       scheduler.cancel(taskId);
     }
 

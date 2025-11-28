@@ -466,8 +466,8 @@ export class ResponseNormalizer {
 
     return {
       currentPage: (currentPage as number) ?? 1,
-      totalPages: (totalPages as number) ?? 1,
-      pageSize: (pageSize as number) ?? 20,
+      totalPages: (totalPages) ?? 1,
+      pageSize: (pageSize) ?? 20,
       totalItems: (totalItems as number) ?? 0,
       hasNextPage,
       hasPrevPage,
@@ -493,10 +493,7 @@ export class ResponseNormalizer {
 
     if (meta && this.isObject(meta)) {
       // Filter out pagination fields that are handled separately
-      const { page, number, size, totalElements, totalPages, ...rest } = meta as Record<
-        string,
-        unknown
-      >;
+      const { page, number, size, totalElements, totalPages, ...rest } = meta;
       return Object.keys(rest).length > 0 ? rest : undefined;
     }
 
@@ -545,7 +542,7 @@ export class ResponseNormalizer {
 
       for (const item of included) {
         if (this.isObject(item) && 'type' in item) {
-          const type = (item as { type: string }).type;
+          const {type} = (item as { type: string });
           if (!grouped[type]) grouped[type] = [];
           grouped[type].push(item);
         }
@@ -600,7 +597,7 @@ export class ResponseNormalizer {
 
     for (const key of keys) {
       if (!this.isObject(current)) return undefined;
-      current = (current as Record<string, unknown>)[key];
+      current = (current)[key];
     }
 
     return current;

@@ -16,6 +16,7 @@ import React, {
   useMemo,
   useCallback,
   useState,
+  useRef,
   type ReactNode,
 } from 'react';
 import type {
@@ -105,15 +106,14 @@ export function ConfigProvider({
 }: ConfigProviderProps): React.ReactElement {
   const [isInitialized, setIsInitialized] = useState(skipInitialization);
   const [initError, setInitError] = useState<Error | null>(null);
-  const [dynamicState, setDynamicState] = useState<DynamicConfigState>({
-    initialized: false,
-    syncing: false,
-    connectionStatus: 'disconnected',
-  });
 
   // Get singleton instances
   const registry = useMemo(() => getConfigRegistry(), []);
   const dynamicConfig = useMemo(() => getDynamicConfig(), []);
+
+  // Initialize dynamic state from config once
+  const initialDynamicState = useMemo(() => dynamicConfig.getState(), [dynamicConfig]);
+  const [dynamicState, setDynamicState] = useState<DynamicConfigState>(initialDynamicState);
 
   // Initialize configuration system
   useEffect(() => {
@@ -123,7 +123,7 @@ export function ConfigProvider({
 
     let mounted = true;
 
-    const initialize = async () => {
+    const initialize = async (): Promise<void> => {
       try {
         // Load initial config if provided
         if (initialConfig) {
@@ -149,7 +149,7 @@ export function ConfigProvider({
       }
     };
 
-    initialize();
+    void initialize();
 
     return () => {
       mounted = false;
@@ -161,9 +161,6 @@ export function ConfigProvider({
     const unsubscribe = dynamicConfig.subscribeToState((state) => {
       setDynamicState(state);
     });
-
-    // Get initial state
-    setDynamicState(dynamicConfig.getState());
 
     return unsubscribe;
   }, [dynamicConfig]);
@@ -276,7 +273,7 @@ export function ConfigProvider({
   }
 
   // Show loading state
-  if (!isInitialized && loadingComponent) {
+  if (!isInitialized && loadingComponent != null) {
     return <>{loadingComponent}</>;
   }
 

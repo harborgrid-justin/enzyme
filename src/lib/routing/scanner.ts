@@ -213,7 +213,7 @@ async function scanDirectory(
 
   let entries: Dirent[];
   try {
-    entries = await fs.readdir(dirPath, { withFileTypes: true }) as Dirent[];
+    entries = await fs.readdir(dirPath, { withFileTypes: true });
   } catch {
     return routes;
   }
@@ -446,7 +446,7 @@ export async function scanRouteFilesParallel(
   async function processDirectory(dirPath: string, basePath: string): Promise<void> {
     let entries: Dirent[];
     try {
-      entries = await fs.readdir(dirPath, { withFileTypes: true }) as Dirent[];
+      entries = await fs.readdir(dirPath, { withFileTypes: true });
     } catch {
       return;
     }

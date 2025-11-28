@@ -48,7 +48,7 @@ export interface BreadcrumbsProps {
 /**
  * Default separator icon - memoized for performance
  */
-const DefaultSeparator = memo(function DefaultSeparator(): React.ReactElement {
+const DefaultSeparator = memo((): React.ReactElement => {
   return (
     <svg
       width="16"
@@ -71,7 +71,7 @@ DefaultSeparator.displayName = 'DefaultSeparator';
 /**
  * Default home icon - memoized for performance
  */
-const DefaultHomeIcon = memo(function DefaultHomeIcon(): React.ReactElement {
+const DefaultHomeIcon = memo((): React.ReactElement => {
   return (
     <svg
       width="16"
@@ -142,7 +142,7 @@ function generateBreadcrumbs(
 /**
  * Breadcrumbs component - memoized for performance
  */
-export const Breadcrumbs = memo(function Breadcrumbs({
+export const Breadcrumbs = memo(({
   items: customItems,
   pathLabels = {},
   homePath = '/',
@@ -151,7 +151,7 @@ export const Breadcrumbs = memo(function Breadcrumbs({
   separator,
   maxItems,
   className,
-}: BreadcrumbsProps): React.ReactElement | null {
+}: BreadcrumbsProps): React.ReactElement | null => {
   const location = useLocation();
   
   // Generate or use custom items

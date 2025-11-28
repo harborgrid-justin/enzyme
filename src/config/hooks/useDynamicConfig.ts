@@ -5,7 +5,7 @@
  * @module config/hooks/useDynamicConfig
  */
 
-import { useCallback, useEffect, useState, useMemo } from 'react';
+import { useCallback, useEffect, useState, useMemo, useRef } from 'react';
 import type {
   DynamicConfigState,
   FeatureFlagResult,
@@ -141,9 +141,9 @@ export function useFeatureFlag(
     () => ({
       userId,
       userRole,
-      environment: (env.appEnv as ConfigEnvironment) || 'development',
+      environment: (env.appEnv as ConfigEnvironment) ?? 'development',
       attributes,
-      sessionId: typeof window !== 'undefined' ? sessionStorage.getItem('session_id') || undefined : undefined,
+      sessionId: typeof window !== 'undefined' ? (sessionStorage.getItem('session_id') !== null && sessionStorage.getItem('session_id') !== '' ? sessionStorage.getItem('session_id') : undefined) : undefined,
     }),
     [userId, userRole, attributes]
   );
@@ -439,9 +439,11 @@ export function useFeatureFlagOverride(): UseFeatureFlagOverrideResult {
 export function useRemoteConfig<T extends import('../types').ConfigValue>(key: string, defaultValue: T): T {
   const { dynamicConfig, isInitialized } = useConfigContext();
   const [value, setValue] = useState<T>(defaultValue);
+  const initializedRef = useRef(false);
 
   useEffect(() => {
-    if (isInitialized) {
+    if (isInitialized && !initializedRef.current) {
+      initializedRef.current = true;
       const config = dynamicConfig.getRuntimeConfig<T>(
         'features' as unknown as import('../types').ConfigNamespace,
         key

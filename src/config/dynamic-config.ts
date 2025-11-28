@@ -261,7 +261,7 @@ export class DynamicConfigManager {
   private async fetchFromRemoteAPI(): Promise<RemoteConfigResponse> {
     // This would be replaced with actual API call
     // For now, return empty config
-    return { flags: {}, tests: {}, config: {} };
+    return Promise.resolve({ flags: {}, tests: {}, config: {} });
   }
 
   /**
@@ -270,7 +270,7 @@ export class DynamicConfigManager {
   private async fetchFromLaunchDarkly(): Promise<RemoteConfigResponse> {
     // This would integrate with LaunchDarkly SDK
     // For now, return empty config
-    return { flags: {}, tests: {}, config: {} };
+    return Promise.resolve({ flags: {}, tests: {}, config: {} });
   }
 
   /**
@@ -280,30 +280,31 @@ export class DynamicConfigManager {
     // Apply feature flags
     if (config.flags) {
       Object.entries(config.flags).forEach(([key, value]) => {
-        this.flags.set(key, value as FeatureFlagConfig);
+        this.flags.set(key, value);
       });
     }
 
     // Apply A/B tests
     if (config.tests) {
       Object.entries(config.tests).forEach(([key, value]) => {
-        this.abTests.set(key, value as ABTestConfig);
+        this.abTests.set(key, value);
       });
     }
 
     // Apply general config
     if (config.config) {
       Object.entries(config.config).forEach(([namespace, values]) => {
-        Object.entries(values as ConfigRecord).forEach(([key, value]) => {
+        Object.entries(values).forEach(([key, value]) => {
           this.registry.set(
             CONFIG_NAMESPACES.FEATURES,
             `${namespace}.${key}`,
-            value as ConfigValue,
+            value,
             { source: 'remote' }
           );
         });
       });
     }
+    return Promise.resolve();
   }
 
   /**
@@ -331,7 +332,7 @@ export class DynamicConfigManager {
       );
 
       this.state.retryCount++;
-      setTimeout(() => this.syncWithRemote(), delay);
+      setTimeout(() => { void this.syncWithRemote(); }, delay);
     }
   }
 
@@ -345,15 +346,18 @@ export class DynamicConfigManager {
   private async loadFromCache(): Promise<void> {
     try {
       const cached = localStorage.getItem('dynamic_config_cache');
-      if (cached) {
+      if (cached != null) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const { flags, tests, timestamp } = JSON.parse(cached);
-        const age = Date.now() - timestamp;
+        const age = Date.now() - (timestamp as number);
 
         if (age < this.options.cacheDuration) {
-          Object.entries(flags || {}).forEach(([key, value]) => {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+          Object.entries(flags ?? {}).forEach(([key, value]) => {
             this.flags.set(key, value as FeatureFlagConfig);
           });
-          Object.entries(tests || {}).forEach(([key, value]) => {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+          Object.entries(tests ?? {}).forEach(([key, value]) => {
             this.abTests.set(key, value as ABTestConfig);
           });
         }
@@ -361,6 +365,7 @@ export class DynamicConfigManager {
     } catch (error) {
       console.warn('[DynamicConfig] Failed to load from cache:', error);
     }
+    return Promise.resolve();
   }
 
   /**
@@ -377,6 +382,7 @@ export class DynamicConfigManager {
     } catch (error) {
       console.warn('[DynamicConfig] Failed to save to cache:', error);
     }
+    return Promise.resolve();
   }
 
   // ---------------------------------------------------------------------------
@@ -392,7 +398,7 @@ export class DynamicConfigManager {
     }
 
     this.state.pollingInterval = setInterval(() => {
-      this.syncWithRemote();
+      void this.syncWithRemote();
     }, this.options.pollingInterval);
   }
 
@@ -419,7 +425,7 @@ export class DynamicConfigManager {
     }
 
     try {
-      const wsUrl = env.wsUrl;
+      const {wsUrl} = env;
       this.state.webSocket = new WebSocket(`${wsUrl}/config`);
 
       this.state.webSocket.onopen = () => {
@@ -428,6 +434,7 @@ export class DynamicConfigManager {
 
       this.state.webSocket.onmessage = (event) => {
         try {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
           const update = JSON.parse(event.data) as ConfigUpdate;
           this.handleConfigUpdate(update);
         } catch (error) {
@@ -518,7 +525,7 @@ export class DynamicConfigManager {
     }
 
     // Check if flag is expired
-    if (flag.expiresAt && new Date(flag.expiresAt) < new Date()) {
+    if (flag.expiresAt != null && new Date(flag.expiresAt) < new Date()) {
       return {
         key,
         value: false,
@@ -527,7 +534,7 @@ export class DynamicConfigManager {
     }
 
     // Check environment
-    if (flag.environments && !flag.environments.includes(context.environment)) {
+    if (flag.environments != null && !flag.environments.includes(context.environment)) {
       return {
         key,
         value: false,
@@ -536,7 +543,7 @@ export class DynamicConfigManager {
     }
 
     // Check role
-    if (flag.minRole && context.userRole) {
+    if (flag.minRole != null && context.userRole != null) {
       if (!this.hasMinimumRole(context.userRole, flag.minRole)) {
         return {
           key,
@@ -548,7 +555,7 @@ export class DynamicConfigManager {
 
     // Check rollout percentage
     if (flag.rolloutPercentage !== undefined && flag.rolloutPercentage < 100) {
-      const bucket = this.getUserBucket(context.userId || context.sessionId || '', key);
+      const bucket = this.getUserBucket(context.userId ?? context.sessionId ?? '', key);
       if (bucket > flag.rolloutPercentage) {
         return {
           key,
@@ -654,7 +661,8 @@ export class DynamicConfigManager {
   public getOverrides(): Record<string, boolean> {
     try {
       const stored = localStorage.getItem('feature_flag_overrides');
-      return stored ? JSON.parse(stored) : {};
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      return stored != null ? JSON.parse(stored) : {};
     } catch {
       return {};
     }
@@ -700,23 +708,23 @@ export class DynamicConfigManager {
     userId?: string
   ): ABTestVariant | undefined {
     const test = this.abTests.get(testId);
-    if (!test || test.status !== 'running') {
+    if (test?.status !== 'running') {
       return undefined;
     }
 
     // Check cached assignment
-    const cacheKey = `${testId}:${userId || 'anonymous'}`;
+    const cacheKey = `${testId}:${userId ?? 'anonymous'}`;
     const cachedVariant = this.userAssignments.get(cacheKey);
-    if (cachedVariant) {
-      return test.variants.find((v) => v.id === cachedVariant);
+    if (cachedVariant != null) {
+      return test.variants.find((v) => v.id === cachedVariant) ?? undefined;
     }
 
     // Assign variant based on user bucket
-    const bucket = this.getUserBucket(userId || '', testId);
+    const bucket = this.getUserBucket(userId ?? '', testId);
     let cumulativeAllocation = 0;
 
     for (const variant of test.variants) {
-      cumulativeAllocation += test.allocation[variant.id] || 0;
+      cumulativeAllocation += test.allocation[variant.id] ?? 0;
       if (bucket < cumulativeAllocation) {
         this.userAssignments.set(cacheKey, variant.id);
         return variant;
@@ -815,9 +823,7 @@ let dynamicConfigInstance: DynamicConfigManager | null = null;
 export function getDynamicConfig(
   options?: DynamicConfigOptions
 ): DynamicConfigManager {
-  if (!dynamicConfigInstance) {
-    dynamicConfigInstance = new DynamicConfigManager(options);
-  }
+  dynamicConfigInstance ??= new DynamicConfigManager(options);
   return dynamicConfigInstance;
 }
 

@@ -209,7 +209,7 @@ export class RequestOrchestrator {
     rejected: { request: GatewayRequest; error: Error }[];
   }> {
     const results = await Promise.allSettled(
-      requests.map(request => this.executor<T>(request))
+      requests.map(async request => this.executor<T>(request))
     );
 
     const fulfilled: GatewayResponse<T>[] = [];
@@ -233,7 +233,7 @@ export class RequestOrchestrator {
    * @returns First completed result
    */
   async race<T = unknown>(requests: GatewayRequest[]): Promise<GatewayResponse<T>> {
-    return Promise.race(requests.map(request => this.executor<T>(request)));
+    return Promise.race(requests.map(async request => this.executor<T>(request)));
   }
 
   // ===========================================================================
@@ -618,7 +618,7 @@ export class RequestOrchestrator {
   /**
    * Delay execution.
    */
-  private delay(ms: number): Promise<void> {
+  private async delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 }

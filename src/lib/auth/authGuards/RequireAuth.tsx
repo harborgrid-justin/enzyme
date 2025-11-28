@@ -33,11 +33,11 @@ interface RequireAuthProps {
  * </RequireAuth>
  * ```
  */
-export const RequireAuth = memo(function RequireAuth({
+export const RequireAuth = memo(({
   children,
   redirectTo = routes.login,
   fallback
-}: RequireAuthProps) {
+}: RequireAuthProps) => {
   const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
 

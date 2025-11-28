@@ -12,6 +12,7 @@
  * - Font preloading coordination
  */
 
+import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 // ============================================================================
@@ -198,12 +199,12 @@ class CSSAnalyzer {
     // Analyze all stylesheets
     Array.from(document.styleSheets).forEach((stylesheet) => {
       try {
-        const cssRules = stylesheet.cssRules || stylesheet.rules;
-        if (!cssRules) return;
+        const cssRules = stylesheet.cssRules ?? stylesheet.rules;
+        if (cssRules == null) return;
 
         Array.from(cssRules).forEach((rule) => {
-          const analyzed = this.analyzeRule(rule, stylesheet.href || 'inline');
-          if (analyzed) {
+          const analyzed = this.analyzeRule(rule, stylesheet.href ?? 'inline');
+          if (analyzed != null) {
             rules.push(...analyzed);
           }
         });
@@ -348,9 +349,10 @@ class CSSAnalyzer {
    * Uses pre-compiled RegExp patterns from cache for performance
    */
   private isCriticalSelector(selector: string): boolean {
-    return CRITICAL_SELECTORS.some((pattern, index) =>
-      selector.includes(pattern) || CRITICAL_SELECTOR_PATTERNS[index]!.test(selector)
-    );
+    return CRITICAL_SELECTORS.some((pattern, index) => {
+      const regexPattern = CRITICAL_SELECTOR_PATTERNS[index];
+      return selector.includes(pattern) || regexPattern?.test(selector) === true;
+    });
   }
 
   /**
@@ -399,18 +401,18 @@ class CSSAnalyzer {
     let score = 0;
 
     // IDs
-    const ids = (selector.match(/#[a-zA-Z][\w-]*/g) || []).length;
+    const ids = (selector.match(/#[a-zA-Z][\w-]*/g) ?? []).length;
     score += ids * 100;
 
     // Classes, attributes, pseudo-classes
-    const classes = (selector.match(/\.[a-zA-Z][\w-]*/g) || []).length;
-    const attrs = (selector.match(/\[[^\]]+\]/g) || []).length;
-    const pseudoClasses = (selector.match(/:[a-zA-Z][\w-]*/g) || []).length;
+    const classes = (selector.match(/\.[a-zA-Z][\w-]*/g) ?? []).length;
+    const attrs = (selector.match(/\[[^\]]+\]/g) ?? []).length;
+    const pseudoClasses = (selector.match(/:[a-zA-Z][\w-]*/g) ?? []).length;
     score += (classes + attrs + pseudoClasses) * 10;
 
     // Elements, pseudo-elements
-    const elements = (selector.match(/(?:^|\s)[a-zA-Z][\w-]*/g) || []).length;
-    const pseudoElements = (selector.match(/::[a-zA-Z][\w-]*/g) || []).length;
+    const elements = (selector.match(/(?:^|\s)[a-zA-Z][\w-]*/g) ?? []).length;
+    const pseudoElements = (selector.match(/::[a-zA-Z][\w-]*/g) ?? []).length;
     score += elements + pseudoElements;
 
     return score;
@@ -446,9 +448,7 @@ export class CriticalCSSExtractor {
    * Get singleton instance
    */
   static getInstance(config?: CriticalCSSConfig): CriticalCSSExtractor {
-    if (!CriticalCSSExtractor.instance) {
-      CriticalCSSExtractor.instance = new CriticalCSSExtractor(config);
-    }
+    CriticalCSSExtractor.instance ??= new CriticalCSSExtractor(config);
     return CriticalCSSExtractor.instance;
   }
 
@@ -464,11 +464,12 @@ export class CriticalCSSExtractor {
    * Extract critical CSS
    */
   extract(routePath?: string): CriticalCSSResult {
-    const cacheKey = routePath || window.location.pathname;
+    const cacheKey = routePath ?? window.location.pathname;
 
     // Check cache
     if (this.config.cacheCSS && this.cache.has(cacheKey)) {
-      return this.cache.get(cacheKey)!;
+      const cached = this.cache.get(cacheKey);
+      if (cached != null) return cached;
     }
 
     this.log('Extracting critical CSS...');
@@ -598,9 +599,10 @@ export class CriticalCSSExtractor {
 
     rules.forEach((rule) => {
       if (rule.type === 'critical' && rule.selector === '@font-face') {
-        const urlMatch = rule.declarations.match(/url\(['"]?([^'"\)\s]+)['"]?\)/);
-        if (urlMatch?.[1]) {
-          fontUrls.push(urlMatch[1]);
+        const urlMatch = rule.declarations.match(/url\(['"]?([^'")\s]+)['"]?\)/);
+        const matchedUrl = urlMatch?.[1];
+        if (matchedUrl != null && matchedUrl !== '') {
+          fontUrls.push(matchedUrl);
         }
       }
     });
@@ -632,6 +634,7 @@ export class CriticalCSSExtractor {
    */
   private log(message: string, ...args: unknown[]): void {
     if (this.config.debug) {
+      // eslint-disable-next-line no-console
       console.log(`[CriticalCSS] ${message}`, ...args);
     }
   }
@@ -645,8 +648,8 @@ export class CriticalCSSExtractor {
  * Inject critical CSS inline
  */
 export function injectCriticalCSS(css: string, id = 'critical-css'): HTMLStyleElement {
-  const existing = document.getElementById(id) as HTMLStyleElement;
-  if (existing) {
+  const existing = document.getElementById(id) as HTMLStyleElement | null;
+  if (existing != null) {
     existing.textContent = css;
     return existing;
   }
@@ -656,8 +659,8 @@ export function injectCriticalCSS(css: string, id = 'critical-css'): HTMLStyleEl
   style.textContent = css;
 
   // Insert at the top of head for highest priority
-  const head = document.head;
-  const firstChild = head.firstChild;
+  const {head} = document;
+  const {firstChild} = head;
   if (firstChild) {
     head.insertBefore(style, firstChild);
   } else {
@@ -670,12 +673,12 @@ export function injectCriticalCSS(css: string, id = 'critical-css'): HTMLStyleEl
 /**
  * Load CSS asynchronously
  */
-export function loadCSSAsync(href: string, id?: string): Promise<void> {
+export async function loadCSSAsync(href: string, id?: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
     link.href = href;
-    if (id) link.id = id;
+    if (id != null && id !== '') link.id = id;
 
     link.onload = () => resolve();
     link.onerror = () => reject(new Error(`Failed to load CSS: ${href}`));
@@ -707,10 +710,10 @@ export function preloadFont(url: string, crossOrigin = true): HTMLLinkElement {
 export function applyContainment(element: HTMLElement, options: ContainmentOptions): void {
   const containValues: string[] = [];
 
-  if (options.layout) containValues.push('layout');
-  if (options.paint) containValues.push('paint');
-  if (options.size) containValues.push('size');
-  if (options.style) containValues.push('style');
+  if (options.layout === true) containValues.push('layout');
+  if (options.paint === true) containValues.push('paint');
+  if (options.size === true) containValues.push('size');
+  if (options.style === true) containValues.push('style');
 
   if (containValues.length > 0) {
     element.style.contain = containValues.join(' ');
@@ -783,7 +786,7 @@ export function useDeferredCSS(
   const [loaded, setLoaded] = useState(false);
 
   const load = useCallback(async () => {
-    await Promise.all(stylesheets.map((href) => loadCSSAsync(href)));
+    await Promise.all(stylesheets.map(async (href) => loadCSSAsync(href)));
     setLoaded(true);
   }, [stylesheets]);
 
@@ -792,11 +795,13 @@ export function useDeferredCSS(
 
     if (typeof requestIdleCallback !== 'undefined') {
       const id = requestIdleCallback(() => {
-        load();
+        void load();
       });
       return () => cancelIdleCallback(id);
     } else {
-      const id = setTimeout(load, 100);
+      const id = setTimeout(() => {
+        void load();
+      }, 100);
       return () => clearTimeout(id);
     }
   }, [load, loadOnIdle, loaded]);

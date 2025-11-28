@@ -42,7 +42,17 @@ export interface RoutePrefetchConfig {
 /**
  * Hook for prefetching route data
  */
-export function usePrefetchRoute() {
+export function usePrefetchRoute(): {
+  prefetch: (config: RoutePrefetchConfig, options?: PrefetchOptions) => Promise<void>;
+  prefetchMany: (configs: RoutePrefetchConfig[], options?: PrefetchOptions) => Promise<void>;
+  createHoverHandlers: (config: RoutePrefetchConfig, options?: PrefetchOptions) => {
+    onMouseEnter: () => void;
+    onMouseLeave: () => void;
+    onFocus: () => void;
+  };
+  clearPrefetch: (queryKey: readonly unknown[]) => void;
+  clearAllPrefetch: () => void;
+} {
   const queryClient = useQueryClient();
   const prefetchedRoutes = useRef<Set<string>>(new Set());
   // Track all active timeouts for cleanup on unmount
@@ -70,7 +80,7 @@ export function usePrefetchRoute() {
         return;
       }
 
-      const doPrefetch = async () => {
+      const doPrefetch = async (): Promise<void> => {
         try {
           await queryClient.prefetchQuery({
             queryKey: config.queryKey,
@@ -91,13 +101,15 @@ export function usePrefetchRoute() {
           activeTimeoutsRef.current.add(staleTimeoutId);
         } catch (error) {
           // Silently fail prefetch - not critical
-          console.debug('Route prefetch failed:', error);
+          // Only log in development
+          // eslint-disable-next-line no-console
+          if (process.env.NODE_ENV === 'development') console.debug('Route prefetch failed:', error);
         }
       };
 
       if (delay > 0) {
         const delayTimeoutId = setTimeout(() => {
-          doPrefetch();
+          void doPrefetch();
           // Remove from active timeouts after completion
           activeTimeoutsRef.current.delete(delayTimeoutId);
         }, delay);
@@ -128,22 +140,22 @@ export function usePrefetchRoute() {
   const createHoverHandlers = useCallback(
     (config: RoutePrefetchConfig, options: PrefetchOptions = {}) => {
       let timeoutId: ReturnType<typeof setTimeout> | null = null;
-      
+
       return {
-        onMouseEnter: () => {
+        onMouseEnter: (): void => {
           const delay = options.delay ?? 100;
           timeoutId = setTimeout(() => {
-            prefetch(config, { ...options, delay: 0 });
+            void prefetch(config, { ...options, delay: 0 });
           }, delay);
         },
-        onMouseLeave: () => {
-          if (timeoutId) {
+        onMouseLeave: (): void => {
+          if (timeoutId !== null && timeoutId !== undefined) {
             clearTimeout(timeoutId);
             timeoutId = null;
           }
         },
-        onFocus: () => {
-          prefetch(config, { ...options, delay: 0 });
+        onFocus: (): void => {
+          void prefetch(config, { ...options, delay: 0 });
         },
       };
     },
@@ -183,7 +195,11 @@ export function usePrefetchRoute() {
 export function usePrefetchOnHover(
   config: RoutePrefetchConfig,
   options: PrefetchOptions = {}
-) {
+): {
+  onMouseEnter: () => void;
+  onMouseLeave: () => void;
+  onFocus: () => void;
+} {
   const { createHoverHandlers } = usePrefetchRoute();
   return createHoverHandlers(config, options);
 }

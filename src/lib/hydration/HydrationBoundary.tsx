@@ -638,7 +638,7 @@ export function LazyHydration<P extends object>({
 }: LazyHydrationProps<P>): React.JSX.Element {
   // Create lazy component once with proper typing
   const LazyComponent = useMemo(
-    () => lazy(factory) as React.LazyExoticComponent<ComponentType<P>>,
+    () => lazy(factory),
     [factory]
   );
 

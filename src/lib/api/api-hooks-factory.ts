@@ -46,7 +46,7 @@ import {
   type QueryKey,
   type QueryClient,
 } from '@tanstack/react-query';
-import { useMemo, useCallback, useRef } from 'react';
+import { useMemo, useCallback } from 'react';
 import type {
   ApiEndpoint,
   ApiError,
@@ -56,7 +56,8 @@ import type {
   PaginatedResponse,
   PaginationMeta,
 } from './types';
-import { apiClient, ApiClient } from './api-client';
+import { apiClient } from './api-client';
+import type { ApiClient } from './api-client';
 import { TIMING } from '@/config';
 
 // =============================================================================
@@ -346,14 +347,13 @@ function createQueryHook<TResponse>(
   endpointName: string,
   endpoint: ApiEndpoint,
   defaultStaleTime: number,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _globalOnError?: (error: ApiError) => void
 ) {
   return (params?: QueryRequestParams, hookConfig?: QueryHookConfig<TResponse>) => {
     const queryKey = useMemo(
       () => [
         ...buildQueryKey(namespace, endpointName, params),
-        ...(hookConfig?.queryKeySuffix || []),
+        ...(hookConfig?.queryKeySuffix ?? []),
       ],
       [params, hookConfig?.queryKeySuffix]
     );
@@ -465,7 +465,7 @@ function createMutationHook<TResponse, TBody = unknown>(
         // Invalidate queries
         if (hookConfig?.invalidateQueries) {
           await Promise.all(
-            hookConfig.invalidateQueries.map((key) =>
+            hookConfig.invalidateQueries.map(async (key) =>
               queryClient.invalidateQueries({ queryKey: key })
             )
           );
@@ -474,7 +474,7 @@ function createMutationHook<TResponse, TBody = unknown>(
         // Refetch queries
         if (hookConfig?.refetchQueries) {
           await Promise.all(
-            hookConfig.refetchQueries.map((key) =>
+            hookConfig.refetchQueries.map(async (key) =>
               queryClient.refetchQueries({ queryKey: key })
             )
           );
@@ -533,7 +533,7 @@ export function createInfiniteQueryHook<TResponse>(config: {
   return (
     params?: QueryRequestParams,
     hookConfig?: InfiniteQueryHookConfig<TResponse>
-  ) => {
+  ): ReturnType<typeof useInfiniteQuery<TResponse, ApiError>> => {
     const queryKey = useMemo(
       () => [...buildQueryKey(namespace, `${endpointName}.infinite`, params)],
       [params]
@@ -556,8 +556,14 @@ export function createInfiniteQueryHook<TResponse>(config: {
         return response.data;
       },
       initialPageParam: undefined,
-      getNextPageParam: (hookConfig?.getNextPageParam || getNextPageParam) as any,
-      getPreviousPageParam: (hookConfig?.getPreviousPageParam || getPreviousPageParam) as any,
+      getNextPageParam: (hookConfig?.getNextPageParam ?? getNextPageParam) as (
+        lastPage: TResponse,
+        allPages: TResponse[]
+      ) => string | number | undefined,
+      getPreviousPageParam: (hookConfig?.getPreviousPageParam ?? getPreviousPageParam) as (
+        firstPage: TResponse,
+        allPages: TResponse[]
+      ) => string | number | undefined,
       enabled: hookConfig?.enabled,
       staleTime: hookConfig?.staleTime,
       gcTime: hookConfig?.gcTime,
@@ -637,13 +643,13 @@ export function createOptimisticMutation<TData, TVariables>(
     onError: (_error, _variables, context) => {
       // Rollback on error
       if (context?.previousData !== undefined) {
-        queryClient.setQueryData(config.queryKey, context.previousData);
+        void queryClient.setQueryData(config.queryKey, context.previousData);
       }
     },
 
     onSettled: () => {
       // Refetch after mutation
-      queryClient.invalidateQueries({ queryKey: config.queryKey });
+      void queryClient.invalidateQueries({ queryKey: config.queryKey });
     },
   };
 }
@@ -732,12 +738,12 @@ export function createOptimisticListMutation<
 
     onError: (_error, _variables, context) => {
       if (context?.previousData !== undefined) {
-        queryClient.setQueryData(config.queryKey, context.previousData);
+        void queryClient.setQueryData(config.queryKey, context.previousData);
       }
     },
 
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: config.queryKey });
+      void queryClient.invalidateQueries({ queryKey: config.queryKey });
     },
   };
 }
@@ -785,13 +791,15 @@ export interface ErrorHandlerConfig {
  * });
  * ```
  */
-export function createErrorHandler(config: ErrorHandlerConfig = {}) {
+export function createErrorHandler(config: ErrorHandlerConfig = {}): {
+  onError: (error: ApiError) => void;
+} {
   const { showToast = true, reportError = true, messages = {} } = config;
 
   return {
-    onError: (error: ApiError) => {
+    onError: (error: ApiError): void => {
       // Get custom message or use default
-      const message = messages[error.code] || error.message;
+      const message = messages[error.code] ?? error.message;
 
       // Show toast notification
       if (showToast) {
@@ -938,16 +946,9 @@ export function mergeInfinitePages<T>(
  * Hook to get stable query key reference
  */
 export function useStableQueryKey(key: QueryKey): QueryKey {
-  const keyRef = useRef(key);
   const serialized = JSON.stringify(key);
-  const serializedRef = useRef(serialized);
-
-  if (serializedRef.current !== serialized) {
-    serializedRef.current = serialized;
-    keyRef.current = key;
-  }
-
-  return keyRef.current;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  return useMemo(() => key, [serialized]);
 }
 
 /**
@@ -965,5 +966,5 @@ export function useMutationLoadingState(
 export function useCombinedMutationError(
   ...mutations: Array<{ error: ApiError | null }>
 ): ApiError | null {
-  return mutations.find((m) => m.error)?.error || null;
+  return mutations.find((m) => m.error)?.error ?? null;
 }

@@ -391,7 +391,7 @@ export const CoordinationProvider: FC<CoordinationProviderComponentProps> = ({
     if (initRef.current) return;
     initRef.current = true;
 
-    const initialize = async () => {
+    const initialize = async (): Promise<void> => {
       try {
         if (autoInitialize) {
           const lifecycle = getLifecycleManager();
@@ -402,7 +402,7 @@ export const CoordinationProvider: FC<CoordinationProviderComponentProps> = ({
         onReady?.();
 
         if (debug) {
-          console.debug('[Coordination] System initialized');
+          console.info('[Coordination] System initialized');
         }
       } catch (error) {
         const err = error instanceof Error ? error : new Error(String(error));
@@ -414,12 +414,12 @@ export const CoordinationProvider: FC<CoordinationProviderComponentProps> = ({
       }
     };
 
-    initialize();
+    void initialize();
 
     // Cleanup on unmount
     return () => {
       const lifecycle = getLifecycleManager();
-      lifecycle.shutdown().catch(console.error);
+      void lifecycle.shutdown().catch(console.error);
     };
   }, [autoInitialize, debug, onError, onReady]);
 
@@ -730,7 +730,7 @@ export async function initCoordination(options: {
   await lifecycle.initialize();
 
   if (debug) {
-    console.debug('[Coordination] System initialized outside React');
+    console.info('[Coordination] System initialized outside React');
   }
 
   // Return cleanup function
@@ -739,7 +739,7 @@ export async function initCoordination(options: {
     eventBus.clear();
 
     if (debug) {
-      console.debug('[Coordination] System shut down');
+      console.info('[Coordination] System shut down');
     }
   };
 }

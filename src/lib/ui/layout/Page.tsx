@@ -112,7 +112,7 @@ const actionsContainerStyle: CSSProperties = {
 /**
  * Page component - memoized for performance
  */
-export const Page = memo(function Page({
+export const Page = memo(({
   title,
   description,
   children,
@@ -124,7 +124,7 @@ export const Page = memo(function Page({
   padding = 'md',
   isLoading = false,
   onBack,
-}: PageProps): React.ReactElement {
+}: PageProps): React.ReactElement => {
   // Update document title
   useEffect(() => {
     if (title !== undefined && title !== '') {
