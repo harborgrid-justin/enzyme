@@ -104,12 +104,12 @@ export interface ModuleProviderProps {
 /**
  * Module system context.
  */
-const ModuleSystemContext = createContext<ModuleSystemContextValue | null>(null);
+export const ModuleSystemContext = createContext<ModuleSystemContextValue | null>(null);
 
 /**
  * Internal module hierarchy context for tracking module nesting.
  */
-const ModuleHierarchyContext = createContext<{
+export const ModuleHierarchyContext = createContext<{
   moduleId: ModuleId | null;
   depth: number;
   path: ModuleId[];
@@ -401,103 +401,17 @@ export const ModuleProvider: FC<ModuleProviderProps> = ({
 ModuleProvider.displayName = 'ModuleProvider';
 
 // ============================================================================
-// Context Hooks
+// Re-export hooks and components from separate files
 // ============================================================================
 
-/**
- * Hook to access the module system context.
- * @throws Error if used outside ModuleProvider
- * @returns Module system context value
- */
-export function useModuleSystem(): ModuleSystemContextValue {
-  const context = useContext(ModuleSystemContext);
-  if (!context) {
-    throw new Error('useModuleSystem must be used within a ModuleProvider');
-  }
-  return context;
-}
+export {
+  useModuleSystem,
+  useModuleHierarchy,
+  useVDOMPool,
+  useModuleRegistry,
+  useModuleLoader,
+  useEventBus,
+  useDevMode,
+} from './hooks/useModuleSystem';
 
-/**
- * Hook to access the module hierarchy context.
- * @returns Module hierarchy context value
- */
-export function useModuleHierarchy() {
-  return useContext(ModuleHierarchyContext);
-}
-
-/**
- * Internal provider for module hierarchy tracking.
- * Used by ModuleBoundary to establish parent-child relationships.
- */
-export const ModuleHierarchyProvider: FC<{
-  moduleId: ModuleId;
-  children: ReactNode;
-}> = ({ moduleId, children }) => {
-  const parent = useModuleHierarchy();
-
-  const value = useMemo(
-    () => ({
-      moduleId,
-      depth: parent.depth + 1,
-      path: [...parent.path, moduleId],
-    }),
-    [moduleId, parent.depth, parent.path]
-  );
-
-  return (
-    <ModuleHierarchyContext.Provider value={value}>
-      {children}
-    </ModuleHierarchyContext.Provider>
-  );
-};
-
-ModuleHierarchyProvider.displayName = 'ModuleHierarchyProvider';
-
-// ============================================================================
-// Utility Hooks
-// ============================================================================
-
-/**
- * Hook to get the VDOM pool.
- * @returns VDOM pool instance
- */
-export function useVDOMPool(): VDOMPool {
-  const { pool } = useModuleSystem();
-  return pool;
-}
-
-/**
- * Hook to get the module registry.
- * @returns Module registry instance
- */
-export function useModuleRegistry(): ModuleRegistry {
-  const { registry } = useModuleSystem();
-  return registry;
-}
-
-/**
- * Hook to get the module loader.
- * @returns Module loader instance
- */
-export function useModuleLoader(): ModuleLoader {
-  const { loader } = useModuleSystem();
-  return loader;
-}
-
-/**
- * Hook to get the event bus.
- * @returns Event bus instance
- */
-export function useEventBus(): ModuleEventBus {
-  const { eventBus } = useModuleSystem();
-  return eventBus;
-}
-
-/**
- * Hook to check if in development mode.
- * @returns Whether in development mode
- */
-export function useDevMode(): boolean {
-  const { config } = useModuleSystem();
-  return config.devMode ?? false;
-}
+export { ModuleHierarchyProvider } from './components/ModuleHierarchyProvider';

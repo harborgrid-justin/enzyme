@@ -3,7 +3,7 @@
  * @description React context provider for configuration access and subscriptions.
  *
  * This module provides:
- * - React context for configuration
+ * - React context provider for configuration
  * - Configuration change subscriptions
  * - Type-safe configuration access
  * - Dynamic configuration state
@@ -12,8 +12,6 @@
  */
 
 import React, {
-  createContext,
-  useContext,
   useEffect,
   useMemo,
   useCallback,
@@ -38,91 +36,13 @@ import {
 } from './dynamic-config';
 import { initializeConfigDiscovery } from './config-discovery';
 import { env } from './env';
+import { ConfigContext, type ConfigContextValue } from './config-context';
 
-// =============================================================================
-// Context Types
-// =============================================================================
-
-/**
- * Configuration context value interface
- */
-export interface ConfigContextValue {
-  /** Get configuration value */
-  get: <T extends ConfigValue>(namespace: ConfigNamespace, key: string) => T | undefined;
-  /** Get entire namespace configuration */
-  getNamespace: <T extends ConfigRecord>(namespace: ConfigNamespace) => Readonly<T>;
-  /** Check if configuration exists */
-  has: (namespace: ConfigNamespace, key: string) => boolean;
-  /** Subscribe to configuration changes */
-  subscribe: (
-    namespace: ConfigNamespace,
-    key: string,
-    listener: ConfigChangeListener
-  ) => ConfigUnsubscribe;
-  /** Get validation status */
-  getValidationStatus: () => ConfigValidationStatus;
-  /** Dynamic configuration state */
-  dynamicState: DynamicConfigState;
-  /** Force refresh configuration from remote */
-  refresh: () => Promise<void>;
-  /** Check if configuration is initialized */
-  isInitialized: boolean;
-  /** Configuration registry instance (for advanced use) */
-  registry: ConfigRegistry;
-  /** Dynamic config manager instance (for advanced use) */
-  dynamicConfig: DynamicConfigManager;
-}
-
-/**
- * Default context value (throws if used outside provider)
- */
-const defaultContextValue: ConfigContextValue = {
-  get: () => {
-    throw new Error('ConfigProvider not found. Wrap your app with <ConfigProvider>.');
-  },
-  getNamespace: () => {
-    throw new Error('ConfigProvider not found. Wrap your app with <ConfigProvider>.');
-  },
-  has: () => {
-    throw new Error('ConfigProvider not found. Wrap your app with <ConfigProvider>.');
-  },
-  subscribe: () => {
-    throw new Error('ConfigProvider not found. Wrap your app with <ConfigProvider>.');
-  },
-  getValidationStatus: () => {
-    throw new Error('ConfigProvider not found. Wrap your app with <ConfigProvider>.');
-  },
-  dynamicState: {
-    initialized: false,
-    syncing: false,
-    connectionStatus: 'disconnected',
-  },
-  refresh: async () => {
-    throw new Error('ConfigProvider not found. Wrap your app with <ConfigProvider>.');
-  },
-  isInitialized: false,
-  // Default values that throw when accessed - these are replaced by actual instances in the provider
-  get registry(): ConfigRegistry {
-    throw new Error('ConfigProvider not found. Cannot access registry.');
-  },
-  get dynamicConfig(): DynamicConfigManager {
-    throw new Error('ConfigProvider not found. Cannot access dynamicConfig.');
-  },
-};
-
-// =============================================================================
-// Context Creation
-// =============================================================================
-
-/**
- * Configuration context
- */
-export const ConfigContext = createContext<ConfigContextValue>(defaultContextValue);
-
-/**
- * Display name for React DevTools
- */
-ConfigContext.displayName = 'ConfigContext';
+// Re-export from separate modules for convenience
+export { ConfigReady, FeatureFlag, ABTest } from './config-components';
+export { withConfig } from './with-config';
+export { useConfigContext } from './use-config-context';
+export type { ConfigContextValue } from './config-context';
 
 // =============================================================================
 // Provider Props
@@ -368,154 +288,11 @@ export function ConfigProvider({
   );
 }
 
-// =============================================================================
-// Context Hook
-// =============================================================================
-
-/**
- * Hook to access the configuration context
- *
- * @returns Configuration context value
- * @throws Error if used outside ConfigProvider
- *
- * @example
- * ```tsx
- * function MyComponent() {
- *   const config = useConfigContext();
- *   const value = config.get(CONFIG_NAMESPACES.STREAMING, 'bufferSize');
- *   return <div>Buffer size: {value}</div>;
- * }
- * ```
- */
-export function useConfigContext(): ConfigContextValue {
-  const context = useContext(ConfigContext);
-
-  if (context === defaultContextValue) {
-    throw new Error(
-      'useConfigContext must be used within a ConfigProvider. ' +
-        'Make sure to wrap your app with <ConfigProvider>.'
-    );
-  }
-
-  return context;
-}
-
-// =============================================================================
-// Utility Components
-// =============================================================================
-
-/**
- * Component that renders only when configuration is initialized
- */
-export function ConfigReady({
-  children,
-  fallback,
-}: {
-  children: ReactNode;
-  fallback?: ReactNode;
-}): React.ReactElement | null {
-  const { isInitialized } = useConfigContext();
-
-  if (!isInitialized) {
-    return fallback ? <>{fallback}</> : null;
-  }
-
-  return <>{children}</>;
-}
-
-/**
- * Component that conditionally renders based on feature flag
- */
-export function FeatureFlag({
-  flag,
-  children,
-  fallback,
-}: {
-  flag: string;
-  children: ReactNode;
-  fallback?: ReactNode;
-}): React.ReactElement | null {
-  const { dynamicConfig } = useConfigContext();
-  const isEnabled = dynamicConfig.isFlagEnabled(flag);
-
-  if (!isEnabled) {
-    return fallback ? <>{fallback}</> : null;
-  }
-
-  return <>{children}</>;
-}
-
-/**
- * Component that renders based on A/B test variant
- */
-export function ABTest({
-  testId,
-  userId,
-  variants,
-  fallback,
-}: {
-  testId: string;
-  userId?: string;
-  variants: Record<string, ReactNode>;
-  fallback?: ReactNode;
-}): React.ReactElement | null {
-  const { dynamicConfig } = useConfigContext();
-  const variant = dynamicConfig.getVariant(testId, userId);
-
-  if (!variant) {
-    return fallback ? <>{fallback}</> : null;
-  }
-
-  const content = variants[variant.id];
-  if (!content) {
-    return fallback ? <>{fallback}</> : null;
-  }
-
-  return <>{content}</>;
-}
-
-// =============================================================================
-// HOC for Configuration Access
-// =============================================================================
-
-/**
- * Higher-order component for injecting configuration props
- *
- * @param WrappedComponent - Component to wrap
- * @param namespace - Configuration namespace
- * @returns Wrapped component with config props
- *
- * @example
- * ```tsx
- * interface MyComponentProps {
- *   config: StreamingConfig;
- * }
- *
- * function MyComponent({ config }: MyComponentProps) {
- *   return <div>Buffer: {config.buffer.initialSize}</div>;
- * }
- *
- * export default withConfig(MyComponent, CONFIG_NAMESPACES.STREAMING);
- * ```
- */
-export function withConfig<P extends { config: ConfigRecord }, T extends ConfigRecord>(
-  WrappedComponent: React.ComponentType<P>,
-  namespace: ConfigNamespace
-): React.ComponentType<Omit<P, 'config'>> {
-  function WithConfigComponent(props: Omit<P, 'config'>): React.ReactElement {
-    const { getNamespace } = useConfigContext();
-    const config = getNamespace<T>(namespace);
-
-    return <WrappedComponent {...(props as P)} config={config} />;
-  }
-
-  WithConfigComponent.displayName = `withConfig(${WrappedComponent.displayName || WrappedComponent.name || 'Component'})`;
-
-  return WithConfigComponent;
-}
+ConfigProvider.displayName = 'ConfigProvider';
 
 // =============================================================================
 // Exports
 // =============================================================================
 
 export type { ConfigValidationStatus };
+

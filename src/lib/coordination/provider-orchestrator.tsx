@@ -31,6 +31,15 @@ import type {
   ProviderOrchestratorConfig,
 } from './types';
 
+// Re-export for convenience
+export { DefaultLoadingFallback, DefaultErrorFallback } from './default-components';
+export type { LoadingFallbackProps, ErrorFallbackProps } from './default-components';
+
+// Import for internal use
+import {
+  DefaultLoadingFallback,
+} from './default-components';
+
 // ============================================================================
 // Types
 // ============================================================================
@@ -46,136 +55,6 @@ interface ProviderEntry extends ProviderDefinition {
   /** Resolution order */
   order: number;
 }
-
-// /**
-//  * Orchestrator state.
-//  */
-// interface OrchestratorState {
-//   /** Ordered providers */
-//   providers: ProviderEntry[];
-//   /** Provider tree component */
-//   tree: ComponentType<{ children: ReactNode }>;
-// }
-
-/**
- * Fallback loading component props.
- */
-interface LoadingFallbackProps {
-  message?: string;
-}
-
-/**
- * Fallback error component props.
- */
-interface ErrorFallbackProps {
-  error: Error;
-  resetError?: () => void;
-}
-
-// ============================================================================
-// Default Components
-// ============================================================================
-
-/**
- * Default loading fallback component.
- */
-const DefaultLoadingFallback: FC<LoadingFallbackProps> = ({ message }) => (
-  <div
-    role="status"
-    aria-live="polite"
-    style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '100vh',
-      fontFamily: 'system-ui, sans-serif',
-    }}
-  >
-    <div style={{ textAlign: 'center' }}>
-      <div
-        style={{
-          width: '48px',
-          height: '48px',
-          border: '4px solid #e5e7eb',
-          borderTopColor: '#3b82f6',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite',
-          margin: '0 auto 16px',
-        }}
-      />
-      <p style={{ color: '#6b7280', margin: 0 }}>
-        {message ?? 'Loading application...'}
-      </p>
-      <style>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
-    </div>
-  </div>
-);
-
-/**
- * Default error fallback component.
- */
-const DefaultErrorFallback: FC<ErrorFallbackProps> = ({ error, resetError }) => (
-  <div
-    role="alert"
-    style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '100vh',
-      fontFamily: 'system-ui, sans-serif',
-      backgroundColor: '#fef2f2',
-    }}
-  >
-    <div
-      style={{
-        maxWidth: '500px',
-        padding: '24px',
-        backgroundColor: 'white',
-        borderRadius: '8px',
-        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-        textAlign: 'center',
-      }}
-    >
-      <h2 style={{ color: '#dc2626', marginTop: 0 }}>Application Error</h2>
-      <p style={{ color: '#4b5563' }}>
-        An error occurred while initializing the application.
-      </p>
-      <pre
-        style={{
-          textAlign: 'left',
-          backgroundColor: '#f3f4f6',
-          padding: '12px',
-          borderRadius: '4px',
-          fontSize: '12px',
-          overflow: 'auto',
-          maxHeight: '150px',
-        }}
-      >
-        {error.message}
-      </pre>
-      {resetError && (
-        <button
-          onClick={resetError}
-          style={{
-            marginTop: '16px',
-            padding: '8px 16px',
-            backgroundColor: '#3b82f6',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-          }}
-        >
-          Try Again
-        </button>
-      )}
-    </div>
-  </div>
-);
 
 // ============================================================================
 // Helper Functions
@@ -608,9 +487,3 @@ export function registerProvider(definition: ProviderDefinition): void {
 export function getGlobalProviderTree(): ComponentType<{ children: ReactNode }> {
   return getProviderOrchestrator().getProviderTree();
 }
-
-// ============================================================================
-// Exports
-// ============================================================================
-
-export { DefaultLoadingFallback, DefaultErrorFallback };

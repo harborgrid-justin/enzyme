@@ -70,6 +70,9 @@ export default [
       // React Hooks
       ...reactHooks.configs.recommended.rules,
 
+      // Disable problematic rule that causes stack overflow on complex types
+      '@typescript-eslint/no-redundant-type-constituents': 'off',
+
       // React Refresh
       'react-refresh/only-export-components': [
         'warn',
