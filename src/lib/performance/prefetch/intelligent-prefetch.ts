@@ -248,7 +248,7 @@ export class IntelligentPrefetchEngine {
    */
   markPrefetched(url: string, size?: number): void {
     this.prefetchedUrls.add(url);
-    if (size) {
+    if (size !== undefined && size > 0) {
       this.currentBudgetUsed += size;
     }
   }
@@ -406,7 +406,7 @@ export class IntelligentPrefetchEngine {
 
     for (let i = 0; i < recentNavs.length; i++) {
       const nav = recentNavs[i];
-      if (nav && this.normalizeUrl(nav.to) === normalizedUrl) {
+      if (nav !== undefined && this.normalizeUrl(nav.to) === normalizedUrl) {
         // More recent = higher score
         recencyScore = Math.max(recencyScore, (i + 1) / recentNavs.length);
       }
@@ -456,7 +456,11 @@ export class IntelligentPrefetchEngine {
       this.transitionProbabilities.set(fromPath, new Map());
     }
 
-    const transitions = this.transitionProbabilities.get(fromPath)!;
+    const transitions = this.transitionProbabilities.get(fromPath);
+    if (transitions === undefined) {
+      return;
+    }
+
     const currentProb = transitions.get(toPath) ?? 0;
 
     // Update using exponential moving average
@@ -473,15 +477,15 @@ export class IntelligentPrefetchEngine {
 
   private shouldPrefetch(): boolean {
     // Check network conditions
-    if (this.config.networkAware) {
+    if (this.config.networkAware === true) {
       const networkInfo = this.getNetworkInfo();
 
-      if (this.config.respectDataSaver && networkInfo?.saveData) {
+      if (this.config.respectDataSaver === true && networkInfo?.saveData === true) {
         this.log('Skipping prefetch: Data saver enabled');
         return false;
       }
 
-      if (networkInfo?.effectiveType) {
+      if (networkInfo?.effectiveType !== undefined) {
         const currentQuality = NETWORK_QUALITY_SCORES[networkInfo.effectiveType] ?? 0;
         const minQuality = NETWORK_QUALITY_SCORES[this.config.minNetworkQuality] ?? 0;
 
@@ -613,12 +617,12 @@ export class IntelligentPrefetchEngine {
   private loadStoredPatterns(): void {
     try {
       const stored = sessionStorage.getItem('prefetch-patterns');
-      if (stored) {
-        const data = JSON.parse(stored);
+      if (stored !== null) {
+        const data = JSON.parse(stored) as { transitions?: Record<string, Record<string, number>> };
         this.transitionProbabilities = new Map(
           Object.entries(data.transitions ?? {}).map(([k, v]) => [
             k,
-            new Map(Object.entries(v as Record<string, number>)),
+            new Map(Object.entries(v)),
           ])
         );
       }
@@ -670,9 +674,7 @@ let engineInstance: IntelligentPrefetchEngine | null = null;
 export function getIntelligentPrefetchEngine(
   config?: Partial<IntelligentPrefetchConfig>
 ): IntelligentPrefetchEngine {
-  if (!engineInstance) {
-    engineInstance = new IntelligentPrefetchEngine(config);
-  }
+  engineInstance ??= new IntelligentPrefetchEngine(config);
   return engineInstance;
 }
 
@@ -680,7 +682,7 @@ export function getIntelligentPrefetchEngine(
  * Reset the engine instance
  */
 export function resetIntelligentPrefetchEngine(): void {
-  if (engineInstance) {
+  if (engineInstance !== null) {
     engineInstance.reset();
     engineInstance = null;
   }

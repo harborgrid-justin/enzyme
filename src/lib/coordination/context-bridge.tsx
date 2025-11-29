@@ -431,21 +431,29 @@ export function createComposedContext<T extends Record<string, unknown>>(config:
   ComposedContext.displayName = config.displayName;
 
   const ComposedProvider: FC<{ children: ReactNode }> = ({ children }) => {
-    const sourceValues: Partial<T> = {};
-
     // Get all source values
-    for (const key of Object.keys(config.sources) as Array<keyof T>) {
-      const source = config.sources[key];
+    const sourceEntries = Object.entries(config.sources) as Array<[keyof T, typeof config.sources[keyof T]]>;
+
+    // Collect all context values for memoization
+    const contextValues: unknown[] = [];
+
+    for (const [_key, source] of sourceEntries) {
       // eslint-disable-next-line react-hooks/rules-of-hooks
       const value = useContext(source.context);
-      sourceValues[key] = (source.selector != null && value != null ? source.selector(value) : value) as T[keyof T];
+      const transformedValue = (source.selector != null && value != null ? source.selector(value) : value);
+      contextValues.push(transformedValue);
     }
 
-    const composedValue = useMemo(() => sourceValues as T, [
-      sourceValues,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      ...Object.values(sourceValues),
-    ]);
+    // Memoize the composed value based on individual context values
+    const composedValue = useMemo(() => {
+      const sourceValues = {} as Partial<T>;
+      for (let i = 0; i < sourceEntries.length; i++) {
+        const [key] = sourceEntries[i];
+        (sourceValues as Record<string, unknown>)[key as string] = contextValues[i];
+      }
+      return sourceValues as T;
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [...contextValues]);
 
     return (
       <ComposedContext.Provider value={composedValue}>

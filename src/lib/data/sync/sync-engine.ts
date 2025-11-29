@@ -1144,11 +1144,13 @@ export function createLocalStorageSource(
     },
 
     get: async (entityType, id) => {
+      await Promise.resolve();
       const data = localStorage.getItem(getKey(entityType, id));
       return data !== null && data !== '' ? JSON.parse(data) as unknown : null;
     },
 
-    getMany: (entityType, ids) => {
+    getMany: async (entityType, ids) => {
+      await Promise.resolve();
       const results = new Map();
       for (const id of ids) {
         const data = localStorage.getItem(getKey(entityType, id));
@@ -1156,10 +1158,11 @@ export function createLocalStorageSource(
           results.set(id, JSON.parse(data) as unknown);
         }
       }
-      return Promise.resolve(results);
+      return results;
     },
 
-    getAll: (entityType) => {
+    getAll: async (entityType) => {
+      await Promise.resolve();
       const keys = getAllKeys(entityType);
       const results: unknown[] = [];
       for (const key of keys) {
@@ -1168,31 +1171,31 @@ export function createLocalStorageSource(
           results.push(JSON.parse(data) as unknown);
         }
       }
-      return Promise.resolve(results);
+      return results;
     },
 
-    set: (entityType, id, data) => {
+    set: async (entityType, id, data) => {
+      await Promise.resolve();
       localStorage.setItem(getKey(entityType, id), JSON.stringify(data));
-      return Promise.resolve();
     },
 
-    setMany: (entityType, entities) => {
+    setMany: async (entityType, entities) => {
+      await Promise.resolve();
       for (const [id, data] of entities) {
         localStorage.setItem(getKey(entityType, id), JSON.stringify(data));
       }
-      return Promise.resolve();
     },
 
-    delete: (entityType, id) => {
+    delete: async (entityType, id) => {
+      await Promise.resolve();
       localStorage.removeItem(getKey(entityType, id));
-      return Promise.resolve();
     },
 
-    deleteMany: (entityType, ids) => {
+    deleteMany: async (entityType, ids) => {
+      await Promise.resolve();
       for (const id of ids) {
         localStorage.removeItem(getKey(entityType, id));
       }
-      return Promise.resolve();
     },
   };
 }
@@ -1221,49 +1224,52 @@ export function createMemorySource(
 
     isAvailable: () => true,
 
-    get: (entityType, id) => {
+    get: async (entityType, id) => {
+      await Promise.resolve();
       const value = getEntityStore(entityType).get(id);
-      return Promise.resolve(value ?? null);
+      return value ?? null;
     },
 
-    getMany: (entityType, ids) => {
+    getMany: async (entityType, ids) => {
+      await Promise.resolve();
       const entityStore = getEntityStore(entityType);
       const results = new Map<string, unknown>();
       for (const id of ids) {
         const data = entityStore.get(id);
         if (data !== undefined && data !== null) results.set(id, data);
       }
-      return Promise.resolve(results);
+      return results;
     },
 
-    getAll: (entityType) => {
-      return Promise.resolve(Array.from(getEntityStore(entityType).values()));
+    getAll: async (entityType) => {
+      await Promise.resolve();
+      return Array.from(getEntityStore(entityType).values());
     },
 
-    set: (entityType, id, data) => {
+    set: async (entityType, id, data) => {
+      await Promise.resolve();
       getEntityStore(entityType).set(id, data);
-      return Promise.resolve();
     },
 
-    setMany: (entityType, entities) => {
+    setMany: async (entityType, entities) => {
+      await Promise.resolve();
       const entityStore = getEntityStore(entityType);
       for (const [id, data] of entities) {
         entityStore.set(id, data);
       }
-      return Promise.resolve();
     },
 
-    delete: (entityType, id) => {
+    delete: async (entityType, id) => {
+      await Promise.resolve();
       getEntityStore(entityType).delete(id);
-      return Promise.resolve();
     },
 
-    deleteMany: (entityType, ids) => {
+    deleteMany: async (entityType, ids) => {
+      await Promise.resolve();
       const entityStore = getEntityStore(entityType);
       for (const id of ids) {
         entityStore.delete(id);
       }
-      return Promise.resolve();
     },
   };
 }

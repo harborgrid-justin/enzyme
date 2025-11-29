@@ -195,7 +195,7 @@ export class RoutePrefetchManager {
     const startTime = performance.now();
     const route = this.routes.get(path);
 
-    if (!route) {
+    if (route === undefined) {
       return {
         path,
         component: false,
@@ -221,9 +221,9 @@ export class RoutePrefetchManager {
     this.log(`Prefetching route: ${path}`);
 
     const results = await Promise.allSettled([
-      route.component ? this.prefetchComponent(path, route.component) : Promise.resolve(null),
-      route.dataLoader ? this.prefetchData(path, route.dataLoader) : Promise.resolve(null),
-      route.assets ? Promise.resolve(this.prefetchAssets(route.assets)) : Promise.resolve(null),
+      route.component !== undefined ? this.prefetchComponent(path, route.component) : Promise.resolve(null),
+      route.dataLoader !== undefined ? this.prefetchData(path, route.dataLoader) : Promise.resolve(null),
+      route.assets !== undefined ? Promise.resolve(this.prefetchAssets(route.assets)) : Promise.resolve(null),
     ]);
 
     const componentSuccess = results[0]?.status === 'fulfilled';
@@ -250,7 +250,7 @@ export class RoutePrefetchManager {
    */
   getCachedComponent(path: string): unknown | null {
     const cached = this.componentCache.get(path);
-    if (!cached) return null;
+    if (cached === undefined) return null;
 
     // Check TTL
     if (Date.now() - cached.timestamp > this.config.cacheTTL) {
@@ -266,7 +266,7 @@ export class RoutePrefetchManager {
    */
   getCachedData(path: string): unknown | null {
     const cached = this.dataCache.get(path);
-    if (!cached) return null;
+    if (cached === undefined) return null;
 
     // Check TTL
     if (Date.now() - cached.timestamp > this.config.cacheTTL) {
@@ -343,7 +343,7 @@ export class RoutePrefetchManager {
    */
   prefetchImmediateRoutes(): void {
     for (const [path, route] of this.routes.entries()) {
-      if (route.prefetchOn?.includes('immediate')) {
+      if (route.prefetchOn?.includes('immediate') === true) {
         void this.prefetchRoute(path);
       }
     }
@@ -450,7 +450,7 @@ export class RoutePrefetchManager {
   ): Promise<unknown> {
     // Check cache first
     const cached = this.getCachedData(path);
-    if (cached) {
+    if (cached !== null) {
       return cached;
     }
 
@@ -486,7 +486,7 @@ export class RoutePrefetchManager {
 
     // Cancel any existing timer
     const existingTimer = this.hoverTimers.get(path);
-    if (existingTimer) {
+    if (existingTimer !== undefined) {
       clearTimeout(existingTimer);
     }
 
@@ -500,7 +500,7 @@ export class RoutePrefetchManager {
 
   private handleHoverEnd(path: string): void {
     const timer = this.hoverTimers.get(path);
-    if (timer) {
+    if (timer !== undefined) {
       clearTimeout(timer);
       this.hoverTimers.delete(path);
     }
@@ -514,9 +514,9 @@ export class RoutePrefetchManager {
     this.viewportObserver = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
+          if (entry.isIntersecting === true) {
             const path = this.observedLinks.get(entry.target);
-            if (path && !this.prefetchedRoutes.has(path)) {
+            if (path !== undefined && !this.prefetchedRoutes.has(path)) {
               void this.prefetchRoute(path);
             }
           }
@@ -529,8 +529,8 @@ export class RoutePrefetchManager {
   }
 
   private log(message: string, ...args: unknown[]): void {
-    if (this.config.debug) {
-      console.log(`[RoutePrefetch] ${message}`, ...args);
+    if (this.config.debug === true) {
+      console.info(`[RoutePrefetch] ${message}`, ...args);
     }
   }
 }
@@ -555,7 +555,7 @@ export function getRoutePrefetchManager(
  * Reset the manager instance
  */
 export function resetRoutePrefetchManager(): void {
-  if (managerInstance) {
+  if (managerInstance !== null) {
     managerInstance.destroy();
     managerInstance = null;
   }

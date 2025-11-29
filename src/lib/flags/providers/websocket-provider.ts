@@ -452,14 +452,14 @@ export class WebSocketProvider implements FlagProvider {
   /**
    * Get all segments.
    */
-  getSegments(): Promise<readonly Segment[]> {
+  async getSegments(): Promise<readonly Segment[]> {
     return Promise.resolve(Array.from(this.segments.values()));
   }
 
   /**
    * Get a segment by ID.
    */
-  getSegment(id: SegmentId): Promise<Segment | null> {
+  async getSegment(id: SegmentId): Promise<Segment | null> {
     return Promise.resolve(this.segments.get(id) ?? null);
   }
 
@@ -511,7 +511,7 @@ export class WebSocketProvider implements FlagProvider {
   /**
    * Check if the provider is healthy.
    */
-  isHealthy(): Promise<boolean> {
+  async isHealthy(): Promise<boolean> {
     return Promise.resolve(this.connectionState === 'connected');
   }
 
@@ -583,7 +583,7 @@ export class WebSocketProvider implements FlagProvider {
   /**
    * Shutdown the provider.
    */
-  shutdown(): Promise<void> {
+  async shutdown(): Promise<void> {
     this.disconnect();
     this.ready = false;
     this.listeners.clear();

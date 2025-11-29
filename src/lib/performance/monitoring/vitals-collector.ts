@@ -233,7 +233,7 @@ export class EnhancedVitalsCollector {
     thresholds?: MetricThresholds
   ): void {
     const effectiveThresholds = thresholds ?? this.thresholds.custom;
-    const rating = effectiveThresholds ? this.calculateRating(value, effectiveThresholds) : 'good';
+    const rating = effectiveThresholds !== undefined ? this.calculateRating(value, effectiveThresholds) : 'good';
 
     const metric: CollectedMetric = {
       name,
@@ -465,7 +465,7 @@ export class EnhancedVitalsCollector {
           sources?: Array<{ node?: Element }>;
         }>) {
           // Ignore entries with recent input
-          if (entry.hadRecentInput) continue;
+          if (entry.hadRecentInput === true) continue;
 
           const firstEntryTime = sessionEntries[0]?.startTime ?? 0;
           const timeSinceFirstEntry = entry.startTime - firstEntryTime;
@@ -508,7 +508,7 @@ export class EnhancedVitalsCollector {
             this.recordMetric({
               name: 'CLS',
               value: clsValue,
-              rating: this.thresholds.CLS ? this.calculateRating(clsValue, this.thresholds.CLS) : 'good',
+              rating: this.thresholds.CLS !== undefined ? this.calculateRating(clsValue, this.thresholds.CLS) : 'good',
               delta: entry.value ?? 0,
               id: this.generateId(),
               navigationType: this.getNavigationType(),
@@ -628,9 +628,9 @@ export class EnhancedVitalsCollector {
   private observeTTFB(): void {
     try {
       const navEntries = performance.getEntriesByType('navigation');
-      const navEntry = navEntries[0];
+      const [navEntry] = navEntries;
 
-      if (navEntry) {
+      if (navEntry !== undefined) {
         const value = navEntry.responseStart - navEntry.requestStart;
 
         const attribution = this.config.attribution
@@ -691,7 +691,7 @@ export class EnhancedVitalsCollector {
   }
 
   private getElementSelector(element?: Element | null): string | undefined {
-    if (!element) return undefined;
+    if (element === undefined || element === null) return undefined;
 
     const tag = element.tagName.toLowerCase();
     const id = element.id ? `#${element.id}` : '';
@@ -739,7 +739,7 @@ export class EnhancedVitalsCollector {
    * @see {@link @/lib/api/api-client} for application API calls
    */
   private async sendToEndpoint(metrics: CollectedMetric[]): Promise<void> {
-    if (!this.config.reportEndpoint) return;
+    if (this.config.reportEndpoint === undefined || this.config.reportEndpoint === null) return;
 
     try {
       const payload = {
@@ -749,7 +749,7 @@ export class EnhancedVitalsCollector {
         timestamp: Date.now(),
       };
 
-      if (navigator.sendBeacon) {
+      if (typeof navigator.sendBeacon === 'function') {
         navigator.sendBeacon(
           this.config.reportEndpoint,
           JSON.stringify(payload)
@@ -778,7 +778,7 @@ export class EnhancedVitalsCollector {
     this.observers = [];
 
     // Clear timer
-    if (this.flushTimer) {
+    if (this.flushTimer !== null) {
       clearInterval(this.flushTimer);
       this.flushTimer = null;
     }
@@ -810,9 +810,7 @@ let collectorInstance: EnhancedVitalsCollector | null = null;
 export function getEnhancedVitalsCollector(
   config?: Partial<VitalsCollectionConfig>
 ): EnhancedVitalsCollector {
-  if (!collectorInstance) {
-    collectorInstance = new EnhancedVitalsCollector(config);
-  }
+  collectorInstance ??= new EnhancedVitalsCollector(config);
   return collectorInstance;
 }
 

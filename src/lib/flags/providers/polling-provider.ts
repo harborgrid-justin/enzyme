@@ -324,7 +324,7 @@ export class PollingProvider implements FlagProvider {
   /**
    * Get a segment by ID.
    */
-  getSegment(id: SegmentId): Promise<Segment | null> {
+  async getSegment(id: SegmentId): Promise<Segment | null> {
     return Promise.resolve(this.cachedSegments.find((s) => s.id === id) ?? null);
   }
 

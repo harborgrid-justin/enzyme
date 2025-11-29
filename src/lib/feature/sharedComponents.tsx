@@ -235,7 +235,7 @@ function GenericListInner<T extends ListItemBase>({
 
   // Item wrapper style - memoized
   const itemWrapperStyle = useMemo<CSSProperties>(() => ({
-    cursor: onSelect ? 'pointer' : 'default',
+    cursor: onSelect !== undefined ? 'pointer' : 'default',
   }), [onSelect]);
 
   // Stable click handler using data-* attributes
@@ -256,7 +256,7 @@ function GenericListInner<T extends ListItemBase>({
         <div
           key={getKey(item)}
           data-item-id={item.id}
-          onClick={onSelect ? handleItemClick : undefined}
+          onClick={onSelect !== undefined ? handleItemClick : undefined}
           style={itemWrapperStyle}
         >
           {renderItem(item, selectedId === item.id, index)}
@@ -362,14 +362,14 @@ export const StatsCard = memo(({
     backgroundColor: 'var(--color-bg-primary, #fff)',
     borderRadius: 'var(--radius-md, 0.5rem)',
     border: '1px solid var(--color-border-default, #e5e7eb)',
-    cursor: onClick ? 'pointer' : 'default',
+    cursor: onClick !== undefined ? 'pointer' : 'default',
     transition: 'box-shadow 0.2s, transform 0.2s',
     ...style,
   }), [onClick, style]);
 
   // Memoize trend style based on direction
   const trendStyle = useMemo<CSSProperties | undefined>(() => {
-    if (!trend) return undefined;
+    if (trend === undefined) return undefined;
     let color: string;
     if (trend.direction === 'up') {
       color = 'var(--color-success, #22c55e)';
@@ -391,7 +391,7 @@ export const StatsCard = memo(({
         {icon}
       </div>
       <p style={statsCardValueStyle}>{value}</p>
-      {trend && (
+      {trend !== undefined && (
         <span style={trendStyle}>
           {trend.direction === 'up' && '+'}
           {trend.direction === 'down' && '-'}
@@ -463,8 +463,8 @@ export const ActionToolbar = memo(({
         ...sizeStyles[size],
         borderRadius: '0.375rem',
         border: 'none',
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        opacity: disabled ? 0.5 : 1,
+        cursor: (disabled ?? false) === true ? 'not-allowed' : 'pointer',
+        opacity: (disabled ?? false) === true ? 0.5 : 1,
         display: 'flex',
         alignItems: 'center',
         gap: '0.5rem',
@@ -486,11 +486,13 @@ export const ActionToolbar = memo(({
   }), [direction, style]);
 
   // Stable click handler using data-* attributes
-  const handleButtonClick = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleButtonClick = useCallback((event: React.MouseEvent<HTMLButtonElement>): void => {
     const {actionId} = event.currentTarget.dataset;
-    if (actionId) {
+    if (actionId !== undefined) {
       const action = actions.find((a) => a.id === actionId);
-      action?.onClick();
+      if (action !== undefined) {
+        action.onClick();
+      }
     }
   }, [actions]);
 
@@ -501,10 +503,10 @@ export const ActionToolbar = memo(({
           key={action.id}
           data-action-id={action.id}
           onClick={handleButtonClick}
-          disabled={(action.disabled ?? false) || (action.loading ?? false)}
+          disabled={(action.disabled ?? false) === true || (action.loading ?? false) === true}
           style={getButtonStyle(action.variant, action.disabled)}
         >
-          {action.loading ? (
+          {(action.loading ?? false) === true ? (
             <span style={loadingIndicatorStyle}>...</span>
           ) : (
             action.icon
@@ -561,7 +563,7 @@ function FilterPanelInner<TFilters extends Record<string, unknown>>({
     [onChange]
   );
 
-  const activeFilterCount = useMemo(() => {
+  const activeFilterCount = useMemo((): number => {
     return Object.values(filters).filter(
       (v) => v !== undefined && v !== null && v !== ''
     ).length;
@@ -576,8 +578,8 @@ function FilterPanelInner<TFilters extends Record<string, unknown>>({
     ...style,
   }), [style]);
 
-  if (!isOpen) {
-    return onToggle ? (
+  if (isOpen === false) {
+    return onToggle !== undefined ? (
       <button onClick={onToggle} style={filterToggleButtonStyle}>
         {title}
         {activeFilterCount > 0 && (
@@ -602,7 +604,7 @@ function FilterPanelInner<TFilters extends Record<string, unknown>>({
           <button onClick={onClear} style={clearButtonStyle}>
             Clear all
           </button>
-          {onToggle && (
+          {onToggle !== undefined && (
             <button onClick={onToggle} style={closeButtonStyle}>
               Close
             </button>
@@ -661,7 +663,7 @@ export const Pagination = memo(({
   const startItem = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const endItem = Math.min(currentPage * pageSize, totalItems);
 
-  const pageNumbers = useMemo(() => {
+  const pageNumbers = useMemo((): (number | 'ellipsis')[] => {
     const pages: (number | 'ellipsis')[] = [];
     const maxVisible = 5;
 
@@ -732,9 +734,9 @@ export const Pagination = memo(({
   }, [onPageChange, currentPage]);
 
   // Stable page number click handler using data-* attributes
-  const handlePageClick = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
+  const handlePageClick = useCallback((event: React.MouseEvent<HTMLButtonElement>): void => {
     const {page} = event.currentTarget.dataset;
-    if (page) {
+    if (page !== undefined) {
       onPageChange(Number(page));
     }
   }, [onPageChange]);
@@ -746,14 +748,14 @@ export const Pagination = memo(({
 
   return (
     <div className={className} style={containerStyle}>
-      {showItemCount && (
+      {showItemCount === true && (
         <span style={paginationInfoStyle}>
           Showing {startItem}-{endItem} of {totalItems}
         </span>
       )}
 
       <div style={paginationControlsStyle}>
-        {showPageSizeSelector && onPageSizeChange && (
+        {showPageSizeSelector === true && onPageSizeChange !== undefined && (
           <select
             value={pageSize}
             onChange={handlePageSizeChange}
@@ -896,7 +898,7 @@ export const SearchInput = memo(({
       }
     }, debounceMs);
 
-    return () => clearTimeout(timer);
+    return (): void => clearTimeout(timer);
   }, [localValue, debounceMs, onChange, value]);
 
   React.useEffect(() => {
@@ -904,7 +906,7 @@ export const SearchInput = memo(({
   }, [value]);
 
   // Stable change handler
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>): void => {
     setLocalValue(e.target.value);
   }, []);
 

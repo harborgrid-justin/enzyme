@@ -224,7 +224,7 @@ export class PrefetchQueue {
 
     for (const item of items) {
       const id = this.enqueue(item.url, item);
-      if (id) {
+      if (id !== null) {
         ids.push(id);
       }
     }
@@ -241,10 +241,11 @@ export class PrefetchQueue {
       return false;
     }
 
+    const wasLoading = item.status === 'loading';
     item.status = 'cancelled';
     item.completedAt = Date.now();
 
-    if (item.status === 'cancelled') {
+    if (wasLoading) {
       this.activeCount--;
     }
 
@@ -354,8 +355,8 @@ export class PrefetchQueue {
           break;
         case 'completed':
           completed++;
-          if (item.size) totalSize += item.size;
-          if (item.startedAt && item.completedAt) {
+          if (item.size !== undefined) totalSize += item.size;
+          if (item.startedAt !== undefined && item.completedAt !== undefined) {
             loadTimes.push(item.completedAt - item.startedAt);
           }
           break;
@@ -405,7 +406,7 @@ export class PrefetchQueue {
    */
   destroy(): void {
     this.clear();
-    if (this.cleanupTimer) {
+    if (this.cleanupTimer !== null) {
       clearInterval(this.cleanupTimer);
       this.cleanupTimer = null;
     }
@@ -416,7 +417,7 @@ export class PrefetchQueue {
   // ============================================================================
 
   private processQueue(): void {
-    if (this.paused) {
+    if (this.paused === true) {
       return;
     }
 
@@ -424,11 +425,11 @@ export class PrefetchQueue {
 
     while (this.activeCount < maxConcurrent) {
       const next = this.getNextItem();
-      if (!next) {
+      if (next === null) {
         break;
       }
 
-      this.executeItem(next);
+      void this.executeItem(next);
     }
 
     // Check if queue is empty
@@ -629,12 +630,12 @@ export class PrefetchQueue {
   }
 
   private getMaxConcurrent(): number {
-    if (!this.config.networkAware) {
+    if (this.config.networkAware !== true) {
       return this.config.maxConcurrent;
     }
 
     const connection = this.getNetworkInfo();
-    if (!connection?.effectiveType) {
+    if (connection?.effectiveType === undefined) {
       return this.config.maxConcurrent;
     }
 
@@ -717,9 +718,7 @@ let queueInstance: PrefetchQueue | null = null;
 export function getPrefetchQueue(
   config?: Partial<PrefetchQueueConfig>
 ): PrefetchQueue {
-  if (!queueInstance) {
-    queueInstance = new PrefetchQueue(config);
-  }
+  queueInstance ??= new PrefetchQueue(config);
   return queueInstance;
 }
 
@@ -727,7 +726,7 @@ export function getPrefetchQueue(
  * Reset the queue instance
  */
 export function resetPrefetchQueue(): void {
-  if (queueInstance) {
+  if (queueInstance !== null) {
     queueInstance.destroy();
     queueInstance = null;
   }

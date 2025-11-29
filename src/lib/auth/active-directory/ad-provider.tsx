@@ -545,7 +545,7 @@ export function ADProvider({
   );
 
   const logout = useCallback(
-    async (options?: ADLogoutOptions) => {
+    (options?: ADLogoutOptions) => {
       const correlationId = generateCorrelationId();
       emitEvent({ type: 'logout_initiated', correlationId });
 
@@ -556,7 +556,7 @@ export function ADProvider({
         }
 
         // Clear token cache
-        await tokenHandler.clearCache();
+        tokenHandler.clearCache();
 
         // Update state
         dispatch({ type: 'LOGOUT' });
@@ -663,7 +663,7 @@ export function ADProvider({
   }, []);
 
   const forceReauth = useCallback(async () => {
-    await logout({ localOnly: true });
+    logout({ localOnly: true });
     await login({ prompt: 'login', scopes: getDefaultScopes(config) });
   }, [logout, login, config]);
 

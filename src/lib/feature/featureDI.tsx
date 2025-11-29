@@ -5,7 +5,7 @@
  * @description Enables loose coupling between features via service contracts
  */
 
-import {
+import React, {
   useContext,
   useMemo,
   useEffect,
@@ -100,14 +100,14 @@ export class FeatureDIContainer {
    */
   resolve<T>(contract: ServiceContract<T>): T {
     // Check for singleton first
-    if (this.singletons.has(contract.id)) {
+    if (this.singletons.has(contract.id) === true) {
       return this.singletons.get(contract.id) as T;
     }
 
     const registration = this.services.get(contract.id);
 
     // Not registered - check for default value
-    if (!registration) {
+    if (registration === undefined) {
       if (contract.defaultValue !== undefined) {
         return contract.defaultValue;
       }
@@ -121,7 +121,7 @@ export class FeatureDIContainer {
 
     // Check for factory function
     const factory = this.factoryFunctions.get(contract.id);
-    if (factory && registration.implementation === undefined) {
+    if (factory !== undefined && registration.implementation === undefined) {
       instance = factory() as T;
       // Update registration with created instance
       registration.implementation = instance;
@@ -266,7 +266,7 @@ export function FeatureDIProvider({
 }: {
   container?: FeatureDIContainer;
   children: ReactNode;
-}) {
+}): React.ReactElement {
   return <DIContext.Provider value={container}>{children}</DIContext.Provider>;
 }
 
@@ -358,7 +358,7 @@ interface NotificationOptions {
 export const NotificationContract = createServiceContract<NotificationService>(
   'notification',
   {
-    success: (msg) => console.log('[Success]', msg),
+    success: (msg) => console.info('[Success]', msg),
     error: (msg) => console.error('[Error]', msg),
     warning: (msg) => console.warn('[Warning]', msg),
     info: (msg) => console.info('[Info]', msg),
@@ -397,7 +397,7 @@ export const StorageContract = createServiceContract<StorageService>(
     get: (key) => {
       try {
         const item = localStorage.getItem(key);
-        return item ? (JSON.parse(item) as unknown) : null;
+        return item !== null ? (JSON.parse(item) as unknown) : null;
       } catch {
         return null;
       }
@@ -448,13 +448,13 @@ export class SimpleFeatureEventBus implements FeatureEventBus {
   emit<T>(event: string, payload?: T): void {
     // Regular listeners
     const handlers = this.listeners.get(event);
-    if (handlers) {
+    if (handlers !== undefined) {
       handlers.forEach((handler) => handler(payload));
     }
 
     // Once listeners
     const onceHandlers = this.onceListeners.get(event);
-    if (onceHandlers) {
+    if (onceHandlers !== undefined) {
       onceHandlers.forEach((handler) => {
         handler(payload);
         this.off(event, handler);
@@ -464,38 +464,44 @@ export class SimpleFeatureEventBus implements FeatureEventBus {
   }
 
   on<T>(event: string, handler: EventHandler<T>): () => void {
-    if (!this.listeners.has(event)) {
+    if (this.listeners.has(event) === false) {
       this.listeners.set(event, new Set());
     }
-    this.listeners.get(event)!.add(handler as EventHandler);
+    const handlers = this.listeners.get(event);
+    if (handlers !== undefined) {
+      handlers.add(handler as EventHandler);
+    }
 
     // Return unsubscribe function
     return () => this.off(event, handler as EventHandler);
   }
 
   once<T>(event: string, handler: EventHandler<T>): () => void {
-    if (!this.onceListeners.has(event)) {
+    if (this.onceListeners.has(event) === false) {
       this.onceListeners.set(event, new Set());
     }
-    this.onceListeners.get(event)!.add(handler as EventHandler);
+    const handlers = this.onceListeners.get(event);
+    if (handlers !== undefined) {
+      handlers.add(handler as EventHandler);
+    }
 
     return () => {
-      const handlers = this.onceListeners.get(event);
-      if (handlers) {
-        handlers.delete(handler as EventHandler);
+      const onceHandlers = this.onceListeners.get(event);
+      if (onceHandlers !== undefined) {
+        onceHandlers.delete(handler as EventHandler);
       }
     };
   }
 
   off(event: string, handler: EventHandler): void {
     const handlers = this.listeners.get(event);
-    if (handlers) {
+    if (handlers !== undefined) {
       handlers.delete(handler);
     }
   }
 
   offAll(event?: string): void {
-    if (event) {
+    if (event !== undefined) {
       this.listeners.delete(event);
       this.onceListeners.delete(event);
     } else {

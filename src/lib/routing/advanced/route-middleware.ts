@@ -353,7 +353,10 @@ export class MiddlewareChain {
         return;
       }
 
-      const current = applicableMiddleware[index++]!;
+      const current = applicableMiddleware[index++];
+      if (current === undefined) {
+        throw new Error('Unexpected undefined middleware in chain');
+      }
       executionOrder.push(current.name);
 
       const timeout = options.timeout ?? current.timeout ?? this.defaultTimeout;
@@ -377,7 +380,7 @@ export class MiddlewareChain {
     }
 
     return {
-      success: error === null && !context.response.errorMessage,
+      success: error === null && context.response.errorMessage === null,
       durationMs: Date.now() - startTime,
       failedMiddleware,
       error,
@@ -542,7 +545,7 @@ export function createLoggingMiddleware(options: {
   logRequest?: boolean;
   logResponse?: boolean;
 } = {}): MiddlewareConfig {
-  const logger = options.logger ?? console.log;
+  const logger = options.logger ?? ((...args: unknown[]) => { console.info(...args); });
 
   return createMiddleware({
     name: 'logging',
@@ -620,7 +623,7 @@ export function createRoleMiddleware(requiredRoles: readonly string[]): Middlewa
         return;
       }
 
-      const hasRole = requiredRoles.some(role => ctx.user!.roles.includes(role));
+      const hasRole = requiredRoles.some(role => ctx.user?.roles.includes(role) === true);
       if (!hasRole) {
         ctx.response.error(403, 'Forbidden');
         return;
@@ -690,7 +693,7 @@ export function createAnalyticsMiddleware(options: {
       await next();
 
       // Only track successful navigations
-      if (!ctx.response.errorMessage) {
+      if (ctx.response.errorMessage === null || ctx.response.errorMessage === undefined) {
         options.trackFn({
           path: ctx.path,
           timestamp: ctx.timestamp,
@@ -743,7 +746,10 @@ export function compose(...middleware: MiddlewareFunction[]): MiddlewareFunction
         return next();
       }
 
-      const mw = middleware[index++]!;
+      const mw = middleware[index++];
+      if (mw === undefined) {
+        throw new Error('Unexpected undefined middleware in compose');
+      }
       await mw(ctx, dispatch);
     };
 
@@ -761,7 +767,7 @@ export function parallel(...middleware: MiddlewareFunction[]): MiddlewareFunctio
   return async (ctx, next) => {
     // Create shared next tracking
     let nextCalled = false;
-    const sharedNext = async () => {
+    const sharedNext = async (): Promise<void> => {
       if (!nextCalled) {
         nextCalled = true;
         await next();

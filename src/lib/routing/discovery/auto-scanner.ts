@@ -495,7 +495,7 @@ export class AutoScanner {
             }
 
             // Handle symlinks
-            if (entry.isSymbolicLink?.() === true && !this.config.followSymlinks) {
+            if (entry.isSymbolicLink?.() === true && this.config.followSymlinks !== true) {
               continue;
             }
 

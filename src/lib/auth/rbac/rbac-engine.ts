@@ -150,7 +150,7 @@ export class RBACEngine {
   updateConfig(config: Partial<RBACConfig>): void {
     this.config = { ...this.config, ...config };
 
-    if (config.roles) {
+    if (config.roles != null) {
       this.roleMap.clear();
       this.indexRoles(config.roles);
     }
@@ -299,7 +299,7 @@ export class RBACEngine {
       WILDCARD,
     ];
 
-    if (scope) {
+    if (scope != null && scope !== '') {
       permissionsToCheck.unshift(
         `${resource}:${action}:${scope}`,
         `${resource}:*:${scope}`
@@ -429,13 +429,13 @@ export class RBACEngine {
 
     for (const policySet of this.config.policySets ?? []) {
       // Check if policy set target matches
-      if (!this.matchesPolicyTarget(policySet.target, request)) {
+      if (this.matchesPolicyTarget(policySet.target, request) === false) {
         continue;
       }
 
       // Evaluate each policy in the set
       for (const policy of policySet.policies) {
-        if (!policy.enabled) continue;
+        if (policy.enabled !== true) continue;
 
         const matches = this.evaluatePolicy(policy, request);
         if (matches) {
@@ -490,35 +490,35 @@ export class RBACEngine {
     request: AccessRequest
   ): boolean {
     // Check subjects
-    if ((policy.subjects?.length ?? 0) > 0) {
+    if (policy.subjects != null && policy.subjects.length > 0) {
       const subjectMatch = policy.subjects.some(subject =>
         this.matchesPolicySubject(subject, request)
       );
-      if (!subjectMatch) return false;
+      if (subjectMatch === false) return false;
     }
 
     // Check resources
-    if (policy.resources?.length) {
+    if (policy.resources != null && policy.resources.length > 0) {
       const resourceMatch = policy.resources.some(resource =>
         this.matchesPolicyResource(resource, request)
       );
-      if (!resourceMatch) return false;
+      if (resourceMatch === false) return false;
     }
 
     // Check actions
-    if (policy.actions?.length) {
+    if (policy.actions != null && policy.actions.length > 0) {
       const actionMatch = policy.actions.some(
         action => action === WILDCARD || action === request.action
       );
-      if (!actionMatch) return false;
+      if (actionMatch === false) return false;
     }
 
     // Check conditions
-    if (policy.conditions?.length) {
+    if (policy.conditions != null && policy.conditions.length > 0) {
       const conditionsMatch = policy.conditions.every(condition =>
         this.evaluatePolicyCondition(condition, request)
       );
-      if (!conditionsMatch) return false;
+      if (conditionsMatch === false) return false;
     }
 
     return true;
@@ -531,7 +531,7 @@ export class RBACEngine {
     targets: import('./types').PolicyResource[] | undefined,
     request: AccessRequest
   ): boolean {
-    if (!targets?.length) return true;
+    if (targets == null || targets.length === 0) return true;
     return targets.some(target => this.matchesPolicyResource(target, request));
   }
 
@@ -546,7 +546,7 @@ export class RBACEngine {
       case 'user':
         return this.matchIdentifier(subject, request.subject.id);
       case 'role':
-        return request.subject.roles?.includes(subject.identifier) ?? false;
+        return request.subject.roles?.includes(subject.identifier) === true;
       case 'group':
         // Check group membership (would need group info in subject)
         return false;
@@ -570,13 +570,13 @@ export class RBACEngine {
       return false;
     }
 
-    if (resource.identifier && resource.identifier !== WILDCARD) {
-      if (request.resource.id && resource.identifier !== request.resource.id) {
+    if (resource.identifier != null && resource.identifier !== '' && resource.identifier !== WILDCARD) {
+      if (request.resource.id != null && resource.identifier !== request.resource.id) {
         return false;
       }
     }
 
-    if (resource.attributes) {
+    if (resource.attributes != null) {
       for (const [key, value] of Object.entries(resource.attributes)) {
         if (request.resource.attributes?.[key] !== value) {
           return false;
@@ -757,13 +757,13 @@ export class RBACEngine {
     request: AccessRequest
   ): boolean {
     const clientIP = request.context?.ipAddress;
-    if (!clientIP) return condition.operator === 'notIn';
+    if (clientIP == null || clientIP === '') return condition.operator === 'notIn';
 
     switch (condition.operator) {
       case 'in':
         return (condition.value as string[]).includes(clientIP);
       case 'notIn':
-        return !(condition.value as string[]).includes(clientIP);
+        return (condition.value as string[]).includes(clientIP) === false;
       case 'cidr':
         // Would need CIDR matching implementation
         return true;
@@ -780,7 +780,7 @@ export class RBACEngine {
     request: AccessRequest
   ): boolean {
     const {key} = condition;
-    if (!key) return true;
+    if (key == null || key === '') return true;
 
     const value = request.subject.attributes?.[key] ??
                   request.resource.attributes?.[key];
@@ -793,7 +793,7 @@ export class RBACEngine {
       case 'in':
         return (condition.value as unknown[]).includes(value);
       case 'notIn':
-        return !(condition.value as unknown[]).includes(value);
+        return (condition.value as unknown[]).includes(value) === false;
       case 'exists':
         return value !== undefined;
       default:
@@ -809,7 +809,7 @@ export class RBACEngine {
     request: AccessRequest
   ): boolean {
     const {key} = condition;
-    if (!key) return true;
+    if (key == null || key === '') return true;
 
     const value = request.context?.attributes?.[key];
 
@@ -827,7 +827,10 @@ export class RBACEngine {
    * Evaluate using permission matrix.
    */
   private evaluatePermissionMatrix(request: AccessRequest): EvaluationResult {
-    const matrix = this.config.permissionMatrix!;
+    const matrix = this.config.permissionMatrix;
+    if (matrix == null) {
+      return this.createResult(false, 'deny', 'no_permission_matrix');
+    }
 
     // Find matching entries for user's roles
     const matchingEntries = matrix.entries.filter(
@@ -846,8 +849,8 @@ export class RBACEngine {
 
     // Check for explicit deny
     const hasDeny = matchingEntries.some(
-      entry => entry.deniedActions?.includes(request.action as PermissionAction) ??
-               entry.deniedActions?.includes(WILDCARD as PermissionAction)
+      entry => entry.deniedActions?.includes(request.action as PermissionAction) === true ||
+               entry.deniedActions?.includes(WILDCARD as PermissionAction) === true
     );
 
     // Check for explicit allow
@@ -914,7 +917,7 @@ export class RBACEngine {
     visited.add(roleId);
 
     const role = this.roleMap.get(roleId);
-    if (!role || !role.isActive === false) return;
+    if (role == null || role.isActive === false) return;
 
     // Add role's permissions
     for (const permission of role.permissions) {
@@ -922,10 +925,10 @@ export class RBACEngine {
     }
 
     // Add structured permissions
-    if (role.structuredPermissions) {
+    if (role.structuredPermissions != null) {
       for (const sp of role.structuredPermissions) {
-        if (!sp.deny) {
-          const permStr = sp.scope
+        if (sp.deny !== true) {
+          const permStr = sp.scope != null && sp.scope !== ''
             ? `${sp.resource}:${sp.action}:${sp.scope}`
             : `${sp.resource}:${sp.action}`;
           this.resolvedPermissions.add(permStr);
@@ -934,7 +937,7 @@ export class RBACEngine {
     }
 
     // Resolve inherited role permissions
-    if (role.inherits) {
+    if (role.inherits != null) {
       for (const parentRoleId of role.inherits) {
         this.resolveRolePermissions(parentRoleId, visited);
       }
@@ -947,7 +950,7 @@ export class RBACEngine {
   private hasInheritedRole(roleId: string): boolean {
     for (const userRoleId of this.userRoles) {
       const role = this.roleMap.get(userRoleId);
-      if (role?.inherits?.includes(roleId)) {
+      if (role?.inherits?.includes(roleId) === true) {
         return true;
       }
     }
@@ -972,7 +975,7 @@ export class RBACEngine {
       if (resAction !== WILDCARD && resAction !== action) continue;
 
       // Check scope match if specified
-      if (scope && resScope && resScope !== scope && resScope !== WILDCARD) continue;
+      if (scope != null && resScope != null && resScope !== scope && resScope !== WILDCARD) continue;
 
       return true;
     }
@@ -984,8 +987,9 @@ export class RBACEngine {
    * Check if current user is a super admin.
    */
   private isSuperAdmin(): boolean {
-    if (!this.config.superAdminRoles?.length) return false;
-    return this.userRoles.some(r => this.config.superAdminRoles!.includes(r));
+    const { superAdminRoles } = this.config;
+    if (superAdminRoles == null || superAdminRoles.length === 0) return false;
+    return this.userRoles.some(r => superAdminRoles.includes(r));
   }
 
   /**
@@ -1017,7 +1021,7 @@ export class RBACEngine {
    * Check if cache is still valid.
    */
   private isCacheValid(): boolean {
-    if (!this.config.enableCaching) return false;
+    if (this.config.enableCaching !== true) return false;
     return Date.now() < this.cacheExpiry;
   }
 
@@ -1025,7 +1029,7 @@ export class RBACEngine {
    * Cache a permission check result.
    */
   private cachePermission(key: string, value: boolean): void {
-    if (!this.config.enableCaching) return;
+    if (this.config.enableCaching !== true) return;
 
     this.permissionCache.set(key, value);
 
@@ -1038,7 +1042,7 @@ export class RBACEngine {
    * Cache an evaluation result.
    */
   private cacheEvaluation(key: string, result: EvaluationResult): void {
-    if (!this.config.enableCaching) return;
+    if (this.config.enableCaching !== true) return;
 
     this.evaluationCache.set(key, result);
 
@@ -1068,7 +1072,7 @@ export class RBACEngine {
    * Emit an audit event.
    */
   private auditCheck(request: AccessRequest, result: EvaluationResult): void {
-    if (!this.config.enableAudit) return;
+    if (this.config.enableAudit !== true) return;
 
     const event: RBACAuditEvent = {
       id: crypto.randomUUID(),
@@ -1094,8 +1098,8 @@ export class RBACEngine {
    * Log debug message.
    */
   private log(message: string, ...args: unknown[]): void {
-    if (this.debug) {
-      console.log(`[RBACEngine] ${message}`, ...args);
+    if (this.debug === true) {
+      console.info(`[RBACEngine] ${message}`, ...args);
     }
   }
 }

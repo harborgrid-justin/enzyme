@@ -881,13 +881,17 @@ export class UnifiedEventEmitter<Events extends Record<string, unknown>>
       this.middlewares.set(event, []);
     }
 
-    const middlewares = this.middlewares.get(event)!;
-    middlewares.push(middleware as unknown as EventMiddleware<Events[keyof Events]>);
+    const middlewares = this.middlewares.get(event);
+    if (middlewares) {
+      middlewares.push(middleware as unknown as EventMiddleware<Events[keyof Events]>);
+    }
 
     return () => {
-      const index = middlewares.indexOf(middleware as unknown as EventMiddleware<Events[keyof Events]>);
-      if (index !== -1) {
-        middlewares.splice(index, 1);
+      if (middlewares) {
+        const index = middlewares.indexOf(middleware as unknown as EventMiddleware<Events[keyof Events]>);
+        if (index !== -1) {
+          middlewares.splice(index, 1);
+        }
       }
     };
   }
@@ -1389,24 +1393,21 @@ export function addEventListener<K extends keyof WindowEventMap>(
   handler: (event: WindowEventMap[K]) => void,
   options?: boolean | AddEventListenerOptions
 ): Unsubscribe;
+// eslint-disable-next-line no-redeclare
 export function addEventListener<K extends keyof DocumentEventMap>(
   target: Document,
   event: K,
   handler: (event: DocumentEventMap[K]) => void,
   options?: boolean | AddEventListenerOptions
 ): Unsubscribe;
+// eslint-disable-next-line no-redeclare
 export function addEventListener<K extends keyof HTMLElementEventMap>(
   target: HTMLElement,
   event: K,
   handler: (event: HTMLElementEventMap[K]) => void,
   options?: boolean | AddEventListenerOptions
 ): Unsubscribe;
-export function addEventListener(
-  target: EventTarget,
-  event: string,
-  handler: EventListener,
-  options?: boolean | AddEventListenerOptions
-): Unsubscribe;
+// eslint-disable-next-line no-redeclare
 export function addEventListener(
   target: EventTarget,
   event: string,
@@ -1427,13 +1428,7 @@ export function addDisposableEventListener<K extends keyof WindowEventMap>(
   signal: AbortSignal,
   options?: Omit<AddEventListenerOptions, 'signal'>
 ): void;
-export function addDisposableEventListener(
-  target: EventTarget,
-  event: string,
-  handler: EventListener,
-  signal: AbortSignal,
-  options?: Omit<AddEventListenerOptions, 'signal'>
-): void;
+// eslint-disable-next-line no-redeclare
 export function addDisposableEventListener(
   target: EventTarget,
   event: string,
@@ -1503,15 +1498,11 @@ export function withEvents<
 >(
   Base: T
 ): T & Constructor<{ events: UnifiedEventEmitter<Events> }> {
-  // Use a type assertion to avoid the mixin class constructor signature issue
+  // Create a mixin class that adds event emitter functionality
   const MixinClass = class extends (Base as Constructor<object>) {
     events = createEventEmitter<Events>();
-
-    constructor(...args: any[]) {
-      super(...args);
-    }
   };
-  
+
   return MixinClass as T & Constructor<{ events: UnifiedEventEmitter<Events> }>;
 }
 

@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 /**
  * @file Universal Lazy Loading System
  * @description PhD-level lazy loading infrastructure that handles components, images,
@@ -198,7 +199,7 @@ class ObserverPool {
    * Memory leak prevention: Removes entries for elements no longer in DOM
    */
   private startCleanupInterval(): void {
-    if (this.cleanupIntervalId) return;
+    if (this.cleanupIntervalId !== null) return;
 
     this.cleanupIntervalId = setInterval(() => {
       this.cleanupOrphanedEntries();
@@ -209,7 +210,7 @@ class ObserverPool {
    * Stop cleanup interval
    */
   private stopCleanupInterval(): void {
-    if (this.cleanupIntervalId) {
+    if (this.cleanupIntervalId !== null) {
       clearInterval(this.cleanupIntervalId);
       this.cleanupIntervalId = null;
     }
@@ -232,12 +233,12 @@ class ObserverPool {
     // Clean up orphaned entries
     for (const element of orphanedElements) {
       const entry = this.entries.get(element);
-      if (entry) {
+      if (entry !== undefined) {
         this.unobserve(element, entry.threshold, entry.rootMargin);
       }
     }
 
-    if (orphanedElements.length > 0 && typeof console !== 'undefined') {
+    if (orphanedElements.length > 0 && typeof console !== 'undefined' && console !== null) {
       // Debug log for development
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console -- debug logging in development
@@ -259,7 +260,7 @@ class ObserverPool {
   private getObserver(threshold: number, rootMargin: string): IntersectionObserver {
     const key = this.getKey(threshold, rootMargin);
 
-    if (!this.observers.has(key)) {
+    if (this.observers.has(key) === false) {
       const observer = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
@@ -305,7 +306,7 @@ class ObserverPool {
     const key = this.getKey(threshold, rootMargin);
     const observer = this.observers.get(key);
 
-    if (observer) {
+    if (observer !== undefined) {
       observer.unobserve(element);
       this.callbacks.delete(element);
       this.entries.delete(element);
@@ -341,7 +342,7 @@ class ObserverPool {
 export function getNetworkTier(): NetworkTier {
   if (typeof navigator === 'undefined') return 'high';
 
-  if (!navigator.onLine) return 'offline';
+  if (navigator.onLine === false) return 'offline';
 
   const {connection} = (navigator as Navigator & {
     connection?: {
@@ -351,10 +352,10 @@ export function getNetworkTier(): NetworkTier {
     };
   });
 
-  if (!connection) return 'high';
+  if (connection === undefined || connection === null) return 'high';
 
   // Respect data saver
-  if (connection.saveData) return 'low';
+  if (connection.saveData === true) return 'low';
 
   // Check effective type
   const {effectiveType} = connection;
@@ -395,9 +396,7 @@ class ModulePreloader {
   private isProcessing = false;
 
   static getInstance(): ModulePreloader {
-    if (!ModulePreloader.instance) {
-      ModulePreloader.instance = new ModulePreloader();
-    }
+    ModulePreloader.instance ??= new ModulePreloader();
     return ModulePreloader.instance;
   }
 
@@ -409,7 +408,7 @@ class ModulePreloader {
       ? config.module
       : config.module.toString();
 
-    if (this.loadedModules.has(moduleId) || this.loadingModules.has(moduleId)) {
+    if (this.loadedModules.has(moduleId) === true || this.loadingModules.has(moduleId) === true) {
       return;
     }
 
@@ -424,17 +423,17 @@ class ModulePreloader {
    * Process preload queue during idle time
    */
   private processQueue(): void {
-    if (this.isProcessing || this.preloadQueue.length === 0) return;
+    if (this.isProcessing === true || this.preloadQueue.length === 0) return;
 
     this.isProcessing = true;
 
     const process = (deadline?: IdleDeadline): void => {
       while (
         this.preloadQueue.length > 0 &&
-        (!deadline || deadline.timeRemaining() > 5)
+        (deadline === undefined || deadline.timeRemaining() > 5)
       ) {
         const item = this.preloadQueue.shift();
-        if (!item) break;
+        if (item === undefined) break;
 
         void this.loadModule(item.config);
       }
@@ -465,7 +464,7 @@ class ModulePreloader {
       ? config.module
       : config.module.toString();
 
-    if (this.loadingModules.has(moduleId)) return;
+    if (this.loadingModules.has(moduleId) === true) return;
     this.loadingModules.add(moduleId);
 
     try {
@@ -555,7 +554,7 @@ export function createLazyComponent<P extends object = object>(
    * Get or create load promise
    */
   const getLoadPromise = async (): Promise<{ default: ComponentType<P> }> => {
-    if (loadedModule) {
+    if (loadedModule !== null) {
       return Promise.resolve(loadedModule);
     }
     loadPromise ??= loadWithRetry();
@@ -601,7 +600,7 @@ export function withLazyLoading<P extends object>(
       setRetryCount((c) => c + 1);
     }, []);
 
-    if (error) {
+    if (error !== null) {
       if (typeof errorFallbackFn === 'function') {
         return <>{errorFallbackFn(error, retry)}</>;
       }
@@ -677,10 +676,10 @@ export function LazyImage({
 
   // Observe viewport intersection
   useEffect(() => {
-    if (strategy !== 'viewport' || isInView) return;
+    if (strategy !== 'viewport' || isInView === true) return;
 
     const element = containerRef.current;
-    if (!element) return;
+    if (element === null) return;
 
     const pool = ObserverPool.getInstance();
     return pool.observe(
@@ -694,13 +693,13 @@ export function LazyImage({
 
   // Preload image
   useEffect(() => {
-    if (!isInView || isLoaded) return;
+    if (isInView === false || isLoaded === true) return;
 
     const img = new Image();
 
     img.onload = async () => {
       // Decode async for smoother rendering
-      if (decodeAsync && 'decode' in img) {
+      if (decodeAsync === true && 'decode' in img) {
         try {
           await img.decode();
         } catch {
@@ -716,15 +715,15 @@ export function LazyImage({
       onError?.(new Error(`Failed to load image: ${src}`));
     };
 
-    if (srcSet) img.srcset = srcSet;
-    if (sizes) img.sizes = sizes;
+    if (srcSet !== undefined) img.srcset = srcSet;
+    if (sizes !== undefined) img.sizes = sizes;
     img.src = src;
   }, [isInView, src, srcSet, sizes, decodeAsync, isLoaded, onLoad, onError]);
 
   const containerStyle: React.CSSProperties = {
     position: 'relative',
-    width: width ? `${width}px` : '100%',
-    height: height ? `${height}px` : 'auto',
+    width: width !== undefined && width !== 0 ? `${width}px` : '100%',
+    height: height !== undefined && height !== 0 ? `${height}px` : 'auto',
     overflow: 'hidden',
   };
 
@@ -734,8 +733,8 @@ export function LazyImage({
     width: '100%',
     height: '100%',
     objectFit: 'cover',
-    filter: blurUp ? `blur(${blurRadius}px)` : undefined,
-    transform: blurUp ? 'scale(1.1)' : undefined,
+    filter: blurUp === true ? `blur(${blurRadius}px)` : undefined,
+    transform: blurUp === true ? 'scale(1.1)' : undefined,
     transition: 'opacity 0.3s ease',
     opacity: isLoaded ? 0 : 1,
   };
@@ -744,11 +743,11 @@ export function LazyImage({
     width: '100%',
     height: '100%',
     objectFit: 'cover',
-    opacity: isLoaded ? 1 : 0,
+    opacity: isLoaded === true ? 1 : 0,
     transition: 'opacity 0.3s ease',
   };
 
-  if (hasError) {
+  if (hasError === true) {
     return (
       <div
         ref={containerRef}
@@ -761,7 +760,7 @@ export function LazyImage({
 
   return (
     <div ref={containerRef} style={containerStyle}>
-      {placeholder && (
+      {placeholder !== undefined && (
         <img
           src={placeholder}
           alt=""
@@ -769,7 +768,7 @@ export function LazyImage({
           aria-hidden="true"
         />
       )}
-      {isInView && (
+      {isInView === true && (
         <img
           ref={imgRef}
           src={src}
@@ -816,16 +815,16 @@ export function useLazyVisible(options: {
 
   useEffect(() => {
     const element = ref.current;
-    if (!element) return;
+    if (element === null) return;
 
-    if (triggerOnce && hasBeenVisible) return;
+    if (triggerOnce === true && hasBeenVisible === true) return;
 
     const pool = ObserverPool.getInstance();
     return pool.observe(
       element,
       (intersecting) => {
         setIsVisible(intersecting);
-        if (intersecting) setHasBeenVisible(true);
+        if (intersecting === true) setHasBeenVisible(true);
       },
       { rootMargin, threshold }
     );
@@ -864,7 +863,9 @@ export function useNetworkAwareLoading(priority: LoadingPriority = 'normal'): {
       connection?: { addEventListener: (type: string, handler: () => void) => void };
     });
 
-    connection?.addEventListener('change', updateTier);
+    if (connection?.addEventListener !== undefined) {
+      connection.addEventListener('change', updateTier);
+    }
 
     return () => {
       window.removeEventListener('online', updateTier);

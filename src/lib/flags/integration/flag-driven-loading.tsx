@@ -432,7 +432,7 @@ export function useFlaggedLazyComponent<P = Record<string, unknown>>(
 
     // Normalize loader to always return { default: T } for React.lazy
     const normalizedLoader = async (): Promise<{ default: ComponentType<P> }> => loader().then((mod) => {
-      if (mod && typeof mod === 'object' && 'default' in mod) {
+      if (mod !== null && mod !== undefined && typeof mod === 'object' && 'default' in mod) {
         return mod as { default: ComponentType<P> };
       }
       return { default: mod };
@@ -692,7 +692,7 @@ export function createFlaggedRouteLoaders<T>(
       const loader = flagEnabled ? route.enabledModule : route.fallbackModule;
 
       const result = await loader();
-      if (result && typeof result === 'object' && 'default' in result) {
+      if (result !== null && result !== undefined && typeof result === 'object' && 'default' in result) {
         return (result as { default: T }).default;
       }
       return result as T;

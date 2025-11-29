@@ -190,28 +190,28 @@ export const DEFAULT_BUDGETS: Record<string, BudgetThreshold> = {
     degradationStrategy: 'reduce-images',
   },
   INP: {
-    warning: VITAL_THRESHOLDS.INP!.good,
-    critical: VITAL_THRESHOLDS.INP!.needsImprovement,
+    warning: VITAL_THRESHOLDS.INP?.good ?? 200,
+    critical: VITAL_THRESHOLDS.INP?.needsImprovement ?? 500,
     unit: 'ms',
     description: 'Interaction to Next Paint',
     enableDegradation: true,
     degradationStrategy: 'reduce-animations',
   },
   CLS: {
-    warning: VITAL_THRESHOLDS.CLS!.good,
-    critical: VITAL_THRESHOLDS.CLS!.needsImprovement,
+    warning: VITAL_THRESHOLDS.CLS?.good ?? 0.1,
+    critical: VITAL_THRESHOLDS.CLS?.needsImprovement ?? 0.25,
     unit: 'score',
     description: 'Cumulative Layout Shift',
   },
   FCP: {
-    warning: VITAL_THRESHOLDS.FCP!.good,
-    critical: VITAL_THRESHOLDS.FCP!.needsImprovement,
+    warning: VITAL_THRESHOLDS.FCP?.good ?? 1800,
+    critical: VITAL_THRESHOLDS.FCP?.needsImprovement ?? 3000,
     unit: 'ms',
     description: 'First Contentful Paint',
   },
   TTFB: {
-    warning: VITAL_THRESHOLDS.TTFB!.good,
-    critical: VITAL_THRESHOLDS.TTFB!.needsImprovement,
+    warning: VITAL_THRESHOLDS.TTFB?.good ?? 800,
+    critical: VITAL_THRESHOLDS.TTFB?.needsImprovement ?? 1800,
     unit: 'ms',
     description: 'Time to First Byte',
   },
@@ -327,7 +327,9 @@ function generateSessionId(): string {
 function percentile(sortedArr: number[], p: number): number {
   if (sortedArr.length === 0) return 0;
   const index = Math.ceil((p / 100) * sortedArr.length) - 1;
-  return sortedArr[Math.max(0, Math.min(index, sortedArr.length - 1))]!;
+  const safeIndex = Math.max(0, Math.min(index, sortedArr.length - 1));
+  const value = sortedArr[safeIndex];
+  return value ?? 0;
 }
 
 /**
@@ -409,7 +411,7 @@ export class PerformanceBudgetManager {
    */
   public updateBudget(name: string, updates: Partial<BudgetThreshold>): void {
     const existing = this.budgets.get(name);
-    if (!existing) {
+    if (existing === undefined) {
       throw new Error(`Budget "${name}" not found`);
     }
 
@@ -451,7 +453,7 @@ export class PerformanceBudgetManager {
    */
   public record(budgetName: string, value: number): BudgetMetricEntry {
     const threshold = this.budgets.get(budgetName);
-    if (!threshold) {
+    if (threshold === undefined) {
       throw new Error(`Budget "${budgetName}" not found`);
     }
 
@@ -547,18 +549,25 @@ export class PerformanceBudgetManager {
 
     // Create violation record
     const thresholdValue = severity === 'critical' ? threshold.critical : threshold.warning;
+    let overage: number;
+    let overagePercent: number;
+
+    if (threshold.unit === 'fps') {
+      overage = thresholdValue - value;
+      overagePercent = (overage / thresholdValue) * 100;
+    } else {
+      overage = value - thresholdValue;
+      overagePercent = (overage / thresholdValue) * 100;
+    }
+
     const violation: BudgetViolationRecord = {
       id: generateId(),
       budgetName,
       value,
       threshold: thresholdValue,
       severity,
-      overage: threshold.unit === 'fps'
-        ? thresholdValue - value
-        : value - thresholdValue,
-      overagePercent: threshold.unit === 'fps'
-        ? ((thresholdValue - value) / thresholdValue) * 100
-        : ((value - thresholdValue) / thresholdValue) * 100,
+      overage,
+      overagePercent,
       timestamp: Date.now(),
       url: typeof window !== 'undefined' ? window.location.href : '',
       userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
@@ -573,8 +582,8 @@ export class PerformanceBudgetManager {
 
     // Check for automatic degradation
     if (
-      this.config.enableAutoDegradation &&
-      threshold.enableDegradation &&
+      this.config.enableAutoDegradation === true &&
+      threshold.enableDegradation === true &&
       consecutive >= this.config.degradationThreshold
     ) {
       this.activateDegradation(budgetName, threshold);
@@ -628,7 +637,7 @@ export class PerformanceBudgetManager {
       const value = this.currentValues.get(name);
       if (value !== undefined) {
         const status = this.evaluateStatus(value, threshold);
-        if (status !== 'ok' && threshold.enableDegradation) {
+        if (status !== 'ok' && threshold.enableDegradation === true) {
           allOk = false;
         }
       }
@@ -690,7 +699,7 @@ export class PerformanceBudgetManager {
    */
   public getTrend(budgetName: string): BudgetTrend | null {
     const entries = this.history.get(budgetName);
-    if (!entries || entries.length === 0) return null;
+    if (entries === undefined || entries.length === 0) return null;
 
     const values = entries.map((e) => e.value).sort((a, b) => a - b);
     const average = values.reduce((a, b) => a + b, 0) / values.length;
@@ -702,12 +711,15 @@ export class PerformanceBudgetManager {
     const violations = entries.filter((e) => e.status !== 'ok').length;
     const violationRate = (violations / entries.length) * 100;
 
+    const [minValue] = values;
+    const maxValue = values[values.length - 1];
+
     return {
       budgetName,
       entries: [...entries],
       average,
-      min: values[0]!,
-      max: values[values.length - 1]!,
+      min: minValue ?? 0,
+      max: maxValue ?? 0,
       p50: percentile(values, 50),
       p75: percentile(values, 75),
       p90: percentile(values, 90),
@@ -762,7 +774,7 @@ export class PerformanceBudgetManager {
    */
   public getStatus(budgetName: string): BudgetStatusSummary | null {
     const threshold = this.budgets.get(budgetName);
-    if (!threshold) return null;
+    if (threshold === undefined) return null;
 
     const currentValue = this.currentValues.get(budgetName) ?? null;
     const status = currentValue !== null
@@ -855,7 +867,14 @@ export class PerformanceBudgetManager {
       const value = status.currentValue !== null
         ? formatBudgetValue(status.currentValue, status.threshold.unit)
         : 'N/A';
-      const indicator = status.status === 'ok' ? '[OK]' : status.status === 'warning' ? '[WARN]' : '[CRIT]';
+      let indicator: string;
+      if (status.status === 'ok') {
+        indicator = '[OK]';
+      } else if (status.status === 'warning') {
+        indicator = '[WARN]';
+      } else {
+        indicator = '[CRIT]';
+      }
       lines.push(`${indicator} ${status.budgetName}: ${value}`);
     });
 
@@ -888,7 +907,7 @@ export class PerformanceBudgetManager {
    */
   private trimHistory(budgetName: string): void {
     const entries = this.history.get(budgetName);
-    if (!entries) return;
+    if (entries === undefined) return;
 
     // Remove entries older than retention period
     const cutoff = Date.now() - this.config.historyRetention;
@@ -942,9 +961,7 @@ let budgetManagerInstance: PerformanceBudgetManager | null = null;
  * Get or create the global PerformanceBudgetManager instance
  */
 export function getBudgetManager(config?: BudgetManagerConfig): PerformanceBudgetManager {
-  if (!budgetManagerInstance) {
-    budgetManagerInstance = new PerformanceBudgetManager(config);
-  }
+  budgetManagerInstance ??= new PerformanceBudgetManager(config);
   return budgetManagerInstance;
 }
 

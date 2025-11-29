@@ -467,7 +467,7 @@ export class DataPrefetchManager {
             ...this.config.defaultHeaders,
             ...options.headers,
           },
-          body: options.body ? JSON.stringify(options.body) : undefined,
+          body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
           credentials: this.config.credentials,
         });
 
@@ -558,7 +558,7 @@ export class DataPrefetchManager {
       }
     }
 
-    if (oldestKey) {
+    if (oldestKey !== null) {
       this.cache.delete(oldestKey);
       this.log(`Evicted oldest: ${oldestKey}`);
     }
@@ -566,7 +566,7 @@ export class DataPrefetchManager {
 
   private notifySubscribers(cacheKey: string, data: unknown): void {
     const subs = this.listeners.get(cacheKey);
-    if (subs) {
+    if (subs !== undefined) {
       subs.forEach((callback) => callback(data));
     }
   }
@@ -574,7 +574,7 @@ export class DataPrefetchManager {
   private generateCacheKey(url: string, options: PrefetchRequestOptions): string {
     const parts = [url, options.method ?? 'GET'];
 
-    if (options.body) {
+    if (options.body !== undefined) {
       parts.push(JSON.stringify(options.body));
     }
 
@@ -624,9 +624,7 @@ let managerInstance: DataPrefetchManager | null = null;
 export function getDataPrefetchManager(
   config?: Partial<DataPrefetchConfig>
 ): DataPrefetchManager {
-  if (!managerInstance) {
-    managerInstance = new DataPrefetchManager(config);
-  }
+  managerInstance ??= new DataPrefetchManager(config);
   return managerInstance;
 }
 
@@ -634,7 +632,7 @@ export function getDataPrefetchManager(
  * Reset the manager instance
  */
 export function resetDataPrefetchManager(): void {
-  if (managerInstance) {
+  if (managerInstance !== null) {
     managerInstance.clearCache();
     managerInstance = null;
   }

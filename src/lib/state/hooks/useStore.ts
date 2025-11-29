@@ -184,7 +184,6 @@ export function useSettingsState(): {
   highContrast: boolean;
   fontSize: string;
 } {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return useStore(
     (state) => ({
       locale: state.locale,
@@ -294,7 +293,6 @@ export function useModal<T extends Record<string, unknown> = Record<string, unkn
   open: (id: string, data?: Record<string, unknown>) => void;
   close: () => void;
 } {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const { activeModal, modalData, open, close } = useStore(
     (state) => ({
       activeModal: state.activeModal,
@@ -335,7 +333,6 @@ export function useLoading(): {
   start: (loadingMessage?: string) => void;
   stop: () => void;
 } {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const { isLoading, message, setGlobalLoading } = useStore(
     (state) => ({
       isLoading: state.globalLoading,
@@ -376,7 +373,6 @@ export function useDisplaySettings(): {
   timeFormat: string;
   numberFormat: string;
 } {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return useStore(
     (state) => ({
       locale: state.locale,
@@ -402,7 +398,6 @@ export function useAccessibilitySettings(): {
   highContrast: boolean;
   fontSize: string;
 } {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return useStore(
     (state) => ({
       reducedMotion: state.reducedMotion,
@@ -424,7 +419,6 @@ export function useNotificationSettings(): {
   soundEnabled: boolean;
   desktopNotifications: boolean;
 } {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return useStore(
     (state) => ({
       notificationsEnabled: state.notificationsEnabled,
@@ -557,26 +551,26 @@ export function useStateChange<T>(selector: StoreSelector<T>): {
   changeCount: number;
 } {
   const value = useStore(selector);
-  const [initialValue] = useState(value);
-  const prevValueRef = useRef(value);
-  const changeCountRef = useRef(0);
+  const [state, setState] = useState(() => ({
+    initialValue: value,
+    prevValue: value,
+    changeCount: 0,
+  }));
 
-  // Calculate if value changed since last render
-  // This is safe to do during render as we're only reading/writing refs
-  const valueChanged = !Object.is(value, prevValueRef.current);
-
-  if (valueChanged) {
-    changeCountRef.current += 1;
+  // Derive new state if value changed
+  if (!Object.is(value, state.prevValue)) {
+    setState({
+      initialValue: state.initialValue,
+      prevValue: value,
+      changeCount: state.changeCount + 1,
+    });
   }
-
-  // Store current value for next comparison (safe during render)
-  prevValueRef.current = value;
 
   return {
     value,
-    initialValue,
-    hasChanged: !Object.is(value, initialValue),
-    changeCount: changeCountRef.current,
+    initialValue: state.initialValue,
+    hasChanged: !Object.is(value, state.initialValue),
+    changeCount: state.changeCount,
   };
 }
 

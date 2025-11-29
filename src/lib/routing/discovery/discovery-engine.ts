@@ -429,7 +429,7 @@ export class DiscoveryEngine {
 
       // Phase 5: Code Generation
       let generatedCode: GeneratedCode | undefined;
-      if (this.config.generateCode) {
+      if (this.config.generateCode === true) {
         this.setState('generating');
         generatedCode = this.generateCode(transformResult.routes);
       }
@@ -542,10 +542,10 @@ export class DiscoveryEngine {
     const paramRoutes = routes.filter(r => r.extracted.params.length > 0);
     for (let i = 0; i < paramRoutes.length; i++) {
       for (let j = i + 1; j < paramRoutes.length; j++) {
-        const routeA = paramRoutes[i]!;
-        const routeB = paramRoutes[j]!;
+        const routeA = paramRoutes[i];
+        const routeB = paramRoutes[j];
 
-        if (this.doRoutesConflict(routeA, routeB)) {
+        if (routeA !== undefined && routeB !== undefined && this.doRoutesConflict(routeA, routeB)) {
           conflicts.push({
             type: 'param-conflict',
             routes: [routeA, routeB],
