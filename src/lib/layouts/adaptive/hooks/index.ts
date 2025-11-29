@@ -52,4 +52,4 @@ export type {
   UseLayoutMorphReturn,
   UseContentDensityReturn,
   UseCLSGuardReturn,
-} from '../types.ts';
+} from '../types';

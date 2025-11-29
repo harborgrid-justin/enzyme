@@ -9,7 +9,7 @@ import type {
   ErrorReport,
 } from './errorTypes';
 import { normalizeError } from './errorTypes';
-import { isDebugModeEnabled, isDevelopmentEnv } from '../flags/debugMode';
+import { isDebugModeEnabled, isDevelopmentEnv } from '../flags/debug-mode';
 
 /**
  * Error reporter configuration

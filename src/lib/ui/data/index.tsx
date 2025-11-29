@@ -17,6 +17,12 @@ export {
   type PaginationConfig,
 } from './DataTable';
 
+export {
+  VirtualizedDataTable,
+  type VirtualizedDataTableProps,
+  type VirtualizedColumn,
+} from './VirtualizedDataTable';
+
 // ============================================================================
 // Lazy Exports (for code splitting - use with Suspense)
 // ============================================================================

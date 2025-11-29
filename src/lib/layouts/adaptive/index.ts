@@ -165,7 +165,7 @@ export type {
   // Performance types
   LayoutPerformanceMetrics,
   PerformanceBudget,
-} from './types.ts';
+} from './types';
 
 // =============================================================================
 // CONSTANT EXPORTS

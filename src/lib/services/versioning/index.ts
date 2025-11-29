@@ -34,4 +34,4 @@ export {
   type VersionConfig,
   type VersionNegotiationResult,
   type VersionedApiClientConfig,
-} from '../ApiVersioning';
+} from '../api-versioning';

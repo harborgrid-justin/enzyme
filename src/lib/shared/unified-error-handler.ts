@@ -571,7 +571,7 @@ export class UnifiedErrorHandler {
  *
  * @example
  * ```typescript
- * import { getErrorHandler } from '@/lib/shared/UnifiedErrorHandler';
+ * import { getErrorHandler } from '@/lib/shared/unified-error-handler';
  *
  * const handler = getErrorHandler();
  * handler.handle(error, { userAction: 'submit_form' });

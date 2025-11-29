@@ -49,7 +49,7 @@ export {
   type TelemetryConfig,
   type ServiceMetric,
   type ServiceError,
-} from './ServiceLayerFacade';
+} from './service-layer-facade';
 
 // =============================================================================
 // HTTP CLIENT (Legacy - Use @/lib/api instead)
@@ -124,7 +124,7 @@ export {
   // Non-deprecated types
   type PaginatedResponse,
   type ListQueryParams,
-} from './apiClients';
+} from './api-clients';
 
 // =============================================================================
 // REQUEST QUEUE AND RATE LIMITING
@@ -140,7 +140,7 @@ export {
   type RequestQueueConfig,
   type RateLimiterConfig,
   type BatcherConfig,
-} from './requestQueue';
+} from './request-queue';
 
 // =============================================================================
 // TYPE-SAFE API CLIENT (NEW)
@@ -179,7 +179,7 @@ export {
   type TypedApiClientConfig,
   type User,
   type PaginationParams,
-} from './TypeSafeApiClient';
+} from './type-safe-api-client';
 
 // =============================================================================
 // ENHANCED INTERCEPTORS (NEW)
@@ -212,7 +212,7 @@ export {
   type TimingConfig,
   type TimingData,
   type RetryConfig,
-} from './EnhancedInterceptors';
+} from './enhanced-interceptors';
 
 // =============================================================================
 // OPTIMISTIC MUTATIONS (NEW)
@@ -240,7 +240,7 @@ export {
   type QueuedMutation,
   type MutationQueueConfig,
   type QueueStatus,
-} from './OptimisticMutations';
+} from './optimistic-mutations';
 
 // =============================================================================
 // DATALOADER BATCHING (NEW)
@@ -266,7 +266,7 @@ export {
   type GraphQLOperation,
   type GraphQLBatchResponse,
   type GraphQLBatcherConfig,
-} from './DataLoaderBatching';
+} from './data-loader-batching';
 
 // =============================================================================
 // API VERSIONING (NEW)
@@ -299,7 +299,7 @@ export {
   type VersionConfig,
   type VersionNegotiationResult,
   type VersionedApiClientConfig,
-} from './ApiVersioning';
+} from './api-versioning';
 
 // =============================================================================
 // SERVICE CIRCUIT BREAKER (NEW)
@@ -317,7 +317,7 @@ export {
   type ServiceConfig,
   type ServiceStatus,
   type ServiceStateChangeEvent,
-} from './ServiceCircuitBreaker';
+} from './service-circuit-breaker';
 
 // =============================================================================
 // PERSISTENT OFFLINE QUEUE (NEW)
@@ -333,4 +333,4 @@ export {
   type OfflineQueueOptions,
   type EnqueueOptions,
   type QueueStats,
-} from './PersistentOfflineQueue';
+} from './persistent-offline-queue';

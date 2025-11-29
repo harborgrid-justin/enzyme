@@ -817,7 +817,7 @@ enum ErrorSeverity {
 
 **Example:**
 ```typescript
-import { getErrorHandler } from '@/lib/shared/UnifiedErrorHandler';
+import { getErrorHandler } from '@/lib/shared/unified-error-handler';
 
 const handler = getErrorHandler();
 
@@ -880,7 +880,7 @@ interface StructuredError {
 
 **React Hook:**
 ```typescript
-import { useErrorHandler } from '@/lib/shared/UnifiedErrorHandler';
+import { useErrorHandler } from '@/lib/shared/unified-error-handler';
 
 function MyComponent() {
   const handler = useErrorHandler();

@@ -7,7 +7,7 @@
  * - utils/asyncUtils.ts
  * - utils/resilience.ts
  * - services/EnhancedInterceptors.ts
- * - state/sync/BroadcastSync.ts
+ * - state/sync/broadcast-sync.ts
  *
  * @module shared/async-utils
  */

@@ -49,4 +49,4 @@ export {
   generateId,
   generateDate,
   testData,
-} from './featureTestUtils';
+} from './feature-test-utils';

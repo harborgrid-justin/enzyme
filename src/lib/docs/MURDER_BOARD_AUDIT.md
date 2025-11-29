@@ -43,7 +43,7 @@ This document consolidates findings from a comprehensive "murder board" style ar
 | **API-004** | API | Duplicate React Context | `api/hooks/useApiClient.tsx:109` | Low |
 | **STATE-001** | State | Memory leak in featureStores Map | `state/store.ts:341-393` | Low |
 | **STATE-002** | State | waitForHydration no timeout | `state/store.ts:277-294` | Low |
-| **STATE-003** | State | BroadcastSync race condition | `state/sync/BroadcastSync.ts:416-469` | Medium |
+| **STATE-003** | State | BroadcastSync race condition | `state/sync/broadcast-sync.ts:416-469` | Medium |
 | **STATE-004** | State | Missing error boundary in persistence | `utils/statePersistence.ts:209` | Low |
 | **REACT-001** | React | Rules of Hooks violation | `ui/navigation/MainNav.tsx:103-108` | Low |
 | **REACT-002** | React | Inline style tag memory leak | `ui/feedback/Toasts.tsx:333-347` | Low |
@@ -120,7 +120,7 @@ This document consolidates findings from a comprehensive "murder board" style ar
    - Fix: Add timeout with default fallback
 
 3. **BroadcastSync Race Condition**
-   - File: `state/sync/BroadcastSync.ts` (Lines 416-469)
+   - File: `state/sync/broadcast-sync.ts` (Lines 416-469)
    - Problem: `isApplyingRemoteUpdate` flag not safe in async scenarios
    - Fix: Use atomic counter instead of boolean flag
 
@@ -485,7 +485,7 @@ Enterprise-grade test infrastructure sits completely unused:
 ### Priority 3 (Memory/Performance)
 
 - `/state/store.ts`
-- `/state/sync/BroadcastSync.ts`
+- `/state/sync/broadcast-sync.ts`
 - `/services/cache.ts`
 - `/services/DataLoaderBatching.ts`
 - `/ui/feedback/Toasts.tsx`

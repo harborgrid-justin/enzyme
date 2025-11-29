@@ -12,7 +12,7 @@
  */
 
 import { getDefaultFlagValue } from '@/config/featureFlagConfig';
-import { flagKeys } from './flagKeys';
+import { flagKeys } from './flag-keys';
 
 /**
  * Internal state to track feature flag provider initialization
@@ -65,7 +65,7 @@ export function _resetFlagProvider(): void {
  *
  * @example
  * ```typescript
- * import { isDebugModeEnabled } from '@/lib/flags/debugMode';
+ * import { isDebugModeEnabled } from '@/lib/flags/debug-mode';
  *
  * if (isDebugModeEnabled()) {
  *   console.debug('[Debug]', detailedInfo);
@@ -101,7 +101,7 @@ export function isDebugModeEnabled(): boolean {
  *
  * @example
  * ```typescript
- * import { isFlagEnabled } from '@/lib/flags/debugMode';
+ * import { isFlagEnabled } from '@/lib/flags/debug-mode';
  *
  * if (isFlagEnabled('analytics-v2')) {
  *   sendToNewAnalytics(event);

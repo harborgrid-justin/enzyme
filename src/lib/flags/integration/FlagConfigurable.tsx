@@ -47,7 +47,7 @@ import React, {
   useState,
 } from 'react';
 import { useFeatureFlag } from '../useFeatureFlag';
-import type { FlagKey } from '../flagKeys';
+import type { FlagKey } from '../flag-keys';
 
 // =============================================================================
 // Types

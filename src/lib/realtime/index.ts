@@ -15,7 +15,7 @@ export {
   type MessageHandler,
   type ErrorHandler,
   type StateChangeHandler,
-} from './websocketClient';
+} from './websocket-client';
 
 // SSE client
 export {
@@ -26,7 +26,7 @@ export {
   type SSEMessageHandler,
   type SSEErrorHandler,
   type SSEStateChangeHandler,
-} from './sseClient';
+} from './sse-client';
 
 // Stream to query cache (internal naming preserved for cache update semantics)
 export {
@@ -37,7 +37,7 @@ export {
   type StreamEventType,
   type CacheUpdateStrategy,
   type StreamCacheConfig,
-} from './streamToQueryCache';
+} from './stream-to-query-cache';
 
 // Realtime provider
 export {

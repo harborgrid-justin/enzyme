@@ -18,7 +18,7 @@ import { immer } from 'zustand/middleware/immer';
 import { uiSlice, type UISlice } from './slices/uiSlice';
 import { sessionSlice, type SessionSlice } from './slices/sessionSlice';
 import { settingsSlice, type SettingsSlice } from './slices/settingsSlice';
-import { isDebugModeEnabled } from '../flags/debugMode';
+import { isDebugModeEnabled } from '../flags/debug-mode';
 
 // ============================================================================
 // Store Types

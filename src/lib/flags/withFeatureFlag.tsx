@@ -1,7 +1,7 @@
 import { type ComponentType } from 'react';
 import type { JSX } from 'react';
 import { useFeatureFlag } from './useFeatureFlag';
-import type { FlagKey } from './flagKeys';
+import type { FlagKey } from './flag-keys';
 
 interface WithFeatureFlagOptions {
   /** The feature flag to check */

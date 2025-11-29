@@ -30,7 +30,7 @@ export {
   type GraphQLOperation,
   type GraphQLBatchResponse,
   type GraphQLBatcherConfig,
-} from '../DataLoaderBatching';
+} from '../data-loader-batching';
 
 // Request Queue and Rate Limiting
 export {
@@ -44,4 +44,4 @@ export {
   type RequestQueueConfig,
   type RateLimiterConfig,
   type BatcherConfig,
-} from '../requestQueue';
+} from '../request-queue';

@@ -13,8 +13,8 @@ import {
 import { globalEventBus } from '../shared/event-utils';
 import { ErrorReporter } from '../monitoring/ErrorReporter';
 import { logger, configureLogger, type LogLevel } from '../utils/logging';
-import { globalRequestQueue } from '../services/requestQueue';
-import { isDebugModeEnabled } from '../flags/debugMode';
+import { globalRequestQueue } from '../services/request-queue';
+import { isDebugModeEnabled } from '../flags/debug-mode';
 
 /**
  * System configuration options

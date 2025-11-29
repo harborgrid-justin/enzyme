@@ -17,12 +17,12 @@ import React, {
   type ReactNode,
 } from 'react';
 import { RealtimeContext, type RealtimeContextValue, type ConnectionState } from '../contexts/RealtimeContext';
-import { WebSocketClient, createWebSocketClient, type WebSocketState } from './websocketClient';
-import { SSEClient, createSSEClient, type SSEState } from './sseClient';
-import { StreamQueryCacheUpdater, type StreamEvent, type CacheUpdateStrategy } from './streamToQueryCache';
+import { WebSocketClient, createWebSocketClient, type WebSocketState } from './websocket-client';
+import { SSEClient, createSSEClient, type SSEState } from './sse-client';
+import { StreamQueryCacheUpdater, type StreamEvent, type CacheUpdateStrategy } from './stream-to-query-cache';
 import { queryClient } from '../queries/queryClient';
 import { useFeatureFlag } from '../flags/useFeatureFlag';
-import { flagKeys } from '../flags/flagKeys';
+import { flagKeys } from '../flags/flag-keys';
 
 /**
  * Realtime connection type

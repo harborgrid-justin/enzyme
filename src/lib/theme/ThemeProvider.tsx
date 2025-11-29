@@ -11,7 +11,7 @@ import { lightPalette } from './palettes/light';
 import { darkPalette } from './palettes/dark';
 import { tokens } from './tokens';
 import { useFeatureFlag } from '../flags/useFeatureFlag';
-import { flagKeys } from '../flags/flagKeys';
+import { flagKeys } from '../flags/flag-keys';
 
 type Theme = 'light' | 'dark' | 'system';
 

@@ -79,7 +79,7 @@ export {
   isFeatureRegistryInitialized,
   resetFeatureRegistry,
   waitForFeatureRegistry,
-} from './autoRegistry';
+} from './auto-registry';
 
 // ============================================================================
 // Feature Flag Integration
@@ -107,7 +107,7 @@ export {
   // Utility Hooks
   useFeatureAccessChecker,
   useDisabledFeatures,
-} from './featureFlagIntegration';
+} from './feature-flag-integration';
 
 // ============================================================================
 // Dependency Injection

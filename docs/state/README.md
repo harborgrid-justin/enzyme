@@ -462,7 +462,7 @@ window.__STORE__.setState({ locale: 'fr-FR' })
 Check if debug mode is enabled:
 
 ```typescript
-import { isDebugModeEnabled } from '@/lib/flags/debugMode';
+import { isDebugModeEnabled } from '@/lib/flags/debug-mode';
 
 if (isDebugModeEnabled()) {
   console.log('Debug mode active');

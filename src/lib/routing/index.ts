@@ -146,7 +146,7 @@ export {
   useRouteNavigate,
   useQueryParams,
   useQueryParam,
-} from './routingUtils';
+} from './routing-utils';
 
 // =============================================================================
 // Legacy Loaders
@@ -231,7 +231,7 @@ export {
 // =============================================================================
 // Router Factory
 // =============================================================================
-export type { RouteConfig } from './createRouter';
+export type { RouteConfig } from './create-router';
 
 export {
   createRouter,
@@ -241,7 +241,7 @@ export {
   DefaultNotFound,
   withSuspense,
   setupPrefetching,
-} from './createRouter';
+} from './create-router';
 
 // =============================================================================
 // Route Registry

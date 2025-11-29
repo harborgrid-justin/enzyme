@@ -9,7 +9,7 @@
  */
 
 import { useCallback, useRef, useState } from 'react';
-import type { LayoutMode, UseLayoutModeReturn } from '../types.ts';
+import type { LayoutMode, UseLayoutModeReturn } from '../types';
 
 // =============================================================================
 // HOOK IMPLEMENTATION

@@ -1,3 +1,3 @@
-export { dashboardLoader } from './dashboardLoader';
-export { reportsLoader } from './reportsLoader';
-export { usersLoader } from './usersLoader';
+export { dashboardLoader } from './dashboard-loader';
+export { reportsLoader } from './reports-loader';
+export { usersLoader } from './users-loader';

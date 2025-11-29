@@ -1,6 +1,6 @@
 import { type ReactNode, useMemo, memo } from 'react';
 import { useFeatureFlagContext } from './FeatureFlagProvider';
-import type { FlagKey } from './flagKeys';
+import type { FlagKey } from './flag-keys';
 
 interface FlagGateProps {
   /** The feature flag to check */
