@@ -353,7 +353,7 @@ export class RoutePrefetchManager {
    * Prefetch predicted routes
    */
   prefetchPredicted(): void {
-    if (!this.engine || !this.currentPath) {
+    if (this.engine == null || this.currentPath == null || this.currentPath === '') {
       return;
     }
 
@@ -428,7 +428,7 @@ export class RoutePrefetchManager {
   ): Promise<unknown> {
     // Check cache first
     const cached = this.getCachedComponent(path);
-    if (cached) {
+    if (cached != null) {
       return cached;
     }
 

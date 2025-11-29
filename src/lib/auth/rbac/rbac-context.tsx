@@ -163,8 +163,9 @@ export function RBACProvider({
         // Fetch permissions from server if callback provided
         if (fetchPermissions) {
           const fetched = await fetchPermissions();
-          roles = fetched.roles;
-          permissions = fetched.permissions;
+          const { roles: fetchedRoles, permissions: fetchedPermissions } = fetched;
+          roles = fetchedRoles;
+          permissions = fetchedPermissions;
         }
 
         // Set user context on engine

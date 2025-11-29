@@ -805,7 +805,7 @@ export function createSyncEngine(config: SyncEngineConfig): SyncEngine {
       }
     }
 
-    if (localData) {
+    if (localData != null) {
       await source.set(entityType, id, localData);
       updateMetadata(entityType, id, {
         status: 'synced',
@@ -823,7 +823,7 @@ export function createSyncEngine(config: SyncEngineConfig): SyncEngine {
 
     const remoteData = await source.get(entityType, id);
 
-    if (remoteData) {
+    if (remoteData != null) {
       // Update secondary sources
       for (const secondarySource of sortedSources) {
         if (secondarySource.id === source.id) continue;
@@ -1143,9 +1143,9 @@ export function createLocalStorageSource(
       }
     },
 
-    get: (entityType, id) => {
+    get: async (entityType, id) => {
       const data = localStorage.getItem(getKey(entityType, id));
-      return Promise.resolve(data !== null && data !== '' ? JSON.parse(data) as unknown : null);
+      return data !== null && data !== '' ? JSON.parse(data) as unknown : null;
     },
 
     getMany: (entityType, ids) => {

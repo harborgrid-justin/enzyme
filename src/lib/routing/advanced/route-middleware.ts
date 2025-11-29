@@ -329,7 +329,7 @@ export class MiddlewareChain {
     // Filter middleware based on options and route matching
     const applicableMiddleware = this.middleware.filter(mw => {
       if (mw.enabled !== true) return false;
-      if (options.skip?.includes(mw.name)) return false;
+      if (options.skip?.includes(mw.name) === true) return false;
       if (options.only && !options.only.includes(mw.name)) return false;
       if (!this.matchesRoute(mw, context.path)) return false;
       return true;
@@ -345,7 +345,7 @@ export class MiddlewareChain {
       }
 
       // Check abort signal
-      if (options.signal?.aborted) {
+      if (options.signal?.aborted === true) {
         throw new Error('Middleware chain aborted');
       }
 

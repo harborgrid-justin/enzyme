@@ -548,7 +548,7 @@ export function assertType<T>(
  * Assert condition is truthy
  */
 export function assert(condition: unknown, message?: string): asserts condition {
-  if (!condition) {
+  if (condition === false || condition === null || condition === undefined || condition === '' || condition === 0) {
     throw new AssertionError(message ?? 'Assertion failed', condition);
   }
 }

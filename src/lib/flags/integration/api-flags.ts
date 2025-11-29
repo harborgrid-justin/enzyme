@@ -524,7 +524,7 @@ export function createFlaggedFetch(
     } else if (input instanceof URL) {
       url = input.toString();
     } else if (input instanceof Request) {
-      url = input.url;
+      ({ url } = input);
     } else {
       url = String(input);
     }

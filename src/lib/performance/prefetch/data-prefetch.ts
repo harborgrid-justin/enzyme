@@ -174,7 +174,7 @@ export class DataPrefetchManager {
     const now = Date.now();
 
     // Check cache first (unless force)
-    if (!options.force) {
+    if (options.force !== true) {
       const cached = this.cache.get(cacheKey);
       if (cached) {
         // Return fresh data immediately
@@ -500,7 +500,7 @@ export class DataPrefetchManager {
     options: PrefetchRequestOptions
   ): Promise<void> {
     const entry = this.cache.get(cacheKey);
-    if (!entry ?? entry.isRevalidating) {
+    if (entry == null || entry.isRevalidating) {
       return;
     }
 

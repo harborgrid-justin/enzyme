@@ -257,7 +257,7 @@ export class UnifiedErrorHandler {
         timestamp: new Date().toISOString(),
         sessionId: this.sessionId,
         ...context,
-        tags: context.tags || {},
+        tags: context.tags ?? {},
       },
       stackTrace: errorObj.stack,
     };
@@ -554,9 +554,9 @@ export class UnifiedErrorHandler {
    * Generate unique session ID
    */
   private generateSessionId(): string {
-    if (typeof window !== 'undefined' && window.sessionStorage) {
+    if (typeof window !== 'undefined' && window.sessionStorage !== null && window.sessionStorage !== undefined) {
       let sessionId = window.sessionStorage.getItem('__error_handler_session__');
-      if (!sessionId) {
+      if (sessionId === null || sessionId === undefined || sessionId === '') {
         sessionId = `SESSION_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         window.sessionStorage.setItem('__error_handler_session__', sessionId);
       }
@@ -596,7 +596,7 @@ export function getErrorHandler(): UnifiedErrorHandler {
  * }
  * ```
  */
-export function useErrorHandler(config?: Partial<UnifiedErrorHandlerConfig>) {
+export function useErrorHandler(config?: Partial<UnifiedErrorHandlerConfig>): UnifiedErrorHandler {
   const handler = UnifiedErrorHandler.getInstance(config);
   return handler;
 }

@@ -690,6 +690,11 @@ export class ScrollTracker {
       }
     });
 
+    let offset = 0;
+    if (isStuck) {
+      offset = stuckTo === 'top' ? stickyTop : stickyBottom;
+    }
+
     return {
       isStuck,
       stuckTo,
@@ -697,7 +702,7 @@ export class ScrollTracker {
         top: rect.top - containerRect.top + this.state.scrollPosition.y,
         left: rect.left - containerRect.left + this.state.scrollPosition.x,
       },
-      offset: isStuck ? (stuckTo === 'top' ? stickyTop : stickyBottom) : 0,
+      offset,
       siblingStickies,
     };
   }

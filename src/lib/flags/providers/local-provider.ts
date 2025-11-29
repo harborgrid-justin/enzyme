@@ -94,7 +94,7 @@ export class LocalProvider implements WritableFlagProvider {
 
     // Load from storage if enabled
     if (this.config.persistToStorage) {
-      await this.loadFromStorage();
+      this.loadFromStorage();
     }
 
     // Load initial flags (override storage)
@@ -119,7 +119,7 @@ export class LocalProvider implements WritableFlagProvider {
   /**
    * Get all flags.
    */
-  getFlags(): Promise<readonly FeatureFlag[]> {
+  async getFlags(): Promise<readonly FeatureFlag[]> {
     this.stats = { ...this.stats, requestCount: this.stats.requestCount + 1 };
     return Promise.resolve(Array.from(this.flags.values()));
   }
@@ -127,7 +127,7 @@ export class LocalProvider implements WritableFlagProvider {
   /**
    * Get a flag by key.
    */
-  getFlag(key: string): Promise<FeatureFlag | null> {
+  async getFlag(key: string): Promise<FeatureFlag | null> {
     this.stats = { ...this.stats, requestCount: this.stats.requestCount + 1 };
     return Promise.resolve(this.flags.get(key) ?? null);
   }
@@ -143,7 +143,7 @@ export class LocalProvider implements WritableFlagProvider {
     this.updateStats();
 
     if (this.config.persistToStorage) {
-      await this.saveToStorage();
+      this.saveToStorage();
     }
 
     this.emitChange({
@@ -171,7 +171,7 @@ export class LocalProvider implements WritableFlagProvider {
     this.updateStats();
 
     if (this.config.persistToStorage) {
-      await this.saveToStorage();
+      this.saveToStorage();
     }
 
     this.emitChange({
@@ -196,7 +196,7 @@ export class LocalProvider implements WritableFlagProvider {
     this.updateStats();
 
     if (this.config.persistToStorage) {
-      await this.saveToStorage();
+      this.saveToStorage();
     }
 
     this.emitChange({
@@ -234,7 +234,7 @@ export class LocalProvider implements WritableFlagProvider {
     this.updateStats();
 
     if (this.config.persistToStorage) {
-      await this.saveSegmentsToStorage();
+      this.saveSegmentsToStorage();
     }
 
     this.log(`Segment updated: ${segment.id}`);
@@ -248,7 +248,7 @@ export class LocalProvider implements WritableFlagProvider {
     this.updateStats();
 
     if (this.config.persistToStorage) {
-      await this.saveSegmentsToStorage();
+      this.saveSegmentsToStorage();
     }
 
     this.log(`Segment deleted: ${id}`);
@@ -498,8 +498,8 @@ export class LocalProvider implements WritableFlagProvider {
     this.updateStats();
 
     if (this.config.persistToStorage) {
-      await this.saveToStorage();
-      await this.saveSegmentsToStorage();
+      this.saveToStorage();
+      this.saveSegmentsToStorage();
     }
 
     this.emitChange({

@@ -182,8 +182,8 @@ export interface BudgetManagerConfig {
 export const DEFAULT_BUDGETS: Record<string, BudgetThreshold> = {
   // Core Web Vitals
   LCP: {
-    warning: VITAL_THRESHOLDS.LCP!.good,
-    critical: VITAL_THRESHOLDS.LCP!.needsImprovement,
+    warning: VITAL_THRESHOLDS.LCP?.good ?? 2500,
+    critical: VITAL_THRESHOLDS.LCP?.needsImprovement ?? 4000,
     unit: 'ms',
     description: 'Largest Contentful Paint',
     enableDegradation: true,

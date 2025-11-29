@@ -166,7 +166,7 @@ export function createMockFeature(
     ...configOverrides,
   };
 
-  const MockComponent = () =>
+  const MockComponent = (): React.ReactElement =>
     React.createElement('div', { 'data-testid': id }, name);
 
   return {
@@ -606,7 +606,12 @@ export const testData = {
     if (array.length === 0) {
       throw new Error('Cannot pick from empty array');
     }
-    return array[Math.floor(Math.random() * array.length)]!;
+    const index = Math.floor(Math.random() * array.length);
+    const item = array[index];
+    if (item === undefined) {
+      throw new Error('Unexpected undefined value in array');
+    }
+    return item;
   },
 
   array: <T>(length: number, factory: (index: number) => T): T[] =>

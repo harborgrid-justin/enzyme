@@ -362,16 +362,25 @@ class CrashAnalyticsManager {
     const originals = {} as Record<(typeof levels)[number], (...args: unknown[]) => void>;
 
     levels.forEach((level) => {
+      // eslint-disable-next-line no-console -- intentionally capturing console
       originals[level] = console[level].bind(console);
       // eslint-disable-next-line no-console -- intentionally capturing console
       console[level] = (...args: unknown[]): void => {
+        let breadcrumbLevel: 'error' | 'warning' | 'debug';
+        if (level === 'error') {
+          breadcrumbLevel = 'error';
+        } else if (level === 'warn') {
+          breadcrumbLevel = 'warning';
+        } else {
+          breadcrumbLevel = 'debug';
+        }
+
         this.addBreadcrumb({
           type: 'console',
           category: `console.${level}`,
           message: args.map((arg) => this.stringify(arg)).join(' ').substring(0, 500),
-          level: level === 'error' ? 'error' : (level === 'warn' ? 'warning' : 'debug'),
+          level: breadcrumbLevel,
         });
-        // eslint-disable-next-line no-console -- intentionally calling original
         originals[level](...args);
       };
     });
@@ -394,7 +403,15 @@ class CrashAnalyticsManager {
       input: RequestInfo | URL,
       init?: RequestInit
     ): Promise<Response> => {
-      const url = typeof input === 'string' ? input : (input instanceof URL ? input.href : input.url);
+      let url: string;
+      if (typeof input === 'string') {
+        url = input;
+      } else if (input instanceof URL) {
+        url = input.href;
+      } else {
+        const { url: requestUrl } = input;
+        url = requestUrl;
+      }
       const method = init?.method ?? 'GET';
       const startTime = performance.now();
 

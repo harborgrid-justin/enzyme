@@ -331,7 +331,7 @@ export class OptionalSegmentRouteBuilder {
         defaultedSegments.push(segment.getName());
       }
 
-      if (!resolution.valid && resolution.error) {
+      if (!resolution.valid && resolution.error != null && resolution.error !== '') {
         errors[segment.getName()] = resolution.error;
       }
     }
@@ -487,7 +487,7 @@ export class OptionalSegmentManager {
     // Sort by score (descending)
     matches.sort((a, b) => b.match.score - a.match.score);
 
-    return matches[0]!;
+    return matches[0] ?? null;
   }
 
   /**
@@ -676,7 +676,8 @@ export function buildAllPossiblePaths(
   const generateCombinations = (index: number, currentPath: string): void => {
     if (index >= segments.length) return;
 
-    const segment = segments[index]!;
+    const segment = segments[index];
+    if (segment === undefined) return;
     const defaultValue = String(segment.defaultValue);
 
     // Path with this segment's default

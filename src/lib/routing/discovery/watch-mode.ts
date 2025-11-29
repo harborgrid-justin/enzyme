@@ -220,7 +220,7 @@ export class WatchMode {
       avgRediscoveryMs: (this.stats.rediscoveries !== null && this.stats.rediscoveries !== undefined && this.stats.rediscoveries > 0)
         ? this.stats.totalRediscoveryMs / this.stats.rediscoveries
         : 0,
-      uptimeMs: this.startedAt ? Date.now() - this.startedAt : 0,
+      uptimeMs: (this.startedAt != null && this.startedAt !== 0) ? Date.now() - this.startedAt : 0,
       lastChangeAt: this.stats.lastChangeAt,
       lastRediscoveryAt: this.stats.lastRediscoveryAt,
     };
@@ -320,7 +320,7 @@ export class WatchMode {
         }
         return this;
       },
-      close: () => {
+      close: async () => {
         for (const w of watchers) {
           w.close();
         }

@@ -186,7 +186,7 @@ class ObserverPool {
    * Reset singleton instance (for testing and HMR)
    */
   static reset(): void {
-    if (ObserverPool.instance) {
+    if (ObserverPool.instance != null) {
       ObserverPool.instance.disconnectAll();
       // Type-safe null assignment
       (ObserverPool as unknown as { instance: ObserverPool | null }).instance = null;
@@ -272,7 +272,11 @@ class ObserverPool {
       this.observers.set(key, observer);
     }
 
-    return this.observers.get(key)!;
+    const obs = this.observers.get(key);
+    if (obs == null) {
+      throw new Error('Observer not found after creation');
+    }
+    return obs;
   }
 
   /**

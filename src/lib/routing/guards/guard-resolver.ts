@@ -447,7 +447,7 @@ export class GuardResolver {
     const denialReasons: string[] = [];
     let finalResult: GuardResultObject = GuardResult.allow();
 
-    if (this.config.parallelExecution) {
+    if (this.config.parallelExecution === true) {
       // Parallel execution
       const promises = guards.map(async (registered) => {
         return this.executeSingleGuard(registered.guard, timing, context);
@@ -456,8 +456,11 @@ export class GuardResolver {
       const results = await Promise.all(promises);
 
       for (let i = 0; i < results.length; i++) {
-        const result = results[i]!;
-        const {guard} = (guards[i]!);
+        const result = results[i];
+        if (result === undefined) continue;
+        const guardInfo = guards[i];
+        if (guardInfo === undefined) continue;
+        const {guard} = guardInfo;
 
         guardResults.push(result);
 

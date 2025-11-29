@@ -583,7 +583,8 @@ export class HydrationPriorityQueue {
       return undefined;
     }
 
-    let lowest = this.heap[0];
+    const [firstTask] = this.heap;
+    let lowest = firstTask;
 
     for (const task of this.heap) {
       if (lowest && this.config.comparator(task, lowest) > 0) {

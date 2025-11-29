@@ -442,7 +442,8 @@ export function createComposedContext<T extends Record<string, unknown>>(config:
     }
 
     const composedValue = useMemo(() => sourceValues as T, [
-      // eslint-disable-next-line react-hooks/exhaustive-deps, @typescript-eslint/no-unsafe-assignment
+      sourceValues,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       ...Object.values(sourceValues),
     ]);
 

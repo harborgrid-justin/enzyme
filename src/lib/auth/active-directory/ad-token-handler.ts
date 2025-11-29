@@ -714,7 +714,7 @@ export class ADTokenHandler {
    * SECURITY: Clears tokens from both encrypted and unencrypted storage
    * to ensure complete cleanup during logout.
    */
-  async clearCache(): Promise<void> {
+  clearCache(): void {
     // Clear memory cache
     this.memoryCache.clear();
 
@@ -723,7 +723,7 @@ export class ADTokenHandler {
       // Clear from secure storage if available
       if (this.secureStorage !== undefined && this.secureStorage !== null) {
         try {
-          await this.secureStorage.clear();
+          this.secureStorage.clear();
         } catch (error) {
           this.log('Error clearing secure storage:', error);
         }

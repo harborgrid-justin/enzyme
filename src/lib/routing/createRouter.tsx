@@ -265,7 +265,7 @@ function setupPrefetching(
     if (!link) return;
 
     const href = link.getAttribute('href');
-    if (!href || href.startsWith('http') || href.startsWith('mailto:')) return;
+    if (href == null || href === '' || href.startsWith('http') || href.startsWith('mailto:')) return;
 
     // Check if already prefetched
     if (prefetchState.prefetched.has(href)) return;
@@ -281,7 +281,7 @@ function setupPrefetching(
       return href === `/${pattern}` || href === pattern;
     });
 
-    if (routeKey && preloadMap[routeKey]) {
+    if (routeKey != null && routeKey !== '' && preloadMap[routeKey]) {
       // Cancel any existing timeout
       const existingTimeout = prefetchState.timeouts.get(href);
       if (existingTimeout) {

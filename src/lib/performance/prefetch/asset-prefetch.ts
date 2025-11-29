@@ -426,7 +426,7 @@ export class AssetPrefetchManager {
     const link = document.createElement('link');
     link.rel = 'preconnect';
     link.href = origin;
-    if (crossOrigin) {
+    if (crossOrigin === true) {
       link.crossOrigin = 'anonymous';
     }
     document.head.appendChild(link);
@@ -553,15 +553,15 @@ export class AssetPrefetchManager {
     link.href = url;
     link.as = as;
 
-    if (options.crossOrigin) {
+    if (options.crossOrigin != null && options.crossOrigin !== '') {
       link.crossOrigin = options.crossOrigin;
     }
 
-    if (options.type) {
+    if (options.type != null && options.type !== '') {
       link.type = options.type;
     }
 
-    if (options.media) {
+    if (options.media != null && options.media !== '') {
       link.media = options.media;
     }
 

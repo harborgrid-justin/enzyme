@@ -296,7 +296,7 @@ export class ExposureTracker {
   }
 
   private getExposureKey(flagKey: string, experimentId?: string): string {
-    return experimentId ? `${flagKey}:${experimentId}` : flagKey;
+    return experimentId != null && experimentId !== '' ? `${flagKey}:${experimentId}` : flagKey;
   }
 
   private enforceMaxExposures(userId: UserId): void {
@@ -367,7 +367,7 @@ export class ExposureTracker {
     for (const exposure of exposures) {
       totalExposures += exposure.exposureCount;
 
-      if (exposure.experimentId) {
+      if (exposure.experimentId != null && exposure.experimentId !== '') {
         experiments.add(exposure.experimentId);
       }
 
@@ -469,7 +469,7 @@ export class ExposureTracker {
 
     for (const [userId, userMap] of this.userExposures.entries()) {
       for (const exposure of userMap.values()) {
-        if (exposure.experimentId === experimentId && exposure.cohort) {
+        if (exposure.experimentId === experimentId && exposure.cohort != null && exposure.cohort !== '') {
           cohorts[exposure.cohort] ??= [];
           cohorts[exposure.cohort]?.push(userId);
         }
@@ -579,7 +579,7 @@ export class ExposureTracker {
 
     try {
       const stored = localStorage.getItem(`${this.config.storagePrefix}data`);
-      if (stored) {
+      if (stored != null && stored !== '') {
         const data = JSON.parse(stored) as Record<string, unknown>;
 
         for (const [userId, exposures] of Object.entries(data)) {
@@ -726,7 +726,13 @@ export function resetExposureTracker(): void {
 /**
  * Create exposure tracking context for React.
  */
-export function createExposureContext(config?: ExposureTrackerConfig) {
+export function createExposureContext(config?: ExposureTrackerConfig): {
+  tracker: ExposureTracker;
+  trackExposure: (input: TrackExposureInput) => ExposureEvent | null;
+  getExposure: (userId: UserId, flagKey: string, experimentId?: string) => ExposureRecord | null;
+  wasExposed: (userId: UserId, flagKey: string, experimentId?: string) => boolean;
+  subscribe: (callback: (exposure: ExposureEvent) => void) => () => void;
+} {
   const tracker = new ExposureTracker(config);
 
   return {

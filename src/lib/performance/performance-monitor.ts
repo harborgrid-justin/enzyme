@@ -714,7 +714,7 @@ export class PerformanceMonitor {
   public checkVitalBudget(metric: string, value: number): 'good' | 'needs-improvement' | 'poor' {
     // Validate metric is a known vital threshold
     if (!isVitalMetricName(metric)) {
-      this.log(`Unknown vital metric: ${metric}`);
+      this.log(`Unknown vital metric: ${String(metric)}`);
       return 'poor';
     }
 

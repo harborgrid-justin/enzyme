@@ -117,7 +117,7 @@ export class CachedProvider implements FlagProvider {
 
     // Load from persistent storage if configured
     if (this.config.storage !== 'memory') {
-      await this.loadFromStorage();
+      this.loadFromStorage();
     }
 
     // Initialize underlying provider
@@ -226,7 +226,7 @@ export class CachedProvider implements FlagProvider {
 
     // Persist to storage
     if (this.config.storage !== 'memory') {
-      await this.saveToStorage();
+      this.saveToStorage();
     }
 
     return flagArray;
@@ -240,7 +240,7 @@ export class CachedProvider implements FlagProvider {
     // Enforce max size
     if (this.flagCache.size >= this.config.maxSize) {
       const oldest = this.findOldestEntry();
-      if (oldest) {
+      if (oldest != null && oldest !== '') {
         this.flagCache.delete(oldest);
       }
     }
@@ -264,7 +264,7 @@ export class CachedProvider implements FlagProvider {
       }
     }
 
-    return oldest ?? null;
+    return oldest;
   }
 
   // ==========================================================================

@@ -312,9 +312,9 @@ export function createAnalyticsBridge(
     registeredDestinations.set(dest.id, dest);
   }
 
-  const log = (...args: unknown[]) => {
+  const log = (...args: unknown[]): void => {
     if (debug) {
-      console.log('[FlagAnalyticsBridge]', ...args);
+      console.info('[FlagAnalyticsBridge]', ...args);
     }
   };
 
@@ -790,13 +790,13 @@ export function createConsoleDestination(
     id: 'console',
     enabled: true,
     sendExposure(event) {
-      console.log(prefix, 'Exposure:', event);
+      console.info(prefix, 'Exposure:', event);
     },
     sendEvaluation(event) {
-      console.log(prefix, 'Evaluation:', event);
+      console.info(prefix, 'Evaluation:', event);
     },
     sendMetric(metric) {
-      console.log(prefix, 'Metric:', metric);
+      console.info(prefix, 'Metric:', metric);
     },
     sendError(error) {
       console.error(prefix, 'Error:', error);
@@ -814,7 +814,7 @@ export function createLocalStorageDestination(
 
   try {
     const stored = localStorage.getItem(key);
-    if (stored) {
+    if (stored != null && stored !== '') {
       events = JSON.parse(stored) as unknown[];
     }
   } catch {
@@ -876,7 +876,7 @@ export function createHttpDestination(config: {
 
   let batch: unknown[] = [];
 
-  const send = async (events: unknown[]) => {
+  const send = async (events: unknown[]): Promise<void> => {
     try {
       // Raw fetch is intentional - analytics should be independent of apiClient
       await fetch(endpoint, {

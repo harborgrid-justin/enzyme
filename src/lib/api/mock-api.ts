@@ -237,7 +237,7 @@ export class MockServer {
     this.isActive = true;
 
     if (this.config.logging) {
-      console.log('[MockServer] Started - intercepting fetch requests');
+      console.info('[MockServer] Started - intercepting fetch requests');
     }
 
     return this;
@@ -257,7 +257,7 @@ export class MockServer {
     this.isActive = false;
 
     if (this.config.logging) {
-      console.log('[MockServer] Stopped - fetch restored');
+      console.info('[MockServer] Stopped - fetch restored');
     }
 
     return this;
@@ -381,12 +381,23 @@ export class MockServer {
     const startTime = Date.now();
 
     // Parse request
-    const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+    let url: string;
+    if (typeof input === 'string') {
+      url = input;
+    } else if (input instanceof URL) {
+      url = input.href;
+    } else {
+      const { url: requestUrl } = input;
+      url = requestUrl;
+    }
     const method = ((init?.method ?? 'GET') as HttpMethod).toUpperCase() as HttpMethod;
 
     // Check if URL should be mocked
     if (!this.shouldMock(url)) {
-      return this.originalFetch!(input, init);
+      if (this.originalFetch == null) {
+        throw new Error('Original fetch not available');
+      }
+      return this.originalFetch(input, init);
     }
 
     // Parse URL

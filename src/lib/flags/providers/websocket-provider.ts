@@ -144,7 +144,7 @@ export class WebSocketProvider implements FlagProvider {
   /**
    * Initialize the provider.
    */
-  initialize(): Promise<void> {
+  async initialize(): Promise<void> {
     this.log('Initializing WebSocket provider');
     this.ready = true;
     this.log('WebSocket provider initialized');
@@ -434,14 +434,14 @@ export class WebSocketProvider implements FlagProvider {
   /**
    * Get all flags.
    */
-  getFlags(): Promise<readonly FeatureFlag[]> {
+  async getFlags(): Promise<readonly FeatureFlag[]> {
     return Promise.resolve(Array.from(this.flags.values()));
   }
 
   /**
    * Get a flag by key.
    */
-  getFlag(key: string): Promise<FeatureFlag | null> {
+  async getFlag(key: string): Promise<FeatureFlag | null> {
     return Promise.resolve(this.flags.get(key) ?? null);
   }
 

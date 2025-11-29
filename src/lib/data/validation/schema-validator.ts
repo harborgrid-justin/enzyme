@@ -296,7 +296,7 @@ export class StringSchema extends BaseSchema<string> {
   protected _validate(value: unknown, options: ParseOptions): ValidationResult<string> {
     // Coercion
     let str = value;
-    if (options.coerce && typeof value !== 'string') {
+    if (options.coerce === true && typeof value !== 'string') {
       str = String(value);
     }
 
@@ -411,14 +411,14 @@ export class StringSchema extends BaseSchema<string> {
   min(length: number, message?: string): this {
     const clone = this._clone();
     clone._minLength = length;
-    if (message) clone._message = message;
+    if (message != null && message !== '') clone._message = message;
     return clone;
   }
 
   max(length: number, message?: string): this {
     const clone = this._clone();
     clone._maxLength = length;
-    if (message) clone._message = message;
+    if (message != null && message !== '') clone._message = message;
     return clone;
   }
 

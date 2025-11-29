@@ -299,14 +299,14 @@ export class PollingProvider implements FlagProvider {
   /**
    * Get all flags.
    */
-  getFlags(): Promise<readonly FeatureFlag[]> {
+  async getFlags(): Promise<readonly FeatureFlag[]> {
     return Promise.resolve(this.cachedFlags);
   }
 
   /**
    * Get a flag by key.
    */
-  getFlag(key: string): Promise<FeatureFlag | null> {
+  async getFlag(key: string): Promise<FeatureFlag | null> {
     return Promise.resolve(this.cachedFlags.find((f) => f.key === key) ?? null);
   }
 
@@ -317,7 +317,7 @@ export class PollingProvider implements FlagProvider {
   /**
    * Get all segments.
    */
-  getSegments(): Promise<readonly Segment[]> {
+  async getSegments(): Promise<readonly Segment[]> {
     return Promise.resolve(this.cachedSegments);
   }
 

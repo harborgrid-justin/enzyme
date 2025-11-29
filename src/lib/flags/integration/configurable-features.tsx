@@ -367,7 +367,7 @@ class FeatureRegistryImpl implements FeatureRegistryInterface {
   }
 
   getByTag(tag: string): ConfigurableFeature[] {
-    return this.getAll().filter((f) => f.tags?.includes(tag));
+    return this.getAll().filter((f) => f.tags?.includes(tag) === true);
   }
 
   getByStage(stage: FeatureStage): ConfigurableFeature[] {
@@ -583,7 +583,7 @@ export function ConfigurableFeaturesProvider({
 
   // Subscribe to changes
   useEffect(() => {
-    const updateFeatures = (newFeatures: ConfigurableFeature[]) => {
+    const updateFeatures = (newFeatures: ConfigurableFeature[]): void => {
       setTimeout(() => {
         setFeatures(newFeatures);
       }, 0);

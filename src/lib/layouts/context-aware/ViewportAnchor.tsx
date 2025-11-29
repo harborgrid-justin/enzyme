@@ -385,11 +385,14 @@ export function LazyLoad({
     onLoad?.();
   }, [onLoad]);
 
+  let minHeightValue: string | number | undefined;
+  if (minHeight !== undefined) {
+    minHeightValue = typeof minHeight === 'number' ? `${minHeight}px` : minHeight;
+  }
+
   const containerStyle: React.CSSProperties = {
     ...style,
-    minHeight: minHeight !== undefined
-      ? (typeof minHeight === 'number' ? `${minHeight}px` : minHeight)
-      : undefined,
+    minHeight: minHeightValue,
   };
 
   return (

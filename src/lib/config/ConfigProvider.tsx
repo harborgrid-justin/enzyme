@@ -124,7 +124,7 @@ export function ConfigProvider<T extends ConfigRecord = ConfigRecord>({
 
   // Load configuration
   useEffect(() => {
-    const loadConfig = async () => {
+    const loadConfig = async (): Promise<void> => {
       setIsLoading(true);
       setError(null);
 
@@ -137,11 +137,11 @@ export function ConfigProvider<T extends ConfigRecord = ConfigRecord>({
 
         loader.addDefaultSource(defaultConfig);
 
-        if (envPrefix) {
+        if (envPrefix != null && envPrefix !== '') {
           loader.addEnvSource();
         }
 
-        if (remoteUrl) {
+        if (remoteUrl != null && remoteUrl !== '') {
           await loader.addRemoteSource({ url: remoteUrl });
         }
 
@@ -154,8 +154,8 @@ export function ConfigProvider<T extends ConfigRecord = ConfigRecord>({
         runtimeConfig.reset(loadedConfig as T);
         onLoad?.(loadedConfig as T);
 
-        if (debug) {
-          console.log('[ConfigProvider] Configuration loaded:', loadedConfig);
+        if (debug === true) {
+          console.info('[ConfigProvider] Configuration loaded:', loadedConfig);
         }
       } catch (err) {
         const error = err instanceof Error ? err : new Error(String(err));
@@ -222,11 +222,11 @@ export function ConfigProvider<T extends ConfigRecord = ConfigRecord>({
       const loader = new ConfigLoader({ envPrefix, remoteUrl, debug });
       loader.addDefaultSource(defaultConfig);
 
-      if (envPrefix) {
+      if (envPrefix != null && envPrefix !== '') {
         loader.addEnvSource();
       }
 
-      if (remoteUrl) {
+      if (remoteUrl != null && remoteUrl !== '') {
         await loader.addRemoteSource({ url: remoteUrl });
       }
 
@@ -287,12 +287,12 @@ export function ConfigProvider<T extends ConfigRecord = ConfigRecord>({
   );
 
   // Render loading state
-  if (isLoading && loadingComponent) {
+  if (isLoading === true && loadingComponent != null) {
     return <>{loadingComponent}</>;
   }
 
   // Render error state
-  if (error && errorComponent) {
+  if (error != null && errorComponent != null) {
     return <>{errorComponent(error)}</>;
   }
 
@@ -310,11 +310,12 @@ export function ConfigProvider<T extends ConfigRecord = ConfigRecord>({
 /**
  * Hook to access the configuration context.
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useConfigContext<
   T extends ConfigRecord = ConfigRecord
 >(): ConfigContextValue<T> {
   const context = useContext(ConfigContext);
-  if (!context) {
+  if (context == null) {
     throw new Error('useConfigContext must be used within a ConfigProvider');
   }
   return context as ConfigContextValue<T>;
@@ -323,6 +324,7 @@ export function useConfigContext<
 /**
  * Hook to access configuration context optionally.
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useOptionalConfigContext<
   T extends ConfigRecord = ConfigRecord
 >(): ConfigContextValue<T> | null {
@@ -336,6 +338,7 @@ export function useOptionalConfigContext<
 /**
  * HOC to inject configuration as props.
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function withConfig<
   P extends object,
   T extends ConfigRecord = ConfigRecord

@@ -153,6 +153,7 @@ export function useSecureStorage<T>(
 
   // Remove value from storage
   const removeValue = useCallback(async (): Promise<void> => {
+    await Promise.resolve(); // Satisfy require-await lint rule
     try {
       setError(null);
 
@@ -215,7 +216,7 @@ export function useSecureStorage<T>(
     const handleStorageChange = (event: StorageEvent): void => {
       // Check if the changed key matches our key
       // Note: Secure storage uses a prefix, so we need to check for that
-      if (event.key?.includes(key)) {
+      if (event.key?.includes(key) === true) {
         void loadValue();
       }
     };

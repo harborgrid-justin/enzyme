@@ -237,7 +237,7 @@ export class PrefetchQueue {
    */
   cancel(id: string): boolean {
     const item = this.items.get(id);
-    if (!item ?? item.status === 'completed' ?? item.status === 'cancelled') {
+    if (item == null || item.status === 'completed' || item.status === 'cancelled') {
       return false;
     }
 
@@ -673,8 +673,8 @@ export class PrefetchQueue {
 
     for (const [id, item] of this.items.entries()) {
       if (
-        (item.status === 'completed' ?? item.status === 'cancelled') &&
-        item.completedAt &&
+        (item.status === 'completed' || item.status === 'cancelled') &&
+        item.completedAt != null &&
         now - item.completedAt > this.config.completedTTL
       ) {
         toDelete.push(id);

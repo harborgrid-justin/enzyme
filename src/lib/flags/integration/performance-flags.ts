@@ -223,7 +223,7 @@ export function createPerformanceFlagIntegration(): LibraryIntegration<Performan
       [PERFORMANCE_FLAG_KEYS.PERF_DEGRADATION_ENABLED]: 'degradationEnabled',
     },
     onConfigChange: (config, changedFlags) => {
-      console.debug('[Performance Flags] Config changed:', changedFlags, config);
+      console.info('[Performance Flags] Config changed:', changedFlags, config);
     },
   });
 }

@@ -51,6 +51,7 @@ import { useDOMContextValue } from './DOMContextProvider';
 /**
  * Hook to access portal context.
  */
+// eslint-disable-next-line react-refresh/only-export-components -- hook export is valid
 export function usePortalBridgeContext(): PortalContext | null {
   const context = useContext(PortalBridgeContext);
   return (context as PortalContext | null) ?? null;
@@ -114,7 +115,6 @@ export function PortalBridge({
 
   // State
   const [portalContext, setPortalContext] = useState<PortalContext | null>(null);
-  const [_portalRoot, setPortalRoot] = useState<Element | null>(null);
   const [isReady, setIsReady] = useState(false);
   const [portalContainer, setPortalContainer] = useState<HTMLDivElement | null>(null);
 
@@ -195,13 +195,15 @@ export function PortalBridge({
       return;
     }
 
-    setPortalRoot(root);
-
     // Create portal container
     const container = createPortalContainer();
     portalContainerRef.current = container;
-    setPortalContainer(container);
     root.appendChild(container);
+
+    // Set state asynchronously to avoid synchronous setState in effect
+    queueMicrotask(() => {
+      setPortalContainer(container);
+    });
 
     // Save scroll position if preserving
     if (preserveScrollPosition) {

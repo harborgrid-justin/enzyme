@@ -190,7 +190,7 @@ export class IntelligentPrefetchEngine {
    * Get prefetch predictions for current page
    */
   predict(currentUrl: string, availableUrls: string[]): PredictionResult {
-    if (!this.config.enabled ?? !this.shouldPrefetch()) {
+    if (this.config.enabled !== true || !this.shouldPrefetch()) {
       return this.emptyPrediction();
     }
 
@@ -525,7 +525,7 @@ export class IntelligentPrefetchEngine {
   }
 
   private inferResourceType(url: string): 'route' | 'data' | 'asset' {
-    if (url.includes('/api/') ?? url.endsWith('.json')) {
+    if (url.includes('/api/') || url.endsWith('.json')) {
       return 'data';
     }
 

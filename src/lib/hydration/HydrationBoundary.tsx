@@ -315,15 +315,19 @@ export function HydrationBoundary({
   useEffect(() => {
     // Skip if SSR-only
     if (ssrOnly) {
-      setState((prev) => ({ ...prev, hydrationState: 'skipped' }));
+      queueMicrotask(() => {
+        setState((prev) => ({ ...prev, hydrationState: 'skipped' }));
+      });
       return;
     }
 
     // Skip if no context or not on client
-    if (!hydrationContext || !state.isClient) {
+    if (hydrationContext == null || !state.isClient) {
       // Without context, hydrate immediately
       if (state.isClient) {
-        setState((prev) => ({ ...prev, hydrationState: 'hydrated' }));
+        queueMicrotask(() => {
+          setState((prev) => ({ ...prev, hydrationState: 'hydrated' }));
+        });
       }
       return;
     }
@@ -408,11 +412,11 @@ export function HydrationBoundary({
     }
 
     // Error state
-    if (state.hydrationState === 'error' && state.error) {
+    if (state.hydrationState === 'error' && state.error != null) {
       if (typeof errorFallback === 'function') {
         return errorFallback(state.error);
       }
-      if (errorFallback) {
+      if (errorFallback != null) {
         return errorFallback;
       }
       return <DefaultErrorFallback error={state.error} />;
@@ -511,6 +515,7 @@ export function HydrationBoundary({
 // Higher-Order Component
 // ============================================================================
 
+/* eslint-disable react-refresh/only-export-components */
 /**
  * HOC to wrap a component with a HydrationBoundary.
  *
@@ -654,7 +659,7 @@ export function LazyHydration<P extends object>({
   return (
     <HydrationBoundary {...restBoundaryProps} placeholder={placeholder}>
       <Suspense fallback={placeholder}>
-        <LazyComponent {...(componentProps as any)} />
+        <LazyComponent {...componentProps} />
       </Suspense>
     </HydrationBoundary>
   );

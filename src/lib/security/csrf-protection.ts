@@ -555,7 +555,8 @@ class CSRFProtectionClass {
       } else if (input instanceof URL) {
         url = input.pathname;
       } else {
-        url = input.url;
+        const { url: requestUrl } = input;
+        url = requestUrl;
       }
 
       // Skip CSRF for excluded paths

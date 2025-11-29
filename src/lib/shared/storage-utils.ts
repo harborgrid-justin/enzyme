@@ -215,7 +215,9 @@ export class StorageWrapper {
         const item = JSON.parse(raw) as unknown;
         if (
           this.isStorageItem(item) &&
-          item.ttl &&
+          item.ttl !== undefined &&
+          item.ttl !== null &&
+          item.ttl > 0 &&
           now - item.timestamp > item.ttl
         ) {
           this.storage.removeItem(key);
@@ -247,18 +249,20 @@ export class StorageWrapper {
 
     for (let i = 0; i < this.storage.length; i++) {
       const key = this.storage.key(i);
-      if (key === null || (prefix && !key.startsWith(prefix))) continue;
+      if (key === null || (prefix !== '' && prefix !== null && prefix !== undefined && !key.startsWith(prefix))) continue;
 
       itemCount++;
       const value = this.storage.getItem(key);
-      if (value) {
+      if (value !== null && value !== undefined) {
         totalSize += key.length + value.length;
 
         try {
           const item = JSON.parse(value) as unknown;
           if (
             this.isStorageItem(item) &&
-            item.ttl &&
+            item.ttl !== undefined &&
+            item.ttl !== null &&
+            item.ttl > 0 &&
             now - item.timestamp > item.ttl
           ) {
             expiredCount++;
@@ -396,9 +400,7 @@ let defaultSessionStorage: StorageWrapper | null = null;
  * Get default localStorage wrapper.
  */
 function getDefaultLocalStorage(): StorageWrapper {
-  if (!defaultLocalStorage) {
-    defaultLocalStorage = createLocalStorage({ prefix: 'app' });
-  }
+  defaultLocalStorage ??= createLocalStorage({ prefix: 'app' });
   return defaultLocalStorage;
 }
 
@@ -406,9 +408,7 @@ function getDefaultLocalStorage(): StorageWrapper {
  * Get default sessionStorage wrapper.
  */
 function getDefaultSessionStorage(): StorageWrapper {
-  if (!defaultSessionStorage) {
-    defaultSessionStorage = createSessionStorage({ prefix: 'app' });
-  }
+  defaultSessionStorage ??= createSessionStorage({ prefix: 'app' });
   return defaultSessionStorage;
 }
 
@@ -476,7 +476,7 @@ export function getJsonFromStorage<T>(
 ): T | null {
   try {
     const raw = storage.getItem(key);
-    if (!raw) return null;
+    if (raw === null || raw === undefined || raw === '') return null;
 
     const parsed: unknown = JSON.parse(raw);
     return guard(parsed) ? parsed : null;
@@ -522,10 +522,10 @@ export function onStorageChange(
 
   const handler = (event: StorageEvent): void => {
     // Filter by key if specified
-    if (options.key && event.key !== options.key) return;
+    if (options.key !== undefined && options.key !== null && options.key !== '' && event.key !== options.key) return;
 
     // Filter by storage type if specified
-    if (options.storage && event.storageArea !== options.storage) return;
+    if (options.storage !== undefined && options.storage !== null && event.storageArea !== options.storage) return;
 
     callback(event);
   };
@@ -547,7 +547,7 @@ export function watchStorageKey<T>(
       if (event.key !== key) return;
 
       const parse = (val: string | null): T | null => {
-        if (!val) return null;
+        if (val === null || val === undefined || val === '') return null;
         try {
           return JSON.parse(val) as T;
         } catch {

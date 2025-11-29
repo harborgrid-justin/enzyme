@@ -399,7 +399,7 @@ export class StorageManager {
 
         request.onerror = () => { reject(new Error(request.error?.message ?? 'Unknown error')); };
         request.onsuccess = () => {
-          const {result} = request;
+          const result = request.result as unknown;
           if (result === null || result === undefined) {
             resolve(undefined);
             return;
@@ -518,28 +518,28 @@ export class StorageManager {
   private validateAccess(storageType: 'localStorage' | 'sessionStorage', key: string): void {
     if (storageType === 'localStorage') {
       // Check whitelist
-      if (this.accessControl.localstorageWhitelist?.length) {
+      if (this.accessControl.localstorageWhitelist !== undefined && this.accessControl.localstorageWhitelist !== null && this.accessControl.localstorageWhitelist.length > 0) {
         if (!this.accessControl.localstorageWhitelist.includes(key)) {
           throw new Error(`Key "${key}" is not in localStorage whitelist`);
         }
       }
 
       // Check blacklist
-      if (this.accessControl.localstorageBlacklist?.includes(key)) {
+      if (this.accessControl.localstorageBlacklist?.includes(key) === true) {
         throw new Error(`Key "${key}" is blacklisted from localStorage`);
       }
     }
 
     if (storageType === 'sessionStorage') {
       // Check whitelist
-      if (this.accessControl.sessionstoragWhitelist?.length) {
+      if (this.accessControl.sessionstoragWhitelist !== undefined && this.accessControl.sessionstoragWhitelist !== null && this.accessControl.sessionstoragWhitelist.length > 0) {
         if (!this.accessControl.sessionstoragWhitelist.includes(key)) {
           throw new Error(`Key "${key}" is not in sessionStorage whitelist`);
         }
       }
 
       // Check blacklist
-      if (this.accessControl.sessionstorageBlacklist?.includes(key)) {
+      if (this.accessControl.sessionstorageBlacklist?.includes(key) === true) {
         throw new Error(`Key "${key}" is blacklisted from sessionStorage`);
       }
     }

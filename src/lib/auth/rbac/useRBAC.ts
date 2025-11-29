@@ -297,7 +297,15 @@ export function usePermissions(): {
  * }
  * ```
  */
-export function useRoles() {
+export function useRoles(): {
+  roles: string[];
+  roleDefinitions: RoleDefinition[];
+  hasRole: (role: string) => boolean;
+  hasAnyRole: (roles: string[]) => boolean;
+  hasAllRoles: (roles: string[]) => boolean;
+  isAdmin: boolean;
+  isManager: boolean;
+} {
   const {
     userRoles,
     hasRole,
@@ -341,7 +349,17 @@ export function useRoles() {
  * }
  * ```
  */
-export function useResourceAccess(resourceType: string) {
+export function useResourceAccess(resourceType: string): {
+  resourceType: string;
+  canAccess: (action: PermissionAction) => boolean;
+  checkResource: (resourceId: string, action: PermissionAction) => boolean;
+  evaluateAccess: (resourceId: string, action: string, context?: Record<string, unknown>) => EvaluationResult;
+  canCreate: () => boolean;
+  canRead: () => boolean;
+  canUpdate: () => boolean;
+  canDelete: () => boolean;
+  canManage: () => boolean;
+} {
   const { canAccess, checkResourcePermission, evaluate } = useRBAC();
 
   const checkResource = useCallback(
@@ -400,7 +418,7 @@ export function useResourceAccess(resourceType: string) {
  * }
  * ```
  */
-export function usePermissionGate(permission: Permission) {
+export function usePermissionGate(permission: Permission): { allowed: boolean; loading: boolean } {
   const { loading, hasPermission } = useRBAC();
 
   const allowed = useMemo(

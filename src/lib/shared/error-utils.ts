@@ -356,11 +356,14 @@ function fromErrorObject(obj: {
   const category = (obj.category as ErrorCategory) ?? categorizeByStatusCode(obj);
 
   const { statusCode, status } = obj;
-  const resolvedStatusCode = typeof statusCode === 'number'
-    ? statusCode
-    : (typeof status === 'number'
-      ? status
-      : undefined);
+  let resolvedStatusCode: number | undefined;
+  if (typeof statusCode === 'number') {
+    resolvedStatusCode = statusCode;
+  } else if (typeof status === 'number') {
+    resolvedStatusCode = status;
+  } else {
+    resolvedStatusCode = undefined;
+  }
 
   return new AppError(obj.message, {
     category,
@@ -407,11 +410,14 @@ function categorizeError(error: Error): ErrorCategory {
  */
 function categorizeByStatusCode(obj: Record<string, unknown>): ErrorCategory {
   const { statusCode, status } = obj;
-  const resolvedStatus = typeof statusCode === 'number'
-    ? statusCode
-    : typeof status === 'number'
-      ? status
-      : 0;
+  let resolvedStatus: number;
+  if (typeof statusCode === 'number') {
+    resolvedStatus = statusCode;
+  } else if (typeof status === 'number') {
+    resolvedStatus = status;
+  } else {
+    resolvedStatus = 0;
+  }
 
   if (resolvedStatus === 400) return 'validation';
   if (resolvedStatus === 401) return 'authentication';

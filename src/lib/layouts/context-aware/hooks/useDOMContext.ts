@@ -238,8 +238,8 @@ export function useContextEffect<T>(
 ): void {
   const value = useContextSelector(selector);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- effect and deps are intentionally dynamic
   useEffect(() => {
     return effect(value);
-  }, [value, ...deps]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- deps array is intentionally spread from user input
+  }, [value, effect, ...deps]);
 }

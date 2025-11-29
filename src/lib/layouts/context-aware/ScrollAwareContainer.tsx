@@ -47,6 +47,7 @@ import {
 /**
  * Hook to access scroll container context.
  */
+// eslint-disable-next-line react-refresh/only-export-components -- hook export is valid
 export function useScrollContainerContext(): ScrollContainer | null {
   const context = useContext(ScrollContainerContext);
   return (context as ScrollContainer | null) ?? null;
@@ -296,7 +297,7 @@ export const ScrollAwareContainer = forwardRef<HTMLDivElement, ExtendedScrollAwa
      * Renders virtualized content.
      */
     const renderVirtualized = useCallback(async () => {
-      if (!virtualize || !itemHeight || !scrollState) {
+      if (virtualize !== true || itemHeight == null || itemHeight === 0 || scrollState == null) {
         return children;
       }
 
@@ -444,6 +445,7 @@ function ScrollIndicator({ position }: ScrollIndicatorProps): React.JSX.Element 
 /**
  * Hook to get imperative scroll control methods.
  */
+// eslint-disable-next-line react-refresh/only-export-components -- hook export is valid
 export function useScrollControl(): {
   scrollState: ScrollContainer | null;
   scrollTo: (options: { x?: number; y?: number; behavior?: 'auto' | 'smooth' }) => void;
