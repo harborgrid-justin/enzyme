@@ -219,10 +219,24 @@ export function PortalBridge({
         target: container,
         layer,
         bridgeEvents,
-        parentPortal: parentPortalContext,
+        parentPortal: parentPortalContext ?? undefined,
       });
 
-      setPortalContext(ctx);
+      // Create portal context that matches the interface
+      const fullContext: import('@/lib/contexts').PortalContext = {
+        registerPortal: (_id: string, _container: HTMLElement) => {
+          console.warn('Portal registration not implemented');
+        },
+        unregisterPortal: (_id: string) => {
+          console.warn('Portal unregistration not implemented');
+        },
+        getPortalContainer: (_id: string) => container,
+        renderInPortal: (_id: string, _content: React.ReactNode) => {
+          console.warn('Portal rendering not implemented');
+        },
+      };
+
+      setPortalContext(fullContext as unknown as PortalContext | null);
       setIsReady(true);
 
       // Register with z-index manager
@@ -283,7 +297,25 @@ export function PortalBridge({
 
       {/* Portal content */}
       {isReady && portalContainer != null && portalContext != null && (
-        <PortalBridgeContext.Provider value={portalContext}>
+        <PortalBridgeContext.Provider value={{
+          registerPortal: (_id: string, _container: HTMLElement) => {
+            // Implementation for registering portal
+            console.warn('Portal registration not implemented');
+          },
+          unregisterPortal: (_id: string) => {
+            // Implementation for unregistering portal
+            console.warn('Portal unregistration not implemented');
+          },
+          getPortalContainer: (_id: string) => {
+            // Implementation for getting portal container
+            console.warn('Portal container retrieval not implemented');
+            return null;
+          },
+          renderInPortal: (_id: string, _content: React.ReactNode) => {
+            // Implementation for rendering in portal
+            console.warn('Portal rendering not implemented');
+          },
+        }}>
           {createPortal(
             <PortalContent sourceContext={portalContext.sourceContext}>
               {children}

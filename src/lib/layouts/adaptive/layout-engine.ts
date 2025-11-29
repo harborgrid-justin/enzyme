@@ -815,8 +815,19 @@ export class LayoutEngine implements LayoutEngineInterface {
         const parsed = JSON.parse(stored) as { modePreferences?: Record<string, LayoutMode> };
         const { modePreferences } = parsed;
         return {
-          ...parsed,
           modePreferences: new Map(Object.entries(modePreferences ?? {})) as ReadonlyMap<ContentDensity, LayoutMode>,
+          animationPreferences: {
+            reducedMotion: typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+            preferredDuration: 300,
+            preferredEasing: 'ease-out' as const,
+          },
+          accessibilityPreferences: {
+            highContrast: false,
+            largeText: false,
+            reducedMotion: false,
+            screenReader: false,
+          },
+          lastUpdated: Date.now(),
         };
       } catch {
         // Fall through to default
@@ -829,12 +840,12 @@ export class LayoutEngine implements LayoutEngineInterface {
       animationPreferences: {
         reducedMotion: typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
         preferredDuration: 300,
-        preferredEasing: 'ease-out',
+        preferredEasing: 'ease-out' as const,
       },
       accessibilityPreferences: {
         highContrast: false,
         largeText: false,
-        reducedMotion: typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+        reducedMotion: false,
         screenReader: false,
       },
       lastUpdated: Date.now(),

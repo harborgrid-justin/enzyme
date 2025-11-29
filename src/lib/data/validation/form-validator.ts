@@ -531,7 +531,6 @@ export function useFormValidation<T extends Record<string, unknown>>(
     mode = 'onSubmit',
     revalidateMode = 'onChange',
     validateOnMount = false,
-    showErrorsAfterSubmit = false,
     debounceMs = 300,
   } = options;
 
@@ -798,25 +797,8 @@ export function useFormValidation<T extends Record<string, unknown>>(
     return Object.values(fieldStates).every((state) => (state).valid);
   }, [fieldStates]);
 
-  const isDirty = useMemo(() => {
-    return Object.values(fieldStates).some((state) => (state).dirty);
-  }, [fieldStates]);
 
-  const isTouched = useMemo(() => {
-    return Object.values(fieldStates).some((state) => (state).touched);
-  }, [fieldStates]);
 
-  // Get field errors (respects showErrorsAfterSubmit)
-  const getFieldError = useCallback(
-    (field: keyof T): string | undefined => {
-      if (showErrorsAfterSubmit && !isSubmitted) {
-        return undefined;
-      }
-      const state = fieldStates[field as string];
-      return state?.errors[0]?.message;
-    },
-    [fieldStates, showErrorsAfterSubmit, isSubmitted]
-  );
 
   // Get all errors (as ValidationError[])
   const getAllErrors = useCallback((): Record<string, ValidationError[]> => {
@@ -828,23 +810,6 @@ export function useFormValidation<T extends Record<string, unknown>>(
     return errors;
   }, [fieldStates]);
 
-  // Register field helpers
-  const register = useCallback(
-    (field: keyof T) => {
-      return {
-        name: field as string,
-        value: fieldStates[field as string]?.value ?? '',
-        onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-          const value = e.target.type === 'checkbox'
-            ? (e.target as HTMLInputElement).checked
-            : e.target.value;
-          setValue(field, value);
-        },
-        onBlur: () => handleBlur(field),
-      };
-    },
-    [fieldStates, setValue, handleBlur]
-  );
 
   return {
     // State
@@ -891,15 +856,16 @@ export function useFormValidation<T extends Record<string, unknown>>(
     },
     clearAllErrors: () => {
       setFieldStates((prev) => {
-        const newStates = { ...prev };
+        const newStates = { ...prev } as { [K in keyof T]: FieldState };
         for (const key of Object.keys(newStates)) {
-          newStates[key] = {
-            ...newStates[key],
+          const typedKey = key as keyof T;
+          newStates[typedKey] = {
+            ...newStates[typedKey],
             errors: [],
             valid: true,
           };
         }
-        return newStates as { [K in keyof T]: FieldState };
+        return newStates;
       });
     },
     reset,
@@ -961,7 +927,6 @@ export function useField<T>(
   const [value, setValueState] = useState<T | undefined>(defaultValue);
   const [errors, setErrors] = useState<FieldError[]>([]);
   const [touched, setTouched] = useState(false);
-  const [dirty, setDirty] = useState(false);
   const [validating, setValidating] = useState(false);
 
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -992,22 +957,21 @@ export function useField<T>(
     [rules, name]
   );
 
-  const setValue = useCallback(
-    (newValue: T) => {
-      setValueState(newValue);
-      setDirty(true);
+  const setValue = useCallback((newValue: T | undefined) => {
+    setValueState(newValue);
+    if (!touched) {
+      setTouched(true);
+    }
 
-      if (validateOnChange) {
-        if (debounceTimer.current !== undefined) {
-          clearTimeout(debounceTimer.current);
-        }
-        debounceTimer.current = setTimeout(() => {
-          void validate(newValue);
-        }, debounceMs);
+    if (validateOnChange) {
+      if (debounceTimer.current !== undefined) {
+        clearTimeout(debounceTimer.current);
       }
-    },
-    [validateOnChange, validate, debounceMs]
-  );
+      debounceTimer.current = setTimeout(() => {
+        void validate(newValue);
+      }, debounceMs);
+    }
+  }, [touched, validateOnChange, debounceMs, validate]);
 
   const handleBlur = useCallback(() => {
     setTouched(true);
@@ -1020,7 +984,6 @@ export function useField<T>(
     setValueState(newValue ?? defaultValue);
     setErrors([]);
     setTouched(false);
-    setDirty(false);
   }, [defaultValue]);
 
   useEffect(() => {

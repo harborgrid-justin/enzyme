@@ -347,7 +347,36 @@ export const ScrollAwareContainer = forwardRef<HTMLDivElement, ExtendedScrollAwa
     }, [virtualize, itemHeight, scrollState, children, overscan, scrollSnap]);
 
     return (
-      <ScrollContainerContext.Provider value={scrollState as unknown as ScrollContainer}>
+      <ScrollContainerContext.Provider value={scrollState ? {
+        element: scrollState.element as HTMLElement,
+        position: {
+          x: scrollState.scrollPosition.x,
+          y: scrollState.scrollPosition.y,
+        },
+        isScrolling: scrollState.isScrolling,
+        scrollTo: (x: number, y: number, smooth?: boolean) => {
+          scrollState.element.scrollTo({
+            left: x,
+            top: y,
+            behavior: smooth ? 'smooth' : 'auto',
+          });
+        },
+        scrollToTop: (smooth?: boolean) => {
+          scrollState.element.scrollTo({
+            top: 0,
+            behavior: smooth ? 'smooth' : 'auto',
+          });
+        },
+        scrollToBottom: (smooth?: boolean) => {
+          scrollState.element.scrollTo({
+            top: scrollState.element.scrollHeight,
+            behavior: smooth ? 'smooth' : 'auto',
+          });
+        },
+        scrollToElement: (element: HTMLElement, options?: ScrollIntoViewOptions) => {
+          element.scrollIntoView({ behavior: 'smooth', ...options });
+        },
+      } : null}>
         <div
           ref={setRefs}
           className={computedClassName}

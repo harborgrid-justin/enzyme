@@ -26,7 +26,7 @@
  * ```
  */
 
-import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 
 // =============================================================================
 // TYPES
@@ -594,7 +594,6 @@ export function useOptimisticList<T extends ListItem>(
 
   // State
   const [items, setItems] = useState<T[]>(initialItems);
-  const [confirmedItems, setConfirmedItems] = useState<T[]>(initialItems);
   const [pendingOps, setPendingOps] = useState<PendingListOperation<T>[]>([]);
   const [error, setError] = useState<Error | null>(null);
 
@@ -610,10 +609,6 @@ export function useOptimisticList<T extends ListItem>(
 
   // Derived state
   const isPending = pendingOps.some((op) => op.status === 'pending' || op.status === 'syncing');
-  const pendingIds = useMemo(
-    () => new Set(pendingOps.map((op) => op.itemId)),
-    [pendingOps]
-  );
 
   // Fetch items
   const refresh = useCallback(async (): Promise<T[]> => {
@@ -622,7 +617,7 @@ export function useOptimisticList<T extends ListItem>(
     try {
       const freshItems = await fetcher();
       if (isMounted.current) {
-        setConfirmedItems(freshItems);
+        setItems(freshItems);
 
         // Merge with pending operations
         const pendingCreates = pendingOps
@@ -684,7 +679,7 @@ export function useOptimisticList<T extends ListItem>(
           setItems((prev) =>
             prev.map((item) => (item.id === tempId ? createdItem : item))
           );
-          setConfirmedItems((prev) => [...prev, createdItem]);
+          setItems((prev) => [...prev, createdItem]);
           setPendingOps((prev) => prev.filter((o) => o.id !== op.id));
           onCreateSuccess?.(createdItem);
         }
@@ -749,7 +744,7 @@ export function useOptimisticList<T extends ListItem>(
           setItems((prev) =>
             prev.map((item) => (item.id === id ? updatedItem : item))
           );
-          setConfirmedItems((prev) =>
+          setItems((prev) =>
             prev.map((item) => (item.id === id ? updatedItem : item))
           );
           setPendingOps((prev) => prev.filter((o) => o.id !== op.id));
@@ -806,7 +801,7 @@ export function useOptimisticList<T extends ListItem>(
         await deleteItem(id);
 
         if (isMounted.current) {
-          setConfirmedItems((prev) => prev.filter((item) => item.id !== id));
+          setItems((prev) => prev.filter((item) => item.id !== id));
           setPendingOps((prev) => prev.filter((o) => o.id !== op.id));
           onDeleteSuccess?.(id);
         }
@@ -831,7 +826,7 @@ export function useOptimisticList<T extends ListItem>(
   const reset = useCallback((newItems?: T[]) => {
     const resetItems = newItems ?? initialItems;
     setItems(resetItems);
-    setConfirmedItems(resetItems);
+    setItems(resetItems);
     setPendingOps([]);
     setError(null);
   }, [initialItems]);

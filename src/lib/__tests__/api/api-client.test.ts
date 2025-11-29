@@ -16,6 +16,11 @@ import {
   createDeferred,
   delay,
 } from '../utils/test-utils';
+import type {
+  RequestInterceptor,
+  ResponseInterceptor,
+  ErrorInterceptor,
+} from '@/lib/api/types';
 
 // ============================================================================
 // Mock Setup

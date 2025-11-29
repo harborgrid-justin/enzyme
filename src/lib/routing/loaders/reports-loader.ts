@@ -14,7 +14,18 @@ async function fetchReport(id: string): Promise<unknown> {
  * Fetch reports list using the centralized API client
  */
 async function fetchReports(params: Record<string, unknown>): Promise<unknown> {
-  const response = await apiClient.get('/api/reports', { params: params as Record<string, string | number | boolean | readonly (string | number | boolean)[]> });
+  const queryParams: Record<string, string | number | boolean | undefined> = {};
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+        queryParams[key] = value;
+      } else {
+        // Convert other types to string
+        queryParams[key] = String(value);
+      }
+    }
+  });
+  const response = await apiClient.get('/api/reports', { params: queryParams });
   return response.data;
 }
 
