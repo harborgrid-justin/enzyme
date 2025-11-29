@@ -382,8 +382,15 @@ export class VersionedApiClient {
         ...this.config.defaultHeaders,
         ...config.headers,
       },
-      ...(config.timeout !== undefined ? { timeout: config.timeout } :
-          this.config.timeout !== undefined ? { timeout: this.config.timeout } : {}),
+      ...((): { timeout?: number } => {
+        if (config.timeout !== undefined) {
+          return { timeout: config.timeout };
+        } else if (this.config.timeout !== undefined) {
+          return { timeout: this.config.timeout };
+        } else {
+          return {};
+        }
+      })(),
     };
 
     // Apply body transformation
@@ -533,14 +540,14 @@ export function createFieldRenamingTransformer(
     if (typeof obj !== 'object' || obj === null) return obj;
 
     if (Array.isArray(obj)) {
-      return obj.map((item) => renameFields(item, mappings)) as T;
+      const mapped: unknown[] = obj.map((item: unknown) => renameFields(item, mappings));
+      return mapped as T;
     }
 
     const result: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
       const newKey = mappings[key] ?? key;
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-assignment
-      result[newKey] = typeof value === 'object' ? renameFields(value, mappings) : value;
+      result[newKey] = typeof value === 'object' ? renameFields(value, mappings) as unknown : value;
     }
     return result as T;
   }

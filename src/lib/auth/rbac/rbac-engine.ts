@@ -342,7 +342,7 @@ export class RBACEngine {
     if (this.canAccess(resourceType, action, 'team')) {
       const resourceTeam = context?.teamId;
       const userTeam = this.userAttributes.teamId;
-      if (resourceTeam && userTeam && resourceTeam === userTeam) {
+      if (resourceTeam != null && userTeam != null && resourceTeam === userTeam) {
         return true;
       }
     }
@@ -366,9 +366,11 @@ export class RBACEngine {
 
     // Check cache
     if (this.isCacheValid() && this.evaluationCache.has(cacheKey)) {
-      const cached = this.evaluationCache.get(cacheKey)!;
-      this.auditCheck(request, cached);
-      return cached;
+      const cached = this.evaluationCache.get(cacheKey);
+      if (cached != null) {
+        this.auditCheck(request, cached);
+        return cached;
+      }
     }
 
     // Super admin bypass
@@ -380,7 +382,7 @@ export class RBACEngine {
     }
 
     // Evaluate policies if configured
-    if (this.config.policySets?.length) {
+    if ((this.config.policySets?.length ?? 0) > 0) {
       const policyResult = this.evaluatePolicies(request);
       if (policyResult.decision !== 'not-applicable') {
         policyResult.evaluationTime = Date.now() - startTime;
@@ -488,7 +490,7 @@ export class RBACEngine {
     request: AccessRequest
   ): boolean {
     // Check subjects
-    if (policy.subjects?.length) {
+    if ((policy.subjects?.length ?? 0) > 0) {
       const subjectMatch = policy.subjects.some(subject =>
         this.matchesPolicySubject(subject, request)
       );

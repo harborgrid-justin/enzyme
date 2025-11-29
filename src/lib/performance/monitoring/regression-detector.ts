@@ -588,7 +588,7 @@ export class RegressionDetector {
     const shouldUpdate =
       !existing ||
       (samples.length >= this.config.minBaselineSamples &&
-        now - (existing?.updatedAt || 0) > this.config.baselineUpdateInterval);
+        now - (existing?.updatedAt ?? 0) > this.config.baselineUpdateInterval);
 
     if (!shouldUpdate) return;
     if (samples.length < this.config.minBaselineSamples) return;
@@ -708,9 +708,7 @@ let detectorInstance: RegressionDetector | null = null;
 export function getRegressionDetector(
   config?: Partial<RegressionDetectorConfig>
 ): RegressionDetector {
-  if (!detectorInstance) {
-    detectorInstance = new RegressionDetector(config);
-  }
+  detectorInstance ??= new RegressionDetector(config);
   return detectorInstance;
 }
 

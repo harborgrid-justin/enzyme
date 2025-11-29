@@ -132,7 +132,7 @@ export class RemoteProvider implements FlagProvider {
   /**
    * Get all flags.
    */
-  getFlags(): Promise<readonly FeatureFlag[]> {
+  async getFlags(): Promise<readonly FeatureFlag[]> {
     return Promise.resolve(Array.from(this.flags.values()));
   }
 
@@ -219,14 +219,14 @@ export class RemoteProvider implements FlagProvider {
   /**
    * Get all segments.
    */
-  getSegments(): Promise<readonly Segment[]> {
+  async getSegments(): Promise<readonly Segment[]> {
     return Promise.resolve(Array.from(this.segments.values()));
   }
 
   /**
    * Get a segment by ID.
    */
-  getSegment(id: SegmentId): Promise<Segment | null> {
+  async getSegment(id: SegmentId): Promise<Segment | null> {
     return Promise.resolve(this.segments.get(id) ?? null);
   }
 
@@ -245,7 +245,7 @@ export class RemoteProvider implements FlagProvider {
       flags = data as FeatureFlag[];
     } else if (data !== null && data !== undefined && typeof data === 'object' && 'flags' in data) {
       const dataWithFlags = data as { flags: FeatureFlag[] };
-      flags = dataWithFlags.flags;
+      ({ flags } = dataWithFlags);
     } else {
       throw new Error('Invalid response format');
     }
@@ -309,7 +309,7 @@ export class RemoteProvider implements FlagProvider {
         this.stats = { ...this.stats, requestCount: this.stats.requestCount + 1 };
 
         if (!response.ok) {
-          if (retry.retryStatusCodes !== null && retry.retryStatusCodes !== undefined && retry.retryStatusCodes.includes(response.status)) {
+          if (retry.retryStatusCodes?.includes(response.status) === true) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
           }
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);

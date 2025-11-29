@@ -239,7 +239,7 @@ export class RouteGroupManager {
     this.groups.set(config.name, group);
 
     // Update parent's children
-    if (config.parent) {
+    if (config.parent != null && config.parent !== '') {
       const parent = this.groups.get(config.parent);
       if (parent) {
         const updatedParent: RouteGroup = {
@@ -289,7 +289,7 @@ export class RouteGroupManager {
     const chain: RouteGroup[] = [];
     let current = parentName;
 
-    while (current) {
+    while (current != null && current !== '') {
       const group = this.groups.get(current);
       if (!group) break;
       chain.unshift(group); // Add to beginning

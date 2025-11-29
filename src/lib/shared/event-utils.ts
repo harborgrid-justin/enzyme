@@ -411,7 +411,7 @@ function matchesSourceFilter(
   source: string | undefined,
   filter: string | RegExp | string[] | undefined
 ): boolean {
-  if (!filter || !source) return true;
+  if (filter === undefined || filter === null || source === undefined || source === null || source === '') return true;
   if (filter instanceof RegExp) return filter.test(source);
   if (Array.isArray(filter)) return filter.includes(source);
   return filter === source;
@@ -533,7 +533,10 @@ export class UnifiedEventEmitter<Events extends Record<string, unknown>>
       this.listeners.set(event, []);
     }
 
-    const handlers = this.listeners.get(event)!;
+    const handlers = this.listeners.get(event);
+    if (handlers === undefined) {
+      throw new Error(`Failed to get handlers for event: ${String(event)}`);
+    }
 
     // Warn if max listeners exceeded
     if (handlers.length >= this.config.maxListeners) {
@@ -544,9 +547,9 @@ export class UnifiedEventEmitter<Events extends Record<string, unknown>>
 
     // Create processed handler (debounced/throttled if configured)
     let processedHandler: EventHandler<Events[K]> | undefined;
-    if (debounceMs && debounceMs > 0) {
+    if (debounceMs !== undefined && debounceMs !== null && debounceMs > 0) {
       processedHandler = debounce(handler, debounceMs);
-    } else if (throttleMs && throttleMs > 0) {
+    } else if (throttleMs !== undefined && throttleMs !== null && throttleMs > 0) {
       processedHandler = throttle(handler, throttleMs);
     }
 
@@ -642,9 +645,9 @@ export class UnifiedEventEmitter<Events extends Record<string, unknown>>
     if (this.config.enableDeduplication) {
       const hash = createEventHash(String(event), data);
       const existing = this.deduplicationCache.get(hash);
-      if (existing && existing.expiresAt > Date.now()) {
+      if (existing !== undefined && existing !== null && existing.expiresAt > Date.now()) {
         if (this.config.debug) {
-          console.debug(`[UnifiedEventEmitter] Deduplicated event: ${String(event)}`);
+          console.info(`[UnifiedEventEmitter] Deduplicated event: ${String(event)}`);
         }
         return;
       }
@@ -716,11 +719,11 @@ export class UnifiedEventEmitter<Events extends Record<string, unknown>>
       if (!entry.metadata.isActive) continue;
 
       // Apply filters
-      if (entry.options.filter && !entry.options.filter(processedData)) {
+      if (entry.options.filter !== undefined && entry.options.filter !== null && !entry.options.filter(processedData)) {
         continue;
       }
 
-      if (entry.options.sourceFilter && !matchesSourceFilter(this.contextSource, entry.options.sourceFilter)) {
+      if (entry.options.sourceFilter !== undefined && entry.options.sourceFilter !== null && !matchesSourceFilter(this.contextSource, entry.options.sourceFilter)) {
         continue;
       }
 
@@ -792,9 +795,9 @@ export class UnifiedEventEmitter<Events extends Record<string, unknown>>
    * Remove all listeners for an event (or all events if no event specified).
    */
   removeAllListeners<K extends keyof Events>(event?: K): void {
-    if (event) {
+    if (event !== undefined && event !== null) {
       const handlers = this.listeners.get(event);
-      if (handlers && this.config.enableStatistics) {
+      if (handlers !== undefined && handlers !== null && this.config.enableStatistics) {
         this.stats.activeSubscriptions -= handlers.length;
       }
       this.listeners.delete(event);

@@ -358,7 +358,7 @@ class AuthService {
     } catch {
       // Ignore errors during logout - we still want to clear local tokens
     } finally {
-      await this.clearTokens();
+      this.clearTokens();
     }
   }
 
@@ -523,14 +523,12 @@ class AuthService {
    * the encrypted storage and the in-memory cache to prevent
    * any token leakage after logout.
    */
-  private async clearTokens(): Promise<void> {
+  private clearTokens(): void {
     const storage = this.getSecureStorage();
-    // Clear from secure storage in parallel
-    await Promise.all([
-      storage.removeItem(SECURE_TOKEN_KEYS.ACCESS_TOKEN),
-      storage.removeItem(SECURE_TOKEN_KEYS.REFRESH_TOKEN),
-      storage.removeItem(SECURE_TOKEN_KEYS.TOKEN_EXPIRY),
-    ]);
+    // Clear from secure storage
+    storage.removeItem(SECURE_TOKEN_KEYS.ACCESS_TOKEN);
+    storage.removeItem(SECURE_TOKEN_KEYS.REFRESH_TOKEN);
+    storage.removeItem(SECURE_TOKEN_KEYS.TOKEN_EXPIRY);
 
     // Clear in-memory cache
     this.tokenCache = {

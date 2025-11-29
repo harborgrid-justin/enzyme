@@ -83,9 +83,9 @@ function generateSelector(element: Element): string {
 
     // Add nth-child for disambiguation
     const parent = current.parentElement;
-    if (parent) {
+    if (parent && current != null) {
       const siblings = Array.from(parent.children).filter(
-        (child) => child.tagName === current!.tagName
+        (child) => child.tagName === current.tagName
       );
       if (siblings.length > 1) {
         const index = siblings.indexOf(current) + 1;
@@ -121,8 +121,8 @@ function extractPointerPosition(
   event: MouseEvent | TouchEvent
 ): CapturedInteraction['pointerPosition'] {
   if ('touches' in event && event.touches.length > 0) {
-    const touch = event.touches[0];
-    if (!touch) return undefined;
+    const [touch] = event.touches;
+    if (touch == null) return undefined;
     return {
       clientX: touch.clientX,
       clientY: touch.clientY,
@@ -514,7 +514,7 @@ export class InteractionReplayManager {
     let replayed = 0;
 
     for (const interaction of interactions) {
-      const success = await this.replayInteraction(interaction);
+      const success = this.replayInteraction(interaction);
       if (success) {
         replayed++;
       }
@@ -533,12 +533,12 @@ export class InteractionReplayManager {
   /**
    * Replays a single interaction.
    */
-  private async replayInteraction(interaction: CapturedInteraction): Promise<boolean> {
+  private replayInteraction(interaction: CapturedInteraction): boolean {
     try {
       // Find target element
       const target = document.querySelector(interaction.targetSelector);
 
-      if (!target) {
+      if (target == null) {
         this.log(`Target not found for replay: ${interaction.targetSelector}`, 'warn');
         return false;
       }
@@ -567,7 +567,7 @@ export class InteractionReplayManager {
 
       return true;
     } catch (error) {
-      this.log(`Failed to replay interaction: ${error}`, 'error');
+      this.log(`Failed to replay interaction: ${String(error)}`, 'error');
       return false;
     }
   }
@@ -659,7 +659,8 @@ export class InteractionReplayManager {
    */
   private log(message: string, level: 'log' | 'warn' | 'error' = 'log'): void {
     if (this.debug) {
-      console[level](`[InteractionReplay] ${message}`);
+      const logger = level === 'error' ? console.error : level === 'warn' ? console.warn : console.info;
+      logger(`[InteractionReplay] ${message}`);
     }
   }
 }
@@ -681,9 +682,7 @@ export function getInteractionReplayManager(
   config?: Partial<InteractionReplayConfig>,
   debug = false
 ): InteractionReplayManager {
-  if (!replayManagerInstance) {
-    replayManagerInstance = new InteractionReplayManager(config, debug);
-  }
+  replayManagerInstance ??= new InteractionReplayManager(config, debug);
   return replayManagerInstance;
 }
 

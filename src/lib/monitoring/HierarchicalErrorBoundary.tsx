@@ -734,7 +734,14 @@ export function withHierarchicalErrorBoundary<P extends object>(
   level: ErrorBoundaryLevel,
   options?: Omit<HierarchicalErrorBoundaryProps, 'level' | 'children'>
 ): ComponentType<P> {
-  const displayName = (WrappedComponent.displayName !== null && WrappedComponent.displayName !== undefined && WrappedComponent.displayName !== '') ? WrappedComponent.displayName : ((WrappedComponent.name !== null && WrappedComponent.name !== undefined && WrappedComponent.name !== '') ? WrappedComponent.name : 'Component');
+  const { displayName: componentDisplayName, name: componentName } = WrappedComponent;
+
+  let displayName = 'Component';
+  if (componentDisplayName != null && componentDisplayName !== '') {
+    displayName = componentDisplayName;
+  } else if (componentName != null && componentName !== '') {
+    displayName = componentName;
+  }
 
   function WithErrorBoundary(props: P): React.JSX.Element {
     return (

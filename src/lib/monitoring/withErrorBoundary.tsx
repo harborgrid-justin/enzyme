@@ -212,10 +212,8 @@ export function ErrorBoundary({
   const boundaryRef = useRef<ComponentType<{ children: ReactNode }> | null>(null);
 
   // Initialize boundary component once
-  // eslint-disable-next-line react-hooks/refs, react-hooks/static-components -- Cached boundary creation is safe
   boundaryRef.current ??= getCachedBoundary({ fallback, onError, showReset });
 
-  // eslint-disable-next-line react-hooks/refs -- Safe to read cached component
   const BoundaryComponent = boundaryRef.current;
 
   return <BoundaryComponent>{children}</BoundaryComponent>;

@@ -654,7 +654,7 @@ export class HydrationScheduler {
     }
 
     // Setup timeout if specified
-    if (task.timeout && task.trigger !== 'immediate') {
+    if (task.timeout != null && task.timeout !== 0 && task.trigger !== 'immediate') {
       boundary.timeoutId = setTimeout(() => {
         if (boundary.status.state === 'pending') {
           this.log(`Timeout reached for ${task.id}, queueing`);
@@ -706,7 +706,7 @@ export class HydrationScheduler {
     this.observeVisibility(boundary);
 
     // Setup interaction listeners for immediate hydration
-    const interactionHandler = () => {
+    const interactionHandler = (): void => {
       if (boundary.status.state === 'pending') {
         this.log(`Interaction triggered hydration for ${task.id}`);
         // Boost priority and queue
@@ -741,19 +741,19 @@ export class HydrationScheduler {
     const { task } = boundary;
     const mediaQuery = task.metadata?.routePath; // Using routePath as media query for now
 
-    if (!mediaQuery || typeof window === 'undefined') {
+    if (mediaQuery == null || mediaQuery === '' || typeof window === 'undefined') {
       this.enqueue(boundary);
       return;
     }
 
     let mql = this.mediaListeners.get(mediaQuery);
 
-    if (!mql) {
+    if (mql == null) {
       mql = window.matchMedia(mediaQuery);
       this.mediaListeners.set(mediaQuery, mql);
     }
 
-    const handler = (event: MediaQueryListEvent | MediaQueryList) => {
+    const handler = (event: MediaQueryListEvent | MediaQueryList): void => {
       if (event.matches && boundary.status.state === 'pending') {
         this.enqueue(boundary);
       }
@@ -819,18 +819,20 @@ export class HydrationScheduler {
     if (nextTask?.priority === 'critical') {
       // Process critical tasks immediately in next frame
       this.animationFrameHandle = requestAnimationFrame(() => {
-        this.processQueue();
+        void this.processQueue();
       });
     } else if (nextTask?.priority === 'idle' && this.config.useIdleCallback) {
       // Process idle tasks in idle time
       this.idleCallbackHandle = requestIdle(
-        async (deadline) => this.processQueueWithDeadline(deadline),
+        (deadline) => {
+          void this.processQueueWithDeadline(deadline);
+        },
         { timeout: 5000 }
       );
-    } else if (nextTask) {
+    } else if (nextTask != null) {
       // Process normal tasks in next frame
       this.animationFrameHandle = requestAnimationFrame(() => {
-        this.processQueue();
+        void this.processQueue();
       });
     }
   }
@@ -993,7 +995,12 @@ export class HydrationScheduler {
       }
 
       // Track above-the-fold hydration
-      if (task.metadata?.aboveTheFold && !this.aboveFoldHydrationTime && this.startTime) {
+      if (
+        task.metadata?.aboveTheFold === true &&
+        this.aboveFoldHydrationTime == null &&
+        this.startTime != null &&
+        this.startTime !== 0
+      ) {
         this.aboveFoldHydrationTime = endTime - this.startTime;
       }
 
@@ -1043,7 +1050,7 @@ export class HydrationScheduler {
     errorMessage?: string
   ): void {
     const { task, status } = boundary;
-    const queueDuration = status.startedAt
+    const queueDuration = status.startedAt != null && status.startedAt !== 0
       ? status.startedAt - task.enqueuedAt
       : 0;
 
@@ -1081,7 +1088,7 @@ export class HydrationScheduler {
       (b) => b.status.state === 'hydrated' || b.status.state === 'error' || b.status.state === 'skipped'
     );
 
-    if (allHydrated && this.startTime) {
+    if (allHydrated && this.startTime != null && this.startTime !== 0) {
       this.fullHydrationTime = performance.now() - this.startTime;
       this.log(`Full hydration complete: ${this.fullHydrationTime.toFixed(2)}ms`);
     }
@@ -1100,9 +1107,14 @@ export class HydrationScheduler {
     }
 
     const thresholdValue = this.config.visibility.threshold;
-    const threshold = (Array.isArray(thresholdValue)
-      ? [...thresholdValue]
-      : (thresholdValue ?? 0)) as number | number[];
+    let threshold: number | number[];
+    if (Array.isArray(thresholdValue)) {
+      threshold = [...thresholdValue];
+    } else if (thresholdValue != null) {
+      threshold = thresholdValue;
+    } else {
+      threshold = 0;
+    }
     this.visibilityObserver = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
@@ -1173,7 +1185,8 @@ export class HydrationScheduler {
    */
   private log(message: string, level: 'log' | 'warn' | 'error' = 'log'): void {
     if (this.config.debug) {
-      console[level](`[HydrationScheduler] ${message}`);
+      const logger = level === 'error' ? console.error : level === 'warn' ? console.warn : console.info;
+      logger(`[HydrationScheduler] ${message}`);
     }
   }
 }
@@ -1193,9 +1206,7 @@ let schedulerInstance: HydrationScheduler | null = null;
 export function getHydrationScheduler(
   config?: Partial<HydrationSchedulerConfig>
 ): HydrationScheduler {
-  if (!schedulerInstance) {
-    schedulerInstance = new HydrationScheduler(config);
-  }
+  schedulerInstance ??= new HydrationScheduler(config);
   return schedulerInstance;
 }
 

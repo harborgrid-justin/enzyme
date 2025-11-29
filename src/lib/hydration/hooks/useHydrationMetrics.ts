@@ -257,6 +257,7 @@ export function useHydrationMetrics(
 
   const [metrics, setMetrics] = useState<HydrationMetricsSnapshot>(DEFAULT_METRICS);
   const [durationHistory, setDurationHistory] = useState<number[]>([]);
+  const [hydrationRate, setHydrationRate] = useState(0);
 
   // ==========================================================================
   // Refs
@@ -264,7 +265,6 @@ export function useHydrationMetrics(
 
   const previousCountRef = useRef(0);
   const previousTimestampRef = useRef(0);
-  const hydrationRateRef = useRef(0);
 
   // Initialize timestamp ref on first mount
   useEffect(() => {
@@ -302,7 +302,7 @@ export function useHydrationMetrics(
         intervalMs
       );
 
-      hydrationRateRef.current = rate;
+      setHydrationRate(rate);
       previousCountRef.current = newMetrics.hydratedCount;
       previousTimestampRef.current = now;
 
@@ -373,7 +373,7 @@ export function useHydrationMetrics(
 
     const estimatedTimeRemaining = estimateTimeRemaining(
       metrics.pendingCount,
-      hydrationRateRef.current
+      hydrationRate
     );
 
     const isFullyHydrated =
@@ -390,14 +390,14 @@ export function useHydrationMetrics(
       ...metrics,
       hydrationProgress,
       estimatedTimeRemaining,
-      hydrationRate: hydrationRateRef.current,
+      hydrationRate,
       isFullyHydrated,
       isAboveFoldHydrated,
       replaySuccessRate,
       durationHistory,
       refresh: fetchMetrics,
     };
-  }, [metrics, durationHistory, fetchMetrics]);
+  }, [metrics, durationHistory, hydrationRate, fetchMetrics]);
 
   return computedMetrics;
 }
@@ -521,7 +521,7 @@ export function useHydrationMetricsDebug(label = 'HydrationMetrics'): void {
   const metrics = useHydrationMetrics({ pollInterval: 500 });
 
   useEffect(() => {
-    console.log(`[${label}]`, {
+    console.info(`[${label}]`, {
       progress: `${metrics.hydrationProgress.toFixed(0)}%`,
       hydrated: `${metrics.hydratedCount}/${metrics.totalBoundaries}`,
       pending: metrics.pendingCount,

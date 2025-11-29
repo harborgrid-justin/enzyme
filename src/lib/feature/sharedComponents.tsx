@@ -310,7 +310,7 @@ function GenericDetailInner<T>({
     return <>{renderError?.(error) ?? <DefaultErrorState error={error} />}</>;
   }
 
-  if (!item) {
+  if (item == null) {
     return <>{renderEmpty?.() ?? <DefaultEmptyState message="No item selected" />}</>;
   }
 
@@ -370,14 +370,17 @@ export const StatsCard = memo(({
   // Memoize trend style based on direction
   const trendStyle = useMemo<CSSProperties | undefined>(() => {
     if (!trend) return undefined;
+    let color: string;
+    if (trend.direction === 'up') {
+      color = 'var(--color-success, #22c55e)';
+    } else if (trend.direction === 'down') {
+      color = 'var(--color-error, #ef4444)';
+    } else {
+      color = 'var(--color-text-muted, #6b7280)';
+    }
     return {
       fontSize: '0.75rem',
-      color:
-        trend.direction === 'up'
-          ? 'var(--color-success, #22c55e)'
-          : trend.direction === 'down'
-            ? 'var(--color-error, #ef4444)'
-            : 'var(--color-text-muted, #6b7280)',
+      color,
     };
   }, [trend]);
 
@@ -390,7 +393,8 @@ export const StatsCard = memo(({
       <p style={statsCardValueStyle}>{value}</p>
       {trend && (
         <span style={trendStyle}>
-          {trend.direction === 'up' ? '+' : trend.direction === 'down' ? '-' : ''}
+          {trend.direction === 'up' && '+'}
+          {trend.direction === 'down' && '-'}
           {Math.abs(trend.value)}%
         </span>
       )}

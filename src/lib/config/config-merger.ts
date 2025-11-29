@@ -200,9 +200,8 @@ export function getValueAtPath<T = ConfigValue>(
 
     // Handle array indexing
     const arrayMatch = part.match(/^(\w+)\[(\d+)\]$/);
-    if (arrayMatch) {
-      const key = arrayMatch[1];
-      const index = arrayMatch[2];
+    if (arrayMatch != null) {
+      const [, key, index] = arrayMatch;
       if (key == null || index == null) {
         return defaultValue as T;
       }
@@ -234,13 +233,15 @@ export function setValueAtPath(
 
   for (let i = 0; i < parts.length - 1; i++) {
     const part = parts[i];
-    if (!part) continue;
+    if (part == null || part === '') continue;
 
     // Handle array indexing
     const arrayMatch = part.match(/^(\w+)\[(\d+)\]$/);
-    if (arrayMatch?.[1] && arrayMatch[2]) {
-      const key = arrayMatch[1];
-      const index = arrayMatch[2];
+    if (arrayMatch != null) {
+      const [, key, index] = arrayMatch;
+      if (key == null || key === '' || index == null || index === '') {
+        continue;
+      }
       if (!Array.isArray(current[key])) {
         current[key] = [];
       }
@@ -262,12 +263,14 @@ export function setValueAtPath(
   }
 
   const lastPart = parts[parts.length - 1];
-  if (!lastPart) return result;
+  if (lastPart == null || lastPart === '') return result;
 
   const arrayMatch = lastPart.match(/^(\w+)\[(\d+)\]$/);
-  if (arrayMatch?.[1] && arrayMatch[2]) {
-    const key = arrayMatch[1];
-    const index = arrayMatch[2];
+  if (arrayMatch != null) {
+    const [, key, index] = arrayMatch;
+    if (key == null || key === '' || index == null || index === '') {
+      return result;
+    }
     if (!Array.isArray(current[key])) {
       current[key] = [];
     }
@@ -292,14 +295,18 @@ export function deleteValueAtPath(
   const result = { ...config };
 
   if (parts.length === 1) {
-    delete result[parts[0]!];
+    const [firstPart] = parts;
+    if (firstPart !== undefined) {
+      delete result[firstPart];
+    }
     return result;
   }
 
   let current: Record<string, unknown> = result;
 
   for (let i = 0; i < parts.length - 1; i++) {
-    const part = parts[i]!;
+    const part = parts[i];
+    if (part === undefined) continue;
     if (typeof current[part] !== 'object' || current[part] === null) {
       return result; // Path doesn't exist
     }
@@ -307,7 +314,10 @@ export function deleteValueAtPath(
     current = current[part] as Record<string, unknown>;
   }
 
-  delete current[parts[parts.length - 1]!];
+  const lastPart = parts[parts.length - 1];
+  if (lastPart !== undefined) {
+    delete current[lastPart];
+  }
   return result;
 }
 

@@ -494,7 +494,7 @@ export class RequestDeduplicator {
       if (!response.ok) {
         throw new Error(`Request failed: ${response.status}`);
       }
-      return response.json();
+      return response.json() as T;
     });
   }
 

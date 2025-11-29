@@ -401,7 +401,7 @@ export class DiscoveryEngine {
 
       // Phase 3: Validation
       let validationDurationMs = 0;
-      if (this.config.validate) {
+      if (this.config.validate === true) {
         this.setState('validating');
         const validationStartTime = Date.now();
 
@@ -417,7 +417,7 @@ export class DiscoveryEngine {
       }
 
       // Phase 4: Conflict Detection
-      if (this.config.detectConflicts) {
+      if (this.config.detectConflicts === true) {
         const detectedConflicts = this.detectConflicts(transformResult.routes);
         conflicts.push(...detectedConflicts);
 

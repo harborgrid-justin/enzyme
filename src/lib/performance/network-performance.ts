@@ -590,7 +590,11 @@ export class NetworkPerformanceAnalyzer {
       prefetchStrategy: quality.tier.prefetchStrategy,
       shouldReduceMotion: quality.score < 50 || quality.saveData,
       shouldDeferNonCritical: quality.score < 30,
-      maxConcurrentRequests: quality.score >= 70 ? 6 : quality.score >= 40 ? 4 : 2,
+      maxConcurrentRequests: (() => {
+        if (quality.score >= 70) return 6;
+        if (quality.score >= 40) return 4;
+        return 2;
+      })(),
     };
   }
 
@@ -783,7 +787,7 @@ export class NetworkPerformanceAnalyzer {
     const sizeByType: Record<string, number> = {};
 
     requests.forEach((r) => {
-      const type = r.initiatorType || 'other';
+      const type = r.initiatorType ?? 'other';
       requestsByType[type] = (requestsByType[type] ?? 0) + 1;
       sizeByType[type] = (sizeByType[type] ?? 0) + r.transferSize;
     });

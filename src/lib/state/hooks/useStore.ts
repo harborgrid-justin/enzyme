@@ -40,8 +40,7 @@ export function useStoreState<T>(
 export function useShallowState<T extends object>(
   selector: StoreSelector<T>
 ): T {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-explicit-any
-  return useStore(selector as any);
+  return useStore(selector as unknown as StoreSelector<never>);
 }
 
 /**
@@ -73,7 +72,6 @@ export function useUIState(): {
   globalLoading: boolean;
   loadingMessage: string | null;
 } {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-explicit-any
   return useStore(
     (state) => ({
       sidebarOpen: state.sidebarOpen,
@@ -83,7 +81,14 @@ export function useUIState(): {
       globalLoading: state.globalLoading,
       loadingMessage: state.loadingMessage,
     })
-  ) as any;
+  ) as {
+    sidebarOpen: boolean;
+    sidebarCollapsed: boolean;
+    activeModal: string | null;
+    modalData: Record<string, unknown> | null;
+    globalLoading: boolean;
+    loadingMessage: string | null;
+  };
 }
 
 /**
@@ -130,7 +135,12 @@ export function useSessionState(): {
       lastActivity: state.lastActivity,
       navigationHistory: state.navigationHistory,
     })
-  ) as any;
+  ) as {
+    sessionId: string | null;
+    isSessionActive: boolean;
+    lastActivity: number | null;
+    navigationHistory: string[];
+  };
 }
 
 /**
@@ -174,6 +184,7 @@ export function useSettingsState(): {
   highContrast: boolean;
   fontSize: string;
 } {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return useStore(
     (state) => ({
       locale: state.locale,
@@ -188,7 +199,19 @@ export function useSettingsState(): {
       highContrast: state.highContrast,
       fontSize: state.fontSize,
     })
-  ) as any;
+  ) as {
+    locale: string;
+    timezone: string;
+    dateFormat: string;
+    timeFormat: string;
+    numberFormat: string;
+    notificationsEnabled: boolean;
+    soundEnabled: boolean;
+    desktopNotifications: boolean;
+    reducedMotion: boolean;
+    highContrast: boolean;
+    fontSize: string;
+  };
 }
 
 /**
@@ -271,6 +294,7 @@ export function useModal<T extends Record<string, unknown> = Record<string, unkn
   open: (id: string, data?: Record<string, unknown>) => void;
   close: () => void;
 } {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const { activeModal, modalData, open, close } = useStore(
     (state) => ({
       activeModal: state.activeModal,
@@ -278,7 +302,12 @@ export function useModal<T extends Record<string, unknown> = Record<string, unkn
       open: state.openModal,
       close: state.closeModal,
     })
-  ) as any;
+  ) as {
+    activeModal: string | null;
+    modalData: Record<string, unknown> | null;
+    open: (id: string, data?: Record<string, unknown>) => void;
+    close: () => void;
+  };
 
   return {
     activeModal,
@@ -306,13 +335,18 @@ export function useLoading(): {
   start: (loadingMessage?: string) => void;
   stop: () => void;
 } {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const { isLoading, message, setGlobalLoading } = useStore(
     (state) => ({
       isLoading: state.globalLoading,
       message: state.loadingMessage,
       setGlobalLoading: state.setGlobalLoading,
     })
-  ) as any;
+  ) as {
+    isLoading: boolean;
+    message: string | null;
+    setGlobalLoading: (loading: boolean, message?: string) => void;
+  };
 
   const start = useCallback(
     (loadingMessage?: string) => setGlobalLoading(true, loadingMessage),
@@ -342,6 +376,7 @@ export function useDisplaySettings(): {
   timeFormat: string;
   numberFormat: string;
 } {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return useStore(
     (state) => ({
       locale: state.locale,
@@ -350,7 +385,13 @@ export function useDisplaySettings(): {
       timeFormat: state.timeFormat,
       numberFormat: state.numberFormat,
     })
-  ) as any;
+  ) as {
+    locale: string;
+    timezone: string;
+    dateFormat: string;
+    timeFormat: string;
+    numberFormat: string;
+  };
 }
 
 /**
@@ -361,13 +402,18 @@ export function useAccessibilitySettings(): {
   highContrast: boolean;
   fontSize: string;
 } {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return useStore(
     (state) => ({
       reducedMotion: state.reducedMotion,
       highContrast: state.highContrast,
       fontSize: state.fontSize,
     })
-  ) as any;
+  ) as {
+    reducedMotion: boolean;
+    highContrast: boolean;
+    fontSize: string;
+  };
 }
 
 /**
@@ -378,13 +424,18 @@ export function useNotificationSettings(): {
   soundEnabled: boolean;
   desktopNotifications: boolean;
 } {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return useStore(
     (state) => ({
       notificationsEnabled: state.notificationsEnabled,
       soundEnabled: state.soundEnabled,
       desktopNotifications: state.desktopNotifications,
     })
-  ) as any;
+  ) as {
+    notificationsEnabled: boolean;
+    soundEnabled: boolean;
+    desktopNotifications: boolean;
+  };
 }
 
 // ============================================================================
@@ -482,13 +533,13 @@ export function useDebouncedState<T>(
  */
 export function usePreviousState<T>(selector: StoreSelector<T>): T | undefined {
   const value = useStore(selector);
-  const ref = useRef<T | undefined>(undefined);
+  const [prevValue, setPrevValue] = useState<T | undefined>(undefined);
 
   useEffect(() => {
-    ref.current = value;
+    setPrevValue(value);
   }, [value]);
 
-  return ref.current;
+  return prevValue;
 }
 
 /**
@@ -506,20 +557,26 @@ export function useStateChange<T>(selector: StoreSelector<T>): {
   changeCount: number;
 } {
   const value = useStore(selector);
-  const initialRef = useRef(value);
-  const countRef = useRef(0);
-  const prevRef = useRef(value);
+  const [initialValue] = useState(value);
+  const prevValueRef = useRef(value);
+  const changeCountRef = useRef(0);
 
-  if (!Object.is(value, prevRef.current)) {
-    countRef.current += 1;
-    prevRef.current = value;
+  // Calculate if value changed since last render
+  // This is safe to do during render as we're only reading/writing refs
+  const valueChanged = !Object.is(value, prevValueRef.current);
+
+  if (valueChanged) {
+    changeCountRef.current += 1;
   }
+
+  // Store current value for next comparison (safe during render)
+  prevValueRef.current = value;
 
   return {
     value,
-    initialValue: initialRef.current,
-    hasChanged: !Object.is(value, initialRef.current),
-    changeCount: countRef.current,
+    initialValue,
+    hasChanged: !Object.is(value, initialValue),
+    changeCount: changeCountRef.current,
   };
 }
 
@@ -555,13 +612,16 @@ export function useHydration(): {
 
   useEffect(() => {
     const state = useStore.getState();
-    if ((state as { _hasHydrated?: boolean })._hasHydrated) {
-      setHasHydrated(true);
+    if ((state as { _hasHydrated?: boolean })._hasHydrated === true) {
+      // Use queueMicrotask to avoid calling setState synchronously in effect
+      queueMicrotask(() => {
+        setHasHydrated(true);
+      });
       return;
     }
 
     const unsubscribe = useStore.subscribe((state) => {
-      if ((state as { _hasHydrated?: boolean })._hasHydrated) {
+      if ((state as { _hasHydrated?: boolean })._hasHydrated === true) {
         setHasHydrated(true);
       }
     });

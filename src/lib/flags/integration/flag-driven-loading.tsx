@@ -231,7 +231,7 @@ async function loadModuleWithRetry<T>(
     try {
       const loadPromise = loader();
 
-      const result = timeout
+      const result = timeout != null && timeout !== 0
         ? await Promise.race([
             loadPromise,
             new Promise<never>((_, reject) =>
@@ -241,7 +241,7 @@ async function loadModuleWithRetry<T>(
         : await loadPromise;
 
       // Handle both { default: T } and T
-      if (result && typeof result === 'object' && 'default' in result) {
+      if (result != null && typeof result === 'object' && 'default' in result) {
         return (result as { default: T }).default;
       }
       return result as T;
@@ -299,7 +299,7 @@ export function useFeatureFlaggedModule<T>(
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [isEnabledVariant, setIsEnabledVariant] = useState(false);
-  const [loadCount, setLoadCount] = useState(0);
+  const [_loadCount, setLoadCount] = useState(0);
 
   // Get flag value - try context first, then fallback to provided getter
   const flagEnabled = useMemo(() => {
@@ -308,7 +308,7 @@ export function useFeatureFlaggedModule<T>(
     }
     // Default to false if no getter provided
     return false;
-  }, [flagKey, getFlag, loadCount]);
+  }, [flagKey, getFlag]);
 
   const load = useCallback(async () => {
     setIsLoading(true);
@@ -431,7 +431,7 @@ export function useFlaggedLazyComponent<P = Record<string, unknown>>(
     if (!loader) return null;
 
     // Normalize loader to always return { default: T } for React.lazy
-    const normalizedLoader = async () => loader().then((mod) => {
+    const normalizedLoader = async (): Promise<{ default: ComponentType<P> }> => loader().then((mod) => {
       if (mod && typeof mod === 'object' && 'default' in mod) {
         return mod as { default: ComponentType<P> };
       }

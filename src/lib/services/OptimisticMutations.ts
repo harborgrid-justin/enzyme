@@ -151,7 +151,7 @@ export function useOptimisticMutation<TData = unknown, TError = Error, TVariable
       }
 
       // Create rollback function
-      const rollbackFn = () => {
+      const rollbackFn = (): void => {
         for (const snapshot of snapshots) {
           queryClient.setQueryData(snapshot.queryKey, snapshot.data);
         }
@@ -171,7 +171,7 @@ export function useOptimisticMutation<TData = unknown, TError = Error, TVariable
     },
 
     onError: (error, variables, context) => {
-      if (!context) return;
+      if (context == null) return;
 
       // Execute rollback
       if (config.customRollback) {
@@ -188,7 +188,7 @@ export function useOptimisticMutation<TData = unknown, TError = Error, TVariable
     },
 
     onSuccess: async (data, variables, context) => {
-      if (!context) return;
+      if (context == null) return;
 
       // Handle conflict resolution based on strategy
       for (const snapshot of context.snapshots) {
@@ -734,7 +734,8 @@ export function deepClone<T>(data: T): T {
 
   if (Array.isArray(data)) {
     // Safe cast: we're creating an array of the same element type
-    return data.map((item) => deepClone(item)) as T;
+    const cloned: unknown[] = data.map((item) => deepClone(item));
+    return cloned as T;
   }
 
   if (data instanceof Date) {

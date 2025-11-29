@@ -682,9 +682,9 @@ export class RenderTracker {
     let renders = [...this.renderHistory];
 
     // Filter by interaction if specified
-    if (options.interactionId) {
+    if (options.interactionId != null && options.interactionId !== '') {
       const interaction = this.interactions.find((i) => i.id === options.interactionId);
-      if (interaction) {
+      if (interaction != null) {
         renders = interaction.renders;
       }
     }

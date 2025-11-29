@@ -29,7 +29,7 @@
  */
 
 import type { StoreApi, UseBoundStore } from 'zustand';
-import { useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
 
 // ============================================================================
 // Types
@@ -758,7 +758,6 @@ export function useBroadcastSync<TState extends object>(
   store: UseBoundStore<StoreApi<TState>>,
   config: BroadcastSyncConfig<TState>
 ): BroadcastSyncInstance<TState> {
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   const [sync] = useState(() => createBroadcastSync(store, config));
 
   useEffect(() => {

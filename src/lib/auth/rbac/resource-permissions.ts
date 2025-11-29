@@ -378,7 +378,7 @@ export class ResourcePermissionManager {
     }
 
     // Check inherited permissions
-    if (acl.inheritParent && acl.parentResource) {
+    if (acl.inheritParent === true && acl.parentResource != null) {
       return this.checkAccess(
         acl.parentResource.type,
         acl.parentResource.id,
@@ -461,9 +461,10 @@ export class ResourcePermissionManager {
     const permissions = this.permissionsByGrantee.get(granteeKey) ?? [];
 
     return permissions
-      .filter(p => !resourceType || p.resourceType === resourceType)
+      .filter(p => (resourceType == null || resourceType === '') || p.resourceType === resourceType)
       .filter(p => !this.isExpired(p))
-      .map(p => p.resourceId!);
+      .map(p => p.resourceId ?? '')
+      .filter(id => id !== '');
   }
 
   /**
@@ -543,7 +544,7 @@ export class ResourcePermissionManager {
     action: PermissionAction
   ): boolean {
     // Check specific actions if defined
-    if (permission.actions?.length) {
+    if ((permission.actions?.length ?? 0) > 0) {
       return permission.actions.includes(action) || permission.actions.includes('*');
     }
 
@@ -566,7 +567,7 @@ export class ResourcePermissionManager {
    * Check if a permission has expired.
    */
   private isExpired(permission: ResourcePermission): boolean {
-    if (!permission.expiresAt) return false;
+    if (permission.expiresAt == null || permission.expiresAt === '') return false;
     return new Date(permission.expiresAt) < new Date();
   }
 

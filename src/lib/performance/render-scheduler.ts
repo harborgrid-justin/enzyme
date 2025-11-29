@@ -314,9 +314,11 @@ class TaskPriorityQueue {
     if (queue.length >= this.maxSize) {
       // Drop lowest priority task if queue is full
       const lowestPriority = this.getLowestPriorityWithTasks();
-      if (lowestPriority && PRIORITY_VALUES[lowestPriority] > PRIORITY_VALUES[task.priority]) {
-        const lowestQueue = this.queues.get(lowestPriority)!;
-        lowestQueue.pop();
+      if (lowestPriority != null && PRIORITY_VALUES[lowestPriority] > PRIORITY_VALUES[task.priority]) {
+        const lowestQueue = this.queues.get(lowestPriority);
+        if (lowestQueue != null) {
+          lowestQueue.pop();
+        }
       } else {
         return false;
       }
@@ -331,9 +333,9 @@ class TaskPriorityQueue {
    */
   dequeue(): ScheduledTask | null {
     for (const priority of Object.keys(PRIORITY_VALUES) as RenderPriority[]) {
-      const queue = this.queues.get(priority)!;
-      if (queue.length > 0) {
-        return queue.shift()!;
+      const queue = this.queues.get(priority);
+      if (queue != null && queue.length > 0) {
+        return queue.shift() ?? null;
       }
     }
     return null;

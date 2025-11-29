@@ -119,7 +119,7 @@ export function HydrationProvider({
   onMetric,
   autoStart = true,
   integrateWithPerformance = true,
-}: HydrationProviderProps): JSX.Element {
+}: HydrationProviderProps): React.JSX.Element {
   // ==========================================================================
   // Refs
   // ==========================================================================
@@ -165,9 +165,7 @@ export function HydrationProvider({
 
   useEffect(() => {
     // Create or get scheduler
-    if (!schedulerRef.current) {
-      schedulerRef.current = getHydrationScheduler(config);
-    }
+    schedulerRef.current ??= getHydrationScheduler(config);
 
     const scheduler = schedulerRef.current;
 
@@ -262,7 +260,7 @@ export function HydrationProvider({
 
     if (integrateWithPerformance && typeof window !== 'undefined') {
       // Report hydration metrics as custom performance entries
-      const reportToPerformance = (event: HydrationEvent) => {
+      const reportToPerformance = (event: HydrationEvent): void => {
         if ('performance' in window && 'mark' in performance) {
           const name = `hydration:${event.boundaryId ?? 'unknown'}`;
 
@@ -296,7 +294,7 @@ export function HydrationProvider({
       unsubscribeResumed();
       vitalsUnsubscribe?.();
     };
-  }, [autoStart, integrateWithPerformance]);
+  }, [autoStart, integrateWithPerformance, config]);
 
   // ==========================================================================
   // Context Methods

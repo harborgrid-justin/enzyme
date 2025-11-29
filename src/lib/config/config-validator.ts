@@ -139,9 +139,9 @@ export class ConfigValidator {
       if (fieldSchema.rules) {
         for (const rule of fieldSchema.rules) {
           const error = this.validateRule(value, rule, path);
-          if (error) {
+          if (error != null) {
             errors.push(error);
-            if (this.options.stopOnFirstError) {
+            if (this.options.stopOnFirstError === true) {
               return;
             }
           }
@@ -390,9 +390,9 @@ export class ConfigValidator {
         break;
 
       case 'custom':
-        if (typeof params === 'string' && this.customValidators[params]) {
+        if (typeof params === 'string' && this.customValidators[params] != null) {
           const customMessage = this.customValidators[params](value, path, {});
-          if (customMessage) {
+          if (customMessage != null && customMessage !== '') {
             return this.createError(path, customMessage, type, value);
           }
         }
@@ -448,10 +448,10 @@ export class SchemaBuilder {
   ): this {
     const rules: ValidationRule[] = [{ type: 'string' }];
 
-    if (options?.required) {
+    if (options?.required === true) {
       rules.unshift({ type: 'required' });
     }
-    if (options?.pattern) {
+    if (options?.pattern != null && options.pattern !== '') {
       rules.push({ type: 'pattern', params: options.pattern });
     }
     if (options?.minLength !== undefined) {
@@ -491,7 +491,7 @@ export class SchemaBuilder {
   ): this {
     const rules: ValidationRule[] = [{ type: 'number' }];
 
-    if (options?.required) {
+    if (options?.required === true) {
       rules.unshift({ type: 'required' });
     }
     if (options?.min !== undefined) {
@@ -525,7 +525,7 @@ export class SchemaBuilder {
   ): this {
     const rules: ValidationRule[] = [{ type: 'boolean' }];
 
-    if (options?.required) {
+    if (options?.required === true) {
       rules.unshift({ type: 'required' });
     }
 
@@ -552,7 +552,7 @@ export class SchemaBuilder {
   ): this {
     const rules: ValidationRule[] = [{ type: 'object' }];
 
-    if (options?.required) {
+    if (options?.required === true) {
       rules.unshift({ type: 'required' });
     }
 
@@ -580,7 +580,7 @@ export class SchemaBuilder {
   ): this {
     const rules: ValidationRule[] = [{ type: 'array' }];
 
-    if (options?.required) {
+    if (options?.required === true) {
       rules.unshift({ type: 'required' });
     }
     if (options?.minLength !== undefined) {

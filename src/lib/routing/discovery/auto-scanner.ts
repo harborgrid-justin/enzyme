@@ -381,7 +381,7 @@ export class AutoScanner {
       const result = await this.pendingScan;
 
       // Update cache
-      if (this.config.cache) {
+      if (this.config.cache === true) {
         this.cache = {
           result,
           expiresAt: Date.now() + (this.config.cacheTTL ?? 30000),
@@ -495,7 +495,7 @@ export class AutoScanner {
             }
 
             // Handle symlinks
-            if (entry.isSymbolicLink?.() && !this.config.followSymlinks) {
+            if (entry.isSymbolicLink?.() === true && !this.config.followSymlinks) {
               continue;
             }
 

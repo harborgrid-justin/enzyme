@@ -198,7 +198,7 @@ export function createRoutingFlagIntegration(): LibraryIntegration<RoutingFlagCo
       [ROUTING_FLAG_KEYS.ROUTING_LOADING_STATES_ENABLED]: 'loadingStatesEnabled',
     },
     onConfigChange: (config, changedFlags) => {
-      console.debug('[Routing Flags] Config changed:', changedFlags, config);
+      console.info('[Routing Flags] Config changed:', changedFlags, config);
     },
   });
 }
@@ -469,7 +469,7 @@ export function createFlaggedNavLinks(
 }> {
   return links.map((link) => ({
     ...link,
-    visible: link.flagKey ? getFlag(link.flagKey) : true,
+    visible: link.flagKey != null && link.flagKey !== '' ? getFlag(link.flagKey) : true,
   }));
 }
 
@@ -491,7 +491,7 @@ export function useFlaggedNavigation(
 }> {
   return useMemo(() => {
     return links
-      .filter((link) => !link.flagKey || getFlag(link.flagKey))
+      .filter((link) => link.flagKey == null || link.flagKey === '' || getFlag(link.flagKey))
       .map(({ path, label, icon }) => ({ path, label, icon }));
   }, [links, getFlag]);
 }

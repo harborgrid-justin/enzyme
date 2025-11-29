@@ -414,7 +414,6 @@ export const OrchestratedProviders: FC<OrchestratedProvidersProps> = ({
     providers,
     errorBoundary,
   });
-  // eslint-disable-next-line react-hooks/static-components
   const ProviderTree = orchestrator.getProviderTree();
 
   return (

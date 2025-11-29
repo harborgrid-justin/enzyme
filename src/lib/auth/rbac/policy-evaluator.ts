@@ -305,8 +305,8 @@ export class PolicyEvaluator {
     }
 
     // Evaluate subjects
-    if ((policy.subjects?.length ?? 0) > 0) {
-      const subjectMatch = this.evaluateSubjects(policy.subjects!, request);
+    if ((policy.subjects?.length ?? 0) > 0 && policy.subjects !== undefined) {
+      const subjectMatch = this.evaluateSubjects(policy.subjects, request);
       if (!subjectMatch) {
         return {
           policyId: policy.id,
@@ -934,7 +934,7 @@ export class PolicyEvaluator {
    */
   private log(message: string, ...args: unknown[]): void {
     if (this.debug) {
-      console.log(`[PolicyEvaluator] ${message}`, ...args);
+      console.info(`[PolicyEvaluator] ${message}`, ...args);
     }
   }
 }

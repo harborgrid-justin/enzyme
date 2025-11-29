@@ -252,7 +252,7 @@ export class ConfigLoader {
       }
 
       // Try process.env (CRA, Next.js SSR)
-      if (typeof process !== 'undefined' && process.env) {
+      if (typeof process !== 'undefined' && process.env != null) {
         for (const [key, value] of Object.entries(process.env)) {
           if (key.startsWith(prefix) && value !== undefined) {
             const configKey = this.envKeyToConfigKey(key, prefix);
@@ -263,7 +263,7 @@ export class ConfigLoader {
     }
 
     // In Node.js environment
-    if (typeof process !== 'undefined' && process.env) {
+    if (typeof process !== 'undefined' && process.env != null) {
       for (const [key, value] of Object.entries(process.env)) {
         if (key.startsWith(prefix) && value !== undefined) {
           const configKey = this.envKeyToConfigKey(key, prefix);
@@ -321,7 +321,7 @@ export class ConfigLoader {
       const response = await fetch(url, {
         headers: {
           'Content-Type': 'application/json',
-          ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
+          ...(apiKey != null && apiKey !== '' ? { Authorization: `Bearer ${apiKey}` } : {}),
           ...headers,
         },
         signal: controller.signal,
@@ -374,7 +374,7 @@ export class ConfigLoader {
     }
 
     // Try process.env (Node.js, CRA)
-    if (typeof process !== 'undefined' && process.env?.NODE_ENV) {
+    if (typeof process !== 'undefined' && process.env?.NODE_ENV != null && process.env.NODE_ENV !== '') {
       return process.env.NODE_ENV as Environment;
     }
 
@@ -399,8 +399,8 @@ export class ConfigLoader {
   }
 
   private log(message: string, ...args: unknown[]): void {
-    if (this.options.debug) {
-      console.log(`[ConfigLoader] ${message}`, ...args);
+    if (this.options.debug === true) {
+      console.info(`[ConfigLoader] ${message}`, ...args);
     }
   }
 }

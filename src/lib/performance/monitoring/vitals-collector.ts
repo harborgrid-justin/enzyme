@@ -277,7 +277,7 @@ export class EnhancedVitalsCollector {
     const reports = [...this.reportBuffer];
     this.reportBuffer = [];
 
-    if (this.config.reportEndpoint) {
+    if (this.config.reportEndpoint != null && this.config.reportEndpoint !== '') {
       void this.sendToEndpoint(reports);
     }
   }
@@ -380,7 +380,7 @@ export class EnhancedVitalsCollector {
           loadTime?: number;
         };
 
-        if (lastEntry) {
+        if (lastEntry != null) {
           const value = lastEntry.startTime;
           const attribution = this.config.attribution
             ? {
