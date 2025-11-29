@@ -486,7 +486,7 @@ export class StateCoordinatorImpl implements StateCoordinator {
     }
 
     if (this.config.debug) {
-      console.debug(`[StateCoordinator] Processed change:`, { sliceId, change });
+      console.info(`[StateCoordinator] Processed change:`, { sliceId, change });
     }
   }
 
@@ -549,7 +549,7 @@ export class StateCoordinatorImpl implements StateCoordinator {
       targetEntry.registration.setState(newTargetState);
 
       if (this.config.debug) {
-        console.debug(`[StateCoordinator] Synced ${rule.id}:`, {
+        console.info(`[StateCoordinator] Synced ${rule.id}:`, {
           from: sourceSliceId,
           to: targetSliceId,
           value: transformedValue,
@@ -578,9 +578,7 @@ let globalCoordinator: StateCoordinatorImpl | null = null;
 export function getStateCoordinator(
   config?: Partial<StateCoordinatorConfig>
 ): StateCoordinatorImpl {
-  if (!globalCoordinator) {
-    globalCoordinator = new StateCoordinatorImpl(config);
-  }
+  globalCoordinator ??= new StateCoordinatorImpl(config);
   return globalCoordinator;
 }
 

@@ -13,7 +13,9 @@
  * @refresh reset
  */
 
-import {
+/* eslint-disable react-refresh/only-export-components, @typescript-eslint/prefer-nullish-coalescing, @typescript-eslint/no-misused-promises, @typescript-eslint/strict-boolean-expressions, react-hooks/set-state-in-effect */
+
+import React, {
   useState,
   useEffect,
   useCallback,

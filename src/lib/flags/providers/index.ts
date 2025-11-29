@@ -192,7 +192,7 @@ export function createProvider(
       }
       return new WebSocketProvider(config as unknown as ConstructorParameters<typeof WebSocketProvider>[0]);
     default:
-      throw new Error(`Unknown provider type: ${type}`);
+      throw new Error(`Unknown provider type: ${String(type)}`);
   }
 }
 

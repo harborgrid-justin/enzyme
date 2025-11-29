@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 /**
  * @file Provider Orchestrator
  * @module coordination/provider-orchestrator
@@ -19,7 +20,6 @@ import {
   createElement,
   Fragment,
   Suspense,
-  useMemo,
   useEffect,
   type ReactNode,
   type ComponentType,
@@ -276,7 +276,7 @@ export class ProviderOrchestratorImpl {
    */
   disableProvider(id: string): void {
     const entry = this.providers.get(id);
-    if (entry?.isEnabled) {
+    if (entry?.isEnabled === true) {
       entry.isEnabled = false;
       this.isTreeInvalid = true;
     }
@@ -404,26 +404,22 @@ export const OrchestratedProviders: FC<OrchestratedProvidersProps> = ({
   children,
   onReady,
 }) => {
-  // Create orchestrator
-  const orchestrator = useMemo(() => {
-    return new ProviderOrchestratorImpl({
-      providers,
-      errorBoundary,
-    });
-  }, [providers, errorBoundary]);
-
-  // Get provider tree
-  const ProviderTree = useMemo(() => {
-    return orchestrator.getProviderTree();
-  }, [orchestrator]);
-
-  // Notify when ready - use useEffect for side effects, not useMemo
+  // Notify when ready - use useEffect for side effects
   useEffect(() => {
     onReady?.();
   }, [onReady]);
 
+  // Build provider tree directly without refs
+  const orchestrator = new ProviderOrchestratorImpl({
+    providers,
+    errorBoundary,
+  });
+  // eslint-disable-next-line react-hooks/static-components
+  const ProviderTree = orchestrator.getProviderTree();
+
   return (
     <Suspense fallback={<LoadingComponent />}>
+      {/* eslint-disable-next-line react-hooks/static-components */}
       <ProviderTree>{children}</ProviderTree>
     </Suspense>
   );
@@ -447,9 +443,7 @@ let globalOrchestrator: ProviderOrchestratorImpl | null = null;
 export function getProviderOrchestrator(
   config?: Partial<ProviderOrchestratorConfig>
 ): ProviderOrchestratorImpl {
-  if (!globalOrchestrator) {
-    globalOrchestrator = new ProviderOrchestratorImpl(config);
-  }
+  globalOrchestrator ??= new ProviderOrchestratorImpl(config);
   return globalOrchestrator;
 }
 

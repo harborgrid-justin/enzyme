@@ -6,7 +6,7 @@
  * FEATURE 3: Predictive Navigation Prefetching
  */
 
-import { useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useEffect, useCallback, useRef, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   getPredictivePrefetchEngine,
@@ -85,6 +85,7 @@ export interface UsePredictivePrefetchReturn {
  * }
  * ```
  */
+// eslint-disable-next-line react-refresh/only-export-components -- Hook and component are closely related
 export function usePredictivePrefetch(
   options: UsePredictivePrefetchOptions = {}
 ): UsePredictivePrefetchReturn {
@@ -127,7 +128,7 @@ export function usePredictivePrefetch(
     // Trigger prefetch after delay
     if (autoPrefetch) {
       prefetchTimeoutRef.current = setTimeout(() => {
-        engine.prefetchPredictedRoutes(currentPath);
+        void engine.prefetchPredictedRoutes(currentPath);
       }, prefetchDelay);
     }
 
@@ -175,9 +176,9 @@ export function usePredictivePrefetch(
   const navigateWithPrefetch = useCallback(
     (to: string) => {
       // Start prefetching immediately
-      engine.prefetchRoute(to);
+      void engine.prefetchRoute(to);
       // Navigate
-      navigate(to);
+      void navigate(to);
     },
     [engine, navigate]
   );
@@ -226,7 +227,7 @@ function shouldPrefetch(): boolean {
   };
 
   // Don't prefetch on slow connections or data saver mode
-  if (nav.connection?.saveData) return false;
+  if (nav.connection?.saveData === true) return false;
   if (nav.connection?.effectiveType === 'slow-2g') return false;
   if (nav.connection?.effectiveType === '2g') return false;
 
@@ -264,19 +265,21 @@ export function PredictiveLink({
 
     // Prefetch module if provided
     if (loader) {
-      loader().catch(() => {});
+      void loader().catch(() => {});
     }
 
     // Prefetch via engine
-    engine.prefetchRoute(to);
+    void engine.prefetchRoute(to);
   }, [to, loader, engine]);
 
   // Handle click
   const handleClick = useCallback(
     (e: React.MouseEvent<HTMLAnchorElement>) => {
       e.preventDefault();
-      props.onClick?.(e);
-      navigate(to);
+      if (props.onClick) {
+        void props.onClick(e);
+      }
+      void navigate(to);
     },
     [to, navigate, props]
   );
@@ -315,7 +318,7 @@ export function PredictiveLink({
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry?.isIntersecting) {
+        if (entry?.isIntersecting === true) {
           triggerPrefetch();
           observer.disconnect();
         }

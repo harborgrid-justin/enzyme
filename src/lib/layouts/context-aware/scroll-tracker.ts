@@ -410,8 +410,8 @@ export class ScrollTracker {
     if (elapsed >= this.options.throttleMs) {
       this.lastThrottleTime = now;
       this.updateState();
-    } else if (this.throttleTimer === null) {
-      this.throttleTimer = window.setTimeout(() => {
+    } else {
+      this.throttleTimer ??= window.setTimeout(() => {
         this.throttleTimer = null;
         this.lastThrottleTime = Date.now();
         this.updateState();
@@ -563,7 +563,13 @@ export class ScrollTracker {
 
     // Prioritize vertical scrolling detection
     if (Math.abs(deltaY) > Math.abs(deltaX)) {
-      this.lastDirection = deltaY > 0 ? 'down' : deltaY < 0 ? 'up' : 'none';
+      if (deltaY > 0) {
+        this.lastDirection = 'down';
+      } else if (deltaY < 0) {
+        this.lastDirection = 'up';
+      } else {
+        this.lastDirection = 'none';
+      }
     } else if (deltaX !== 0) {
       this.lastDirection = deltaX > 0 ? 'right' : 'left';
     }
@@ -639,7 +645,7 @@ export class ScrollTracker {
     this.stickyStates.set(element, newState);
 
     // Only notify if state changed
-    if (!prevState || prevState.isStuck !== newState.isStuck) {
+    if ((prevState === undefined) || (prevState.isStuck !== newState.isStuck)) {
       callback(newState);
     }
   }
@@ -652,8 +658,8 @@ export class ScrollTracker {
     const rect = element.getBoundingClientRect();
     const containerRect = this.element.getBoundingClientRect();
 
-    const stickyTop = parseFloat(style.top) || 0;
-    const stickyBottom = parseFloat(style.bottom) || 0;
+    const stickyTop = parseFloat(style.top) ?? 0;
+    const stickyBottom = parseFloat(style.bottom) ?? 0;
 
     // Determine if stuck
     let isStuck = false;
@@ -673,11 +679,11 @@ export class ScrollTracker {
     }
 
     // Get sibling stickies
-    const siblingStickies: StickyState['siblingStickies'] = [];
+    const siblingStickies: Array<{ id: string; isStuck: boolean; offset: number }> = [];
     this.stickyStates.forEach((state, el) => {
       if (el !== element) {
-        (siblingStickies as any).push({
-          id: el.id || 'unknown',
+        siblingStickies.push({
+          id: el.id ?? 'unknown',
           isStuck: state.isStuck,
           offset: state.offset,
         });
@@ -719,9 +725,7 @@ export class ScrollContainerRegistry {
    * Gets the singleton instance.
    */
   public static getInstance(): ScrollContainerRegistry {
-    if (!ScrollContainerRegistry.instance) {
-      ScrollContainerRegistry.instance = new ScrollContainerRegistry();
-    }
+    ScrollContainerRegistry.instance ??= new ScrollContainerRegistry();
     return ScrollContainerRegistry.instance;
   }
 

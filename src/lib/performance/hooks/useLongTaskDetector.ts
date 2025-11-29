@@ -275,15 +275,15 @@ export function useLongTaskDetector(
 
   // Get attribution for last task
   const getLastTaskAttribution = useCallback((): string | null => {
-    if (!lastTask || lastTask.attribution.length === 0) {
+    if ((lastTask === null) || (lastTask.attribution.length === 0)) {
       return null;
     }
 
     const [attr] = lastTask.attribution;
-    if (attr?.containerSrc) {
+    if ((attr?.containerSrc !== undefined) && (attr.containerSrc !== null) && (attr.containerSrc !== '')) {
       return attr.containerSrc;
     }
-    if (attr?.containerName) {
+    if ((attr?.containerName !== undefined) && (attr.containerName !== null) && (attr.containerName !== '')) {
       return attr.containerName;
     }
     return attr?.name ?? null;
@@ -319,7 +319,9 @@ export function useDeferredRender<T>(
 
   useEffect(() => {
     if (!shouldDefer()) {
-      setDeferredValue(value);
+      setTimeout(() => {
+        setDeferredValue(value);
+      }, 0);
       return;
     } else {
       // Use requestIdleCallback to update when idle
@@ -410,7 +412,8 @@ export function useYieldToMain(): {
   const yieldToMain = useCallback(async (): Promise<void> => {
     return new Promise((resolve) => {
       if (hasSchedulerYield(globalThis)) {
-        (globalThis as any).scheduler.yield().then(resolve);
+        const global = globalThis as unknown as SchedulerWithYield;
+        void global.scheduler.yield().then(resolve);
       } else {
         setTimeout(resolve, 0);
       }
@@ -435,11 +438,11 @@ export function useYieldToMain(): {
 // ============================================================================
 
 const requestIdleCallback =
-  typeof window !== 'undefined' && window.requestIdleCallback
+  (typeof window !== 'undefined') && (window.requestIdleCallback !== undefined)
     ? window.requestIdleCallback
     : (callback: () => void) => setTimeout(callback, 1);
 
 const cancelIdleCallback =
-  typeof window !== 'undefined' && window.cancelIdleCallback
+  (typeof window !== 'undefined') && (window.cancelIdleCallback !== undefined)
     ? window.cancelIdleCallback
     : (id: number) => clearTimeout(id);

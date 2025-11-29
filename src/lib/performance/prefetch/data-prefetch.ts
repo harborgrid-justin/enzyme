@@ -170,7 +170,7 @@ export class DataPrefetchManager {
       };
     }
 
-    const cacheKey = options.cacheKey || this.generateCacheKey(url, options);
+    const cacheKey = options.cacheKey ?? this.generateCacheKey(url, options);
     const now = Date.now();
 
     // Check cache first (unless force)
@@ -196,7 +196,7 @@ export class DataPrefetchManager {
           !cached.isRevalidating
         ) {
           this.log(`Cache hit (stale): ${cacheKey}`);
-          this.revalidate(url, cacheKey, options);
+          void this.revalidate(url, cacheKey, options);
           return {
             data: cached.data as T,
             error: null,
@@ -248,7 +248,7 @@ export class DataPrefetchManager {
 
     const promises = requests.map(async ({ url, options }) => {
       const result = await this.prefetch<T>(url, options);
-      results.set(options?.cacheKey || url, result);
+      results.set(options?.cacheKey ?? url, result);
     });
 
     await Promise.allSettled(promises);
@@ -343,7 +343,7 @@ export class DataPrefetchManager {
    * Subscribe to cache updates
    */
   subscribe(cacheKey: string, callback: (data: unknown) => void): () => void {
-    const subs = this.listeners.get(cacheKey) || new Set();
+    const subs = this.listeners.get(cacheKey) ?? new Set();
     subs.add(callback);
     this.listeners.set(cacheKey, subs);
 
@@ -409,7 +409,7 @@ export class DataPrefetchManager {
     try {
       const data = await fetchPromise;
       const now = Date.now();
-      const ttl = options.ttl || this.config.defaultTTL;
+      const ttl = options.ttl ?? this.config.defaultTTL;
 
       // Cache the result
       this.setCache(cacheKey, data, ttl, options.tags);
@@ -462,7 +462,7 @@ export class DataPrefetchManager {
     for (let attempt = 0; attempt <= retry.attempts; attempt++) {
       try {
         const response = await fetch(url, {
-          method: options.method || 'GET',
+          method: options.method ?? 'GET',
           headers: {
             ...this.config.defaultHeaders,
             ...options.headers,
@@ -475,7 +475,7 @@ export class DataPrefetchManager {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
-        return await response.json();
+        return (await response.json()) as T;
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
 
@@ -491,7 +491,7 @@ export class DataPrefetchManager {
       }
     }
 
-    throw lastError;
+    throw lastError ?? new Error('Unknown error occurred');
   }
 
   private async revalidate(
@@ -500,7 +500,7 @@ export class DataPrefetchManager {
     options: PrefetchRequestOptions
   ): Promise<void> {
     const entry = this.cache.get(cacheKey);
-    if (!entry || entry.isRevalidating) {
+    if (!entry ?? entry.isRevalidating) {
       return;
     }
 
@@ -509,7 +509,7 @@ export class DataPrefetchManager {
 
     try {
       const data = await this.fetchWithRetry(url, options);
-      const ttl = options.ttl || this.config.defaultTTL;
+      const ttl = options.ttl ?? this.config.defaultTTL;
       this.setCache(cacheKey, data, ttl, options.tags);
 
       // Notify subscribers
@@ -542,7 +542,7 @@ export class DataPrefetchManager {
       fetchedAt: now,
       expiresAt: now + ttl,
       staleAt: now + ttl + this.config.staleTime,
-      tags: tags || [],
+      tags: tags ?? [],
       isRevalidating: false,
     });
   }
@@ -572,7 +572,7 @@ export class DataPrefetchManager {
   }
 
   private generateCacheKey(url: string, options: PrefetchRequestOptions): string {
-    const parts = [url, options.method || 'GET'];
+    const parts = [url, options.method ?? 'GET'];
 
     if (options.body) {
       parts.push(JSON.stringify(options.body));
@@ -587,8 +587,8 @@ export class DataPrefetchManager {
   ): string {
     const parts = [
       endpoint,
-      options.operationName || 'anonymous',
-      JSON.stringify(options.variables || {}),
+      options.operationName ?? 'anonymous',
+      JSON.stringify(options.variables ?? {}),
     ];
     return `graphql:${parts.join(':')}`;
   }
@@ -607,7 +607,7 @@ export class DataPrefetchManager {
 
   private log(message: string, ...args: unknown[]): void {
     if (this.config.debug) {
-      console.log(`[DataPrefetch] ${message}`, ...args);
+      console.info(`[DataPrefetch] ${message}`, ...args);
     }
   }
 }

@@ -119,10 +119,10 @@ export async function concurrent<T, R>(
     const e: Promise<void> = promise.then(() => {
       const index = executing.indexOf(e);
       if (index !== -1) {
-        executing.splice(index, 1);
+        void executing.splice(index, 1);
       }
     });
-    executing.push(e);
+    void executing.push(e);
 
     if (executing.length >= concurrency) {
       await Promise.race(executing);
@@ -174,16 +174,18 @@ export function debounceAsync<T extends (...args: unknown[]) => Promise<unknown>
     }
 
     return new Promise((resolve, reject) => {
-      timeoutId = setTimeout(async () => {
-        try {
-          pendingPromise = fn(...args);
-          const result = await pendingPromise;
-          resolve(result);
-        } catch (error) {
-          reject(error);
-        } finally {
-          pendingPromise = null;
-        }
+      timeoutId = setTimeout(() => {
+        void (async () => {
+          try {
+            pendingPromise = fn(...args);
+            const result = await pendingPromise;
+            resolve(result);
+          } catch (error) {
+            reject(error instanceof Error ? error : new Error(String(error)));
+          } finally {
+            pendingPromise = null;
+          }
+        })();
       }, delayMs);
     });
   }) as T;
@@ -214,17 +216,19 @@ export function throttleAsync<T extends (...args: unknown[]) => Promise<unknown>
     }
 
     return new Promise((resolve, reject) => {
-      setTimeout(async () => {
-        lastExecution = Date.now();
-        try {
-          pendingPromise = fn(...args);
-          const result = await pendingPromise;
-          resolve(result);
-        } catch (error) {
-          reject(error);
-        } finally {
-          pendingPromise = null;
-        }
+      setTimeout(() => {
+        void (async () => {
+          lastExecution = Date.now();
+          try {
+            pendingPromise = fn(...args);
+            const result = await pendingPromise;
+            resolve(result);
+          } catch (error) {
+            reject(error instanceof Error ? error : new Error(String(error)));
+          } finally {
+            pendingPromise = null;
+          }
+        })();
       }, intervalMs - timeSinceLast);
     });
   }) as T;
@@ -265,7 +269,7 @@ export function makeCancelable<T>(promise: Promise<T>): CancelablePromise<T> {
       })
       .catch((error) => {
         if (!isCanceled) {
-          reject(error);
+          reject(error instanceof Error ? error : new Error(String(error)));
         }
       });
   });
@@ -295,7 +299,11 @@ export async function sequence<T>(
 /**
  * Create a semaphore for limiting concurrent operations
  */
-export function createSemaphore(limit: number) {
+export function createSemaphore(limit: number): {
+  acquire: () => Promise<void>;
+  release: () => void;
+  getCount: () => number;
+} {
   let currentCount = 0;
   const waiting: Array<() => void> = [];
 

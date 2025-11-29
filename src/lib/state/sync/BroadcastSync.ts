@@ -415,7 +415,7 @@ export function createBroadcastSync<TState extends object>(
     : broadcastStateThrottled;
 
   // Apply remote state update
-  const applyRemoteState = (remoteState: Partial<TState>, sourceTabId: string) => {
+  const applyRemoteState = (remoteState: Partial<TState>, sourceTabId: string): void => {
     if (Object.keys(remoteState).length === 0) return;
 
     const currentState = store.getState();
@@ -758,24 +758,18 @@ export function useBroadcastSync<TState extends object>(
   store: UseBoundStore<StoreApi<TState>>,
   config: BroadcastSyncConfig<TState>
 ): BroadcastSyncInstance<TState> {
-  const syncRef = useRef<BroadcastSyncInstance<TState> | null>(null);
-
-  if (syncRef.current === null) {
-    syncRef.current = createBroadcastSync(store, config);
-  }
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const [sync] = useState(() => createBroadcastSync(store, config));
 
   useEffect(() => {
-    const sync = syncRef.current;
-    if (sync === null) return;
-
     sync.start();
 
     return () => {
       sync.stop();
     };
-  }, []);
+  }, [sync]);
 
-  return syncRef.current;
+  return sync;
 }
 
 // ============================================================================

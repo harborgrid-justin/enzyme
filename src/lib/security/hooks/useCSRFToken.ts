@@ -9,7 +9,8 @@
  * @version 1.0.0
  */
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import type React from 'react';
 import type { UseCSRFTokenResult } from '../types';
 import { CSRFProtection } from '../csrf-protection';
 
@@ -100,7 +101,7 @@ export function useCSRFToken(
 
   // Set up auto-refresh interval
   useEffect(() => {
-    if (!isInitialized || !refreshInterval || refreshInterval <= 0) {
+    if (!isInitialized || refreshInterval === undefined || refreshInterval === null || refreshInterval <= 0) {
       return;
     }
 

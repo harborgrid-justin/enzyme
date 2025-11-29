@@ -38,10 +38,12 @@ import { env } from './env';
 import { ConfigContext, type ConfigContextValue } from './config-context';
 
 // Re-export from separate modules for convenience
+/* eslint-disable react-refresh/only-export-components */
 export { ConfigReady, FeatureFlag, ABTest } from './config-components';
 export { withConfig } from './with-config';
 export { useConfigContext } from './use-config-context';
 export type { ConfigContextValue } from './config-context';
+/* eslint-enable react-refresh/only-export-components */
 
 // =============================================================================
 // Provider Props

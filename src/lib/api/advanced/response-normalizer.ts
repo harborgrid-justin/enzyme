@@ -443,23 +443,23 @@ export class ResponseNormalizer {
     const totalItemsCount = this.getNestedValue(paginationSource, mapping.totalItems ?? 'totalItems') as number | undefined;
     const totalPages =
       (this.getNestedValue(paginationSource, mapping.totalPages ?? 'totalPages') as number) ??
-      (totalItemsCount && pageSize ? Math.ceil(totalItemsCount / pageSize) : 1);
+      (totalItemsCount !== undefined && totalItemsCount > 0 && pageSize > 0 ? Math.ceil(totalItemsCount / pageSize) : 1);
 
     let hasNextPage: boolean;
     let hasPrevPage: boolean;
 
-    if (mapping.hasNext) {
+    if (mapping.hasNext !== undefined && mapping.hasNext !== null && mapping.hasNext !== '') {
       const hasNextValue = this.getNestedValue(paginationSource, mapping.hasNext);
       // Handle Spring's 'last' field (inverted)
-      hasNextPage = mapping.hasNext === 'last' ? !hasNextValue : !!hasNextValue;
+      hasNextPage = mapping.hasNext === 'last' ? (hasNextValue !== true) : (hasNextValue === true);
     } else {
       hasNextPage = ((currentPage as number) ?? 1) < totalPages;
     }
 
-    if (mapping.hasPrev) {
+    if (mapping.hasPrev !== undefined && mapping.hasPrev !== null && mapping.hasPrev !== '') {
       const hasPrevValue = this.getNestedValue(paginationSource, mapping.hasPrev);
       // Handle Spring's 'first' field (inverted)
-      hasPrevPage = mapping.hasPrev === 'first' ? !hasPrevValue : !!hasPrevValue;
+      hasPrevPage = mapping.hasPrev === 'first' ? (hasPrevValue !== true) : (hasPrevValue === true);
     } else {
       hasPrevPage = ((currentPage as number) ?? 1) > 1;
     }
@@ -487,13 +487,13 @@ export class ResponseNormalizer {
    * Extract meta information from response.
    */
   private extractMeta(response: unknown): Record<string, unknown> | undefined {
-    if (!this.config.metaPath) return undefined;
+    if (this.config.metaPath === undefined || this.config.metaPath === null || this.config.metaPath === '') return undefined;
 
     const meta = this.getNestedValue(response, this.config.metaPath);
 
-    if (meta && this.isObject(meta)) {
+    if (meta !== undefined && meta !== null && this.isObject(meta)) {
       // Filter out pagination fields that are handled separately
-      const { page, number, size, totalElements, totalPages, ...rest } = meta;
+      const { page: _page, number: _number, size: _size, totalElements: _totalElements, totalPages: _totalPages, ...rest } = meta;
       return Object.keys(rest).length > 0 ? rest : undefined;
     }
 
@@ -504,11 +504,11 @@ export class ResponseNormalizer {
    * Extract links from response.
    */
   private extractLinks(response: unknown): NormalizedLinks | undefined {
-    if (!this.config.linksPath) return undefined;
+    if (this.config.linksPath === undefined || this.config.linksPath === null || this.config.linksPath === '') return undefined;
 
     const links = this.getNestedValue(response, this.config.linksPath);
 
-    if (!links || !this.isObject(links)) return undefined;
+    if (links === undefined || links === null || !this.isObject(links)) return undefined;
 
     // Normalize HAL links
     const normalizedLinks: NormalizedLinks = {};
@@ -530,11 +530,11 @@ export class ResponseNormalizer {
   private extractIncluded(
     response: unknown
   ): Record<string, unknown[]> | undefined {
-    if (!this.config.includedPath) return undefined;
+    if (this.config.includedPath === undefined || this.config.includedPath === null || this.config.includedPath === '') return undefined;
 
     const included = this.getNestedValue(response, this.config.includedPath);
 
-    if (!included) return undefined;
+    if (included === undefined || included === null) return undefined;
 
     // Handle JSON:API included format (array of resources)
     if (Array.isArray(included)) {
@@ -543,7 +543,7 @@ export class ResponseNormalizer {
       for (const item of included) {
         if (this.isObject(item) && 'type' in item) {
           const {type} = (item as { type: string });
-          if (!grouped[type]) grouped[type] = [];
+          grouped[type] ??= [];
           grouped[type].push(item);
         }
       }

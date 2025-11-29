@@ -165,7 +165,7 @@ export function useFlexAncestor(): LayoutAncestor | undefined {
 export function useGridAncestor(): LayoutAncestor | undefined {
   const { findAncestor } = useLayoutAncestry();
   return useMemo(
-    () => findAncestor('grid') || findAncestor('inline-grid'),
+    () => findAncestor('grid') ?? findAncestor('inline-grid'),
     [findAncestor]
   );
 }
@@ -346,7 +346,7 @@ export function useParentAspectRatio(): number | null {
   const { constraints, ancestors } = useLayoutAncestry();
 
   return useMemo(() => {
-    if (constraints?.aspectRatio) {
+    if (constraints?.aspectRatio != null) {
       return constraints.aspectRatio;
     }
     if (ancestors.length > 0) {
@@ -354,7 +354,7 @@ export function useParentAspectRatio(): number | null {
       if (height > 0) {
         return width / height;
       }
-  }
-  return null;
-}, [constraints, ancestors]);
+    }
+    return null;
+  }, [constraints, ancestors]);
 }

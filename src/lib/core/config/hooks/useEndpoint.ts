@@ -303,7 +303,7 @@ export function useDegradedEndpoints(): readonly string[] {
 /**
  * Hook to get endpoint registry statistics.
  */
-export function useEndpointStats() {
+export function useEndpointStats(): ReturnType<typeof getEndpointRegistry>['getStats'] extends () => infer R ? R : never {
   const [stats, setStats] = useState(() => getEndpointRegistry().getStats());
 
   useEffect(() => {
@@ -401,7 +401,14 @@ export function useRegisterEndpoint(
 /**
  * Hook to get endpoint management functions.
  */
-export function useEndpointRegistry() {
+export function useEndpointRegistry(): {
+  registry: ReturnType<typeof getEndpointRegistry>;
+  register: (definition: EndpointDefinition) => void;
+  update: (name: string, updates: Partial<EndpointDefinition>) => void;
+  remove: (name: string) => void;
+  markHealthy: (name: string, responseTime?: number) => void;
+  markUnhealthy: (name: string, reason: string) => void;
+} {
   const registry = useMemo(() => getEndpointRegistry(), []);
 
   const register = useCallback(
@@ -427,7 +434,7 @@ export function useEndpointRegistry() {
 
   const markHealthy = useCallback(
     (name: string, responseTime?: number) => {
-      registry.markHealthy(name, responseTime ? ms(responseTime) : undefined);
+      registry.markHealthy(name, responseTime != null ? ms(responseTime) : undefined);
     },
     [registry]
   );

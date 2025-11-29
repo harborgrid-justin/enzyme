@@ -404,6 +404,7 @@ export function createCircuitBreakerInterceptor(
         halfOpenSuccesses: 0,
       });
     }
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     return circuitStates.get(key)!;
   }
 
@@ -618,9 +619,15 @@ export function createTracingInterceptors(config: TracingConfig = {}): {
         ...config,
         headers: {
           ...config.headers,
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           [headers.traceId!]: context.traceId,
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           [headers.spanId!]: context.spanId,
-          ...(context.parentSpanId && { [headers.parentSpanId!]: context.parentSpanId }),
+          ...(context.parentSpanId !== null && context.parentSpanId !== undefined && context.parentSpanId !== '' ? {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            [headers.parentSpanId!]: context.parentSpanId
+          } : {}),
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           [headers.sampled!]: '1',
         },
       };
@@ -632,7 +639,7 @@ export function createTracingInterceptors(config: TracingConfig = {}): {
     priority: InterceptorPriority.LOWEST,
     intercept: (response, context) => {
       const sampled = context.metadata.get('tracing:sampled');
-      if (!sampled) return response;
+      if (sampled !== true) return response;
 
       const span = activeSpans.get(context.spanId);
       if (span) {
@@ -654,7 +661,7 @@ export function createTracingInterceptors(config: TracingConfig = {}): {
     priority: InterceptorPriority.LOWEST,
     intercept: (error, context) => {
       const sampled = context.metadata.get('tracing:sampled');
-      if (!sampled) return error;
+      if (sampled !== true) return error;
 
       const span = activeSpans.get(context.spanId);
       if (span) {
@@ -854,7 +861,7 @@ export function createRetryInterceptor(
       let delay = calculateDelay(attempt);
       if (error.status === 429) {
         const retryAfter = error.config.headers?.['Retry-After'];
-        if (retryAfter) {
+        if (retryAfter !== null && retryAfter !== undefined && retryAfter !== '') {
           const parsed = parseInt(retryAfter, 10);
           if (!isNaN(parsed)) {
             delay = parsed * 1000;

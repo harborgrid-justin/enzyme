@@ -194,7 +194,7 @@ export function createApiFlagIntegration(): LibraryIntegration<ApiFlagConfig> {
       [API_FLAG_KEYS.API_OFFLINE_ENABLED]: 'offlineEnabled',
     },
     onConfigChange: (config, changedFlags) => {
-      console.debug('[API Flags] Config changed:', changedFlags, config);
+      console.info('[API Flags] Config changed:', changedFlags, config);
     },
   });
 }
@@ -422,7 +422,7 @@ export function useFlaggedApiRequest<T>(
 
   const makeRequest = useCallback(async (): Promise<T> => {
     if (shouldLog) {
-      console.log(`[API] Request to ${endpoint}`, { shouldRetry, shouldCache, shouldMock });
+      console.info(`[API] Request to ${endpoint}`, { shouldRetry, shouldCache, shouldMock });
     }
 
     // Use the centralized apiClient for consistent error handling, retry logic, and auth
@@ -518,12 +518,21 @@ export function createFlaggedFetch(
       )
     );
 
-    const url = typeof input === 'string' ? input : input.toString();
+    let url: string;
+    if (typeof input === 'string') {
+      url = input;
+    } else if (input instanceof URL) {
+      url = input.toString();
+    } else if (input instanceof Request) {
+      url = input.url;
+    } else {
+      url = String(input);
+    }
 
     // Check for mock mode
     if (config.mockEnabled) {
       const mockData = getFlaggedEndpointMockData(url, true);
-      if (mockData) {
+      if (mockData !== undefined) {
         return new Response(JSON.stringify(mockData), {
           status: 200,
           headers: { 'Content-Type': 'application/json' },
@@ -536,7 +545,7 @@ export function createFlaggedFetch(
 
     // Log if enabled
     if (config.loggingEnabled) {
-      console.log(`[FlaggedFetch] ${flaggedUrl}`, { config });
+      console.info(`[FlaggedFetch] ${flaggedUrl}`, { config });
     }
 
     // Make request with retry if enabled
@@ -557,7 +566,7 @@ export function createFlaggedFetch(
       }
     }
 
-    throw lastError;
+    throw lastError ?? new Error('Fetch failed with no error details');
   };
 }
 

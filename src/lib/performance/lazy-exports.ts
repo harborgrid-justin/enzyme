@@ -56,7 +56,7 @@ export const LazyPerformanceObservatory = lazy(async () =>
 export const LazyPerformanceMonitor = lazy(async () =>
   import('./performance-monitor').then((module) => {
     // Create a functional component wrapper
-    const PerformanceMonitorComponent: React.FC<any> = (_props) => {
+    const PerformanceMonitorComponent: React.FC<Record<string, unknown>> = (_props) => {
       React.useEffect(() => {
         const monitor = module.getPerformanceMonitor();
         monitor.start();
@@ -129,13 +129,13 @@ export async function importRenderTrackerInDev(): Promise<
 export function preloadPerformanceComponents(): void {
   if (typeof requestIdleCallback !== 'undefined') {
     requestIdleCallback(() => {
-      import('./PerformanceObservatory');
-      import('./render-tracker');
+      void import('./PerformanceObservatory');
+      void import('./render-tracker');
     });
   } else {
     setTimeout(() => {
-      import('./PerformanceObservatory');
-      import('./render-tracker');
+      void import('./PerformanceObservatory');
+      void import('./render-tracker');
     }, 100);
   }
 }

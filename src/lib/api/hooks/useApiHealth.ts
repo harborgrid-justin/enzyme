@@ -180,14 +180,14 @@ export function useApiHealth(config?: UseApiHealthConfig): UseApiHealthResult {
   const consecutiveFailuresRef = useRef(0);
 
   // Calculate average latency
-  // Using ref for latencyHistory is intentional to avoid re-renders on every update
-  // Calculate directly to avoid React Compiler issues with ref access in useMemo
-  const calculateAverageLatency = (): number | null => {
+  // Using state instead of ref access during render to avoid React rules violation
+  const [averageLatency, setAverageLatency] = useState<number | null>(null);
+
+  const calculateAverageLatency = useCallback((): number | null => {
     if (latencyHistory.current.length === 0) return null;
     const sum = latencyHistory.current.reduce((a, b) => a + b, 0);
     return Math.round(sum / latencyHistory.current.length);
-  };
-  const averageLatency = calculateAverageLatency();
+  }, []);
 
   // Health check function
   const performHealthCheck = useCallback(async (): Promise<HealthCheckResult> => {
@@ -219,6 +219,9 @@ export function useApiHealth(config?: UseApiHealthConfig): UseApiHealthResult {
       if (latencyHistory.current.length > 10) {
         latencyHistory.current.shift();
       }
+
+      // Update average latency
+      setAverageLatency(calculateAverageLatency());
 
       const result: HealthCheckResult = {
         status: 'healthy',
@@ -308,7 +311,7 @@ export function useApiHealth(config?: UseApiHealthConfig): UseApiHealthResult {
     }
   // Dependencies reduced: consecutiveSuccesses/Failures now use refs for immediate reads
   // status is still needed for degraded fallback logic
-  }, [client, mergedConfig, config, status]);
+  }, [client, mergedConfig, config, status, calculateAverageLatency]);
 
   // Use useLatestRef to avoid interval thrashing when performHealthCheck changes
   const performHealthCheckRef = useLatestRef(performHealthCheck);
@@ -353,18 +356,18 @@ export function useApiHealth(config?: UseApiHealthConfig): UseApiHealthResult {
   // Manual check - uses ref to get latest performHealthCheck without causing recreation
   const checkNow = useCallback(async (): Promise<HealthCheckResult> => {
     return performHealthCheckRef.current();
-  }, []); // Empty deps - ref always has latest function
+  }, [performHealthCheckRef]); // Empty deps - ref always has latest function
 
   // Set up interval
   // Uses ref for performHealthCheck to avoid interval thrashing when the callback changes
   useEffect(() => {
     if (isMonitoring) {
       // Initial check
-      performHealthCheckRef.current();
+      void performHealthCheckRef.current();
 
       // Set up interval - use wrapper function to call ref
       intervalRef.current = setInterval(() => {
-        performHealthCheckRef.current();
+        void performHealthCheckRef.current();
       }, mergedConfig.interval);
 
       return () => {
@@ -375,7 +378,7 @@ export function useApiHealth(config?: UseApiHealthConfig): UseApiHealthResult {
       };
     }
     return undefined;
-  }, [isMonitoring, mergedConfig.interval]); // Removed performHealthCheck - using ref instead
+  }, [isMonitoring, mergedConfig.interval, performHealthCheckRef]); // Removed performHealthCheck - using ref instead
 
   // Cleanup on unmount
   useEffect(() => {
@@ -480,8 +483,8 @@ export function useNetworkAware(): {
 
   // Listen for browser online/offline events
   useEffect(() => {
-    const handleOnline = () => setIsBrowserOnline(true);
-    const handleOffline = () => setIsBrowserOnline(false);
+    const handleOnline = (): void => setIsBrowserOnline(true);
+    const handleOffline = (): void => setIsBrowserOnline(false);
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
@@ -562,7 +565,7 @@ export function useMultiApiHealth(
     const intervals: Array<ReturnType<typeof setInterval>> = [];
 
     for (const { name, endpoint, interval = TIMING.BACKGROUND.POLL.STANDARD } of endpoints) {
-      const check = async () => {
+      const check = async (): Promise<void> => {
         const startTime = Date.now();
 
         try {
@@ -588,10 +591,10 @@ export function useMultiApiHealth(
       };
 
       // Initial check
-      check();
+      void check();
 
-      // Set up interval
-      intervals.push(setInterval(check, interval));
+      // Set up interval - wrap to avoid no-misused-promises
+      intervals.push(setInterval(() => { void check(); }, interval));
     }
 
     return () => {
@@ -600,7 +603,7 @@ export function useMultiApiHealth(
   }, [client, endpoints]);
 
   return endpoints.map(({ name, endpoint }) => {
-    const result = results.get(name) || { status: 'unknown' as HealthStatus, latency: null };
+    const result = results.get(name) ?? { status: 'unknown' as HealthStatus, latency: null };
     return {
       name,
       endpoint,

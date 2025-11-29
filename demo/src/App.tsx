@@ -1,15 +1,20 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/promise-function-async */
+import React from 'react';
 import { RouterProvider } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Import Enzyme modules using the main package
-import { 
-  routing, 
-  theme, 
-  monitoring, 
-  performance as performanceMod, 
-  flags, 
-  config, 
-  auth 
+import {
+  routing,
+  theme,
+  monitoring,
+  performance as performanceMod,
+  flags,
+  config,
+  auth
 } from '@missionfabric-js/enzyme';
 
 // Create router configuration
@@ -55,7 +60,7 @@ const demoConfig = {
   },
 };
 
-export default function App() {
+export default function App(): React.ReactElement {
   return (
     <config.ConfigProvider config={demoConfig}>
       <theme.ThemeProvider>

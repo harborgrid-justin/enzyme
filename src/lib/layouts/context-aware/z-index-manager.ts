@@ -175,9 +175,9 @@ export class ZIndexManager {
 
     // Check if already registered
     const existingId = this.elementToId.get(element);
-    if (existingId) {
+    if (existingId !== undefined) {
       const existing = this.registrations.get(existingId);
-      if (existing) {
+      if (existing !== undefined) {
         // Update if layer changed
         if (existing.layer !== layer) {
           this.unregister(existingId);
@@ -195,14 +195,14 @@ export class ZIndexManager {
     let offset = 0;
 
     if (autoIncrement) {
-      const currentOffset = this.layerOffsets.get(layer) || 0;
+      const currentOffset = this.layerOffsets.get(layer) ?? 0;
       offset = currentOffset + LAYER_GAP;
       this.layerOffsets.set(layer, offset);
 
       // Check if rebalancing needed
       if (offset >= MAX_LAYER_OFFSET) {
         this.rebalanceLayer(layer);
-        offset = this.layerOffsets.get(layer) || 0;
+        offset = this.layerOffsets.get(layer) ?? 0;
       }
     }
 
@@ -223,7 +223,7 @@ export class ZIndexManager {
     this.elementToId.set(element, id);
 
     // Add to layer registrations
-    const layerRegs = this.layerRegistrations.get(layer) || [];
+    const layerRegs = this.layerRegistrations.get(layer) ?? [];
     layerRegs.push(id);
     this.layerRegistrations.set(layer, layerRegs);
 
@@ -233,7 +233,8 @@ export class ZIndexManager {
     // Notify callbacks
     this.notifyChange(registration);
 
-    if (this.config.debug) {
+    if (this.config.debug === true) {
+      // eslint-disable-next-line no-console -- debug logging
       console.debug('[ZIndexManager] Registered:', id, registration);
     }
 
@@ -254,12 +255,12 @@ export class ZIndexManager {
       id = this.elementToId.get(idOrElement);
     }
 
-    if (!id) {
+    if ((id === undefined) || (id === '')) {
       return;
     }
 
     const registration = this.registrations.get(id);
-    if (!registration) {
+    if (registration === undefined) {
       return;
     }
 
@@ -269,14 +270,15 @@ export class ZIndexManager {
 
     // Remove from layer registrations
     const layerRegs = this.layerRegistrations.get(registration.layer);
-    if (layerRegs) {
+    if (layerRegs !== undefined) {
       const index = layerRegs.indexOf(id);
       if (index !== -1) {
         layerRegs.splice(index, 1);
       }
     }
 
-    if (this.config.debug) {
+    if (this.config.debug === true) {
+      // eslint-disable-next-line no-console -- debug logging
       console.debug('[ZIndexManager] Unregistered:', id);
     }
   }
@@ -341,10 +343,10 @@ export class ZIndexManager {
    */
   public getRegistration(element: Element): ZIndexRegistration | null {
     const id = this.elementToId.get(element);
-    if (!id) {
+    if ((id === undefined) || (id === '')) {
       return null;
     }
-    return this.registrations.get(id) || null;
+    return this.registrations.get(id) ?? null;
   }
 
   /**
@@ -354,7 +356,7 @@ export class ZIndexManager {
    * @returns Array of registrations (sorted by z-index)
    */
   public getLayerRegistrations(layer: ZIndexLayer): ZIndexRegistration[] {
-    const ids = this.layerRegistrations.get(layer) || [];
+    const ids = this.layerRegistrations.get(layer) ?? [];
     return ids
       .map((id) => this.registrations.get(id))
       .filter((reg): reg is ZIndexRegistration => reg !== undefined);
@@ -380,7 +382,7 @@ export class ZIndexManager {
     const registration = this.getRegistration(element);
 
     if (registration) {
-      const layerRegs = this.layerRegistrations.get(registration.layer) || [];
+      const layerRegs = this.layerRegistrations.get(registration.layer) ?? [];
       const orderInLayer = layerRegs.indexOf(registration.id);
 
       return {
@@ -411,7 +413,7 @@ export class ZIndexManager {
    */
   public getNextZIndex(layer: ZIndexLayer): number {
     const baseZIndex = Z_INDEX_LAYERS[layer];
-    const currentOffset = this.layerOffsets.get(layer) || 0;
+    const currentOffset = this.layerOffsets.get(layer) ?? 0;
     return baseZIndex + currentOffset + LAYER_GAP;
   }
 
@@ -473,7 +475,7 @@ export class ZIndexManager {
     this.notifyChange(updated);
 
     // Update layer offset
-    const currentOffset = this.layerOffsets.get(registration.layer) || 0;
+    const currentOffset = this.layerOffsets.get(registration.layer) ?? 0;
     this.layerOffsets.set(
       registration.layer,
       Math.max(currentOffset, updated.zIndex - Z_INDEX_LAYERS[registration.layer])
@@ -525,7 +527,8 @@ export class ZIndexManager {
       this.layerOffsets.set(layer, 0);
     });
 
-    if (this.config.debug) {
+    if (this.config.debug === true) {
+      // eslint-disable-next-line no-console -- debug logging
       console.debug('[ZIndexManager] Cleared all registrations');
     }
   }
@@ -553,7 +556,7 @@ export class ZIndexManager {
     ids.sort((a, b) => {
       const regA = this.registrations.get(a);
       const regB = this.registrations.get(b);
-      if (!regA || !regB) return 0;
+      if ((regA === undefined) || (regB === undefined)) return 0;
       return regA.zIndex - regB.zIndex;
     });
   }
@@ -563,7 +566,7 @@ export class ZIndexManager {
    */
   private rebalanceLayer(layer: ZIndexLayer): void {
     const ids = this.layerRegistrations.get(layer);
-    if (!ids || ids.length === 0) {
+    if ((ids === undefined) || (ids.length === 0)) {
       this.layerOffsets.set(layer, 0);
       return;
     }
@@ -573,7 +576,7 @@ export class ZIndexManager {
 
     ids.forEach((id) => {
       const registration = this.registrations.get(id);
-      if (registration) {
+      if (registration !== undefined) {
         const updated: ZIndexRegistration = {
           ...registration,
           zIndex: baseZIndex + offset + registration.priority,
@@ -585,7 +588,8 @@ export class ZIndexManager {
 
     this.layerOffsets.set(layer, offset);
 
-    if (this.config.debug) {
+    if (this.config.debug === true) {
+      // eslint-disable-next-line no-console -- debug logging
       console.debug('[ZIndexManager] Rebalanced layer:', layer);
     }
   }

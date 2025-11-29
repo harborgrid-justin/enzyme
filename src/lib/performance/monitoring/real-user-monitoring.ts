@@ -478,7 +478,7 @@ export class RealUserMonitoring {
 
     this.recordEvent('custom', {
       name,
-      data: this.maskSensitiveData(data || {}),
+      data: this.maskSensitiveData(data ?? {}),
       timestamp: Date.now(),
     });
   }
@@ -494,7 +494,7 @@ export class RealUserMonitoring {
       stack: typeof error === 'object' ? error.stack : undefined,
       type,
       timestamp: Date.now(),
-      context: this.maskSensitiveData(context || {}),
+      context: this.maskSensitiveData(context ?? {}),
     };
 
     this.errors.push(errorEvent);
@@ -535,8 +535,8 @@ export class RealUserMonitoring {
     const events = [...this.eventBuffer];
     this.eventBuffer = [];
 
-    if (this.config.endpoint) {
-      this.sendToEndpoint(events);
+    if (this.config.endpoint !== null && this.config.endpoint !== undefined) {
+      void this.sendToEndpoint(events);
     }
   }
 
@@ -611,7 +611,7 @@ export class RealUserMonitoring {
   private getOrCreateVisitorId(): string {
     try {
       let visitorId = localStorage.getItem(VISITOR_ID_KEY);
-      if (!visitorId) {
+      if (visitorId === null || visitorId === undefined) {
         visitorId = this.generateVisitorId();
         localStorage.setItem(VISITOR_ID_KEY, visitorId);
       }
@@ -624,7 +624,10 @@ export class RealUserMonitoring {
   private loadSession(): UserSession | null {
     try {
       const data = sessionStorage.getItem(SESSION_KEY);
-      return data ? JSON.parse(data) : null;
+      if (data === null || data === undefined) {
+        return null;
+      }
+      return JSON.parse(data) as UserSession;
     } catch {
       return null;
     }
@@ -812,7 +815,8 @@ export class RealUserMonitoring {
       });
     }
 
-    const tracker = this.formTrackers.get(formId)!;
+    const tracker = this.formTrackers.get(formId);
+    if (!tracker) return;
     const fieldName = (target as HTMLInputElement).name || (target as HTMLInputElement).id;
     if (fieldName) {
       tracker.fields.add(fieldName);
@@ -945,7 +949,7 @@ export class RealUserMonitoring {
    * @see {@link @/lib/api/api-client} for application API calls
    */
   private async sendToEndpoint(events: RUMEvent[]): Promise<void> {
-    if (!this.config.endpoint) return;
+    if (this.config.endpoint === null || this.config.endpoint === undefined) return;
 
     try {
       const payload = {
@@ -957,11 +961,11 @@ export class RealUserMonitoring {
         'Content-Type': 'application/json',
       };
 
-      if (this.config.apiKey) {
+      if (this.config.apiKey !== null && this.config.apiKey !== undefined) {
         headers['X-API-Key'] = this.config.apiKey;
       }
 
-      if (navigator.sendBeacon) {
+      if (navigator.sendBeacon !== null && navigator.sendBeacon !== undefined) {
         navigator.sendBeacon(this.config.endpoint, JSON.stringify(payload));
       } else {
         // Raw fetch is intentional - uses keepalive for page unload reliability
@@ -1031,11 +1035,16 @@ export class RealUserMonitoring {
     const params = new URLSearchParams(window.location.search);
     const utm: UTMParams = {};
 
-    if (params.has('utm_source')) utm.source = params.get('utm_source')!;
-    if (params.has('utm_medium')) utm.medium = params.get('utm_medium')!;
-    if (params.has('utm_campaign')) utm.campaign = params.get('utm_campaign')!;
-    if (params.has('utm_term')) utm.term = params.get('utm_term')!;
-    if (params.has('utm_content')) utm.content = params.get('utm_content')!;
+    const utmSource = params.get('utm_source');
+    if (utmSource !== null) utm.source = utmSource;
+    const utmMedium = params.get('utm_medium');
+    if (utmMedium !== null) utm.medium = utmMedium;
+    const utmCampaign = params.get('utm_campaign');
+    if (utmCampaign !== null) utm.campaign = utmCampaign;
+    const utmTerm = params.get('utm_term');
+    if (utmTerm !== null) utm.term = utmTerm;
+    const utmContent = params.get('utm_content');
+    if (utmContent !== null) utm.content = utmContent;
 
     return Object.keys(utm).length > 0 ? utm : undefined;
   }
@@ -1105,7 +1114,7 @@ export class RealUserMonitoring {
 
   private log(message: string, ...args: unknown[]): void {
     if (this.config.debug) {
-      console.log(`[RUM] ${message}`, ...args);
+      console.info(`[RUM] ${message}`, ...args);
     }
   }
 }
@@ -1120,9 +1129,7 @@ let rumInstance: RealUserMonitoring | null = null;
  * Get or create the global RUM instance
  */
 export function getRUM(config?: Partial<RUMConfig>): RealUserMonitoring {
-  if (!rumInstance) {
-    rumInstance = new RealUserMonitoring(config);
-  }
+  rumInstance ??= new RealUserMonitoring(config);
   return rumInstance;
 }
 

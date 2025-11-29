@@ -205,7 +205,7 @@ export function createCsrfInterceptor(config: CsrfInterceptorConfig = {}): Reque
       : getCsrfTokenFromCookie(cookieName);
 
     // Handle missing token
-    if (!token) {
+    if (token === undefined || token === null || token === '') {
       if (onMissingToken) {
         onMissingToken(requestConfig);
       }
@@ -323,6 +323,6 @@ export const railsCsrfInterceptor = createCsrfInterceptor({
       return null;
     }
     const meta = document.querySelector('meta[name="csrf-token"]');
-    return meta?.getAttribute('content') || null;
+    return meta?.getAttribute('content') ?? null;
   },
 });

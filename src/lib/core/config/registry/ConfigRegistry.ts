@@ -386,7 +386,7 @@ export class ConfigRegistry implements IConfigRegistry {
    * Reset configuration to defaults.
    */
   reset(path?: ConfigPath): void {
-    if (path) {
+    if (path != null) {
       const defaultValue = getAtPath(DEFAULT_LIBRARY_CONFIG, path);
       this.set(path, defaultValue, 'default');
     } else {
@@ -414,7 +414,10 @@ export class ConfigRegistry implements IConfigRegistry {
     if (!this.pathListeners.has(path)) {
       this.pathListeners.set(path, new Set());
     }
-    this.pathListeners.get(path)!.add(listener);
+    const listeners = this.pathListeners.get(path);
+    if (listeners != null) {
+      listeners.add(listener);
+    }
 
     return () => {
       const listeners = this.pathListeners.get(path);
@@ -434,7 +437,7 @@ export class ConfigRegistry implements IConfigRegistry {
     this.environment = env;
     const overrides = ENVIRONMENT_OVERRIDES[env];
 
-    if (overrides) {
+    if (overrides != null && typeof overrides === 'object') {
       this.config = deepMerge(this.config, overrides);
       this.traverseAndMarkSource(overrides, '', 'environment');
     }

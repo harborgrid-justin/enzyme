@@ -337,7 +337,7 @@ class CrashAnalyticsManager {
     };
 
     // Popstate
-    const popstateHandler = () => {
+    const popstateHandler = (): void => {
       this.addBreadcrumb({
         type: 'navigation',
         category: 'navigation',
@@ -363,19 +363,22 @@ class CrashAnalyticsManager {
 
     levels.forEach((level) => {
       originals[level] = console[level].bind(console);
+      // eslint-disable-next-line no-console -- intentionally capturing console
       console[level] = (...args: unknown[]): void => {
         this.addBreadcrumb({
           type: 'console',
           category: `console.${level}`,
           message: args.map((arg) => this.stringify(arg)).join(' ').substring(0, 500),
-          level: level === 'error' ? 'error' : level === 'warn' ? 'warning' : 'debug',
+          level: level === 'error' ? 'error' : (level === 'warn' ? 'warning' : 'debug'),
         });
+        // eslint-disable-next-line no-console -- intentionally calling original
         originals[level](...args);
       };
     });
 
     this.cleanupFns.push(() => {
       levels.forEach((level) => {
+        // eslint-disable-next-line no-console -- intentionally restoring console
         console[level] = originals[level];
       });
     });
@@ -391,7 +394,7 @@ class CrashAnalyticsManager {
       input: RequestInfo | URL,
       init?: RequestInit
     ): Promise<Response> => {
-      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+      const url = typeof input === 'string' ? input : (input instanceof URL ? input.href : input.url);
       const method = init?.method ?? 'GET';
       const startTime = performance.now();
 
@@ -445,10 +448,10 @@ class CrashAnalyticsManager {
    * Capture performance metrics
    */
   private capturePerformanceMetrics(): void {
-    if (typeof window === 'undefined' || !window.performance) return;
+    if ((typeof window === 'undefined') || (window.performance === undefined)) return;
 
     // Wait for page load
-    const captureMetrics = () => {
+    const captureMetrics = (): void => {
       setTimeout(() => {
         const navigation = performance.getEntriesByType(
           'navigation'
@@ -457,7 +460,7 @@ class CrashAnalyticsManager {
 
         const metrics: Partial<PerformanceMetrics> = {};
 
-        if (navigation) {
+        if (navigation !== undefined) {
           metrics.pageLoadTime = navigation.loadEventEnd - navigation.startTime;
           metrics.domContentLoaded = navigation.domContentLoadedEventEnd - navigation.startTime;
         }
@@ -522,7 +525,7 @@ class CrashAnalyticsManager {
     };
 
     // Mask sensitive input values
-    if (this.config.maskInputs && action.value) {
+    if ((this.config.maskInputs === true) && (action.value !== undefined) && (action.value !== null) && (action.value !== '')) {
       userAction.value = '***';
     }
 
@@ -574,14 +577,14 @@ class CrashAnalyticsManager {
   private getPerformanceMetrics(): PerformanceMetrics {
     const metrics: PerformanceMetrics = {};
 
-    if (typeof window === 'undefined' || !window.performance) {
+    if ((typeof window === 'undefined') || (window.performance === undefined)) {
       return metrics;
     }
 
     const navigation = performance.getEntriesByType(
       'navigation'
     )[0] as PerformanceNavigationTiming;
-    if (navigation) {
+    if (navigation !== undefined) {
       metrics.pageLoadTime = navigation.loadEventEnd - navigation.startTime;
       metrics.domContentLoaded = navigation.domContentLoadedEventEnd - navigation.startTime;
     }

@@ -291,7 +291,14 @@ export class PerformanceReporter {
     ];
 
     for (const metric of report.metrics) {
-      const indicator = metric.rating === 'good' ? '[OK]' : metric.rating === 'poor' ? '[!!]' : '[!]';
+      let indicator: string;
+      if (metric.rating === 'good') {
+        indicator = '[OK]';
+      } else if (metric.rating === 'poor') {
+        indicator = '[!!]';
+      } else {
+        indicator = '[!]';
+      }
       lines.push(`${indicator} ${metric.name}: ${this.formatValue(metric.name, metric.value)}`);
     }
 
@@ -365,13 +372,13 @@ export class PerformanceReporter {
     let weightedScore = 0;
 
     for (const metric of metrics) {
-      const weight = weights[metric.name] || 0.1;
+      const weight = weights[metric.name] ?? 0.1;
       const score = this.ratingToScore(metric.rating);
       weightedScore += score * weight;
       totalWeight += weight;
     }
 
-    return totalWeight > 0 ? Math.round(weightedScore / totalWeight) : 0;
+    return (totalWeight !== null && totalWeight !== undefined && totalWeight > 0) ? Math.round(weightedScore / totalWeight) : 0;
   }
 
   private createSummary(metrics: ReportMetric[]): ReportSummary {
@@ -502,7 +509,7 @@ export class PerformanceReporter {
   private async sendReport(report: PerformanceReport): Promise<void> {
     switch (this.config.destination) {
       case 'console':
-        console.log(this.generateConsoleReport(report));
+        console.info(this.generateConsoleReport(report));
         break;
 
       case 'endpoint':
@@ -530,7 +537,7 @@ export class PerformanceReporter {
    * @see {@link @/lib/api/api-client} for application API calls
    */
   private async sendToEndpoint(report: PerformanceReport): Promise<void> {
-    if (!this.config.endpointUrl) {
+    if (this.config.endpointUrl === null || this.config.endpointUrl === undefined) {
       this.log('No endpoint URL configured');
       return;
     }
@@ -538,7 +545,7 @@ export class PerformanceReporter {
     try {
       const body = this.formatReport(report);
 
-      if (navigator.sendBeacon) {
+      if (navigator.sendBeacon !== null && navigator.sendBeacon !== undefined) {
         navigator.sendBeacon(this.config.endpointUrl, JSON.stringify(body));
       } else {
         // Raw fetch is intentional - uses keepalive for page unload reliability
@@ -557,15 +564,20 @@ export class PerformanceReporter {
   }
 
   private saveToLocalStorage(report: PerformanceReport): void {
-    const key = this.config.storageKey || 'performance-reports';
+    const key = this.config.storageKey ?? 'performance-reports';
 
     try {
-      const existing = JSON.parse(localStorage.getItem(key) || '[]');
-      existing.push(report);
+      const storedValue = localStorage.getItem(key);
+      const existing: unknown = storedValue !== null && storedValue !== undefined ? JSON.parse(storedValue) : [];
 
-      // Keep only last 100 reports
-      const trimmed = existing.slice(-100);
-      localStorage.setItem(key, JSON.stringify(trimmed));
+      if (Array.isArray(existing)) {
+        existing.push(report);
+        // Keep only last 100 reports
+        const trimmed: unknown = existing.slice(-100);
+        if (Array.isArray(trimmed)) {
+          localStorage.setItem(key, JSON.stringify(trimmed));
+        }
+      }
 
       this.log('Report saved to localStorage');
     } catch (e) {
@@ -645,7 +657,7 @@ export class PerformanceReporter {
 
   private log(message: string, ...args: unknown[]): void {
     if (this.config.debug) {
-      console.log(`[PerformanceReporter] ${message}`, ...args);
+      console.info(`[PerformanceReporter] ${message}`, ...args);
     }
   }
 }
@@ -662,9 +674,7 @@ let reporterInstance: PerformanceReporter | null = null;
 export function getPerformanceReporter(
   config?: Partial<PerformanceReporterConfig>
 ): PerformanceReporter {
-  if (!reporterInstance) {
-    reporterInstance = new PerformanceReporter(config);
-  }
+  reporterInstance ??= new PerformanceReporter(config);
   return reporterInstance;
 }
 

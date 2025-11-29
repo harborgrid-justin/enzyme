@@ -617,7 +617,7 @@ if (import.meta.env.DEV) {
  * @returns Total estimated size in bytes
  */
 function estimateStorageSize(): number {
-  if (typeof window === 'undefined' || !window.localStorage) {
+  if (typeof window === 'undefined' || window.localStorage === undefined) {
     return 0;
   }
 
@@ -626,10 +626,10 @@ function estimateStorageSize(): number {
   try {
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key) {
+      if (key !== null) {
         const value = localStorage.getItem(key);
         // Calculate size: key + value in UTF-16 (2 bytes per character)
-        totalSize += (key.length + (value?.length || 0)) * 2;
+        totalSize += (key.length + (value?.length ?? 0)) * 2;
       }
     }
   } catch (error) {

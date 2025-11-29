@@ -409,7 +409,7 @@ export function getPrefixedItem<T>(prefix: string, id: string): T | null {
   const key = `${prefix}${id}`;
   try {
     const value = localStorage.getItem(key);
-    return value ? (JSON.parse(value) as T) : null;
+    return value !== null ? (JSON.parse(value) as T) : null;
   } catch {
     return null;
   }
@@ -457,10 +457,10 @@ export function getAllPrefixedItems<T>(
 
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
-    if (key && key.startsWith(prefix)) {
+    if (key?.startsWith(prefix) === true) {
       try {
         const id = key.slice(prefix.length);
-        const value = JSON.parse(localStorage.getItem(key) || 'null') as T;
+        const value = JSON.parse(localStorage.getItem(key) ?? 'null') as T;
         if (value !== null) {
           items.push({ id, value });
         }
@@ -488,8 +488,8 @@ export function estimateStorageSize(storage: Storage = localStorage): number {
 
   for (let i = 0; i < storage.length; i++) {
     const key = storage.key(i);
-    if (key) {
-      const value = storage.getItem(key) || '';
+    if (key !== null) {
+      const value = storage.getItem(key) ?? '';
       // Approximate: 2 bytes per character (UTF-16)
       totalSize += (key.length + value.length) * 2;
     }

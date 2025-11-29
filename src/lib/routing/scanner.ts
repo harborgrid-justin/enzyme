@@ -66,7 +66,7 @@ function shouldIgnore(filePath: string, ignorePatterns: readonly string[]): bool
       .replace(/\*/g, '[^/]*')
       .replace(/\?/g, '.')
       .replace(/\{\{GLOBSTAR\}\}/g, '.*')
-      .replace(/\{([^}]+)\}/g, (_, group) => `(${group.split(',').join('|')})`);
+      .replace(/\{([^}]+)\}/g, (_: string, group: string) => `(${group.split(',').join('|')})`);
 
     const regex = new RegExp(regexPattern);
     if (regex.test(filePath)) {
@@ -178,7 +178,7 @@ export async function scanRouteFiles(
   for (const route of routes) {
     if (!route.isLayout) {
       const parentLayout = findParentLayout(route.relativePath, layoutMap);
-      if (parentLayout) {
+      if (parentLayout !== undefined && parentLayout !== null) {
         // TypeScript doesn't allow direct mutation, so we create a new object
         Object.assign(route, { parentLayout });
       }
@@ -245,19 +245,26 @@ async function scanDirectory(
 
       // Parse route from file
       const dirRelative = path.relative(basePath, dirPath);
-      const segments = parseDirectoryPath(dirRelative, entryName);
+      const parsedSegments = parseDirectoryPath(dirRelative, entryName);
+      const segments: readonly ParsedRouteSegment[] = parsedSegments;
 
-      const isLayout = segments.some((s) => s.type === 'layout');
-      const isIndex = segments[segments.length - 1]?.type === 'index';
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      const isLayout = Array.from(segments).some((s) => s.type === 'layout');
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const lastSegment = Array.from(segments)[segments.length - 1];
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      const isIndex = lastSegment?.type === 'index';
 
       const route: DiscoveredRoute = {
         filePath: entryPath,
         relativePath,
-        urlPath: segmentsToUrlPath(segments),
+        urlPath: segmentsToUrlPath(parsedSegments),
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         segments,
         isLayout,
         isIndex,
-        depth: segments.filter((s) => s.type !== 'group').length,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        depth: Array.from(segments).filter((s) => s.type !== 'group').length,
       };
 
       routes.push(route);
@@ -478,19 +485,26 @@ export async function scanRouteFilesParallel(
 
         // Parse route from file
         const dirRelative = path.relative(basePath, dirPath);
-        const segments = parseDirectoryPath(dirRelative, entryName);
+        const parsedSegments = parseDirectoryPath(dirRelative, entryName);
+        const segments: readonly ParsedRouteSegment[] = parsedSegments;
 
-        const isLayout = segments.some((s) => s.type === 'layout');
-        const isIndex = segments[segments.length - 1]?.type === 'index';
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        const isLayout = Array.from(segments).some((s) => s.type === 'layout');
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        const lastSegment = Array.from(segments)[segments.length - 1];
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        const isIndex = lastSegment?.type === 'index';
 
         const route: DiscoveredRoute = {
           filePath: entryPath,
           relativePath,
-          urlPath: segmentsToUrlPath(segments),
+          urlPath: segmentsToUrlPath(parsedSegments),
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           segments,
           isLayout,
           isIndex,
-          depth: segments.filter((s) => s.type !== 'group').length,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+          depth: Array.from(segments).filter((s) => s.type !== 'group').length,
         };
 
         routes.push(route);
@@ -525,7 +539,7 @@ export async function scanRouteFilesParallel(
           totalDirs,
           scannedDirs,
           routesFound: routes.length,
-          currentDir: Array.from(inProgress)[0] || '',
+          currentDir: Array.from(inProgress)[0] ?? '',
           elapsedMs: Date.now() - startTime,
         });
       }
@@ -546,7 +560,7 @@ export async function scanRouteFilesParallel(
   for (const route of routes) {
     if (!route.isLayout) {
       const parentLayout = findParentLayout(route.relativePath, layoutMap);
-      if (parentLayout) {
+      if (parentLayout !== undefined && parentLayout !== null) {
         Object.assign(route, { parentLayout });
       }
     }
@@ -623,24 +637,31 @@ export function applyIncrementalChanges(
         const basePath = config.scanPaths.find((sp) =>
           change.filePath.includes(sp)
         );
-        if (!basePath) break;
+        if (basePath === undefined || basePath === null) break;
 
-        const relativePath = change.filePath.split(basePath)[1]?.replace(/^[/\\]/, '') || '';
-        const filename = change.filePath.split(/[/\\]/).pop() || '';
+        const relativePath = change.filePath.split(basePath)[1]?.replace(/^[/\\]/, '') ?? '';
+        const filename = change.filePath.split(/[/\\]/).pop() ?? '';
         const dirRelative = relativePath.replace(/[/\\][^/\\]+$/, '');
 
-        const segments = parseDirectoryPath(dirRelative, filename);
-        const isLayout = segments.some((s) => s.type === 'layout');
-        const isIndex = segments[segments.length - 1]?.type === 'index';
+        const parsedSegments = parseDirectoryPath(dirRelative, filename);
+        const segments: readonly ParsedRouteSegment[] = parsedSegments;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        const isLayout = Array.from(segments).some((s) => s.type === 'layout');
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        const lastSegment = Array.from(segments)[segments.length - 1];
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        const isIndex = lastSegment?.type === 'index';
 
         const route: DiscoveredRoute = {
           filePath: change.filePath,
           relativePath,
-          urlPath: segmentsToUrlPath(segments),
+          urlPath: segmentsToUrlPath(parsedSegments),
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           segments,
           isLayout,
           isIndex,
-          depth: segments.filter((s) => s.type !== 'group').length,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+          depth: Array.from(segments).filter((s) => s.type !== 'group').length,
         };
 
         result.added.push(route);
@@ -752,7 +773,7 @@ export function buildLayoutTree(
 
   // Connect children to parents
   for (const layout of sortedLayouts) {
-    if (layout.parentLayout) {
+    if (layout.parentLayout !== undefined && layout.parentLayout !== null) {
       const parentNode = layoutNodes.get(layout.parentLayout);
       const currentNode = layoutNodes.get(layout.filePath);
 
@@ -765,7 +786,7 @@ export function buildLayoutTree(
   }
 
   // Find root layouts (no parent)
-  const rootLayouts = sortedLayouts.filter((l) => !l.parentLayout);
+  const rootLayouts = sortedLayouts.filter((l) => l.parentLayout === undefined || l.parentLayout === null);
 
   if (rootLayouts.length === 0) {
     return {
@@ -775,8 +796,8 @@ export function buildLayoutTree(
   }
 
   // If multiple root layouts, create a virtual root
-  const firstRootLayout = rootLayouts[0];
-  const rootNode = firstRootLayout ? (layoutNodes.get(firstRootLayout.filePath) || null) : null;
+  const [firstRootLayout] = rootLayouts;
+  const rootNode = firstRootLayout ? (layoutNodes.get(firstRootLayout.filePath) ?? null) : null;
 
   return {
     root: rootNode,

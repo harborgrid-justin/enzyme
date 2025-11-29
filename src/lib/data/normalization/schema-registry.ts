@@ -395,8 +395,8 @@ export function createSchemaRegistry(config: SchemaRegistryConfig = {}): SchemaR
       name,
       definition,
       schema: null,
-      version: definition.version || 1,
-      createdAt: existing?.createdAt || now,
+      version: definition.version !== undefined && definition.version !== 0 ? definition.version : 1,
+      createdAt: existing?.createdAt ?? now,
       updatedAt: now,
     });
 
@@ -407,7 +407,11 @@ export function createSchemaRegistry(config: SchemaRegistryConfig = {}): SchemaR
     // Resolve all schemas
     resolveAllSchemas();
 
-    return resolvedSchemas.get(name)!;
+    const resolved = resolvedSchemas.get(name);
+    if (resolved === undefined) {
+      throw new Error(`Failed to resolve schema: ${name}`);
+    }
+    return resolved;
   }
 
   /**
@@ -473,7 +477,11 @@ export function createSchemaRegistry(config: SchemaRegistryConfig = {}): SchemaR
       register(schemaName);
     }
 
-    return baseNormalize<T>(data, resolvedSchemas.get(schemaName)!);
+    const schema = resolvedSchemas.get(schemaName);
+    if (schema === undefined) {
+      throw new Error(`Failed to resolve schema: ${schemaName}`);
+    }
+    return baseNormalize<T>(data, schema);
   }
 
   /**
@@ -520,7 +528,7 @@ export function createSchemaRegistry(config: SchemaRegistryConfig = {}): SchemaR
             }
           }
 
-          if (targetName) {
+          if (targetName !== undefined && targetName !== '') {
             usedSchemas.add(targetName);
 
             if (!registeredSchemas.has(targetName)) {
@@ -609,7 +617,7 @@ export function createSchemaRegistry(config: SchemaRegistryConfig = {}): SchemaR
         if (typeof relation.schema === 'string') {
           deps.add(relation.schema);
         }
-        if ('schema' in relation && relation.schema) {
+        if ('schema' in relation && relation.schema !== undefined && relation.schema !== null && relation.schema !== '') {
           const schemas = typeof relation.schema === 'object' ? Object.values(relation.schema) : [];
           schemas.forEach((s) => {
             if (typeof s === 'string') deps.add(s);
@@ -720,7 +728,8 @@ export function createSchemaRegistry(config: SchemaRegistryConfig = {}): SchemaR
    * Get schema version
    */
   function getVersion(name: string): number {
-    return registeredSchemas.get(name)?.version || 0;
+    const version = registeredSchemas.get(name)?.version;
+    return version !== undefined && version !== 0 ? version : 0;
   }
 
   /**
@@ -783,9 +792,7 @@ let globalRegistry: SchemaRegistry | null = null;
  * Get or create global schema registry
  */
 export function getGlobalRegistry(): SchemaRegistry {
-  if (!globalRegistry) {
-    globalRegistry = createSchemaRegistry();
-  }
+  globalRegistry ??= createSchemaRegistry();
   return globalRegistry;
 }
 
@@ -852,7 +859,7 @@ export class SchemaBuilder {
   constructor(name: string, registry?: SchemaRegistry) {
     this.name = name;
     this.definition = {};
-    this.registry = registry || getGlobalRegistry();
+    this.registry = registry ?? getGlobalRegistry();
   }
 
   /**
@@ -867,9 +874,7 @@ export class SchemaBuilder {
    * Add entity relation
    */
   belongsTo(field: string, schemaName: string): this {
-    if (!this.definition.relations) {
-      this.definition.relations = {};
-    }
+    this.definition.relations ??= {};
     this.definition.relations[field] = schemaName;
     return this;
   }
@@ -878,9 +883,7 @@ export class SchemaBuilder {
    * Add array relation
    */
   hasMany(field: string, schemaName: string): this {
-    if (!this.definition.relations) {
-      this.definition.relations = {};
-    }
+    this.definition.relations ??= {};
     this.definition.relations[field] = { schema: schemaName, type: 'array' };
     return this;
   }
@@ -893,11 +896,10 @@ export class SchemaBuilder {
     schemas: Record<string, string>,
     discriminator: string | ((entity: Entity) => string) = '__typename'
   ): this {
-    if (!this.definition.relations) {
-      this.definition.relations = {};
-    }
-    const firstSchema = Object.values(schemas)[0];
-    if (!firstSchema) {
+    this.definition.relations ??= {};
+    const schemaValues = Object.values(schemas);
+    const [firstSchema] = schemaValues;
+    if (firstSchema === undefined || firstSchema === '') {
       throw new Error(`Union must have at least one schema for field ${field}`);
     }
     this.definition.relations[field] = {

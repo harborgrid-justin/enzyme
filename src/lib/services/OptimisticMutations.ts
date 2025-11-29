@@ -231,7 +231,7 @@ export function useOptimisticMutation<TData = unknown, TError = Error, TVariable
           case 'client-wins':
           default:
             // Keep optimistic data, just invalidate for freshness
-            queryClient.invalidateQueries({ queryKey: snapshot.queryKey });
+            void queryClient.invalidateQueries({ queryKey: snapshot.queryKey });
             continue;
         }
 

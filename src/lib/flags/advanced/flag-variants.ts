@@ -259,7 +259,8 @@ export class VariantManager {
           if (typeof value === 'string') return value as T;
           if (value === null || value === undefined) return null;
           if (typeof value === 'object') return JSON.stringify(value) as T;
-          return typeof value === 'object' ? JSON.stringify(value) : String(value) as T;
+          if (typeof value === 'boolean' || typeof value === 'number') return String(value) as T;
+          return null;
 
         case 'number':
           if (typeof value === 'number') return value as T;

@@ -4,7 +4,7 @@
  * @description HOC to wrap any component with local try/catch UI
  */
 
-import React, { Component, type ErrorInfo, type ReactNode, type ComponentType } from 'react';
+import React, { Component, useRef, type ErrorInfo, type ReactNode, type ComponentType } from 'react';
 import { ErrorReporter } from './ErrorReporter';
 import type { AppError } from './errorTypes';
 import { normalizeError, getUserFriendlyMessage } from './errorTypes';
@@ -155,6 +155,7 @@ function createErrorBoundary(
 /**
  * Higher-order component to wrap any component with error boundary
  */
+// eslint-disable-next-line react-refresh/only-export-components -- HOC export is valid
 export function withErrorBoundary<P extends object>(
   WrappedComponent: ComponentType<P>,
   options: WithErrorBoundaryOptions = {}
@@ -164,21 +165,34 @@ export function withErrorBoundary<P extends object>(
     WrappedComponent.displayName ??
     WrappedComponent.name ??
     'Component';
-  
+
   const ErrorBoundary = createErrorBoundary({
     ...options,
     componentName,
   });
-  
+
   const WithErrorBoundary: React.FC<P> = (props: P) => (
     <ErrorBoundary>
       <WrappedComponent {...props} />
     </ErrorBoundary>
   );
-  
+
   WithErrorBoundary.displayName = `withErrorBoundary(${componentName})`;
-  
+
   return WithErrorBoundary;
+}
+
+// Pre-created error boundary components
+const boundaryCache = new Map<string, ComponentType<{ children: ReactNode }>>();
+
+function getCachedBoundary(options: WithErrorBoundaryOptions): ComponentType<{ children: ReactNode }> {
+  const cacheKey = JSON.stringify(options);
+  let boundary = boundaryCache.get(cacheKey);
+  if (!boundary) {
+    boundary = createErrorBoundary(options);
+    boundaryCache.set(cacheKey, boundary);
+  }
+  return boundary;
 }
 
 /**
@@ -194,12 +208,15 @@ export function ErrorBoundary({
   fallback?: ReactNode | ((error: AppError, reset: () => void) => ReactNode);
   onError?: (error: AppError, errorInfo: ErrorInfo) => void;
   showReset?: boolean;
-}) {
-  const BoundaryComponent = createErrorBoundary({
-    fallback,
-    onError,
-    showReset,
-  });
-  
+}): React.JSX.Element {
+  const boundaryRef = useRef<ComponentType<{ children: ReactNode }> | null>(null);
+
+  // Initialize boundary component once
+  // eslint-disable-next-line react-hooks/refs, react-hooks/static-components -- Cached boundary creation is safe
+  boundaryRef.current ??= getCachedBoundary({ fallback, onError, showReset });
+
+  // eslint-disable-next-line react-hooks/refs -- Safe to read cached component
+  const BoundaryComponent = boundaryRef.current;
+
   return <BoundaryComponent>{children}</BoundaryComponent>;
 }

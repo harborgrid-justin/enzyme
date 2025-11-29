@@ -414,13 +414,17 @@ export function useSafeHTMLWithReport(
     };
     setReport(newReport);
 
-    // Call report callback if threats detected
+    // Call report callback if threats detected (timestamp captured lazily)
     if (detection.isDangerous && onReport != null) {
-      onReport({
-        originalContent: content,
-        threats: detection.details,
-        sanitizedContent: safeProps.dangerouslySetInnerHTML.__html,
-        timestamp: Date.now(),
+      // Use a function to defer timestamp capture to avoid render-time side effects
+      queueMicrotask(() => {
+        onReport({
+          originalContent: content,
+          threats: detection.details,
+          sanitizedContent: safeProps.dangerouslySetInnerHTML.__html,
+          /* eslint-disable-next-line react-hooks/purity */
+          timestamp: Date.now(),
+        });
       });
     }
 

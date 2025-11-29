@@ -498,6 +498,7 @@ export function StreamProvider({
  * }
  * ```
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useStreamContext(): StreamContextValue {
   const context = useContext(StreamContext);
 
@@ -532,6 +533,7 @@ export function useStreamContext(): StreamContextValue {
  * }
  * ```
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useOptionalStreamContext(): StreamContextValue | null {
   return useContext(StreamContext);
 }
@@ -560,6 +562,7 @@ export function useOptionalStreamContext(): StreamContextValue | null {
  * }
  * ```
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useStreamingAvailable(): boolean {
   const context = useOptionalStreamContext();
   return context?.isStreamingSupported ?? false;
@@ -585,6 +588,7 @@ export function useStreamingAvailable(): boolean {
  * }
  * ```
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useIsSSR(): boolean {
   const context = useOptionalStreamContext();
   return context?.isSSR ?? isServerEnvironment();
@@ -612,6 +616,7 @@ export function useIsSSR(): boolean {
  * }
  * ```
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useStreamMetrics(): StreamMetrics {
   const context = useStreamContext();
   const [metrics, setMetrics] = useState<StreamMetrics>(context.getMetrics);
@@ -648,6 +653,7 @@ export function useStreamMetrics(): StreamMetrics {
  * }
  * ```
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useStreamEvents(
   handler: StreamEventHandler,
   deps: DependencyList = []
@@ -700,6 +706,7 @@ export interface WithStreamProps {
  * export default withStream(MyComponent);
  * ```
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function withStream<P extends WithStreamProps>(
   WrappedComponent: ComponentType<P>
 ): FC<Omit<P, keyof WithStreamProps>> {
@@ -719,6 +726,7 @@ export function withStream<P extends WithStreamProps>(
 // Exports
 // ============================================================================
 
+/* eslint-disable react-refresh/only-export-components */
 export {
   StreamContext,
   StreamErrorBoundary,

@@ -977,7 +977,7 @@ export type MergeRoutes<TRoutes extends readonly Record<string, string>[]> =
         ? First & MergeRoutes<Rest>
         : First
       : never
-    : {};
+    : Record<string, never>;
 
 // =============================================================================
 // ROUTE PATH BUILDER UTILITIES
@@ -1021,7 +1021,7 @@ export function validateRouteParams<TPath extends string>(
   path: TPath,
   params: Record<string, unknown>
 ): params is RouteParams<TPath> {
-  const expectedParams = (path.match(/:([a-zA-Z0-9_]+)\??/g) || []).map((p) => p.slice(1));
+  const expectedParams = (path.match(/:([a-zA-Z0-9_]+)\??/g) ?? []).map((p) => p.slice(1));
   const providedParams = Object.keys(params);
 
   // Check all required params are provided
@@ -1093,7 +1093,7 @@ export function parseRouteParams<TPath extends string>(
   pattern: TPath,
   path: string
 ): RouteParams<TPath> | null {
-  const paramNames = (pattern.match(/:([a-zA-Z0-9_]+)\??/g) || []).map((p) => p.slice(1));
+  const paramNames = (pattern.match(/:([a-zA-Z0-9_]+)\??/g) ?? []).map((p) => p.slice(1));
   const regexPattern = pattern
     .replace(/:[^/?]+\?/g, '([^/]*)?')
     .replace(/:[^/]+/g, '([^/]+)')
@@ -1110,7 +1110,7 @@ export function parseRouteParams<TPath extends string>(
   for (let i = 0; i < paramNames.length; i++) {
     const value = match[i + 1];
     const name = paramNames[i];
-    if (value !== undefined && value !== '' && name) {
+    if (value !== undefined && value !== '' && name !== undefined && name !== '') {
       params[name] = decodeURIComponent(value);
     }
   }

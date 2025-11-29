@@ -37,6 +37,7 @@ import { createRBACEngine } from './rbac-engine';
  * RBAC Context for React applications.
  */
 // @refresh reset
+// eslint-disable-next-line react-refresh/only-export-components
 export const RBACContext = createContext<RBACContextValue | null>(null);
 
 // =============================================================================
@@ -152,7 +153,7 @@ export function RBACProvider({
       return;
     }
 
-    const initialize = async () => {
+    const initialize = async (): Promise<void> => {
       setState(prev => ({ ...prev, loading: true, error: null }));
 
       try {
@@ -190,7 +191,7 @@ export function RBACProvider({
       }
     };
 
-    initialize();
+    void initialize();
   }, [isRBACEnabled, user, userRoles, userPermissions, fetchPermissions, engine]);
 
   // Update engine when roles change
@@ -272,7 +273,7 @@ export function RBACProvider({
     (resource: string, action: PermissionAction, resourceId?: string): boolean => {
       if (!isRBACEnabled) return true;
 
-      const granted = resourceId
+      const granted = (resourceId !== null && resourceId !== undefined && resourceId !== '')
         ? engine.checkResourcePermission(resource, resourceId, action)
         : engine.canAccess(resource, action);
 
@@ -409,7 +410,7 @@ export function RBACProvider({
   // ===========================================================================
 
   // Show loading during initialization
-  if (state.loading && loadingComponent) {
+  if (state.loading === true && loadingComponent !== null && loadingComponent !== undefined) {
     return <>{loadingComponent}</>;
   }
 

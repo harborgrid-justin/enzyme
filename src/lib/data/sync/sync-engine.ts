@@ -588,7 +588,7 @@ export function createSyncEngine(config: SyncEngineConfig): SyncEngine {
         if (secondarySource.id === source.id) continue;
         if (await secondarySource.isAvailable()) {
           localData = await secondarySource.get(entityType, id);
-          if (localData) break;
+          if (localData !== undefined && localData !== null) break;
         }
       }
 
@@ -596,9 +596,9 @@ export function createSyncEngine(config: SyncEngineConfig): SyncEngine {
       let finalData = remoteData;
       const conflicts: SyncConflict[] = [];
 
-      if (localData && remoteData && meta.localModifiedAt > meta.lastSyncedAt) {
+      if (localData !== undefined && localData !== null && remoteData !== undefined && remoteData !== null && meta.localModifiedAt > meta.lastSyncedAt) {
         // Potential conflict
-        if (!options.skipConflictResolution) {
+        if (options.skipConflictResolution !== true) {
           const conflict: SyncConflict = {
             id: crypto.randomUUID(),
             entityType,
@@ -626,8 +626,8 @@ export function createSyncEngine(config: SyncEngineConfig): SyncEngine {
       }
 
       // Propagate to secondary sources
-      if (finalData) {
-        const direction = entityConfig.direction || 'bidirectional';
+      if (finalData !== undefined && finalData !== null) {
+        const direction = entityConfig.direction ?? 'bidirectional';
         if (direction === 'bidirectional' || direction === 'pull') {
           for (const secondarySource of sortedSources) {
             if (secondarySource.id === source.id) continue;
@@ -646,7 +646,7 @@ export function createSyncEngine(config: SyncEngineConfig): SyncEngine {
       updateMetadata(entityType, id, {
         status: 'synced',
         lastSyncedAt: Date.now(),
-        remoteModifiedAt: remoteModifiedAt || Date.now(),
+        remoteModifiedAt: remoteModifiedAt !== undefined && remoteModifiedAt !== 0 ? remoteModifiedAt : Date.now(),
         retryCount: 0,
       });
 
@@ -675,10 +675,11 @@ export function createSyncEngine(config: SyncEngineConfig): SyncEngine {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
       // Update metadata
+      const currentRetryCount = metadata.get(getMetadataKey(entityType, id))?.retryCount;
       updateMetadata(entityType, id, {
         status: 'error',
         error: errorMessage,
-        retryCount: (metadata.get(getMetadataKey(entityType, id))?.retryCount || 0) + 1,
+        retryCount: (currentRetryCount !== undefined && currentRetryCount !== 0 ? currentRetryCount : 0) + 1,
       });
 
       // Emit error event
@@ -688,7 +689,7 @@ export function createSyncEngine(config: SyncEngineConfig): SyncEngine {
         entityId: id,
         error: error instanceof Error ? error : new Error(errorMessage),
         timestamp: Date.now(),
-        sourceId: options.sourceId || 'unknown',
+        sourceId: options.sourceId !== undefined && options.sourceId !== '' ? options.sourceId : 'unknown',
       });
 
       log('Sync error:', entityType, id, errorMessage);
@@ -745,7 +746,7 @@ export function createSyncEngine(config: SyncEngineConfig): SyncEngine {
       // Sync each entity
       for (const entity of entities) {
         const entityWithId = entity as { id?: string };
-        if (entityWithId.id) {
+        if (entityWithId.id !== undefined && entityWithId.id !== '') {
           await syncEntity(entityType, entityWithId.id, options);
         }
       }
@@ -776,7 +777,7 @@ export function createSyncEngine(config: SyncEngineConfig): SyncEngine {
         for (const localSource of sortedSources) {
           if (await localSource.isAvailable()) {
             const data = await localSource.get(entityType, id);
-            if (data) {
+            if (data !== undefined && data !== null) {
               queueOperation({
                 type: 'update',
                 entityType,
@@ -800,7 +801,7 @@ export function createSyncEngine(config: SyncEngineConfig): SyncEngine {
       if (localSource.id === source.id) continue;
       if (await localSource.isAvailable()) {
         localData = await localSource.get(entityType, id);
-        if (localData) break;
+        if (localData !== undefined && localData !== null) break;
       }
     }
 
@@ -842,7 +843,7 @@ export function createSyncEngine(config: SyncEngineConfig): SyncEngine {
   function setupNetworkHandlers(): void {
     if (typeof window === 'undefined') return;
 
-    const handleOnline = () => {
+    const handleOnline = (): void => {
       isOnlineState = true;
       log('Online - processing pending operations');
       emit({
@@ -851,10 +852,10 @@ export function createSyncEngine(config: SyncEngineConfig): SyncEngine {
         timestamp: Date.now(),
         sourceId: 'system',
       });
-      processPendingOperations();
+      void processPendingOperations();
     };
 
-    const handleOffline = () => {
+    const handleOffline = (): void => {
       isOnlineState = false;
       log('Offline');
       emit({
@@ -873,10 +874,10 @@ export function createSyncEngine(config: SyncEngineConfig): SyncEngine {
 
   // Start automatic sync
   function start(): void {
-    if (syncInterval > 0 && !syncIntervalId) {
+    if (syncInterval > 0 && syncIntervalId === null) {
       syncIntervalId = setInterval(() => {
         if (isOnlineState) {
-          processPendingOperations();
+          void processPendingOperations();
         }
       }, syncInterval);
       log('Started automatic sync with interval:', syncInterval);
@@ -906,9 +907,10 @@ export function createSyncEngine(config: SyncEngineConfig): SyncEngine {
   // Create entity
   async function createEntity<T>(entityType: string, data: Partial<T>): Promise<T> {
     // Placeholder implementation
-    const id = (data as any).id || crypto.randomUUID();
-    const source = sortedSources[0]; // Use primary source
-    if (source) {
+    const dataWithId = data as Record<string, unknown>;
+    const id = (typeof dataWithId.id === 'string' && dataWithId.id !== '') ? dataWithId.id : crypto.randomUUID();
+    const [source] = sortedSources; // Use primary source
+    if (source !== undefined) {
       await source.set(entityType, id, data);
     }
     return data as T;
@@ -917,8 +919,8 @@ export function createSyncEngine(config: SyncEngineConfig): SyncEngine {
   // Update entity
   async function updateEntity<T>(entityType: string, id: string, data: Partial<T>): Promise<T> {
     // Placeholder implementation
-    const source = sortedSources[0]; // Use primary source
-    if (source) {
+    const [source] = sortedSources; // Use primary source
+    if (source !== undefined) {
       await source.set(entityType, id, data);
     }
     return data as T;
@@ -927,8 +929,8 @@ export function createSyncEngine(config: SyncEngineConfig): SyncEngine {
   // Delete entity
   async function deleteEntity(entityType: string, id: string): Promise<void> {
     // Placeholder implementation
-    const source = sortedSources[0]; // Use primary source
-    if (source) {
+    const [source] = sortedSources; // Use primary source
+    if (source !== undefined) {
       await source.delete(entityType, id);
     }
   }
@@ -945,9 +947,9 @@ export function createSyncEngine(config: SyncEngineConfig): SyncEngine {
   }
 
   return {
-    sync: syncEntity as any,
-    syncMany: syncManyEntities as any,
-    syncAll: syncAllEntities as any,
+    sync: syncEntity as <_T>(entityType: string, id: string, options?: Partial<SyncOptions>) => Promise<SyncResult>,
+    syncMany: syncManyEntities as (entityType: string, ids: string[], options?: Partial<SyncOptions>) => Promise<SyncResult>,
+    syncAll: syncAllEntities as (entityType: string, options?: Partial<SyncOptions>) => Promise<SyncResult>,
     create: createEntity,
     update: updateEntity,
     delete: deleteEntity,
@@ -969,7 +971,7 @@ export function createSyncEngine(config: SyncEngineConfig): SyncEngine {
     retryPending: processPendingOperations,
 
     clearMetadata: (entityType) => {
-      if (entityType) {
+      if (entityType !== undefined && entityType !== '') {
         for (const [key] of metadata) {
           if (key.startsWith(`${entityType}:`)) {
             metadata.delete(key);
@@ -1028,7 +1030,7 @@ export function createApiSource(
         signal: AbortSignal.timeout(timeout),
       });
       if (!response.ok) return null;
-      return response.json();
+      return response.json() as Promise<unknown>;
     },
 
     getMany: async (entityType, ids) => {
@@ -1038,10 +1040,10 @@ export function createApiSource(
         signal: AbortSignal.timeout(timeout),
       });
       if (response.ok) {
-        const data = await response.json();
+        const data = await response.json() as unknown[];
         for (const item of data) {
           const itemWithId = item as { id?: string };
-          if (itemWithId.id) {
+          if (itemWithId.id !== undefined && itemWithId.id !== '') {
             results.set(itemWithId.id, item);
           }
         }
@@ -1051,9 +1053,9 @@ export function createApiSource(
 
     getAll: async (entityType, options) => {
       const params = new URLSearchParams();
-      if (options?.limit) params.set('limit', String(options.limit));
-      if (options?.offset) params.set('offset', String(options.offset));
-      if (options?.modifiedSince) params.set('since', String(options.modifiedSince));
+      if (options?.limit !== undefined && options.limit !== 0) params.set('limit', String(options.limit));
+      if (options?.offset !== undefined && options.offset !== 0) params.set('offset', String(options.offset));
+      if (options?.modifiedSince !== undefined && options.modifiedSince !== 0) params.set('since', String(options.modifiedSince));
 
       const url = `${baseUrl}/${entityType}${params.toString() ? `?${params}` : ''}`;
       const response = await fetch(url, {
@@ -1061,7 +1063,7 @@ export function createApiSource(
         signal: AbortSignal.timeout(timeout),
       });
       if (!response.ok) return [];
-      return response.json();
+      return response.json() as Promise<unknown[]>;
     },
 
     set: async (entityType, id, data) => {
@@ -1111,15 +1113,15 @@ export function createLocalStorageSource(
   const { priority = 2 } = options;
 
   function getKey(entityType: string, id?: string): string {
-    return id ? `${prefix}:${entityType}:${id}` : `${prefix}:${entityType}`;
+    return id !== undefined && id !== '' ? `${prefix}:${entityType}:${id}` : `${prefix}:${entityType}`;
   }
 
   function getAllKeys(entityType: string): string[] {
     const keys: string[] = [];
-    const keyPrefix = `${getKey(entityType)  }:`;
+    const keyPrefix = `${getKey(entityType)}:`;
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key?.startsWith(keyPrefix)) {
+      if (key?.startsWith(keyPrefix) === true) {
         keys.push(key);
       }
     }
@@ -1141,52 +1143,56 @@ export function createLocalStorageSource(
       }
     },
 
-    get: async (entityType, id) => {
+    get: (entityType, id) => {
       const data = localStorage.getItem(getKey(entityType, id));
-      return data ? JSON.parse(data) : null;
+      return Promise.resolve(data !== null && data !== '' ? JSON.parse(data) as unknown : null);
     },
 
-    getMany: async (entityType, ids) => {
+    getMany: (entityType, ids) => {
       const results = new Map();
       for (const id of ids) {
         const data = localStorage.getItem(getKey(entityType, id));
-        if (data) {
-          results.set(id, JSON.parse(data));
+        if (data !== null && data !== '') {
+          results.set(id, JSON.parse(data) as unknown);
         }
       }
-      return results;
+      return Promise.resolve(results);
     },
 
-    getAll: async (entityType) => {
+    getAll: (entityType) => {
       const keys = getAllKeys(entityType);
       const results: unknown[] = [];
       for (const key of keys) {
         const data = localStorage.getItem(key);
-        if (data) {
-          results.push(JSON.parse(data));
+        if (data !== null && data !== '') {
+          results.push(JSON.parse(data) as unknown);
         }
       }
-      return results;
+      return Promise.resolve(results);
     },
 
-    set: async (entityType, id, data) => {
+    set: (entityType, id, data) => {
       localStorage.setItem(getKey(entityType, id), JSON.stringify(data));
+      return Promise.resolve();
     },
 
-    setMany: async (entityType, entities) => {
+    setMany: (entityType, entities) => {
       for (const [id, data] of entities) {
         localStorage.setItem(getKey(entityType, id), JSON.stringify(data));
       }
+      return Promise.resolve();
     },
 
-    delete: async (entityType, id) => {
+    delete: (entityType, id) => {
       localStorage.removeItem(getKey(entityType, id));
+      return Promise.resolve();
     },
 
-    deleteMany: async (entityType, ids) => {
+    deleteMany: (entityType, ids) => {
       for (const id of ids) {
         localStorage.removeItem(getKey(entityType, id));
       }
+      return Promise.resolve();
     },
   };
 }
@@ -1215,44 +1221,49 @@ export function createMemorySource(
 
     isAvailable: () => true,
 
-    get: async (entityType, id) => {
-      return getEntityStore(entityType).get(id) || null;
+    get: (entityType, id) => {
+      const value = getEntityStore(entityType).get(id);
+      return Promise.resolve(value ?? null);
     },
 
-    getMany: async (entityType, ids) => {
+    getMany: (entityType, ids) => {
       const entityStore = getEntityStore(entityType);
       const results = new Map<string, unknown>();
       for (const id of ids) {
         const data = entityStore.get(id);
-        if (data) results.set(id, data);
+        if (data !== undefined && data !== null) results.set(id, data);
       }
-      return results;
+      return Promise.resolve(results);
     },
 
-    getAll: async (entityType) => {
-      return Array.from(getEntityStore(entityType).values());
+    getAll: (entityType) => {
+      return Promise.resolve(Array.from(getEntityStore(entityType).values()));
     },
 
-    set: async (entityType, id, data) => {
+    set: (entityType, id, data) => {
       getEntityStore(entityType).set(id, data);
+      return Promise.resolve();
     },
 
-    setMany: async (entityType, entities) => {
+    setMany: (entityType, entities) => {
       const entityStore = getEntityStore(entityType);
       for (const [id, data] of entities) {
         entityStore.set(id, data);
       }
+      return Promise.resolve();
     },
 
-    delete: async (entityType, id) => {
+    delete: (entityType, id) => {
       getEntityStore(entityType).delete(id);
+      return Promise.resolve();
     },
 
-    deleteMany: async (entityType, ids) => {
+    deleteMany: (entityType, ids) => {
       const entityStore = getEntityStore(entityType);
       for (const id of ids) {
         entityStore.delete(id);
       }
+      return Promise.resolve();
     },
   };
 }

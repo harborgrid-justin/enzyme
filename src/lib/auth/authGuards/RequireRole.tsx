@@ -75,6 +75,7 @@ export const RequireRole = memo(({
  * HOC version of RequireRole
  */
 // @refresh reset
+// eslint-disable-next-line react-refresh/only-export-components
 export function withRequireRole<P extends object>(
   Component: React.ComponentType<P>,
   roleConfig: { role?: Role; roles?: Role[]; redirectTo?: string }

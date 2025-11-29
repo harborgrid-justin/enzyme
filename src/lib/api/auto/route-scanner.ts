@@ -275,7 +275,7 @@ export function parseApiSegment(name: string): ParsedApiSegment {
 
   // Optional dynamic segments [[param]]
   const optionalMatch = trimmed.match(/^\[\[([^\]]+)\]\]$/);
-  if (optionalMatch?.[1]) {
+  if (optionalMatch?.[1] !== undefined && optionalMatch[1] !== null && optionalMatch[1] !== '') {
     return {
       type: 'optional',
       name: `:${optionalMatch[1]}?`,
@@ -287,7 +287,7 @@ export function parseApiSegment(name: string): ParsedApiSegment {
 
   // Dynamic segments [param]
   const dynamicMatch = trimmed.match(/^\[([^\]]+)\]$/);
-  if (dynamicMatch?.[1]) {
+  if (dynamicMatch?.[1] !== undefined && dynamicMatch[1] !== null && dynamicMatch[1] !== '') {
     return {
       type: 'dynamic',
       name: `:${dynamicMatch[1]}`,
@@ -324,7 +324,7 @@ export function parseGroupModifier(name: string): GroupModifier {
 
   // Check for role pattern (role:rolename)
   if (lowerName.startsWith('role:')) {
-    const role = name.split(':')[1];
+    const [, role] = name.split(':');
     return {
       name,
       type: 'role',
@@ -334,7 +334,7 @@ export function parseGroupModifier(name: string): GroupModifier {
 
   // Check for scope pattern (scope:own|team|org)
   if (lowerName.startsWith('scope:')) {
-    const scope = name.split(':')[1];
+    const [, scope] = name.split(':');
     return {
       name,
       type: 'scope',
@@ -431,11 +431,11 @@ export function segmentsToUrlPath(
   baseUrl: string = '/api'
 ): string {
   const pathParts = segments
-    .filter((s) => s.type !== 'group' && s.type !== 'private' && s.name)
+    .filter((s) => s.type !== 'group' && s.type !== 'private' && s.name !== undefined && s.name !== null && s.name !== '')
     .map((s) => s.name);
 
   const path = pathParts.join('/');
-  return path ? `${baseUrl}/${path}` : baseUrl;
+  return path !== '' ? `${baseUrl}/${path}` : baseUrl;
 }
 
 /**
@@ -443,8 +443,8 @@ export function segmentsToUrlPath(
  */
 export function extractParamNames(segments: readonly ParsedApiSegment[]): readonly string[] {
   return segments
-    .filter((s) => s.paramName)
-    .map((s) => s.paramName as string);
+    .filter((s): s is ParsedApiSegment & { paramName: string } => s.paramName !== undefined && s.paramName !== null && s.paramName !== '')
+    .map((s) => s.paramName);
 }
 
 /**
@@ -488,8 +488,8 @@ export function extractGroupModifiers(
   segments: readonly ParsedApiSegment[]
 ): readonly GroupModifier[] {
   return segments
-    .filter((s) => s.type === 'group' && s.groupModifier)
-    .map((s) => s.groupModifier as GroupModifier);
+    .filter((s): s is ParsedApiSegment & { groupModifier: GroupModifier } => s.type === 'group' && s.groupModifier !== undefined && s.groupModifier !== null)
+    .map((s) => s.groupModifier);
 }
 
 // =============================================================================
@@ -506,7 +506,7 @@ function shouldIgnore(filePath: string, ignorePatterns: readonly string[]): bool
       .replace(/\*/g, '[^/]*')
       .replace(/\?/g, '.')
       .replace(/\{\{GLOBSTAR\}\}/g, '.*')
-      .replace(/\{([^}]+)\}/g, (_, group) => `(${group.split(',').join('|')})`);
+      .replace(/\{([^}]+)\}/g, (_match, group: string) => `(${group.split(',').join('|')})`);
 
     const regex = new RegExp(regexPattern);
     if (regex.test(filePath)) {
@@ -550,9 +550,14 @@ export async function scanApiRoutes(
 
   // First pass: collect metadata files
   async function collectMetadataFiles(dirPath: string): Promise<void> {
-    let entries: any[];
+    interface DirEntry {
+      name: string;
+      isDirectory: () => boolean;
+      isFile: () => boolean;
+    }
+    let entries: DirEntry[];
     try {
-      entries = await fs.readdir(dirPath, { withFileTypes: true });
+      entries = await fs.readdir(dirPath, { withFileTypes: true }) as unknown as DirEntry[];
     } catch {
       return;
     }
@@ -561,9 +566,9 @@ export async function scanApiRoutes(
       const entryName = typeof entry.name === 'string' ? entry.name : String(entry.name);
       const entryPath = path.join(dirPath, entryName);
 
-      if (entry.isDirectory()) {
+      if (entry.isDirectory?.()) {
         await collectMetadataFiles(entryPath);
-      } else if (entry.isFile()) {
+      } else if (entry.isFile?.()) {
         const baseName = entryName.replace(/\.(ts|tsx|js|jsx)$/, '').toLowerCase();
         if (baseName === '_schema') {
           schemaFiles.add(path.dirname(entryPath));
@@ -582,9 +587,14 @@ export async function scanApiRoutes(
     basePath: string,
     parentSegments: ParsedApiSegment[] = []
   ): Promise<void> {
-    let entries: any[];
+    interface DirEntry {
+      name: string;
+      isDirectory: () => boolean;
+      isFile: () => boolean;
+    }
+    let entries: DirEntry[];
     try {
-      entries = await fs.readdir(dirPath, { withFileTypes: true });
+      entries = await fs.readdir(dirPath, { withFileTypes: true }) as unknown as DirEntry[];
     } catch {
       return;
     }
@@ -594,7 +604,7 @@ export async function scanApiRoutes(
       const entryPath = path.join(dirPath, entryName);
       const relativePath = path.relative(basePath, entryPath);
 
-      if (entry.isDirectory()) {
+      if (entry.isDirectory?.()) {
         // Skip ignored directories
         if (shouldIgnore(`${relativePath}/`, mergedConfig.ignorePatterns)) {
           continue;
@@ -608,7 +618,7 @@ export async function scanApiRoutes(
 
         // Recurse into subdirectory
         await scanDirectory(entryPath, basePath, [...parentSegments, segment]);
-      } else if (entry.isFile()) {
+      } else if (entry.isFile?.()) {
         // Check extension
         if (!hasValidExtension(entryName, mergedConfig.extensions)) {
           continue;
@@ -620,7 +630,7 @@ export async function scanApiRoutes(
         }
 
         // Classify file
-        const fileType = mergedConfig.classifyFile
+        const fileType = mergedConfig.classifyFile !== undefined
           ? mergedConfig.classifyFile(entryName)
           : classifyApiFile(entryName);
 

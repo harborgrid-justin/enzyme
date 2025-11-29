@@ -751,7 +751,7 @@ export class StreamingEngine {
 
       // Handle final chunk
       if (transformedChunk.isFinal) {
-        await this.completeStream(boundary);
+        this.completeStream(boundary);
       }
 
       return true;

@@ -119,9 +119,9 @@ function normalizeHttpError(
     const serverError = response as ServerErrorResponse;
 
     // Extract message
-    if (serverError.message != null && serverError.message !== '') {
+    if (serverError.message !== undefined && serverError.message !== null && serverError.message !== '') {
       ({ message } = serverError);
-    } else if (serverError.error) {
+    } else if (serverError.error !== undefined && serverError.error !== null) {
       message =
         typeof serverError.error === 'string'
           ? serverError.error
@@ -129,14 +129,17 @@ function normalizeHttpError(
     }
 
     // Extract code
-    if (serverError.code) {
-      code = serverError.code;
+    if (serverError.code !== undefined && serverError.code !== null && serverError.code !== '') {
+      ({ code } = serverError);
     } else if (
-      serverError.error &&
+      serverError.error !== undefined &&
+      serverError.error !== null &&
       typeof serverError.error === 'object' &&
-      serverError.error.code
+      serverError.error.code !== undefined &&
+      serverError.error.code !== null &&
+      serverError.error.code !== ''
     ) {
-      code = serverError.error.code;
+      ({ code } = serverError.error);
     }
 
     // Extract field errors
@@ -166,7 +169,7 @@ function normalizeHttpError(
     category: mappedCategory,
     severity,
     fieldErrors,
-    response: config.includeResponseBody ? response : undefined,
+    response: config.includeResponseBody === true ? response : undefined,
     retryable: isRetryableStatus(status),
   });
 }

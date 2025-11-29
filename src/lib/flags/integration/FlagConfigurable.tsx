@@ -44,6 +44,7 @@ import React, {
   useEffect,
   useCallback,
   useContext,
+  useState,
 } from 'react';
 import { useFeatureFlag } from '../useFeatureFlag';
 import type { FlagKey } from '../flagKeys';
@@ -159,6 +160,7 @@ const FlagConfigurableContext = createContext<FlagConfigurableContextValue>({
 /**
  * Hook to access parent flag context
  */
+// eslint-disable-next-line react-refresh/only-export-components -- Utility hook needed alongside components
 export function useFlagConfigurableContext(): FlagConfigurableContextValue {
   return useContext(FlagConfigurableContext);
 }
@@ -192,16 +194,19 @@ export function FlagConfigurable({
   // Apply inversion
   const shouldRender = invert ? !isEnabled : isEnabled;
 
+  // Capture evaluation timestamp (stable across re-renders using lazy initialization)
+  const [evaluatedAt] = useState<number>(() => Date.now());
+
   // Create metadata
   const metadata = useMemo<FlagMetadata>(
     () => ({
       flagKey,
       isEnabled,
       source: 'flag',
-      evaluatedAt: Date.now(),
+      evaluatedAt,
       variant: variant ?? (isEnabled ? 'enabled' : 'disabled'),
     }),
-    [flagKey, isEnabled, variant]
+    [flagKey, isEnabled, variant, evaluatedAt]
   );
 
   // Debug logging
@@ -266,7 +271,7 @@ export function FlagConfigurable({
   );
 
   // Determine content to render
-  const content = useMemo(() => {
+  const content = useMemo((): ReactNode => {
     if (typeof children === 'function') {
       return children(renderProps);
     }
@@ -312,6 +317,7 @@ export interface WithFlagConfigurableOptions {
 /**
  * HOC to wrap a component with flag configuration
  */
+// eslint-disable-next-line react-refresh/only-export-components -- HOC factory function
 export function withFlagConfigurable<P extends object>(
   Component: ComponentType<P>,
   options: WithFlagConfigurableOptions
@@ -429,13 +435,13 @@ export function FlagConfigurableMulti({
     if (strategy === 'first') {
       // Return first enabled flag's variant
       for (const key of flagKeys) {
-        if (getFlag(key) && variants[key]) {
+        if (getFlag(key) === true && variants[key] !== undefined) {
           return key;
         }
       }
     } else {
       // Return variant based on all flags being enabled
-      const allEnabled = flagKeys.every((key) => getFlag(key));
+      const allEnabled = flagKeys.every((key) => getFlag(key) === true);
       if (allEnabled) {
         return 'all';
       }
@@ -479,8 +485,8 @@ export function FlagConfigurableGated({
   const isEnabled = getFlag ? getFlag(flagKey) : hookEnabled;
 
   useEffect(() => {
-    if (!isEnabled && redirectTo) {
-      if (onRedirect) {
+    if (!isEnabled && redirectTo !== undefined && redirectTo !== '') {
+      if (onRedirect !== undefined) {
         onRedirect(redirectTo);
       } else if (typeof window !== 'undefined') {
         window.location.href = redirectTo;
@@ -489,7 +495,7 @@ export function FlagConfigurableGated({
   }, [isEnabled, redirectTo, onRedirect]);
 
   if (!isEnabled) {
-    if (redirectTo) {
+    if (redirectTo !== undefined && redirectTo !== '') {
       return null; // Will redirect
     }
     return <>{fallback}</>;

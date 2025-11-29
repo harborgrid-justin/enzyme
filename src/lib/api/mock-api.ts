@@ -109,7 +109,7 @@ export class MockServer {
       defaultErrorRate: config.defaultErrorRate ?? 0,
       logging: config.logging ?? isDev(),
       notFoundHandler:
-        config.notFoundHandler ||
+        config.notFoundHandler ??
         (() => ({
           status: 404,
           data: { error: 'Not Found', message: 'No mock handler registered for this route' },
@@ -283,7 +283,7 @@ export class MockServer {
 
     this.dataStore.set(key, {
       data,
-      createdAt: existing?.createdAt || now,
+      createdAt: existing?.createdAt ?? now,
       updatedAt: now,
     });
 
@@ -382,7 +382,7 @@ export class MockServer {
 
     // Parse request
     const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
-    const method = ((init?.method || 'GET') as HttpMethod).toUpperCase() as HttpMethod;
+    const method = ((init?.method ?? 'GET') as HttpMethod).toUpperCase() as HttpMethod;
 
     // Check if URL should be mocked
     if (!this.shouldMock(url)) {
@@ -396,7 +396,7 @@ export class MockServer {
 
     // Parse body
     let body: unknown;
-    if (init?.body) {
+    if (init?.body !== null && init?.body !== undefined) {
       try {
         body =
           typeof init.body === 'string'
@@ -465,12 +465,12 @@ export class MockServer {
       }
 
       // Handle timeout simulation
-      if (response.timeout) {
+      if (response.timeout === true) {
         throw new DOMException('The operation was aborted.', 'AbortError');
       }
 
       // Handle network error simulation
-      if (response.networkError) {
+      if (response.networkError === true) {
         throw new TypeError('Failed to fetch');
       }
 
@@ -524,13 +524,13 @@ export class MockServer {
       const patternPart = patternParts[i];
       const pathPart = pathParts[i];
 
-      if (!patternPart) continue;
+      if (patternPart === null || patternPart === undefined || patternPart === '') continue;
 
       if (patternPart.startsWith(':')) {
         // Parameter match
         const paramName = patternPart.slice(1);
-        if (paramName) {
-          params[paramName] = decodeURIComponent(pathPart || '');
+        if (paramName !== null && paramName !== undefined && paramName !== '') {
+          params[paramName] = decodeURIComponent(pathPart ?? '');
         }
       } else if (patternPart === '*') {
         // Wildcard match
@@ -571,7 +571,7 @@ export class MockServer {
    * Calculate delay from range
    */
   private calculateDelay(range?: [number, number]): number {
-    const [min, max] = range || this.config.defaultDelay;
+    const [min, max] = range ?? this.config.defaultDelay;
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
@@ -590,7 +590,7 @@ export class MockServer {
 
     return new Response(responseBody, {
       status,
-      statusText: statusText || this.getStatusText(status),
+      statusText: statusText ?? this.getStatusText(status),
       headers: responseHeaders,
     });
   }
@@ -614,7 +614,7 @@ export class MockServer {
       502: 'Bad Gateway',
       503: 'Service Unavailable',
     };
-    return texts[status] || 'Unknown';
+    return texts[status] ?? 'Unknown';
   }
 
   /**
@@ -696,7 +696,7 @@ export const mockHandlers = {
    */
   success: <T>(data: T, options: { status?: number; headers?: Record<string, string> } = {}) => {
     return (): MockResponse<T> => ({
-      status: options.status || 200,
+      status: options.status ?? 200,
       data,
       headers: options.headers,
     });
@@ -732,7 +732,7 @@ export const mockHandlers = {
     return (): MockResponse => ({
       status,
       data: {
-        error: options.code || `HTTP_${status}`,
+        error: options.code ?? `HTTP_${status}`,
         message,
         details: options.details,
       },
@@ -1052,7 +1052,7 @@ export function createCrudHandlers<T extends { id: string }>(config: {
 
         // Search
         const search = req.queryParams.search as string | undefined;
-        if (search && searchFields.length > 0) {
+        if (search !== null && search !== undefined && search !== '' && searchFields.length > 0) {
           const searchLower = search.toLowerCase();
           filtered = filtered.filter((item) =>
             searchFields.some((field) => {

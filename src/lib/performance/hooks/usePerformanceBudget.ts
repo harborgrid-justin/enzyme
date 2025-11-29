@@ -24,7 +24,7 @@
  * ```
  */
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   getBudgetManager,
   type PerformanceBudgetManager,
@@ -106,11 +106,13 @@ export function usePerformanceBudget(
 ): UsePerformanceBudgetReturn {
   const { budgets, onViolation, onDegradationChange, debug = false } = options;
 
-  // Get budget manager instance
-  const managerRef = useRef<PerformanceBudgetManager | null>(null);
+  // State
+  const [budgetStatuses, setBudgetStatuses] = useState<BudgetStatusSummary[]>([]);
+  const [degradationState, setDegradationState] = useState<DegradationState>('none');
 
-  if (managerRef.current === null) {
-    managerRef.current = getBudgetManager({
+  // Get budget manager instance - use useState for initialization
+  const [manager] = useState<PerformanceBudgetManager>(() => {
+    return getBudgetManager({
       debug,
       onViolation: (violation) => {
         onViolation?.(violation);
@@ -120,21 +122,13 @@ export function usePerformanceBudget(
         onDegradationChange?.(state);
       },
     });
-  }
-
-  const manager = managerRef.current;
-
-  // State
-  const [budgetStatuses, setBudgetStatuses] = useState<BudgetStatusSummary[]>([]);
-  const [degradationState, setDegradationState] = useState<DegradationState>(() =>
-    manager.getDegradationState()
-  );
+  });
   const [healthScore, setHealthScore] = useState<number>(100);
   const [recentViolations, setRecentViolations] = useState<BudgetViolationRecord[]>([]);
 
   // Update statuses periodically
   useEffect(() => {
-    const updateStatuses = () => {
+    const updateStatuses = (): void => {
       let statuses = manager.getAllStatuses();
 
       // Filter to specific budgets if specified
@@ -163,7 +157,7 @@ export function usePerformanceBudget(
   const formattedStatuses = useMemo<BudgetStatus[]>(() => {
     return budgetStatuses.map((summary) => {
       const unit = summary.threshold?.unit ?? 'ms';
-      const percentOfBudget = summary.currentValue !== null && summary.threshold
+      const percentOfBudget = summary.currentValue !== null && summary.threshold !== undefined
         ? (summary.currentValue / summary.threshold.warning) * 100
         : 0;
 
@@ -176,7 +170,7 @@ export function usePerformanceBudget(
         formattedValue: summary.currentValue !== null
           ? formatBudgetValue(summary.currentValue, unit)
           : 'N/A',
-        formattedThreshold: summary.threshold
+        formattedThreshold: summary.threshold !== undefined
           ? formatBudgetValue(summary.threshold.warning, unit)
           : 'N/A',
       };
@@ -199,7 +193,7 @@ export function usePerformanceBudget(
       if (!summary) return null;
 
       const unit = summary.threshold?.unit ?? 'ms';
-      const percentOfBudget = summary.currentValue !== null && summary.threshold
+      const percentOfBudget = summary.currentValue !== null && summary.threshold !== undefined
         ? (summary.currentValue / summary.threshold.warning) * 100
         : 0;
 
@@ -212,7 +206,7 @@ export function usePerformanceBudget(
         formattedValue: summary.currentValue !== null
           ? formatBudgetValue(summary.currentValue, unit)
           : 'N/A',
-        formattedThreshold: summary.threshold
+        formattedThreshold: summary.threshold !== undefined
           ? formatBudgetValue(summary.threshold.warning, unit)
           : 'N/A',
       };

@@ -211,14 +211,14 @@ export function useMemoryPressure(
   // Perform cleanup
   const performCleanup = useCallback((): void => {
     if (debug) {
-      console.log('[useMemoryPressure] Performing cleanup');
+      console.info('[useMemoryPressure] Performing cleanup');
     }
 
     // Clear caches if available
     if ('caches' in globalThis) {
       // Don't actually clear caches, just log
       if (debug) {
-        console.log('[useMemoryPressure] Cache clearing would be performed here');
+        console.info('[useMemoryPressure] Cache clearing would be performed here');
       }
     }
 
@@ -247,7 +247,7 @@ export function useMemoryPressure(
       // Check for pressure change
       if (newSnapshot.pressure !== lastPressureRef.current) {
         if (debug) {
-          console.log(
+          console.info(
             `[useMemoryPressure] Pressure changed: ${lastPressureRef.current} -> ${newSnapshot.pressure}`
           );
         }
@@ -281,7 +281,7 @@ export function useMemoryPressure(
     if (history.length < 2) return null;
 
     const recentHistory = history.slice(-10);
-    const oldestSnapshot = recentHistory[0];
+    const [oldestSnapshot] = recentHistory;
     const newestSnapshot = recentHistory[recentHistory.length - 1];
 
     if (!oldestSnapshot || !newestSnapshot) return null;
@@ -419,7 +419,7 @@ export function useMemoryAwareCache<T>(
       // Evict oldest if at capacity
       if (cacheRef.current.size >= maxSize) {
         const firstKey = cacheRef.current.keys().next().value;
-        if (firstKey) cacheRef.current.delete(firstKey);
+        if (firstKey !== undefined && firstKey !== null) cacheRef.current.delete(firstKey);
       }
 
       cacheRef.current.set(key, value);
@@ -444,32 +444,34 @@ export function useComponentMemoryImpact(): {
   currentSize: number | null;
   impact: number | null;
 } {
-  const mountSizeRef = useRef<number | null>(null);
+  const [mountSize, setMountSize] = useState<number | null>(null);
   const [currentSize, setCurrentSize] = useState<number | null>(null);
 
   const { snapshot } = useMemoryPressure();
 
   // Capture mount size
   useEffect(() => {
-    if (snapshot && mountSizeRef.current === null) {
-      mountSizeRef.current = snapshot.usedJSHeapSize;
+    if (snapshot !== null && mountSize === null) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setMountSize(snapshot.usedJSHeapSize);
     }
-  }, [snapshot]);
+  }, [snapshot, mountSize]);
 
   // Update current size
   useEffect(() => {
-    if (snapshot) {
+    if (snapshot !== null) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCurrentSize(snapshot.usedJSHeapSize);
     }
   }, [snapshot]);
 
   const impact = useMemo(() => {
-    if (mountSizeRef.current === null || currentSize === null) return null;
-    return currentSize - mountSizeRef.current;
-  }, [currentSize]);
+    if (mountSize === null || currentSize === null) return null;
+    return currentSize - mountSize;
+  }, [currentSize, mountSize]);
 
   return {
-    mountSize: mountSizeRef.current,
+    mountSize,
     currentSize,
     impact,
   };

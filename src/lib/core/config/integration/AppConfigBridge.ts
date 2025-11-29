@@ -256,7 +256,7 @@ export class AppConfigBridge {
     this.initialized = true;
 
     if (this.config.debug) {
-      console.log('[AppConfigBridge] Synced from app config:', overlay);
+      console.info('[AppConfigBridge] Synced from app config:', overlay);
     }
   }
 
@@ -281,7 +281,7 @@ export class AppConfigBridge {
   // ===========================================================================
 
   private mapEnvToNetworkConfig(env: Partial<AppEnvConfig>): Partial<NetworkConfig> {
-    const config: any = {};
+    const config: Partial<NetworkConfig> = {};
 
     if (env.apiTimeout !== undefined) {
       config.defaultTimeout = env.apiTimeout;
@@ -307,10 +307,10 @@ export class AppConfigBridge {
   }
 
   private mapTimingToNetworkConfig(timing: Partial<AppTimingConfig>): Partial<NetworkConfig> {
-    const config: any = {};
+    const config: Partial<NetworkConfig> = {};
     const api = timing.API;
 
-    if (api) {
+    if (api != null) {
       if (api.TIMEOUT !== undefined) config.defaultTimeout = api.TIMEOUT;
       if (api.TIMEOUT_LONG !== undefined) config.longTimeout = api.TIMEOUT_LONG;
       if (api.TIMEOUT_SHORT !== undefined) config.shortTimeout = api.TIMEOUT_SHORT;
@@ -327,39 +327,39 @@ export class AppConfigBridge {
   }
 
   private mapTimingToCacheConfig(timing: Partial<AppTimingConfig>): Partial<CacheConfig> {
-    const config: Partial<CacheConfig> = {};
+    const config: Record<string, number | undefined> = {};
     const stale = timing.QUERY?.STALE;
     const gc = timing.QUERY?.GC;
 
-    if (stale) {
-      if (stale.SHORT !== undefined) (config as any).shortTTL = stale.SHORT;
-      if (stale.MEDIUM !== undefined) (config as any).defaultTTL = stale.MEDIUM;
-      if (stale.LONG !== undefined) (config as any).longTTL = stale.LONG;
-      if (stale.EXTENDED !== undefined) (config as any).extendedTTL = stale.EXTENDED;
+    if (stale != null) {
+      if (stale.SHORT !== undefined) config.shortTTL = stale.SHORT;
+      if (stale.MEDIUM !== undefined) config.defaultTTL = stale.MEDIUM;
+      if (stale.LONG !== undefined) config.longTTL = stale.LONG;
+      if (stale.EXTENDED !== undefined) config.extendedTTL = stale.EXTENDED;
     }
 
-    if (gc) {
-      if (gc.MEDIUM !== undefined) (config as any).gcInterval = gc.MEDIUM;
+    if (gc != null) {
+      if (gc.MEDIUM !== undefined) config.gcInterval = gc.MEDIUM;
     }
 
-    return config;
+    return config as Partial<CacheConfig>;
   }
 
-  private mapTimingToUIConfig(timing: Partial<AppTimingConfig>) {
+  private mapTimingToUIConfig(timing: Partial<AppTimingConfig>): Record<string, number | undefined> {
     const config: Record<string, number | undefined> = {};
     const debounce = timing.UI?.DEBOUNCE;
     const animation = timing.UI?.ANIMATION;
     const toast = timing.UI?.TOAST;
     const loading = timing.UI?.LOADING;
 
-    if (debounce) {
+    if (debounce != null) {
       if (debounce.INPUT !== undefined) config.inputDebounce = debounce.INPUT;
       if (debounce.FORM !== undefined) config.formDebounce = debounce.FORM;
       if (debounce.RESIZE !== undefined) config.resizeDebounce = debounce.RESIZE;
       if (debounce.SCROLL !== undefined) config.scrollThrottle = debounce.SCROLL;
     }
 
-    if (animation) {
+    if (animation != null) {
       if (animation.FAST !== undefined) config.animationFast = animation.FAST;
       if (animation.STANDARD !== undefined) config.animationStandard = animation.STANDARD;
       if (animation.SLOW !== undefined) config.animationSlow = animation.SLOW;
@@ -369,7 +369,7 @@ export class AppConfigBridge {
       config.toastDuration = toast.STANDARD;
     }
 
-    if (loading) {
+    if (loading != null) {
       if (loading.SPINNER_DELAY !== undefined) config.spinnerDelay = loading.SPINNER_DELAY;
       if (loading.MIN_DISPLAY !== undefined) config.skeletonMinDisplay = loading.MIN_DISPLAY;
     }
@@ -378,22 +378,22 @@ export class AppConfigBridge {
   }
 
   private mapApiConfigToNetworkConfig(apiConfig: Partial<AppApiConfig>): Partial<NetworkConfig> {
-    const config: Partial<NetworkConfig> = {};
+    const config: Record<string, number | undefined> = {};
 
-    if (apiConfig.TIMEOUT) {
-      if (apiConfig.TIMEOUT.DEFAULT !== undefined) (config as any).defaultTimeout = apiConfig.TIMEOUT.DEFAULT;
-      if (apiConfig.TIMEOUT.LONG !== undefined) (config as any).longTimeout = apiConfig.TIMEOUT.LONG;
-      if (apiConfig.TIMEOUT.SHORT !== undefined) (config as any).shortTimeout = apiConfig.TIMEOUT.SHORT;
-      if (apiConfig.TIMEOUT.HEALTH !== undefined) (config as any).healthCheckTimeout = apiConfig.TIMEOUT.HEALTH;
+    if (apiConfig.TIMEOUT != null) {
+      if (apiConfig.TIMEOUT.DEFAULT !== undefined) config.defaultTimeout = apiConfig.TIMEOUT.DEFAULT;
+      if (apiConfig.TIMEOUT.LONG !== undefined) config.longTimeout = apiConfig.TIMEOUT.LONG;
+      if (apiConfig.TIMEOUT.SHORT !== undefined) config.shortTimeout = apiConfig.TIMEOUT.SHORT;
+      if (apiConfig.TIMEOUT.HEALTH !== undefined) config.healthCheckTimeout = apiConfig.TIMEOUT.HEALTH;
     }
 
-    if (apiConfig.RETRY) {
-      if (apiConfig.RETRY.ATTEMPTS !== undefined) (config as any).maxRetryAttempts = apiConfig.RETRY.ATTEMPTS;
-      if (apiConfig.RETRY.BASE_DELAY !== undefined) (config as any).retryBaseDelay = apiConfig.RETRY.BASE_DELAY;
-      if (apiConfig.RETRY.MAX_DELAY !== undefined) (config as any).retryMaxDelay = apiConfig.RETRY.MAX_DELAY;
+    if (apiConfig.RETRY != null) {
+      if (apiConfig.RETRY.ATTEMPTS !== undefined) config.maxRetryAttempts = apiConfig.RETRY.ATTEMPTS;
+      if (apiConfig.RETRY.BASE_DELAY !== undefined) config.retryBaseDelay = apiConfig.RETRY.BASE_DELAY;
+      if (apiConfig.RETRY.MAX_DELAY !== undefined) config.retryMaxDelay = apiConfig.RETRY.MAX_DELAY;
     }
 
-    return config;
+    return config as Partial<NetworkConfig>;
   }
 }
 

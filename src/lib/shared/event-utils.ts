@@ -1327,12 +1327,10 @@ export function batchHandler<T>(
   return (data: T) => {
     batch.push(data);
 
-    if (timeoutId === null) {
-      timeoutId = setTimeout(() => {
-        timeoutId = null;
-        flush();
-      }, intervalMs);
-    }
+    timeoutId ??= setTimeout(() => {
+      timeoutId = null;
+      flush();
+    }, intervalMs);
   };
 }
 
@@ -1343,9 +1341,9 @@ export function filterHandler<T>(
   handler: EventHandler<T>,
   predicate: (data: T) => boolean
 ): EventHandler<T> {
-  return async (data: T) => {
+  return async (data: T): Promise<void> => {
     if (predicate(data)) {
-      return handler(data);
+      await handler(data);
     }
   };
 }

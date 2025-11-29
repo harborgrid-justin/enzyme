@@ -109,7 +109,7 @@ export function useCSPNonce(
 
   // Set up auto-regeneration interval
   useEffect(() => {
-    if (regenerateInterval && regenerateInterval > 0) {
+    if (regenerateInterval !== undefined && regenerateInterval !== null && regenerateInterval > 0) {
       const intervalId = setInterval(() => {
         regenerate();
       }, regenerateInterval);

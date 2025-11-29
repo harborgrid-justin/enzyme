@@ -303,15 +303,15 @@ function GenericDetailInner<T>({
   renderError,
 }: GenericDetailProps<T>): React.ReactElement {
   if (isLoading === true) {
-    return <>{renderLoading?.() || <DefaultLoadingState />}</>;
+    return <>{renderLoading?.() ?? <DefaultLoadingState />}</>;
   }
 
   if (error != null) {
-    return <>{renderError?.(error) || <DefaultErrorState error={error} />}</>;
+    return <>{renderError?.(error) ?? <DefaultErrorState error={error} />}</>;
   }
 
   if (!item) {
-    return <>{renderEmpty?.() || <DefaultEmptyState message="No item selected" />}</>;
+    return <>{renderEmpty?.() ?? <DefaultEmptyState message="No item selected" />}</>;
   }
 
   return <>{renderContent(item)}</>;
@@ -497,7 +497,7 @@ export const ActionToolbar = memo(({
           key={action.id}
           data-action-id={action.id}
           onClick={handleButtonClick}
-          disabled={action.disabled || action.loading}
+          disabled={(action.disabled ?? false) || (action.loading ?? false)}
           style={getButtonStyle(action.variant, action.disabled)}
         >
           {action.loading ? (

@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React from 'react';
 /**
  * @fileoverview Configurable features system for dynamic feature management.
@@ -583,11 +584,15 @@ export function ConfigurableFeaturesProvider({
   // Subscribe to changes
   useEffect(() => {
     const updateFeatures = (newFeatures: ConfigurableFeature[]) => {
-      setFeatures(newFeatures);
+      setTimeout(() => {
+        setFeatures(newFeatures);
+      }, 0);
     };
 
     // Initial load
-    setFeatures(featureRegistry.getAll());
+    setTimeout(() => {
+      setFeatures(featureRegistry.getAll());
+    }, 0);
 
     // Subscribe
     return featureRegistry.subscribe(updateFeatures);

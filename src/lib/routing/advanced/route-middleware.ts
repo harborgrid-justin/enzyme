@@ -409,9 +409,9 @@ export class MiddlewareChain {
           clearTimeout(timer);
           resolve();
         })
-        .catch((err) => {
+        .catch((err: unknown) => {
           clearTimeout(timer);
-          reject(err);
+          reject(err instanceof Error ? err : new Error(String(err)));
         });
     });
   }
@@ -712,9 +712,7 @@ let defaultChain: MiddlewareChain | null = null;
  * Get the default middleware chain
  */
 export function getMiddlewareChain(): MiddlewareChain {
-  if (!defaultChain) {
-    defaultChain = new MiddlewareChain();
-  }
+  defaultChain ??= new MiddlewareChain();
   return defaultChain;
 }
 

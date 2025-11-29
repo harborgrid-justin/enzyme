@@ -267,9 +267,11 @@ export function useHydrationMetrics(
   const hydrationRateRef = useRef(0);
 
   // Initialize timestamp ref on first mount
-  if (previousTimestampRef.current === 0) {
-    previousTimestampRef.current = Date.now();
-  }
+  useEffect(() => {
+    if (previousTimestampRef.current === 0) {
+      previousTimestampRef.current = Date.now();
+    }
+  }, []);
 
   // ==========================================================================
   // Metrics Fetcher
@@ -290,7 +292,7 @@ export function useHydrationMetrics(
       }
     }
 
-    if (newMetrics) {
+    if (newMetrics !== null && newMetrics !== undefined) {
       // Calculate hydration rate
       const now = Date.now();
       const intervalMs = now - previousTimestampRef.current;
@@ -323,7 +325,7 @@ export function useHydrationMetrics(
       const unsubscribe = scheduler.on('hydration:complete', (event) => {
         // Update duration history
         const payload = event.payload as { duration: number } | undefined;
-        if (payload?.duration) {
+        if (payload?.duration !== null && payload?.duration !== undefined) {
           setDurationHistory((prev) => {
             const newHistory = [...prev, payload.duration];
             // Keep only the last historySize entries
@@ -528,7 +530,7 @@ export function useHydrationMetricsDebug(label = 'HydrationMetrics'): void {
       p95Duration: `${metrics.p95HydrationDuration.toFixed(0)}ms`,
       rate: `${metrics.hydrationRate.toFixed(1)}/s`,
       queueSize: metrics.queueSize,
-      timeToFull: metrics.timeToFullHydration
+      timeToFull: metrics.timeToFullHydration !== null && metrics.timeToFullHydration !== undefined
         ? `${metrics.timeToFullHydration.toFixed(0)}ms`
         : 'pending',
     });

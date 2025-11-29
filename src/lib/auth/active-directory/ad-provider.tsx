@@ -49,6 +49,7 @@ import { validateADConfig } from './ad-config';
  * AD Authentication Context.
  */
 // @refresh reset
+// eslint-disable-next-line react-refresh/only-export-components
 export const ADContext = createContext<ADContextValue | null>(null);
 
 // =============================================================================
@@ -406,7 +407,7 @@ export function ADProvider({
 
       // Check for existing SSO session
       if (ssoManager) {
-        const existingSession = await ssoManager.detectSession();
+        const existingSession = ssoManager.detectSession();
         if (existingSession) {
           const sessionTokens = ssoManager.getSessionTokens();
           if (sessionTokens) {
@@ -439,7 +440,7 @@ export function ADProvider({
         const mappedUser = applyMappings(user, groupMapper, attributeMapper);
 
         if (ssoManager) {
-          await ssoManager.startSession(mappedUser, cachedTokens);
+          ssoManager.startSession(mappedUser, cachedTokens);
         }
 
         dispatch({
@@ -481,7 +482,7 @@ export function ADProvider({
         const mappedUser = applyMappings(user, groupMapper, attributeMapper);
 
         if (ssoManager) {
-          await ssoManager.startSession(mappedUser, tokens);
+          ssoManager.startSession(mappedUser, tokens);
         }
 
         dispatch({
@@ -501,7 +502,7 @@ export function ADProvider({
           error: authError,
           correlationId,
         });
-        throw authError;
+        throw new Error(authError.message);
       }
     },
     [config, tokenHandler, adClient, groupMapper, attributeMapper, ssoManager, emitEvent]
@@ -527,7 +528,7 @@ export function ADProvider({
         const mappedUser = applyMappings(user, groupMapper, attributeMapper);
 
         if (ssoManager) {
-          await ssoManager.startSession(mappedUser, tokens);
+          ssoManager.startSession(mappedUser, tokens);
         }
 
         dispatch({
@@ -537,7 +538,7 @@ export function ADProvider({
       } catch (error) {
         const authError = createAuthError(error);
         dispatch({ type: 'LOGIN_FAILURE', payload: authError });
-        throw authError;
+        throw new Error(authError.message);
       }
     },
     [config, tokenHandler, adClient, groupMapper, attributeMapper, ssoManager]
@@ -551,11 +552,11 @@ export function ADProvider({
       try {
         // End SSO session
         if (ssoManager != null) {
-          await ssoManager.endSession();
+          ssoManager.endSession();
         }
 
         // Clear token cache
-        tokenHandler.clearCache();
+        await tokenHandler.clearCache();
 
         // Update state
         dispatch({ type: 'LOGOUT' });

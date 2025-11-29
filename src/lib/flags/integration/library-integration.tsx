@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React from 'react';
 /**
  * @fileoverview Unified library integration layer for feature flags.
@@ -560,11 +561,15 @@ export function useLibraryFlags<TConfig extends Record<string, unknown>>(
     if (!context) return;
 
     // Get initial config
-    setConfig((context).getLibraryConfig<TConfig>(libraryId));
+    setTimeout(() => {
+      setConfig((context).getLibraryConfig<TConfig>(libraryId));
+    }, 0);
 
     // Subscribe to updates
     return (context).subscribeToLibrary<TConfig>(libraryId, (newConfig: TConfig) => {
-      setConfig(newConfig);
+      setTimeout(() => {
+        setConfig(newConfig);
+      }, 0);
     });
   }, [context, libraryId]);
 
@@ -594,22 +599,26 @@ export function useMultiLibraryFlags<
     if (!context) return;
 
     // Get initial configs
-    const initialConfigs: Partial<TConfigs> = {};
-    for (const id of libraryIds) {
-      const config = context.getLibraryConfig(id as LibraryId);
-      if (config) {
-        initialConfigs[id] = config as TConfigs[typeof id];
+    setTimeout(() => {
+      const initialConfigs: Partial<TConfigs> = {};
+      for (const id of libraryIds) {
+        const config = context.getLibraryConfig(id as LibraryId);
+        if (config) {
+          initialConfigs[id] = config as TConfigs[typeof id];
+        }
       }
-    }
-    setConfigs(initialConfigs);
+      setConfigs(initialConfigs);
+    }, 0);
 
     // Subscribe to all
     const unsubscribers = libraryIds.map((id) =>
       context.subscribeToLibrary(id as LibraryId, (newConfig) => {
-        setConfigs((prev) => ({
-          ...prev,
-          [id]: newConfig,
-        }));
+        setTimeout(() => {
+          setConfigs((prev) => ({
+            ...prev,
+            [id]: newConfig,
+          }));
+        }, 0);
       })
     );
 

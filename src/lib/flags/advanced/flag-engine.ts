@@ -565,7 +565,7 @@ export class FlagEngine {
           startTime,
           undefined,
           undefined,
-          depResult.failedDependency ? { failedDependency: depResult.failedDependency } : {}
+          depResult.failedDependency != null ? { failedDependency: depResult.failedDependency } : {}
         );
       }
     }

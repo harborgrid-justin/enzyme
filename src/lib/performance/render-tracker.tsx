@@ -28,6 +28,7 @@
  * ```
  */
 
+import React from 'react';
 import { RENDER_CONFIG, formatDuration } from '../../config/performance.config';
 
 // ============================================================================
@@ -290,9 +291,7 @@ export class RenderTracker {
    * Get singleton instance
    */
   public static getInstance(config?: RenderTrackerConfig): RenderTracker {
-    if (!RenderTracker.instance) {
-      RenderTracker.instance = new RenderTracker(config);
-    }
+    RenderTracker.instance ??= new RenderTracker(config);
     return RenderTracker.instance;
   }
 

@@ -441,7 +441,7 @@ function VirtualizedDataTableInner<T>({
               width: column.width,
               minWidth: column.minWidth,
               textAlign: column.align ?? 'left',
-              flex: column.width ? 'none' : 1,
+              flex: (column.width !== undefined && column.width !== null) ? 'none' : 1,
             }}
           >
             {column.header}
@@ -459,7 +459,7 @@ function VirtualizedDataTableInner<T>({
       {/* Empty state */}
       {!isLoading && data.length === 0 && (
         <div style={emptyStyle}>
-          {emptyState || 'No data available'}
+          {emptyState ?? 'No data available'}
         </div>
       )}
 
@@ -490,6 +490,7 @@ export const VirtualizedDataTable = memo(VirtualizedDataTableInner) as typeof Vi
  * @param threshold - Threshold above which virtualization is recommended
  * @returns Whether virtualization should be used
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useVirtualizationRecommended(
   dataLength: number,
   threshold: number = 100

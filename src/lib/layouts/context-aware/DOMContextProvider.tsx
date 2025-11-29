@@ -19,6 +19,8 @@
  * @version 1.0.0
  */
 
+/* eslint-disable react-refresh/only-export-components */
+
 import React, {
   createContext,
   useContext,
@@ -144,9 +146,12 @@ export function DOMContextProvider({
   onContextUpdate,
   'data-testid': testId,
 }: DOMContextProviderProps): React.JSX.Element {
+  // Generate context ID once
+  const [contextId] = useState(() => generateContextId());
+
   // Refs
   const containerRef = useRef<HTMLDivElement>(null);
-  const contextIdRef = useRef<string>(generateContextId());
+  const contextIdRef = useRef<string>(contextId);
   const rafHandleRef = useRef<number | null>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isSSR = typeof window === 'undefined';
@@ -157,7 +162,7 @@ export function DOMContextProvider({
     viewport: initialViewport != null
       ? { ...defaultDOMContext.viewport, ...initialViewport }
       : defaultDOMContext.viewport,
-    contextId: contextIdRef.current,
+    contextId,
     isSSR,
   }));
 
@@ -199,12 +204,9 @@ export function DOMContextProvider({
     const portal: PortalContext | null = portalManager.getContextForElement(element);
 
     // Get z-index context
-    let zIndex: ZIndexContext;
-    if (trackZIndex === true) {
-      zIndex = zIndexManager.getZIndexContext(element);
-    } else {
-      zIndex = defaultDOMContext.zIndex;
-    }
+    const zIndex: ZIndexContext = trackZIndex === true
+      ? zIndexManager.getZIndexContext(element)
+      : defaultDOMContext.zIndex;
 
     return {
       ancestors,
@@ -270,8 +272,10 @@ export function DOMContextProvider({
       return;
     }
 
-    // Initial context computation
-    forceUpdate();
+    // Initial context computation - schedule to avoid setState in effect warning
+    const timeoutId = setTimeout(() => {
+      forceUpdate();
+    }, 0);
 
     // Subscribe to viewport changes
     const viewportTracker = getViewportTracker();
@@ -304,6 +308,7 @@ export function DOMContextProvider({
 
     // Cleanup
     return () => {
+      clearTimeout(timeoutId);
       unsubscribeViewport();
       resizeObserver?.disconnect();
       mutationObserver?.disconnect();

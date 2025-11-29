@@ -315,7 +315,7 @@ export function useConfigPaths(): string[] {
   return useMemo(() => {
     const paths: string[] = [];
 
-    const traverse = (obj: ConfigRecord, prefix = '') => {
+    const traverse = (obj: ConfigRecord, prefix = ''): void => {
       for (const [key, value] of Object.entries(obj)) {
         const path = prefix ? `${prefix}.${key}` : key;
         paths.push(path);
@@ -346,7 +346,7 @@ export function useConfigStats(): {
     const sections = Object.keys(config);
     let totalPaths = 0;
 
-    const countPaths = (obj: ConfigRecord) => {
+    const countPaths = (obj: ConfigRecord): void => {
       for (const value of Object.values(obj)) {
         totalPaths++;
         if (value !== null && typeof value === 'object' && !Array.isArray(value)) {

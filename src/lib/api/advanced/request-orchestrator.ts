@@ -190,7 +190,7 @@ export class RequestOrchestrator {
     }
 
     if (errors.length > 0 && stopOnError) {
-      const firstError = errors[0];
+      const [firstError] = errors;
       throw firstError instanceof Error ? firstError : new Error(String(firstError));
     }
 
@@ -222,7 +222,7 @@ export class RequestOrchestrator {
       } else {
         const request = requests[index];
         if (request != null) {
-          rejected.push({ request, error: result.reason });
+          rejected.push({ request, error: result.reason as Error });
         }
       }
     });
@@ -262,7 +262,7 @@ export class RequestOrchestrator {
         const result = await this.executor<T>(request);
         results.push(result);
 
-        if (config?.delay) {
+        if (config?.delay !== undefined && config.delay > 0) {
           await this.delay(config.delay);
         }
       } catch (error) {
@@ -296,7 +296,7 @@ export class RequestOrchestrator {
 
     for (const step of steps) {
       // Check skip condition
-      if (step.skip?.(currentInput, context)) {
+      if (step.skip !== undefined && step.skip(currentInput, context) === true) {
         continue;
       }
 
@@ -349,10 +349,16 @@ export class RequestOrchestrator {
     // Execute level by level
     for (const level of levels) {
       const levelRequests = level
-        .map(id => requestMap.get(id)!)
+        .map(id => {
+          const req = requestMap.get(id);
+          if (req === undefined) {
+            throw new Error(`Request not found: ${id}`);
+          }
+          return req;
+        })
         .filter(req => {
           // Check condition
-          if (req.condition && !req.condition(results)) {
+          if (req.condition !== undefined && !req.condition(results)) {
             return false;
           }
           return true;
@@ -436,7 +442,10 @@ export class RequestOrchestrator {
             throw new Error(`Unknown dependency: ${dep}`);
           }
           inDegree.set(req.id, (inDegree.get(req.id) ?? 0) + 1);
-          dependents.get(dep)!.push(req.id);
+          const depList = dependents.get(dep);
+          if (depList !== undefined) {
+            depList.push(req.id);
+          }
         }
       }
     }
@@ -490,7 +499,11 @@ export class RequestOrchestrator {
 
     for (let i = 0; i < allRequests.length; i++) {
       try {
-        return await this.executor<T>(allRequests[i]!);
+        const request = allRequests[i];
+        if (request === undefined) {
+          throw new Error('Request not found');
+        }
+        return await this.executor<T>(request);
       } catch (error) {
         if (i === allRequests.length - 1) {
           throw error;
@@ -529,7 +542,7 @@ export class RequestOrchestrator {
       }
     }
 
-    throw lastError;
+    throw lastError ?? new Error('Request failed after retries');
   }
 
   /**

@@ -417,7 +417,7 @@ class CSRFProtectionClass {
     // Get cookie token if not provided
     const cookie = cookieToken ?? getCookie(this.config.cookieName);
 
-    if (!cookie) {
+    if (cookie === null || cookie === undefined || cookie === '') {
       return {
         isValid: false,
         reason: 'Missing CSRF cookie',
@@ -428,7 +428,7 @@ class CSRFProtectionClass {
     // Parse cookie value (token:timestamp format)
     const [expectedToken] = cookie.split(':');
 
-    if (!expectedToken) {
+    if (expectedToken === undefined || expectedToken === null || expectedToken === '') {
       return {
         isValid: false,
         reason: 'Invalid CSRF cookie format',
@@ -469,7 +469,7 @@ class CSRFProtectionClass {
     // Get the origin to validate
     let requestOrigin = origin;
 
-    if (!requestOrigin && referer) {
+    if ((requestOrigin === null || requestOrigin === undefined || requestOrigin === '') && (referer !== null && referer !== undefined && referer !== '')) {
       try {
         const url = new URL(referer);
         requestOrigin = url.origin;
@@ -479,7 +479,7 @@ class CSRFProtectionClass {
     }
 
     // If no origin available, fail closed (secure default)
-    if (!requestOrigin) {
+    if (requestOrigin === null || requestOrigin === undefined || requestOrigin === '') {
       return {
         isValid: false,
         reason: 'Missing Origin/Referer header',
@@ -513,7 +513,7 @@ class CSRFProtectionClass {
 
       // Skip if method doesn't require CSRF protection
       if (!requiresCSRFProtection(method)) {
-        return config;
+        return Promise.resolve(config);
       }
 
       // Get current token
@@ -523,10 +523,10 @@ class CSRFProtectionClass {
       const headers = new Headers(config.headers);
       headers.set(this.config.headerName, token);
 
-      return {
+      return Promise.resolve({
         ...config,
         headers,
-      };
+      });
     };
   }
 
@@ -549,11 +549,14 @@ class CSRFProtectionClass {
       init?: RequestInit
     ): Promise<Response> => {
       // Get the URL for path checking
-      const url = typeof input === 'string'
-        ? input
-        : input instanceof URL
-          ? input.pathname
-          : input.url;
+      let url: string;
+      if (typeof input === 'string') {
+        url = input;
+      } else if (input instanceof URL) {
+        url = input.pathname;
+      } else {
+        url = input.url;
+      }
 
       // Skip CSRF for excluded paths
       // Raw fetch is intentional - this IS the CSRF wrapper
@@ -598,9 +601,9 @@ class CSRFProtectionClass {
    */
   async getHeaders(): Promise<Record<string, string>> {
     const token = this.getToken();
-    return {
+    return Promise.resolve({
       [this.config.headerName]: token,
-    };
+    });
   }
 
   /**
@@ -699,12 +702,12 @@ export async function createSecureRequestInit(
     headers[csrfConfig.headerName] = token;
   }
 
-  return {
+  return Promise.resolve({
     method,
     headers,
     body,
     credentials: 'same-origin',
-  };
+  });
 }
 
 /**
@@ -778,7 +781,7 @@ export function validateRequest(
 
   switch (config.mode) {
     case 'synchronizer-token':
-      if (!headerValue) {
+      if (headerValue === null || headerValue === undefined || headerValue === '') {
         return {
           isValid: false,
           reason: `Missing ${config.headerName} header`,
@@ -788,7 +791,7 @@ export function validateRequest(
       return CSRFProtection.validateToken(headerValue);
 
     case 'double-submit-cookie':
-      if (!headerValue) {
+      if (headerValue === null || headerValue === undefined || headerValue === '') {
         return {
           isValid: false,
           reason: `Missing ${config.headerName} header`,
@@ -809,7 +812,7 @@ export function validateRequest(
 
     case 'custom-header':
       // Just check that the custom header exists
-      if (!headerValue) {
+      if (headerValue === null || headerValue === undefined || headerValue === '') {
         return {
           isValid: false,
           reason: `Missing required header: ${config.headerName}`,
@@ -836,11 +839,11 @@ export async function createCSRFInputProps(): Promise<{
   value: string;
 }> {
   const token = CSRFProtection.getToken();
-  return {
+  return Promise.resolve({
     type: 'hidden',
     name: csrfConfig.fieldName,
     value: token,
-  };
+  });
 }
 
 /**
@@ -852,10 +855,10 @@ export async function createCSRFMetaProps(): Promise<{
   content: string;
 }> {
   const token = CSRFProtection.getToken();
-  return {
+  return Promise.resolve({
     name: 'csrf-token',
     content: token,
-  };
+  });
 }
 
 // ============================================================================

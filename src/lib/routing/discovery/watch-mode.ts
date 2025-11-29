@@ -312,7 +312,7 @@ export class WatchMode {
     const watchers: ReturnType<typeof watch>[] = [];
 
     const wrapperWatcher: FileWatcher = {
-      on(event: any, handler: any): FileWatcher {
+      on(event: 'add' | 'change' | 'unlink' | 'error' | 'ready', handler: ((path: string) => void) | ((error: Error) => void) | (() => void)): FileWatcher {
         // Store handlers for manual dispatch
         if (event === 'ready') {
           // Immediately ready with fs.watch
@@ -320,10 +320,11 @@ export class WatchMode {
         }
         return this;
       },
-      close: async () => {
+      close: () => {
         for (const w of watchers) {
           w.close();
         }
+        return Promise.resolve();
       },
     };
 

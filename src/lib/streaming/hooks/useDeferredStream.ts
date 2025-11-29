@@ -447,7 +447,7 @@ export function useExtendedDeferredStream(
 
   useLayoutEffect(() => {
     if ((options.maxDeferMs == null || options.maxDeferMs === 0) || !base.isDeferred) {
-      // eslint-disable-next-line @eslint-react/hooks-extra/no-direct-set-state-in-use-effect
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTimeRemaining(null);
       return;
     }

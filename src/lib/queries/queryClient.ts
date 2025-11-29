@@ -210,7 +210,7 @@ function createMutationErrorHandler(config: QueryClientConfig) {
     _context: unknown,
     _mutation: unknown
   ): void => {
-    const message = getErrorMessage(error) || 'An error occurred';
+    const message = getErrorMessage(error) ?? 'An error occurred';
 
     console.error('[Mutation Error]', message, { error });
 
@@ -225,7 +225,7 @@ function createMutationErrorHandler(config: QueryClientConfig) {
  * Extract error message from various error types
  */
 function getErrorMessage(error: unknown): string | null {
-  if (!error) return null;
+  if (error == null) return null;
 
   if (typeof error === 'string') return error;
 
@@ -333,13 +333,13 @@ function setupNetworkHandlers(): void {
 
   // Online manager - pause/resume queries based on network status
   onlineManager.setEventListener((setOnline) => {
-    const handleOnline = () => {
-      console.log('[Query] Network online - resuming queries');
+    const handleOnline = (): void => {
+      console.info('[Query] Network online - resuming queries');
       setOnline(true);
     };
 
-    const handleOffline = () => {
-      console.log('[Query] Network offline - pausing queries');
+    const handleOffline = (): void => {
+      console.info('[Query] Network offline - pausing queries');
       setOnline(false);
     };
 
@@ -357,12 +357,12 @@ function setupNetworkHandlers(): void {
 
   // Focus manager - refetch on window focus
   focusManager.setEventListener((setFocused) => {
-    const handleVisibilityChange = () => {
+    const handleVisibilityChange = (): void => {
       const isVisible = document.visibilityState === 'visible';
       setFocused(isVisible);
 
       if (isVisible) {
-        console.log('[Query] Window focused - checking for stale queries');
+        console.info('[Query] Window focused - checking for stale queries');
       }
     };
 
@@ -559,7 +559,15 @@ export function removeQuery(queryKey: readonly unknown[]): void {
 export function createOptimisticHandlers<TData, TVariables>(
   queryKey: readonly unknown[],
   optimisticUpdater: (oldData: TData | undefined, variables: TVariables) => TData
-) {
+): {
+  onMutate: (variables: TVariables) => Promise<{ previousData: TData | undefined }>;
+  onError: (
+    _error: unknown,
+    _variables: TVariables,
+    context: { previousData: TData | undefined } | undefined
+  ) => void;
+  onSettled: () => void;
+} {
   return {
     onMutate: async (variables: TVariables) => {
       // Cancel outgoing refetches
@@ -588,7 +596,7 @@ export function createOptimisticHandlers<TData, TVariables>(
     },
     onSettled: () => {
       // Refetch after mutation
-      queryClient.invalidateQueries({ queryKey });
+      void queryClient.invalidateQueries({ queryKey });
     },
   };
 }

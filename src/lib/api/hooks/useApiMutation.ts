@@ -238,8 +238,9 @@ export function useApiMutation<
 
         const previousData = queryClient.getQueryData(config.optimisticQueryKey);
 
+        const { optimisticUpdate } = config;
         queryClient.setQueryData(config.optimisticQueryKey, (old: unknown) =>
-          config.optimisticUpdate!(old, variables)
+          optimisticUpdate(old, variables)
         );
 
         return { previousData } as TContext;
@@ -291,7 +292,7 @@ export function useApiMutation<
       context: TContext | undefined
     ) => {
       // Rollback optimistic update
-      if (config.optimisticQueryKey && context) {
+      if (config.optimisticQueryKey !== undefined && context !== undefined && context !== null) {
         const ctx = context as { previousData?: unknown };
         if (ctx.previousData !== undefined) {
           queryClient.setQueryData(config.optimisticQueryKey, ctx.previousData);
@@ -520,10 +521,10 @@ export function createOptimisticUpdate<TItem extends Record<string, unknown>>(
     optimisticQueryKey: queryKey,
     optimisticUpdate: (oldData, variables) => {
       const items = oldData as TItem[] | undefined;
-      if (!items) return items;
+      if (items === undefined || items === null) return items;
 
       const id = variables.pathParams?.id;
-      if (!id) return items;
+      if (id === undefined || id === null) return items;
 
       return items.map((item) =>
         getItemId(item) === id ? { ...item, ...variables.body } : item
@@ -553,10 +554,10 @@ export function createOptimisticRemove<TItem>(
     optimisticQueryKey: queryKey,
     optimisticUpdate: (oldData, variables) => {
       const items = oldData as TItem[] | undefined;
-      if (!items) return items;
+      if (items === undefined || items === null) return items;
 
       const id = variables.pathParams?.id;
-      if (!id) return items;
+      if (id === undefined || id === null) return items;
 
       return items.filter((item) => getItemId(item) !== id);
     },

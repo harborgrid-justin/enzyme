@@ -396,7 +396,7 @@ export class FlagImpactAnalyzer {
     this.enforceMaxDataPoints(metricList);
 
     // Store in flag-specific metrics
-    if (input.flagKey && input.variantId) {
+    if (input.flagKey !== undefined && input.flagKey !== '' && input.variantId !== undefined && input.variantId !== '') {
       const {flagKey} = input;
       if (!this.flagMetrics.has(flagKey)) {
         this.flagMetrics.set(flagKey, new Map());
@@ -610,8 +610,8 @@ export class FlagImpactAnalyzer {
 
     for (const [key, dataPoints] of flagMap.entries()) {
       const [metric, variant] = key.split(':');
-      if (metric) metricsSet.add(metric);
-      if (variant) variantsSet.add(variant);
+      if (metric !== undefined && metric !== '') metricsSet.add(metric);
+      if (variant !== undefined && variant !== '') variantsSet.add(variant);
 
       for (const dp of dataPoints) {
         if (dp.timestamp < periodStart) {
@@ -620,7 +620,7 @@ export class FlagImpactAnalyzer {
         if (dp.timestamp > periodEnd) {
           periodEnd = dp.timestamp;
         }
-        if (dp.userId) {
+        if (dp.userId !== undefined && dp.userId !== '') {
           userSet.add(dp.userId);
         }
       }
@@ -648,7 +648,7 @@ export class FlagImpactAnalyzer {
       for (const [key, dataPoints] of flagMap.entries()) {
         if (key.endsWith(`:${variant}`)) {
           for (const dp of dataPoints) {
-            if (dp.userId) {
+            if (dp.userId !== undefined && dp.userId !== '') {
               userIds.add(dp.userId);
             }
           }
@@ -762,8 +762,14 @@ export class FlagImpactAnalyzer {
       parts.push('No significant impact detected');
     }
 
-    const impactDirection =
-      impactScore > 0 ? 'positive' : impactScore < 0 ? 'negative' : 'neutral';
+    let impactDirection: string;
+    if (impactScore > 0) {
+      impactDirection = 'positive';
+    } else if (impactScore < 0) {
+      impactDirection = 'negative';
+    } else {
+      impactDirection = 'neutral';
+    }
     parts.push(`Overall impact: ${impactDirection} (score: ${impactScore})`);
 
     return `${parts.join('. ')  }.`;
@@ -799,7 +805,7 @@ export class FlagImpactAnalyzer {
     const metrics = new Set<string>();
     for (const key of flagMap.keys()) {
       const [metric] = key.split(':');
-      if (metric) metrics.add(metric);
+      if (metric !== undefined && metric !== '') metrics.add(metric);
     }
 
     return Array.from(metrics);
@@ -817,7 +823,7 @@ export class FlagImpactAnalyzer {
     const variants = new Set<VariantId>();
     for (const key of flagMap.keys()) {
       const parts = key.split(':');
-      if (parts.length > 1 && parts[1]) {
+      if (parts.length > 1 && parts[1] !== undefined && parts[1] !== '') {
         variants.add(parts[1]);
       }
     }

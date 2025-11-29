@@ -548,9 +548,10 @@ export class RBACEngine {
       case 'group':
         // Check group membership (would need group info in subject)
         return false;
-      case 'attribute':
+      case 'attribute': {
         const attrValue = request.subject.attributes?.[subject.identifier];
         return subject.value === undefined || attrValue === subject.value;
+      }
       default:
         return false;
     }
@@ -733,9 +734,10 @@ export class RBACEngine {
     const now = request.context?.timestamp ?? Date.now();
 
     switch (condition.operator) {
-      case 'between':
+      case 'between': {
         const [start, end] = condition.value as [number, number];
         return now >= start && now <= end;
+      }
       case 'before':
         return now < (condition.value as number);
       case 'after':
@@ -842,7 +844,7 @@ export class RBACEngine {
 
     // Check for explicit deny
     const hasDeny = matchingEntries.some(
-      entry => entry.deniedActions?.includes(request.action as PermissionAction) ||
+      entry => entry.deniedActions?.includes(request.action as PermissionAction) ??
                entry.deniedActions?.includes(WILDCARD as PermissionAction)
     );
 

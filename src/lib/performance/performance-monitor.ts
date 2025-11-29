@@ -264,9 +264,7 @@ export class PerformanceMonitor {
    * Get singleton instance
    */
   public static getInstance(options?: PerformanceMonitorOptions): PerformanceMonitor {
-    if (!PerformanceMonitor.instance) {
-      PerformanceMonitor.instance = new PerformanceMonitor(options);
-    }
+    PerformanceMonitor.instance ??= new PerformanceMonitor(options);
     return PerformanceMonitor.instance;
   }
 
@@ -720,8 +718,8 @@ export class PerformanceMonitor {
       return 'poor';
     }
 
-    const rating = meetsVitalThreshold(metric, value);
-    const vitalThreshold = VITAL_THRESHOLDS[metric];
+    const rating = meetsVitalThreshold(metric as import('./vitals').VitalMetricName, value);
+    const vitalThreshold = VITAL_THRESHOLDS[metric as import('./vitals').VitalMetricName];
     const budgetValue = vitalThreshold?.good ?? 0;
 
     if (rating === 'poor') {
@@ -866,7 +864,7 @@ export class PerformanceMonitor {
    */
   private log(message: string, ...args: unknown[]): void {
     if (this.options.debug) {
-      console.log(`[PerformanceMonitor] ${message}`, ...args);
+      console.info(`[PerformanceMonitor] ${message}`, ...args);
     }
   }
 

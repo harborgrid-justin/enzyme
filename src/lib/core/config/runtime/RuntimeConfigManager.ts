@@ -320,7 +320,7 @@ export class RuntimeConfigManager {
 
     try {
       const stored = localStorage.getItem(this.options.storageKey);
-      if (stored) {
+      if (stored != null && stored !== '') {
         const config = JSON.parse(stored) as DeepPartial<LibraryConfig>;
         const registry = getConfigRegistry();
         registry.applyOverlay(config, 'runtime');
@@ -350,11 +350,11 @@ export class RuntimeConfigManager {
     this.remoteUrl = url;
 
     // Fetch immediately
-    this.fetchRemoteConfig();
+    void this.fetchRemoteConfig();
 
     // Set up polling
     this.pollingTimer = setInterval(() => {
-      this.fetchRemoteConfig();
+      void this.fetchRemoteConfig();
     }, interval);
   }
 
@@ -373,7 +373,7 @@ export class RuntimeConfigManager {
    * Fetch remote configuration once.
    */
   async fetchRemoteConfig(): Promise<void> {
-    if (!this.remoteUrl) {
+    if (this.remoteUrl == null || this.remoteUrl === '') {
       return;
     }
 

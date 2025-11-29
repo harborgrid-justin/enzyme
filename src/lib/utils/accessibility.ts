@@ -203,10 +203,10 @@ export function getLoadingAriaAttributes(isLoading: boolean, label?: string): {
 /**
  * Get ARIA attributes for expanded/collapsed state
  */
-export function getExpandableAriaAttributes(isExpanded: boolean, controlsId?: string) {
+export function getExpandableAriaAttributes(isExpanded: boolean, controlsId?: string): Record<string, boolean | string> {
   return {
     'aria-expanded': isExpanded,
-    ...(controlsId && { 'aria-controls': controlsId }),
+    ...((controlsId !== undefined && controlsId !== '') && { 'aria-controls': controlsId }),
   };
 }
 

@@ -35,12 +35,13 @@ import { ConfigMerger } from './config-merger';
  */
 export function detectEnvironment(): Environment {
   // Check import.meta.env (Vite)
-  if (typeof import.meta !== 'undefined' && import.meta.env?.MODE) {
-    return normalizeEnvironment(import.meta.env.MODE);
+  const importMetaMode = import.meta?.env?.MODE;
+  if (importMetaMode !== undefined && importMetaMode !== '') {
+    return normalizeEnvironment(importMetaMode);
   }
 
   // Check process.env (Node.js, CRA)
-  if (typeof process !== 'undefined' && process.env?.NODE_ENV) {
+  if (typeof process !== 'undefined' && process.env?.NODE_ENV !== undefined && process.env.NODE_ENV !== '') {
     return normalizeEnvironment(process.env.NODE_ENV);
   }
 
@@ -253,15 +254,16 @@ export function getEnvVar(
   defaultValue?: string
 ): string | undefined {
   // Try import.meta.env (Vite)
-  if (typeof import.meta !== 'undefined' && import.meta.env) {
-    const value = import.meta.env[name];
+  const importMetaEnv = import.meta?.env;
+  if (importMetaEnv !== undefined && importMetaEnv !== null) {
+    const value = importMetaEnv[name] as string | undefined;
     if (value !== undefined) {
       return value;
     }
   }
 
   // Try process.env (Node.js)
-  if (typeof process !== 'undefined' && process.env) {
+  if (typeof process !== 'undefined' && process.env !== undefined) {
     const value = process.env[name];
     if (value !== undefined) {
       return value;
@@ -354,9 +356,7 @@ let instance: EnvironmentConfigManager | null = null;
  * Get the singleton environment config manager.
  */
 export function getEnvironmentConfig(): EnvironmentConfigManager {
-  if (!instance) {
-    instance = new EnvironmentConfigManager();
-  }
+  instance ??= new EnvironmentConfigManager();
   return instance;
 }
 

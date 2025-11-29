@@ -23,6 +23,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type DependencyList 
  * Custom hook to track dependency array changes with a stable version number.
  * This allows proper ESLint compliance when using dynamic dependency arrays.
  */
+/* eslint-disable react-hooks/refs */
 function useDepsVersion(deps: DependencyList): number {
   const versionRef = useRef(0);
   const prevDepsRef = useRef<DependencyList>(deps);
@@ -39,6 +40,7 @@ function useDepsVersion(deps: DependencyList): number {
 
   return versionRef.current;
 }
+/* eslint-enable react-hooks/refs */
 
 // ============================================================================
 // Type Guards
@@ -354,7 +356,7 @@ class TaskPriorityQueue {
    * Get all pending tasks of a priority
    */
   getTasksByPriority(priority: RenderPriority): ScheduledTask[] {
-    return [...(this.queues.get(priority) || [])];
+    return [...(this.queues.get(priority) ?? [])];
   }
 
   /**
@@ -526,7 +528,8 @@ export class RenderScheduler {
     return new Promise((resolve) => {
       // Use scheduler.yield() if available (Chrome 115+)
       if (hasSchedulerYieldAPI(globalThis)) {
-        (globalThis as any).scheduler.yield().then(resolve);
+        const scheduler = globalThis.scheduler as { yield: () => Promise<void> };
+        void scheduler.yield().then(resolve);
       } else {
         // Fallback to setTimeout
         setTimeout(resolve, 0);
@@ -613,7 +616,7 @@ export class RenderScheduler {
   private processImmediateTasks(): void {
     const immediateTasks = this.queue.getTasksByPriority('immediate');
     for (const task of immediateTasks) {
-      this.executeTask(task);
+      void this.executeTask(task);
       this.queue.removeById(task.id);
     }
   }
@@ -635,7 +638,7 @@ export class RenderScheduler {
       }
 
       this.queue.dequeue();
-      this.executeTask(task);
+      void this.executeTask(task);
     }
   }
 
@@ -651,7 +654,7 @@ export class RenderScheduler {
       if (task.priority !== 'idle' && task.priority !== 'low') break;
 
       this.queue.dequeue();
-      this.executeTask(task);
+      void this.executeTask(task);
     }
   }
 
@@ -753,7 +756,7 @@ export class RenderScheduler {
  */
 export function useOptimizedRender<T>(
   computeFn: () => T,
-  deps: React.DependencyList,
+  deps: DependencyList,
   options: {
     priority?: RenderPriority;
     defer?: boolean;
@@ -781,6 +784,7 @@ export function useOptimizedRender<T>(
     }, { priority });
 
     return () => {
+      /* eslint-disable-next-line react-hooks/exhaustive-deps */
       scheduler.current.cancel(taskId);
     };
   }, [depsVersion, computeFn, defer, priority]);
@@ -800,6 +804,7 @@ export function useDeferredRender(
 
   useEffect(() => {
     if (!shouldDefer) {
+      /* eslint-disable-next-line react-hooks/set-state-in-effect */
       setIsDeferred(false);
       setIsDeferring(false);
       return;

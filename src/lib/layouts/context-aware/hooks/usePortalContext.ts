@@ -8,7 +8,8 @@
  * @version 1.0.0
  */
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
+import type { RefCallback } from 'react';
 
 import type {
   PortalContext,
@@ -92,13 +93,13 @@ export function usePortalContext(): UsePortalContextReturn {
     // Find the layer that matches the portal's z-index
     const entries = Object.entries(Z_INDEX_LAYERS) as [ZIndexLayer, number][];
     const matchingEntry = entries.find(([_, zIndex]) => zIndex === portal.layer);
-    return matchingEntry?.[0] || 'base';
+    return matchingEntry?.[0] ?? 'base';
   }, [portal]);
 
   return {
     portal,
     isInPortal: portal !== null,
-    sourceContext: portal?.sourceContext || null,
+    sourceContext: portal?.sourceContext ?? null,
     layer,
     getLayerZIndex: getZIndex,
   };
@@ -176,7 +177,7 @@ export function useSourceContext(): DOMContextSnapshot | null {
  */
 export function usePortalNestingDepth(): number {
   const { portal } = usePortalContext();
-  return portal?.nestingDepth || 0;
+  return portal?.nestingDepth ?? 0;
 }
 
 /**
@@ -267,7 +268,11 @@ export function useZIndexForLayer(layer: ZIndexLayer): number {
  * }
  * ```
  */
-export function useZIndexContext() {
+export function useZIndexContext(): {
+  zIndex: number;
+  layer: ZIndexLayer;
+  createsStackingContext: boolean;
+} {
   const domContext = useDOMContextValue();
   return domContext.zIndex;
 }
@@ -292,41 +297,38 @@ export function useZIndexContext() {
  * ```
  */
 export function useZIndexRegistration(layer: ZIndexLayer = 'base'): {
-  ref: React.RefCallback<HTMLElement>;
+  ref: RefCallback<HTMLElement>;
   zIndex: number;
   bringToFront: () => void;
   sendToBack: () => void;
 } {
-  const elementRef = { current: null as HTMLElement | null };
+  const elementRef = useRef<HTMLElement | null>(null);
   const zIndexManager = getZIndexManager();
 
   // Registration ref callback
   const ref = useCallback(
     (node: HTMLElement | null) => {
       // Unregister previous element
-      if (elementRef.current) {
+      if (elementRef.current !== null) {
         zIndexManager.unregister(elementRef.current);
       }
 
       // Register new element
-      if (node) {
+      if (node !== null) {
         const registration = zIndexManager.register(node, { layer });
         node.style.zIndex = String(registration.zIndex);
+        elementRef.current = node;
+      } else {
+        elementRef.current = null;
       }
-
-      elementRef.current = node;
     },
     [layer, zIndexManager]
   );
 
-  // Get z-index
+  // Get z-index (static value based on layer, not dependent on ref)
   const zIndex = useMemo(() => {
-    if (elementRef.current) {
-      const reg = zIndexManager.getRegistration(elementRef.current);
-      return reg?.zIndex ?? Z_INDEX_LAYERS[layer];
-    }
     return Z_INDEX_LAYERS[layer];
-  }, [layer, zIndexManager]);
+  }, [layer]);
 
   // Bring to front
   const bringToFront = useCallback(() => {

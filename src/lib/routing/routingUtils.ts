@@ -61,7 +61,7 @@ export function useRouteInfo(): {
       pathname: location.pathname,
       search: location.search,
       hash: location.hash,
-      state: location.state,
+      state: location.state as unknown,
       params,
       query: Object.fromEntries(searchParams.entries()),
       isExactMatch: (path: RoutePath) => location.pathname === path,
@@ -74,12 +74,26 @@ export function useRouteInfo(): {
 /**
  * Hook for type-safe navigation
  */
-export function useRouteNavigate() {
+export function useRouteNavigate(): {
+  navigateTo: (path: RoutePath | string, options?: NavigateOptions) => void;
+  navigateWithParams: <T extends keyof RouteParams>(
+    path: T,
+    params: RouteParams[T],
+    options?: NavigateOptions
+  ) => void;
+  navigateWithQuery: <T extends keyof RouteQuery>(
+    path: T,
+    query?: Partial<RouteQuery[T]>,
+    options?: NavigateOptions
+  ) => void;
+  goBack: () => void;
+  goForward: () => void;
+} {
   const navigate = useNavigate();
 
   const navigateTo = useCallback(
     (path: RoutePath | string, options?: NavigateOptions) => {
-      navigate(path, options);
+      void navigate(path, options);
     },
     [navigate]
   );
@@ -94,7 +108,7 @@ export function useRouteNavigate() {
       for (const [key, value] of Object.entries(params)) {
         resolvedPath = resolvedPath.replace(`:${key}`, encodeURIComponent(String(value)));
       }
-      navigate(resolvedPath, options);
+      void navigate(resolvedPath, options);
     },
     [navigate]
   );
@@ -110,22 +124,30 @@ export function useRouteNavigate() {
         const searchParams = new URLSearchParams();
         for (const [key, value] of Object.entries(query)) {
           if (value !== undefined && value !== null) {
-            searchParams.set(key, String(value));
+            let stringValue: string;
+            if (typeof value === 'object') {
+              stringValue = JSON.stringify(value);
+            } else if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+              stringValue = String(value);
+            } else {
+              stringValue = JSON.stringify(value);
+            }
+            searchParams.set(key, stringValue);
           }
         }
         resolvedPath = `${path}?${searchParams.toString()}`;
       }
-      navigate(resolvedPath, options);
+      void navigate(resolvedPath, options);
     },
     [navigate]
   );
 
   const goBack = useCallback(() => {
-    navigate(-1);
+    void navigate(-1);
   }, [navigate]);
 
   const goForward = useCallback(() => {
-    navigate(1);
+    void navigate(1);
   }, [navigate]);
 
   return {

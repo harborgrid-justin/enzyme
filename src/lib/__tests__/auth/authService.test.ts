@@ -99,8 +99,8 @@ describe('AuthService', () => {
       },
     }));
 
-    const module = await import('@/lib/auth/authService');
-    authService = module.authService;
+    const { authService: authServiceImport } = await import('@/lib/auth/authService');
+    authService = authServiceImport;
   });
 
   afterEach(() => {

@@ -249,28 +249,28 @@ export function useUsers(filters?: UserFilters): ReturnType<typeof useQuery<User
 /**
  * Hook to fetch current user profile with Suspense
  */
-export function useUserProfileSuspense() {
+export function useUserProfileSuspense(): ReturnType<typeof useSuspenseQuery<User>> {
   return useSuspenseQuery(userProfileSuspenseQueryOptions());
 }
 
 /**
  * Hook to fetch single user with Suspense
  */
-export function useUserSuspense(id: string) {
+export function useUserSuspense(id: string): ReturnType<typeof useSuspenseQuery<User>> {
   return useSuspenseQuery(userDetailSuspenseQueryOptions(id));
 }
 
 /**
  * Hook to fetch single user
  */
-export function useUser(id: string) {
+export function useUser(id: string): ReturnType<typeof useQuery<User>> {
   return useQuery(userDetailQueryOptions(id));
 }
 
 /**
  * Hook to fetch current user profile
  */
-export function useUserProfile() {
+export function useUserProfile(): ReturnType<typeof useQuery<User>> {
   return useQuery(userProfileQueryOptions());
 }
 
@@ -280,13 +280,13 @@ export function useUserProfile() {
  */
 export function useCreateUser(
   options?: UseMutationOptions<User, ApiError, CreateUserPayload>
-) {
+): ReturnType<typeof useMutation<User, ApiError, CreateUserPayload>> {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: createUser,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
     },
     ...options,
   });
@@ -298,14 +298,14 @@ export function useCreateUser(
  */
 export function useUpdateUser(
   options?: UseMutationOptions<User, ApiError, { id: string; payload: UpdateUserPayload }>
-) {
+): ReturnType<typeof useMutation<User, ApiError, { id: string; payload: UpdateUserPayload }>> {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async ({ id, payload }) => updateUser(id, payload),
     onSuccess: (updatedUser) => {
       queryClient.setQueryData(queryKeys.users.detail(updatedUser.id), updatedUser);
-      queryClient.invalidateQueries({ queryKey: queryKeys.users.list() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.list() });
     },
     ...options,
   });
@@ -317,14 +317,14 @@ export function useUpdateUser(
  */
 export function useDeleteUser(
   options?: UseMutationOptions<void, ApiError, string>
-) {
+): ReturnType<typeof useMutation<void, ApiError, string>> {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: deleteUser,
     onSuccess: (_, id) => {
       queryClient.removeQueries({ queryKey: queryKeys.users.detail(id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.users.list() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.users.list() });
     },
     ...options,
   });

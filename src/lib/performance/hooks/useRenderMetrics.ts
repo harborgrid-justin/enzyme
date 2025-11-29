@@ -141,22 +141,20 @@ export function useRenderMetrics(
 
   // Get tracker instance
   const trackerRef = useRef<RenderTracker | null>(null);
-  if (trackerRef.current === null) {
-    trackerRef.current = getRenderTracker({
-      slowThreshold,
-      debug,
-      onSlowRender: (entry) => {
-        if (entry.componentName === componentName) {
-          onSlowRender?.(entry);
-        }
-      },
-      onWastedRender: (entry) => {
-        if (entry.componentName === componentName) {
-          onWastedRender?.(entry);
-        }
-      },
-    });
-  }
+  trackerRef.current ??= getRenderTracker({
+    slowThreshold,
+    debug,
+    onSlowRender: (entry) => {
+      if (entry.componentName === componentName) {
+        onSlowRender?.(entry);
+      }
+    },
+    onWastedRender: (entry) => {
+      if (entry.componentName === componentName) {
+        onWastedRender?.(entry);
+      }
+    },
+  });
 
   const tracker = trackerRef.current;
 
@@ -280,7 +278,7 @@ export function useRenderMetrics(
     // This is a placeholder - in a real implementation,
     // we'd need to update the last render entry
     if (debug) {
-      console.log(`[useRenderMetrics] Wasted render marked for ${componentName}`);
+      console.info(`[useRenderMetrics] Wasted render marked for ${componentName}`);
     }
   }, [componentName, debug]);
 
@@ -439,8 +437,9 @@ export function useWastedRenderDetector(
 
     // Check if any deps actually changed
     const changed: number[] = [];
+    const prevDeps = prevDepsRef.current;
     deps.forEach((dep, i) => {
-      if (dep !== prevDepsRef.current![i]) {
+      if (prevDeps !== null && dep !== prevDeps[i]) {
         changed.push(i);
       }
     });
@@ -456,6 +455,7 @@ export function useWastedRenderDetector(
     });
 
     prevDepsRef.current = deps;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 
   return { wasWasted, reason };

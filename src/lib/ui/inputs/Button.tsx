@@ -279,9 +279,9 @@ export const Button = memo(forwardRef<HTMLButtonElement, ButtonProps>((
   // Content rendering
   const content = (
     <>
-      {leftIcon && renderIcon(leftIcon, 'left')}
+      {(leftIcon !== null && leftIcon !== undefined) && renderIcon(leftIcon, 'left')}
       {children}
-      {rightIcon && renderIcon(rightIcon, 'right')}
+      {(rightIcon !== null && rightIcon !== undefined) && renderIcon(rightIcon, 'right')}
     </>
   );
 
@@ -294,7 +294,11 @@ export const Button = memo(forwardRef<HTMLButtonElement, ButtonProps>((
       disabled={isDisabled}
       aria-disabled={isDisabled}
       aria-busy={isLoading}
-      aria-label={ariaLabel || (isLoading ? 'Loading...' : undefined)}
+      aria-label={(() => {
+        if (ariaLabel !== undefined && ariaLabel !== '') return ariaLabel;
+        if (isLoading) return 'Loading...';
+        return undefined;
+      })()}
       {...props}
     >
       {isLoading ? (

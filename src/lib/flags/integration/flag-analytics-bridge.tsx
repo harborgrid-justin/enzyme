@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React from 'react';
 /**
  * @fileoverview Flag analytics bridge for connecting flags to monitoring systems.
@@ -326,11 +327,11 @@ export function createAnalyticsBridge(
 
     flushTimer = setTimeout(() => {
       flushTimer = null;
-      bridge.flush();
+      void bridge.flush();
     }, batchInterval);
   };
 
-  const sendToDestinations = async <T extends unknown>(
+  const sendToDestinations = async <T,>(
     eventType: 'exposure' | 'evaluation' | 'metric' | 'error',
     event: T
   ): Promise<void> => {
@@ -396,7 +397,7 @@ export function createAnalyticsBridge(
           scheduleFlush();
         }
       } else {
-        sendToDestinations('exposure', fullEvent);
+        void sendToDestinations('exposure', fullEvent);
       }
     },
 
@@ -425,7 +426,7 @@ export function createAnalyticsBridge(
           scheduleFlush();
         }
       } else {
-        sendToDestinations('evaluation', fullEvent);
+        void sendToDestinations('evaluation', fullEvent);
       }
     },
 
@@ -447,7 +448,7 @@ export function createAnalyticsBridge(
       // Callback
       onMetric?.(fullMetric);
 
-      sendToDestinations('metric', fullMetric);
+      void sendToDestinations('metric', fullMetric);
     },
 
     trackCorrelatedError(error) {
@@ -465,7 +466,7 @@ export function createAnalyticsBridge(
       // Callback
       onError?.(fullError);
 
-      sendToDestinations('error', fullError);
+      void sendToDestinations('error', fullError);
     },
 
     recordImpactMetric(metric) {
@@ -580,9 +581,7 @@ let globalBridge: FlagAnalyticsBridge | null = null;
  * Get the global analytics bridge
  */
 export function getAnalyticsBridge(): FlagAnalyticsBridge {
-  if (!globalBridge) {
-    globalBridge = createAnalyticsBridge();
-  }
+  globalBridge ??= createAnalyticsBridge();
   return globalBridge;
 }
 
@@ -661,7 +660,7 @@ export function FlagAnalyticsProvider({
   // Flush on unmount
   useEffect(() => {
     return () => {
-      bridge.flush();
+      void bridge.flush();
     };
   }, [bridge]);
 
@@ -756,13 +755,13 @@ export function useTrackedFeatureFlag(
   } = {}
 ): void {
   const { trackOnMount = true, trackOnChange = true, context } = options;
-  const { trackExposure } = useFlagAnalytics();
+  const analytics = useFlagAnalytics();
   const [prevValue, setPrevValue] = useState(isEnabled);
 
   // Track on mount
   useEffect(() => {
     if (trackOnMount) {
-      trackExposure(flagKey, isEnabled ? 'enabled' : 'disabled', context);
+      analytics.trackExposure(flagKey, isEnabled ? 'enabled' : 'disabled', context);
     }
     // Only run on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -771,10 +770,10 @@ export function useTrackedFeatureFlag(
   // Track on change
   useEffect(() => {
     if (trackOnChange && prevValue !== isEnabled) {
-      trackExposure(flagKey, isEnabled ? 'enabled' : 'disabled', context);
+      analytics.trackExposure(flagKey, isEnabled ? 'enabled' : 'disabled', context);
       setPrevValue(isEnabled);
     }
-  }, [isEnabled, prevValue, flagKey, trackExposure, trackOnChange, context]);
+  }, [isEnabled, prevValue, flagKey, analytics, trackOnChange, context]);
 }
 
 // =============================================================================
@@ -816,7 +815,7 @@ export function createLocalStorageDestination(
   try {
     const stored = localStorage.getItem(key);
     if (stored) {
-      events = JSON.parse(stored);
+      events = JSON.parse(stored) as unknown[];
     }
   } catch {
     events = [];
@@ -893,11 +892,11 @@ export function createHttpDestination(config: {
     }
   };
 
-  const queueEvent = (event: unknown) => {
+  const queueEvent = (event: unknown): void => {
     if (batchEvents) {
       batch.push(event);
     } else {
-      send([event]);
+      void send([event]);
     }
   };
 

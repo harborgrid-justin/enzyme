@@ -7,6 +7,7 @@ import { routeRegistry } from './route-registry';
 /* @refresh reset */
 
 // Re-export appRoutes from the separate file for backward compatibility
+// eslint-disable-next-line react-refresh/only-export-components -- Re-exporting routes object
 export { appRoutes } from './app-routes';
 
 /**

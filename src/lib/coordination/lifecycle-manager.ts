@@ -419,7 +419,7 @@ export class LifecycleManagerImpl implements LifecycleManager {
    */
   async resume(): Promise<void> {
     const suspended = Array.from(this.libraries.values()).filter(
-      (e) => e.resume && e.state === 'suspended'
+      (e) => e.resume !== undefined && e.state === 'suspended'
     );
 
     await Promise.all(
@@ -562,7 +562,7 @@ export class LifecycleManagerImpl implements LifecycleManager {
     const startTime = performance.now();
     entry.state = 'initializing';
 
-    const doInit = async () => {
+    const doInit = async (): Promise<void> => {
       try {
         await entry.initialize();
         entry.state = 'running';
@@ -593,7 +593,7 @@ export class LifecycleManagerImpl implements LifecycleManager {
       }
     };
 
-    entry.initPromise = timeout
+    entry.initPromise = timeout !== undefined && timeout !== 0
       ? withTimeout(doInit, timeout, `Initialize ${entry.name}`)
       : doInit();
 
@@ -662,9 +662,7 @@ let globalLifecycle: LifecycleManagerImpl | null = null;
 export function getLifecycleManager(
   config?: Partial<LifecycleManagerConfig>
 ): LifecycleManagerImpl {
-  if (!globalLifecycle) {
-    globalLifecycle = new LifecycleManagerImpl(config);
-  }
+  globalLifecycle ??= new LifecycleManagerImpl(config);
   return globalLifecycle;
 }
 

@@ -201,7 +201,8 @@ export class PortalContextManager {
     // Notify lifecycle callbacks
     this.notifyLifecycle(portalId, portalContext);
 
-    if (this.config.debug) {
+    if (this.config.debug === true) {
+      // eslint-disable-next-line no-console -- debug logging
       console.debug('[PortalContextManager] Created portal:', portalId, portalContext);
     }
 
@@ -231,7 +232,8 @@ export class PortalContextManager {
     this.lifecycleCallbacks.delete(portalId);
     this.eventHandlers.delete(portalId);
 
-    if (this.config.debug) {
+    if (this.config.debug === true) {
+      // eslint-disable-next-line no-console -- debug logging
       console.debug('[PortalContextManager] Destroyed portal:', portalId);
     }
   }
@@ -268,10 +270,10 @@ export class PortalContextManager {
     // Walk up the DOM to find a portal root
     let current: Element | null = element;
 
-    while (current) {
+    while (current !== null) {
       const portalId = current.getAttribute(PORTAL_CONTEXT_ATTR);
-      if (portalId) {
-        return this.portalContexts.get(portalId) || null;
+      if ((portalId !== null) && (portalId !== '')) {
+        return this.portalContexts.get(portalId) ?? null;
       }
       current = current.parentElement;
     }
@@ -287,7 +289,7 @@ export class PortalContextManager {
    */
   public getSourceContext(portalId: string): DOMContextSnapshot | null {
     const context = this.portalContexts.get(portalId);
-    return context?.sourceContext || null;
+    return context?.sourceContext ?? null;
   }
 
   /**
@@ -297,7 +299,7 @@ export class PortalContextManager {
    * @returns Source element or null
    */
   public getSourceElement(portalId: string): Element | null {
-    return this.sourceElements.get(portalId) || null;
+    return this.sourceElements.get(portalId) ?? null;
   }
 
   /**
@@ -477,7 +479,7 @@ export class PortalContextManager {
     // List of events to bridge
     const eventsTobridge = ['click', 'keydown', 'keyup', 'focus', 'blur'];
 
-    const bridgeHandler = (event: Event) => {
+    const bridgeHandler = (event: Event): void => {
       const handlers = this.eventHandlers.get(portalId);
       if (handlers) {
         handlers.forEach((handler) => {

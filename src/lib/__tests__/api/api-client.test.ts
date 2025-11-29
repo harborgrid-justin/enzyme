@@ -54,7 +54,7 @@ vi.mock('@/config', () => ({
       TOKEN_EXPIRY_BUFFER: 60000,
     },
   },
-  calculateBackoffWithJitter: vi.fn((attempt, base, max) => {
+  calculateBackoffWithJitter: vi.fn((attempt: number, base: number, max: number) => {
     const delay = Math.min(base * Math.pow(2, attempt), max);
     return delay;
   }),
@@ -91,10 +91,10 @@ describe('ApiClient', () => {
     vi.resetModules();
 
     // Import fresh module
-    const apiModule = await import('@/lib/api/api-client');
-    ApiClient = apiModule.ApiClient;
-    createApiClient = apiModule.createApiClient;
-    createApiError = apiModule.createApiError;
+    const { ApiClient: ApiClientImport, createApiClient: createApiClientImport, createApiError: createApiErrorImport } = await import('@/lib/api/api-client');
+    ApiClient = ApiClientImport;
+    createApiClient = createApiClientImport;
+    createApiError = createApiErrorImport;
   });
 
   afterEach(() => {
@@ -346,9 +346,9 @@ describe('ApiClient', () => {
       });
       mockFetch.mockResponse({});
 
-      const interceptor = vi.fn((config) => ({
+      const interceptor = vi.fn((config: Record<string, unknown>) => ({
         ...config,
-        headers: { ...config.headers, 'X-Custom-Header': 'test' },
+        headers: { ...(config.headers as Record<string, string>), 'X-Custom-Header': 'test' },
       }));
 
       client.addRequestInterceptor(interceptor);
@@ -368,9 +368,9 @@ describe('ApiClient', () => {
       });
       mockFetch.mockResponse({ data: 'original' });
 
-      const interceptor = vi.fn((response) => ({
+      const interceptor = vi.fn((response: Record<string, unknown>) => ({
         ...response,
-        data: { ...response.data, modified: true },
+        data: { ...(response.data as Record<string, unknown>), modified: true },
       }));
 
       client.addResponseInterceptor(interceptor);
@@ -391,7 +391,7 @@ describe('ApiClient', () => {
       });
       mockFetch.mockError(500, 'Server Error');
 
-      const errorInterceptor = vi.fn((error) => ({
+      const errorInterceptor = vi.fn((error: Record<string, unknown>) => ({
         ...error,
         handled: true,
       }));
@@ -413,7 +413,7 @@ describe('ApiClient', () => {
       });
       mockFetch.mockResponse({});
 
-      const interceptor = vi.fn((config) => config);
+      const interceptor = vi.fn((config: Record<string, unknown>) => config);
       const remove = client.addRequestInterceptor(interceptor);
 
       // Act - call once with interceptor
@@ -520,15 +520,16 @@ describe('ApiClient', () => {
         status: 422,
         statusText: 'Unprocessable Entity',
         headers: new Headers(),
-        json: async () => ({
+        json: async () => Promise.resolve({
           message: 'Validation failed',
           errors: [{ field: 'email', message: 'Invalid email' }],
         }),
-        text: async () =>
+        text: async () => Promise.resolve(
           JSON.stringify({
             message: 'Validation failed',
             errors: [{ field: 'email', message: 'Invalid email' }],
-          }),
+          })
+        ),
       });
 
       // Act & Assert
@@ -597,21 +598,22 @@ describe('ApiClient', () => {
         status: 400,
         statusText: 'Bad Request',
         headers: new Headers(),
-        json: async () => ({
+        json: async () => Promise.resolve({
           message: 'Validation failed',
           errors: [
             { field: 'email', message: 'Invalid email format' },
             { field: 'password', message: 'Password too short' },
           ],
         }),
-        text: async () =>
+        text: async () => Promise.resolve(
           JSON.stringify({
             message: 'Validation failed',
             errors: [
               { field: 'email', message: 'Invalid email format' },
               { field: 'password', message: 'Password too short' },
             ],
-          }),
+          })
+        ),
       });
 
       // Act & Assert
@@ -621,7 +623,7 @@ describe('ApiClient', () => {
         fieldErrors: expect.arrayContaining([
           { field: 'email', message: 'Invalid email format' },
           { field: 'password', message: 'Password too short' },
-        ]),
+        ]) as unknown,
       });
     });
   });
@@ -649,22 +651,22 @@ describe('ApiClient', () => {
           ok: false,
           status: 503,
           headers: new Headers(),
-          json: async () => ({ error: 'Service Unavailable' }),
-          text: async () => JSON.stringify({ error: 'Service Unavailable' }),
+          json: async () => Promise.resolve({ error: 'Service Unavailable' }),
+          text: async () => Promise.resolve(JSON.stringify({ error: 'Service Unavailable' })),
         })
         .mockResolvedValueOnce({
           ok: false,
           status: 503,
           headers: new Headers(),
-          json: async () => ({ error: 'Service Unavailable' }),
-          text: async () => JSON.stringify({ error: 'Service Unavailable' }),
+          json: async () => Promise.resolve({ error: 'Service Unavailable' }),
+          text: async () => Promise.resolve(JSON.stringify({ error: 'Service Unavailable' })),
         })
         .mockResolvedValueOnce({
           ok: true,
           status: 200,
           headers: new Headers(),
-          json: async () => ({ success: true }),
-          text: async () => JSON.stringify({ success: true }),
+          json: async () => Promise.resolve({ success: true }),
+          text: async () => Promise.resolve(JSON.stringify({ success: true })),
         });
 
       // Act
@@ -692,8 +694,8 @@ describe('ApiClient', () => {
         ok: false,
         status: 503,
         headers: new Headers(),
-        json: async () => ({ error: 'Service Unavailable' }),
-        text: async () => JSON.stringify({ error: 'Service Unavailable' }),
+        json: async () => Promise.resolve({ error: 'Service Unavailable' }),
+        text: async () => Promise.resolve(JSON.stringify({ error: 'Service Unavailable' })),
       });
 
       // Act & Assert
@@ -741,8 +743,8 @@ describe('ApiClient', () => {
           ok: true,
           status: 200,
           headers: new Headers(),
-          json: async () => ({ success: true }),
-          text: async () => JSON.stringify({ success: true }),
+          json: async () => Promise.resolve({ success: true }),
+          text: async () => Promise.resolve(JSON.stringify({ success: true })),
         });
 
       // Act
@@ -772,15 +774,15 @@ describe('ApiClient', () => {
           ok: false,
           status: 503,
           headers: new Headers(),
-          json: async () => ({ error: 'Error' }),
-          text: async () => JSON.stringify({ error: 'Error' }),
+          json: async () => Promise.resolve({ error: 'Error' }),
+          text: async () => Promise.resolve(JSON.stringify({ error: 'Error' })),
         })
         .mockResolvedValueOnce({
           ok: true,
           status: 200,
           headers: new Headers(),
-          json: async () => ({ success: true }),
-          text: async () => JSON.stringify({ success: true }),
+          json: async () => Promise.resolve({ success: true }),
+          text: async () => Promise.resolve(JSON.stringify({ success: true })),
         });
 
       // Act
@@ -803,8 +805,8 @@ describe('ApiClient', () => {
         ok: false,
         status: 503,
         headers: new Headers(),
-        json: async () => ({ error: 'Error' }),
-        text: async () => JSON.stringify({ error: 'Error' }),
+        json: async () => Promise.resolve({ error: 'Error' }),
+        text: async () => Promise.resolve(JSON.stringify({ error: 'Error' })),
       });
 
       // Act & Assert
@@ -847,8 +849,8 @@ describe('ApiClient', () => {
         ok: true,
         status: 200,
         headers: new Headers(),
-        json: async () => ({ users: [] }),
-        text: async () => JSON.stringify({ users: [] }),
+        json: async () => Promise.resolve({ users: [] }),
+        text: async () => Promise.resolve(JSON.stringify({ users: [] })),
       });
 
       const [result1, result2, result3] = await Promise.all([
@@ -876,8 +878,8 @@ describe('ApiClient', () => {
         ok: true,
         status: 201,
         headers: new Headers(),
-        json: async () => ({ id: Math.random() }),
-        text: async () => JSON.stringify({ id: Math.random() }),
+        json: async () => Promise.resolve({ id: Math.random() }),
+        text: async () => Promise.resolve(JSON.stringify({ id: Math.random() })),
       });
 
       // Act
@@ -902,8 +904,8 @@ describe('ApiClient', () => {
         ok: true,
         status: 200,
         headers: new Headers(),
-        json: async () => ({}),
-        text: async () => JSON.stringify({}),
+        json: async () => Promise.resolve({}),
+        text: async () => Promise.resolve(JSON.stringify({})),
       });
 
       // Act
@@ -941,8 +943,8 @@ describe('ApiClient', () => {
         ok: true,
         status: 200,
         headers: new Headers(),
-        json: async () => ({}),
-        text: async () => JSON.stringify({}),
+        json: async () => Promise.resolve({}),
+        text: async () => Promise.resolve(JSON.stringify({})),
       });
 
       await Promise.all([promise1, promise2]);
@@ -997,8 +999,8 @@ describe('ApiClient', () => {
       mockFetch.mockReturnValue(new Promise(() => {}));
 
       // Start multiple requests
-      client.get('/users');
-      client.get('/posts');
+      void client.get('/users');
+      void client.get('/posts');
 
       // Small delay to ensure requests are started
       await delay(10);
@@ -1055,15 +1057,8 @@ describe('ApiClient', () => {
       await client.get('/protected');
 
       // Assert
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({
-          headers: expect.any(Headers),
-        })
-      );
-
-      const callArgs = mockFetch.mock.calls[0]!;
-      const headers = callArgs[1].headers as Headers;
+      const mockCalls: Array<[string, { headers: Headers }]> = mockFetch.mock.calls as Array<[string, { headers: Headers }]>;
+      const [, { headers }] = mockCalls[0]!;
       expect(headers.get('Authorization')).toBe('Bearer test-token');
     });
 
@@ -1080,8 +1075,8 @@ describe('ApiClient', () => {
       await client.get('/public', { meta: { skipAuth: true } });
 
       // Assert
-      const callArgs = mockFetch.mock.calls[0]!;
-      const headers = callArgs[1].headers as Headers;
+      const mockCalls: Array<[string, { headers: Headers }]> = mockFetch.mock.calls as Array<[string, { headers: Headers }]>;
+      const [, { headers }] = mockCalls[0]!;
       expect(headers.get('Authorization')).toBeNull();
     });
 
@@ -1107,8 +1102,8 @@ describe('ApiClient', () => {
 
       // Assert
       expect(customProvider.getAccessToken).toHaveBeenCalled();
-      const callArgs = mockFetch.mock.calls[0]!;
-      const headers = callArgs[1].headers as Headers;
+      const mockCalls: Array<[string, { headers: Headers }]> = mockFetch.mock.calls as Array<[string, { headers: Headers }]>;
+      const [, { headers }] = mockCalls[0]!;
       expect(headers.get('Authorization')).toBe('Bearer custom-token');
     });
 
@@ -1165,7 +1160,7 @@ describe('ApiClient', () => {
         ok: true,
         status: 200,
         headers: new Headers(),
-        text: async () => 'Plain text response',
+        text: async () => Promise.resolve('Plain text response'),
       });
 
       // Act
@@ -1187,7 +1182,7 @@ describe('ApiClient', () => {
         ok: true,
         status: 204,
         headers: new Headers(),
-        text: async () => '',
+        text: async () => Promise.resolve(''),
       });
 
       // Act
@@ -1303,7 +1298,7 @@ describe('ApiClient', () => {
         ok: true,
         status: 200,
         headers: new Headers(),
-        text: async () => 'not valid json {',
+        text: async () => Promise.resolve('not valid json {'),
       });
 
       // Act

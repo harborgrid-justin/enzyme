@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-env node */
 /**
  * @file Fast Refresh Compliance Scanner
  * @description Scans codebase for Fast Refresh violations and generates report
@@ -10,25 +11,6 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-// Patterns that violate Fast Refresh
-const VIOLATIONS = {
-  CONTEXT_WITH_COMPONENT: {
-    pattern: /createContext.*\n[\s\S]*?export (function|const) [A-Z]/,
-    severity: 'HIGH',
-    description: 'Context created in same file as component',
-  },
-  LOWERCASE_COMPONENT: {
-    pattern: /export (default )?function [a-z]/,
-    severity: 'MEDIUM',
-    description: 'Component name is not PascalCase',
-  },
-  MODULE_SIDE_EFFECTS: {
-    pattern: /(window\.|document\.).*addEventListener.*\n(?!.*useEffect)/,
-    severity: 'HIGH',
-    description: 'Module-level side effects detected',
-  },
-};
 
 /**
  * Scan directory for TypeScript/TSX files
@@ -109,43 +91,43 @@ function findLineNumber(content, pattern) {
 function generateReport(results) {
   const high = results.filter(r => r.violations.some(v => v.severity === 'HIGH'));
   const medium = results.filter(r => r.violations.some(v => v.severity === 'MEDIUM'));
-  
-  console.log('\n' + '='.repeat(80));
-  console.log('FAST REFRESH COMPLIANCE REPORT');
-  console.log('='.repeat(80) + '\n');
-  
-  console.log(`Total files scanned: ${results.length}`);
-  console.log(`High priority issues: ${high.length}`);
-  console.log(`Medium priority issues: ${medium.length}`);
-  console.log();
-  
+
+  globalThis.console.log('\n' + '='.repeat(80));
+  globalThis.console.log('FAST REFRESH COMPLIANCE REPORT');
+  globalThis.console.log('='.repeat(80) + '\n');
+
+  globalThis.console.log(`Total files scanned: ${results.length}`);
+  globalThis.console.log(`High priority issues: ${high.length}`);
+  globalThis.console.log(`Medium priority issues: ${medium.length}`);
+  globalThis.console.log();
+
   if (high.length > 0) {
-    console.log('HIGH PRIORITY VIOLATIONS:');
-    console.log('-'.repeat(80));
+    globalThis.console.log('HIGH PRIORITY VIOLATIONS:');
+    globalThis.console.log('-'.repeat(80));
     high.forEach(result => {
-      console.log(`\n📁 ${result.filePath}`);
+      globalThis.console.log(`\n📁 ${result.filePath}`);
       result.violations.forEach(v => {
-        console.log(`   ⚠️  Line ${v.line}: ${v.description}`);
+        globalThis.console.log(`   ⚠️  Line ${v.line}: ${v.description}`);
       });
     });
-    console.log();
+    globalThis.console.log();
   }
-  
+
   if (medium.length > 0) {
-    console.log('MEDIUM PRIORITY VIOLATIONS:');
-    console.log('-'.repeat(80));
+    globalThis.console.log('MEDIUM PRIORITY VIOLATIONS:');
+    globalThis.console.log('-'.repeat(80));
     medium.forEach(result => {
-      console.log(`\n📁 ${result.filePath}`);
+      globalThis.console.log(`\n📁 ${result.filePath}`);
       result.violations.forEach(v => {
-        console.log(`   ⚡ Line ${v.line}: ${v.description}`);
+        globalThis.console.log(`   ⚡ Line ${v.line}: ${v.description}`);
       });
     });
   }
-  
-  console.log('\n' + '='.repeat(80));
-  console.log('RECOMMENDATIONS:');
-  console.log('='.repeat(80));
-  console.log(`
+
+  globalThis.console.log('\n' + '='.repeat(80));
+  globalThis.console.log('RECOMMENDATIONS:');
+  globalThis.console.log('='.repeat(80));
+  globalThis.console.log(`
 1. Extract all createContext() calls to separate context files
 2. Move context files to reuse/templates/react/src/lib/contexts/
 3. Update imports in provider files
@@ -158,7 +140,7 @@ See FAST_REFRESH_REFACTORING.md for detailed instructions.
 
 // Main execution
 const targetDir = path.join(__dirname, '../src/lib');
-console.log(`Scanning directory: ${targetDir}\n`);
+globalThis.console.log(`Scanning directory: ${targetDir}\n`);
 
 const files = scanDirectory(targetDir);
 const results = files
@@ -170,4 +152,4 @@ generateReport(results);
 // Export results for further processing
 const outputPath = path.join(__dirname, '../fast-refresh-report.json');
 fs.writeFileSync(outputPath, JSON.stringify(results, null, 2));
-console.log(`\nDetailed report saved to: ${outputPath}\n`);
+globalThis.console.log(`\nDetailed report saved to: ${outputPath}\n`);

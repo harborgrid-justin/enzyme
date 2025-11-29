@@ -476,7 +476,7 @@ export function createAssertion<T>(
  */
 export function assertString(value: unknown, message?: string): asserts value is string {
   if (!isString(value)) {
-    throw new AssertionError(message || `Expected string, received ${typeof value}`, value, 'string');
+    throw new AssertionError(message ?? `Expected string, received ${typeof value}`, value, 'string');
   }
 }
 
@@ -485,7 +485,7 @@ export function assertString(value: unknown, message?: string): asserts value is
  */
 export function assertNumber(value: unknown, message?: string): asserts value is number {
   if (!isNumber(value)) {
-    throw new AssertionError(message || `Expected number, received ${typeof value}`, value, 'number');
+    throw new AssertionError(message ?? `Expected number, received ${typeof value}`, value, 'number');
   }
 }
 
@@ -494,7 +494,7 @@ export function assertNumber(value: unknown, message?: string): asserts value is
  */
 export function assertBoolean(value: unknown, message?: string): asserts value is boolean {
   if (!isBoolean(value)) {
-    throw new AssertionError(message || `Expected boolean, received ${typeof value}`, value, 'boolean');
+    throw new AssertionError(message ?? `Expected boolean, received ${typeof value}`, value, 'boolean');
   }
 }
 
@@ -506,7 +506,7 @@ export function assertObject(
   message?: string
 ): asserts value is Record<string, unknown> {
   if (!isObject(value)) {
-    throw new AssertionError(message || `Expected object, received ${typeof value}`, value, 'object');
+    throw new AssertionError(message ?? `Expected object, received ${typeof value}`, value, 'object');
   }
 }
 
@@ -515,7 +515,7 @@ export function assertObject(
  */
 export function assertArray(value: unknown, message?: string): asserts value is unknown[] {
   if (!isArray(value)) {
-    throw new AssertionError(message || `Expected array, received ${typeof value}`, value, 'array');
+    throw new AssertionError(message ?? `Expected array, received ${typeof value}`, value, 'array');
   }
 }
 
@@ -527,7 +527,7 @@ export function assertDefined<T>(
   message?: string
 ): asserts value is T {
   if (!isDefined(value)) {
-    throw new AssertionError(message || 'Expected defined value', value, 'defined');
+    throw new AssertionError(message ?? 'Expected defined value', value, 'defined');
   }
 }
 
@@ -540,7 +540,7 @@ export function assertType<T>(
   message?: string
 ): asserts value is T {
   if (!guard(value)) {
-    throw new AssertionError(message || 'Type assertion failed', value);
+    throw new AssertionError(message ?? 'Type assertion failed', value);
   }
 }
 
@@ -549,7 +549,7 @@ export function assertType<T>(
  */
 export function assert(condition: unknown, message?: string): asserts condition {
   if (!condition) {
-    throw new AssertionError(message || 'Assertion failed', condition);
+    throw new AssertionError(message ?? 'Assertion failed', condition);
   }
 }
 

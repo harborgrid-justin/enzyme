@@ -528,7 +528,7 @@ export class RequestBatcher<K, V> {
 
     // Check if batch is full
     if (this.batch.size >= this.config.maxBatchSize) {
-      this.executeBatch();
+      void this.executeBatch();
     }
 
     return deferred.promise;
@@ -551,7 +551,7 @@ export class RequestBatcher<K, V> {
     if (this.timer) return;
 
     this.timer = setTimeout(() => {
-      this.executeBatch();
+      void this.executeBatch();
     }, this.config.maxWaitMs);
   }
 

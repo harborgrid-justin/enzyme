@@ -199,29 +199,29 @@ export const schema = {
   /**
    * Create entity schema
    */
-  entity: (name: string, relations?: Record<string, Schema>, options?: Omit<EntitySchemaDefinition, 'name' | 'relations'>) =>
+  entity: (name: string, relations?: Record<string, Schema>, options?: Omit<EntitySchemaDefinition, 'name' | 'relations'>): EntitySchema =>
     new EntitySchema(name, { ...options, relations: relations as Record<string, EntitySchema | ArraySchema | UnionSchema> | undefined }),
 
   /**
    * Create array schema
    */
-  array: (itemSchema: Schema) => new ArraySchema(itemSchema),
+  array: (itemSchema: Schema): ArraySchema => new ArraySchema(itemSchema),
 
   /**
    * Create object schema
    */
-  object: (shape: Record<string, Schema>) => new ObjectSchema(shape),
+  object: (shape: Record<string, Schema>): ObjectSchema => new ObjectSchema(shape),
 
   /**
    * Create union schema
    */
-  union: (schemas: Record<string, EntitySchema>, schemaAttribute?: string | ((entity: Entity) => string)) =>
+  union: (schemas: Record<string, EntitySchema>, schemaAttribute?: string | ((entity: Entity) => string)): UnionSchema =>
     new UnionSchema(schemas, schemaAttribute),
 
   /**
    * Create value schema (pass-through)
    */
-  value: () => new ValueSchema(),
+  value: (): ValueSchema => new ValueSchema(),
 };
 
 // =============================================================================
@@ -259,9 +259,7 @@ function addEntity(
   const visitKey = `${entityType}:${entityId}`;
 
   // Ensure entity type exists
-  if (!context.entities[entityType]) {
-    context.entities[entityType] = {};
-  }
+  context.entities[entityType] ??= {};
 
   // Apply process strategy
   const processedEntity = entitySchema.processStrategy
@@ -568,7 +566,7 @@ export function removeEntity(
     return entities;
   }
 
-  const { [id]: removed, ...rest } = entityMap;
+  const { [id]: _removed, ...rest } = entityMap;
   return {
     ...entities,
     [entityType]: rest,

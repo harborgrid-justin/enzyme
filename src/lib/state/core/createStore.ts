@@ -220,7 +220,7 @@ export function createSimpleStore<TState extends object>(
   initializer: StateCreator<TState, [['zustand/immer', never], ['zustand/devtools', never]], [], TState>,
   name: string,
   enableDevtools = process.env['NODE_ENV'] === 'development'
-) {
+): ReturnType<typeof create<TState>> {
   return create<TState>()(
     immer(
       devtools(initializer, {
@@ -249,7 +249,7 @@ export function createSimpleStore<TState extends object>(
  */
 export function createMinimalStore<TState extends object>(
   initializer: StateCreator<TState, [['zustand/immer', never]], [], TState>
-) {
+): ReturnType<typeof create<TState>> {
   return create<TState>()(immer(initializer));
 }
 

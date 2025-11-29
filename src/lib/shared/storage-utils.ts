@@ -123,7 +123,7 @@ export class StorageWrapper {
       }
 
       // Check expiration
-      const ttl = item.ttl;
+      const {ttl} = item;
       if (ttl !== undefined && ttl !== null && ttl > 0 && Date.now() - item.timestamp > ttl) {
         this.remove(key);
         return defaultValue;

@@ -508,8 +508,16 @@ class SystemManager {
 
     // Check request queue
     const queueStats = globalRequestQueue.getStats();
+    let queueStatus: 'pass' | 'warn' | 'fail';
+    if (queueStats.queued < 50) {
+      queueStatus = 'pass';
+    } else if (queueStats.queued < 100) {
+      queueStatus = 'warn';
+    } else {
+      queueStatus = 'fail';
+    }
     checks.requestQueue = {
-      status: queueStats.queued < 50 ? 'pass' : queueStats.queued < 100 ? 'warn' : 'fail',
+      status: queueStatus,
       message: queueStats.queued >= 50 ? `${queueStats.queued} requests queued` : undefined,
     };
 
@@ -556,12 +564,18 @@ export function shutdownSystem(): void {
  * Default system configuration
  * Uses feature flag utilities for debug mode detection
  */
+function getEnvironment(): 'development' | 'staging' | 'production' {
+  if (import.meta.env.MODE === 'production') {
+    return 'production';
+  } else if (import.meta.env.MODE === 'test') {
+    return 'staging';
+  } else {
+    return 'development';
+  }
+}
+
 export const defaultSystemConfig: SystemConfig = {
-  environment: import.meta.env.MODE === 'production'
-    ? 'production'
-    : import.meta.env.MODE === 'test'
-    ? 'staging'
-    : 'development',
+  environment: getEnvironment(),
   debug: isDebugModeEnabled(),
   logLevel: isDebugModeEnabled() ? 'debug' : 'info',
   errorReporting: {

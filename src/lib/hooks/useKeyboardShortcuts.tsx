@@ -9,6 +9,7 @@
  */
 
 /* @refresh reset */
+/* eslint-disable react-refresh/only-export-components */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFeatureFlag } from '../flags/useFeatureFlag';

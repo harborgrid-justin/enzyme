@@ -285,8 +285,8 @@ function scheduleByPriority(callback: () => void, priority: RenderPriority): () 
 
   return () => {
     cancelled = true;
-    if (timeoutId) clearTimeout(timeoutId);
-    if (idleId && typeof cancelIdleCallback !== 'undefined') {
+    if (timeoutId !== undefined) clearTimeout(timeoutId);
+    if (idleId !== undefined && typeof cancelIdleCallback !== 'undefined') {
       cancelIdleCallback(idleId);
     }
   };
@@ -337,7 +337,7 @@ export function useOptimizedRender<T>(
   const forceCompute = useCallback(() => {
     const newValue = computeFn();
 
-    if (skipWhen?.(newValue)) {
+    if (skipWhen?.(newValue) === true) {
       return;
     }
 
@@ -364,7 +364,7 @@ export function useOptimizedRender<T>(
       cancelScheduleRef.current = scheduleByPriority(forceCompute, priority);
     };
 
-    if (debounceMs && debounceMs > 0) {
+    if (debounceMs !== undefined && debounceMs !== null && debounceMs > 0) {
       debounceTimerRef.current = setTimeout(compute, debounceMs);
     } else {
       compute();
@@ -584,6 +584,7 @@ export function useProgressiveLoad<T>(
   );
   const [data, setData] = useState<T | null>(null);
   const [networkQuality, setNetworkQuality] = useState<NetworkQuality>(getNetworkQuality);
+  // eslint-disable-next-line react-hooks/purity
   const phaseStartTimeRef = useRef(Date.now());
 
   // Monitor network quality
@@ -682,7 +683,7 @@ export function useProgressiveLoad<T>(
  * Clear feature cache
  */
 export function clearFeatureCache(featureId?: string): void {
-  if (featureId) {
+  if (featureId !== undefined && featureId !== null && featureId !== '') {
     featureCache.delete(featureId);
   } else {
     featureCache.clear();

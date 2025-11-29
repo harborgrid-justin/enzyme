@@ -113,7 +113,7 @@ export class ADGroupMapper {
     const result = this.evaluateMappings(groups, user);
 
     // Update cache
-    if (this.config.cacheDuration) {
+    if (this.config.cacheDuration != null && this.config.cacheDuration > 0) {
       this.cache.set(cacheKey, result);
       this.cacheExpiry = Date.now() + this.config.cacheDuration;
     }
@@ -177,7 +177,7 @@ export class ADGroupMapper {
     const matches: Array<{ mapping: ADGroupRoleMapping; matchedGroups: ADGroup[] }> = [];
 
     for (const mapping of this.config.mappings) {
-      if (!mapping.enabled) continue;
+      if (mapping.enabled === false) continue;
 
       const matchedGroups = groups.filter(group => {
         const matches = this.matchesGroup(group, mapping.groupIdentifier, mapping.matchType);
@@ -243,7 +243,10 @@ export class ADGroupMapper {
     );
 
     if (index >= 0) {
-      const existing = this.config.mappings[index]!;
+      const existing = this.config.mappings[index];
+      if (!existing) {
+        return;
+      }
       this.config.mappings[index] = {
         ...existing,
         ...updates,
@@ -290,7 +293,7 @@ export class ADGroupMapper {
     }
 
     // Get highest priority role
-    const highestPriorityMapping = matchedMappings[0];
+    const [highestPriorityMapping] = matchedMappings;
     if (!highestPriorityMapping) {
       return {
         role: this.config.defaultRole,

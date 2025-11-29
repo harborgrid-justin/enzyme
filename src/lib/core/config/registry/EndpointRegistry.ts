@@ -294,7 +294,7 @@ export class EndpointRegistry implements IEndpointRegistry {
    */
   getByTag(tag: string): readonly EndpointDefinition[] {
     return Array.from(this.endpoints.values()).filter(
-      (endpoint) => endpoint.tags?.includes(tag)
+      (endpoint) => endpoint.tags?.includes(tag) ?? false
     );
   }
 

@@ -166,7 +166,7 @@ export class MemoryGuardian {
    * Reset singleton (for testing)
    */
   static reset(): void {
-    if (MemoryGuardian.instance) {
+    if (MemoryGuardian.instance !== null && MemoryGuardian.instance !== undefined) {
       MemoryGuardian.instance.stopMonitoring();
       // Type-safe null assignment for singleton reset
       (MemoryGuardian as unknown as { instance: MemoryGuardian | null }).instance = null;
@@ -222,7 +222,7 @@ export class MemoryGuardian {
 
       // Trigger auto cleanup on pressure
       if (this.config.autoCleanup && snapshot.pressureLevel !== 'normal') {
-        this.triggerCleanup(snapshot.pressureLevel);
+        void this.triggerCleanup(snapshot.pressureLevel);
       }
     }
 
@@ -530,8 +530,8 @@ export class MemoryGuardian {
     };
 
     for (const subscription of this.subscriptions.values()) {
-      stats.byType[subscription.type] = (stats.byType[subscription.type] || 0) + 1;
-      stats.byContext[subscription.context] = (stats.byContext[subscription.context] || 0) + 1;
+      stats.byType[subscription.type] = (stats.byType[subscription.type] ?? 0) + 1;
+      stats.byContext[subscription.context] = (stats.byContext[subscription.context] ?? 0) + 1;
     }
 
     return stats;
@@ -611,7 +611,7 @@ export class MemoryGuardian {
    */
   private log(message: string, ...args: unknown[]): void {
     if (this.config.debug) {
-      console.log(`[MemoryGuardian] ${message}`, ...args);
+      console.info(`[MemoryGuardian] ${message}`, ...args);
     }
   }
 }
@@ -641,19 +641,20 @@ export function useMemoryGuard(
   const [pressureLevel, setPressureLevel] = useState<MemoryPressureLevel>('normal');
 
   useEffect(() => {
-    guardian.current.setComponentBudget(componentId, {
+    const currentGuardian = guardian.current;
+    currentGuardian.setComponentBudget(componentId, {
       maxBytes,
       warningThreshold,
       onExceed,
     });
 
-    const unsubPressure = guardian.current.onPressureChange(setPressureLevel);
+    const unsubPressure = currentGuardian.onPressureChange(setPressureLevel);
 
     // Get initial snapshot
-    setSnapshot(guardian.current.getMemorySnapshot());
+    setSnapshot(currentGuardian.getMemorySnapshot());
 
     return () => {
-      guardian.current.removeComponentBudget(componentId);
+      currentGuardian.removeComponentBudget(componentId);
       unsubPressure();
     };
   }, [componentId, maxBytes, warningThreshold, onExceed]);
@@ -727,11 +728,12 @@ export function useCleanupHandler(
   const cleanupIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    cleanupIdRef.current = guardian.current.registerCleanup(cleanup, options);
+    const currentGuardian = guardian.current;
+    cleanupIdRef.current = currentGuardian.registerCleanup(cleanup, options);
 
     return () => {
-      if (cleanupIdRef.current) {
-        guardian.current.unregisterCleanup(cleanupIdRef.current);
+      if (cleanupIdRef.current !== null && cleanupIdRef.current !== undefined) {
+        currentGuardian.unregisterCleanup(cleanupIdRef.current);
       }
     };
   }, [cleanup, options]);
@@ -830,7 +832,7 @@ export function checkMemory(): MemorySnapshot {
 /**
  * Format bytes helper
  */
-export const {formatBytes} = MemoryGuardian;
+export const formatBytes: (bytes: number) => string = MemoryGuardian.formatBytes.bind(MemoryGuardian);
 
 // ============================================================================
 // Exports

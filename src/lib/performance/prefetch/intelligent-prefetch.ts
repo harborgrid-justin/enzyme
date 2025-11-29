@@ -182,7 +182,7 @@ export class IntelligentPrefetchEngine {
    * Record a hover event
    */
   recordHover(url: string): void {
-    const count = this.hoverHistory.get(url) || 0;
+    const count = this.hoverHistory.get(url) ?? 0;
     this.hoverHistory.set(url, count + 1);
   }
 
@@ -190,7 +190,7 @@ export class IntelligentPrefetchEngine {
    * Get prefetch predictions for current page
    */
   predict(currentUrl: string, availableUrls: string[]): PredictionResult {
-    if (!this.config.enabled || !this.shouldPrefetch()) {
+    if (!this.config.enabled ?? !this.shouldPrefetch()) {
       return this.emptyPrediction();
     }
 
@@ -388,11 +388,11 @@ export class IntelligentPrefetchEngine {
       return 0;
     }
 
-    return transitions.get(toPath) || 0;
+    return transitions.get(toPath) ?? 0;
   }
 
   private getHoverScore(url: string): number {
-    const hoverCount = this.hoverHistory.get(url) || 0;
+    const hoverCount = this.hoverHistory.get(url) ?? 0;
     const maxHover = Math.max(...Array.from(this.hoverHistory.values()), 1);
     return hoverCount / maxHover;
   }
@@ -457,7 +457,7 @@ export class IntelligentPrefetchEngine {
     }
 
     const transitions = this.transitionProbabilities.get(fromPath)!;
-    const currentProb = transitions.get(toPath) || 0;
+    const currentProb = transitions.get(toPath) ?? 0;
 
     // Update using exponential moving average
     const newProb = currentProb + this.config.learningRate * (1 - currentProb);
@@ -482,8 +482,8 @@ export class IntelligentPrefetchEngine {
       }
 
       if (networkInfo?.effectiveType) {
-        const currentQuality = NETWORK_QUALITY_SCORES[networkInfo.effectiveType] || 0;
-        const minQuality = NETWORK_QUALITY_SCORES[this.config.minNetworkQuality] || 0;
+        const currentQuality = NETWORK_QUALITY_SCORES[networkInfo.effectiveType] ?? 0;
+        const minQuality = NETWORK_QUALITY_SCORES[this.config.minNetworkQuality] ?? 0;
 
         if (currentQuality < minQuality) {
           this.log(`Skipping prefetch: Network quality ${networkInfo.effectiveType} below threshold`);
@@ -525,7 +525,7 @@ export class IntelligentPrefetchEngine {
   }
 
   private inferResourceType(url: string): 'route' | 'data' | 'asset' {
-    if (url.includes('/api/') || url.endsWith('.json')) {
+    if (url.includes('/api/') ?? url.endsWith('.json')) {
       return 'data';
     }
 
@@ -584,7 +584,7 @@ export class IntelligentPrefetchEngine {
     const nav = navigator as Navigator & {
       connection?: NetworkInformation;
     };
-    return nav.connection || null;
+    return nav.connection ?? null;
   }
 
   private deduplicateFactors(factors: PredictionFactor[]): PredictionFactor[] {
@@ -616,7 +616,7 @@ export class IntelligentPrefetchEngine {
       if (stored) {
         const data = JSON.parse(stored);
         this.transitionProbabilities = new Map(
-          Object.entries(data.transitions || {}).map(([k, v]) => [
+          Object.entries(data.transitions ?? {}).map(([k, v]) => [
             k,
             new Map(Object.entries(v as Record<string, number>)),
           ])
@@ -653,7 +653,7 @@ export class IntelligentPrefetchEngine {
 
   private log(message: string, ...args: unknown[]): void {
     if (this.config.debug) {
-      console.log(`[IntelligentPrefetch] ${message}`, ...args);
+      console.info(`[IntelligentPrefetch] ${message}`, ...args);
     }
   }
 }

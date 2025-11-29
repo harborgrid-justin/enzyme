@@ -119,17 +119,17 @@ export class LocalProvider implements WritableFlagProvider {
   /**
    * Get all flags.
    */
-  async getFlags(): Promise<readonly FeatureFlag[]> {
+  getFlags(): Promise<readonly FeatureFlag[]> {
     this.stats = { ...this.stats, requestCount: this.stats.requestCount + 1 };
-    return Array.from(this.flags.values());
+    return Promise.resolve(Array.from(this.flags.values()));
   }
 
   /**
    * Get a flag by key.
    */
-  async getFlag(key: string): Promise<FeatureFlag | null> {
+  getFlag(key: string): Promise<FeatureFlag | null> {
     this.stats = { ...this.stats, requestCount: this.stats.requestCount + 1 };
-    return this.flags.get(key) ?? null;
+    return Promise.resolve(this.flags.get(key) ?? null);
   }
 
   /**
@@ -215,15 +215,15 @@ export class LocalProvider implements WritableFlagProvider {
   /**
    * Get all segments.
    */
-  async getSegments(): Promise<readonly Segment[]> {
-    return Array.from(this.segments.values());
+  getSegments(): Promise<readonly Segment[]> {
+    return Promise.resolve(Array.from(this.segments.values()));
   }
 
   /**
    * Get a segment by ID.
    */
-  async getSegment(id: SegmentId): Promise<Segment | null> {
-    return this.segments.get(id) ?? null;
+  getSegment(id: SegmentId): Promise<Segment | null> {
+    return Promise.resolve(this.segments.get(id) ?? null);
   }
 
   /**
@@ -258,15 +258,15 @@ export class LocalProvider implements WritableFlagProvider {
   // Storage Operations
   // ==========================================================================
 
-  private async loadFromStorage(): Promise<void> {
-    if (typeof window === 'undefined' || !window.localStorage) {
+  private loadFromStorage(): void {
+    if (typeof window === 'undefined' || window.localStorage === null || window.localStorage === undefined) {
       return;
     }
 
     try {
       // Load flags
       const flagsJson = localStorage.getItem(this.config.storageKey);
-      if (flagsJson) {
+      if (flagsJson !== null && flagsJson !== '') {
         const flags = JSON.parse(flagsJson) as FeatureFlag[];
         for (const flag of flags) {
           this.flags.set(flag.key, this.deserializeFlag(flag));
@@ -278,7 +278,7 @@ export class LocalProvider implements WritableFlagProvider {
       const segmentsJson = localStorage.getItem(
         `${this.config.storageKey}-segments`
       );
-      if (segmentsJson) {
+      if (segmentsJson !== null && segmentsJson !== '') {
         const segments = JSON.parse(segmentsJson) as Segment[];
         for (const segment of segments) {
           this.segments.set(segment.id, this.deserializeSegment(segment));
@@ -291,8 +291,8 @@ export class LocalProvider implements WritableFlagProvider {
     }
   }
 
-  private async saveToStorage(): Promise<void> {
-    if (typeof window === 'undefined' || !window.localStorage) {
+  private saveToStorage(): void {
+    if (typeof window === 'undefined' || window.localStorage === null || window.localStorage === undefined) {
       return;
     }
 
@@ -306,8 +306,8 @@ export class LocalProvider implements WritableFlagProvider {
     }
   }
 
-  private async saveSegmentsToStorage(): Promise<void> {
-    if (typeof window === 'undefined' || !window.localStorage) {
+  private saveSegmentsToStorage(): void {
+    if (typeof window === 'undefined' || window.localStorage === null || window.localStorage === undefined) {
       return;
     }
 
@@ -367,8 +367,8 @@ export class LocalProvider implements WritableFlagProvider {
   /**
    * Check if the provider is healthy.
    */
-  async isHealthy(): boolean {
-    return this.ready;
+  isHealthy(): Promise<boolean> {
+    return Promise.resolve(this.ready);
   }
 
   /**
@@ -419,10 +419,11 @@ export class LocalProvider implements WritableFlagProvider {
   /**
    * Shutdown the provider.
    */
-  async shutdown(): Promise<void> {
+  shutdown(): Promise<void> {
     this.ready = false;
     this.listeners.clear();
     this.log('Provider shutdown');
+    return Promise.resolve();
   }
 
   // ==========================================================================
@@ -448,7 +449,7 @@ export class LocalProvider implements WritableFlagProvider {
   /**
    * Clear all flags and segments.
    */
-  async clear(): Promise<void> {
+  clear(): Promise<void> {
     this.flags.clear();
     this.segments.clear();
     this.updateStats();
@@ -465,6 +466,7 @@ export class LocalProvider implements WritableFlagProvider {
     });
 
     this.log('All flags and segments cleared');
+    return Promise.resolve();
   }
 
   /**

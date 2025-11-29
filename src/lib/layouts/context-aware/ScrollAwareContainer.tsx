@@ -49,7 +49,7 @@ import {
  */
 export function useScrollContainerContext(): ScrollContainer | null {
   const context = useContext(ScrollContainerContext);
-  return context as ScrollContainer | null;
+  return (context as ScrollContainer | null) ?? null;
 }
 
 // ============================================================================
@@ -346,14 +346,14 @@ export const ScrollAwareContainer = forwardRef<HTMLDivElement, ExtendedScrollAwa
     }, [virtualize, itemHeight, scrollState, children, overscan, scrollSnap]);
 
     return (
-      <ScrollContainerContext.Provider value={scrollState as any}>
+      <ScrollContainerContext.Provider value={scrollState as unknown as ScrollContainer}>
         <div
           ref={setRefs}
           className={computedClassName}
           style={containerStyle}
           data-testid={testId}
           data-scroll-container="true"
-          data-scroll-direction={scrollState?.scrollDirection || 'none'}
+          data-scroll-direction={scrollState?.scrollDirection ?? 'none'}
         >
           {/* Scroll indicators */}
           {showScrollIndicators && (
@@ -444,12 +444,21 @@ function ScrollIndicator({ position }: ScrollIndicatorProps): React.JSX.Element 
 /**
  * Hook to get imperative scroll control methods.
  */
-export function useScrollControl() {
+export function useScrollControl(): {
+  scrollState: ScrollContainer | null;
+  scrollTo: (options: { x?: number; y?: number; behavior?: 'auto' | 'smooth' }) => void;
+  scrollBy: (options: { x?: number; y?: number; behavior?: 'auto' | 'smooth' }) => void;
+  scrollToTop: (behavior?: 'auto' | 'smooth') => void;
+  scrollToBottom: (behavior?: 'auto' | 'smooth') => void;
+  isScrolling: boolean;
+  scrollDirection: string;
+  scrollProgress: { x: number; y: number };
+} {
   const scrollState = useScrollContainerContext();
 
   const scrollTo = useCallback(
     (options: { x?: number; y?: number; behavior?: 'auto' | 'smooth' }) => {
-      if (scrollState?.element) {
+      if (scrollState?.element !== null && scrollState?.element !== undefined) {
         scrollState.element.scrollTo({
           left: options.x,
           top: options.y,
@@ -462,7 +471,7 @@ export function useScrollControl() {
 
   const scrollBy = useCallback(
     (options: { x?: number; y?: number; behavior?: 'auto' | 'smooth' }) => {
-      if (scrollState?.element) {
+      if (scrollState?.element !== null && scrollState?.element !== undefined) {
         scrollState.element.scrollBy({
           left: options.x,
           top: options.y,
@@ -482,7 +491,7 @@ export function useScrollControl() {
 
   const scrollToBottom = useCallback(
     (behavior: 'auto' | 'smooth' = 'smooth') => {
-      if (scrollState) {
+      if (scrollState !== null && scrollState !== undefined) {
         scrollTo({
           y: scrollState.scrollDimensions.height,
           behavior,

@@ -515,9 +515,7 @@ export class ResourcePermissionManager {
     owner?: string
   ): ResourceACL {
     let acl = this.getACL(resourceType, resourceId);
-    if (!acl) {
-      acl = this.createACL(resourceType, resourceId, owner ?? 'system');
-    }
+    acl ??= this.createACL(resourceType, resourceId, owner ?? 'system');
     return acl;
   }
 

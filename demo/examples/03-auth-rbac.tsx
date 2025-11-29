@@ -1,4 +1,10 @@
-import { useState } from 'react';
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/strict-boolean-expressions */
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
+/* eslint-disable no-console */
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth, AuthProvider, RequireRole, RequirePermission } from '@missionfabric-js/enzyme/auth';
 
@@ -217,7 +223,7 @@ const { RequireRole, RequirePermission } = auth;
   );
 }
 
-export default function AuthRBACExample() {
+export default function AuthRBACExample(): React.ReactElement {
   return (
     <AuthProvider>
       <AuthContent />

@@ -564,7 +564,7 @@ export class ADTokenHandler {
 
     this.refreshTimer = setTimeout(() => {
       this.log('Auto-refreshing token');
-      const refreshToken = tokens.refreshToken;
+      const { refreshToken } = tokens;
       if (refreshToken != null) {
         void this.refreshToken(refreshToken);
       }
@@ -590,7 +590,7 @@ export class ADTokenHandler {
     const cacheKey = this.getCacheKey(scopes, tokens.accountId);
     const entry: TokenCacheEntry = {
       tokens,
-      accountId: tokens.accountId || '',
+      accountId: tokens.accountId ?? '',
       scopes,
       cachedAt: Date.now(),
     };
@@ -622,7 +622,7 @@ export class ADTokenHandler {
       }
     }
 
-    this.currentAccountId = tokens.accountId || null;
+    this.currentAccountId = (tokens.accountId != null && tokens.accountId !== '') ? tokens.accountId : null;
   }
 
   /**
@@ -735,7 +735,7 @@ export class ADTokenHandler {
 
       for (let i = 0; i < storage.length; i++) {
         const key = storage.key(i);
-        if (key !== undefined && key !== null && key.startsWith(TOKEN_CACHE_PREFIX)) {
+        if (key?.startsWith(TOKEN_CACHE_PREFIX) === true) {
           keysToRemove.push(key);
         }
       }
@@ -799,7 +799,10 @@ export class ADTokenHandler {
    * Build authorization URL for interactive flows.
    */
   private buildAuthorizationUrl(request: AcquisitionOptions): string {
-    const authority = getAuthorityUrl(this.config)!;
+    const authority = getAuthorityUrl(this.config);
+    if (authority == null || authority === '') {
+      throw new Error('No authority URL configured');
+    }
     const authorizeEndpoint = `${authority}/oauth2/v2.0/authorize`;
 
     const state = request.state ?? this.generateRandomString(32);
@@ -847,14 +850,21 @@ export class ADTokenHandler {
       return null;
     }
 
-    const expiresIn = parseInt(params.get('expires_in') || String(DEFAULT_TOKEN_LIFETIME), 10);
+    const expiresInParam = params.get('expires_in');
+    const expiresIn = parseInt(
+      (expiresInParam != null && expiresInParam !== '') ? expiresInParam : String(DEFAULT_TOKEN_LIFETIME),
+      10
+    );
+
+    const scopeParam = params.get('scope');
+    const tokenTypeParam = params.get('token_type');
 
     return {
       accessToken,
       idToken,
       expiresAt: Date.now() + (expiresIn * 1000),
-      scopes: (params.get('scope') || '').split(' '),
-      tokenType: params.get('token_type') || 'Bearer',
+      scopes: (scopeParam != null && scopeParam !== '') ? scopeParam.split(' ') : [],
+      tokenType: (tokenTypeParam != null && tokenTypeParam !== '') ? tokenTypeParam : 'Bearer',
     };
   }
 
@@ -870,7 +880,8 @@ export class ADTokenHandler {
    */
   private getCacheKey(scopes: string[], account?: string): string {
     const sortedScopes = [...scopes].sort().join('|');
-    return `${account || 'default'}_${sortedScopes}`;
+    const accountKey = (account != null && account !== '') ? account : 'default';
+    return `${accountKey}_${sortedScopes}`;
   }
 
   /**
@@ -945,6 +956,7 @@ export class ADTokenHandler {
    */
   private log(message: string, ...args: unknown[]): void {
     if (this.options.debug) {
+      // eslint-disable-next-line no-console
       console.log(`[ADTokenHandler] ${message}`, ...args);
     }
   }

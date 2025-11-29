@@ -294,6 +294,7 @@ export function useOptimisticSync<T>(
         throw error;
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [persister, maxRetries, retryDelay, onSuccess, onError, pendingChanges]
   );
 
@@ -330,9 +331,11 @@ export function useOptimisticSync<T>(
             clearTimeout(debounceTimer.current);
           }
 
-          debounceTimer.current = setTimeout(async () => {
-            const result = await applyUpdate(payload);
-            resolve(result);
+          debounceTimer.current = setTimeout(() => {
+            void applyUpdate(payload).then((result) => { resolve(result); return result; }).catch((err: unknown) => {
+              const error = err instanceof Error ? err : new Error(String(err));
+              throw error;
+            });
           }, debounceMs);
         });
       }
@@ -416,13 +419,14 @@ export function useOptimisticSync<T>(
 
       // Recalculate data from remaining changes
       const remainingChanges = pendingChanges.filter((c) => c.id !== changeId);
+      const baseData = confirmedData ?? rollbackData;
       if (remainingChanges.length === 0) {
-        setData(confirmedData || rollbackData);
+        setData(baseData);
       } else {
         // Apply remaining changes to confirmed data
         const reappliedData = remainingChanges.reduce(
           (acc, c) => merger(acc, c.payload),
-          confirmedData || rollbackData
+          baseData
         );
         setData(reappliedData);
       }
@@ -438,15 +442,15 @@ export function useOptimisticSync<T>(
     if (pendingChanges.length === 0) return;
 
     const firstSnapshot = pendingChanges[0]?.snapshot;
-    if (!firstSnapshot) return;
+    if (firstSnapshot === undefined || firstSnapshot === null) return;
     let rollbackData = firstSnapshot;
 
-    if (rollback) {
+    if (rollback !== undefined && rollback !== null) {
       rollbackData = rollback(firstSnapshot, new Error('Rollback all')) as NonNullable<T>;
     }
 
     setPendingChanges([]);
-    setData(confirmedData || rollbackData);
+    setData(confirmedData ?? rollbackData);
     setStatus('rolled-back');
     onRollback?.(rollbackData, new Error('Rollback all'));
   }, [pendingChanges, rollback, confirmedData, onRollback]);
@@ -564,7 +568,16 @@ export interface PendingListOperation<T> {
  */
 export function useOptimisticList<T extends ListItem>(
   config: OptimisticListConfig<T>
-) {
+): {
+  items: T[];
+  isPending: boolean;
+  error: Error | null;
+  create: (item: Omit<T, 'id'>) => Promise<T>;
+  update: (id: string, updates: Partial<T>) => Promise<T>;
+  remove: (id: string) => Promise<void>;
+  refresh: () => Promise<void>;
+  reset: (newItems?: T[]) => void;
+} {
   const {
     initialItems = [],
     fetcher,
@@ -816,7 +829,7 @@ export function useOptimisticList<T extends ListItem>(
 
   // Reset
   const reset = useCallback((newItems?: T[]) => {
-    const resetItems = newItems || initialItems;
+    const resetItems = newItems ?? initialItems;
     setItems(resetItems);
     setConfirmedItems(resetItems);
     setPendingOps([]);

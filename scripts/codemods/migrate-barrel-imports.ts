@@ -11,6 +11,15 @@
  * @see https://github.com/facebook/jscodeshift
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/strict-boolean-expressions */
+/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+
 import type { API, FileInfo, Options } from 'jscodeshift';
 
 /**
@@ -157,7 +166,6 @@ const EXPORT_TO_MODULE: Record<string, string> = {
   // Network
   useNetworkStatus: 'hooks',
   useOnlineStatus: 'hooks',
-  useNetworkQuality: 'hooks',
   useSlowConnection: 'hooks',
   useOfflineFallback: 'hooks',
   useNetworkAwareFetch: 'hooks',
@@ -454,7 +462,7 @@ const ALLOWED_MAIN_INDEX_IMPORTS = new Set([
   'Result',
 ]);
 
-export default function transformer(file: FileInfo, api: API, options: Options): string | null {
+export default function transformer(file: FileInfo, api: API, _options: Options): string | null {
   const j = api.jscodeshift;
   const root = j(file.source);
   const { quote } = api.jscodeshiftOptions;
@@ -511,7 +519,7 @@ export default function transformer(file: FileInfo, api: API, options: Options):
       hasModifications = true;
 
       // Create new import declarations for each module
-      const newImports: any[] = [];
+      const newImports: unknown[] = [];
 
       moduleGroups.forEach((specs, module) => {
         newImports.push(

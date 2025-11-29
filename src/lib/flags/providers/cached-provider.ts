@@ -159,7 +159,7 @@ export class CachedProvider implements FlagProvider {
       if (now < staleAt) {
         this.cacheHits++;
         this.log('Cache hit (stale, revalidating in background)');
-        this.revalidateInBackground('flags');
+        void this.revalidateInBackground('flags');
         return value;
       }
     }
@@ -188,7 +188,7 @@ export class CachedProvider implements FlagProvider {
 
       if (now < staleAt) {
         this.cacheHits++;
-        this.revalidateInBackground('flag', key);
+        void this.revalidateInBackground('flag', key);
         return value;
       }
     }
@@ -264,7 +264,7 @@ export class CachedProvider implements FlagProvider {
       }
     }
 
-    return oldest;
+    return oldest ?? null;
   }
 
   // ==========================================================================
@@ -291,7 +291,7 @@ export class CachedProvider implements FlagProvider {
 
       if (now < staleAt) {
         this.cacheHits++;
-        this.revalidateInBackground('segments');
+        void this.revalidateInBackground('segments');
         return value;
       }
     }
@@ -339,7 +339,7 @@ export class CachedProvider implements FlagProvider {
     }
 
     this.revalidating = true;
-    this.log(`Background revalidation: ${type}${key ? ` (${key})` : ''}`);
+    this.log(`Background revalidation: ${type}${key !== null && key !== undefined ? ` (${key})` : ''}`);
 
     try {
       const now = Date.now();
@@ -360,7 +360,7 @@ export class CachedProvider implements FlagProvider {
           }
           break;
         case 'flag':
-          if (key) {
+          if (key !== null && key !== undefined) {
             const flag = await this.provider.getFlag(key);
             this.cacheFlag(key, flag, now);
           }
@@ -394,7 +394,7 @@ export class CachedProvider implements FlagProvider {
     }
   }
 
-  private async loadFromStorage(): Promise<void> {
+  private loadFromStorage(): void {
     const storage = this.getStorage();
     if (!storage) {
       return;
@@ -402,15 +402,16 @@ export class CachedProvider implements FlagProvider {
 
     try {
       const data = storage.getItem(this.storageKey);
-      if (data) {
-        const parsed = JSON.parse(data);
-        if (parsed.flags) {
+      if (data !== null && data !== '') {
+        const parsed = JSON.parse(data) as Record<string, unknown>;
+        if (parsed.flags !== null && parsed.flags !== undefined && typeof parsed.flags === 'object') {
+          const flags = parsed.flags as Record<string, unknown>;
           this.flagsCache = {
-            ...parsed.flags,
-            timestamp: new Date(parsed.flags.timestamp).getTime(),
-            expiresAt: new Date(parsed.flags.expiresAt).getTime(),
-            staleAt: new Date(parsed.flags.staleAt).getTime(),
-          };
+            ...flags,
+            timestamp: new Date(flags.timestamp as string | number | Date).getTime(),
+            expiresAt: new Date(flags.expiresAt as string | number | Date).getTime(),
+            staleAt: new Date(flags.staleAt as string | number | Date).getTime(),
+          } as CacheEntry<FeatureFlag[]>;
         }
         this.log('Loaded cache from storage');
       }
@@ -419,7 +420,7 @@ export class CachedProvider implements FlagProvider {
     }
   }
 
-  private async saveToStorage(): Promise<void> {
+  private saveToStorage(): void {
     const storage = this.getStorage();
     if (!storage) {
       return;
@@ -474,7 +475,7 @@ export class CachedProvider implements FlagProvider {
 
   private handleProviderChange(event: FlagChangeEvent): void {
     // Invalidate affected cache entries
-    if (event.flagKey) {
+    if (event.flagKey !== null && event.flagKey !== undefined) {
       this.invalidateFlag(event.flagKey);
     } else {
       this.invalidate();

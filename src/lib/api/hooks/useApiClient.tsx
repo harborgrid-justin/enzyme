@@ -20,6 +20,8 @@
  * ```
  */
 
+/* eslint-disable react-refresh/only-export-components */
+
 import type { Context } from 'react';
 import {
   useContext,
@@ -28,6 +30,7 @@ import {
   useState,
   useEffect,
   type ReactNode,
+  type ReactElement,
 } from 'react';
 import { ApiClientContext as ImportedApiClientContext } from '../../contexts/ApiClientContext';
 import { type ApiClient, apiClient, createApiClient } from '../api-client';
@@ -145,7 +148,7 @@ export function ApiClientProvider({
   client: customClient,
   onTokenRefresh,
   onError,
-}: ApiClientProviderProps): JSX.Element {
+}: ApiClientProviderProps): ReactElement {
   // Create or use provided client
   const [client] = useState<ApiClient>(() => {
     if (customClient) return customClient;

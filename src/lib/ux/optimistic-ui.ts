@@ -12,6 +12,8 @@
  * - Undo support
  */
 
+/* eslint-disable @typescript-eslint/strict-boolean-expressions, @typescript-eslint/prefer-nullish-coalescing, prefer-destructuring */
+
 // ============================================================================
 // Types
 // ============================================================================
@@ -419,7 +421,7 @@ export class OptimisticUpdateManager<T> {
 
   private log(message: string, ...args: unknown[]): void {
     if (this.config.debug) {
-      console.log(`[OptimisticUpdate] ${message}`, ...args);
+      console.info(`[OptimisticUpdate] ${message}`, ...args);
     }
   }
 }

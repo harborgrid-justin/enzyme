@@ -651,9 +651,7 @@ let defaultResolver: GuardResolver | null = null;
  * Get the default guard resolver
  */
 export function getGuardResolver(): GuardResolver {
-  if (!defaultResolver) {
-    defaultResolver = new GuardResolver();
-  }
+  defaultResolver ??= new GuardResolver();
   return defaultResolver;
 }
 

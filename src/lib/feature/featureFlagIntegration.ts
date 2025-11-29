@@ -173,7 +173,7 @@ export function useFeatureVisibility(): FeatureVisibility[] {
       const { access, tabs } = config;
 
       // Check authentication
-      if (access.requireAuth && !isAuthenticated) {
+      if (access.requireAuth === true && !isAuthenticated) {
         return {
           featureId: config.metadata.id,
           isVisible: false,
@@ -184,7 +184,7 @@ export function useFeatureVisibility(): FeatureVisibility[] {
       }
 
       // Check main feature visibility (flag enabled)
-      const isVisible = !access.featureFlag || flagStatus[access.featureFlag] === true;
+      const isVisible = access.featureFlag == null || access.featureFlag === '' || flagStatus[access.featureFlag] === true;
 
       // Check main feature access (roles/permissions)
       const isAccessible = hasFeatureAccess(access, roles, enabledFlags);
@@ -198,8 +198,8 @@ export function useFeatureVisibility(): FeatureVisibility[] {
       }
 
       // Check tab access
-      const tabVisibility: TabVisibility[] = (tabs || []).map((tab) => {
-        const tabVisible = !tab.access?.featureFlag ||
+      const tabVisibility: TabVisibility[] = (tabs ?? []).map((tab) => {
+        const tabVisible = tab.access?.featureFlag == null || tab.access?.featureFlag === '' ||
           flagStatus[tab.access.featureFlag] === true;
 
         const tabAccessible = tab.access

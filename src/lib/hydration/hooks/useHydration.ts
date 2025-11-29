@@ -41,7 +41,6 @@
 import { useCallback, useMemo } from 'react';
 
 import {
-  useHydrationContext,
   useOptionalHydrationContext,
 } from '../HydrationProvider';
 

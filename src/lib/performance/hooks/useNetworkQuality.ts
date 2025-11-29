@@ -28,7 +28,7 @@
  * ```
  */
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   getNetworkAnalyzer,
   type NetworkPerformanceAnalyzer,
@@ -135,24 +135,20 @@ export function useNetworkQuality(
     debug = false,
   } = options;
 
-  // Get analyzer instance
-  const analyzerRef = useRef<NetworkPerformanceAnalyzer | null>(null);
-  if (analyzerRef.current === null) {
-    analyzerRef.current = getNetworkAnalyzer({
-      debug,
-      onQualityChange: (quality) => {
-        setQuality(quality);
-        onQualityChange?.(quality);
-      },
-      onSlowRequest: (request) => {
-        onSlowRequest?.(request);
-      },
-    });
-  }
-  const analyzer = analyzerRef.current;
-
   // State
   const [quality, setQuality] = useState<NetworkQuality | null>(null);
+
+  // Get analyzer instance (lazy initialization)
+  const [analyzer] = useState<NetworkPerformanceAnalyzer>(() => getNetworkAnalyzer({
+    debug,
+    onQualityChange: (quality) => {
+      setQuality(quality);
+      onQualityChange?.(quality);
+    },
+    onSlowRequest: (request) => {
+      onSlowRequest?.(request);
+    },
+  }));
   const [isOffline, setIsOffline] = useState(
     typeof navigator !== 'undefined' ? !navigator.onLine : false
   );
@@ -161,6 +157,7 @@ export function useNetworkQuality(
   // Initialize quality
   useEffect(() => {
     const initialQuality = analyzer.getQuality();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setQuality(initialQuality);
     setStats(analyzer.getStats());
 
@@ -175,17 +172,17 @@ export function useNetworkQuality(
 
   // Online/offline detection
   useEffect(() => {
-    const handleOnline = () => {
+    const handleOnline = (): void => {
       setIsOffline(false);
       if (debug) {
-        console.log('[useNetworkQuality] Connection restored');
+        console.info('[useNetworkQuality] Connection restored');
       }
     };
 
-    const handleOffline = () => {
+    const handleOffline = (): void => {
       setIsOffline(true);
       if (debug) {
-        console.log('[useNetworkQuality] Connection lost');
+        console.info('[useNetworkQuality] Connection lost');
       }
     };
 
@@ -207,17 +204,8 @@ export function useNetworkQuality(
 
   // Get loading strategy
   const loadingStrategy = useMemo<AdaptiveLoadingStrategy>(() => {
-    if (analyzer === null) {
-      return {
-        shouldReduceQuality: false,
-        shouldDefer: false,
-        maxConcurrentRequests: 6,
-        prefetchStrategy: 'none' as const,
-        imageQuality: 'high' as const,
-      };
-    }
     return analyzer.getLoadingStrategy();
-  }, [analyzer, quality]); // Re-compute when quality changes
+  }, [analyzer]); // Re-compute when analyzer changes
 
   // Get priority recommendation
   const getPriority = useCallback(
@@ -247,7 +235,7 @@ export function useNetworkQuality(
   const isSlowConnection = score < slowConnectionThreshold || effectiveType === 'slow-2g' || effectiveType === '2g';
   const isMetered = quality?.isMetered ?? false;
   const shouldPrefetch = loadingStrategy.prefetchStrategy !== 'none' && !isOffline && !saveData;
-  const estimatedBandwidth = analyzer !== null ? analyzer.getEstimatedBandwidth() : null;
+  const estimatedBandwidth = analyzer.getEstimatedBandwidth();
 
   return {
     quality,
@@ -365,7 +353,7 @@ export function useRequestPerformance(url: string): {
     });
 
     // Wait for the request to complete and then analyze it
-    const checkForTiming = () => {
+    const checkForTiming = (): void => {
       const requestTiming = analyzer.analyzeRequest(url);
       if (requestTiming) {
         setTiming(requestTiming);
@@ -378,7 +366,8 @@ export function useRequestPerformance(url: string): {
     const timeoutId = setTimeout(() => {
       clearInterval(intervalId);
       setIsLoading(false);
-      if (!timing) {
+      const currentTiming = timing;
+      if (currentTiming === null) {
         setError(new Error('Request timing not found'));
       }
     }, 10000);
@@ -387,7 +376,7 @@ export function useRequestPerformance(url: string): {
       clearInterval(intervalId);
       clearTimeout(timeoutId);
     };
-  }, [url, analyzer]);
+  }, [url, analyzer, timing]);
 
   return { timing, isLoading, error };
 }

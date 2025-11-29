@@ -314,7 +314,7 @@ export function useFeaturePreload(featureId: string): {
   preload: () => void;
 } {
   const preload = useCallback(() => {
-    featureChunkManager.preload(featureId);
+    void featureChunkManager.preload(featureId);
   }, [featureId]);
 
   return {
@@ -366,7 +366,7 @@ export function usePreloadOnVisible(
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry && entry.isIntersecting && !hasPreloaded) {
-          featureChunkManager.preloadAll(featureIds);
+          void featureChunkManager.preloadAll(featureIds);
           setHasPreloaded(true);
           observer.disconnect();
         }
@@ -406,7 +406,7 @@ export function withFeatureSuspense<P extends object>(
     featureId,
   } = options;
 
-  function FeatureWithSuspense(props: P) {
+  function FeatureWithSuspense(props: P): React.JSX.Element {
     return (
       <Suspense fallback={fallback}>
         <WrappedComponent {...props} />
@@ -470,7 +470,7 @@ export function generateSplitRoutes(
     return {
       path: config.metadata.id,
       element: (
-        <Suspense fallback={config.loadingFallback || fallback}>
+        <Suspense fallback={config.loadingFallback ?? fallback}>
           <Component />
         </Suspense>
       ),
@@ -488,11 +488,11 @@ export function generateSplitRoutes(
  */
 export function initializeFeaturePreloading(): void {
   // Preload critical features immediately
-  featureChunkManager.preloadByPriority('critical');
+  void featureChunkManager.preloadByPriority('critical');
 
   // Preload high priority features after initial render
   requestAnimationFrame(() => {
-    featureChunkManager.preloadByPriority('high');
+    void featureChunkManager.preloadByPriority('high');
   });
 
   // Preload idle features during idle time

@@ -83,7 +83,7 @@ export function useViewportPosition(): UseViewportPositionReturn {
 
   // Set up visibility observation
   useEffect(() => {
-    if (isSSR || !elementRef.current) {
+    if ((isSSR === true) || !elementRef.current) {
       return;
     }
 
@@ -120,9 +120,9 @@ export function useViewportPosition(): UseViewportPositionReturn {
   );
 
   // Compute derived values
-  const isVisible = position?.visibility === 'visible' || position?.visibility === 'partial';
+  const isVisible = (position?.visibility === 'visible') || (position?.visibility === 'partial');
   const isFullyVisible = position?.visibility === 'visible';
-  const visibility = position?.visibility || 'unknown';
+  const visibility = position?.visibility ?? 'unknown';
 
   return {
     position,
@@ -160,7 +160,7 @@ export function useVisibility(): {
   isVisible: boolean;
   isFullyVisible: boolean;
   visibility: VisibilityState;
-  ref: React.RefObject<HTMLElement | null>;
+  ref: { readonly current: HTMLElement | null };
 } {
   const { isVisible, isFullyVisible, visibility, ref } = useViewportPosition();
   return { isVisible, isFullyVisible, visibility, ref };
@@ -189,10 +189,10 @@ export function useVisibility(): {
  */
 export function useIntersectionRatio(): {
   ratio: number;
-  ref: React.RefObject<HTMLElement | null>;
+  ref: { readonly current: HTMLElement | null };
 } {
   const { position, ref } = useViewportPosition();
-  const ratio = position?.intersectionRatio || 0;
+  const ratio = position?.intersectionRatio ?? 0;
   return { ratio, ref };
 }
 
@@ -216,10 +216,10 @@ export function useIntersectionRatio(): {
  */
 export function useDistanceFromViewport(): {
   distance: ViewportPosition['distanceFromViewport'] | null;
-  ref: React.RefObject<HTMLElement | null>;
+  ref: { readonly current: HTMLElement | null };
 } {
   const { position, ref } = useViewportPosition();
-  const distance = position?.distanceFromViewport || null;
+  const distance = position?.distanceFromViewport ?? null;
   return { distance, ref };
 }
 
@@ -246,18 +246,18 @@ export function useDistanceFromViewport(): {
  */
 export function useDistanceFromCenter(): {
   distanceFromCenter: number;
-  ref: React.RefObject<HTMLElement>;
+  ref: { readonly current: HTMLElement | null };
 } {
-  const elementRef = useRef<HTMLElement>(null!);
+  const elementRef = useRef<HTMLElement | null>(null);
   const context = useDOMContextValue();
   const [distanceFromCenter, setDistanceFromCenter] = useState(Infinity);
 
   useEffect(() => {
-    if (context.isSSR || !elementRef.current) {
+    if ((context.isSSR === true) || !elementRef.current) {
       return;
     }
 
-    const updateDistance = () => {
+    const updateDistance = (): void => {
       if (elementRef.current) {
         setDistanceFromCenter(getDistanceFromViewportCenter(elementRef.current));
       }

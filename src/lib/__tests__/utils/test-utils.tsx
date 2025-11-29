@@ -4,6 +4,8 @@
  * for React components and hooks in the lib module.
  */
 
+/* eslint-disable react-refresh/only-export-components */
+
 import React, { type ReactElement, type PropsWithChildren } from 'react';
 import { render, type RenderOptions, type RenderResult } from '@testing-library/react';
 import { renderHook, type RenderHookResult, type RenderHookOptions } from '@testing-library/react';
@@ -436,6 +438,7 @@ export function createMockSecureStorage(): MockSecureStorage {
 
   return {
     getItem: vi.fn(async (key: string) => {
+      await Promise.resolve();
       const value = store.get(key);
       if (value === undefined) {
         return { success: true, data: undefined };
@@ -443,14 +446,17 @@ export function createMockSecureStorage(): MockSecureStorage {
       return { success: true, data: value };
     }),
     setItem: vi.fn(async (key: string, value: unknown) => {
+      await Promise.resolve();
       store.set(key, value);
       return { success: true };
     }),
     removeItem: vi.fn(async (key: string) => {
+      await Promise.resolve();
       store.delete(key);
       return { success: true };
     }),
     clear: vi.fn(async () => {
+      await Promise.resolve();
       store.clear();
       return { success: true };
     }),
@@ -477,16 +483,31 @@ export interface MockSecureStorage {
  * Create a mock fetch function
  */
 export function createMockFetch(): MockFetch {
-  const mockFetch = vi.fn().mockImplementation(async () => ({
-    ok: true,
-    status: 200,
-    statusText: 'OK',
-    headers: new Headers(),
-    json: async () => ({}),
-    text: async () => '',
-    blob: async () => new Blob(),
-    arrayBuffer: async () => new ArrayBuffer(0),
-  }));
+  const mockFetch = vi.fn().mockImplementation(async () => {
+    await Promise.resolve();
+    return {
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      headers: new Headers(),
+      json: async () => {
+        await Promise.resolve();
+        return {};
+      },
+      text: async () => {
+        await Promise.resolve();
+        return '';
+      },
+      blob: async () => {
+        await Promise.resolve();
+        return new Blob();
+      },
+      arrayBuffer: async () => {
+        await Promise.resolve();
+        return new ArrayBuffer(0);
+      },
+    };
+  });
 
   return Object.assign(mockFetch, {
     mockResponse: (data: unknown, status = 200) => {
@@ -495,8 +516,14 @@ export function createMockFetch(): MockFetch {
         status,
         statusText: status === 200 ? 'OK' : 'Error',
         headers: new Headers(),
-        json: async () => data,
-        text: async () => JSON.stringify(data),
+        json: async () => {
+          await Promise.resolve();
+          return data;
+        },
+        text: async () => {
+          await Promise.resolve();
+          return JSON.stringify(data);
+        },
       });
     },
     mockError: (status: number, message: string) => {
@@ -505,8 +532,14 @@ export function createMockFetch(): MockFetch {
         status,
         statusText: message,
         headers: new Headers(),
-        json: async () => ({ error: message }),
-        text: async () => JSON.stringify({ error: message }),
+        json: async () => {
+          await Promise.resolve();
+          return { error: message };
+        },
+        text: async () => {
+          await Promise.resolve();
+          return JSON.stringify({ error: message });
+        },
       });
     },
     mockNetworkError: () => {
