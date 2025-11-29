@@ -133,7 +133,7 @@ Enzyme requires the following peer dependencies:
 // 1. Import core modules
 import { createApp } from '@missionfabric-js/enzyme/core';
 import { createRouter } from '@missionfabric-js/enzyme/routing';
-import { createStore } from '@missionfabric-js/enzyme/state';
+import { createAppStore } from '@missionfabric-js/enzyme/state';
 
 // 2. Initialize your app
 const app = createApp({
@@ -149,13 +149,13 @@ const router = createRouter({
   ],
 });
 
-// 4. Configure state management
-const store = createStore({
-  initialState: {
-    user: null,
-    theme: 'light',
-  },
-});
+// 4. Configure state management with Zustand
+const useAppStore = createAppStore((set) => ({
+  user: null,
+  theme: 'light',
+  setUser: (user) => set({ user }),
+  setTheme: (theme) => set({ theme }),
+}));
 
 // 5. Start your application
 app.mount('#root');
@@ -166,17 +166,18 @@ app.mount('#root');
 Enzyme provides modular imports for optimal tree-shaking:
 
 ```typescript
-// Core functionality
-import { EnzymeProvider, useEnzyme } from '@missionfabric-js/enzyme';
+// Core functionality (commonly used exports)
+import { AuthProvider, useAuth, FeatureFlagProvider, ErrorBoundary } from '@missionfabric-js/enzyme';
 
 // Authentication
 import { AuthProvider, useAuth } from '@missionfabric-js/enzyme/auth';
 
 // Routing
-import { RouterProvider, useRouter, Link } from '@missionfabric-js/enzyme/routing';
+import { createRouter, AppLink, useRouteNavigate } from '@missionfabric-js/enzyme/routing';
+import { RouterProvider } from 'react-router-dom'; // RouterProvider from react-router-dom
 
 // State management
-import { createStore, useStore } from '@missionfabric-js/enzyme/state';
+import { createAppStore, useStore } from '@missionfabric-js/enzyme/state';
 
 // API utilities
 import { createApiClient, useQuery } from '@missionfabric-js/enzyme/api';
@@ -242,15 +243,23 @@ import { env, routes, api, theme } from '@missionfabric-js/enzyme/config';
 
 **Provider Composition**
 ```typescript
-<EnzymeProvider>
+import { AuthProvider } from '@missionfabric-js/enzyme/auth';
+import { ThemeProvider } from '@missionfabric-js/enzyme/theme';
+import { FeatureFlagProvider } from '@missionfabric-js/enzyme/flags';
+import { PerformanceProvider } from '@missionfabric-js/enzyme/performance';
+import { RouterProvider } from 'react-router-dom';
+
+<PerformanceProvider>
   <AuthProvider>
     <ThemeProvider>
-      <RouterProvider>
-        <App />
-      </RouterProvider>
+      <FeatureFlagProvider>
+        <RouterProvider router={router}>
+          <App />
+        </RouterProvider>
+      </FeatureFlagProvider>
     </ThemeProvider>
   </AuthProvider>
-</EnzymeProvider>
+</PerformanceProvider>
 ```
 
 ---
@@ -371,14 +380,15 @@ import {
 
 ```typescript
 import {
-  RouterProvider,    // Router context provider
-  useRouter,        // Router hook
-  useParams,        // URL params hook
-  useNavigate,      // Navigation hook
-  Link,             // Navigation component
-  RouteGuard,       // Generic guard
-  createRouter,     // Router factory
+  createRouter,      // Router factory
+  AppLink,           // Type-safe navigation link
+  AppNavLink,        // Type-safe nav link with active state
+  useRouteNavigate,  // Navigation hook
+  useRouteInfo,      // Current route info hook
+  useQueryParams,    // URL query params hook
+  routeRegistry,     // Route registry for dynamic routes
 } from '@missionfabric-js/enzyme/routing';
+import { RouterProvider } from 'react-router-dom'; // From react-router-dom
 ```
 
 [Full Routing Documentation](./AUTO_ROUTES.md)
@@ -387,11 +397,12 @@ import {
 
 ```typescript
 import {
-  createStore,      // Store factory
+  createAppStore,   // Main store factory with all features
+  createSimpleStore,// Simplified store without persistence
   useStore,         // Store hook
   createSlice,      // Slice creator
-  persist,          // Persistence middleware
-  devtools,         // Redux DevTools integration
+  createSelector,   // Memoized selector creator
+  createFeatureStore, // Feature-scoped store factory
 } from '@missionfabric-js/enzyme/state';
 ```
 
@@ -475,7 +486,8 @@ function Profile() {
 #### Configure Routing
 
 ```typescript
-import { RouterProvider, createRouter } from '@missionfabric-js/enzyme/routing';
+import { createRouter } from '@missionfabric-js/enzyme/routing';
+import { RouterProvider } from 'react-router-dom';
 
 const router = createRouter({
   routes: [
@@ -545,10 +557,10 @@ function UpdateProfile() {
 #### Manage Global State
 
 ```typescript
-import { createStore, useStore } from '@missionfabric-js/enzyme/state';
+import { createAppStore } from '@missionfabric-js/enzyme/state';
 
-// Create store
-const useAppStore = createStore((set) => ({
+// Create store with Zustand + Immer + DevTools
+const useAppStore = createAppStore((set) => ({
   user: null,
   theme: 'light',
   setUser: (user) => set({ user }),
