@@ -200,7 +200,7 @@ export class ADClient {
       const tokenEndpoint = `${authority}/oauth2/v2.0/token`;
 
       // Raw fetch is intentional - OAuth requires x-www-form-urlencoded body
-      const {refreshToken} = this.tokens;
+      const refreshToken = this.tokens?.refreshToken;
       if (refreshToken == null) {
         throw new Error('No refresh token available');
       }
@@ -245,7 +245,7 @@ export class ADClient {
       const newTokens: ADTokens = {
         accessToken: data.access_token,
         idToken: data.id_token,
-        refreshToken: (data.refresh_token != null && data.refresh_token !== '') ? data.refresh_token : (this.tokens.refreshToken ?? ''),
+        refreshToken: (data.refresh_token != null && data.refresh_token !== '') ? data.refresh_token : (this.tokens?.refreshToken ?? ''),
         expiresAt: Date.now() + (data.expires_in * 1000),
         scopes: (data.scope != null && data.scope !== '') ? data.scope.split(' ') : [],
         tokenType: (data.token_type != null && data.token_type !== '') ? data.token_type : 'Bearer',

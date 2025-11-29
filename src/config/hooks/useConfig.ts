@@ -117,9 +117,9 @@ export function useConfig<T extends ConfigRecord>(
   const getConfig = useCallback((): DeepReadonly<T> => {
     const fullConfig = getNamespace<T>(namespace);
     if (selector !== undefined && selector !== null) {
-      return selector(fullConfig) as DeepReadonly<T>;
+      return selector(fullConfig) as unknown as DeepReadonly<T>;
     }
-    return fullConfig;
+    return fullConfig as DeepReadonly<T>;
   }, [getNamespace, namespace, selector]);
 
   const [config, setConfig] = useState<DeepReadonly<T>>(getConfig);
@@ -135,7 +135,7 @@ export function useConfig<T extends ConfigRecord>(
       const newConfig = getConfig();
 
       // Only update if config actually changed
-      if (!prevConfigRef.current || !isEqual(prevConfigRef.current, newConfig)) {
+      if (!prevConfigRef.current || !isEqual(prevConfigRef.current as T, newConfig as T)) {
         prevConfigRef.current = newConfig;
         setConfig(newConfig);
         setLastUpdated(event.timestamp);

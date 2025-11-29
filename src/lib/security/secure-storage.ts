@@ -523,7 +523,7 @@ export class SecureStorage implements SecureStorageInterface {
       return {
         success: true,
         data: value,
-        metadata: this.getMetadata(key) ?? undefined,
+        metadata: await this.getMetadata(key) ?? undefined,
       };
     } catch (error) {
       return {
@@ -536,7 +536,7 @@ export class SecureStorage implements SecureStorageInterface {
   /**
    * Remove an item
    */
-  removeItem(key: string): SecureStorageResult<void> {
+  async removeItem(key: string): Promise<SecureStorageResult<void>> {
     try {
       const storageKey = this.getStorageKey(key);
       this.storage.removeItem(storageKey);
@@ -583,7 +583,7 @@ export class SecureStorage implements SecureStorageInterface {
   /**
    * Get all keys
    */
-  keys(): string[] {
+  async keys(): Promise<string[]> {
     const prefix = this.config.storagePrefix;
     const metaPrefix = `${prefix}${METADATA_PREFIX}`;
     const keys: string[] = [];
@@ -601,12 +601,12 @@ export class SecureStorage implements SecureStorageInterface {
   /**
    * Get storage quota information
    */
-  getQuotaInfo(): StorageQuotaInfo {
+  async getQuotaInfo(): Promise<StorageQuotaInfo> {
     const used = this.estimateStorageSize();
     const total = this.config.storageQuota;
     const available = Math.max(0, total - used);
     const usagePercent = (used / total) * 100;
-    const keys = this.keys();
+    const keys = await this.keys();
 
     return {
       total,
@@ -621,7 +621,7 @@ export class SecureStorage implements SecureStorageInterface {
   /**
    * Clear all secure storage items
    */
-  clear(): SecureStorageResult<void> {
+  async clear(): Promise<SecureStorageResult<void>> {
     try {
       const prefix = this.config.storagePrefix;
       const keysToRemove: string[] = [];
@@ -652,7 +652,7 @@ export class SecureStorage implements SecureStorageInterface {
   /**
    * Get item metadata
    */
-  getMetadata(key: string): SecureStorageMetadata | null {
+  async getMetadata(key: string): Promise<SecureStorageMetadata | null> {
     try {
       const metaKey = `${this.config.storagePrefix}${METADATA_PREFIX}${key}`;
       const metaString = this.storage.getItem(metaKey);
@@ -670,9 +670,9 @@ export class SecureStorage implements SecureStorageInterface {
   /**
    * Cleanup expired items
    */
-  cleanup(): number {
+  async cleanup(): Promise<number> {
     let cleaned = 0;
-    const keys = this.keys();
+    const keys = await this.keys();
 
     for (const key of keys) {
       const storageKey = this.getStorageKey(key);
@@ -681,12 +681,12 @@ export class SecureStorage implements SecureStorageInterface {
         try {
           const encrypted = JSON.parse(item) as EncryptedData;
           if (encrypted.expiresAt !== null && encrypted.expiresAt !== undefined && encrypted.expiresAt > 0 && Date.now() > encrypted.expiresAt) {
-            this.removeItem(key);
+            await this.removeItem(key);
             cleaned++;
           }
         } catch {
           // Corrupted item, remove it
-          this.removeItem(key);
+          await this.removeItem(key);
           cleaned++;
         }
       }

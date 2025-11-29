@@ -299,7 +299,7 @@ export class RBACEngine {
       WILDCARD,
     ];
 
-    if (scope != null && scope !== '') {
+    if (scope != null) {
       permissionsToCheck.unshift(
         `${resource}:${action}:${scope}`,
         `${resource}:*:${scope}`
@@ -928,7 +928,7 @@ export class RBACEngine {
     if (role.structuredPermissions != null) {
       for (const sp of role.structuredPermissions) {
         if (sp.deny !== true) {
-          const permStr = sp.scope != null && sp.scope !== ''
+          const permStr = sp.scope != null
             ? `${sp.resource}:${sp.action}:${sp.scope}`
             : `${sp.resource}:${sp.action}`;
           this.resolvedPermissions.add(permStr);

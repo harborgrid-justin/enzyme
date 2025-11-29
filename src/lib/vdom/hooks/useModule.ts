@@ -95,7 +95,8 @@ export function useModule(): UseModuleReturn {
     ): EventSubscription => {
       const subscriptionId = `${moduleId}-${name}-${Date.now()}`;
       let isActive = true;
-      const unsubscribeFn = eventBus.subscribe(name, handler, moduleId);
+      // EventHandler from types.ts and ModuleEventHandler are compatible - both take ModuleEventMessage<T>
+      const unsubscribeFn = eventBus.subscribe<T>(name, handler as unknown as Parameters<typeof eventBus.subscribe<T>>[1], moduleId);
       
       const unsubscribe = (): void => {
         if (isActive) {

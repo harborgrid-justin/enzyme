@@ -1415,8 +1415,10 @@ export const v = {
   any: (): UnknownSchema => new UnknownSchema(),
 
   // Convenience methods
-  optional: <T extends BaseSchema<unknown>>(schema: T): T => schema.optional(),
-  nullable: <T extends BaseSchema<unknown>>(schema: T): T => schema.nullable(),
+  optional: <T extends BaseSchema<unknown>>(schema: T): BaseSchema<SchemaOutput<T> | undefined> =>
+    schema.optional() as BaseSchema<SchemaOutput<T> | undefined>,
+  nullable: <T extends BaseSchema<unknown>>(schema: T): BaseSchema<SchemaOutput<T> | null> =>
+    schema.nullable() as BaseSchema<SchemaOutput<T> | null>,
 };
 
 // =============================================================================

@@ -93,10 +93,10 @@ export function useCSRFToken(
   }, [autoInitialize]);
 
   // Regenerate token function
-  const regenerate = useCallback((): string => {
+  const regenerate = useCallback((): Promise<string> => {
     const newToken = CSRFProtection.regenerateToken();
     setToken(newToken);
-    return newToken;
+    return Promise.resolve(newToken);
   }, []);
 
   // Set up auto-refresh interval

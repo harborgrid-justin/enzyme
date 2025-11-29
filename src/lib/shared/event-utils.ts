@@ -548,9 +548,9 @@ export class UnifiedEventEmitter<Events extends Record<string, unknown>>
     // Create processed handler (debounced/throttled if configured)
     let processedHandler: EventHandler<Events[K]> | undefined;
     if (debounceMs !== undefined && debounceMs !== null && debounceMs > 0) {
-      processedHandler = debounce(handler, debounceMs);
+      processedHandler = debounce(handler as (...args: unknown[]) => unknown, debounceMs) as EventHandler<Events[K]>;
     } else if (throttleMs !== undefined && throttleMs !== null && throttleMs > 0) {
-      processedHandler = throttle(handler, throttleMs);
+      processedHandler = throttle(handler as (...args: unknown[]) => unknown, throttleMs) as EventHandler<Events[K]>;
     }
 
     const entry: PriorityListener<Events[K]> = {

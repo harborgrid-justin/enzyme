@@ -180,7 +180,7 @@ export function createParameterizedSelector<TState, TParam, TResult>(
   return (param: TParam) => {
     if (selectorCache.has(param)) {
       // Move to end (most recently used) for LRU behavior
-      const selector = selectorCache.get(param);
+      const selector = selectorCache.get(param)!;
       selectorCache.delete(param);
       selectorCache.set(param, selector);
       return selector;
@@ -223,7 +223,7 @@ export function createBoundedParameterizedSelector<TState, TParam, TResult>(
   return (param: TParam) => {
     if (selectorCache.has(param)) {
       // Move to end (most recently used)
-      const selector = selectorCache.get(param);
+      const selector = selectorCache.get(param)!;
       selectorCache.delete(param);
       selectorCache.set(param, selector);
       return selector;

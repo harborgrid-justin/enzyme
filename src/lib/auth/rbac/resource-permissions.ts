@@ -545,7 +545,7 @@ export class ResourcePermissionManager {
   ): boolean {
     // Check specific actions if defined
     if ((permission.actions?.length ?? 0) > 0) {
-      return permission.actions.includes(action) || permission.actions.includes('*');
+      return (permission.actions ?? []).includes(action) || (permission.actions ?? []).includes('*');
     }
 
     // Check against level-based actions

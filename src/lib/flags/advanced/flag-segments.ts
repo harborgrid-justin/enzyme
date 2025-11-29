@@ -441,10 +441,17 @@ export class SegmentMatcher {
 // ============================================================================
 
 /**
+ * Mutable segment type for builder.
+ */
+type MutableSegment = {
+  -readonly [K in keyof Segment]: Segment[K];
+};
+
+/**
  * Fluent builder for creating segments.
  */
 export class SegmentBuilder {
-  private segment: Partial<Segment> = {
+  private segment: Partial<MutableSegment> = {
     includedUsers: [],
     excludedUsers: [],
     tags: [],

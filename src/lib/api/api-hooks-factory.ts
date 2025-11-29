@@ -793,6 +793,8 @@ export interface ErrorHandlerConfig {
  */
 export function createErrorHandler(config: ErrorHandlerConfig = {}): {
   onError: (error: ApiError) => void;
+  retry: (failureCount: number, error: ApiError) => boolean;
+  fallbackData?: unknown;
 } {
   const { showToast = true, reportError = true, messages = {} } = config;
 

@@ -273,7 +273,17 @@ export class FlagAnalytics {
     }
   }
 
-  private getOrCreateMetrics(flagKey: string): FlagMetrics {
+  private getOrCreateMetrics(flagKey: string): {
+    evaluationCount: number;
+    variantCounts: Map<VariantId, number>;
+    uniqueUsers: Set<string>;
+    uniqueSessions: Set<string>;
+    totalDuration: number;
+    cacheHits: number;
+    errorCount: number;
+    firstSeen: Date;
+    lastSeen: Date;
+  } {
     let metrics = this.flagMetrics.get(flagKey);
     if (metrics == null) {
       metrics = {
@@ -508,7 +518,7 @@ export class FlagAnalytics {
    * Enable or disable analytics.
    */
   setEnabled(enabled: boolean): void {
-    this.config.enabled = enabled;
+    (this.config as { enabled: boolean }).enabled = enabled;
     if (enabled) {
       this.startFlushTimer();
     } else {

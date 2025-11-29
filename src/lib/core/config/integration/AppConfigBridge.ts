@@ -210,11 +210,7 @@ export class AppConfigBridge {
     const registry = getConfigRegistry();
     const endpointRegistry = getEndpointRegistry();
 
-    const overlay: Partial<{
-      network: unknown;
-      cache: unknown;
-      ui: unknown;
-    }> = {};
+    const overlay: Record<string, unknown> = {};
 
     // Sync from env config
     if (env !== undefined && env !== null) {
@@ -250,7 +246,7 @@ export class AppConfigBridge {
 
     // Apply overlay to registry
     if (Object.keys(overlay).length > 0) {
-      registry.applyOverlay(overlay, 'environment');
+      registry.applyOverlay(overlay as DeepPartial<LibraryConfig>, 'environment');
     }
 
     this.initialized = true;
@@ -281,7 +277,7 @@ export class AppConfigBridge {
   // ===========================================================================
 
   private mapEnvToNetworkConfig(env: Partial<AppEnvConfig>): Partial<NetworkConfig> {
-    const config: Partial<NetworkConfig> = {};
+    const config: Record<string, number | undefined> = {};
 
     if (env.apiTimeout !== undefined) {
       config.defaultTimeout = env.apiTimeout;
@@ -303,11 +299,11 @@ export class AppConfigBridge {
       config.websocketMaxReconnectAttempts = env.wsMaxReconnectAttempts;
     }
 
-    return config;
+    return config as Partial<NetworkConfig>;
   }
 
   private mapTimingToNetworkConfig(timing: Partial<AppTimingConfig>): Partial<NetworkConfig> {
-    const config: Partial<NetworkConfig> = {};
+    const config: Record<string, number | undefined> = {};
     const api = timing.API;
 
     if (api != null) {
@@ -323,7 +319,7 @@ export class AppConfigBridge {
       config.maxRetryAttempts = timing.RETRY.API_ATTEMPTS;
     }
 
-    return config;
+    return config as Partial<NetworkConfig>;
   }
 
   private mapTimingToCacheConfig(timing: Partial<AppTimingConfig>): Partial<CacheConfig> {

@@ -455,6 +455,7 @@ export function AnimatedPresence({
       requestAnimationFrame(() => {
         setPresentChildren(children);
       });
+      return undefined;
     }
   }, [children, exitBeforeEnter, onExitComplete]);
 

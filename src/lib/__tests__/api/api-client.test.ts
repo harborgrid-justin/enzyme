@@ -349,7 +349,7 @@ describe('ApiClient', () => {
       const interceptor = vi.fn((config: Record<string, unknown>) => ({
         ...config,
         headers: { ...(config.headers as Record<string, string>), 'X-Custom-Header': 'test' },
-      }));
+      })) as unknown as RequestInterceptor;
 
       client.addRequestInterceptor(interceptor);
 
@@ -371,7 +371,7 @@ describe('ApiClient', () => {
       const interceptor = vi.fn((response: Record<string, unknown>) => ({
         ...response,
         data: { ...(response.data as Record<string, unknown>), modified: true },
-      }));
+      })) as unknown as ResponseInterceptor;
 
       client.addResponseInterceptor(interceptor);
 
@@ -394,7 +394,7 @@ describe('ApiClient', () => {
       const errorInterceptor = vi.fn((error: Record<string, unknown>) => ({
         ...error,
         handled: true,
-      }));
+      })) as unknown as ErrorInterceptor;
 
       client.addErrorInterceptor(errorInterceptor);
 
@@ -413,7 +413,7 @@ describe('ApiClient', () => {
       });
       mockFetch.mockResponse({});
 
-      const interceptor = vi.fn((config: Record<string, unknown>) => config);
+      const interceptor = vi.fn((config: Record<string, unknown>) => config) as unknown as RequestInterceptor;
       const remove = client.addRequestInterceptor(interceptor);
 
       // Act - call once with interceptor

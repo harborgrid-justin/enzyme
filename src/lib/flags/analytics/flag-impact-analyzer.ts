@@ -392,8 +392,10 @@ export class FlagImpactAnalyzer {
       this.metrics.set(name, []);
     }
     const metricList = this.metrics.get(name);
-    metricList.push(dataPoint);
-    this.enforceMaxDataPoints(metricList);
+    if (metricList) {
+      metricList.push(dataPoint);
+      this.enforceMaxDataPoints(metricList);
+    }
 
     // Store in flag-specific metrics
     if (input.flagKey !== undefined && input.flagKey !== '' && input.variantId !== undefined && input.variantId !== '') {
@@ -403,13 +405,17 @@ export class FlagImpactAnalyzer {
       }
       const flagMap = this.flagMetrics.get(flagKey);
 
-      const key = `${name}:${input.variantId}`;
-      if (!flagMap.has(key)) {
-        flagMap.set(key, []);
+      if (flagMap) {
+        const key = `${name}:${input.variantId}`;
+        if (!flagMap.has(key)) {
+          flagMap.set(key, []);
+        }
+        const flagMetricList = flagMap.get(key);
+        if (flagMetricList) {
+          flagMetricList.push(dataPoint);
+          this.enforceMaxDataPoints(flagMetricList);
+        }
       }
-      const flagMetricList = flagMap.get(key);
-      flagMetricList.push(dataPoint);
-      this.enforceMaxDataPoints(flagMetricList);
     }
 
     this.log(`Recorded metric: ${name} = ${value}`);
@@ -856,7 +862,7 @@ export class FlagImpactAnalyzer {
    * Enable or disable analysis.
    */
   setEnabled(enabled: boolean): void {
-    this.config.enabled = enabled;
+    (this.config as { enabled: boolean }).enabled = enabled;
   }
 
   // ==========================================================================
@@ -877,10 +883,11 @@ export class FlagImpactAnalyzer {
 
     const flagMetrics: Record<string, Record<string, MetricDataPoint[]>> = {};
     for (const [flagKey, flagMap] of this.flagMetrics.entries()) {
-      flagMetrics[flagKey] = {};
+      const flagEntry: Record<string, MetricDataPoint[]> = {};
       for (const [key, dataPoints] of flagMap.entries()) {
-        flagMetrics[flagKey][key] = dataPoints;
+        flagEntry[key] = dataPoints;
       }
+      flagMetrics[flagKey] = flagEntry;
     }
 
     return { metrics, flagMetrics };

@@ -816,7 +816,7 @@ export class LayoutEngine implements LayoutEngineInterface {
         const { modePreferences } = parsed;
         return {
           ...parsed,
-          modePreferences: new Map(Object.entries(modePreferences ?? {})),
+          modePreferences: new Map(Object.entries(modePreferences ?? {})) as ReadonlyMap<ContentDensity, LayoutMode>,
         };
       } catch {
         // Fall through to default

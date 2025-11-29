@@ -213,13 +213,13 @@ export function useDashboardChartsSuspense(range: string = '7d'): ReturnType<typ
 /**
  * Hook to fetch activity feed
  */
-export function useActivity(page: number = 1): ReturnType<typeof useQuery<ActivityItem[]>> {
+export function useActivity(page: number = 1): ReturnType<typeof useQuery<ActivityResponse>> {
   return useQuery(activityQueryOptions(page));
 }
 
 /**
  * Hook to fetch activity feed with Suspense
  */
-export function useActivitySuspense(page: number = 1): ReturnType<typeof useSuspenseQuery<ActivityItem[]>> {
+export function useActivitySuspense(page: number = 1): ReturnType<typeof useSuspenseQuery<ActivityResponse>> {
   return useSuspenseQuery(activitySuspenseQueryOptions(page));
 }

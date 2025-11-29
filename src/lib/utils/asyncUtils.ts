@@ -73,7 +73,7 @@ export async function retry<T>(
     onRetry,
   } = options;
 
-  let lastError: Error;
+  let lastError: Error | undefined;
   let currentDelay = delayMs;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -81,7 +81,7 @@ export async function retry<T>(
       return await fn();
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
-      
+
       if (attempt === maxAttempts) {
         throw lastError;
       }
@@ -141,7 +141,7 @@ export async function withTimeout<T>(
   timeoutMs: number,
   message = 'Operation timed out'
 ): Promise<T> {
-  let timeoutId: ReturnType<typeof setTimeout>;
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
   const timeoutPromise = new Promise<never>((_, reject) => {
     timeoutId = setTimeout(() => {
@@ -302,10 +302,11 @@ export async function sequence<T>(
 export function createSemaphore(limit: number): {
   acquire: () => Promise<void>;
   release: () => void;
-  getCount: () => number;
+  available: number;
+  waiting: number;
 } {
   let currentCount = 0;
-  const waiting: Array<() => void> = [];
+  const waitingQueue: Array<() => void> = [];
 
   return {
     async acquire(): Promise<void> {
@@ -315,14 +316,14 @@ export function createSemaphore(limit: number): {
       }
 
       await new Promise<void>((resolve) => {
-        waiting.push(resolve);
+        waitingQueue.push(resolve);
       });
       currentCount++;
     },
 
     release(): void {
       currentCount--;
-      const next = waiting.shift();
+      const next = waitingQueue.shift();
       if (next) {
         next();
       }
@@ -333,7 +334,7 @@ export function createSemaphore(limit: number): {
     },
 
     get waiting(): number {
-      return waiting.length;
+      return waitingQueue.length;
     },
   };
 }

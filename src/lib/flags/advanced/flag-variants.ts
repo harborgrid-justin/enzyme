@@ -379,10 +379,17 @@ export class VariantManager {
 // ============================================================================
 
 /**
+ * Mutable variant type for builder.
+ */
+type MutableVariant<T extends JsonValue = JsonValue> = {
+  -readonly [K in keyof Variant<T>]: Variant<T>[K];
+};
+
+/**
  * Fluent builder for creating variants.
  */
 export class VariantBuilder<T extends JsonValue = JsonValue> {
-  private variant: Partial<Variant<T>> = {};
+  private variant: Partial<MutableVariant<T>> = {};
 
   /**
    * Set the variant ID.

@@ -553,7 +553,7 @@ export class AssetPrefetchManager {
     link.href = url;
     link.as = as;
 
-    if (options.crossOrigin != null && options.crossOrigin !== '') {
+    if (options.crossOrigin != null) {
       link.crossOrigin = options.crossOrigin;
     }
 

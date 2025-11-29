@@ -491,7 +491,7 @@ export function FlaggedModuleLoader<P extends Record<string, unknown> = Record<s
     return null;
   }
 
-  return <LoadedComponent {...(componentProps as P)} />;
+  return <LoadedComponent {...((componentProps ?? {}) as P)} />;
 }
 
 /**
@@ -520,7 +520,7 @@ export function SuspenseFlaggedLoader<P extends Record<string, unknown> = Record
 
   return (
     <Suspense fallback={loadingFallback}>
-      <Component {...(componentProps as Record<string, unknown>)} />
+      <Component {...((componentProps ?? {}) as P)} />
     </Suspense>
   );
 }

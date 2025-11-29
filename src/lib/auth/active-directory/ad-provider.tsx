@@ -545,7 +545,7 @@ export function ADProvider({
   );
 
   const logout = useCallback(
-    (options?: ADLogoutOptions) => {
+    async (options?: ADLogoutOptions): Promise<void> => {
       const correlationId = generateCorrelationId();
       emitEvent({ type: 'logout_initiated', correlationId });
 

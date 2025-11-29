@@ -279,7 +279,7 @@ export function useGetList<TResponse = unknown>(
   if (params?.sort !== undefined && params.sort !== null && params.sort !== '') {
     queryParams.sort = params.sort;
   }
-  if (params?.order !== undefined && params.order !== null && params.order !== '') {
+  if (params?.order !== undefined && params.order !== null) {
     queryParams.order = params.order;
   }
   if (params?.filters) {

@@ -4,7 +4,7 @@
  *              Immer + DevTools + SubscribeWithSelector + Persist
  */
 
-import { create, type StateCreator, type StoreApi, type UseBoundStore } from 'zustand';
+import { create, type StateCreator } from 'zustand';
 import { devtools, subscribeWithSelector, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import type { HydrationState, ResetState } from './types';
@@ -98,7 +98,7 @@ export function createAppStore<TState extends object>(
     TState
   >,
   config: AppStoreConfig<TState>
-): UseBoundStore<StoreApi<TState & HydrationState & ResetState>> {
+): ReturnType<typeof create<TState & HydrationState & ResetState>> {
   const {
     name,
     persist: persistConfig,
@@ -155,11 +155,11 @@ export function createAppStore<TState extends object>(
           subscribeWithSelector(
             persist(storeCreator, {
               name: persistConfig.key,
-              partialize: persistConfig.partialize as (
+              partialize: persistConfig.partialize as unknown as (
                 state: TState & HydrationState & ResetState
               ) => Partial<TState & HydrationState & ResetState>,
               version: persistConfig.version ?? 1,
-              migrate: persistConfig.migrate as (
+              migrate: persistConfig.migrate as unknown as (
                 persistedState: unknown,
                 version: number
               ) => TState & HydrationState & ResetState,
@@ -176,14 +176,14 @@ export function createAppStore<TState extends object>(
           }
         )
       )
-    );
+    ) as unknown as ReturnType<typeof create<TState & HydrationState & ResetState>>;
   }
 
   // Without persistence - simpler middleware stack
   return create<TState & HydrationState & ResetState>()(
     immer(
       devtools(
-        subscribeWithSelector(storeCreator as StateCreator<
+        subscribeWithSelector(storeCreator as unknown as StateCreator<
           TState & HydrationState & ResetState,
           NoPersistMiddleware
         >),
@@ -194,7 +194,7 @@ export function createAppStore<TState extends object>(
         }
       )
     )
-  );
+  ) as unknown as ReturnType<typeof create<TState & HydrationState & ResetState>>;
 }
 
 // ============================================================================
@@ -228,7 +228,7 @@ export function createSimpleStore<TState extends object>(
         enabled: enableDevtools,
       })
     )
-  );
+  ) as ReturnType<typeof create<TState>>;
 }
 
 // ============================================================================
@@ -250,7 +250,7 @@ export function createSimpleStore<TState extends object>(
 export function createMinimalStore<TState extends object>(
   initializer: StateCreator<TState, [['zustand/immer', never]], [], TState>
 ): ReturnType<typeof create<TState>> {
-  return create<TState>()(immer(initializer));
+  return create<TState>()(immer(initializer)) as ReturnType<typeof create<TState>>;
 }
 
 // ============================================================================
@@ -277,7 +277,7 @@ export async function waitForHydration<TState extends HydrationState>(
           resolve();
         }
       }
-    );
+    ) as () => void;
   });
 }
 

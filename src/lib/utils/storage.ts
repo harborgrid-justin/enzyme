@@ -442,6 +442,7 @@ export class StorageManager {
     for (let i = this.storage.length - 1; i >= 0; i--) {
       const key = this.storage.key(i);
       if (!(key?.startsWith(`${this.config.prefix}:`) ?? false)) continue;
+      if (key === null) continue;
 
       try {
         const serialized = this.storage.getItem(key);
@@ -478,6 +479,7 @@ export class StorageManager {
     for (let i = 0; i < this.storage.length; i++) {
       const key = this.storage.key(i);
       if (!(key?.startsWith(`${this.config.prefix}:`) ?? false)) continue;
+      if (key === null) continue;
 
       itemCount++;
       const value = this.storage.getItem(key);

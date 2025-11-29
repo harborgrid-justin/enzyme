@@ -84,8 +84,9 @@ function generateSelector(element: Element): string {
     // Add nth-child for disambiguation
     const parent = current.parentElement;
     if (parent && current != null) {
+      const currentTagName = current.tagName;
       const siblings = Array.from(parent.children).filter(
-        (child) => child.tagName === current.tagName
+        (child) => child.tagName === currentTagName
       );
       if (siblings.length > 1) {
         const index = siblings.indexOf(current) + 1;

@@ -375,7 +375,7 @@ export function SecurityProvider({
   /**
    * Regenerate CSRF token
    */
-  const regenerateCsrfToken = useCallback((): string => {
+  const regenerateCsrfToken = useCallback(async (): Promise<string> => {
     const newToken = CSRFProtection.regenerateToken();
 
     setState((prev) => ({ ...prev, csrfToken: newToken }));

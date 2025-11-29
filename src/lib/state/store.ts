@@ -420,7 +420,7 @@ export function resetAllFeatureStores(clearRegistry = true): void {
   featureStores.forEach((store, _name) => {
     // Type the store's getState method properly
     type StoreWithReset = { reset?: () => void; _reset?: () => void };
-    const state = (store.getState as () => StoreWithReset)();
+    const state = ((store as { getState: () => StoreWithReset }).getState)();
     if (typeof state.reset === 'function') {
       state.reset();
     } else if (typeof state._reset === 'function') {

@@ -21,6 +21,7 @@ export function useAuth(): ReturnType<typeof useAuthContext> & {
     login,
     logout,
     register,
+    refreshToken,
     refreshSession,
     hasRole,
     hasAnyRole,
@@ -41,6 +42,7 @@ export function useAuth(): ReturnType<typeof useAuthContext> & {
     login,
     logout,
     register,
+    refreshToken,
     refreshSession,
 
     // Permission helpers

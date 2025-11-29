@@ -22,6 +22,11 @@ export function detectCapabilities(): {
   containerQueries: boolean;
   cssHas: boolean;
   viewTransitions: boolean;
+  navigationAPI: boolean;
+  popoverAPI: boolean;
+  webAnimations: boolean;
+  idleCallback: boolean;
+  intl: boolean;
 } {
   return {
     esModules: hasESModules(),

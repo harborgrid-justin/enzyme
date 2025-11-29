@@ -448,8 +448,11 @@ export function createComposedContext<T extends Record<string, unknown>>(config:
     const composedValue = useMemo(() => {
       const sourceValues = {} as Partial<T>;
       for (let i = 0; i < sourceEntries.length; i++) {
-        const [key] = sourceEntries[i];
-        (sourceValues as Record<string, unknown>)[key as string] = contextValues[i];
+        const entry = sourceEntries[i];
+        if (entry !== undefined) {
+          const [key] = entry;
+          (sourceValues as Record<string, unknown>)[key as string] = contextValues[i];
+        }
       }
       return sourceValues as T;
       // eslint-disable-next-line react-hooks/exhaustive-deps

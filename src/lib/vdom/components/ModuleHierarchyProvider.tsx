@@ -5,7 +5,7 @@
 
 import { useMemo, type FC, type ReactNode } from 'react';
 import type { ModuleId } from '../types';
-import { ModuleHierarchyContext } from '../ModuleProvider';
+import { ModuleHierarchyContext } from '../ModuleProviderContext';
 import { useModuleHierarchy } from '../hooks/useModuleSystem';
 
 /**

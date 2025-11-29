@@ -568,7 +568,7 @@ export function useFormValidation<T extends Record<string, unknown>>(
   // Validate on mount if configured
   useEffect(() => {
     if (validateOnMount) {
-      void validateAll();
+      void validateAllFields();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -583,7 +583,7 @@ export function useFormValidation<T extends Record<string, unknown>>(
   }, [fieldStates]);
 
   // Validate a single field
-  const validateField = useCallback(
+  const validateFieldInternal = useCallback(
     async (field: keyof T, value?: unknown): Promise<FieldError[]> => {
       const currentValue = value ?? fieldStates[field as string]?.value;
       const formData = getValues();
@@ -625,8 +625,17 @@ export function useFormValidation<T extends Record<string, unknown>>(
     [fieldStates, getValues, validator]
   );
 
+  // Public validate field (returns boolean)
+  const validateField = useCallback(
+    async (field: keyof T, value?: unknown): Promise<boolean> => {
+      const errors = await validateFieldInternal(field, value);
+      return errors.length === 0;
+    },
+    [validateFieldInternal]
+  );
+
   // Validate all fields
-  const validateAll = useCallback(async (): Promise<boolean> => {
+  const validateAllFields = useCallback(async (): Promise<boolean> => {
     setIsValidating(true);
 
     try {
@@ -691,15 +700,15 @@ export function useFormValidation<T extends Record<string, unknown>>(
         // Debounce validation
         if (validator.hasAsyncRules(field)) {
           const timer = setTimeout(() => {
-            void validateField(field, value);
+            void validateFieldInternal(field, value);
           }, debounceMs);
           debounceTimers.current.set(field, timer);
         } else {
-          void validateField(field, value);
+          void validateFieldInternal(field, value);
         }
       }
     },
-    [shouldValidate, validator, validateField, debounceMs]
+    [shouldValidate, validator, validateFieldInternal, debounceMs]
   );
 
   // Set multiple values
@@ -722,10 +731,10 @@ export function useFormValidation<T extends Record<string, unknown>>(
 
       const shouldVal = options?.shouldValidate ?? shouldValidate('blur');
       if (shouldVal && touched) {
-        void validateField(field);
+        void validateFieldInternal(field);
       }
     },
-    [shouldValidate, validateField]
+    [shouldValidate, validateFieldInternal]
   );
 
   // Handle blur
@@ -766,7 +775,7 @@ export function useFormValidation<T extends Record<string, unknown>>(
         setIsSubmitted(true);
         setSubmitCount((c) => c + 1);
 
-        const isValid = await validateAll();
+        const isValid = await validateAllFields();
 
         if (isValid) {
           try {
@@ -781,7 +790,7 @@ export function useFormValidation<T extends Record<string, unknown>>(
         }
       };
     },
-    [validateAll, getValues]
+    [validateAllFields, getValues]
   );
 
   // Compute derived state
@@ -809,14 +818,15 @@ export function useFormValidation<T extends Record<string, unknown>>(
     [fieldStates, showErrorsAfterSubmit, isSubmitted]
   );
 
-  // Get all errors
-  const getAllErrors = useCallback((): Record<keyof T, string | undefined> => {
-    const errors: Record<string, string | undefined> = {};
+  // Get all errors (as ValidationError[])
+  const getAllErrors = useCallback((): Record<string, ValidationError[]> => {
+    const errors: Record<string, ValidationError[]> = {};
     for (const [field] of Object.entries(fieldStates)) {
-      errors[field] = getFieldError(field as keyof T);
+      const state = fieldStates[field as keyof T];
+      errors[field] = state?.errors ?? [];
     }
-    return errors as Record<keyof T, string | undefined>;
-  }, [fieldStates, getFieldError]);
+    return errors;
+  }, [fieldStates]);
 
   // Register field helpers
   const register = useCallback(
@@ -840,29 +850,75 @@ export function useFormValidation<T extends Record<string, unknown>>(
     // State
     values: getValues(),
     errors: getAllErrors(),
-    fieldStates,
-    formErrors,
+    touched: Object.keys(fieldStates).reduce((acc, key) => {
+      acc[key] = fieldStates[key as keyof T]?.touched ?? false;
+      return acc;
+    }, {} as Record<string, boolean>),
+    dirty: Object.keys(fieldStates).reduce((acc, key) => {
+      acc[key] = fieldStates[key as keyof T]?.dirty ?? false;
+      return acc;
+    }, {} as Record<string, boolean>),
     isValid,
-    isDirty,
-    isTouched,
-    isSubmitted,
     isValidating,
+    isSubmitting: false,
+    isSubmitted,
     submitCount,
+    formErrors,
 
     // Actions
     setValue,
     setValues,
     setTouched,
-    validateField,
-    validateAll,
+    setError: (field: keyof T, error: string) => {
+      setFieldStates((prev) => ({
+        ...prev,
+        [field]: {
+          ...prev[field as string],
+          errors: [{ message: error }],
+          valid: false,
+        },
+      }));
+    },
+    clearError: (field: keyof T) => {
+      setFieldStates((prev) => ({
+        ...prev,
+        [field]: {
+          ...prev[field as string],
+          errors: [],
+          valid: true,
+        },
+      }));
+    },
+    clearAllErrors: () => {
+      setFieldStates((prev) => {
+        const newStates = { ...prev };
+        for (const key of Object.keys(newStates)) {
+          newStates[key] = {
+            ...newStates[key],
+            errors: [],
+            valid: true,
+          };
+        }
+        return newStates as { [K in keyof T]: FieldState };
+      });
+    },
     reset,
-    handleSubmit,
-    handleBlur,
-    register,
-
-    // Helpers
-    getFieldError,
+    validateField,
+    validateAll: validateAllFields,
     getValues,
+    handleBlur,
+    handleSubmit,
+    registerField: (field: keyof T) => {
+      const state = fieldStates[field as string];
+      return {
+        value: (state?.value ?? '') as T[keyof T],
+        onChange: (value: unknown) => setValue(field, value),
+        onBlur: () => handleBlur(field),
+        error: state?.errors[0]?.message,
+        touched: state?.touched ?? false,
+        dirty: state?.dirty ?? false,
+      };
+    },
   };
 }
 
@@ -978,22 +1034,15 @@ export function useField<T>(
   return {
     value,
     setValue,
+    error: errors[0]?.message,
     errors,
     touched,
-    dirty,
+    setTouched,
     validating,
-    isValid: errors.length === 0,
+    onChange: setValue,
+    onBlur: handleBlur,
     validate: async () => validate(value),
-    handleBlur,
     reset,
-    inputProps: {
-      name,
-      value: value ?? '',
-      onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
-        setValue(e.target.value as T);
-      },
-      onBlur: handleBlur,
-    },
   };
 }
 

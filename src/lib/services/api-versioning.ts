@@ -210,7 +210,7 @@ export function compareVersions(a: ApiVersion, b: ApiVersion): number {
 export function isVersionInRange(version: ApiVersion, min: ApiVersion, max?: ApiVersion): boolean {
   const v = versionToNumber(version);
   const minV = versionToNumber(min);
-  const maxV = (max !== null && max !== undefined && max !== '') ? versionToNumber(max) : Infinity;
+  const maxV = (max !== null && max !== undefined) ? versionToNumber(max) : Infinity;
   return v >= minV && v <= maxV;
 }
 
@@ -415,7 +415,7 @@ export class VersionedApiClient {
 
     // Check for version mismatch in response
     const responseVersion = response.headers['x-api-version'] as ApiVersion | undefined;
-    if (responseVersion !== null && responseVersion !== undefined && responseVersion !== '' && responseVersion !== this.currentVersion) {
+    if (responseVersion !== null && responseVersion !== undefined && responseVersion !== this.currentVersion) {
       this.config.onVersionMismatch?.(this.currentVersion, responseVersion);
     }
 
