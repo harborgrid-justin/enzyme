@@ -281,7 +281,7 @@ export class StatePersister<T extends object> {
       const state = this.config.deserialize(migratedState);
 
       return {
-        state: state as any,
+        state: state as Partial<T>,
         error: null,
         migrated,
         fromVersion,
@@ -289,7 +289,7 @@ export class StatePersister<T extends object> {
     } catch (error) {
       logger.error('[StatePersister] Failed to rehydrate state', { error });
       return {
-        state: null as any,
+        state: null,
         error: error as Error,
         migrated: false,
         fromVersion: null,

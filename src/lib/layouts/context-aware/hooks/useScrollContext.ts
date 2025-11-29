@@ -103,8 +103,8 @@ export function useScrollContext(): UseScrollContextReturn {
     isInScrollContainer: scrollContainer !== null,
     scrollTo,
     scrollBy,
-    scrollDirection: scrollContainer?.scrollDirection || 'none',
-    scrollProgress: scrollContainer?.scrollProgress || { x: 0, y: 0 },
+    scrollDirection: scrollContainer?.scrollDirection ?? 'none',
+    scrollProgress: scrollContainer?.scrollProgress ?? { x: 0, y: 0 },
   };
 }
 
@@ -134,13 +134,13 @@ export function useScrollContext(): UseScrollContextReturn {
  * ```
  */
 export function useScrollContainer(
-  containerRef: React.RefObject<HTMLElement>
+  containerRef: { readonly current: HTMLElement | null }
 ): ScrollContainer | null {
   const [scrollState, setScrollState] = useState<ScrollContainer | null>(null);
   const trackerRef = useRef<ScrollTracker | null>(null);
 
   useEffect(() => {
-    if (!containerRef.current) {
+    if (containerRef.current === null) {
       return;
     }
 
@@ -235,7 +235,7 @@ export function useScrollProgress(): { x: number; y: number } {
  */
 export function useIsScrolling(): boolean {
   const { scrollContainer } = useScrollContext();
-  return scrollContainer?.isScrolling || false;
+  return scrollContainer?.isScrolling ?? false;
 }
 
 /**
@@ -445,7 +445,7 @@ export function useScrollIntoView(): (
 ) => void {
   return useCallback((element: Element, options?: ScrollIntoViewOptions) => {
     element.scrollIntoView(
-    options || { behavior: 'smooth', block: 'center' }
+    options ?? { behavior: 'smooth', block: 'center' }
   );
 }, []);
 }

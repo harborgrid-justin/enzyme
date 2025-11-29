@@ -212,7 +212,7 @@ export class ADClient {
         },
         body: new URLSearchParams({
           grant_type: 'refresh_token',
-          refresh_token: refreshToken,
+          refresh_token: refreshToken as string,
           client_id: this.getClientId(),
           scope: getConfiguredScopes(this.config).join(' '),
         }),
@@ -255,11 +255,11 @@ export class ADClient {
       this.onTokenRefresh?.(newTokens);
 
       return { success: true, tokens: newTokens };
-    } catch (error) {
+    } catch (error: unknown) {
       const authError = this.createError(
         'network_error',
         'Network error during token refresh',
-        error
+        error as Error
       );
       this.onAuthError?.(authError);
 
@@ -327,7 +327,7 @@ export class ADClient {
       body: (request.body != null) ? JSON.stringify(request.body) : undefined,
     };
 
-    return this.executeWithRetry<T>(url, fetchOptions, request.timeout ? ms(request.timeout) : undefined);
+    return this.executeWithRetry<T>(url, fetchOptions, (request.timeout !== null && request.timeout !== undefined && request.timeout !== 0) ? ms(request.timeout) : undefined);
   }
 
   /**
@@ -412,7 +412,7 @@ export class ADClient {
           correlationId,
           pagination,
         };
-      } catch (error) {
+      } catch (error: unknown) {
         lastError = error as Error;
 
         if (error instanceof GraphAPIClientError) {

@@ -7,7 +7,16 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React, { type ReactElement, type ReactNode } from 'react';
 import type { FeatureRegistryEntry, FeatureConfig, FeatureAccess } from '../types';
 import { FeatureDIContainer, FeatureDIProvider } from '../featureDI';
-import { vi, type Mock } from 'vitest';
+import { vi, type Mock, expect } from 'vitest';
+
+/**
+ * Simple render result type
+ */
+export interface RenderResult {
+  element: ReactElement;
+  queryClient: QueryClient;
+  diContainer: FeatureDIContainer;
+}
 
 // ============================================================================
 // Test Query Client
@@ -176,9 +185,9 @@ export function createMockFeatures(
   return Array.from({ length: count }, (_, index) =>
     createMockFeature({
       ...baseOptions,
-      id: `${baseOptions.id || 'mock-feature'}-${index + 1}`,
-      name: `${baseOptions.name || 'Mock Feature'} ${index + 1}`,
-      order: (baseOptions.order || 0) + index,
+      id: `${baseOptions.id ?? 'mock-feature'}-${index + 1}`,
+      name: `${baseOptions.name ?? 'Mock Feature'} ${index + 1}`,
+      order: (baseOptions.order ?? 0) + index,
     })
   );
 }
@@ -204,7 +213,7 @@ export function createMockEntity<T extends Partial<MockEntityBase>>(
 ): MockEntityBase & T {
   const now = new Date().toISOString();
   return {
-    id: overrides.id || `mock-${Math.random().toString(36).substr(2, 9)}`,
+    id: overrides.id ?? `mock-${Math.random().toString(36).substr(2, 9)}`,
     createdAt: now,
     updatedAt: now,
     ...overrides,
@@ -381,7 +390,7 @@ export function createFeatureTestFixture<TData>(
   const mockApi: Record<string, Mock> = {};
 
   const methods =
-    options.apiMethods || ['getAll', 'getById', 'create', 'update', 'delete'];
+    options.apiMethods ?? ['getAll', 'getById', 'create', 'update', 'delete'];
 
   methods.forEach((method) => {
     mockApi[method] = vi.fn();
@@ -457,7 +466,9 @@ export function clearQueryCache(
  * Wait for queries to settle
  */
 export async function waitForQueries(queryClient: QueryClient): Promise<void> {
-  await queryClient.isFetching();
+  while (queryClient.isFetching()) {
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
 }
 
 // ============================================================================

@@ -470,9 +470,7 @@ export class ExposureTracker {
     for (const [userId, userMap] of this.userExposures.entries()) {
       for (const exposure of userMap.values()) {
         if (exposure.experimentId === experimentId && exposure.cohort) {
-          if (!cohorts[exposure.cohort]) {
-            cohorts[exposure.cohort] = [];
-          }
+          cohorts[exposure.cohort] ??= [];
           cohorts[exposure.cohort]?.push(userId);
         }
       }
@@ -540,7 +538,10 @@ export class ExposureTracker {
 
     try {
       for (const exposure of exposures) {
-        await this.config.onExposure(exposure);
+        const result = this.config.onExposure(exposure);
+        if (result instanceof Promise) {
+          await result;
+        }
       }
       this.log(`Flushed ${exposures.length} exposures`);
     } catch (error) {
@@ -579,7 +580,7 @@ export class ExposureTracker {
     try {
       const stored = localStorage.getItem(`${this.config.storagePrefix}data`);
       if (stored) {
-        const data = JSON.parse(stored);
+        const data = JSON.parse(stored) as Record<string, unknown>;
 
         for (const [userId, exposures] of Object.entries(data)) {
           const userMap = new Map<string, ExposureRecord>();
@@ -713,7 +714,7 @@ export function initExposureTracker(config: ExposureTrackerConfig): ExposureTrac
  */
 export function resetExposureTracker(): void {
   if (instance) {
-    instance.shutdown();
+    void instance.shutdown();
   }
   instance = null;
 }

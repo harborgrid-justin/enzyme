@@ -423,7 +423,7 @@ function DataTableInner<T>({
   const handleHeaderClick = useCallback((event: React.MouseEvent<HTMLTableCellElement>) => {
     const {columnKey} = event.currentTarget.dataset;
     const isSortable = event.currentTarget.dataset.sortable === 'true';
-    if (columnKey && isSortable) {
+    if (columnKey !== undefined && columnKey !== '' && isSortable) {
       handleSort(columnKey);
     }
   }, [handleSort]);
@@ -433,7 +433,7 @@ function DataTableInner<T>({
     if (event.key === 'Enter' || event.key === ' ') {
       const {columnKey} = event.currentTarget.dataset;
       const isSortable = event.currentTarget.dataset.sortable === 'true';
-      if (columnKey && isSortable) {
+      if (columnKey !== undefined && columnKey !== '' && isSortable) {
         event.preventDefault();
         handleSort(columnKey);
       }
@@ -445,7 +445,7 @@ function DataTableInner<T>({
     const {rowIndex} = event.currentTarget.dataset;
     if (rowIndex !== undefined && onRowClick) {
       const row = data[Number(rowIndex)];
-      if (row) {
+      if (row !== undefined) {
         onRowClick(row);
       }
     }
@@ -454,7 +454,7 @@ function DataTableInner<T>({
   // Stable selection change handler using data-* attributes
   const handleSelectionClick = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const {rowKey} = event.currentTarget.dataset;
-    if (rowKey) {
+    if (rowKey !== undefined && rowKey !== '') {
       handleSelectRow(rowKey);
     }
   }, [handleSelectRow]);
@@ -488,7 +488,7 @@ function DataTableInner<T>({
       {/* Table container */}
       <div style={tableContainerStyle}>
         <table style={tableStyle}>
-          {caption && (
+          {(caption !== undefined && caption !== '') && (
             <caption style={captionStyle}>
               {caption}
             </caption>
@@ -512,20 +512,30 @@ function DataTableInner<T>({
               {/* Column headers */}
               {visibleColumns.map((column) => {
                 const isSorted = sort?.key === column.key;
-                const ariaSortValue = isSorted
-                  ? (sort.direction === 'asc' ? 'ascending' : 'descending')
-                  : undefined;
+                let ariaSortValue: 'ascending' | 'descending' | undefined;
+                if (isSorted) {
+                  ariaSortValue = sort.direction === 'asc' ? 'ascending' : 'descending';
+                } else {
+                  ariaSortValue = undefined;
+                }
+
+                const sortIndicator = (() => {
+                  if (sort?.key === column.key) {
+                    return sort.direction === 'asc' ? '↑' : '↓';
+                  }
+                  return '↕';
+                })();
 
                 return (
                   <th
                     key={column.key}
                     scope="col"
                     style={getHeaderCellStyle(column)}
-                    tabIndex={column.sortable ? 0 : undefined}
-                    role={column.sortable ? 'button' : undefined}
-                    aria-sort={column.sortable ? ariaSortValue : undefined}
+                    tabIndex={column.sortable === true ? 0 : undefined}
+                    role={column.sortable === true ? 'button' : undefined}
+                    aria-sort={column.sortable === true ? ariaSortValue : undefined}
                     data-column-key={column.key}
-                    data-sortable={column.sortable ? 'true' : 'false'}
+                    data-sortable={column.sortable === true ? 'true' : 'false'}
                     onClick={handleHeaderClick}
                     onKeyDown={handleHeaderKeyDown}
                   >
@@ -533,10 +543,7 @@ function DataTableInner<T>({
                       {column.header}
                       {column.sortable === true && (
                         <span style={sortIndicatorStyle} aria-hidden="true">
-                          {sort?.key === column.key
-                            ? (sort.direction === 'asc' ? '↑' : '↓')
-                            : '↕'
-                          }
+                          {sortIndicator}
                         </span>
                       )}
                     </div>
@@ -568,7 +575,7 @@ function DataTableInner<T>({
                   colSpan={visibleColumns.length + (selectable ? 1 : 0)}
                   style={emptyCellStyle}
                 >
-                  {emptyState || 'No data available'}
+                  {emptyState ?? 'No data available'}
                 </td>
               </tr>
             )}
@@ -606,14 +613,25 @@ function DataTableInner<T>({
                     {visibleColumns.map((column) => {
                       const value = getCellValue(row, column.accessor);
 
+                      let cellContent: React.ReactNode;
+                      if (column.cell) {
+                        cellContent = column.cell(value, row, rowIndex);
+                      } else if (value === null || value === undefined) {
+                        cellContent = '';
+                      } else if (typeof value === 'object') {
+                        cellContent = JSON.stringify(value);
+                      } else if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+                        cellContent = String(value);
+                      } else {
+                        cellContent = '';
+                      }
+
                       return (
                         <td
                           key={column.key}
                           style={getCellStyle(column.align)}
                         >
-                          {column.cell
-                            ? column.cell(value, row, rowIndex)
-                            : (value !== null && value !== undefined ? String(value) : '')}
+                          {cellContent}
                         </td>
                       );
                     })}

@@ -324,7 +324,7 @@ export function quickStartMonitoring(options: {
   onRegression?: (event: import('./regression-detector').RegressionEvent) => void;
   /** Callback when budget violated */
   onBudgetViolation?: (violation: import('./budget-enforcer').BudgetViolation) => void;
-} = {}): Promise<() => void> {
+} = {}): () => void {
   const {
     debug = false,
     endpoint,
@@ -342,7 +342,7 @@ export function quickStartMonitoring(options: {
     },
     reporter: {
       enabled: true,
-      destination: endpoint ? 'endpoint' : 'console',
+      destination: (endpoint !== null && endpoint !== undefined) ? 'endpoint' : 'console',
       endpointUrl: endpoint,
       debug,
     },

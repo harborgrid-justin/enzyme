@@ -311,7 +311,7 @@ export class ParallelRoutes {
       activeSlots: Array.from(this.slotStates.entries())
         .filter(([_, state]) => state.isActive)
         .map(([name]) => name),
-      refreshSlot: async (slotName: string) => {
+      refreshSlot: (slotName: string) => {
         this.updateSlotState(slotName, { isLoading: true, hasError: false, error: null });
         // Actual refresh logic would be implemented by the consumer
       },
@@ -433,7 +433,7 @@ export function mergeSlotStates(states: readonly SlotRenderState[]): {
   errors: readonly Error[];
   isAllActive: boolean;
 } {
-  const errors = states.filter(s => s.error).map(s => s.error!);
+  const errors = states.filter((s): s is typeof s & { error: Error } => s.error != null).map(s => s.error);
 
   return {
     isAnyLoading: states.some(s => s.isLoading),

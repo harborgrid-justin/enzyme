@@ -4,6 +4,8 @@
  * @description App-wide boundary catching render/runtime errors
  */
 
+/* eslint-disable react-refresh/only-export-components */
+
 import React, { Component, type ErrorInfo, type ReactNode } from 'react';
 import { ErrorReporter } from './ErrorReporter';
 import type { AppError } from './errorTypes';
@@ -189,8 +191,8 @@ export class GlobalErrorBoundary extends Component<
       if (typeof fallback === 'function') {
         return fallback(error, this.handleReset);
       }
-      
-      if (fallback) {
+
+      if (fallback != null) {
         return fallback;
       }
       

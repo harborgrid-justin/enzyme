@@ -272,7 +272,7 @@ export function getToastNotification(
   }
 
   // Auto-dismiss only for recoverable errors with retry suggestions
-  const duration = template.recoverable && template.retryAfter ? 5000 : undefined;
+  const duration = template.recoverable && template.retryAfter != null ? 5000 : undefined;
 
   const result: ToastMessage = {
     message,
@@ -299,7 +299,7 @@ export function getRecoveryHint(error: AppError): string | null {
     return null;
   }
 
-  if (template.retryAfter) {
+  if (template.retryAfter != null && template.retryAfter !== 0) {
     const seconds = Math.ceil(template.retryAfter / 1000);
     return `Try again in ${seconds} second${seconds > 1 ? 's' : ''}`;
   }
@@ -369,7 +369,7 @@ export function createContextualMessage(
   };
 
   const verb = actionVerbs[action.toLowerCase()] ?? action;
-  const resourceStr = resource ? ` ${resource}` : '';
+  const resourceStr = resource != null && resource !== '' ? ` ${resource}` : '';
 
   switch (error.category) {
     case 'network':
@@ -470,23 +470,23 @@ export function formatErrorForLogging(
     `Timestamp: ${error.timestamp}`,
   ];
 
-  if (context?.userAction) {
+  if (context?.userAction != null && context.userAction !== '') {
     parts.push(`User Action: ${context.userAction}`);
   }
 
-  if (context?.feature) {
+  if (context?.feature != null && context.feature !== '') {
     parts.push(`Feature: ${context.feature}`);
   }
 
-  if (context?.resource) {
+  if (context?.resource != null && context.resource !== '') {
     parts.push(`Resource: ${context.resource}`);
   }
 
-  if (error.code) {
+  if (error.code != null && error.code !== '') {
     parts.push(`Code: ${error.code}`);
   }
 
-  if (error.stack) {
+  if (error.stack != null && error.stack !== '') {
     parts.push(`\nStack:\n${error.stack}`);
   }
 

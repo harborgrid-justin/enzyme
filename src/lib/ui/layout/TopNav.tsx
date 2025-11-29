@@ -563,7 +563,7 @@ const NavButton = memo(({
   // Create stable dropdown item click handler using data attributes
   const handleDropdownItemClick = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
     const {childId} = event.currentTarget.dataset;
-    if (childId && item.items) {
+    if (childId !== undefined && childId !== '' && item.items !== undefined) {
       const child = item.items.find((c) => c.id === childId);
       child?.onClick?.();
       setDropdownOpen(false);
@@ -573,7 +573,7 @@ const NavButton = memo(({
   // Memoize dropdown item style generator
   const getDropdownItemStyle = useCallback((disabled?: boolean): CSSProperties => ({
     ...navDropdownItemBaseStyle,
-    cursor: disabled ? 'not-allowed' : 'pointer',
+    cursor: (disabled === true) ? 'not-allowed' : 'pointer',
   }), []);
 
   return (

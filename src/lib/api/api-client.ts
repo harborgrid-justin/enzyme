@@ -350,8 +350,8 @@ const defaultTokenProvider: TokenProvider = {
 
     try {
       await Promise.all([
-        storage.removeItem(SECURE_API_TOKEN_KEYS.ACCESS_TOKEN),
-        storage.removeItem(SECURE_API_TOKEN_KEYS.REFRESH_TOKEN),
+        Promise.resolve(storage.removeItem(SECURE_API_TOKEN_KEYS.ACCESS_TOKEN)),
+        Promise.resolve(storage.removeItem(SECURE_API_TOKEN_KEYS.REFRESH_TOKEN)),
       ]);
     } catch (error) {
       console.error('[API Client] Error clearing tokens from secure storage:', error);
@@ -984,7 +984,7 @@ export class ApiClient {
           }
 
           // Handle 401 with token refresh
-          if (response.status === 401 && this.config.autoRefreshToken && !config.meta?.skipAuth) {
+          if (response.status === 401 && this.config.autoRefreshToken === true && config.meta?.skipAuth !== true) {
             try {
               await this.refreshToken();
               // Retry the request with new token

@@ -590,7 +590,7 @@ export function useTypedNavigate(): {
       try {
         const fullPath = routeRegistry.buildPath(path, params, options?.query);
 
-        navigate(fullPath, {
+        void navigate(fullPath, {
           replace: options?.replace,
           state: options?.state,
           preventScrollReset: options?.preventScrollReset,

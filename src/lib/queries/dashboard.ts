@@ -199,27 +199,27 @@ export function useDashboardStatsSuspense(): ReturnType<typeof useSuspenseQuery<
 /**
  * Hook to fetch dashboard charts
  */
-export function useDashboardCharts(range: string = '7d') {
+export function useDashboardCharts(range: string = '7d'): ReturnType<typeof useQuery<DashboardCharts>> {
   return useQuery(dashboardChartsQueryOptions(range));
 }
 
 /**
  * Hook to fetch dashboard charts with Suspense
  */
-export function useDashboardChartsSuspense(range: string = '7d') {
+export function useDashboardChartsSuspense(range: string = '7d'): ReturnType<typeof useSuspenseQuery<DashboardCharts>> {
   return useSuspenseQuery(dashboardChartsSuspenseQueryOptions(range));
 }
 
 /**
  * Hook to fetch activity feed
  */
-export function useActivity(page: number = 1) {
+export function useActivity(page: number = 1): ReturnType<typeof useQuery<ActivityItem[]>> {
   return useQuery(activityQueryOptions(page));
 }
 
 /**
  * Hook to fetch activity feed with Suspense
  */
-export function useActivitySuspense(page: number = 1) {
+export function useActivitySuspense(page: number = 1): ReturnType<typeof useSuspenseQuery<ActivityItem[]>> {
   return useSuspenseQuery(activitySuspenseQueryOptions(page));
 }

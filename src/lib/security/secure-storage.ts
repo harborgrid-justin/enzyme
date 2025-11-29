@@ -226,8 +226,8 @@ async function decompress(data: Uint8Array): Promise<string> {
   const writer = stream.writable.getWriter();
   const reader = stream.readable.getReader();
 
-  writer.write(data as any);
-  writer.close();
+  void writer.write(data as BufferSource | undefined);
+  void writer.close();
 
   const chunks: Uint8Array[] = [];
   let result = await reader.read();
@@ -322,7 +322,7 @@ async function decrypt(
   const salt = base64ToBytes(encryptedData.salt);
   const iv = base64ToBytes(encryptedData.iv);
   const ciphertext = base64ToBytes(encryptedData.data);
-  const tag = encryptedData.tag ? base64ToBytes(encryptedData.tag) : new Uint8Array(0);
+  const tag = (encryptedData.tag !== null && encryptedData.tag !== undefined && encryptedData.tag !== '') ? base64ToBytes(encryptedData.tag) : new Uint8Array(0);
 
   // Reconstruct the encrypted data with tag
   const encryptedBytes = new Uint8Array(ciphertext.length + tag.length);
@@ -445,7 +445,7 @@ export class SecureStorage implements SecureStorageInterface {
       let encrypted = await encrypt(serialized, this.encryptionKey, configForEncrypt);
 
       // Add expiration if TTL specified
-      if (options.ttl) {
+      if (options.ttl !== null && options.ttl !== undefined && options.ttl > 0) {
         encrypted = { ...encrypted, expiresAt: Date.now() + options.ttl };
       }
 
@@ -492,19 +492,19 @@ export class SecureStorage implements SecureStorageInterface {
       const storageKey = this.getStorageKey(key);
       const encryptedString = this.storage.getItem(storageKey);
 
-      if (!encryptedString) {
+      if (encryptedString === null || encryptedString === undefined || encryptedString === '') {
         return {
           success: false,
           error: 'Item not found',
         };
       }
 
-      const encrypted: EncryptedData = JSON.parse(encryptedString);
+      const encrypted = JSON.parse(encryptedString) as EncryptedData;
 
       // Check expiration
-      if (encrypted.expiresAt && Date.now() > encrypted.expiresAt) {
+      if (encrypted.expiresAt !== null && encrypted.expiresAt !== undefined && encrypted.expiresAt > 0 && Date.now() > encrypted.expiresAt) {
         // Remove expired item
-        await this.removeItem(key);
+        this.removeItem(key);
         return {
           success: false,
           error: 'Item has expired',
@@ -536,7 +536,7 @@ export class SecureStorage implements SecureStorageInterface {
   /**
    * Remove an item
    */
-  async removeItem(key: string): Promise<SecureStorageResult<void>> {
+  removeItem(key: string): SecureStorageResult<void> {
     try {
       const storageKey = this.getStorageKey(key);
       this.storage.removeItem(storageKey);
@@ -562,15 +562,15 @@ export class SecureStorage implements SecureStorageInterface {
     const storageKey = this.getStorageKey(key);
     const item = this.storage.getItem(storageKey);
 
-    if (!item) {
+    if (item === null || item === undefined || item === '') {
       return false;
     }
 
     // Check expiration
     try {
-      const encrypted: EncryptedData = JSON.parse(item);
-      if (encrypted.expiresAt && Date.now() > encrypted.expiresAt) {
-        await this.removeItem(key);
+      const encrypted = JSON.parse(item) as EncryptedData;
+      if (encrypted.expiresAt !== null && encrypted.expiresAt !== undefined && encrypted.expiresAt > 0 && Date.now() > encrypted.expiresAt) {
+        this.removeItem(key);
         return false;
       }
       return true;
@@ -582,7 +582,7 @@ export class SecureStorage implements SecureStorageInterface {
   /**
    * Get all keys
    */
-  async keys(): Promise<string[]> {
+  keys(): string[] {
     const prefix = this.config.storagePrefix;
     const metaPrefix = `${prefix}${METADATA_PREFIX}`;
     const keys: string[] = [];
@@ -600,12 +600,12 @@ export class SecureStorage implements SecureStorageInterface {
   /**
    * Get storage quota information
    */
-  async getQuotaInfo(): Promise<StorageQuotaInfo> {
+  getQuotaInfo(): StorageQuotaInfo {
     const used = this.estimateStorageSize();
     const total = this.config.storageQuota;
     const available = Math.max(0, total - used);
     const usagePercent = (used / total) * 100;
-    const keys = await this.keys();
+    const keys = this.keys();
 
     return {
       total,
@@ -620,14 +620,14 @@ export class SecureStorage implements SecureStorageInterface {
   /**
    * Clear all secure storage items
    */
-  async clear(): Promise<SecureStorageResult<void>> {
+  clear(): SecureStorageResult<void> {
     try {
       const prefix = this.config.storagePrefix;
       const keysToRemove: string[] = [];
 
       for (let i = 0; i < this.storage.length; i++) {
         const key = this.storage.key(i);
-        if (key?.startsWith(prefix)) {
+        if (key !== null && key !== undefined && key.startsWith(prefix)) {
           keysToRemove.push(key);
         }
       }
@@ -651,12 +651,12 @@ export class SecureStorage implements SecureStorageInterface {
   /**
    * Get item metadata
    */
-  async getMetadata(key: string): Promise<SecureStorageMetadata | null> {
+  getMetadata(key: string): SecureStorageMetadata | null {
     try {
       const metaKey = `${this.config.storagePrefix}${METADATA_PREFIX}${key}`;
       const metaString = this.storage.getItem(metaKey);
 
-      if (!metaString) {
+      if (metaString === null || metaString === undefined || metaString === '') {
         return null;
       }
 
@@ -669,14 +669,25 @@ export class SecureStorage implements SecureStorageInterface {
   /**
    * Cleanup expired items
    */
-  async cleanup(): Promise<number> {
+  cleanup(): number {
     let cleaned = 0;
-    const keys = await this.keys();
+    const keys = this.keys();
 
     for (const key of keys) {
-      const exists = await this.hasItem(key);
-      if (!exists) {
-        cleaned++;
+      const storageKey = this.getStorageKey(key);
+      const item = this.storage.getItem(storageKey);
+      if (item !== null && item !== undefined && item !== '') {
+        try {
+          const encrypted = JSON.parse(item) as EncryptedData;
+          if (encrypted.expiresAt !== null && encrypted.expiresAt !== undefined && encrypted.expiresAt > 0 && Date.now() > encrypted.expiresAt) {
+            this.removeItem(key);
+            cleaned++;
+          }
+        } catch {
+          // Corrupted item, remove it
+          this.removeItem(key);
+          cleaned++;
+        }
       }
     }
 
@@ -708,7 +719,7 @@ export class SecureStorage implements SecureStorageInterface {
       const key = this.storage.key(i);
       if (key?.startsWith(prefix)) {
         const value = this.storage.getItem(key);
-        if (value) {
+        if (value !== null && value !== undefined) {
           // UTF-16 encoding: 2 bytes per character
           totalSize += (key.length + value.length) * 2;
         }
@@ -734,7 +745,7 @@ export class SecureStorage implements SecureStorageInterface {
       size,
       createdAt: now,
       lastAccessedAt: now,
-      expiresAt: options.ttl ? now + options.ttl : undefined,
+      expiresAt: (options.ttl !== null && options.ttl !== undefined && options.ttl > 0) ? now + options.ttl : undefined,
       type: this.getValueType(value),
     };
   }
@@ -746,7 +757,7 @@ export class SecureStorage implements SecureStorageInterface {
     const metaKey = `${this.config.storagePrefix}${METADATA_PREFIX}${key}`;
     const metaString = this.storage.getItem(metaKey);
 
-    if (metaString) {
+    if (metaString !== null && metaString !== undefined && metaString !== '') {
       try {
         const metadata = JSON.parse(metaString) as SecureStorageMetadata;
         const updatedMetadata: SecureStorageMetadata = { ...metadata, lastAccessedAt: Date.now() };
@@ -813,9 +824,7 @@ let defaultStorage: SecureStorage | null = null;
  * Call this once during app initialization
  */
 export function initSecureStorage(encryptionKey: string): SecureStorage {
-  if (!defaultStorage) {
-    defaultStorage = createSecureLocalStorage(encryptionKey);
-  }
+  defaultStorage ??= createSecureLocalStorage(encryptionKey);
   return defaultStorage;
 }
 
@@ -840,7 +849,7 @@ export function isSecureStorageAvailable(): boolean {
     }
 
     // Check for Web Crypto API
-    if (!crypto?.subtle) {
+    if (typeof crypto === 'undefined' || !crypto?.subtle) {
       return false;
     }
 

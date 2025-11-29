@@ -727,9 +727,7 @@ let defaultScanner: AutoScanner | null = null;
  * @returns Default scanner instance
  */
 export function getAutoScanner(): AutoScanner {
-  if (!defaultScanner) {
-    defaultScanner = new AutoScanner();
-  }
+  defaultScanner ??= new AutoScanner();
   return defaultScanner;
 }
 

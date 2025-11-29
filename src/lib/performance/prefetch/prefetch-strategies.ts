@@ -214,8 +214,8 @@ export abstract class PrefetchStrategy {
       return { allowed: false, reason: 'Data saver enabled' };
     }
 
-    const currentQuality = NETWORK_QUALITY_SCORES[context.networkQuality] || 3;
-    const minQuality = NETWORK_QUALITY_SCORES[this.config.minNetworkQuality] || 3;
+    const currentQuality = NETWORK_QUALITY_SCORES[context.networkQuality] ?? 3;
+    const minQuality = NETWORK_QUALITY_SCORES[this.config.minNetworkQuality] ?? 3;
 
     if (currentQuality < minQuality) {
       return { allowed: false, reason: `Network quality ${context.networkQuality} below minimum` };
@@ -691,8 +691,8 @@ export class SequentialPrefetchStrategy extends PrefetchStrategy {
         return targets.sort((a, b) => {
           const importanceOrder = { high: 0, auto: 1, low: 2 };
           return (
-            (importanceOrder[a.importance || 'auto'] || 1) -
-            (importanceOrder[b.importance || 'auto'] || 1)
+            (importanceOrder[a.importance ?? 'auto'] ?? 1) -
+            (importanceOrder[b.importance ?? 'auto'] ?? 1)
           );
         });
       case 'size':

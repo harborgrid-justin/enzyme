@@ -1,3 +1,4 @@
+/* eslint-env node */
 import fs from 'fs/promises';
 import path from 'path';
 import { glob } from 'glob';
@@ -72,7 +73,7 @@ async function fixDuplicatesInFile(filePath) {
   if (duplicatesFound > 0) {
     const newContent = newLines.join('\n');
     await fs.writeFile(filePath, newContent, 'utf-8');
-    console.log(`✅ Fixed ${duplicatesFound} duplicates in ${path.basename(filePath)}`);
+    globalThis.console.log(`✅ Fixed ${duplicatesFound} duplicates in ${path.basename(filePath)}`);
     return duplicatesFound;
   }
   
@@ -89,8 +90,8 @@ async function main() {
     const fixed = await fixDuplicatesInFile(file);
     totalFixed += fixed;
   }
-  
-  console.log(`\n✅ Total duplicates fixed: ${totalFixed}`);
+
+  globalThis.console.log(`\n✅ Total duplicates fixed: ${totalFixed}`);
 }
 
-main().catch(console.error);
+main().catch((err) => globalThis.console.error(err));

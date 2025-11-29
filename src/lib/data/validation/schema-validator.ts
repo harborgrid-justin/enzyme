@@ -195,14 +195,14 @@ export abstract class BaseSchema<TOutput> {
   /**
    * Async parse and validate
    */
-  parseAsync(value: unknown, options?: ParseOptions): Promise<TOutput> {
+  async parseAsync(value: unknown, options?: ParseOptions): Promise<TOutput> {
     return Promise.resolve(this.parse(value, options));
   }
 
   /**
    * Async safeParse
    */
-  safeParseAsync(
+  async safeParseAsync(
     value: unknown,
     options?: ParseOptions
   ): AsyncValidationResult<TOutput> {
@@ -305,7 +305,7 @@ export class StringSchema extends BaseSchema<string> {
         success: false,
         data: undefined,
         issues: [
-          this._createIssue('invalid_type', `Expected string, received ${typeof value}`, options.path || [], {
+          this._createIssue('invalid_type', `Expected string, received ${typeof value}`, options.path ?? [], {
             expected: 'string',
             received: typeof value,
           }),
@@ -327,7 +327,7 @@ export class StringSchema extends BaseSchema<string> {
         this._createIssue(
           'too_small',
           `String must be at least ${this._minLength} characters`,
-          options.path || [],
+          options.path ?? [],
           { minimum: this._minLength, actual: result.length }
         )
       );
@@ -338,7 +338,7 @@ export class StringSchema extends BaseSchema<string> {
         this._createIssue(
           'too_big',
           `String must be at most ${this._maxLength} characters`,
-          options.path || [],
+          options.path ?? [],
           { maximum: this._maxLength, actual: result.length }
         )
       );
@@ -347,7 +347,7 @@ export class StringSchema extends BaseSchema<string> {
     // Pattern check
     if (this._pattern && !this._pattern.test(result)) {
       issues.push(
-        this._createIssue('invalid_pattern', 'String does not match required pattern', options.path || [], {
+        this._createIssue('invalid_pattern', 'String does not match required pattern', options.path ?? [], {
           pattern: this._pattern.toString(),
         })
       );
@@ -355,7 +355,7 @@ export class StringSchema extends BaseSchema<string> {
 
     // Format checks
     if (this._format && issues.length === 0) {
-      const formatIssue = this._validateFormat(result, this._format, options.path || []);
+      const formatIssue = this._validateFormat(result, this._format, options.path ?? []);
       if (formatIssue) issues.push(formatIssue);
     }
 
@@ -480,7 +480,7 @@ export class StringSchema extends BaseSchema<string> {
   }
 
   nonempty(message?: string): this {
-    return this.min(1, message || 'String cannot be empty');
+    return this.min(1, message ?? 'String cannot be empty');
   }
 
   protected _clone(): this {
@@ -528,7 +528,7 @@ export class NumberSchema extends BaseSchema<number> {
         success: false,
         data: undefined,
         issues: [
-          this._createIssue('invalid_type', `Expected number, received ${typeof value}`, options.path || [], {
+          this._createIssue('invalid_type', `Expected number, received ${typeof value}`, options.path ?? [], {
             expected: 'number',
             received: typeof value,
           }),
@@ -539,24 +539,24 @@ export class NumberSchema extends BaseSchema<number> {
     const issues: ValidationIssue[] = [];
 
     if (this._finite && !Number.isFinite(num)) {
-      issues.push(this._createIssue('not_finite', 'Number must be finite', options.path || []));
+      issues.push(this._createIssue('not_finite', 'Number must be finite', options.path ?? []));
     }
 
     if (this._integer && !Number.isInteger(num)) {
-      issues.push(this._createIssue('not_integer', 'Number must be an integer', options.path || []));
+      issues.push(this._createIssue('not_integer', 'Number must be an integer', options.path ?? []));
     }
 
     if (this._positive && num <= 0) {
-      issues.push(this._createIssue('not_positive', 'Number must be positive', options.path || []));
+      issues.push(this._createIssue('not_positive', 'Number must be positive', options.path ?? []));
     }
 
     if (this._negative && num >= 0) {
-      issues.push(this._createIssue('not_negative', 'Number must be negative', options.path || []));
+      issues.push(this._createIssue('not_negative', 'Number must be negative', options.path ?? []));
     }
 
     if (this._min !== undefined && num < this._min) {
       issues.push(
-        this._createIssue('too_small', `Number must be at least ${this._min}`, options.path || [], {
+        this._createIssue('too_small', `Number must be at least ${this._min}`, options.path ?? [], {
           minimum: this._min,
           actual: num,
         })
@@ -565,7 +565,7 @@ export class NumberSchema extends BaseSchema<number> {
 
     if (this._max !== undefined && num > this._max) {
       issues.push(
-        this._createIssue('too_big', `Number must be at most ${this._max}`, options.path || [], {
+        this._createIssue('too_big', `Number must be at most ${this._max}`, options.path ?? [], {
           maximum: this._max,
           actual: num,
         })
@@ -615,7 +615,7 @@ export class NumberSchema extends BaseSchema<number> {
   }
 
   nonnegative(message?: string): this {
-    return this.min(0, message || 'Number must be non-negative');
+    return this.min(0, message ?? 'Number must be non-negative');
   }
 
   finite(message?: string): this {
@@ -663,7 +663,7 @@ export class BooleanSchema extends BaseSchema<boolean> {
         success: false,
         data: undefined,
         issues: [
-          this._createIssue('invalid_type', `Expected boolean, received ${typeof value}`, options.path || [], {
+          this._createIssue('invalid_type', `Expected boolean, received ${typeof value}`, options.path ?? [], {
             expected: 'boolean',
             received: typeof value,
           }),
@@ -708,7 +708,7 @@ export class DateSchema extends BaseSchema<Date> {
         success: false,
         data: undefined,
         issues: [
-          this._createIssue('invalid_type', `Expected Date, received ${typeof value}`, options.path || [], {
+          this._createIssue('invalid_type', `Expected Date, received ${typeof value}`, options.path ?? [], {
             expected: 'Date',
             received: typeof value,
           }),
@@ -720,7 +720,7 @@ export class DateSchema extends BaseSchema<Date> {
       return {
         success: false,
         data: undefined,
-        issues: [this._createIssue('invalid_date', 'Invalid date value', options.path || [])],
+        issues: [this._createIssue('invalid_date', 'Invalid date value', options.path ?? [])],
       };
     }
 
@@ -728,13 +728,13 @@ export class DateSchema extends BaseSchema<Date> {
 
     if (this._min && date < this._min) {
       issues.push(
-        this._createIssue('too_small', `Date must be after ${this._min.toISOString()}`, options.path || [])
+        this._createIssue('too_small', `Date must be after ${this._min.toISOString()}`, options.path ?? [])
       );
     }
 
     if (this._max && date > this._max) {
       issues.push(
-        this._createIssue('too_big', `Date must be before ${this._max.toISOString()}`, options.path || [])
+        this._createIssue('too_big', `Date must be before ${this._max.toISOString()}`, options.path ?? [])
       );
     }
 
@@ -800,7 +800,7 @@ export class ArraySchema<TElement extends BaseSchema<unknown>> extends BaseSchem
         success: false,
         data: undefined,
         issues: [
-          this._createIssue('invalid_type', `Expected array, received ${typeof value}`, options.path || [], {
+          this._createIssue('invalid_type', `Expected array, received ${typeof value}`, options.path ?? [], {
             expected: 'array',
             received: typeof value,
           }),
@@ -814,13 +814,13 @@ export class ArraySchema<TElement extends BaseSchema<unknown>> extends BaseSchem
     // Length checks
     if (this._minLength !== undefined && value.length < this._minLength) {
       issues.push(
-        this._createIssue('too_small', `Array must have at least ${this._minLength} items`, options.path || [])
+        this._createIssue('too_small', `Array must have at least ${this._minLength} items`, options.path ?? [])
       );
     }
 
     if (this._maxLength !== undefined && value.length > this._maxLength) {
       issues.push(
-        this._createIssue('too_big', `Array must have at most ${this._maxLength} items`, options.path || [])
+        this._createIssue('too_big', `Array must have at most ${this._maxLength} items`, options.path ?? [])
       );
     }
 
@@ -828,7 +828,7 @@ export class ArraySchema<TElement extends BaseSchema<unknown>> extends BaseSchem
     for (let i = 0; i < value.length; i++) {
       const elementResult = this._element.safeParse(value[i], {
         ...options,
-        path: [...(options.path || []), i],
+        path: [...(options.path ?? []), i],
       });
 
       if (!elementResult.success) {
@@ -865,7 +865,7 @@ export class ArraySchema<TElement extends BaseSchema<unknown>> extends BaseSchem
   }
 
   nonempty(message?: string): this {
-    return this.min(1, message || 'Array cannot be empty');
+    return this.min(1, message ?? 'Array cannot be empty');
   }
 
   protected _clone(): this {
@@ -922,7 +922,7 @@ export class ObjectSchema<TShape extends ObjectShape> extends BaseSchema<
         success: false,
         data: undefined,
         issues: [
-          this._createIssue('invalid_type', `Expected object, received ${typeof value}`, options.path || [], {
+          this._createIssue('invalid_type', `Expected object, received ${typeof value}`, options.path ?? [], {
             expected: 'object',
             received: Array.isArray(value) ? 'array' : typeof value,
           }),
@@ -938,7 +938,7 @@ export class ObjectSchema<TShape extends ObjectShape> extends BaseSchema<
     for (const [key, schema] of Object.entries(this._shape)) {
       const fieldResult = schema.safeParse(obj[key], {
         ...options,
-        path: [...(options.path || []), key],
+        path: [...(options.path ?? []), key],
       });
 
       if (!fieldResult.success) {
@@ -955,12 +955,12 @@ export class ObjectSchema<TShape extends ObjectShape> extends BaseSchema<
       if (!knownKeys.has(key)) {
         if (this._strict) {
           issues.push(
-            this._createIssue('unrecognized_key', `Unrecognized key: ${key}`, [...(options.path || []), key])
+            this._createIssue('unrecognized_key', `Unrecognized key: ${key}`, [...(options.path ?? []), key])
           );
         } else if (this._catchall) {
           const catchResult = this._catchall.safeParse(obj[key], {
             ...options,
-            path: [...(options.path || []), key],
+            path: [...(options.path ?? []), key],
           });
           if (!catchResult.success) {
             issues.push(...catchResult.issues);
@@ -1108,7 +1108,7 @@ export class EnumSchema<T extends readonly [string, ...string[]]> extends BaseSc
           this._createIssue(
             'invalid_enum_value',
             `Expected one of: ${this._values.join(', ')}`,
-            options.path || [],
+            options.path ?? [],
             {
               expected: this._values.join(' | '),
               received: String(value),
@@ -1160,7 +1160,7 @@ export class LiteralSchema<T extends string | number | boolean> extends BaseSche
           this._createIssue(
             'invalid_literal',
             `Expected ${JSON.stringify(this._value)}, received ${JSON.stringify(value)}`,
-            options.path || []
+            options.path ?? []
           ),
         ],
       };
@@ -1222,7 +1222,7 @@ export class UnionSchema<T extends BaseSchema<unknown>[]> extends BaseSchema<
         this._createIssue(
           'invalid_union',
           'Input does not match any schema in the union',
-          options.path || [],
+          options.path ?? [],
           { unionErrors: allIssues }
         ),
       ],
@@ -1269,7 +1269,7 @@ export class RecordSchema<
         success: false,
         data: undefined,
         issues: [
-          this._createIssue('invalid_type', `Expected object, received ${typeof value}`, options.path || []),
+          this._createIssue('invalid_type', `Expected object, received ${typeof value}`, options.path ?? []),
         ],
       };
     }
@@ -1281,7 +1281,7 @@ export class RecordSchema<
     for (const [key, val] of Object.entries(obj)) {
       const keyResult = this._keySchema.safeParse(key, {
         ...options,
-        path: [...(options.path || []), key],
+        path: [...(options.path ?? []), key],
       });
 
       if (!keyResult.success) {
@@ -1292,7 +1292,7 @@ export class RecordSchema<
 
       const valueResult = this._valueSchema.safeParse(val, {
         ...options,
-        path: [...(options.path || []), key],
+        path: [...(options.path ?? []), key],
       });
 
       if (!valueResult.success) {
@@ -1370,7 +1370,7 @@ export class SchemaValidationError extends Error {
     const result: Record<string, string[]> = {};
     for (const issue of this.issues) {
       const path = issue.path.join('.') || '_root';
-      if (!result[path]) result[path] = [];
+      result[path] ??= [];
       result[path].push(issue.message);
     }
     return result;
@@ -1383,7 +1383,7 @@ export class SchemaValidationError extends Error {
     const result: Record<string, { _errors: string[] }> = {};
     for (const issue of this.issues) {
       const path = issue.path.join('.') || '_root';
-      if (!result[path]) result[path] = { _errors: [] };
+      result[path] ??= { _errors: [] };
       result[path]._errors.push(issue.message);
     }
     return result;
@@ -1398,25 +1398,25 @@ export class SchemaValidationError extends Error {
  * Schema factory functions
  */
 export const v = {
-  string: () => new StringSchema(),
-  number: () => new NumberSchema(),
-  boolean: () => new BooleanSchema(),
-  date: () => new DateSchema(),
-  array: <T extends BaseSchema<unknown>>(element: T) => new ArraySchema(element),
-  object: <T extends ObjectShape>(shape: T) => new ObjectSchema(shape),
-  enum: <T extends readonly [string, ...string[]]>(values: T) => new EnumSchema(values),
-  literal: <T extends string | number | boolean>(value: T) => new LiteralSchema(value),
-  union: <T extends BaseSchema<unknown>[]>(...schemas: T) => new UnionSchema(schemas),
+  string: (): StringSchema => new StringSchema(),
+  number: (): NumberSchema => new NumberSchema(),
+  boolean: (): BooleanSchema => new BooleanSchema(),
+  date: (): DateSchema => new DateSchema(),
+  array: <T extends BaseSchema<unknown>>(element: T): ArraySchema<T> => new ArraySchema(element),
+  object: <T extends ObjectShape>(shape: T): ObjectSchema<T> => new ObjectSchema(shape),
+  enum: <T extends readonly [string, ...string[]]>(values: T): EnumSchema<T> => new EnumSchema(values),
+  literal: <T extends string | number | boolean>(value: T): LiteralSchema<T> => new LiteralSchema(value),
+  union: <T extends BaseSchema<unknown>[]>(...schemas: T): UnionSchema<T> => new UnionSchema(schemas),
   record: <TKey extends BaseSchema<string>, TValue extends BaseSchema<unknown>>(
     keySchema: TKey,
     valueSchema: TValue
-  ) => new RecordSchema(keySchema, valueSchema),
-  unknown: () => new UnknownSchema(),
-  any: () => new UnknownSchema(),
+  ): RecordSchema<TKey, TValue> => new RecordSchema(keySchema, valueSchema),
+  unknown: (): UnknownSchema => new UnknownSchema(),
+  any: (): UnknownSchema => new UnknownSchema(),
 
   // Convenience methods
-  optional: <T extends BaseSchema<unknown>>(schema: T) => schema.optional(),
-  nullable: <T extends BaseSchema<unknown>>(schema: T) => schema.nullable(),
+  optional: <T extends BaseSchema<unknown>>(schema: T): T => schema.optional(),
+  nullable: <T extends BaseSchema<unknown>>(schema: T): T => schema.nullable(),
 };
 
 // =============================================================================
@@ -1429,7 +1429,7 @@ export type Schema<T = unknown> = BaseSchema<T>;
 
 export class ValidationError extends Error {
   constructor(public issues: ValidationIssue[]) {
-    super(issues[0]?.message || 'Validation failed');
+    super(issues[0]?.message ?? 'Validation failed');
     this.name = 'ValidationError';
   }
 }

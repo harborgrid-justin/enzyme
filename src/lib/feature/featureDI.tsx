@@ -396,7 +396,7 @@ export const StorageContract = createServiceContract<StorageService>(
     get: (key) => {
       try {
         const item = localStorage.getItem(key);
-        return item ? JSON.parse(item) : null;
+        return item ? (JSON.parse(item) as unknown) : null;
       } catch {
         return null;
       }

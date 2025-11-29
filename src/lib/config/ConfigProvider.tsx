@@ -170,7 +170,7 @@ export function ConfigProvider<T extends ConfigRecord = ConfigRecord>({
       }
     };
 
-    loadConfig();
+    void loadConfig();
   }, [defaultConfig, envPrefix, remoteUrl, schema, debug, onLoad, onError, runtimeConfig]);
 
   // Subscribe to runtime config changes

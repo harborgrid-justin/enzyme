@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+/* eslint-disable @typescript-eslint/promise-function-async */
 import { Link, Routes, Route, useParams, useNavigate, Outlet } from 'react-router-dom';
 
 // Simple route guard that always allows access for demo purposes

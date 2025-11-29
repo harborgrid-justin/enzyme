@@ -52,13 +52,13 @@ export function extractCacheHints(headers: ResponseHeaders): CacheHints {
   const directives = parseCacheControlHeader(cacheControl);
 
   const hints: CacheHints = {
-    cacheable: !directives['no-store'] && !directives['no-cache'],
-    maxAge: (directives['max-age'] != null && directives['max-age'] !== '') ? parseInt(directives['max-age'], 10) : undefined,
-    staleWhileRevalidate: (directives['stale-while-revalidate'] != null && directives['stale-while-revalidate'] !== '')
+    cacheable: directives['no-store'] === undefined && directives['no-cache'] === undefined,
+    maxAge: (directives['max-age'] !== undefined && directives['max-age'] !== null && directives['max-age'] !== '') ? parseInt(directives['max-age'], 10) : undefined,
+    staleWhileRevalidate: (directives['stale-while-revalidate'] !== undefined && directives['stale-while-revalidate'] !== null && directives['stale-while-revalidate'] !== '')
       ? parseInt(directives['stale-while-revalidate'], 10)
       : undefined,
     etag,
-    lastModified: (lastModified != null && lastModified !== '') ? new Date(lastModified) : undefined,
+    lastModified: (lastModified !== undefined && lastModified !== null && lastModified !== '') ? new Date(lastModified) : undefined,
     mustRevalidate: 'must-revalidate' in directives,
     isPrivate: 'private' in directives,
     noStore: 'no-store' in directives,
@@ -80,7 +80,7 @@ function parseCacheControlHeader(header: string): Record<string, string> {
 
   for (const part of parts) {
     const [key, value] = part.split('=').map((s) => s.trim());
-    if (key) directives[key.toLowerCase()] = value ?? 'true';
+    if (key !== undefined && key !== null && key !== '') directives[key.toLowerCase()] = value ?? 'true';
   }
 
   return directives;
@@ -100,7 +100,7 @@ export function buildCacheInfo(
     fromCache,
     hitType: fromCache ? 'memory' : undefined,
     age,
-    expiresAt: hints.maxAge ? Date.now() + hints.maxAge * 1000 : undefined,
+    expiresAt: hints.maxAge !== undefined && hints.maxAge > 0 ? Date.now() + hints.maxAge * 1000 : undefined,
     etag: hints.etag,
   };
 }
@@ -121,15 +121,15 @@ export function buildCacheInfo(
 export function generateCacheControl(hints: Partial<CacheHints>): string {
   const directives: string[] = [];
 
-  if (hints.noStore) {
+  if (hints.noStore === true) {
     return 'no-store';
   }
 
-  if (hints.noCache) {
+  if (hints.noCache === true) {
     directives.push('no-cache');
   }
 
-  if (hints.isPrivate) {
+  if (hints.isPrivate === true) {
     directives.push('private');
   } else {
     directives.push('public');
@@ -143,7 +143,7 @@ export function generateCacheControl(hints: Partial<CacheHints>): string {
     directives.push(`stale-while-revalidate=${hints.staleWhileRevalidate}`);
   }
 
-  if (hints.mustRevalidate) {
+  if (hints.mustRevalidate === true) {
     directives.push('must-revalidate');
   }
 

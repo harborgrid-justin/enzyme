@@ -24,7 +24,7 @@
  *
  * // Analyze a specific request
  * const timing = analyzer.analyzeRequest('https://api.example.com/data');
- * console.log(`TTFB: ${timing.ttfb}ms, Download: ${timing.downloadTime}ms`);
+ * console.info(`TTFB: ${timing.ttfb}ms, Download: ${timing.downloadTime}ms`);
  * ```
  */
 
@@ -490,7 +490,7 @@ export class NetworkPerformanceAnalyzer {
     }
 
     return {
-      name: entry.name.split('/').pop() || entry.name,
+      name: entry.name.split('/').pop() ?? entry.name,
       url: entry.name,
       startTime: entry.startTime,
       duration: entry.duration,
@@ -784,8 +784,8 @@ export class NetworkPerformanceAnalyzer {
 
     requests.forEach((r) => {
       const type = r.initiatorType || 'other';
-      requestsByType[type] = (requestsByType[type] || 0) + 1;
-      sizeByType[type] = (sizeByType[type] || 0) + r.transferSize;
+      requestsByType[type] = (requestsByType[type] ?? 0) + 1;
+      sizeByType[type] = (sizeByType[type] ?? 0) + r.transferSize;
     });
 
     return {
@@ -872,7 +872,7 @@ export class NetworkPerformanceAnalyzer {
     Object.entries(stats.requestsByType)
       .sort(([, a], [, b]) => b - a)
       .forEach(([type, count]) => {
-        const size = stats.sizeByType[type] || 0;
+        const size = stats.sizeByType[type] ?? 0;
         lines.push(`  ${type}: ${count} requests, ${formatBytes(size)}`);
       });
 
@@ -908,7 +908,7 @@ export class NetworkPerformanceAnalyzer {
    */
   private log(message: string, ...args: unknown[]): void {
     if (this.config.debug) {
-      console.log(`[NetworkAnalyzer] ${message}`, ...args);
+      console.info(`[NetworkAnalyzer] ${message}`, ...args);
     }
   }
 }

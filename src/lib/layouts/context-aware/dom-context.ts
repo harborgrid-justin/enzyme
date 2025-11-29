@@ -370,7 +370,7 @@ export class DOMContextTracker {
   private parseLayoutType(display: string): LayoutType {
     // Handle multi-value display (e.g., "flex" or "block flex")
     const parts = display.split(' ');
-    const mainDisplay = parts[parts.length - 1] || '';
+    const mainDisplay = parts[parts.length - 1] ?? '';
 
     // Normalize display values
     if (mainDisplay.includes('flex')) {

@@ -1020,7 +1020,7 @@ export function unwrapResult<T, E>(result: Result<T, E>): T {
     return result.value;
   }
   if (isErr(result)) {
-    throw result.error;
+    throw result.error instanceof Error ? result.error : new Error(String(result.error));
   }
   throw new TypeError('Invalid Result type');
 }

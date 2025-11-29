@@ -284,9 +284,9 @@ export const ViewportAnchor = forwardRef<HTMLDivElement, ExtendedViewportAnchorP
     const containerStyle = useMemo((): React.CSSProperties => {
       const baseStyle: React.CSSProperties = { ...style };
 
-      if (sticky?.enabled) {
+      if (sticky?.enabled === true) {
         baseStyle.position = 'sticky';
-        baseStyle[sticky.edge || 'top'] = sticky.offset || 0;
+        baseStyle[sticky.edge ?? 'top'] = sticky.offset ?? 0;
 
         if (state.isSticky && sticky.zIndex !== undefined) {
           baseStyle.zIndex = sticky.zIndex;
@@ -306,7 +306,7 @@ export const ViewportAnchor = forwardRef<HTMLDivElement, ExtendedViewportAnchorP
         'data-visibility': state.visibility,
       };
 
-      if (sticky?.enabled) {
+      if (sticky?.enabled === true) {
         attrs['data-sticky'] = String(state.isSticky);
       }
 
@@ -388,7 +388,7 @@ export function LazyLoad({
   const containerStyle: React.CSSProperties = {
     ...style,
     minHeight: minHeight !== undefined
-      ? typeof minHeight === 'number' ? `${minHeight}px` : minHeight
+      ? (typeof minHeight === 'number' ? `${minHeight}px` : minHeight)
       : undefined,
   };
 

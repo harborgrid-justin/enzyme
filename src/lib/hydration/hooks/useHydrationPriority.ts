@@ -417,22 +417,22 @@ export function useAdaptiveHydrationPriority(
     if (element === null || element === undefined) return;
 
     // Hover handler - boost on hover
-    const handleMouseEnter = () => {
+    const handleMouseEnter = (): void => {
       if (priorityControl.priorityLevel > 1) {
         priorityControl.boost();
       }
     };
 
-    const handleMouseLeave = () => {
+    const handleMouseLeave = (): void => {
       // Optional: restore after a delay
     };
 
     // Focus handler - boost on focus
-    const handleFocus = () => {
+    const handleFocus = (): void => {
       priorityControl.makeCritical();
     };
 
-    const handleBlur = () => {
+    const handleBlur = (): void => {
       priorityControl.reset();
     };
 

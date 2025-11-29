@@ -22,7 +22,7 @@
  * ```
  */
 
-import { useMemo, useCallback, useRef, useState, useEffect } from 'react';
+import { useMemo, useCallback, useState, useEffect } from 'react';
 import {
   useQuery,
   useQueryClient,
@@ -128,7 +128,9 @@ export function useApiRequest<TResponse = unknown>(
   const queryClient = useQueryClient();
 
   // Stabilize query key using useMemo to avoid ref access during render
-  const stableQueryKey = useMemo(() => options.queryKey, [JSON.stringify(options.queryKey)]);
+  // Note: We intentionally use options.queryKey directly as a dependency
+  // React Query handles array comparison internally
+  const stableQueryKey = useMemo(() => options.queryKey, [options.queryKey]);
 
   // Build the request URL with path params
   const url = useMemo(() => {
@@ -236,9 +238,9 @@ export function useGetById<TResponse = unknown>(
   options?: Omit<ApiRequestOptions<TResponse>, 'url' | 'queryKey'>
 ): UseApiRequestResult<TResponse> {
   return useApiRequest<TResponse>({
-    url: `${baseUrl}/${id}`,
+    url: `${baseUrl}/${id ?? ''}`,
     queryKey: [baseUrl.replace(/^\//, ''), id],
-    enabled: !!id && (options?.enabled ?? true),
+    enabled: (id !== undefined && id !== null && id !== '') && (options?.enabled ?? true),
     ...options,
   });
 }
@@ -274,10 +276,10 @@ export function useGetList<TResponse = unknown>(
   if (params?.pageSize !== undefined) {
     queryParams.pageSize = params.pageSize;
   }
-  if (params?.sort) {
+  if (params?.sort !== undefined && params.sort !== null && params.sort !== '') {
     queryParams.sort = params.sort;
   }
-  if (params?.order) {
+  if (params?.order !== undefined && params.order !== null && params.order !== '') {
     queryParams.order = params.order;
   }
   if (params?.filters) {
@@ -417,15 +419,15 @@ export function useParallelRequests<TResponses extends unknown[]>(
         if (event.query.queryKey === config.queryKey ||
             JSON.stringify(event.query.queryKey) === JSON.stringify(config.queryKey)) {
           const state = queryClient.getQueryState<unknown, ApiError>(config.queryKey);
-          if (state) {
+          if (state !== undefined && state !== null) {
             setResults((prev) => {
               const next = [...prev];
               next[index] = {
                 data: state.data,
                 hasData: state.data !== undefined,
-                isLoading: state.status === 'pending' && !state.data,
+                isLoading: state.status === 'pending' && state.data === undefined,
                 isFetching: state.fetchStatus === 'fetching',
-                error: state.error,
+                error: state.error ?? null,
                 isError: state.status === 'error',
                 isSuccess: state.status === 'success',
               };
@@ -485,16 +487,16 @@ export function useDependentRequest<TFirst, TSecond>(
   const firstResult = useApiRequest<TFirst>(firstRequest);
 
   const secondOptions = useMemo(() => {
-    if (firstResult.data) {
+    if (firstResult.data !== undefined && firstResult.data !== null) {
       return secondRequestFn(firstResult.data);
     }
     return null;
   }, [firstResult.data, secondRequestFn]);
 
   const secondResult = useApiRequest<TSecond>({
-    url: secondOptions?.url || '',
-    queryKey: secondOptions?.queryKey || ['__disabled__'],
-    enabled: !!secondOptions && (firstRequest.enabled ?? true),
+    url: secondOptions?.url ?? '',
+    queryKey: secondOptions?.queryKey ?? ['__disabled__'],
+    enabled: (secondOptions !== undefined && secondOptions !== null) && (firstRequest.enabled ?? true),
     ...secondOptions,
   });
 
@@ -502,7 +504,7 @@ export function useDependentRequest<TFirst, TSecond>(
     first: firstResult,
     second: secondResult,
     isLoading: firstResult.isLoading || secondResult.isLoading,
-    error: firstResult.error || secondResult.error,
+    error: firstResult.error ?? secondResult.error,
   };
 }
 
@@ -535,17 +537,17 @@ export function usePolling<TResponse = unknown>(
 } {
   const [shouldStop, setShouldStop] = useState(false);
 
-  const refetchIntervalFn = useCallback((query: any) => {
+  const refetchIntervalFn = useCallback((query: { state: { data?: TResponse } }) => {
     if (shouldStop) return false;
 
     const {data} = query.state;
-    if (data && options.stopCondition?.(data)) {
+    if (data !== undefined && data !== null && options.stopCondition?.(data) === true) {
       setShouldStop(true);
       return false;
     }
 
     return options.interval;
-  }, [options.interval, options.stopCondition, shouldStop]);
+  }, [options, shouldStop]);
 
   const result = useApiRequest<TResponse>({
     ...options,
@@ -554,7 +556,7 @@ export function usePolling<TResponse = unknown>(
 
   const startPolling = useCallback(() => {
     setShouldStop(false);
-    result.refetch();
+    void result.refetch();
   }, [result]);
 
   const stopPolling = useCallback(() => {

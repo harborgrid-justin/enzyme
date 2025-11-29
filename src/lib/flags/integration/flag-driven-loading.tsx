@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React from 'react';
 /**
  * @fileoverview Flag-driven module loading for conditional imports.
@@ -369,7 +370,7 @@ export function useFeatureFlaggedModule<T>(
 
   // Load on mount and flag change
   useEffect(() => {
-    load();
+    void load();
   }, [load]);
 
   // Preload the other variant if configured
@@ -385,7 +386,7 @@ export function useFeatureFlaggedModule<T>(
     // Preload in idle time
     if ('requestIdleCallback' in window) {
       const id = (window as Window & { requestIdleCallback: (cb: () => void) => number }).requestIdleCallback(() => {
-        loadModuleWithRetry(preloadLoader, { attempts: 1, delay: 0 }).then((mod) => {
+        void loadModuleWithRetry(preloadLoader, { attempts: 1, delay: 0 }).then((mod) => {
           setCachedModule(preloadCacheKey, mod, !flagEnabled);
         }).catch(() => {
           // Silently fail preload
@@ -519,7 +520,7 @@ export function SuspenseFlaggedLoader<P extends Record<string, unknown> = Record
 
   return (
     <Suspense fallback={loadingFallback}>
-      <Component {...(componentProps as any)} />
+      <Component {...(componentProps as Record<string, unknown>)} />
     </Suspense>
   );
 }
@@ -597,7 +598,7 @@ export function preloadModule(config: ModulePreloadConfig): () => void {
   const { module, priority = 'idle', delay = 0 } = config;
   let cancelled = false;
 
-  const doPreload = async () => {
+  const doPreload = async (): Promise<void> => {
     if (cancelled) return;
 
     try {
@@ -609,14 +610,21 @@ export function preloadModule(config: ModulePreloadConfig): () => void {
 
   const schedulePreload = (): void => {
     if (priority === 'high') {
-      setTimeout(doPreload, delay);
-    } else if (priority === 'idle' && 'requestIdleCallback' in window) {
+      void doPreload();
+      return;
+    }
+
+    if (priority === 'idle' && 'requestIdleCallback' in window) {
       setTimeout(() => {
         if (cancelled) return;
-        (window as Window & { requestIdleCallback: (cb: () => void) => number }).requestIdleCallback(doPreload);
+        (window as Window & { requestIdleCallback: (cb: () => void) => number }).requestIdleCallback(() => {
+          void doPreload();
+        });
       }, delay);
     } else {
-      setTimeout(doPreload, delay + 100);
+      setTimeout(() => {
+        void doPreload();
+      }, delay + 100);
     }
   };
 

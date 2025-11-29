@@ -4,6 +4,8 @@
  * for React components and hooks in the lib module.
  */
 
+/* eslint-disable react-refresh/only-export-components, @typescript-eslint/promise-function-async */
+
 import React, { type ReactElement, type PropsWithChildren } from 'react';
 import { render, type RenderOptions, type RenderResult } from '@testing-library/react';
 import { renderHook, type RenderHookResult, type RenderHookOptions } from '@testing-library/react';
@@ -81,7 +83,6 @@ export function renderWithProviders(
 }
 
 // Keep legacy export for backward compatibility
-// eslint-disable-next-line react-refresh/only-export-components
 export const customRender = renderWithProviders;
 
 /**
@@ -113,7 +114,6 @@ export function renderHookWithProviders<TResult, TProps>(
 }
 
 // Keep legacy export for backward compatibility
-// eslint-disable-next-line react-refresh/only-export-components
 export const customRenderHook = renderHookWithProviders;
 
 // ============================================================================
@@ -443,24 +443,24 @@ export function createMockSecureStorage(): MockSecureStorage {
   const store = new Map<string, unknown>();
 
   return {
-    getItem: vi.fn((key: string) => {
+    getItem: vi.fn(async (key: string) => {
       const value = store.get(key);
       if (value === undefined) {
         return Promise.resolve({ success: true, data: undefined });
       }
       return Promise.resolve({ success: true, data: value });
     }),
-    setItem: vi.fn(async (key: string, value: unknown) => {
+    setItem: vi.fn((key: string, value: unknown) => {
       store.set(key, value);
-      return { success: true };
+      return Promise.resolve({ success: true });
     }),
-    removeItem: vi.fn(async (key: string) => {
+    removeItem: vi.fn((key: string) => {
       store.delete(key);
-      return { success: true };
+      return Promise.resolve({ success: true });
     }),
-    clear: vi.fn(async () => {
+    clear: vi.fn(() => {
       store.clear();
-      return { success: true };
+      return Promise.resolve({ success: true });
     }),
     _store: store,
   };
@@ -485,15 +485,15 @@ export interface MockSecureStorage {
  * Create a mock fetch function
  */
 export function createMockFetch(): MockFetch {
-  const mockFetch = vi.fn().mockImplementation(async () => ({
+  const mockFetch = vi.fn().mockImplementation(() => Promise.resolve({
     ok: true,
     status: 200,
     statusText: 'OK',
     headers: new Headers(),
-    json: async () => ({}),
-    text: async () => '',
-    blob: async () => new Blob(),
-    arrayBuffer: async () => new ArrayBuffer(0),
+    json: () => Promise.resolve({}),
+    text: () => Promise.resolve(''),
+    blob: () => Promise.resolve(new Blob()),
+    arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
   }));
 
   return Object.assign(mockFetch, {
@@ -503,8 +503,8 @@ export function createMockFetch(): MockFetch {
         status,
         statusText: status === 200 ? 'OK' : 'Error',
         headers: new Headers(),
-        json: async () => data,
-        text: async () => JSON.stringify(data),
+        json: () => Promise.resolve(data),
+        text: () => Promise.resolve(JSON.stringify(data)),
       });
     },
     mockError: (status: number, message: string) => {
@@ -513,8 +513,8 @@ export function createMockFetch(): MockFetch {
         status,
         statusText: message,
         headers: new Headers(),
-        json: async () => ({ error: message }),
-        text: async () => JSON.stringify({ error: message }),
+        json: () => Promise.resolve({ error: message }),
+        text: () => Promise.resolve(JSON.stringify({ error: message })),
       });
     },
     mockNetworkError: () => {

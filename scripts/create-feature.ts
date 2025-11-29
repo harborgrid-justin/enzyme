@@ -75,11 +75,11 @@ function parseArgs(args: string[]): FeatureOptions {
     name,
     displayName,
     description: `Manage ${displayName.toLowerCase()} data`,
-    category: extractFlag(flags, 'category') || 'general',
+    category: extractFlag(flags, 'category') ?? 'general',
     withTabs: flags.includes('--with-tabs'),
     withCrud: flags.includes('--with-crud'),
     withScheduled: flags.includes('--with-scheduled'),
-    roles: (extractFlag(flags, 'roles') || 'admin,user').split(','),
+    roles: (extractFlag(flags, 'roles') ?? 'admin,user').split(','),
     featureFlag: `${name}_enabled`,
   };
 }
@@ -97,25 +97,28 @@ function buildContext(options: FeatureOptions): TemplateContext {
   const { name } = options;
 
   // Pluralization (handles most common cases)
-  const plural = name.endsWith('y')
-    ? name.slice(0, -1) + 'ies'
-    : name.endsWith('s') || name.endsWith('x') || name.endsWith('ch') || name.endsWith('sh')
-      ? name + 'es'
-      : name + 's';
+  let plural: string;
+  if (name.endsWith('y')) {
+    plural = `${name.slice(0, -1)}ies`;
+  } else if (name.endsWith('s') || name.endsWith('x') || name.endsWith('ch') || name.endsWith('sh')) {
+    plural = `${name}es`;
+  } else {
+    plural = `${name}s`;
+  }
 
   return {
     featureName: name,
-    FeatureName: name.charAt(0).toUpperCase() + name.slice(1),
+    FeatureName: `${name.charAt(0).toUpperCase()}${name.slice(1)}`,
     FEATURE_NAME: name.toUpperCase(),
     featureNamePlural: plural,
-    FeatureNamePlural: plural.charAt(0).toUpperCase() + plural.slice(1),
+    FeatureNamePlural: `${plural.charAt(0).toUpperCase()}${plural.slice(1)}`,
     displayName: options.displayName,
     description: options.description,
     category: options.category,
     featureFlag: options.featureFlag,
     roles: options.roles.map(r => `'${r}'`).join(', '),
-    entityName: name.charAt(0).toUpperCase() + name.slice(1) + 'Item',
-    entityNameLower: name + 'Item',
+    entityName: `${name.charAt(0).toUpperCase()}${name.slice(1)}Item`,
+    entityNameLower: `${name}Item`,
   };
 }
 
@@ -1347,7 +1350,7 @@ function ensureDir(dirPath: string): void {
 
 function writeFile(filePath: string, content: string): void {
   fs.writeFileSync(filePath, content, 'utf-8');
-  console.log(`  Created: ${filePath}`);
+  console.info(`  Created: ${filePath}`);
 }
 
 // ============================================================================
@@ -1358,11 +1361,11 @@ function generateFeatureModule(options: FeatureOptions): void {
   const ctx = buildContext(options);
   const baseDir = path.join(process.cwd(), 'src', 'features', ctx.featureNamePlural);
 
-  console.log(`\n========================================`);
-  console.log(`  Feature Scaffolding CLI`);
-  console.log(`========================================\n`);
-  console.log(`Generating feature: ${ctx.FeatureName}`);
-  console.log(`Location: ${baseDir}\n`);
+  console.info(`\n========================================`);
+  console.info(`  Feature Scaffolding CLI`);
+  console.info(`========================================\n`);
+  console.info(`Generating feature: ${ctx.FeatureName}`);
+  console.info(`Location: ${baseDir}\n`);
 
   // Create directories
   ensureDir(baseDir);
@@ -1390,14 +1393,14 @@ function generateFeatureModule(options: FeatureOptions): void {
   writeFile(path.join(baseDir, 'components', `${ctx.FeatureName}List.tsx`), generateList(ctx));
   writeFile(path.join(baseDir, 'components', 'index.ts'), generateComponentsIndex(ctx));
 
-  console.log(`\n========================================`);
-  console.log(`  Feature "${ctx.FeatureName}" created!`);
-  console.log(`========================================\n`);
-  console.log(`Next steps:`);
-  console.log(`  1. Add to src/features/index.ts:`);
-  console.log(`     export * from './${ctx.featureNamePlural}';`);
-  console.log(`  2. The feature will auto-register via autoRegistry.ts`);
-  console.log(`  3. Add feature flag '${ctx.featureFlag}' to your flags config\n`);
+  console.info(`\n========================================`);
+  console.info(`  Feature "${ctx.FeatureName}" created!`);
+  console.info(`========================================\n`);
+  console.info(`Next steps:`);
+  console.info(`  1. Add to src/features/index.ts:`);
+  console.info(`     export * from './${ctx.featureNamePlural}';`);
+  console.info(`  2. The feature will auto-register via autoRegistry.ts`);
+  console.info(`  3. Add feature flag '${ctx.featureFlag}' to your flags config\n`);
 }
 
 // Run CLI

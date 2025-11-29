@@ -89,6 +89,7 @@ export const RequirePermission = memo(({
  * HOC version of RequirePermission
  */
 // @refresh reset
+// eslint-disable-next-line react-refresh/only-export-components
 export function withRequirePermission<P extends object>(
   Component: React.ComponentType<P>,
   permissionConfig: {

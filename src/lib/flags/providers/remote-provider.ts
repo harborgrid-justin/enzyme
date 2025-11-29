@@ -132,8 +132,8 @@ export class RemoteProvider implements FlagProvider {
   /**
    * Get all flags.
    */
-  async getFlags(): Promise<readonly FeatureFlag[]> {
-    return Array.from(this.flags.values());
+  getFlags(): Promise<readonly FeatureFlag[]> {
+    return Promise.resolve(Array.from(this.flags.values()));
   }
 
   /**
@@ -219,15 +219,15 @@ export class RemoteProvider implements FlagProvider {
   /**
    * Get all segments.
    */
-  async getSegments(): Promise<readonly Segment[]> {
-    return Array.from(this.segments.values());
+  getSegments(): Promise<readonly Segment[]> {
+    return Promise.resolve(Array.from(this.segments.values()));
   }
 
   /**
    * Get a segment by ID.
    */
-  async getSegment(id: SegmentId): Promise<Segment | null> {
-    return this.segments.get(id) ?? null;
+  getSegment(id: SegmentId): Promise<Segment | null> {
+    return Promise.resolve(this.segments.get(id) ?? null);
   }
 
   // ==========================================================================
@@ -243,8 +243,9 @@ export class RemoteProvider implements FlagProvider {
       flags = this.config.transform(data);
     } else if (Array.isArray(data)) {
       flags = data as FeatureFlag[];
-    } else if (data && typeof data === 'object' && 'flags' in data) {
-      flags = (data as { flags: FeatureFlag[] }).flags;
+    } else if (data !== null && data !== undefined && typeof data === 'object' && 'flags' in data) {
+      const dataWithFlags = data as { flags: FeatureFlag[] };
+      flags = dataWithFlags.flags;
     } else {
       throw new Error('Invalid response format');
     }
@@ -308,13 +309,13 @@ export class RemoteProvider implements FlagProvider {
         this.stats = { ...this.stats, requestCount: this.stats.requestCount + 1 };
 
         if (!response.ok) {
-          if (retry.retryStatusCodes?.includes(response.status)) {
+          if (retry.retryStatusCodes !== null && retry.retryStatusCodes !== undefined && retry.retryStatusCodes.includes(response.status)) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
           }
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
-        const data = await response.json();
+        const data: unknown = await response.json();
         this.recordSuccess();
         return data as T;
       } catch (error) {
@@ -327,7 +328,7 @@ export class RemoteProvider implements FlagProvider {
             retry.maxDelay ?? 30000
           );
           this.log(`Retry ${attempt + 1}/${retry.maxAttempts} in ${delay}ms`);
-          await this.sleep(delay);
+          this.sleep(delay);
         }
       }
     }
@@ -365,13 +366,13 @@ export class RemoteProvider implements FlagProvider {
     const params: Record<string, string> = {};
     const ctx = this.config.context;
 
-    if (ctx?.user?.id) {
+    if (ctx?.user?.id !== null && ctx?.user?.id !== undefined && ctx.user.id !== '') {
       params['userId'] = ctx.user.id;
     }
-    if (ctx?.application?.environment) {
+    if (ctx?.application?.environment !== null && ctx?.application?.environment !== undefined && ctx.application.environment !== '') {
       params['environment'] = ctx.application.environment;
     }
-    if (ctx?.application?.version) {
+    if (ctx?.application?.version !== null && ctx?.application?.version !== undefined && ctx.application.version !== '') {
       params['version'] = ctx.application.version;
     }
 
@@ -445,8 +446,8 @@ export class RemoteProvider implements FlagProvider {
   /**
    * Check if the provider is healthy.
    */
-  async isHealthy(): boolean {
-    return this.health.healthy;
+  isHealthy(): Promise<boolean> {
+    return Promise.resolve(this.health.healthy);
   }
 
   /**
@@ -494,11 +495,12 @@ export class RemoteProvider implements FlagProvider {
   /**
    * Shutdown the provider.
    */
-  async shutdown(): Promise<void> {
+  shutdown(): Promise<void> {
     this.abortController?.abort();
     this.ready = false;
     this.listeners.clear();
     this.log('Provider shutdown');
+    return Promise.resolve();
   }
 
   // ==========================================================================

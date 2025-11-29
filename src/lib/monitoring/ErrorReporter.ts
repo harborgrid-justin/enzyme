@@ -183,6 +183,7 @@ export function addBreadcrumb(
   // In production, this would add to Sentry/Datadog breadcrumbs
   // Log to console when debug mode is enabled
   if (isDebugModeEnabled()) {
+    // eslint-disable-next-line no-console
     console.debug('[Breadcrumb]', type, message, data);
   }
 }
@@ -224,7 +225,7 @@ async function sendErrorReport(report: ErrorReport): Promise<void> {
   try {
     // In a real implementation, this would send to Sentry/Datadog
     // For now, we'll use a generic endpoint
-    if (config.dsn) {
+    if (config.dsn != null && config.dsn !== '') {
       // Raw fetch is intentional - error reporting must be independent
       await fetch(config.dsn, {
         method: 'POST',
@@ -242,7 +243,8 @@ async function sendErrorReport(report: ErrorReport): Promise<void> {
  * Handle global error events
  */
 function handleGlobalError(event: ErrorEvent): void {
-  reportError(event.error || event.message, {
+  const errorValue: unknown = event.error ?? event.message;
+  reportError(errorValue, {
     action: 'global_error',
     metadata: {
       filename: event.filename,
@@ -280,9 +282,9 @@ function shouldIgnoreError(error: AppError): boolean {
  */
 function flushErrorQueue(): void {
   if (!config.enabled) return;
-  
+
   errorQueue.forEach((report) => {
-    sendErrorReport(report);
+    void sendErrorReport(report);
   });
   errorQueue = [];
 }

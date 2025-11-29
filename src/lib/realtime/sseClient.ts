@@ -245,6 +245,7 @@ export class SSEClient {
    */
   private createEventHandler(eventType: string): (event: MessageEvent) => void {
     return (event: MessageEvent) => {
+      // eslint-disable-next-line prefer-destructuring -- event.data has 'any' type which is not safe to destructure
       let data: unknown = event.data;
 
       // Try to parse JSON

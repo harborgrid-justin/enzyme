@@ -240,6 +240,7 @@ class ObserverPool {
     if (orphanedElements.length > 0 && typeof console !== 'undefined') {
       // Debug log for development
       if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console -- debug logging in development
         console.debug(`[ObserverPool] Cleaned up ${orphanedElements.length} orphaned entries`);
       }
     }
@@ -408,7 +409,7 @@ class ModulePreloader {
       return;
     }
 
-    const priority = PRIORITY_WEIGHTS[config.priority || 'normal'];
+    const priority = PRIORITY_WEIGHTS[config.priority ?? 'normal'];
     this.preloadQueue.push({ config, priority });
     this.preloadQueue.sort((a, b) => b.priority - a.priority);
 
@@ -431,7 +432,7 @@ class ModulePreloader {
         const item = this.preloadQueue.shift();
         if (!item) break;
 
-        this.loadModule(item.config);
+        void this.loadModule(item.config);
       }
 
       if (this.preloadQueue.length > 0) {
@@ -553,9 +554,7 @@ export function createLazyComponent<P extends object = object>(
     if (loadedModule) {
       return Promise.resolve(loadedModule);
     }
-    if (!loadPromise) {
-      loadPromise = loadWithRetry();
-    }
+    loadPromise ??= loadWithRetry();
     return loadPromise;
   };
 
@@ -609,7 +608,7 @@ export function withLazyLoading<P extends object>(
     return (
       <Suspense fallback={fallback} key={retryCount}>
         <ErrorBoundaryWrapper onError={setError}>
-          <LazyComponent {...(props as any)} />
+          <LazyComponent {...(props as P)} />
         </ErrorBoundaryWrapper>
       </Suspense>
     );

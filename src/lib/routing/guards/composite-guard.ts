@@ -250,7 +250,7 @@ export class CompositeGuard implements RouteGuard {
           error: error as Error,
         });
 
-        if (this.config.shortCircuit) {
+        if (this.config.shortCircuit === true) {
           return {
             result: GuardResult.deny(`Guard "${guard.name}" failed`),
             guardResults,
@@ -316,7 +316,7 @@ export class CompositeGuard implements RouteGuard {
           passed.push(guard.name);
 
           // Short-circuit on success
-          if (this.config.shortCircuitSuccess) {
+          if (this.config.shortCircuitSuccess === true) {
             return {
               result: GuardResult.allow(),
               guardResults,
@@ -345,12 +345,15 @@ export class CompositeGuard implements RouteGuard {
     }
 
     // For 'any', allow if any passed
-    const finalResult = passed.length > 0
-      ? GuardResult.allow()
-      : this.config.mergeResults
-        ? this.config.mergeResults(guardResults.map(gr => gr.result))
-        : getFirstRedirect(guardResults.map(gr => gr.result)) ??
-          GuardResult.deny(getDenialReasons(guardResults.map(gr => gr.result)).join('; '));
+    let finalResult: GuardResult;
+    if (passed.length > 0) {
+      finalResult = GuardResult.allow();
+    } else if (this.config.mergeResults) {
+      finalResult = this.config.mergeResults(guardResults.map(gr => gr.result));
+    } else {
+      finalResult = getFirstRedirect(guardResults.map(gr => gr.result)) ??
+        GuardResult.deny(getDenialReasons(guardResults.map(gr => gr.result)).join('; '));
+    }
 
     return {
       result: finalResult,

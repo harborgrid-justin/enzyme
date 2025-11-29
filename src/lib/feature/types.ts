@@ -206,33 +206,33 @@ export function hasFeatureAccess(
   enabledFlags: string[]
 ): boolean {
   // Check authentication requirement
-  if (access.requireAuth && !userRoles.length) {
+  if (access.requireAuth === true && !userRoles.length) {
     return false;
   }
-  
+
   // Check feature flag
-  if (access.featureFlag && !enabledFlags.includes(access.featureFlag)) {
+  if (access.featureFlag != null && access.featureFlag !== '' && !enabledFlags.includes(access.featureFlag)) {
     return false;
   }
-  
+
   // Check required flags
-  if (access.requiredFlags?.length) {
+  if (access.requiredFlags != null && access.requiredFlags.length > 0) {
     const hasAllFlags = access.requiredFlags.every((flag) =>
       enabledFlags.includes(flag)
     );
     if (!hasAllFlags) return false;
   }
-  
+
   // Check required roles (all must match)
-  if (access.requiredRoles?.length) {
+  if (access.requiredRoles != null && access.requiredRoles.length > 0) {
     const hasAllRoles = access.requiredRoles.every((role) =>
       userRoles.includes(role)
     );
     if (!hasAllRoles) return false;
   }
-  
+
   // Check allowed roles (any must match)
-  if (access.allowedRoles?.length) {
+  if (access.allowedRoles != null && access.allowedRoles.length > 0) {
     const hasAnyRole = access.allowedRoles.some((role) =>
       userRoles.includes(role)
     );

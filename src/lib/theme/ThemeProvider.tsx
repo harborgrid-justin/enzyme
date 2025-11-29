@@ -132,6 +132,7 @@ export function ThemeProvider({ children, defaultTheme }: ThemeProviderProps): R
 /**
  * Hook to access the theme context.
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useThemeContext(): ThemeContextValue {
   const context = useContext(ThemeContext);
   if (!context) {

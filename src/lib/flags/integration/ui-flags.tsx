@@ -27,6 +27,7 @@
  * ```
  */
 
+/* eslint-disable react-refresh/only-export-components */
 import React, { useMemo, type ComponentType, type ReactNode } from 'react';
 import {
   createLibraryIntegration,
@@ -205,7 +206,7 @@ export function createUiFlagIntegration(): LibraryIntegration<UiFlagConfig> {
       [UI_FLAG_KEYS.UI_INLINE_EDIT_ENABLED]: 'inlineEditEnabled',
     },
     onConfigChange: (config, changedFlags) => {
-      console.debug('[UI Flags] Config changed:', changedFlags, config);
+      console.info('[UI Flags] Config changed:', changedFlags, config);
 
       // Apply dark mode to document
       if (changedFlags.includes(UI_FLAG_KEYS.UI_DARK_MODE_ENABLED)) {

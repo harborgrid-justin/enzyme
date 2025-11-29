@@ -12,6 +12,8 @@
  * - Stagger animations
  */
 
+/* eslint-disable @typescript-eslint/strict-boolean-expressions, @typescript-eslint/prefer-nullish-coalescing, no-nested-ternary, no-case-declarations */
+
 // ============================================================================
 // Types
 // ============================================================================

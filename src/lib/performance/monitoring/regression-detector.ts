@@ -340,8 +340,9 @@ export class RegressionDetector {
       this.samples.set(name, []);
     }
 
-    const samples = this.samples.get(name)!;
-    samples.push({ ...sample, timestamp: timestamp || Date.now() });
+    const samples = this.samples.get(name);
+    if (!samples) return null;
+    samples.push({ ...sample, timestamp: timestamp ?? Date.now() });
 
     // Trim samples if exceeding max
     if (samples.length > this.config.maxSamplesPerMetric) {
@@ -372,7 +373,7 @@ export class RegressionDetector {
    * Get or establish baseline for a metric
    */
   getBaseline(metric: string): MetricBaseline | null {
-    return this.baselines.get(metric) || null;
+    return this.baselines.get(metric) ?? null;
   }
 
   /**
@@ -478,7 +479,7 @@ export class RegressionDetector {
    */
   getRegressionHistory(limit?: number): RegressionEvent[] {
     const history = [...this.regressionHistory].reverse();
-    return limit ? history.slice(0, limit) : history;
+    return (limit !== null && limit !== undefined) ? history.slice(0, limit) : history;
   }
 
   /**
@@ -612,7 +613,7 @@ export class RegressionDetector {
       min,
       max,
       sampleCount: values.length,
-      establishedAt: existing?.establishedAt || now,
+      establishedAt: existing?.establishedAt ?? now,
       updatedAt: now,
     };
 
@@ -635,7 +636,7 @@ export class RegressionDetector {
 
     if (isRegression) {
       // Increment consecutive count
-      const currentCount = (this.consecutiveCounts.get(metric) || 0) + 1;
+      const currentCount = (this.consecutiveCounts.get(metric) ?? 0) + 1;
       this.consecutiveCounts.set(metric, currentCount);
 
       // Only create event if we've hit the threshold
@@ -663,7 +664,7 @@ export class RegressionDetector {
       }
     } else {
       // Reset consecutive count on recovery
-      const previousCount = this.consecutiveCounts.get(metric) || 0;
+      const previousCount = this.consecutiveCounts.get(metric) ?? 0;
       if (previousCount >= this.config.consecutiveThreshold) {
         this.config.onRecovery?.(metric, baseline);
         this.log(`Recovery detected for ${metric}`);
@@ -690,7 +691,7 @@ export class RegressionDetector {
 
   private log(message: string, ...args: unknown[]): void {
     if (this.config.debug) {
-      console.log(`[RegressionDetector] ${message}`, ...args);
+      console.info(`[RegressionDetector] ${message}`, ...args);
     }
   }
 }

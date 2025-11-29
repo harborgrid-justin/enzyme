@@ -490,7 +490,7 @@ class ServiceLayerFacade {
   /**
    * Get versioned API client
    */
-  getVersionedApi(version?: ApiVersion) {
+  getVersionedApi(version?: ApiVersion): ReturnType<typeof createVersionedApi> {
     if (!this.config) {
       throw new Error('[ServiceLayer] Not initialized. Call initialize() first.');
     }

@@ -585,7 +585,7 @@ export class EndpointRegistry {
     const result = await this.config.rbacIntegration.checkAccess(endpoint, user as UserContext | undefined, context);
 
     // Emit event
-    if (user) {
+    if (user !== undefined && user !== null) {
       const userContext = user as UserContext;
       this.emit('access_checked', {
         endpointId,
@@ -769,7 +769,7 @@ export class EndpointRegistry {
   private invalidatePathCache(pathPattern: string): void {
     for (const key of this.pathCache.keys()) {
       const [, path] = key.split(':');
-      if (path && this.pathMightMatch(path, pathPattern)) {
+      if (path !== undefined && path !== null && path !== '' && this.pathMightMatch(path, pathPattern)) {
         this.pathCache.delete(key);
       }
     }
@@ -857,9 +857,7 @@ export function createEndpointRegistry(
 let globalRegistry: EndpointRegistry | null = null;
 
 export function getGlobalRegistry(): EndpointRegistry {
-  if (!globalRegistry) {
-    globalRegistry = createEndpointRegistry();
-  }
+  globalRegistry ??= createEndpointRegistry();
   return globalRegistry;
 }
 
@@ -911,9 +909,7 @@ export function groupEndpointsBy<K extends string>(
 
   for (const endpoint of registry) {
     const key = keyFn(endpoint);
-    if (!groups[key]) {
-      groups[key] = [];
-    }
+    groups[key] ??= [];
     groups[key].push(endpoint);
   }
 

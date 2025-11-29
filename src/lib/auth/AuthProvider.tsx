@@ -216,6 +216,7 @@ export function AuthProvider({ children }: AuthProviderProps): JSX.Element {
  * Hook to access auth context.
  */
 // @refresh reset
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuthContext(): AuthContextValue {
   const context = useContext(AuthContext);
   if (!context) {

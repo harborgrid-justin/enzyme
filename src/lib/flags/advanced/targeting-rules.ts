@@ -380,7 +380,7 @@ export class TargetingRulesEngine {
   // ==========================================================================
 
   private normalizeString(value: unknown, caseSensitive: boolean): string {
-    const str = typeof value === 'object' ? JSON.stringify(value) : String(value);
+    const str = typeof value === 'object' && value !== null ? JSON.stringify(value) : String(value);
     return caseSensitive ? str : str.toLowerCase();
   }
 

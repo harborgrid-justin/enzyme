@@ -26,6 +26,7 @@
  * ```
  */
 
+import type React from 'react';
 import { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import type { BaseSchema, Infer } from './schema-validator';
 
@@ -57,6 +58,11 @@ export interface FieldConfig<T = unknown> {
   /** When to validate */
   validateOn?: ('change' | 'blur' | 'submit')[];
 }
+
+/**
+ * Validation error (same as FieldError)
+ */
+export type ValidationError = FieldError;
 
 /**
  * Form validation configuration
@@ -202,7 +208,7 @@ export function min(minValue: number, message?: string): FieldRule<number> {
   return (value) => {
     if (typeof value !== 'number') return undefined;
     if (value < minValue) {
-      return message || `Must be at least ${minValue}`;
+      return message !== undefined && message !== '' ? message : `Must be at least ${minValue}`;
     }
     return undefined;
   };
@@ -215,7 +221,7 @@ export function max(maxValue: number, message?: string): FieldRule<number> {
   return (value) => {
     if (typeof value !== 'number') return undefined;
     if (value > maxValue) {
-      return message || `Must be at most ${maxValue}`;
+      return message !== undefined && message !== '' ? message : `Must be at most ${maxValue}`;
     }
     return undefined;
   };
@@ -262,7 +268,7 @@ export function url(message = 'Invalid URL'): FieldRule<string> {
 export function matches(fieldName: string, message?: string): FieldRule {
   return (value, formData) => {
     if (value !== formData[fieldName]) {
-      return message || `Must match ${fieldName}`;
+      return message !== undefined && message !== '' ? message : `Must match ${fieldName}`;
     }
     return undefined;
   };
@@ -310,7 +316,8 @@ export function schema<T extends BaseSchema<unknown>>(
   return (value) => {
     const result = schemaInstance.safeParse(value);
     if (!result.success) {
-      return message || result.issues[0]?.message || 'Validation failed';
+      const firstIssueMessage = result.issues[0]?.message;
+      return message ?? firstIssueMessage ?? 'Validation failed';
     }
     return undefined;
   };
@@ -329,7 +336,7 @@ export function when<T>(
     }
     for (const rule of rules) {
       const error = await rule(value, formData, fieldName);
-      if (error) return error;
+      if (error !== undefined && error !== '') return error;
     }
     return undefined;
   };
@@ -368,7 +375,7 @@ export function createFormValidator<T extends Record<string, unknown>>(
 
   // Normalize all field configs
   for (const [field, fieldConfig] of Object.entries(config)) {
-    if (fieldConfig) {
+    if (fieldConfig !== undefined && fieldConfig !== null) {
       fieldConfigs.set(
         field as keyof T,
         normalizeFieldConfig(fieldConfig as FieldRule<T[keyof T]>[] | FieldConfig<T[keyof T]>)
@@ -391,7 +398,7 @@ export function createFormValidator<T extends Record<string, unknown>>(
             formData as Record<string, unknown>,
             String(field)
           );
-          if (error) {
+          if (error !== undefined && error !== '') {
             errors.push({ message: error });
             // Stop on first error for field
             break;
@@ -438,7 +445,7 @@ export function createFormValidator<T extends Record<string, unknown>>(
               data as Record<string, unknown>,
               String(field)
             );
-            if (error) {
+            if (error !== undefined && error !== '') {
               errs.push({ message: error });
               break;
             }
@@ -488,7 +495,38 @@ export function useFormValidation<T extends Record<string, unknown>>(
   validator: FormValidator<T>,
   initialValues: T,
   options: FormValidatorOptions = {}
-) {
+): {
+  values: T;
+  errors: Record<string, ValidationError[]>;
+  touched: Record<string, boolean>;
+  dirty: Record<string, boolean>;
+  isValid: boolean;
+  isValidating: boolean;
+  isSubmitting: boolean;
+  isSubmitted: boolean;
+  submitCount: number;
+  formErrors: ValidationError[];
+  setValue: (field: keyof T, value: unknown, options?: { shouldValidate?: boolean }) => void;
+  setValues: (values: Partial<T>, options?: { shouldValidate?: boolean }) => void;
+  setTouched: (field: keyof T, touched: boolean) => void;
+  setError: (field: keyof T, error: string) => void;
+  clearError: (field: keyof T) => void;
+  clearAllErrors: () => void;
+  reset: (values?: Partial<T>) => void;
+  validateField: (field: keyof T, value?: unknown) => Promise<boolean>;
+  validateAll: () => Promise<boolean>;
+  getValues: () => T;
+  handleBlur: (field: keyof T) => void;
+  handleSubmit: (onSubmit: (values: T) => void | Promise<void>) => (e?: React.FormEvent) => Promise<void>;
+  registerField: (field: keyof T) => {
+    value: T[keyof T];
+    onChange: (value: unknown) => void;
+    onBlur: () => void;
+    error: string | undefined;
+    touched: boolean;
+    dirty: boolean;
+  };
+} {
   const {
     mode = 'onSubmit',
     revalidateMode = 'onChange',
@@ -519,16 +557,18 @@ export function useFormValidation<T extends Record<string, unknown>>(
 
   // Cleanup on unmount
   useEffect(() => {
+    const timers = debounceTimers.current;
+    const controllers = abortControllers.current;
     return () => {
-      debounceTimers.current.forEach((timer) => clearTimeout(timer));
-      abortControllers.current.forEach((controller) => controller.abort());
+      timers.forEach((timer) => clearTimeout(timer));
+      controllers.forEach((controller) => controller.abort());
     };
   }, []);
 
   // Validate on mount if configured
   useEffect(() => {
     if (validateOnMount) {
-      validateAll();
+      void validateAll();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -651,11 +691,11 @@ export function useFormValidation<T extends Record<string, unknown>>(
         // Debounce validation
         if (validator.hasAsyncRules(field)) {
           const timer = setTimeout(() => {
-            validateField(field, value);
+            void validateField(field, value);
           }, debounceMs);
           debounceTimers.current.set(field, timer);
         } else {
-          validateField(field, value);
+          void validateField(field, value);
         }
       }
     },
@@ -682,7 +722,7 @@ export function useFormValidation<T extends Record<string, unknown>>(
 
       const shouldVal = options?.shouldValidate ?? shouldValidate('blur');
       if (shouldVal && touched) {
-        validateField(field);
+        void validateField(field);
       }
     },
     [shouldValidate, validateField]
@@ -842,7 +882,19 @@ export function useField<T>(
     validateOnBlur?: boolean;
     debounceMs?: number;
   }
-) {
+): {
+  value: T | undefined;
+  setValue: (val: T | undefined) => void;
+  error: string | undefined;
+  errors: FieldError[];
+  touched: boolean;
+  setTouched: (val: boolean) => void;
+  validating: boolean;
+  onChange: (val: T | undefined) => void;
+  onBlur: () => void;
+  validate: (val?: T) => Promise<FieldError[]>;
+  reset: (newValue?: T) => void;
+} {
   const {
     defaultValue,
     validateOnChange = true,
@@ -866,7 +918,7 @@ export function useField<T>(
       for (const rule of rules) {
         try {
           const error = await rule(val as T, {}, name);
-          if (error) {
+          if (error !== undefined && error !== '') {
             fieldErrors.push({ message: error });
             break;
           }
@@ -890,11 +942,11 @@ export function useField<T>(
       setDirty(true);
 
       if (validateOnChange) {
-        if (debounceTimer.current) {
+        if (debounceTimer.current !== undefined) {
           clearTimeout(debounceTimer.current);
         }
         debounceTimer.current = setTimeout(() => {
-          validate(newValue);
+          void validate(newValue);
         }, debounceMs);
       }
     },
@@ -904,7 +956,7 @@ export function useField<T>(
   const handleBlur = useCallback(() => {
     setTouched(true);
     if (validateOnBlur) {
-      validate(value);
+      void validate(value);
     }
   }, [validateOnBlur, validate, value]);
 

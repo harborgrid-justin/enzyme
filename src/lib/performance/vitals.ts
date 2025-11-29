@@ -188,7 +188,7 @@ function calculateOverallScore(metrics: Partial<Record<VitalMetricName, VitalMet
   let weightedScore = 0;
 
   for (const [name, entry] of Object.entries(metrics)) {
-    if (entry) {
+    if (entry !== undefined && entry !== null) {
       const weight = METRIC_WEIGHTS[name as VitalMetricName];
       weightedScore += ratingToScore(entry.rating) * weight;
       totalWeight += weight;
@@ -404,7 +404,7 @@ export class VitalsCollector {
     this.reportBuffer = [];
 
     if (this.config.reportToAnalytics && this.config.analyticsEndpoint) {
-      this.sendToAnalytics(reports);
+      void this.sendToAnalytics(reports);
     }
   }
 
@@ -422,7 +422,7 @@ export class VitalsCollector {
       };
 
       // Use sendBeacon for reliability during page unload
-      if (navigator.sendBeacon) {
+      if (typeof navigator.sendBeacon !== 'undefined') {
         navigator.sendBeacon(
           this.config.analyticsEndpoint,
           JSON.stringify(payload)
@@ -512,7 +512,7 @@ export class VitalsCollector {
    */
   private log(message: string, ...args: unknown[]): void {
     if (this.config.debug) {
-      console.log(`[VitalsCollector] ${message}`, ...args);
+      console.info(`[VitalsCollector] ${message}`, ...args);
     }
   }
 }
@@ -527,9 +527,7 @@ let collectorInstance: VitalsCollector | null = null;
  * Get or create the global VitalsCollector instance
  */
 export function getVitalsCollector(config?: VitalsCollectorConfig): VitalsCollector {
-  if (!collectorInstance) {
-    collectorInstance = new VitalsCollector(config);
-  }
+  collectorInstance ??= new VitalsCollector(config);
   return collectorInstance;
 }
 

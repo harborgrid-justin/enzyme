@@ -225,8 +225,8 @@ export class AssetPrefetchManager {
         low: 3,
         idle: 4,
       };
-      const priorityA = priorityOrder[a.priority || 'normal'];
-      const priorityB = priorityOrder[b.priority || 'normal'];
+      const priorityA = priorityOrder[a.priority ?? 'normal'];
+      const priorityB = priorityOrder[b.priority ?? 'normal'];
       return priorityA - priorityB;
     });
 
@@ -249,7 +249,7 @@ export class AssetPrefetchManager {
     return this.prefetch({
       url,
       type: 'image',
-      priority: image.priority || this.config.defaultImagePriority,
+      priority: image.priority ?? this.config.defaultImagePriority,
     });
   }
 
@@ -273,7 +273,7 @@ export class AssetPrefetchManager {
       return {
         url,
         type: 'image' as AssetType,
-        priority: img.priority || this.config.defaultImagePriority,
+        priority: img.priority ?? this.config.defaultImagePriority,
       };
     });
 
@@ -306,9 +306,9 @@ export class AssetPrefetchManager {
       // Use CSS Font Loading API if available
       if ('FontFace' in window) {
         const fontFace = new FontFace(font.family, `url(${font.url})`, {
-          weight: String(font.weight || 'normal'),
-          style: font.style || 'normal',
-          display: font.display || 'swap',
+          weight: String(font.weight ?? 'normal'),
+          style: font.style ?? 'normal',
+          display: font.display ?? 'swap',
           unicodeRange: font.unicodeRange,
         });
 
@@ -366,7 +366,7 @@ export class AssetPrefetchManager {
 
     this.queue.enqueue(url, {
       type: 'script',
-      priority: priority || 'normal',
+      priority: priority ?? 'normal',
     });
 
     this.prefetchedAssets.add(url);
@@ -382,7 +382,7 @@ export class AssetPrefetchManager {
 
     this.queue.enqueue(url, {
       type: 'style',
-      priority: priority || 'high',
+      priority: priority ?? 'high',
     });
 
     this.prefetchedAssets.add(url);
@@ -474,19 +474,19 @@ export class AssetPrefetchManager {
         return this.prefetchImageUrl(asset.url);
       case 'font':
         this.createPreloadLink(asset.url, 'font', {
-          crossOrigin: asset.crossOrigin || 'anonymous',
+          crossOrigin: asset.crossOrigin ?? 'anonymous',
         });
         return undefined;
       case 'script':
         this.queue.enqueue(asset.url, {
           type: 'script',
-          priority: asset.priority || 'normal',
+          priority: asset.priority ?? 'normal',
         });
         return undefined;
       case 'style':
         this.queue.enqueue(asset.url, {
           type: 'style',
-          priority: asset.priority || 'high',
+          priority: asset.priority ?? 'high',
         });
         return undefined;
       case 'video':
@@ -496,7 +496,7 @@ export class AssetPrefetchManager {
       case 'document':
         this.queue.enqueue(asset.url, {
           type: 'document',
-          priority: asset.priority || 'normal',
+          priority: asset.priority ?? 'normal',
         });
         return undefined;
       default:
@@ -520,17 +520,17 @@ export class AssetPrefetchManager {
 
   private selectResponsiveSource(srcset: Array<{ url: string; width: number }>): string {
     if (typeof window === 'undefined') {
-      return srcset[0]?.url || '';
+      return srcset[0]?.url ?? '';
     }
 
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = window.devicePixelRatio ?? 1;
     const viewportWidth = window.innerWidth * dpr;
 
     // Find the best matching source
     const sorted = [...srcset].sort((a, b) => a.width - b.width);
-    const best = sorted.find((s) => s.width >= viewportWidth) || sorted[sorted.length - 1];
+    const best = sorted.find((s) => s.width >= viewportWidth) ?? sorted[sorted.length - 1];
 
-    return best?.url || '';
+    return best?.url ?? '';
   }
 
   private createPreloadLink(
@@ -599,8 +599,8 @@ export class AssetPrefetchManager {
     }
 
     if (connection.effectiveType) {
-      const currentQuality = NETWORK_QUALITY_ORDER[connection.effectiveType] || 3;
-      const minQuality = NETWORK_QUALITY_ORDER[this.config.minNetworkQuality] || 3;
+      const currentQuality = NETWORK_QUALITY_ORDER[connection.effectiveType] ?? 3;
+      const minQuality = NETWORK_QUALITY_ORDER[this.config.minNetworkQuality] ?? 3;
 
       if (currentQuality < minQuality) {
         this.log(`Skipping prefetch: Network quality ${connection.effectiveType} below minimum`);
@@ -621,12 +621,12 @@ export class AssetPrefetchManager {
         saveData?: boolean;
       };
     };
-    return nav.connection || null;
+    return nav.connection ?? null;
   }
 
   private log(message: string, ...args: unknown[]): void {
     if (this.config.debug) {
-      console.log(`[AssetPrefetch] ${message}`, ...args);
+      console.info(`[AssetPrefetch] ${message}`, ...args);
     }
   }
 }

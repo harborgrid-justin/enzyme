@@ -157,7 +157,7 @@ export function useSecureStorage<T>(
       setError(null);
 
       const storageInstance = getStorage();
-      const result = await storageInstance.removeItem(key);
+      const result = storageInstance.removeItem(key);
 
       if (!mountedRef.current) return;
 
@@ -208,14 +208,14 @@ export function useSecureStorage<T>(
 
   // Sync across tabs via storage events
   useEffect(() => {
-    if (!syncAcrossTabs || typeof window === 'undefined') {
+    if (syncAcrossTabs !== true || typeof window === 'undefined') {
       return;
     }
 
     const handleStorageChange = (event: StorageEvent): void => {
       // Check if the changed key matches our key
       // Note: Secure storage uses a prefix, so we need to check for that
-      if (event.key != null && event.key.includes(key)) {
+      if (event.key?.includes(key)) {
         void loadValue();
       }
     };

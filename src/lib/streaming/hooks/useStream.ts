@@ -406,7 +406,7 @@ export function useMultipleStreams(boundaryIds: string[]): UseMultipleStreamsRes
       const state = context.getBoundaryState(id);
       initialStates.set(id, state ?? StreamState.Idle);
     }
-    // eslint-disable-next-line @eslint-react/hooks-extra/no-direct-set-state-in-use-effect
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setStates(initialStates);
 
     // Subscribe to updates

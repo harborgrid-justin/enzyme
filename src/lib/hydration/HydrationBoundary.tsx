@@ -206,7 +206,9 @@ export function HydrationBoundary({
   // ==========================================================================
 
   useEffect(() => {
-    setState((prev) => ({ ...prev, isClient: true }));
+    queueMicrotask(() => {
+      setState((prev) => ({ ...prev, isClient: true }));
+    });
   }, []);
 
   // ==========================================================================

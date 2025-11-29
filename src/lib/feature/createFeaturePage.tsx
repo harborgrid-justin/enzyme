@@ -331,7 +331,7 @@ export function createFeaturePage<
    */
   function FeaturePage() {
     const { roles, isAuthenticated } = useAuth();
-    const featureFlagEnabled = useFeatureFlag(config.access.featureFlag || '');
+    const featureFlagEnabled = useFeatureFlag(config.access.featureFlag ?? '');
 
     // Collect all enabled flags for access check
     const enabledFlags = useMemo(() => {
@@ -370,12 +370,12 @@ export function createFeaturePage<
         queryKey={config.metadata.id}
         fallback={({ error, retry }) => (
           <ErrorComponent
-            error={error instanceof Error ? error : new Error(error?.message || 'Unknown error')}
+            error={error instanceof Error ? error : new Error(error?.message ?? 'Unknown error')}
             retry={retry}
           />
         )}
       >
-        <Suspense fallback={config.loadingFallback || <Loading />}>
+        <Suspense fallback={config.loadingFallback ?? <Loading />}>
           <FeatureContent />
         </Suspense>
       </QueryErrorBoundary>

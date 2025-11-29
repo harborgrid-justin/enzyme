@@ -4,6 +4,8 @@
  * @description Boundary specifically for data-fetch errors
  */
 
+/* eslint-disable react-refresh/only-export-components */
+
 import React, { Component, type ErrorInfo, type ReactNode } from 'react';
 import { ErrorReporter } from './ErrorReporter';
 import type { AppError } from './errorTypes';

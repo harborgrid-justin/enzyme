@@ -213,7 +213,7 @@ export class EnhancedVitalsCollector {
    * Get specific metric
    */
   getMetric(name: MetricName): CollectedMetric[] {
-    return this.metrics.get(name) || [];
+    return this.metrics.get(name) ?? [];
   }
 
   /**
@@ -221,7 +221,7 @@ export class EnhancedVitalsCollector {
    */
   getLatestValue(name: MetricName): CollectedMetric | null {
     const metrics = this.metrics.get(name);
-    return metrics?.[metrics.length - 1] || null;
+    return metrics?.[metrics.length - 1] ?? null;
   }
 
   /**
@@ -232,7 +232,7 @@ export class EnhancedVitalsCollector {
     value: number,
     thresholds?: MetricThresholds
   ): void {
-    const effectiveThresholds = thresholds || this.thresholds.custom;
+    const effectiveThresholds = thresholds ?? this.thresholds.custom;
     const rating = effectiveThresholds ? this.calculateRating(value, effectiveThresholds) : 'good';
 
     const metric: CollectedMetric = {
@@ -278,7 +278,7 @@ export class EnhancedVitalsCollector {
     this.reportBuffer = [];
 
     if (this.config.reportEndpoint) {
-      this.sendToEndpoint(reports);
+      void this.sendToEndpoint(reports);
     }
   }
 
@@ -467,7 +467,7 @@ export class EnhancedVitalsCollector {
           // Ignore entries with recent input
           if (entry.hadRecentInput) continue;
 
-          const firstEntryTime = sessionEntries[0]?.startTime || 0;
+          const firstEntryTime = sessionEntries[0]?.startTime ?? 0;
           const timeSinceFirstEntry = entry.startTime - firstEntryTime;
           const timeSinceLastEntry = entry.startTime - previousEndTime;
 
@@ -481,7 +481,7 @@ export class EnhancedVitalsCollector {
             sessionEntries = [];
           }
 
-          sessionValue += entry.value || 0;
+          sessionValue += entry.value ?? 0;
           sessionEntries.push(entry);
           previousEndTime = entry.startTime + (entry.duration || 0);
 
@@ -491,8 +491,8 @@ export class EnhancedVitalsCollector {
             clsEntries = sessionEntries;
 
             const largestShift = clsEntries.reduce((a, b) => {
-              const aValue = (a as { value?: number }).value || 0;
-              const bValue = (b as { value?: number }).value || 0;
+              const aValue = (a as { value?: number }).value ?? 0;
+              const bValue = (b as { value?: number }).value ?? 0;
               return aValue > bValue ? a : b;
             }) as PerformanceEntry & { sources?: Array<{ node?: Element }> };
 
@@ -509,7 +509,7 @@ export class EnhancedVitalsCollector {
               name: 'CLS',
               value: clsValue,
               rating: this.thresholds.CLS ? this.calculateRating(clsValue, this.thresholds.CLS) : 'good',
-              delta: entry.value || 0,
+              delta: entry.value ?? 0,
               id: this.generateId(),
               navigationType: this.getNavigationType(),
               timestamp: Date.now(),
@@ -658,7 +658,7 @@ export class EnhancedVitalsCollector {
   }
 
   private recordMetric(metric: CollectedMetric): void {
-    const existing = this.metrics.get(metric.name) || [];
+    const existing = this.metrics.get(metric.name) ?? [];
     existing.push(metric);
     this.metrics.set(metric.name, existing);
 
@@ -704,7 +704,7 @@ export class EnhancedVitalsCollector {
 
   private getNavigationType(): string {
     const navEntries = performance.getEntriesByType('navigation');
-    return navEntries[0]?.type || 'unknown';
+    return navEntries[0]?.type ?? 'unknown';
   }
 
   private setupLifecycleHandlers(): void {
@@ -793,7 +793,7 @@ export class EnhancedVitalsCollector {
 
   private log(message: string, ...args: unknown[]): void {
     if (this.config.debug) {
-      console.log(`[VitalsCollector] ${message}`, ...args);
+      console.info(`[VitalsCollector] ${message}`, ...args);
     }
   }
 }

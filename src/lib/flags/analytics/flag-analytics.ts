@@ -246,16 +246,19 @@ export class FlagAnalytics {
     metrics.lastSeen = event.timestamp;
 
     // Update variant counts
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const currentCount = metrics.variantCounts.get(event.variantId) ?? 0;
     metrics.variantCounts.set(event.variantId, currentCount + 1);
 
     // Track unique users
     if (event.userId != null && event.userId !== '') {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       metrics.uniqueUsers.add(event.userId);
     }
 
     // Track unique sessions
     if (event.sessionId != null && event.sessionId !== '') {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       metrics.uniqueSessions.add(event.sessionId);
     }
 
@@ -270,9 +273,10 @@ export class FlagAnalytics {
     }
   }
 
-  private getOrCreateMetrics(flagKey: string) {
-    if (!this.flagMetrics.has(flagKey)) {
-      this.flagMetrics.set(flagKey, {
+  private getOrCreateMetrics(flagKey: string): FlagMetrics {
+    let metrics = this.flagMetrics.get(flagKey);
+    if (metrics == null) {
+      metrics = {
         evaluationCount: 0,
         variantCounts: new Map(),
         uniqueUsers: new Set(),
@@ -282,9 +286,10 @@ export class FlagAnalytics {
         errorCount: 0,
         firstSeen: new Date(),
         lastSeen: new Date(),
-      });
+      };
+      this.flagMetrics.set(flagKey, metrics);
     }
-    return this.flagMetrics.get(flagKey);
+    return metrics;
   }
 
   // ==========================================================================
@@ -550,7 +555,7 @@ export function initFlagAnalytics(config: FlagAnalyticsConfig): FlagAnalytics {
  */
 export function resetFlagAnalytics(): void {
   if (instance) {
-    instance.shutdown();
+    void instance.shutdown();
   }
   instance = null;
 }

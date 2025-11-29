@@ -53,7 +53,7 @@ import { useDOMContextValue } from './DOMContextProvider';
  */
 export function usePortalBridgeContext(): PortalContext | null {
   const context = useContext(PortalBridgeContext);
-  return context as PortalContext | null;
+  return (context as PortalContext | null) ?? null;
 }
 
 // ============================================================================
@@ -258,6 +258,7 @@ export function PortalBridge({
     parentPortalContext,
     onPortalMount,
     onPortalUnmount,
+    portalContext,
   ]);
 
   // Update portal context when DOM context changes

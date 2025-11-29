@@ -143,7 +143,7 @@ export class RoutePrefetchManager {
     for (const route of routes) {
       this.routes.set(route.path, {
         ...route,
-        prefetchOn: route.prefetchOn || this.config.defaultTriggers,
+        prefetchOn: route.prefetchOn ?? this.config.defaultTriggers,
       });
     }
     this.log(`Registered ${routes.length} routes`);
@@ -155,7 +155,7 @@ export class RoutePrefetchManager {
   registerRoute(route: PrefetchableRoute): void {
     this.routes.set(route.path, {
       ...route,
-      prefetchOn: route.prefetchOn || this.config.defaultTriggers,
+      prefetchOn: route.prefetchOn ?? this.config.defaultTriggers,
     });
   }
 
@@ -212,7 +212,7 @@ export class RoutePrefetchManager {
         path,
         component: true,
         data: true,
-        assets: route.assets || [],
+        assets: route.assets ?? [],
         duration: 0,
         cached: true,
       };
@@ -221,14 +221,14 @@ export class RoutePrefetchManager {
     this.log(`Prefetching route: ${path}`);
 
     const results = await Promise.allSettled([
-      route.component ? this.prefetchComponent(path, route.component) : null,
-      route.dataLoader ? this.prefetchData(path, route.dataLoader) : null,
-      route.assets ? this.prefetchAssets(route.assets) : null,
+      route.component ? this.prefetchComponent(path, route.component) : Promise.resolve(null),
+      route.dataLoader ? this.prefetchData(path, route.dataLoader) : Promise.resolve(null),
+      route.assets ? Promise.resolve(this.prefetchAssets(route.assets)) : Promise.resolve(null),
     ]);
 
     const componentSuccess = results[0]?.status === 'fulfilled';
     const dataSuccess = results[1]?.status === 'fulfilled';
-    const assetsPrefetched = route.assets || [];
+    const assetsPrefetched = route.assets ?? [];
 
     this.prefetchedRoutes.add(path);
 
@@ -282,7 +282,7 @@ export class RoutePrefetchManager {
    */
   createLinkHandlers(path: string): LinkPrefetchHandlers {
     const route = this.routes.get(path);
-    const triggers = route?.prefetchOn || this.config.defaultTriggers;
+    const triggers = route?.prefetchOn ?? this.config.defaultTriggers;
 
     const shouldPrefetchOnHover = triggers.includes('hover');
 
@@ -312,7 +312,7 @@ export class RoutePrefetchManager {
       onTouchStart: () => {
         if (shouldPrefetchOnHover) {
           // Prefetch immediately on touch
-          this.prefetchRoute(path);
+          void this.prefetchRoute(path);
         }
       },
     };
@@ -323,7 +323,7 @@ export class RoutePrefetchManager {
    */
   observeLink(element: Element, path: string): () => void {
     const route = this.routes.get(path);
-    const triggers = route?.prefetchOn || this.config.defaultTriggers;
+    const triggers = route?.prefetchOn ?? this.config.defaultTriggers;
 
     if (!triggers.includes('viewport')) {
       return () => {};
@@ -344,7 +344,7 @@ export class RoutePrefetchManager {
   prefetchImmediateRoutes(): void {
     for (const [path, route] of this.routes.entries()) {
       if (route.prefetchOn?.includes('immediate')) {
-        this.prefetchRoute(path);
+        void this.prefetchRoute(path);
       }
     }
   }
@@ -365,13 +365,13 @@ export class RoutePrefetchManager {
 
     for (const candidate of prediction.candidates) {
       const route = this.routes.get(candidate.url);
-      const minProbability = route?.minProbability || this.config.minProbability;
+      const minProbability = route?.minProbability ?? this.config.minProbability;
 
       if (candidate.probability >= minProbability) {
         this.log(
           `Predicted route: ${candidate.url} (probability: ${(candidate.probability * 100).toFixed(1)}%)`
         );
-        this.prefetchRoute(candidate.url);
+        void this.prefetchRoute(candidate.url);
       }
     }
   }
@@ -464,7 +464,7 @@ export class RoutePrefetchManager {
     return data;
   }
 
-  private async prefetchAssets(assets: string[]): Promise<void> {
+  private prefetchAssets(assets: string[]): void {
     for (const asset of assets) {
       const type = this.inferAssetType(asset);
       this.queue.enqueue(asset, { type, priority: 'low' });
@@ -491,7 +491,7 @@ export class RoutePrefetchManager {
     }
 
     const timer = setTimeout(() => {
-      this.prefetchRoute(path);
+      void this.prefetchRoute(path);
       this.hoverTimers.delete(path);
     }, this.config.hoverDelay);
 
@@ -517,7 +517,7 @@ export class RoutePrefetchManager {
           if (entry.isIntersecting) {
             const path = this.observedLinks.get(entry.target);
             if (path && !this.prefetchedRoutes.has(path)) {
-              this.prefetchRoute(path);
+              void this.prefetchRoute(path);
             }
           }
         });
@@ -547,9 +547,7 @@ let managerInstance: RoutePrefetchManager | null = null;
 export function getRoutePrefetchManager(
   config?: Partial<RoutePrefetchConfig>
 ): RoutePrefetchManager {
-  if (!managerInstance) {
-    managerInstance = new RoutePrefetchManager(config);
-  }
+  managerInstance ??= new RoutePrefetchManager(config);
   return managerInstance;
 }
 

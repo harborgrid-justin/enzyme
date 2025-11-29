@@ -186,7 +186,7 @@ export class PollingProvider implements FlagProvider {
     const interval = this.config.interval * (1 + jitter);
 
     this.pollingTimer = setTimeout(() => {
-      this.poll().finally(() => {
+      void this.poll().finally(() => {
         this.scheduleNextPoll();
       });
     }, interval);
@@ -299,15 +299,15 @@ export class PollingProvider implements FlagProvider {
   /**
    * Get all flags.
    */
-  async getFlags(): Promise<readonly FeatureFlag[]> {
-    return this.cachedFlags;
+  getFlags(): Promise<readonly FeatureFlag[]> {
+    return Promise.resolve(this.cachedFlags);
   }
 
   /**
    * Get a flag by key.
    */
-  async getFlag(key: string): Promise<FeatureFlag | null> {
-    return this.cachedFlags.find((f) => f.key === key) ?? null;
+  getFlag(key: string): Promise<FeatureFlag | null> {
+    return Promise.resolve(this.cachedFlags.find((f) => f.key === key) ?? null);
   }
 
   // ==========================================================================
@@ -317,15 +317,15 @@ export class PollingProvider implements FlagProvider {
   /**
    * Get all segments.
    */
-  async getSegments(): Promise<readonly Segment[]> {
-    return this.cachedSegments;
+  getSegments(): Promise<readonly Segment[]> {
+    return Promise.resolve(this.cachedSegments);
   }
 
   /**
    * Get a segment by ID.
    */
-  async getSegment(id: SegmentId): Promise<Segment | null> {
-    return this.cachedSegments.find((s) => s.id === id) ?? null;
+  getSegment(id: SegmentId): Promise<Segment | null> {
+    return Promise.resolve(this.cachedSegments.find((s) => s.id === id) ?? null);
   }
 
   // ==========================================================================

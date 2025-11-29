@@ -560,9 +560,7 @@ export class AutoAccessibility {
    * Get singleton instance
    */
   static getInstance(config?: AutoAccessibilityConfig): AutoAccessibility {
-    if (AutoAccessibility.instance === null || AutoAccessibility.instance === undefined) {
-      AutoAccessibility.instance = new AutoAccessibility(config);
-    }
+    AutoAccessibility.instance ??= new AutoAccessibility(config);
     return AutoAccessibility.instance;
   }
 
@@ -570,7 +568,7 @@ export class AutoAccessibility {
    * Reset singleton
    */
   static reset(): void {
-    if (AutoAccessibility.instance) {
+    if (AutoAccessibility.instance !== null && AutoAccessibility.instance !== undefined) {
       AutoAccessibility.instance.cleanup();
       // Type-safe null assignment for singleton reset
       (AutoAccessibility as unknown as { instance: AutoAccessibility | null }).instance = null;
@@ -698,7 +696,7 @@ export class AutoAccessibility {
    */
   private log(message: string, ...args: unknown[]): void {
     if (this.config.debug) {
-      console.log(`[AutoA11y] ${message}`, ...args);
+      console.info(`[AutoA11y] ${message}`, ...args);
     }
   }
 }
@@ -737,7 +735,7 @@ export function useAccessibilityPreferences(): AccessibilityPreferences {
 /**
  * Hook for focus trap
  */
-export function useFocusTrap(enabled = true): React.RefObject<HTMLDivElement | null> {
+export function useFocusTrap(enabled = true): { current: HTMLDivElement | null } {
   const ref = useRef<HTMLDivElement>(null);
   const focusManager = useMemo(() => new FocusManager(), []);
 

@@ -155,6 +155,8 @@ export class ConfigLoader {
     const merger = new ConfigMerger({ strategy: 'deep' });
     const config = merger.merge(...sortedSources.map((s) => s.data));
 
+    await Promise.resolve(); // Ensure async
+
     // Apply schema defaults
     if (this.schema) {
       this.applyDefaults(config, this.schema);
@@ -240,7 +242,7 @@ export class ConfigLoader {
     // In browser environment
     if (typeof window !== 'undefined') {
       // Try import.meta.env (Vite)
-      const importMetaEnv = (typeof import.meta !== 'undefined' && import.meta.env) || {};
+      const importMetaEnv = import.meta?.env ?? {};
 
       for (const [key, value] of Object.entries(importMetaEnv)) {
         if (key.startsWith(prefix)) {
@@ -279,13 +281,13 @@ export class ConfigLoader {
     const withoutPrefix = envKey.substring(prefix.length);
     return withoutPrefix
       .toLowerCase()
-      .replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+      .replace(/_([a-z])/g, (_: string, letter: string) => letter.toUpperCase());
   }
 
   private parseEnvValue(value: string): ConfigValue {
     // Try to parse as JSON
     try {
-      return JSON.parse(value);
+      return JSON.parse(value) as ConfigValue;
     } catch {
       // Return as string
       return value;
@@ -331,9 +333,9 @@ export class ConfigLoader {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const data = await response.json();
-      this.log(`Loaded remote config: ${Object.keys(data).length} keys`);
-      return data as ConfigRecord;
+      const data = await response.json() as ConfigRecord;
+      this.log(`Loaded remote config: ${Object.keys(data as Record<string, unknown>).length} keys`);
+      return data;
     } catch (error) {
       clearTimeout(timeoutId);
       this.log('Failed to load remote config:', error);
@@ -367,7 +369,7 @@ export class ConfigLoader {
 
   private defaultDetectEnvironment(): Environment {
     // Try import.meta.env (Vite)
-    if (typeof import.meta !== 'undefined' && import.meta.env?.MODE) {
+    if (import.meta?.env?.MODE !== undefined) {
       return import.meta.env.MODE as Environment;
     }
 

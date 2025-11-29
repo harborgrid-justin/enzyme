@@ -405,7 +405,12 @@ export function useADGroups(): {
  * }
  * ```
  */
-export function useADRoles() {
+export function useADRoles(): {
+  roles: Role[];
+  hasRole: (role: Role) => boolean;
+  hasAnyRole: (roles: Role[]) => boolean;
+  hasAllRoles: (roles: Role[]) => boolean;
+} {
   const { roles, hasRole, hasAnyRole, hasAllRoles } = useActiveDirectory();
   return { roles, hasRole, hasAnyRole, hasAllRoles };
 }
@@ -430,7 +435,12 @@ export function useADRoles() {
  * }
  * ```
  */
-export function useADPermissions() {
+export function useADPermissions(): {
+  permissions: Permission[];
+  hasPermission: (permission: Permission) => boolean;
+  hasAnyPermission: (permissions: Permission[]) => boolean;
+  hasAllPermissions: (permissions: Permission[]) => boolean;
+} {
   const { permissions, hasPermission, hasAnyPermission, hasAllPermissions } =
     useActiveDirectory();
   return { permissions, hasPermission, hasAnyPermission, hasAllPermissions };
@@ -457,7 +467,16 @@ export function useADPermissions() {
  * }
  * ```
  */
-export function useADAttributes() {
+export function useADAttributes(): {
+  attributes: ADUserAttributes | null;
+  getAttribute: <K extends keyof ADUserAttributes>(key: K) => ADUserAttributes[K] | undefined;
+  hasAttribute: (key: keyof ADUserAttributes, value: unknown) => boolean;
+  upn: string | null;
+  displayName: string | null;
+  department: string | null;
+  jobTitle: string | null;
+  isGuest: boolean;
+} {
   const {
     user,
     getAttribute,
@@ -497,7 +516,19 @@ export function useADAttributes() {
  * }
  * ```
  */
-export function useADAuth() {
+export function useADAuth(): {
+  isAuthenticated: boolean;
+  isAuthenticating: boolean;
+  error: ADAuthError | null;
+  initialize: () => Promise<void>;
+  login: (options?: TokenAcquisitionRequest) => Promise<void>;
+  loginSilent: (options?: TokenAcquisitionRequest) => Promise<void>;
+  logout: () => Promise<void>;
+  acquireToken: (request: TokenAcquisitionRequest) => Promise<ADTokens>;
+  refreshTokens: () => Promise<void>;
+  clearError: () => void;
+  forceReauth: () => Promise<void>;
+} {
   const {
     isAuthenticated,
     isAuthenticating,
@@ -550,7 +581,16 @@ export function useADAuth() {
  * }
  * ```
  */
-export function useADTokens() {
+export function useADTokens(): {
+  accessToken: string | null;
+  idToken: string | null;
+  expiresAt: number | null;
+  scopes: string[];
+  getIsExpired: () => boolean;
+  getTimeUntilExpiry: () => number;
+  isRefreshing: boolean;
+  refreshTokens: () => Promise<void>;
+} {
   const { tokens, isRefreshing, refreshTokens } = useActiveDirectory();
 
   const accessToken = tokens?.accessToken ?? null;
@@ -558,13 +598,14 @@ export function useADTokens() {
   const expiresAt = tokens?.expiresAt ?? null;
   const scopes = tokens?.scopes ?? [];
 
-  const isExpired = useMemo(() => {
-    if (!expiresAt) return true;
+  // Return functions instead of values to avoid calling impure Date.now() during render
+  const getIsExpired = useCallback((): boolean => {
+    if (expiresAt == null || expiresAt === 0) return true;
     return Date.now() >= expiresAt - 300000; // 5 minute buffer
   }, [expiresAt]);
 
-  const timeUntilExpiry = useMemo(() => {
-    if (!expiresAt) return 0;
+  const getTimeUntilExpiry = useCallback((): number => {
+    if (expiresAt == null || expiresAt === 0) return 0;
     return Math.max(0, expiresAt - Date.now());
   }, [expiresAt]);
 
@@ -573,9 +614,9 @@ export function useADTokens() {
     idToken,
     expiresAt,
     scopes,
-    isExpired,
-    timeUntilExpiry,
-  isRefreshing,
-  refreshTokens,
-};
+    getIsExpired,
+    getTimeUntilExpiry,
+    isRefreshing,
+    refreshTokens,
+  };
 }

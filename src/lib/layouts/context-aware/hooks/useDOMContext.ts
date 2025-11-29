@@ -8,6 +8,7 @@
  * @version 1.0.0
  */
 
+import type React from 'react';
 import { useRef, useEffect, useCallback, useMemo, useState, type RefObject } from 'react';
 
 import type {
@@ -134,25 +135,29 @@ export function useDOMContextWithElement(
 
   useEffect(() => {
     const element = elementRef.current;
-    if (!element || context.isSSR) {
-      setElementInfo({
-        ancestors: [] as readonly LayoutAncestor[],
-        bounds: null,
-        layoutType: null,
-      });
-      return;
-    }
+    const timeoutId = setTimeout(() => {
+      if ((element === null) || context.isSSR) {
+        setElementInfo({
+          ancestors: [] as readonly LayoutAncestor[],
+          bounds: null,
+          layoutType: null,
+        });
+        return;
+      }
 
-    setElementInfo({
-      ancestors: tracker.getAncestry(element),
-      bounds: tracker.getBounds(element),
-      layoutType: tracker.getLayoutType(element),
-    });
+      setElementInfo({
+        ancestors: tracker.getAncestry(element),
+        bounds: tracker.getBounds(element),
+        layoutType: tracker.getLayoutType(element),
+      });
+    }, 0);
+
+    return () => clearTimeout(timeoutId);
   }, [elementRef, context.isSSR, context.lastUpdated, tracker]);
 
   // Refresh function
   const refresh = useCallback(() => {
-    if (elementRef.current) {
+    if (elementRef.current !== null) {
       tracker.invalidate(elementRef.current);
     }
   }, [elementRef, tracker]);
@@ -233,7 +238,8 @@ export function useContextEffect<T>(
 ): void {
   const value = useContextSelector(selector);
 
-useEffect(() => {
-  return effect(value);
-}, [value, ...deps]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- effect and deps are intentionally dynamic
+  useEffect(() => {
+    return effect(value);
+  }, [value, ...deps]);
 }

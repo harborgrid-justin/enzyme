@@ -260,6 +260,7 @@ function isStreamEvent(data: unknown): data is StreamEvent {
  * }
  * ```
  */
+// eslint-disable-next-line react-refresh/only-export-components -- Hook is closely related to provider component
 export function useRealtimeContext(): RealtimeContextValue {
   const context = useContext(RealtimeContext);
   if (!context.isConnected && context.connectionState === 'disconnected') {

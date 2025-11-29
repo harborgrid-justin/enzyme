@@ -591,7 +591,7 @@ export class BudgetEnforcer {
       }
     } else {
       // Higher is better (e.g., frame rate)
-      if (budget.criticalThreshold && value < budget.criticalThreshold) {
+      if ((budget.criticalThreshold !== null && budget.criticalThreshold !== undefined) && value < budget.criticalThreshold) {
         severity = 'critical';
         threshold = budget.criticalThreshold;
         compliant = false;
@@ -636,7 +636,8 @@ export class BudgetEnforcer {
       this.samples.set(budgetName, []);
     }
 
-    const samples = this.samples.get(budgetName)!;
+    const samples = this.samples.get(budgetName);
+    if (!samples) return;
     samples.push({
       value,
       timestamp: Date.now(),
@@ -650,7 +651,7 @@ export class BudgetEnforcer {
   }
 
   private handleViolation(budget: BudgetDefinition, result: EnforcementResult): void {
-    const count = (this.consecutiveCounts.get(budget.name) || 0) + 1;
+    const count = (this.consecutiveCounts.get(budget.name) ?? 0) + 1;
     this.consecutiveCounts.set(budget.name, count);
 
     // Check if we should create/update violation
@@ -659,19 +660,19 @@ export class BudgetEnforcer {
       const existing = this.violations.get(budget.name);
 
       const violation: BudgetViolation = {
-        id: existing?.id || this.generateId(),
+        id: existing?.id ?? this.generateId(),
         budget,
         result,
         url: typeof window !== 'undefined' ? window.location.href : '',
         consecutiveViolations: count,
-        firstViolationAt: existing?.firstViolationAt || now,
+        firstViolationAt: existing?.firstViolationAt ?? now,
         lastViolationAt: now,
       };
 
       this.violations.set(budget.name, violation);
 
       // Check alert cooldown
-      const lastAlert = this.lastAlertTimes.get(budget.name) || 0;
+      const lastAlert = this.lastAlertTimes.get(budget.name) ?? 0;
       if (now - lastAlert > this.config.alertCooldown) {
         this.lastAlertTimes.set(budget.name, now);
         this.config.onViolation?.(violation);
@@ -691,7 +692,7 @@ export class BudgetEnforcer {
   }
 
   private handleCompliance(budget: BudgetDefinition): void {
-    const previousCount = this.consecutiveCounts.get(budget.name) || 0;
+    const previousCount = this.consecutiveCounts.get(budget.name) ?? 0;
     this.consecutiveCounts.set(budget.name, 0);
 
     // Clear violation if it existed
@@ -733,7 +734,7 @@ export class BudgetEnforcer {
   }
 
   private getBudgetComplianceReport(name: string, budget: BudgetDefinition): BudgetComplianceReport {
-    const samples = this.samples.get(name) || [];
+    const samples = this.samples.get(name) ?? [];
     const violation = this.violations.get(name);
 
     const values = samples.map(s => s.value);
@@ -769,7 +770,7 @@ export class BudgetEnforcer {
       average,
       peak,
       complianceRate,
-      activeDegradations: violation?.result.actionsTriggered || [],
+      activeDegradations: violation?.result.actionsTriggered ?? [],
     };
   }
 
@@ -815,7 +816,7 @@ export class BudgetEnforcer {
 
     switch (severity) {
       case 'critical':
-        return `CRITICAL: ${budget.name} is ${formattedValue} (critical threshold: ${this.formatValue(budget.criticalThreshold!, budget.unit)})`;
+        return `CRITICAL: ${budget.name} is ${formattedValue} (critical threshold: ${this.formatValue(budget.criticalThreshold ?? budget.errorThreshold, budget.unit)})`;
       case 'error':
         return `ERROR: ${budget.name} exceeds budget at ${formattedValue} (limit: ${formattedThreshold})`;
       case 'warning':
@@ -856,7 +857,7 @@ export class BudgetEnforcer {
 
   private log(message: string, ...args: unknown[]): void {
     if (this.config.debug) {
-      console.log(`[BudgetEnforcer] ${message}`, ...args);
+      console.info(`[BudgetEnforcer] ${message}`, ...args);
     }
   }
 }
@@ -871,9 +872,7 @@ let enforcerInstance: BudgetEnforcer | null = null;
  * Get or create the global budget enforcer
  */
 export function getBudgetEnforcer(config?: Partial<BudgetEnforcerConfig>): BudgetEnforcer {
-  if (!enforcerInstance) {
-    enforcerInstance = new BudgetEnforcer(config);
-  }
+  enforcerInstance ??= new BudgetEnforcer(config);
   return enforcerInstance;
 }
 

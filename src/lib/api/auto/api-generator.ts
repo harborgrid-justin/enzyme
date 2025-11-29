@@ -900,9 +900,7 @@ export function generateOpenAPISpec(
     const openApiPath = endpoint.path.replace(/:([^/]+)/g, '{$1}');
 
     // Initialize path item if needed
-    if (!paths[openApiPath]) {
-      paths[openApiPath] = {};
-    }
+    paths[openApiPath] ??= {};
 
     // Build operation
     const operation: OpenAPIOperation = {
@@ -1075,9 +1073,7 @@ export function groupEndpointsByResource(
 
   for (const endpoint of endpoints) {
     const resource = endpoint.tags[0] ?? 'other';
-    if (!groups[resource]) {
-      groups[resource] = [];
-    }
+    groups[resource] ??= [];
     groups[resource].push(endpoint);
   }
 

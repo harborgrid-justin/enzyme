@@ -337,17 +337,19 @@ export const LazyModuleSlot: FC<LazyModuleSlotProps> = ({
   className,
   style,
 }) => {
-  // Get or create lazy component from cache (outside render to avoid React warnings)
-  if (!lazyComponentCache.has(loader)) {
-    lazyComponentCache.set(loader, lazy(loader));
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const LazyComponent = lazyComponentCache.get(loader)!;
+  // Get or create lazy component from cache using useMemo
+  const LazyComponent = useMemo(() => {
+    if (!lazyComponentCache.has(loader)) {
+      lazyComponentCache.set(loader, lazy(loader));
+    }
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return lazyComponentCache.get(loader)!;
+  }, [loader]);
 
   return (
     <Wrapper className={className} style={style}>
       <Suspense fallback={fallback}>
+        {/* eslint-disable-next-line react-hooks/static-components */}
         <LazyComponent {...componentProps} />
       </Suspense>
     </Wrapper>

@@ -542,7 +542,7 @@ export function extractInterceptionFromPattern(
   pattern: string
 ): { level: InterceptionLevel; cleanPattern: string } | null {
   const match = pattern.match(/\((\.+)\)/);
-  if (!match?.[1]) {
+  if (match?.[1] == null || match[1] === '') {
     return null;
   }
 

@@ -13,6 +13,8 @@
  * - Accessibility auto-enhancement
  */
 
+/* eslint-disable @typescript-eslint/strict-boolean-expressions */
+
 import type React from 'react';
 import { createElement, type ReactNode, type ComponentType } from 'react';
 import { isDev, isTest } from '@/lib/core/config/env-helper';
@@ -451,7 +453,7 @@ export class AutoSetup {
    */
   private log(message: string, ...args: unknown[]): void {
     if (this.config.debug || this.environment.debugMode) {
-      console.log(`[AutoSetup] ${message}`, ...args);
+      console.info(`[AutoSetup] ${message}`, ...args);
     }
   }
 }

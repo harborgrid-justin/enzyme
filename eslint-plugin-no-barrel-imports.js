@@ -21,7 +21,7 @@ export default {
           },
         ],
       },
-      create(context) {
+      create() {
         // Stub implementation - does nothing
         return {};
       },

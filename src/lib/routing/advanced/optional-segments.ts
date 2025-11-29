@@ -369,7 +369,10 @@ export class OptionalSegmentRouteBuilder {
       if (value !== undefined && value !== null) {
         // Include non-default values
         if (value !== defaultValue || options.includeDefaults === true) {
-          parts.push(String(value));
+          const stringValue = typeof value === 'object'
+            ? JSON.stringify(value)
+            : String(value as string | number | boolean);
+          parts.push(stringValue);
         } else {
           // Stop at first default (unless includeDefaults)
           break;
@@ -642,7 +645,7 @@ export function hasOptionalSegments(pattern: string): boolean {
  * @returns Array of optional segment names
  */
 export function extractOptionalSegmentNames(pattern: string): string[] {
-  const matches = pattern.match(/\[\[([^\]]+)\]\]/g) || [];
+  const matches = pattern.match(/\[\[([^\]]+)\]\]/g) ?? [];
   return matches.map(m => m.slice(2, -2)); // Remove [[ and ]]
 }
 

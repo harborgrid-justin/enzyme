@@ -329,7 +329,7 @@ export class PolicyEvaluator {
     }
 
     // Evaluate actions
-    if (policy.actions?.length) {
+    if ((policy.actions?.length ?? 0) > 0) {
       const actionMatch = this.evaluateActions(policy.actions, request);
       if (!actionMatch) {
         return {
@@ -341,7 +341,7 @@ export class PolicyEvaluator {
     }
 
     // Evaluate conditions
-    if (policy.conditions?.length) {
+    if ((policy.conditions?.length ?? 0) > 0) {
       const conditionsMatch = this.evaluateConditions(
         policy.conditions,
         request,
@@ -386,9 +386,10 @@ export class PolicyEvaluator {
           // Would need group info in request
           return false;
 
-        case 'attribute':
+        case 'attribute': {
           const attrValue = request.subject.attributes?.[subject.identifier];
           return subject.value === undefined || attrValue === subject.value;
+        }
 
         default:
           return false;
@@ -410,8 +411,8 @@ export class PolicyEvaluator {
       }
 
       // Check resource identifier
-      if (resource.identifier && resource.identifier !== '*') {
-        if (request.resource.id && !this.matchWildcard(resource.identifier, request.resource.id)) {
+      if (resource.identifier !== null && resource.identifier !== undefined && resource.identifier !== '' && resource.identifier !== '*') {
+        if (request.resource.id !== null && request.resource.id !== undefined && request.resource.id !== '' && !this.matchWildcard(resource.identifier, request.resource.id)) {
           return false;
         }
       }
@@ -530,7 +531,7 @@ export class PolicyEvaluator {
   ): boolean {
     const clientIp = request.context?.ipAddress ?? context.clientIp;
 
-    if (!clientIp) {
+    if (clientIp === null || clientIp === undefined || clientIp === '') {
       return condition.operator === 'notIn';
     }
 
@@ -591,7 +592,7 @@ export class PolicyEvaluator {
     request: AccessRequest
   ): boolean {
     const {key} = condition;
-    if (!key) return true;
+    if (key === null || key === undefined || key === '') return true;
 
     // Check subject attributes first, then resource attributes
     const value =
@@ -609,7 +610,7 @@ export class PolicyEvaluator {
     context: EvaluationContext
   ): boolean {
     const {key} = condition;
-    if (!key) return true;
+    if (key === null || key === undefined || key === '') return true;
 
     const value =
       request.context?.attributes?.[key] ?? context.attributes?.[key];

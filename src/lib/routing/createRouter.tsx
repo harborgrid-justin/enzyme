@@ -9,7 +9,7 @@ import {
   useRouteError,
   isRouteErrorResponse,
 } from 'react-router-dom';
-import { Suspense, type ReactNode, type ComponentType } from 'react';
+import React, { Suspense, type ReactNode, type ComponentType } from 'react';
 import type { CreateRouterOptions, RouteModule } from './types';
 
 // =============================================================================
@@ -59,7 +59,8 @@ function DefaultError(): ReactNode {
   let errorStatus = 500;
 
   if (isRouteErrorResponse(error)) {
-    errorMessage = error.statusText ?? (error.data?.message as string | undefined) ?? errorMessage;
+    const errorData = error.data as { message?: string } | undefined;
+    errorMessage = error.statusText ?? errorData?.message ?? errorMessage;
     errorStatus = error.status;
   } else if (error instanceof Error) {
     errorMessage = error.message;

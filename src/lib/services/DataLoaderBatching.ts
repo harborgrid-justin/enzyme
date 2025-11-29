@@ -178,7 +178,7 @@ export class DataLoader<K, V> {
 
     // Check if batch is full
     if (this.batch.size >= this.config.maxBatchSize) {
-      this.executeBatch();
+      void this.executeBatch();
     }
 
     return deferred.promise;
@@ -291,7 +291,7 @@ export class DataLoader<K, V> {
 
     this.batchTimer = this.config.batchScheduler(() => {
       this.batchTimer = null;
-      this.executeBatch();
+      void this.executeBatch();
     });
   }
 
@@ -435,13 +435,11 @@ export class RequestDeduplicator {
   constructor(config: DeduplicatorConfig = {}) {
     this.config = {
       window: config.window ?? 100,
-      getKey:
-        config.getKey ??
-        ((url, options) => {
-          const method = options?.method ?? 'GET';
-          const body = options?.body ? JSON.stringify(options.body) : '';
-          return `${method}:${url}:${body}`;
-        }),
+      getKey: config.getKey ?? ((url, options) => {
+        const method = (options?.method !== null && options?.method !== undefined && options?.method !== '') ? options.method : 'GET';
+        const body = (options?.body !== null && options?.body !== undefined) ? JSON.stringify(options.body) : '';
+        return `${method}:${url}:${body}`;
+      }),
     };
   }
 
@@ -595,7 +593,7 @@ export class GraphQLBatcher {
     this.scheduleBatch();
 
     if (this.queries.length >= this.config.maxBatchSize) {
-      this.executeBatch();
+      void this.executeBatch();
     }
 
     return deferred.promise;
@@ -622,13 +620,13 @@ export class GraphQLBatcher {
       throw new Error(`GraphQL mutation failed: ${response.status}`);
     }
 
-    const result = await response.json();
+    const result = await response.json() as { data?: T; errors?: Array<{ message: string }> };
 
-    if (result.errors?.length) {
+    if (result.errors !== null && result.errors !== undefined && result.errors.length > 0) {
       throw new Error(result.errors.map((e: { message: string }) => e.message).join(', '));
     }
 
-    return result.data;
+    return result.data as T;
   }
 
   /**
@@ -639,7 +637,7 @@ export class GraphQLBatcher {
 
     this.batchTimer = setTimeout(() => {
       this.batchTimer = null;
-      this.executeBatch();
+      void this.executeBatch();
     }, this.config.batchInterval);
   }
 
@@ -679,13 +677,13 @@ export class GraphQLBatcher {
         throw new Error(`GraphQL batch request failed: ${response.status}`);
       }
 
-      const results: GraphQLBatchResponse[] = await response.json();
+      const results = await response.json() as GraphQLBatchResponse[];
 
       // Resolve individual queries
       for (const result of results) {
         const query = currentBatch.find((q) => q.operation.id === result.id);
-        if (query) {
-          if (result.errors?.length) {
+        if (query !== null && query !== undefined) {
+          if (result.errors !== null && result.errors !== undefined && result.errors.length > 0) {
             query.deferred.reject(new Error(result.errors.map((e) => e.message).join(', ')));
           } else {
             query.deferred.resolve(result.data);

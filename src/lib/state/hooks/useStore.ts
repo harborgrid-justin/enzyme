@@ -40,6 +40,7 @@ export function useStoreState<T>(
 export function useShallowState<T extends object>(
   selector: StoreSelector<T>
 ): T {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-explicit-any
   return useStore(selector as any);
 }
 
@@ -72,6 +73,7 @@ export function useUIState(): {
   globalLoading: boolean;
   loadingMessage: string | null;
 } {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-explicit-any
   return useStore(
     (state) => ({
       sidebarOpen: state.sidebarOpen,
@@ -408,10 +410,13 @@ export function useStoreSubscription<T>(
   options?: { fireImmediately?: boolean }
 ): void {
   const callbackRef = useRef(callback);
-  callbackRef.current = callback;
-
   const selectorRef = useRef(selector);
-  selectorRef.current = selector;
+
+  // Update refs in useEffect to avoid accessing during render
+  useEffect(() => {
+    callbackRef.current = callback;
+    selectorRef.current = selector;
+  });
 
   useEffect(() => {
     let prevValue = selectorRef.current(useStore.getState());

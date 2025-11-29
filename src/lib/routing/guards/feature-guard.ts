@@ -266,7 +266,7 @@ export class FeatureGuard extends BaseRouteGuard {
     }
 
     // Update cache
-    if (this.featureConfig.cacheFlags) {
+    if (this.featureConfig.cacheFlags === true) {
       this.flagCache.set(flagKey, {
         value,
         expiresAt: Date.now() + (this.featureConfig.cacheTTL ?? 60000),

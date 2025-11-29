@@ -52,19 +52,32 @@ describe('Store', () => {
     vi.resetModules();
 
     // Import fresh store module
-    const storeModule = await import('@/lib/state/store');
-    useStore = storeModule.useStore;
-    getStoreState = storeModule.getStoreState;
-    subscribeToStore = storeModule.subscribeToStore;
-    hasStoreHydrated = storeModule.hasStoreHydrated;
-    waitForHydration = storeModule.waitForHydration;
-    resetStore = storeModule.resetStore;
-    clearPersistedStore = storeModule.clearPersistedStore;
-    registerFeatureStore = storeModule.registerFeatureStore;
-    unregisterFeatureStore = storeModule.unregisterFeatureStore;
-    getFeatureStore = storeModule.getFeatureStore;
-    getFeatureStoreNames = storeModule.getFeatureStoreNames;
-    resetAllFeatureStores = storeModule.resetAllFeatureStores;
+    const {
+      useStore: useStoreImport,
+      getStoreState: getStoreStateImport,
+      subscribeToStore: subscribeToStoreImport,
+      hasStoreHydrated: hasStoreHydratedImport,
+      waitForHydration: waitForHydrationImport,
+      resetStore: resetStoreImport,
+      clearPersistedStore: clearPersistedStoreImport,
+      registerFeatureStore: registerFeatureStoreImport,
+      unregisterFeatureStore: unregisterFeatureStoreImport,
+      getFeatureStore: getFeatureStoreImport,
+      getFeatureStoreNames: getFeatureStoreNamesImport,
+      resetAllFeatureStores: resetAllFeatureStoresImport,
+    } = await import('@/lib/state/store');
+    useStore = useStoreImport;
+    getStoreState = getStoreStateImport;
+    subscribeToStore = subscribeToStoreImport;
+    hasStoreHydrated = hasStoreHydratedImport;
+    waitForHydration = waitForHydrationImport;
+    resetStore = resetStoreImport;
+    clearPersistedStore = clearPersistedStoreImport;
+    registerFeatureStore = registerFeatureStoreImport;
+    unregisterFeatureStore = unregisterFeatureStoreImport;
+    getFeatureStore = getFeatureStoreImport;
+    getFeatureStoreNames = getFeatureStoreNamesImport;
+    resetAllFeatureStores = resetAllFeatureStoresImport;
   });
 
   afterEach(() => {
@@ -186,10 +199,10 @@ describe('Store', () => {
   describe('feature store registration', () => {
     it('should register a feature store', () => {
       // Arrange
-      const mockStore = { getState: vi.fn() };
+      const mockStore = { getState: vi.fn() } as unknown;
 
       // Act
-      registerFeatureStore('testFeature', mockStore as any);
+      registerFeatureStore('testFeature', mockStore as ReturnType<typeof import('zustand').create>);
 
       // Assert
       expect(getFeatureStore('testFeature')).toBe(mockStore);
@@ -197,8 +210,8 @@ describe('Store', () => {
 
     it('should unregister a feature store', () => {
       // Arrange
-      const mockStore = { getState: vi.fn() };
-      registerFeatureStore('testFeature', mockStore as any);
+      const mockStore = { getState: vi.fn() } as unknown;
+      registerFeatureStore('testFeature', mockStore as ReturnType<typeof import('zustand').create>);
 
       // Act
       unregisterFeatureStore('testFeature');
@@ -209,10 +222,10 @@ describe('Store', () => {
 
     it('should return all registered feature store names', () => {
       // Arrange
-      const mockStore1 = { getState: vi.fn() };
-      const mockStore2 = { getState: vi.fn() };
-      registerFeatureStore('feature1', mockStore1 as any);
-      registerFeatureStore('feature2', mockStore2 as any);
+      const mockStore1 = { getState: vi.fn() } as unknown;
+      const mockStore2 = { getState: vi.fn() } as unknown;
+      registerFeatureStore('feature1', mockStore1 as ReturnType<typeof import('zustand').create>);
+      registerFeatureStore('feature2', mockStore2 as ReturnType<typeof import('zustand').create>);
 
       // Act
       const names = getFeatureStoreNames();
@@ -224,14 +237,14 @@ describe('Store', () => {
 
     it('should warn when registering duplicate store name', () => {
       // Arrange
-      const mockStore1 = { getState: vi.fn() };
-      const mockStore2 = { getState: vi.fn() };
+      const mockStore1 = { getState: vi.fn() } as unknown;
+      const mockStore2 = { getState: vi.fn() } as unknown;
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-      registerFeatureStore('duplicate', mockStore1 as any);
+      registerFeatureStore('duplicate', mockStore1 as ReturnType<typeof import('zustand').create>);
 
       // Act
-      registerFeatureStore('duplicate', mockStore2 as any);
+      registerFeatureStore('duplicate', mockStore2 as ReturnType<typeof import('zustand').create>);
 
       // Assert
       expect(warnSpy).toHaveBeenCalledWith(
@@ -279,8 +292,8 @@ describe('Store', () => {
       const resetFn = vi.fn();
       const mockStore = {
         getState: () => ({ reset: resetFn }),
-      };
-      registerFeatureStore('resettable', mockStore as any);
+      } as unknown;
+      registerFeatureStore('resettable', mockStore as ReturnType<typeof import('zustand').create>);
 
       // Act
       resetAllFeatureStores();
@@ -294,8 +307,8 @@ describe('Store', () => {
       const resetFn = vi.fn();
       const mockStore = {
         getState: () => ({ _reset: resetFn }),
-      };
-      registerFeatureStore('resettableAlt', mockStore as any);
+      } as unknown;
+      registerFeatureStore('resettableAlt', mockStore as ReturnType<typeof import('zustand').create>);
 
       // Act
       resetAllFeatureStores();
@@ -306,8 +319,8 @@ describe('Store', () => {
 
     it('should clear feature store registry when clearRegistry is true', () => {
       // Arrange
-      const mockStore = { getState: () => ({}) };
-      registerFeatureStore('toClear', mockStore as any);
+      const mockStore = { getState: () => ({}) } as unknown;
+      registerFeatureStore('toClear', mockStore as ReturnType<typeof import('zustand').create>);
 
       // Act
       resetAllFeatureStores(true);
@@ -318,8 +331,8 @@ describe('Store', () => {
 
     it('should keep registry when clearRegistry is false', () => {
       // Arrange
-      const mockStore = { getState: () => ({}) };
-      registerFeatureStore('toKeep', mockStore as any);
+      const mockStore = { getState: () => ({}) } as unknown;
+      registerFeatureStore('toKeep', mockStore as ReturnType<typeof import('zustand').create>);
 
       // Act
       resetAllFeatureStores(false);
@@ -660,7 +673,7 @@ describe('Store', () => {
   describe('DevTools integration', () => {
     it('should not expose store to window in non-debug mode', () => {
       // Assert - window.__STORE__ should not be defined
-      expect((window as any).__STORE__).toBeUndefined();
+      expect((window as Record<string, unknown>).__STORE__).toBeUndefined();
     });
   });
 });

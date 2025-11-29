@@ -541,7 +541,7 @@ export class SSOManager {
 
     for (let i = 0; i < storage.length; i++) {
       const key = storage.key(i);
-      if (key?.startsWith(this.options.storagePrefix)) {
+      if (key?.startsWith(this.options.storagePrefix) === true) {
         keysToRemove.push(key);
       }
     }

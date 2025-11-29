@@ -243,8 +243,8 @@ function defaultGenerateComponentName(filePath: string): string {
   // Convert to PascalCase
   return `${name
     .replace(/[[\]()@.]/g, '')
-    .replace(/[-_](\w)/g, (_, c) => c.toUpperCase())
-    .replace(/^(\w)/, (_, c) => c.toUpperCase())
+    .replace(/[-_](\w)/g, (_: string, c: string) => c.toUpperCase())
+    .replace(/^(\w)/, (_: string, c: string) => c.toUpperCase())
      }Route`;
 }
 
@@ -379,7 +379,7 @@ export class RouteTransformer {
     const pathMap = new Map<string, TransformedRoute[]>();
     for (const route of routes) {
       if (route.type === 'page' || route.type === 'route') {
-        const existing = pathMap.get(route.path) || [];
+        const existing = pathMap.get(route.path) ?? [];
         existing.push(route);
         pathMap.set(route.path, existing);
       }
@@ -531,11 +531,11 @@ export class RouteTransformer {
       const node: RouteTreeNode & { children: RouteTreeNode[] } = {
         route: page,
         children: [],
-        layout: page.layoutId ? (nodeMap.get(page.layoutId) ?? null) : null,
+        layout: (page.layoutId != null && page.layoutId !== '') ? (nodeMap.get(page.layoutId) ?? null) : null,
         slots: new Map(),
       };
 
-      if (page.layoutId) {
+      if (page.layoutId != null && page.layoutId !== '') {
         const layoutNode = nodeMap.get(page.layoutId);
         if (layoutNode) {
           layoutNode.children.push(node);
@@ -549,7 +549,7 @@ export class RouteTransformer {
 
     // Add layout nodes without parents to root
     for (const layoutNode of nodeMap.values()) {
-      if (!layoutNode.route.layoutId) {
+      if (layoutNode.route.layoutId == null || layoutNode.route.layoutId === '') {
         rootNodes.push(layoutNode);
       }
     }

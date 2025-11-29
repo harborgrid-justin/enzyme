@@ -882,7 +882,7 @@ export function createSimplePermissionChecker(
 
     // Check resource wildcard (e.g., users:* matches users:read)
     const [resource] = permission.split(':');
-    if (resource && userPerms.includes(`${resource}:*`)) {
+    if (resource !== undefined && resource !== null && resource !== '' && userPerms.includes(`${resource}:*`)) {
       return true;
     }
 
@@ -906,10 +906,10 @@ export function createSimpleRoleChecker(
     }
 
     // Check hierarchy
-    if (roleHierarchy) {
+    if (roleHierarchy !== undefined && roleHierarchy !== null) {
       for (const userRole of userRoles) {
         const childRoles = roleHierarchy[userRole];
-        if (childRoles?.includes(role)) {
+        if (childRoles?.includes(role) === true) {
           return true;
         }
       }

@@ -1,3 +1,4 @@
+/* eslint-env node */
 import { readFileSync, readdirSync, statSync } from 'fs';
 import { join } from 'path';
 
@@ -35,7 +36,7 @@ for (const file of files) {
 
 largeFiles.sort((a, b) => b.loc - a.loc); // sort by LOC descending
 
-console.log('Files with >150 LOC:');
+globalThis.console.log('Files with >150 LOC:');
 largeFiles.forEach(({ file, loc }) => {
-  console.log(`${file}: ${loc}`);
+  globalThis.console.log(`${file}: ${loc}`);
 });

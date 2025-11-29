@@ -188,14 +188,14 @@ export class StorageManager {
       this.validateAccess('localStorage', key);
 
       const serialized = localStorage.getItem(key);
-      if (!serialized) {
+      if (serialized === null || serialized === undefined || serialized === '') {
         return undefined;
       }
 
-      const entry: StorageEntry<T> = JSON.parse(serialized);
+      const entry = JSON.parse(serialized) as StorageEntry<T>;
 
       // Check expiration
-      if (entry.expiresAt && entry.expiresAt < Date.now()) {
+      if (entry.expiresAt !== null && entry.expiresAt !== undefined && entry.expiresAt > 0 && entry.expiresAt < Date.now()) {
         localStorage.removeItem(key);
         return undefined;
       }
@@ -279,11 +279,11 @@ export class StorageManager {
       this.validateAccess('sessionStorage', key);
 
       const serialized = sessionStorage.getItem(key);
-      if (!serialized) {
+      if (serialized === null || serialized === undefined || serialized === '') {
         return undefined;
       }
 
-      const entry: StorageEntry<T> = JSON.parse(serialized);
+      const entry = JSON.parse(serialized) as StorageEntry<T>;
       return entry.value;
     } catch (error) {
       this.handleError(`Failed to get sessionStorage item "${key}"`, error, options.throwOnError);
@@ -302,9 +302,9 @@ export class StorageManager {
     const entry: StorageEntry<T> = {
       value,
       timestamp: Date.now(),
-      encryption: options.encryption || EncryptionAlgorithm.None,
+      encryption: options.encryption ?? EncryptionAlgorithm.None,
       version: 1,
-      containsPHI: options.containsPHI || false,
+      containsPHI: options.containsPHI ?? false,
     };
 
     this.memoryStore.set(key, entry);
@@ -373,8 +373,8 @@ export class StorageManager {
         const store = transaction.objectStore('storage');
         const request = store.put({ key, ...entry });
 
-        request.onerror = () => reject(request.error);
-        request.onsuccess = () => resolve();
+        request.onerror = () => { reject(new Error(request.error?.message ?? 'Unknown error')); };
+        request.onsuccess = () => { resolve(); };
       });
     } catch (error) {
       this.handleError(`Failed to set IndexedDB item "${key}"`, error, options.throwOnError);
@@ -397,24 +397,31 @@ export class StorageManager {
         const store = transaction.objectStore('storage');
         const request = store.get(key);
 
-        request.onerror = () => reject(request.error);
+        request.onerror = () => { reject(new Error(request.error?.message ?? 'Unknown error')); };
         request.onsuccess = () => {
           const {result} = request;
-          if (!result) {
+          if (result === null || result === undefined) {
             resolve(undefined);
             return;
           }
 
+          // Type the result properly
+          interface StoredItem {
+            value: T;
+            expiresAt?: number;
+          }
+          const typedResult = result as StoredItem;
+
           // Check expiration
-          if (result.expiresAt && result.expiresAt < Date.now()) {
-            this.removeItemAsync(key).catch(() => {
+          if (typedResult.expiresAt !== null && typedResult.expiresAt !== undefined && typedResult.expiresAt > 0 && typedResult.expiresAt < Date.now()) {
+            void this.removeItemAsync(key).catch(() => {
               /* ignore cleanup errors */
             });
             resolve(undefined);
             return;
           }
 
-          resolve(result.value as T);
+          resolve(typedResult.value);
         };
       });
     } catch (error) {
@@ -437,8 +444,8 @@ export class StorageManager {
         const store = transaction.objectStore('storage');
         const request = store.delete(key);
 
-        request.onerror = () => reject(request.error);
-        request.onsuccess = () => resolve();
+        request.onerror = () => { reject(new Error(request.error?.message ?? 'Unknown error')); };
+        request.onsuccess = () => { resolve(); };
       });
     } catch (error) {
       this.handleError(`Failed to remove IndexedDB item "${key}"`, error, true);
@@ -455,12 +462,12 @@ export class StorageManager {
    */
   clearLocalStorage(): void {
     try {
-      const whitelist = this.accessControl.localstorageWhitelist || [];
+      const whitelist = this.accessControl.localstorageWhitelist ?? [];
       const keysToRemove: string[] = [];
 
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && !whitelist.includes(key)) {
+        if (key !== null && key !== undefined && !whitelist.includes(key)) {
           keysToRemove.push(key);
         }
       }
@@ -497,8 +504,8 @@ export class StorageManager {
         const store = transaction.objectStore('storage');
         const request = store.clear();
 
-        request.onerror = () => reject(request.error);
-        request.onsuccess = () => resolve();
+        request.onerror = () => { reject(new Error(request.error?.message ?? 'Unknown error')); };
+        request.onsuccess = () => { resolve(); };
       });
     } catch (error) {
       this.handleError('Failed to clear IndexedDB', error, false);
@@ -557,8 +564,8 @@ export class StorageManager {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(this.dbName, this.dbVersion);
 
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => { reject(new Error(request.error?.message ?? 'Unknown error')); };
+      request.onsuccess = () => { resolve(request.result); };
 
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;

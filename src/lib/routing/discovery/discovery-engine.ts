@@ -519,7 +519,7 @@ export class DiscoveryEngine {
     for (const route of routes) {
       if (route.type === 'layout') continue; // Layouts don't conflict
 
-      const existing = pathMap.get(route.path) || [];
+      const existing = pathMap.get(route.path) ?? [];
       existing.push(route);
       pathMap.set(route.path, existing);
     }

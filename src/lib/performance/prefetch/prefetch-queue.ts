@@ -191,8 +191,8 @@ export class PrefetchQueue {
     const item: PrefetchItem = {
       id,
       url,
-      type: options.type || 'document',
-      priority: options.priority || 'normal',
+      type: options.type ?? 'document',
+      priority: options.priority ?? 'normal',
       status: 'pending',
       createdAt: Date.now(),
       retryCount: 0,
@@ -237,7 +237,7 @@ export class PrefetchQueue {
    */
   cancel(id: string): boolean {
     const item = this.items.get(id);
-    if (!item || item.status === 'completed' || item.status === 'cancelled') {
+    if (!item ?? item.status === 'completed' ?? item.status === 'cancelled') {
       return false;
     }
 
@@ -451,7 +451,7 @@ export class PrefetchQueue {
       .filter((item) => item.status === 'pending')
       .sort((a, b) => this.compareItems(a, b));
 
-    return pending[0] || null;
+    return pending[0] ?? null;
   }
 
   private compareItems(a: PrefetchItem, b: PrefetchItem): number {
@@ -493,7 +493,7 @@ export class PrefetchQueue {
       item.completedAt = Date.now();
 
       this.log(
-        `Completed prefetch: ${item.url} (${item.completedAt - (item.startedAt || 0)}ms)`
+        `Completed prefetch: ${item.url} (${item.completedAt - (item.startedAt ?? 0)}ms)`
       );
       this.notifyListeners('complete', item);
     } catch (error) {
@@ -639,7 +639,7 @@ export class PrefetchQueue {
     }
 
     return (
-      this.config.concurrentByNetwork[connection.effectiveType] ||
+      this.config.concurrentByNetwork[connection.effectiveType] ??
       this.config.maxConcurrent
     );
   }
@@ -648,7 +648,7 @@ export class PrefetchQueue {
     const nav = navigator as Navigator & {
       connection?: { effectiveType?: string };
     };
-    return nav.connection || null;
+    return nav.connection ?? null;
   }
 
   private getPendingCount(): number {
@@ -673,7 +673,7 @@ export class PrefetchQueue {
 
     for (const [id, item] of this.items.entries()) {
       if (
-        (item.status === 'completed' || item.status === 'cancelled') &&
+        (item.status === 'completed' ?? item.status === 'cancelled') &&
         item.completedAt &&
         now - item.completedAt > this.config.completedTTL
       ) {
@@ -700,7 +700,7 @@ export class PrefetchQueue {
 
   private log(message: string, ...args: unknown[]): void {
     if (this.config.debug) {
-      console.log(`[PrefetchQueue] ${message}`, ...args);
+      console.info(`[PrefetchQueue] ${message}`, ...args);
     }
   }
 }

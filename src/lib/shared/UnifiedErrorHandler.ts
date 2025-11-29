@@ -448,15 +448,17 @@ export class UnifiedErrorHandler {
 
     // Log to console (dev only)
     if (this.config.enableDetailedLogging) {
+      /* eslint-disable no-console */
       console.group(`[Error] ${error.id}`);
       console.log('Category:', error.category);
       console.log('Severity:', error.severity);
       console.log('Message:', error.internalMessage);
       console.log('Context:', error.context);
-      if (error.stackTrace) {
+      if (error.stackTrace !== null && error.stackTrace !== undefined && error.stackTrace !== '') {
         console.log('Stack:', error.stackTrace);
       }
       console.groupEnd();
+      /* eslint-enable no-console */
     }
 
     // Audit log if enabled (required for healthcare)
@@ -470,7 +472,7 @@ export class UnifiedErrorHandler {
 
       // Auto-flush buffer if it reaches max size
       if (this.errorBuffer.length >= this.config.maxBufferSize) {
-        this.flush();
+        void this.flush();
       }
     }
   }
@@ -495,7 +497,7 @@ export class UnifiedErrorHandler {
     };
 
     // Send to audit endpoint asynchronously (fire and forget)
-    if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
+    if (typeof navigator !== 'undefined' && navigator.sendBeacon !== null && navigator.sendBeacon !== undefined) {
       navigator.sendBeacon(
         this.config.auditEndpoint,
         JSON.stringify(auditEntry)

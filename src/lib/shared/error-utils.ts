@@ -358,9 +358,9 @@ function fromErrorObject(obj: {
   const { statusCode, status } = obj;
   const resolvedStatusCode = typeof statusCode === 'number'
     ? statusCode
-    : typeof status === 'number'
+    : (typeof status === 'number'
       ? status
-      : undefined;
+      : undefined);
 
   return new AppError(obj.message, {
     category,

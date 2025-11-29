@@ -590,6 +590,7 @@ ConditionalStreamBoundary.displayName = 'ConditionalStreamBoundary';
  * // Inject into HTML
  * ```
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function createBoundaryActivationScript(
   boundaryId: string,
   nonce?: string
@@ -619,6 +620,7 @@ export function createBoundaryActivationScript(
  * @param type - Marker type ('start' or 'end')
  * @returns HTML comment string
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function createBoundaryMarker(
   boundaryId: string,
   type: 'start' | 'end'

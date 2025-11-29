@@ -406,7 +406,7 @@ export class RuntimeConfig<T extends ConfigRecord = ConfigRecord> {
    * Create a snapshot of the current configuration.
    */
   snapshot(): T {
-    return JSON.parse(JSON.stringify(this.config));
+    return JSON.parse(JSON.stringify(this.config)) as T;
   }
 
   /**
@@ -418,7 +418,7 @@ export class RuntimeConfig<T extends ConfigRecord = ConfigRecord> {
 
   private log(message: string, ...args: unknown[]): void {
     if (this.options.debug) {
-      console.log(`[RuntimeConfig] ${message}`, ...args);
+      console.info(`[RuntimeConfig] ${message}`, ...args);
     }
   }
 }
@@ -447,9 +447,7 @@ let instance: RuntimeConfig | null = null;
  * Get the singleton runtime config instance.
  */
 export function getRuntimeConfig<T extends ConfigRecord = ConfigRecord>(): RuntimeConfig<T> {
-  if (!instance) {
-    instance = new RuntimeConfig({});
-  }
+  instance ??= new RuntimeConfig({});
   return instance as RuntimeConfig<T>;
 }
 

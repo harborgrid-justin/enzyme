@@ -50,19 +50,28 @@ describe('useGlobalStore hooks', () => {
     vi.resetModules();
 
     // Import fresh modules
-    const hookModule = await import('@/lib/hooks/useGlobalStore');
-    useGlobalStore = hookModule.useGlobalStore;
-    useGlobalStoreMultiple = hookModule.useGlobalStoreMultiple;
-    useGlobalStoreComputed = hookModule.useGlobalStoreComputed;
-    useStoreHydrated = hookModule.useStoreHydrated;
-    createSliceHook = hookModule.createSliceHook;
-    createActionHook = hookModule.createActionHook;
-    globalSelectors = hookModule.globalSelectors;
-    useIsSidebarOpen = hookModule.useIsSidebarOpen;
+    const {
+      useGlobalStore: useGlobalStoreImport,
+      useGlobalStoreMultiple: useGlobalStoreMultipleImport,
+      useGlobalStoreComputed: useGlobalStoreComputedImport,
+      useStoreHydrated: useStoreHydratedImport,
+      createSliceHook: createSliceHookImport,
+      createActionHook: createActionHookImport,
+      globalSelectors: globalSelectorsImport,
+      useIsSidebarOpen: useIsSidebarOpenImport,
+    } = await import('@/lib/hooks/useGlobalStore');
+    useGlobalStore = useGlobalStoreImport;
+    useGlobalStoreMultiple = useGlobalStoreMultipleImport;
+    useGlobalStoreComputed = useGlobalStoreComputedImport;
+    useStoreHydrated = useStoreHydratedImport;
+    createSliceHook = createSliceHookImport;
+    createActionHook = createActionHookImport;
+    globalSelectors = globalSelectorsImport;
+    useIsSidebarOpen = useIsSidebarOpenImport;
 
-    const storeModule = await import('@/lib/state/store');
-    useStore = storeModule.useStore;
-    getStoreState = storeModule.getStoreState;
+    const { useStore: useStoreImport, getStoreState: getStoreStateImport } = await import('@/lib/state/store');
+    useStore = useStoreImport;
+    getStoreState = getStoreStateImport;
   });
 
   afterEach(() => {
@@ -240,8 +249,8 @@ describe('useGlobalStore hooks', () => {
       // Arrange
       const results: Array<{ sidebarOpen: boolean; locale: string }> = [];
       const selectors = {
-        sidebarOpen: (state: any) => state.sidebarOpen,
-        locale: (state: any) => state.locale,
+        sidebarOpen: (state: { sidebarOpen: boolean }) => state.sidebarOpen,
+        locale: (state: { locale: string }) => state.locale,
       };
 
       const { rerender } = renderHook(() => {
@@ -305,7 +314,7 @@ describe('useGlobalStore hooks', () => {
 
     it('should memoize compute function based on deps', () => {
       // Arrange
-      const computeFn = vi.fn((state: any) => state.locale);
+      const computeFn = vi.fn((state: { locale: string }) => state.locale);
       const { rerender } = renderHook(
         ({ dep }) => useGlobalStoreComputed(computeFn, [dep]),
         { initialProps: { dep: 1 } }
@@ -323,7 +332,7 @@ describe('useGlobalStore hooks', () => {
 
     it('should recompute when deps change', () => {
       // Arrange
-      const computeFn = vi.fn((state: any) => state.locale);
+      const computeFn = vi.fn((state: { locale: string }) => state.locale);
       const { rerender } = renderHook(
         ({ dep }) => useGlobalStoreComputed(computeFn, [dep]),
         { initialProps: { dep: 1 } }
@@ -358,7 +367,7 @@ describe('useGlobalStore hooks', () => {
       subscribeSpy.mockRestore();
     });
 
-    it('should receive updates during component lifecycle', async () => {
+    it('should receive updates during component lifecycle', () => {
       // Arrange
       const updates: boolean[] = [];
       renderHook(() => {
@@ -392,7 +401,7 @@ describe('useGlobalStore hooks', () => {
   // ==========================================================================
 
   describe('cleanup on unmount', () => {
-    it('should not update after unmount', async () => {
+    it('should not update after unmount', () => {
       // Arrange
       const { result, unmount } = renderHook(() =>
         useGlobalStore((state) => state.sidebarOpen)
@@ -517,7 +526,7 @@ describe('useGlobalStore hooks', () => {
       expect(typeof result.current).toBe('function');
     });
 
-    it('should return a callable action', async () => {
+    it('should return a callable action', () => {
       // Arrange
       const useToggleSidebar = createActionHook((state) => state.toggleSidebar);
       const { result } = renderHook(() => useToggleSidebar());
@@ -640,7 +649,7 @@ describe('useGlobalStore hooks', () => {
     it('should handle selector that returns undefined', () => {
       // Act
       const { result } = renderHook(() =>
-        useGlobalStore((state) => (state as any).nonexistentProperty)
+        useGlobalStore((state) => (state as Record<string, unknown>).nonexistentProperty)
       );
 
       // Assert
@@ -649,13 +658,13 @@ describe('useGlobalStore hooks', () => {
 
     it('should handle selector that throws', () => {
       // Arrange
-      const throwingSelector = () => {
+      const throwingSelector = (() => {
         throw new Error('Selector error');
-      };
+      }) as <T>(state: unknown) => T;
 
       // Act & Assert
       expect(() => {
-        renderHook(() => useGlobalStore(throwingSelector as any));
+        renderHook(() => useGlobalStore(throwingSelector));
       }).toThrow('Selector error');
     });
 

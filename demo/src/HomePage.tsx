@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 const examples = [
@@ -19,7 +19,7 @@ const examples = [
   { id: '15', name: 'Full Integration', path: '/example-15', desc: 'All features combined', available: false },
 ];
 
-export default function HomePage() {
+export default function HomePage(): React.ReactElement {
   const [search, setSearch] = useState('');
   
   const filteredExamples = examples.filter(ex =>

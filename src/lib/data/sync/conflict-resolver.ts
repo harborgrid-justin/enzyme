@@ -341,7 +341,7 @@ export function threeWayMerge<T extends Record<string, unknown>>(
           break;
         case 'concat':
           if (Array.isArray(localValue) && Array.isArray(remoteValue)) {
-            resolvedValue = [...new Set([...remoteValue, ...localValue])];
+            resolvedValue = [...new Set([...remoteValue as unknown[], ...localValue as unknown[]])];
             resolution = 'concatenated';
           } else {
             resolvedValue = remoteValue;
@@ -415,8 +415,8 @@ export function compareVectorClocks(
   const allKeys = new Set([...Object.keys(a), ...Object.keys(b)]);
 
   for (const key of allKeys) {
-    const aVal = a[key] || 0;
-    const bVal = b[key] || 0;
+    const aVal = a[key] !== undefined && a[key] !== 0 ? a[key] : 0;
+    const bVal = b[key] !== undefined && b[key] !== 0 ? b[key] : 0;
 
     if (aVal > bVal) aGreater = true;
     if (bVal > aVal) bGreater = true;
@@ -436,7 +436,10 @@ export function mergeVectorClocks(a: VectorClock, b: VectorClock): VectorClock {
   const allKeys = new Set([...Object.keys(a), ...Object.keys(b)]);
 
   for (const key of allKeys) {
-    result[key] = Math.max(a[key] || 0, b[key] || 0);
+    result[key] = Math.max(
+      a[key] !== undefined && a[key] !== 0 ? a[key] : 0,
+      b[key] !== undefined && b[key] !== 0 ? b[key] : 0
+    );
   }
 
   return result;
@@ -448,7 +451,7 @@ export function mergeVectorClocks(a: VectorClock, b: VectorClock): VectorClock {
 export function incrementVectorClock(clock: VectorClock, nodeId: string): VectorClock {
   return {
     ...clock,
-    [nodeId]: (clock[nodeId] || 0) + 1,
+    [nodeId]: (clock[nodeId] !== undefined && clock[nodeId] !== 0 ? clock[nodeId] : 0) + 1,
   };
 }
 
@@ -616,7 +619,9 @@ export function createConflictResolver<T extends Record<string, unknown>>(
         continue;
       }
 
-      const fieldStrategy = effectiveFieldStrategies[pathStr] || effectiveFieldStrategies[path[0] as string] || 'server';
+      const fieldStrategy = effectiveFieldStrategies[pathStr] ??
+        effectiveFieldStrategies[path[0] as string] ??
+        'server';
 
       let resolvedValue: unknown;
       let resolution: string;
@@ -736,19 +741,19 @@ export function createConflictResolver<T extends Record<string, unknown>>(
 /**
  * Server-wins resolver
  */
-export const serverWinsResolver = <T extends Record<string, unknown>>() =>
+export const serverWinsResolver = <T extends Record<string, unknown>>(): ConflictResolver<T> =>
   createConflictResolver<T>({ strategy: 'server-wins' });
 
 /**
  * Client-wins resolver
  */
-export const clientWinsResolver = <T extends Record<string, unknown>>() =>
+export const clientWinsResolver = <T extends Record<string, unknown>>(): ConflictResolver<T> =>
   createConflictResolver<T>({ strategy: 'client-wins' });
 
 /**
  * Latest-wins resolver
  */
-export const latestWinsResolver = <T extends Record<string, unknown>>(timestampField = 'updatedAt') =>
+export const latestWinsResolver = <T extends Record<string, unknown>>(timestampField = 'updatedAt'): ConflictResolver<T> =>
   createConflictResolver<T>({ strategy: 'latest-wins', timestampField });
 
 /**
@@ -756,7 +761,7 @@ export const latestWinsResolver = <T extends Record<string, unknown>>(timestampF
  */
 export const threeWayMergeResolver = <T extends Record<string, unknown>>(
   options?: Partial<ConflictResolverConfig>
-) =>
+): ConflictResolver<T> =>
   createConflictResolver<T>({
     strategy: 'three-way-merge',
     ...options,

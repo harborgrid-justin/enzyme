@@ -614,7 +614,7 @@ export function getNavItems(): Array<{
     .map(([path, meta]) => ({
       path,
       title: meta.title,
-      ...(meta.icon && { icon: meta.icon }),
+      ...(meta.icon !== undefined && { icon: meta.icon }),
       order: meta.navOrder ?? 999,
     }))
     .sort((a, b) => a.order - b.order);
@@ -632,7 +632,7 @@ export function buildBreadcrumbs(
   const breadcrumbs: Array<{ path: string; label: string }> = [];
   let currentPath: string | undefined = path;
 
-  while (currentPath) {
+  while (currentPath !== undefined && currentPath !== '') {
     const meta: RouteMetadata | undefined = ROUTE_METADATA[currentPath];
     if (meta) {
       breadcrumbs.unshift({

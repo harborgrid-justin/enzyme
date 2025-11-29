@@ -1,18 +1,17 @@
+/* eslint-env node */
 import fs from 'fs/promises';
-import path from 'path';
 
 const filePath = 'F:/temp/white-cross/reuse/templates/react/src/lib/performance/index.ts';
 
 async function fixDuplicateExports() {
   const content = await fs.readFile(filePath, 'utf-8');
   const lines = content.split('\n');
-  
+
   const seenExports = new Set();
   const seenTypeExports = new Set();
   const newLines = [];
   let inExportBlock = false;
   let currentBlock = [];
-  let skipLine = false;
   
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -43,7 +42,7 @@ async function fixDuplicateExports() {
               seenTypeExports.add(exportName);
               processedBlock.push(blockLine);
             } else {
-              console.log(`Skipping duplicate type export: ${exportName} at line ${i + 1}`);
+              globalThis.console.log(`Skipping duplicate type export: ${exportName} at line ${i + 1}`);
             }
           } else if (normalMatch) {
             const exportName = normalMatch[1];
@@ -51,7 +50,7 @@ async function fixDuplicateExports() {
               seenExports.add(exportName);
               processedBlock.push(blockLine);
             } else {
-              console.log(`Skipping duplicate export: ${exportName} at line ${i + 1}`);
+              globalThis.console.log(`Skipping duplicate export: ${exportName} at line ${i + 1}`);
             }
           } else {
             // Keep non-export lines (export {, } from, comments)
@@ -72,9 +71,9 @@ async function fixDuplicateExports() {
   
   const newContent = newLines.join('\n');
   await fs.writeFile(filePath, newContent, 'utf-8');
-  console.log('✅ Fixed duplicate exports');
-  console.log(`Total unique exports: ${seenExports.size}`);
-  console.log(`Total unique type exports: ${seenTypeExports.size}`);
+  globalThis.console.log('✅ Fixed duplicate exports');
+  globalThis.console.log(`Total unique exports: ${seenExports.size}`);
+  globalThis.console.log(`Total unique type exports: ${seenTypeExports.size}`);
 }
 
-fixDuplicateExports().catch(console.error);
+fixDuplicateExports().catch((err) => globalThis.console.error(err));

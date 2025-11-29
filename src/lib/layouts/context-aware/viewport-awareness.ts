@@ -235,7 +235,7 @@ export class ViewportTracker {
     }
 
     // Add callback to the element's callback list
-    const callbacks = this.visibilityCallbacks.get(element) || [];
+    const callbacks = this.visibilityCallbacks.get(element) ?? [];
     callbacks.push(callback);
     this.visibilityCallbacks.set(element, callbacks);
 
@@ -476,8 +476,8 @@ export class ViewportTracker {
       this.lastScrollTime = now;
       this.updateViewport();
       this.notifyViewportListeners();
-    } else if (this.scrollThrottleTimer === null) {
-      this.scrollThrottleTimer = window.setTimeout(() => {
+    } else {
+      this.scrollThrottleTimer ??= window.setTimeout(() => {
         this.scrollThrottleTimer = null;
         this.lastScrollTime = Date.now();
         this.updateViewport();
@@ -497,8 +497,8 @@ export class ViewportTracker {
       this.lastResizeTime = now;
       this.updateViewport();
       this.notifyViewportListeners();
-    } else if (this.resizeThrottleTimer === null) {
-      this.resizeThrottleTimer = window.setTimeout(() => {
+    } else {
+      this.resizeThrottleTimer ??= window.setTimeout(() => {
         this.resizeThrottleTimer = null;
         this.lastResizeTime = Date.now();
         this.updateViewport();

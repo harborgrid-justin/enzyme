@@ -101,7 +101,7 @@ export async function waitFor<T>(
   while (Date.now() - startTime < timeout) {
     try {
       const result = await condition();
-      if (result) {
+      if (result !== null && result !== undefined) {
         return result;
       }
     } catch {

@@ -58,27 +58,31 @@ export function usePrefetch(): {
 /**
  * Hook to invalidate queries by pattern
  */
-export function useInvalidateQueries() {
+export function useInvalidateQueries(): {
+  invalidate: (filters: InvalidateQueryFilters) => Promise<void>;
+  invalidateAll: () => Promise<void>;
+  invalidateByKey: (queryKey: QueryKey) => Promise<void>;
+} {
   const queryClient = useQueryClient();
-  
+
   const invalidate = useCallback(
     async (filters: InvalidateQueryFilters) => {
       await queryClient.invalidateQueries(filters);
     },
     [queryClient]
   );
-  
+
   const invalidateAll = useCallback(async () => {
     await queryClient.invalidateQueries();
   }, [queryClient]);
-  
+
   const invalidateByKey = useCallback(
     async (queryKey: QueryKey) => {
       await queryClient.invalidateQueries({ queryKey });
     },
     [queryClient]
   );
-  
+
   return {
     invalidate,
     invalidateAll,
@@ -89,22 +93,29 @@ export function useInvalidateQueries() {
 /**
  * Hook to get query state information
  */
-export function useQueryState<T>(queryKey: QueryKey) {
+export function useQueryState<T>(queryKey: QueryKey): {
+  state: QueryState<T, Error> | undefined;
+  data: T | undefined;
+  isLoading: boolean;
+  isError: boolean;
+  isSuccess: boolean;
+  isPending: boolean;
+} {
   const queryClient = useQueryClient();
-  
+
   const state = useMemo(() => {
     return queryClient.getQueryState<T>(queryKey);
   }, [queryClient, queryKey]);
-  
+
   const data = useMemo(() => {
     return queryClient.getQueryData<T>(queryKey);
   }, [queryClient, queryKey]);
-  
+
   const isLoading = state?.fetchStatus === 'fetching';
   const isError = state?.status === 'error';
   const isSuccess = state?.status === 'success';
   const isPending = state?.status === 'pending';
-  
+
   return {
     state,
     data,
@@ -118,9 +129,19 @@ export function useQueryState<T>(queryKey: QueryKey) {
 /**
  * Hook to manage optimistic updates
  */
-export function useOptimisticUpdate<T>() {
+export function useOptimisticUpdate<T>(): {
+  update: <R>(
+    queryKey: QueryKey,
+    updateFn: (old: T | undefined) => T,
+    mutationFn: () => Promise<R>,
+    options?: {
+      onError?: (error: Error, previousData: T | undefined) => void;
+      onSuccess?: (result: R) => void;
+    }
+  ) => Promise<R>;
+} {
   const queryClient = useQueryClient();
-  
+
   const update = useCallback(
     async <R>(
       queryKey: QueryKey,
@@ -133,13 +154,13 @@ export function useOptimisticUpdate<T>() {
     ) => {
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey });
-      
+
       // Snapshot previous value
       const previousData = queryClient.getQueryData<T>(queryKey);
-      
+
       // Optimistically update
       queryClient.setQueryData<T>(queryKey, updateFn);
-      
+
       try {
         const result = await mutationFn();
         options?.onSuccess?.(result);
@@ -153,7 +174,7 @@ export function useOptimisticUpdate<T>() {
     },
     [queryClient]
   );
-  
+
   return { update };
 }
 
@@ -206,7 +227,7 @@ export function isQueryStale(
   state: QueryState<unknown, Error> | undefined,
   staleTime: number
 ): boolean {
-  if (!state?.dataUpdatedAt) return true;
+  if (state?.dataUpdatedAt == null || state.dataUpdatedAt === 0) return true;
   return Date.now() - state.dataUpdatedAt > staleTime;
 }
 
@@ -215,7 +236,13 @@ export function isQueryStale(
  */
 export function createQueryKeyFactory<T extends Record<string, unknown>>(
   scope: string
-) {
+): {
+  all: readonly [string];
+  lists: () => readonly [string, 'list'];
+  list: (filters?: T) => readonly [string, 'list', T | undefined];
+  details: () => readonly [string, 'detail'];
+  detail: (id: string) => readonly [string, 'detail', string];
+} {
   return {
     all: [scope] as const,
     lists: () => [scope, 'list'] as const,
@@ -228,9 +255,11 @@ export function createQueryKeyFactory<T extends Record<string, unknown>>(
 /**
  * Batch query updates for performance
  */
-export function useBatchQueryUpdates() {
+export function useBatchQueryUpdates(): {
+  batchUpdate: (updates: Array<{ queryKey: QueryKey; data: unknown }>) => void;
+} {
   const queryClient = useQueryClient();
-  
+
   const batchUpdate = useCallback(
     (updates: Array<{ queryKey: QueryKey; data: unknown }>) => {
       queryClient.setQueriesData(
@@ -245,6 +274,6 @@ export function useBatchQueryUpdates() {
     },
     [queryClient]
   );
-  
+
   return { batchUpdate };
 }

@@ -144,10 +144,11 @@ export class WebSocketProvider implements FlagProvider {
   /**
    * Initialize the provider.
    */
-  async initialize(): Promise<void> {
+  initialize(): Promise<void> {
     this.log('Initializing WebSocket provider');
     this.ready = true;
     this.log('WebSocket provider initialized');
+    return Promise.resolve();
   }
 
   // ==========================================================================
@@ -169,7 +170,7 @@ export class WebSocketProvider implements FlagProvider {
       const url = new URL(this.config.url);
 
       // Add auth token as query param if provided
-      if (this.config.authToken) {
+      if (this.config.authToken !== null && this.config.authToken !== undefined && this.config.authToken !== '') {
         url.searchParams.set('token', this.config.authToken);
       }
 
@@ -211,7 +212,7 @@ export class WebSocketProvider implements FlagProvider {
       this.startPing();
 
       // Subscribe to channel if specified
-      if (this.config.channel) {
+      if (this.config.channel !== null && this.config.channel !== undefined && this.config.channel !== '') {
         this.send({
           type: 'subscribe',
           payload: { channel: this.config.channel },
@@ -241,7 +242,7 @@ export class WebSocketProvider implements FlagProvider {
 
   private handleMessage(event: MessageEvent): void {
     try {
-      const message = JSON.parse(event.data) as WSMessage;
+      const message = JSON.parse(event.data as string) as WSMessage;
       this.lastMessageTime = new Date();
 
       this.log('Received message:', message.type);
@@ -340,7 +341,7 @@ export class WebSocketProvider implements FlagProvider {
     this.stopPing();
     this.connectionState = 'disconnected';
 
-    if (this.config.reconnect.enabled) {
+    if (this.config.reconnect.enabled === true) {
       this.scheduleReconnect();
     }
   }
@@ -433,15 +434,15 @@ export class WebSocketProvider implements FlagProvider {
   /**
    * Get all flags.
    */
-  async getFlags(): Promise<readonly FeatureFlag[]> {
-    return Array.from(this.flags.values());
+  getFlags(): Promise<readonly FeatureFlag[]> {
+    return Promise.resolve(Array.from(this.flags.values()));
   }
 
   /**
    * Get a flag by key.
    */
-  async getFlag(key: string): Promise<FeatureFlag | null> {
-    return this.flags.get(key) ?? null;
+  getFlag(key: string): Promise<FeatureFlag | null> {
+    return Promise.resolve(this.flags.get(key) ?? null);
   }
 
   // ==========================================================================
@@ -451,15 +452,15 @@ export class WebSocketProvider implements FlagProvider {
   /**
    * Get all segments.
    */
-  async getSegments(): Promise<readonly Segment[]> {
-    return Array.from(this.segments.values());
+  getSegments(): Promise<readonly Segment[]> {
+    return Promise.resolve(Array.from(this.segments.values()));
   }
 
   /**
    * Get a segment by ID.
    */
-  async getSegment(id: SegmentId): Promise<Segment | null> {
-    return this.segments.get(id) ?? null;
+  getSegment(id: SegmentId): Promise<Segment | null> {
+    return Promise.resolve(this.segments.get(id) ?? null);
   }
 
   // ==========================================================================
@@ -510,8 +511,8 @@ export class WebSocketProvider implements FlagProvider {
   /**
    * Check if the provider is healthy.
    */
-  async isHealthy(): boolean {
-    return this.connectionState === 'connected';
+  isHealthy(): Promise<boolean> {
+    return Promise.resolve(this.connectionState === 'connected');
   }
 
   /**
@@ -582,11 +583,12 @@ export class WebSocketProvider implements FlagProvider {
   /**
    * Shutdown the provider.
    */
-  async shutdown(): Promise<void> {
+  shutdown(): Promise<void> {
     this.disconnect();
     this.ready = false;
     this.listeners.clear();
     this.log('WebSocket provider shutdown');
+    return Promise.resolve();
   }
 
   // ==========================================================================

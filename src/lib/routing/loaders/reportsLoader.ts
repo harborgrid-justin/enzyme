@@ -13,20 +13,20 @@ async function fetchReport(id: string): Promise<unknown> {
 /**
  * Fetch reports list using the centralized API client
  */
-async function fetchReports(params: Record<string, unknown>) {
-  const response = await apiClient.get('/api/reports', { params: params as any });
+async function fetchReports(params: Record<string, unknown>): Promise<unknown> {
+  const response = await apiClient.get('/api/reports', { params });
   return response.data;
 }
 
 /**
  * Data router loader that prefetches reports data before rendering.
  */
-export async function reportsLoader({ request, params }: LoaderFunctionArgs) {
+export async function reportsLoader({ request, params }: LoaderFunctionArgs): Promise<null> {
   const url = new URL(request.url);
   const reportId = params.id;
 
   // If viewing a specific report, prefetch it
-  if (reportId) {
+  if (reportId != null && reportId !== '') {
     await queryClient.prefetchQuery({
       queryKey: queryKeys.reports.detail(reportId),
       queryFn: async () => fetchReport(reportId),

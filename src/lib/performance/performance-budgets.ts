@@ -927,7 +927,7 @@ export class PerformanceBudgetManager {
    */
   private log(message: string, ...args: unknown[]): void {
     if (this.config.debug) {
-      console.log(`[BudgetManager] ${message}`, ...args);
+      console.info(`[BudgetManager] ${message}`, ...args);
     }
   }
 }

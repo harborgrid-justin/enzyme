@@ -123,6 +123,7 @@ HierarchicalErrorBoundaryContext.displayName = 'HierarchicalErrorBoundaryContext
  * Hook to access the nearest error boundary context
  * @throws Error if used outside of a HierarchicalErrorBoundary
  */
+// eslint-disable-next-line react-refresh/only-export-components -- hook export is valid
 export function useErrorBoundary(): ErrorBoundaryContextValue {
   const context = useContext(HierarchicalErrorBoundaryContext);
   if (!context) {
@@ -134,6 +135,7 @@ export function useErrorBoundary(): ErrorBoundaryContextValue {
 /**
  * Hook to access error boundary context safely (returns null if not available)
  */
+// eslint-disable-next-line react-refresh/only-export-components -- hook export is valid
 export function useErrorBoundaryOptional(): ErrorBoundaryContextValue | null {
   return useContext(HierarchicalErrorBoundaryContext);
 }
@@ -141,6 +143,7 @@ export function useErrorBoundaryOptional(): ErrorBoundaryContextValue | null {
 /**
  * Hook to programmatically trigger an error in the nearest boundary
  */
+// eslint-disable-next-line react-refresh/only-export-components -- hook export is valid
 export function useErrorTrigger(): (error: unknown) => void {
   const [, setError] = useState<Error | null>(null);
 
@@ -383,7 +386,7 @@ export class HierarchicalErrorBoundary extends Component<
           break;
 
         case 'degrade':
-          if (degradedComponent) {
+          if (degradedComponent !== undefined) {
             this.setState({
               isDegraded: true,
               isRecovering: false,
@@ -420,7 +423,7 @@ export class HierarchicalErrorBoundary extends Component<
     };
 
     // Show degraded component if in degraded mode
-    if (isDegraded && degradedComponent) {
+    if ((isDegraded === true) && (degradedComponent !== undefined)) {
       return (
         <HierarchicalErrorBoundaryContext.Provider value={contextValue}>
           {degradedComponent}
@@ -428,7 +431,7 @@ export class HierarchicalErrorBoundary extends Component<
       );
     }
 
-    if (hasError && error) {
+    if ((hasError === true) && (error !== null)) {
       const actions = allowedActions ?? config.defaultActions;
       const fallbackProps: ErrorFallbackProps = {
         error,
@@ -448,7 +451,7 @@ export class HierarchicalErrorBoundary extends Component<
         );
       }
 
-      if (fallback) {
+      if (fallback !== undefined) {
         return (
           <HierarchicalErrorBoundaryContext.Provider value={contextValue}>
             {fallback}
@@ -574,7 +577,7 @@ function DefaultHierarchicalFallback({
 
   return (
     <div
-      ref={containerRef as any}
+      ref={containerRef as React.RefObject<HTMLDivElement> | undefined}
       style={getContainerStyles()}
       role="alertdialog"
       aria-modal={shouldTrapFocus}
@@ -725,12 +728,13 @@ export function WidgetErrorBoundary({
  * const SafeComponent = withHierarchicalErrorBoundary(MyComponent, 'component');
  * ```
  */
+// eslint-disable-next-line react-refresh/only-export-components -- HOC export is valid
 export function withHierarchicalErrorBoundary<P extends object>(
   WrappedComponent: ComponentType<P>,
   level: ErrorBoundaryLevel,
   options?: Omit<HierarchicalErrorBoundaryProps, 'level' | 'children'>
 ): ComponentType<P> {
-  const displayName = WrappedComponent.displayName || WrappedComponent.name || 'Component';
+  const displayName = (WrappedComponent.displayName !== null && WrappedComponent.displayName !== undefined && WrappedComponent.displayName !== '') ? WrappedComponent.displayName : ((WrappedComponent.name !== null && WrappedComponent.name !== undefined && WrappedComponent.name !== '') ? WrappedComponent.name : 'Component');
 
   function WithErrorBoundary(props: P): React.JSX.Element {
     return (

@@ -210,7 +210,7 @@ export function compareVersions(a: ApiVersion, b: ApiVersion): number {
 export function isVersionInRange(version: ApiVersion, min: ApiVersion, max?: ApiVersion): boolean {
   const v = versionToNumber(version);
   const minV = versionToNumber(min);
-  const maxV = max ? versionToNumber(max) : Infinity;
+  const maxV = (max !== null && max !== undefined && max !== '') ? versionToNumber(max) : Infinity;
   return v >= minV && v <= maxV;
 }
 
@@ -302,8 +302,8 @@ export class VersionedApiClient {
 
       console.warn(
         `[API Version] Version ${version} is deprecated. ` +
-          `Will be removed on ${deprecation?.sunsetDate}. ${ 
-          deprecation?.migrationGuide ? `See ${deprecation.migrationGuide} for migration guide.` : ''}`
+          `Will be removed on ${deprecation?.sunsetDate}. ${
+          (deprecation?.migrationGuide !== null && deprecation?.migrationGuide !== undefined && deprecation?.migrationGuide !== '') ? `See ${deprecation.migrationGuide} for migration guide.` : ''}`
       );
     }
 
@@ -387,7 +387,7 @@ export class VersionedApiClient {
     };
 
     // Apply body transformation
-    if (transformer?.transformBody && config.body) {
+    if (transformer?.transformBody !== null && transformer?.transformBody !== undefined && typeof transformer.transformBody === 'function' && config.body !== null && config.body !== undefined) {
       processedConfig.body = transformer.transformBody(config.body);
     }
 
@@ -408,7 +408,7 @@ export class VersionedApiClient {
 
     // Check for version mismatch in response
     const responseVersion = response.headers['x-api-version'] as ApiVersion | undefined;
-    if (responseVersion && responseVersion !== this.currentVersion) {
+    if (responseVersion !== null && responseVersion !== undefined && responseVersion !== '' && responseVersion !== this.currentVersion) {
       this.config.onVersionMismatch?.(this.currentVersion, responseVersion);
     }
 
@@ -512,11 +512,9 @@ export function createVersionedApi(config: {
       deprecated: new Map(Object.entries(deprecated) as [ApiVersion, VersionDeprecation][]),
       transformers: new Map(Object.entries(transformers) as [ApiVersion, VersionTransformer][]),
     },
-    onDeprecationWarning:
-      onDeprecationWarning ??
-      ((info) => {
-        console.warn('[API Deprecation]', info);
-      }),
+    onDeprecationWarning: onDeprecationWarning ?? ((info): void => {
+      console.warn('[API Deprecation]', info);
+    }),
   });
 }
 
@@ -541,6 +539,7 @@ export function createFieldRenamingTransformer(
     const result: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
       const newKey = mappings[key] ?? key;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-assignment
       result[newKey] = typeof value === 'object' ? renameFields(value, mappings) : value;
     }
     return result as T;
