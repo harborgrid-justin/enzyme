@@ -659,7 +659,14 @@ export class InteractionReplayManager {
    */
   private log(message: string, level: 'log' | 'warn' | 'error' = 'log'): void {
     if (this.debug) {
-      const logger = level === 'error' ? console.error : level === 'warn' ? console.warn : console.info;
+      let logger: typeof console.log;
+      if (level === 'error') {
+        logger = console.error;
+      } else if (level === 'warn') {
+        logger = console.warn;
+      } else {
+        logger = console.info;
+      }
       logger(`[InteractionReplay] ${message}`);
     }
   }

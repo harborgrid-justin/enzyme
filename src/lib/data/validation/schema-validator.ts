@@ -429,35 +429,35 @@ export class StringSchema extends BaseSchema<string> {
   regex(pattern: RegExp, message?: string): this {
     const clone = this._clone();
     clone._pattern = pattern;
-    if (message) clone._message = message;
+    if (message !== undefined && message !== '') clone._message = message;
     return clone;
   }
 
   email(message?: string): this {
     const clone = this._clone();
     clone._format = 'email';
-    if (message) clone._message = message;
+    if (message !== undefined && message !== '') clone._message = message;
     return clone;
   }
 
   url(message?: string): this {
     const clone = this._clone();
     clone._format = 'url';
-    if (message) clone._message = message;
+    if (message !== undefined && message !== '') clone._message = message;
     return clone;
   }
 
   uuid(message?: string): this {
     const clone = this._clone();
     clone._format = 'uuid';
-    if (message) clone._message = message;
+    if (message !== undefined && message !== '') clone._message = message;
     return clone;
   }
 
   datetime(message?: string): this {
     const clone = this._clone();
     clone._format = 'datetime';
-    if (message) clone._message = message;
+    if (message !== undefined && message !== '') clone._message = message;
     return clone;
   }
 
@@ -519,7 +519,7 @@ export class NumberSchema extends BaseSchema<number> {
   protected _validate(value: unknown, options: ParseOptions): ValidationResult<number> {
     // Coercion
     let num = value;
-    if (options.coerce && typeof value === 'string') {
+    if (options.coerce === true && typeof value === 'string') {
       num = Number(value);
     }
 
@@ -582,35 +582,35 @@ export class NumberSchema extends BaseSchema<number> {
   min(value: number, message?: string): this {
     const clone = this._clone();
     clone._min = value;
-    if (message) clone._message = message;
+    if (message !== undefined && message !== '') clone._message = message;
     return clone;
   }
 
   max(value: number, message?: string): this {
     const clone = this._clone();
     clone._max = value;
-    if (message) clone._message = message;
+    if (message !== undefined && message !== '') clone._message = message;
     return clone;
   }
 
   int(message?: string): this {
     const clone = this._clone();
     clone._integer = true;
-    if (message) clone._message = message;
+    if (message !== undefined && message !== '') clone._message = message;
     return clone;
   }
 
   positive(message?: string): this {
     const clone = this._clone();
     clone._positive = true;
-    if (message) clone._message = message;
+    if (message !== undefined && message !== '') clone._message = message;
     return clone;
   }
 
   negative(message?: string): this {
     const clone = this._clone();
     clone._negative = true;
-    if (message) clone._message = message;
+    if (message !== undefined && message !== '') clone._message = message;
     return clone;
   }
 
@@ -621,7 +621,7 @@ export class NumberSchema extends BaseSchema<number> {
   finite(message?: string): this {
     const clone = this._clone();
     clone._finite = true;
-    if (message) clone._message = message;
+    if (message !== undefined && message !== '') clone._message = message;
     return clone;
   }
 
@@ -653,7 +653,7 @@ export class BooleanSchema extends BaseSchema<boolean> {
   protected _validate(value: unknown, options: ParseOptions): ValidationResult<boolean> {
     // Coercion
     let bool = value;
-    if (options.coerce) {
+    if (options.coerce === true) {
       if (value === 'true' || value === '1' || value === 1) bool = true;
       else if (value === 'false' || value === '0' || value === 0) bool = false;
     }
@@ -701,7 +701,7 @@ export class DateSchema extends BaseSchema<Date> {
     let date: Date;
     if (value instanceof Date) {
       date = value;
-    } else if (options.coerce && (typeof value === 'string' || typeof value === 'number')) {
+    } else if (options.coerce === true && (typeof value === 'string' || typeof value === 'number')) {
       date = new Date(value);
     } else {
       return {
@@ -748,14 +748,14 @@ export class DateSchema extends BaseSchema<Date> {
   min(date: Date, message?: string): this {
     const clone = this._clone();
     clone._min = date;
-    if (message) clone._message = message;
+    if (message !== undefined && message !== '') clone._message = message;
     return clone;
   }
 
   max(date: Date, message?: string): this {
     const clone = this._clone();
     clone._max = date;
-    if (message) clone._message = message;
+    if (message !== undefined && message !== '') clone._message = message;
     return clone;
   }
 
@@ -833,7 +833,7 @@ export class ArraySchema<TElement extends BaseSchema<unknown>> extends BaseSchem
 
       if (!elementResult.success) {
         issues.push(...elementResult.issues);
-        if (options.abortEarly) break;
+        if (options.abortEarly === true) break;
       } else {
         results.push(elementResult.data);
       }
@@ -849,14 +849,14 @@ export class ArraySchema<TElement extends BaseSchema<unknown>> extends BaseSchem
   min(length: number, message?: string): this {
     const clone = this._clone();
     clone._minLength = length;
-    if (message) clone._message = message;
+    if (message !== undefined && message !== '') clone._message = message;
     return clone;
   }
 
   max(length: number, message?: string): this {
     const clone = this._clone();
     clone._maxLength = length;
-    if (message) clone._message = message;
+    if (message !== undefined && message !== '') clone._message = message;
     return clone;
   }
 
@@ -943,7 +943,7 @@ export class ObjectSchema<TShape extends ObjectShape> extends BaseSchema<
 
       if (!fieldResult.success) {
         issues.push(...fieldResult.issues);
-        if (options.abortEarly) break;
+        if (options.abortEarly === true) break;
       } else {
         result[key] = fieldResult.data;
       }
@@ -1286,7 +1286,7 @@ export class RecordSchema<
 
       if (!keyResult.success) {
         issues.push(...keyResult.issues);
-        if (options.abortEarly) break;
+        if (options.abortEarly === true) break;
         continue;
       }
 
@@ -1297,7 +1297,7 @@ export class RecordSchema<
 
       if (!valueResult.success) {
         issues.push(...valueResult.issues);
-        if (options.abortEarly) break;
+        if (options.abortEarly === true) break;
       } else {
         result[key] = valueResult.data as SchemaOutput<TValue>;
       }

@@ -584,7 +584,10 @@ export class ResourcePermissionManager {
       this.permissionsByGrantee.set(granteeKey, []);
     }
 
-    this.permissionsByGrantee.get(granteeKey)!.push(permission);
+    const granteePermissions = this.permissionsByGrantee.get(granteeKey);
+    if (granteePermissions != null) {
+      granteePermissions.push(permission);
+    }
   }
 
   /**

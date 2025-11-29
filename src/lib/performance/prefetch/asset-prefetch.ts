@@ -584,21 +584,21 @@ export class AssetPrefetchManager {
   }
 
   private shouldPrefetch(): boolean {
-    if (!this.config.networkAware) {
+    if (this.config.networkAware !== true) {
       return true;
     }
 
     const connection = this.getNetworkInfo();
-    if (!connection) {
+    if (connection === null) {
       return true;
     }
 
-    if (connection.saveData) {
+    if (connection.saveData === true) {
       this.log('Skipping prefetch: Data saver enabled');
       return false;
     }
 
-    if (connection.effectiveType) {
+    if (connection.effectiveType !== undefined) {
       const currentQuality = NETWORK_QUALITY_ORDER[connection.effectiveType] ?? 3;
       const minQuality = NETWORK_QUALITY_ORDER[this.config.minNetworkQuality] ?? 3;
 
@@ -643,9 +643,7 @@ let managerInstance: AssetPrefetchManager | null = null;
 export function getAssetPrefetchManager(
   config?: Partial<AssetPrefetchConfig>
 ): AssetPrefetchManager {
-  if (!managerInstance) {
-    managerInstance = new AssetPrefetchManager(config);
-  }
+  managerInstance ??= new AssetPrefetchManager(config);
   return managerInstance;
 }
 
@@ -653,7 +651,7 @@ export function getAssetPrefetchManager(
  * Reset the manager instance
  */
 export function resetAssetPrefetchManager(): void {
-  if (managerInstance) {
+  if (managerInstance !== null) {
     managerInstance.clear();
     managerInstance = null;
   }

@@ -90,6 +90,7 @@ export class LocalProvider implements WritableFlagProvider {
    * Initialize the provider.
    */
   async initialize(): Promise<void> {
+    await Promise.resolve();
     this.log('Initializing local provider');
 
     // Load from storage if enabled
@@ -120,6 +121,7 @@ export class LocalProvider implements WritableFlagProvider {
    * Get all flags.
    */
   async getFlags(): Promise<readonly FeatureFlag[]> {
+    await Promise.resolve();
     this.stats = { ...this.stats, requestCount: this.stats.requestCount + 1 };
     return Promise.resolve(Array.from(this.flags.values()));
   }
@@ -128,6 +130,7 @@ export class LocalProvider implements WritableFlagProvider {
    * Get a flag by key.
    */
   async getFlag(key: string): Promise<FeatureFlag | null> {
+    await Promise.resolve();
     this.stats = { ...this.stats, requestCount: this.stats.requestCount + 1 };
     return Promise.resolve(this.flags.get(key) ?? null);
   }
@@ -136,6 +139,7 @@ export class LocalProvider implements WritableFlagProvider {
    * Update or add a flag.
    */
   async updateFlag(flag: FeatureFlag): Promise<void> {
+    await Promise.resolve();
     const existing = this.flags.get(flag.key);
     const isNew = !existing;
 
@@ -162,6 +166,7 @@ export class LocalProvider implements WritableFlagProvider {
    * Delete a flag.
    */
   async deleteFlag(key: string): Promise<void> {
+    await Promise.resolve();
     const existing = this.flags.get(key);
     if (!existing) {
       return;
@@ -189,6 +194,7 @@ export class LocalProvider implements WritableFlagProvider {
    * Set multiple flags at once.
    */
   async setFlags(flags: readonly FeatureFlag[]): Promise<void> {
+    await Promise.resolve();
     this.flags.clear();
     for (const flag of flags) {
       this.flags.set(flag.key, flag);
@@ -215,14 +221,14 @@ export class LocalProvider implements WritableFlagProvider {
   /**
    * Get all segments.
    */
-  getSegments(): Promise<readonly Segment[]> {
+  async getSegments(): Promise<readonly Segment[]> {
     return Promise.resolve(Array.from(this.segments.values()));
   }
 
   /**
    * Get a segment by ID.
    */
-  getSegment(id: SegmentId): Promise<Segment | null> {
+  async getSegment(id: SegmentId): Promise<Segment | null> {
     return Promise.resolve(this.segments.get(id) ?? null);
   }
 
@@ -230,6 +236,7 @@ export class LocalProvider implements WritableFlagProvider {
    * Update or add a segment.
    */
   async updateSegment(segment: Segment): Promise<void> {
+    await Promise.resolve();
     this.segments.set(segment.id, segment);
     this.updateStats();
 
@@ -244,6 +251,7 @@ export class LocalProvider implements WritableFlagProvider {
    * Delete a segment.
    */
   async deleteSegment(id: SegmentId): Promise<void> {
+    await Promise.resolve();
     this.segments.delete(id);
     this.updateStats();
 
@@ -367,7 +375,7 @@ export class LocalProvider implements WritableFlagProvider {
   /**
    * Check if the provider is healthy.
    */
-  isHealthy(): Promise<boolean> {
+  async isHealthy(): Promise<boolean> {
     return Promise.resolve(this.ready);
   }
 
@@ -419,7 +427,7 @@ export class LocalProvider implements WritableFlagProvider {
   /**
    * Shutdown the provider.
    */
-  shutdown(): Promise<void> {
+  async shutdown(): Promise<void> {
     this.ready = false;
     this.listeners.clear();
     this.log('Provider shutdown');
@@ -449,7 +457,7 @@ export class LocalProvider implements WritableFlagProvider {
   /**
    * Clear all flags and segments.
    */
-  clear(): Promise<void> {
+  async clear(): Promise<void> {
     this.flags.clear();
     this.segments.clear();
     this.updateStats();
@@ -483,6 +491,7 @@ export class LocalProvider implements WritableFlagProvider {
    * Import data from backup.
    */
   async import(data: { flags?: FeatureFlag[]; segments?: Segment[] }): Promise<void> {
+    await Promise.resolve();
     if (data.flags) {
       for (const flag of data.flags) {
         this.flags.set(flag.key, flag);

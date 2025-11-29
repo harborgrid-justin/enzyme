@@ -3,6 +3,8 @@
  * @description Creates type-safe router with auto-discovery, prefetching, and feature integration
  */
 
+/* eslint-disable react-refresh/only-export-components */
+
 import {
   createBrowserRouter,
   type RouteObject,
@@ -313,7 +315,7 @@ function setupPrefetching(
     if (!link) return;
 
     const href = link.getAttribute('href');
-    if (!href) return;
+    if (href === null || href === undefined || href === '') return;
 
     // Cancel pending prefetch
     const timeout = prefetchState.timeouts.get(href);
@@ -432,9 +434,9 @@ function buildRouteObjects(
       errorElement: options.errorElement,
     };
 
-    if (route.index) {
+    if (route.index === true) {
       (routeObj as RouteObject & { index?: boolean }).index = true;
-    } else if (route.path) {
+    } else if (route.path !== undefined && route.path !== null) {
       // Remove leading slash for nested routes
       const cleanPath = route.path.replace(/^\//, '');
       routeObj.path = cleanPath || undefined;

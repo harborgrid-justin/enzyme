@@ -335,14 +335,14 @@ export class WatchMode {
           watchPath,
           { recursive: true },
           (eventType: string, filename: string | null) => {
-            if (!filename) return;
+            if (filename === null || filename === undefined || filename === '') return;
 
             const fullPath = path.join(watchPath, filename);
             const relativePath = path.relative(this.config.rootDir, fullPath);
 
             // Check extension
             const ext = path.extname(filename);
-            if (!this.config.extensions?.includes(ext)) {
+            if (this.config.extensions?.includes(ext) !== true) {
               return;
             }
 
@@ -470,8 +470,8 @@ export class WatchMode {
    * Log a message if verbose mode is enabled
    */
   private log(message: string): void {
-    if (this.config.verbose) {
-      console.log(`[WatchMode] ${message}`);
+    if (this.config.verbose === true) {
+      console.info(`[WatchMode] ${message}`);
     }
   }
 
@@ -533,7 +533,7 @@ export function createHMRUpdater(updateHandler: HMRUpdateHandler): {
 } {
   return {
     accept: (newModule) => {
-      if (newModule?.routes) {
+      if (newModule?.routes !== undefined && newModule.routes !== null) {
         updateHandler(newModule.routes);
       }
     },

@@ -227,7 +227,7 @@ const PageHeader = memo(({
   const titleStyle = useMemo<CSSProperties>(() => ({
     fontSize: '1.5rem',
     fontWeight: '600',
-    marginBottom: tabs?.length ? '1rem' : 0,
+    marginBottom: (tabs?.length ?? 0) > 0 ? '1rem' : 0,
   }), [tabs?.length]);
 
   // Memoize tab button style generator
@@ -235,17 +235,17 @@ const PageHeader = memo(({
     padding: '0.75rem 1rem',
     border: 'none',
     background: 'none',
-    cursor: tab.disabled ? 'not-allowed' : 'pointer',
-    opacity: tab.disabled ? 0.5 : 1,
+    cursor: (tab.disabled ?? false) === true ? 'not-allowed' : 'pointer',
+    opacity: (tab.disabled ?? false) === true ? 0.5 : 1,
     borderBottom: activeTab === tab.id ? '2px solid #3b82f6' : '2px solid transparent',
     color: activeTab === tab.id ? '#3b82f6' : '#6b7280',
     fontWeight: activeTab === tab.id ? '500' : '400',
   }), [activeTab]);
 
   // Stable tab click handler using data-* attributes
-  const handleTabClick = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleTabClick = useCallback((event: React.MouseEvent<HTMLButtonElement>): void => {
     const {tabId} = event.currentTarget.dataset;
-    if (tabId && onTabChange) {
+    if (tabId !== undefined && onTabChange !== undefined) {
       onTabChange(tabId);
     }
   }, [onTabChange]);
@@ -258,7 +258,7 @@ const PageHeader = memo(({
         </h1>
       )}
 
-      {tabs && tabs.length > 0 && (
+      {tabs !== undefined && tabs.length > 0 && (
         <div style={tabContainerStyle}>
           {tabs.map((tab) => (
             <button
@@ -308,10 +308,10 @@ export function createFeaturePage<
   /**
    * Inner feature content component
    */
-  function FeatureContent() {
+  function FeatureContent(): React.ReactElement {
     const viewModel = useViewModel();
 
-    if (viewModel.isLoading && !viewModel.data) {
+    if (viewModel.isLoading === true && viewModel.data === undefined) {
       return <Loading />;
     }
 
@@ -330,14 +330,14 @@ export function createFeaturePage<
   /**
    * Feature page component with guards
    */
-  function FeaturePage() {
+  function FeaturePage(): React.ReactElement {
     const { roles, isAuthenticated } = useAuth();
     const featureFlagEnabled = useFeatureFlag(config.access.featureFlag ?? '');
 
     // Collect all enabled flags for access check
     const enabledFlags = useMemo(() => {
       const flags: string[] = [];
-      if (config.access.featureFlag && featureFlagEnabled) {
+      if (config.access.featureFlag !== undefined && featureFlagEnabled === true) {
         flags.push(config.access.featureFlag);
       }
       // In a real app, you'd check all required flags here
@@ -350,17 +350,17 @@ export function createFeaturePage<
     }, [roles, enabledFlags]);
 
     // Check feature flag
-    if (config.access.featureFlag && !featureFlagEnabled) {
+    if (config.access.featureFlag !== undefined && featureFlagEnabled === false) {
       return <FeatureNotAvailable featureName={config.metadata.name} />;
     }
 
     // Check authentication
-    if (config.access.requireAuth && !isAuthenticated) {
+    if ((config.access.requireAuth ?? false) === true && isAuthenticated === false) {
       return <AccessDenied reason="Please log in to access this feature." />;
     }
 
     // Check role-based access
-    if (!hasAccess) {
+    if (hasAccess === false) {
       return (
         <AccessDenied reason="You don't have permission to access this feature." />
       );

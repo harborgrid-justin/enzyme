@@ -734,8 +734,9 @@ export function deepClone<T>(data: T): T {
 
   if (Array.isArray(data)) {
     // Safe cast: we're creating an array of the same element type
-    const cloned: unknown[] = data.map((item) => deepClone(item));
-    return cloned as T;
+    // TypeScript cannot infer that mapping deepClone over an array preserves the array type
+    const clonedArray = data.map((item: unknown) => deepClone(item));
+    return clonedArray as T;
   }
 
   if (data instanceof Date) {

@@ -319,7 +319,7 @@ export class RenderTracker {
       state?: Record<string, unknown>;
     } = {}
   ): () => RenderEntry | null {
-    if (!this.isEnabled || !shouldSample(this.config.sampleRate)) {
+    if (this.isEnabled === false || shouldSample(this.config.sampleRate) === false) {
       return () => null;
     }
 
@@ -371,7 +371,7 @@ export class RenderTracker {
     } = {}
   ): RenderEntry | null {
     const activeRender = this.activeRenders.get(renderId);
-    if (!activeRender) return null;
+    if (activeRender === undefined) return null;
 
     const endTime = performance.now();
     const duration = endTime - activeRender.startTime;
@@ -422,7 +422,7 @@ export class RenderTracker {
     this.trimHistory();
 
     // Add to current interaction if active
-    if (this.currentInteraction) {
+    if (this.currentInteraction !== null) {
       this.currentInteraction.renders.push(entry);
     }
 
@@ -432,7 +432,7 @@ export class RenderTracker {
       this.log(`Slow render: ${activeRender.componentName} (${formatDuration(duration)})`);
     }
 
-    if (isWasted) {
+    if (isWasted === true) {
       this.config.onWastedRender(entry);
       this.log(`Wasted render: ${activeRender.componentName}`);
     }
@@ -526,7 +526,7 @@ export class RenderTracker {
    * Start tracking an interaction (e.g., click, input)
    */
   public startInteraction(name: string): () => RenderInteraction | null {
-    if (!this.isEnabled) {
+    if (this.isEnabled === false) {
       return () => null;
     }
 
@@ -544,7 +544,7 @@ export class RenderTracker {
    * End tracking an interaction
    */
   private endInteraction(): RenderInteraction | null {
-    if (!this.currentInteraction) return null;
+    if (this.currentInteraction === null) return null;
 
     const endTime = performance.now();
     const { id, name, startTime, renders } = this.currentInteraction;
@@ -682,9 +682,11 @@ export class RenderTracker {
     let renders = [...this.renderHistory];
 
     // Filter by interaction if specified
-    if (options.interactionId != null && options.interactionId !== '') {
-      const interaction = this.interactions.find((i) => i.id === options.interactionId);
-      if (interaction != null) {
+    const { interactionId } = options;
+    if (interactionId !== undefined && interactionId !== null && interactionId !== '') {
+      const interaction = this.interactions.find((i) => i.id === interactionId);
+      if (interaction !== undefined && interaction !== null) {
+        // eslint-disable-next-line prefer-destructuring -- reassigning existing variable
         renders = interaction.renders;
       }
     }
@@ -725,7 +727,7 @@ export class RenderTracker {
 
     // Get root entries
     const rootRenders = renders.filter(
-      (r) => !r.parentId || !renderIds.has(r.parentId)
+      (r) => r.parentId === undefined || renderIds.has(r.parentId) === false
     );
 
     return rootRenders.map(buildEntry);
@@ -894,8 +896,8 @@ export class RenderTracker {
    * Debug logging
    */
   private log(message: string, ...args: unknown[]): void {
-    if (this.config.debug) {
-      console.log(`[RenderTracker] ${message}`, ...args);
+    if (this.config.debug === true) {
+      console.info(`[RenderTracker] ${message}`, ...args);
     }
   }
 }
@@ -948,7 +950,7 @@ export function withRenderTracking<P extends object>(
 ): React.ComponentType<P> {
   const tracker = getRenderTracker();
 
-  const TrackedComponent = (props: P) => {
+  const TrackedComponent = (props: P): React.ReactElement => {
     const stopTracking = tracker.startRender(componentName, {
       props: props as Record<string, unknown>,
     });

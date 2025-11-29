@@ -309,7 +309,7 @@ class TaskPriorityQueue {
    */
   enqueue(task: ScheduledTask): boolean {
     const queue = this.queues.get(task.priority);
-    if (!queue) return false;
+    if (queue === undefined) return false;
 
     if (queue.length >= this.maxSize) {
       // Drop lowest priority task if queue is full
@@ -346,8 +346,8 @@ class TaskPriorityQueue {
    */
   peek(): ScheduledTask | null {
     for (const priority of Object.keys(PRIORITY_VALUES) as RenderPriority[]) {
-      const queue = this.queues.get(priority)!;
-      if (queue.length > 0) {
+      const queue = this.queues.get(priority);
+      if (queue !== undefined && queue.length > 0) {
         return queue[0] ?? null;
       }
     }
@@ -383,9 +383,11 @@ class TaskPriorityQueue {
   private getLowestPriorityWithTasks(): RenderPriority | null {
     const priorities = Object.keys(PRIORITY_VALUES) as RenderPriority[];
     for (let i = priorities.length - 1; i >= 0; i--) {
-      const queue = this.queues.get(priorities[i]!)!;
-      if (queue.length > 0) {
-        return priorities[i] ?? null;
+      const priority = priorities[i];
+      if (priority === undefined) continue;
+      const queue = this.queues.get(priority);
+      if (queue !== undefined && queue.length > 0) {
+        return priority;
       }
     }
     return null;
@@ -453,9 +455,7 @@ export class RenderScheduler {
    * Get singleton instance
    */
   static getInstance(config?: RenderSchedulerConfig): RenderScheduler {
-    if (!RenderScheduler.instance) {
-      RenderScheduler.instance = new RenderScheduler(config);
-    }
+    RenderScheduler.instance ??= new RenderScheduler(config);
     return RenderScheduler.instance;
   }
 
@@ -463,7 +463,7 @@ export class RenderScheduler {
    * Reset singleton (for testing)
    */
   static reset(): void {
-    if (RenderScheduler.instance) {
+    if (RenderScheduler.instance !== undefined && RenderScheduler.instance !== null) {
       RenderScheduler.instance.stop();
       // Type-safe null assignment for singleton reset
       (RenderScheduler as unknown as { instance: RenderScheduler | null }).instance = null;
@@ -516,7 +516,7 @@ export class RenderScheduler {
    * Schedule immediate work (runs synchronously if budget allows)
    */
   scheduleImmediate(callback: () => void): void {
-    if (this.frameBudget.hasRemainingBudget()) {
+    if (this.frameBudget.hasRemainingBudget() === true) {
       callback();
     } else {
       this.schedule(callback, { priority: 'immediate' });
@@ -553,7 +553,10 @@ export class RenderScheduler {
       const chunk = items.slice(i, i + chunkSize);
 
       for (let j = 0; j < chunk.length; j++) {
-        processor(chunk[j]!, i + j);
+        const item = chunk[j];
+        if (item !== undefined) {
+          processor(item, i + j);
+        }
 
         // Yield after processing yieldAfter items
         if ((j + 1) % yieldAfter === 0) {
@@ -572,7 +575,7 @@ export class RenderScheduler {
    * Ensure processing is happening
    */
   private ensureProcessing(): void {
-    if (this.isProcessing) return;
+    if (this.isProcessing === true) return;
     this.processQueue();
   }
 
@@ -580,7 +583,7 @@ export class RenderScheduler {
    * Process the task queue
    */
   private processQueue(): void {
-    if (this.queue.isEmpty) {
+    if (this.queue.isEmpty === true) {
       this.isProcessing = false;
       return;
     }
@@ -597,7 +600,7 @@ export class RenderScheduler {
       this.frameBudget.endFrame();
 
       // Continue processing if more tasks
-      if (!this.queue.isEmpty) {
+      if (this.queue.isEmpty === false) {
         this.processQueue();
       } else {
         this.isProcessing = false;
@@ -627,15 +630,15 @@ export class RenderScheduler {
    * Process tasks within frame budget
    */
   private processFrameTasks(): void {
-    while (this.frameBudget.hasRemainingBudget() && !this.queue.isEmpty) {
+    while (this.frameBudget.hasRemainingBudget() === true && this.queue.isEmpty === false) {
       const task = this.queue.peek();
-      if (!task) break;
+      if (task === null) break;
 
       // Skip idle tasks in frame processing
       if (task.priority === 'idle') break;
 
       // Check if task would exceed budget
-      if (task.estimatedDuration && task.estimatedDuration > this.frameBudget.getRemainingTime()) {
+      if (task.estimatedDuration !== undefined && task.estimatedDuration > this.frameBudget.getRemainingTime()) {
         break;
       }
 
@@ -648,9 +651,9 @@ export class RenderScheduler {
    * Process idle tasks during browser idle time
    */
   private processIdleTasks(deadline: IdleDeadline): void {
-    while (deadline.timeRemaining() > 0 && !this.queue.isEmpty) {
+    while (deadline.timeRemaining() > 0 && this.queue.isEmpty === false) {
       const task = this.queue.peek();
-      if (!task) break;
+      if (task === null) break;
 
       // Only process low and idle tasks here
       if (task.priority !== 'idle' && task.priority !== 'low') break;
@@ -695,15 +698,15 @@ export class RenderScheduler {
    * Stop the scheduler
    */
   stop(): void {
-    if (this.animationFrameId) {
+    if (this.animationFrameId !== null) {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = null;
     }
-    if (this.idleCallbackId) {
+    if (this.idleCallbackId !== null) {
       cancelIdleCallback(this.idleCallbackId);
       this.idleCallbackId = null;
     }
-    if (this.cleanupIntervalId) {
+    if (this.cleanupIntervalId !== null) {
       clearInterval(this.cleanupIntervalId);
       this.cleanupIntervalId = null;
     }
@@ -720,11 +723,11 @@ export class RenderScheduler {
     const cancelled = this.completedTasks.filter((t) => t.status === 'cancelled');
 
     const avgWaitTime = completed.length > 0
-      ? completed.reduce((sum, t) => sum + (t.startedAt! - t.createdAt), 0) / completed.length
+      ? completed.reduce((sum, t) => sum + ((t.startedAt ?? t.createdAt) - t.createdAt), 0) / completed.length
       : 0;
 
     const avgExecutionTime = completed.length > 0
-      ? completed.reduce((sum, t) => sum + (t.completedAt! - t.startedAt!), 0) / completed.length
+      ? completed.reduce((sum, t) => sum + ((t.completedAt ?? t.startedAt ?? t.createdAt) - (t.startedAt ?? t.createdAt)), 0) / completed.length
       : 0;
 
     return {
@@ -743,8 +746,8 @@ export class RenderScheduler {
    * Debug logging
    */
   private log(message: string, ...args: unknown[]): void {
-    if (this.config.debug) {
-      console.log(`[RenderScheduler] ${message}`, ...args);
+    if (this.config.debug === true) {
+      console.info(`[RenderScheduler] ${message}`, ...args);
     }
   }
 }
@@ -773,7 +776,7 @@ export function useOptimizedRender<T>(
   const depsVersion = useDepsVersion(deps);
 
   useEffect(() => {
-    if (isFirstRender.current && !defer) {
+    if (isFirstRender.current === true && defer === false) {
       // Compute immediately on first render
       setValue(computeFn());
       isFirstRender.current = false;
@@ -805,7 +808,7 @@ export function useDeferredRender(
   const [isDeferring, setIsDeferring] = useState(false);
 
   useEffect(() => {
-    if (!shouldDefer) {
+    if (shouldDefer === false) {
       /* eslint-disable-next-line react-hooks/set-state-in-effect */
       setIsDeferred(false);
       setIsDeferring(false);
@@ -833,7 +836,7 @@ export function useDeferredRender(
 
     return () => {
       scheduler.cancel(taskId);
-      if (timeoutId) clearTimeout(timeoutId);
+      if (timeoutId !== undefined) clearTimeout(timeoutId);
     };
   }, [shouldDefer, delay]);
 

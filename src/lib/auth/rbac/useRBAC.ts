@@ -444,7 +444,7 @@ export function usePermissionGate(permission: Permission): { allowed: boolean; l
  * }
  * ```
  */
-export function useRoleGate(roles: string | string[]) {
+export function useRoleGate(roles: string | string[]): { allowed: boolean; loading: boolean } {
   const { loading, hasRole, hasAnyRole } = useRBAC();
 
   const allowed = useMemo(() => {

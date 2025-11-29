@@ -468,7 +468,7 @@ export class GuardResolver {
           passedGuards.push(guard.name);
         } else {
           failedGuards.push(guard.name);
-          if (result.result.reason) {
+          if (result.result.reason !== undefined && result.result.reason !== null && result.result.reason !== '') {
             denialReasons.push(result.result.reason);
           }
           if (finalResult.type === 'allow') {
@@ -486,7 +486,7 @@ export class GuardResolver {
           passedGuards.push(registered.guard.name);
         } else {
           failedGuards.push(registered.guard.name);
-          if (result.result.reason) {
+          if (result.result.reason !== undefined && result.result.reason !== null && result.result.reason !== '') {
             denialReasons.push(result.result.reason);
           }
 
@@ -496,7 +496,7 @@ export class GuardResolver {
           }
 
           // Stop on denial if configured
-          if (this.config.stopOnDenial) {
+          if (this.config.stopOnDenial === true) {
             // Mark remaining guards as skipped
             const remaining = guards.slice(guards.indexOf(registered) + 1);
             for (const r of remaining) {

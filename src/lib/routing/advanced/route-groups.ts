@@ -329,7 +329,7 @@ export class RouteGroupManager {
     }
 
     // Remove from parent's children
-    if (group.parent) {
+    if (group.parent !== undefined && group.parent !== null && group.parent !== '') {
       const parent = this.groups.get(group.parent);
       if (parent) {
         const updatedParent: RouteGroup = {
@@ -464,12 +464,12 @@ export class RouteGroupManager {
    */
   canAccess(groupName: string, user: RouteGroupUser | undefined): boolean {
     const group = this.groups.get(groupName);
-    if (!group?.enabled) return false;
+    if (group?.enabled !== true) return false;
 
     const meta = group.computedMeta;
 
     // Check auth requirement
-    if (meta.requiresAuth && !user) {
+    if (meta.requiresAuth === true && (user === undefined || user === null)) {
       return false;
     }
 
@@ -678,7 +678,7 @@ export function isGroupSegment(segment: string): boolean {
  */
 export function extractGroupName(segment: string): string | null {
   const match = segment.match(/^\(([a-zA-Z][a-zA-Z0-9_-]*)\)$/);
-  return match ? match[1]! : null;
+  return match?.[1] ?? null;
 }
 
 /**
@@ -703,7 +703,7 @@ export function extractGroupsFromPath(path: string): string[] {
 
   for (const segment of segments) {
     const groupName = extractGroupName(segment);
-    if (groupName) {
+    if (groupName !== null && groupName !== undefined) {
       groups.push(groupName);
     }
   }

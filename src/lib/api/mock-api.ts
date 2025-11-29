@@ -387,8 +387,8 @@ export class MockServer {
     } else if (input instanceof URL) {
       url = input.href;
     } else {
-      const { url: requestUrl } = input;
-      url = requestUrl;
+      // eslint-disable-next-line prefer-destructuring
+      url = input.url;
     }
     const method = ((init?.method ?? 'GET') as HttpMethod).toUpperCase() as HttpMethod;
 
@@ -414,6 +414,7 @@ export class MockServer {
             ? JSON.parse(init.body)
             : init.body;
       } catch {
+        // eslint-disable-next-line prefer-destructuring
         body = init.body;
       }
     }
@@ -652,7 +653,7 @@ export class MockServer {
     this.requestLog.push(logEntry);
 
     if (this.config.logging) {
-      console.log(
+      console.info(
         `[MockServer] ${request.method} ${request.path} -> ${response.status} (${duration}ms)`
       );
     }

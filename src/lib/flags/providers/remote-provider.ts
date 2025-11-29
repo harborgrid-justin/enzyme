@@ -446,7 +446,7 @@ export class RemoteProvider implements FlagProvider {
   /**
    * Check if the provider is healthy.
    */
-  isHealthy(): Promise<boolean> {
+  async isHealthy(): Promise<boolean> {
     return Promise.resolve(this.health.healthy);
   }
 
@@ -495,7 +495,7 @@ export class RemoteProvider implements FlagProvider {
   /**
    * Shutdown the provider.
    */
-  shutdown(): Promise<void> {
+  async shutdown(): Promise<void> {
     this.abortController?.abort();
     this.ready = false;
     this.listeners.clear();

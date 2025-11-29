@@ -308,9 +308,7 @@ export class NetworkPerformanceAnalyzer {
    * Get singleton instance
    */
   public static getInstance(config?: NetworkAnalyzerConfig): NetworkPerformanceAnalyzer {
-    if (!NetworkPerformanceAnalyzer.instance) {
-      NetworkPerformanceAnalyzer.instance = new NetworkPerformanceAnalyzer(config);
-    }
+    NetworkPerformanceAnalyzer.instance ??= new NetworkPerformanceAnalyzer(config);
     return NetworkPerformanceAnalyzer.instance;
   }
 
@@ -318,7 +316,7 @@ export class NetworkPerformanceAnalyzer {
    * Reset singleton instance (for testing)
    */
   public static resetInstance(): void {
-    if (NetworkPerformanceAnalyzer.instance) {
+    if (NetworkPerformanceAnalyzer.instance !== null) {
       NetworkPerformanceAnalyzer.instance.stopMonitoring();
       NetworkPerformanceAnalyzer.instance = null;
     }
@@ -359,7 +357,7 @@ export class NetworkPerformanceAnalyzer {
         const entries = list.getEntries() as PerformanceResourceTiming[];
         entries.forEach((entry) => {
           const timing = this.processResourceEntry(entry);
-          if (timing) {
+          if (timing !== null) {
             this.requestHistory.push(timing);
             this.trimHistory();
 
@@ -381,7 +379,7 @@ export class NetworkPerformanceAnalyzer {
    * Stop resource observer
    */
   private stopResourceObserver(): void {
-    if (this.resourceObserver) {
+    if (this.resourceObserver !== null) {
       this.resourceObserver.disconnect();
       this.resourceObserver = null;
     }
@@ -393,7 +391,7 @@ export class NetworkPerformanceAnalyzer {
   private startBandwidthMeasurement(): void {
     this.bandwidthIntervalId = setInterval(() => {
       const measurement = this.measureBandwidth();
-      if (measurement) {
+      if (measurement !== null) {
         this.bandwidthHistory.push(measurement);
         if (this.bandwidthHistory.length > 100) {
           this.bandwidthHistory.shift();
@@ -406,7 +404,7 @@ export class NetworkPerformanceAnalyzer {
    * Stop bandwidth measurement
    */
   private stopBandwidthMeasurement(): void {
-    if (this.bandwidthIntervalId) {
+    if (this.bandwidthIntervalId !== null) {
       clearInterval(this.bandwidthIntervalId);
       this.bandwidthIntervalId = null;
     }
@@ -417,7 +415,7 @@ export class NetworkPerformanceAnalyzer {
    */
   private startConnectionListener(): void {
     const connection = getNavigatorConnection();
-    if (!connection?.addEventListener) return;
+    if (connection?.addEventListener === undefined || connection?.addEventListener === null) return;
 
     this.connectionChangeHandler = () => {
       const quality = this.getQuality();
@@ -435,10 +433,10 @@ export class NetworkPerformanceAnalyzer {
    * Stop connection listener
    */
   private stopConnectionListener(): void {
-    if (!this.connectionChangeHandler) return;
+    if (this.connectionChangeHandler === null) return;
 
     const connection = getNavigatorConnection();
-    if (connection?.removeEventListener) {
+    if (connection?.removeEventListener !== undefined && connection?.removeEventListener !== null) {
       connection.removeEventListener('change', this.connectionChangeHandler);
     }
     this.connectionChangeHandler = null;
@@ -448,7 +446,7 @@ export class NetworkPerformanceAnalyzer {
    * Check if network quality has changed significantly
    */
   private hasQualityChanged(newQuality: NetworkQuality): boolean {
-    if (!this.lastQuality) return true;
+    if (this.lastQuality === null) return true;
     return newQuality.effectiveType !== this.lastQuality.effectiveType ||
            Math.abs(newQuality.score - this.lastQuality.score) > 10;
   }
@@ -518,7 +516,7 @@ export class NetworkPerformanceAnalyzer {
 
     // Get the most recent entry
     const entry = entries[entries.length - 1];
-    if (!entry) return null;
+    if (entry === undefined) return null;
     return this.processResourceEntry(entry);
   }
 
@@ -665,7 +663,7 @@ export class NetworkPerformanceAnalyzer {
    */
   public getEstimatedBandwidth(): number {
     const measurement = this.measureBandwidth();
-    if (measurement && measurement.confidence > 0.5) {
+    if (measurement !== null && measurement.confidence > 0.5) {
       return measurement.bandwidth;
     }
 
@@ -701,24 +699,24 @@ export class NetworkPerformanceAnalyzer {
     let reason = 'Standard priority for resource type';
 
     // Boost priority for critical resources
-    if (options.isLCP) {
+    if (options.isLCP === true) {
       recommendedPriority = 'highest';
       fetchPriority = 'high';
       shouldPreload = true;
       reason = 'LCP candidate - highest priority';
-    } else if (options.isAboveFold && resourceType === 'img') {
+    } else if (options.isAboveFold === true && resourceType === 'img') {
       recommendedPriority = 'high';
       fetchPriority = 'high';
       shouldPreload = true;
       reason = 'Above-fold image - preload recommended';
-    } else if (options.isInteractive) {
+    } else if (options.isInteractive === true) {
       recommendedPriority = 'high';
       reason = 'Interactive element - high priority';
     }
 
     // Reduce priority on slow connections
     if (quality.score < 30) {
-      if (!options.isLCP && !options.isAboveFold) {
+      if (options.isLCP !== true && options.isAboveFold !== true) {
         recommendedPriority = 'low';
         fetchPriority = 'low';
         shouldDefer = true;
@@ -731,7 +729,7 @@ export class NetworkPerformanceAnalyzer {
       const urlObj = new URL(url);
       const {origin} = urlObj;
       const isCrossOrigin = origin !== window.location.origin;
-      if (isCrossOrigin && (recommendedPriority === 'highest' || recommendedPriority === 'high')) {
+      if (isCrossOrigin === true && (recommendedPriority === 'highest' || recommendedPriority === 'high')) {
         shouldPreconnect = true;
       }
     } catch {
@@ -858,8 +856,8 @@ export class NetworkPerformanceAnalyzer {
       `Data Saver: ${quality.saveData ? 'Enabled' : 'Disabled'}`,
       '',
       '--- Bandwidth ---',
-      `Estimated: ${bandwidth ? `${formatBytes(bandwidth.bandwidth)  }/s` : 'N/A'}`,
-      `Confidence: ${bandwidth ? `${(bandwidth.confidence * 100).toFixed(0)  }%` : 'N/A'}`,
+      `Estimated: ${bandwidth !== null ? `${formatBytes(bandwidth.bandwidth)  }/s` : 'N/A'}`,
+      `Confidence: ${bandwidth !== null ? `${(bandwidth.confidence * 100).toFixed(0)  }%` : 'N/A'}`,
       `Trend: ${bandwidth?.trend ?? 'N/A'}`,
       '',
       '--- Request Statistics ---',
