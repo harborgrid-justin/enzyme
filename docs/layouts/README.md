@@ -22,6 +22,54 @@ The Advanced Layouts module provides container query-based responsive design, ad
 - **Context-Aware Components**: Components that know their layout context
 - **Responsive Utilities**: Hooks and helpers for adaptive UIs
 
+## Quick Start
+
+```tsx
+import {
+  AppLayout,
+  SidebarLayout,
+  ResponsiveContainer,
+  useLayoutContext
+} from '@missionfabric-js/enzyme/layouts';
+
+function App() {
+  return (
+    <AppLayout
+      header={<Header />}
+      sidebar={<Sidebar />}
+      footer={<Footer />}
+    >
+      <MainContent />
+    </AppLayout>
+  );
+}
+
+function MainContent() {
+  const { isMobile, sidebarCollapsed } = useLayoutContext();
+
+  return (
+    <ResponsiveContainer
+      mobile={<MobileView />}
+      desktop={<DesktopView />}
+    />
+  );
+}
+```
+
+### Available Exports
+
+| Export | Type | Description |
+|--------|------|-------------|
+| `AppLayout` | Component | Main application layout |
+| `SidebarLayout` | Component | Sidebar-based layout |
+| `ResponsiveContainer` | Component | Viewport-aware container |
+| `AdaptiveContainer` | Component | Container query-based container |
+| `AdaptiveGrid` | Component | Self-organizing grid with masonry |
+| `FlexBox` | Component | Context-aware flex container |
+| `GridBox` | Component | Context-aware grid container |
+| `useLayoutContext` | Hook | Access layout state |
+| `useContainerQuery` | Hook | Container query hook |
+
 ## Adaptive Layouts
 
 ### AdaptiveContainer
@@ -552,3 +600,18 @@ function LayoutContent({ children }) {
 ## API Reference
 
 See the [Advanced Features Overview](../advanced/README.md) for complete API documentation.
+
+## Related Documentation
+
+### Main Documentation
+- [Documentation Index](/home/user/enzyme/docs/INDEX.md) - All documentation resources
+- [Architecture Guide](/home/user/enzyme/docs/ARCHITECTURE.md) - System architecture
+- [Advanced Features](/home/user/enzyme/docs/advanced/README.md) - Advanced feature guides
+
+### Related Modules
+- [UI Components](/home/user/enzyme/docs/ui/README.md) - UI component library
+- [Hooks](/home/user/enzyme/docs/hooks/README.md) - Layout hooks and utilities
+- [VDOM](/home/user/enzyme/docs/vdom/README.md) - Module system for layouts
+
+### Integration Guides
+- [Integration Patterns](/home/user/enzyme/docs/integration/README.md) - How modules work together

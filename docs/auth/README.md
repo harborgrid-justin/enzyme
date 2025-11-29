@@ -1,8 +1,37 @@
 # Authentication & RBAC Module
 
-Comprehensive authentication and role-based access control (RBAC) system for @missionfabric-js/enzyme.
+> **Enterprise authentication and authorization system for @missionfabric-js/enzyme**
 
-## Overview
+Comprehensive authentication and role-based access control (RBAC) system with Active Directory integration, SSO, MFA, and enterprise-grade security features.
+
+## Table of Contents
+
+### Getting Started
+- [Overview](./OVERVIEW.md) - Module overview, features, and architecture
+- [Quick Start](#quick-start) - Get up and running in 5 minutes
+- [Common Patterns](./PATTERNS.md) - Real-world usage patterns and examples
+- [Troubleshooting](./TROUBLESHOOTING.md) - Common issues and solutions
+
+### Core Documentation
+- [Authentication Service](./AUTH_SERVICE.md) - Core authentication functionality
+- [Auth Provider](./AUTH_PROVIDER.md) - React context provider
+- [Hooks](./HOOKS.md) - React hooks reference
+- [Route Guards](./GUARDS.md) - Component-based route protection
+- [Type Definitions](./TYPES.md) - TypeScript types and interfaces
+
+### Advanced Features
+- [RBAC System](./RBAC.md) - Role-based access control
+- [Active Directory](./ACTIVE_DIRECTORY.md) - AD/Azure AD integration
+- [Security](../SECURITY.md) - Security best practices
+
+### Related Documentation
+- [API Module](../api/README.md) - Token injection and API integration
+- [Routing Module](../routing/README.md) - Route metadata and navigation
+- [State Module](../state/README.md) - Auth state synchronization
+
+---
+
+## Module Overview
 
 The auth module provides a complete authentication solution with support for:
 
@@ -13,6 +42,8 @@ The auth module provides a complete authentication solution with support for:
 - **Single Sign-On (SSO)**: Cross-tab session synchronization and SSO support
 - **Token Management**: Automatic token refresh, secure storage, and expiration handling
 - **React Integration**: Hooks, providers, and components for seamless React integration
+
+For a comprehensive overview including key features and architecture, see [OVERVIEW.md](./OVERVIEW.md).
 
 ## Architecture
 
@@ -428,15 +459,32 @@ const authConfig = createAuthConfig({
 });
 ```
 
-## API Reference
+## Documentation Index
 
-- [AUTH_SERVICE.md](./AUTH_SERVICE.md) - Core authentication service
-- [AUTH_PROVIDER.md](./AUTH_PROVIDER.md) - Auth provider component
-- [HOOKS.md](./HOOKS.md) - Authentication hooks
-- [GUARDS.md](./GUARDS.md) - Route guards
-- [RBAC.md](./RBAC.md) - RBAC system
-- [ACTIVE_DIRECTORY.md](./ACTIVE_DIRECTORY.md) - AD integration
-- [TYPES.md](./TYPES.md) - Type definitions
+### Core Functionality
+| Document | Description |
+|----------|-------------|
+| [OVERVIEW.md](./OVERVIEW.md) | Complete module overview, architecture, and integration points |
+| [AUTH_SERVICE.md](./AUTH_SERVICE.md) | Core authentication service API reference |
+| [AUTH_PROVIDER.md](./AUTH_PROVIDER.md) | React context provider configuration and usage |
+| [HOOKS.md](./HOOKS.md) | Complete hooks reference (useAuth, useUser, etc.) |
+| [GUARDS.md](./GUARDS.md) | Route protection components (RequireAuth, RequireRole, etc.) |
+| [TYPES.md](./TYPES.md) | TypeScript type definitions and interfaces |
+
+### Advanced Features
+| Document | Description |
+|----------|-------------|
+| [RBAC.md](./RBAC.md) | Role-Based Access Control engine and configuration |
+| [ACTIVE_DIRECTORY.md](./ACTIVE_DIRECTORY.md) | Azure AD, AD FS, and on-premises AD integration |
+| [PATTERNS.md](./PATTERNS.md) | 8 common patterns with complete code examples |
+| [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) | Solutions for common issues and debugging tips |
+
+### Related Resources
+| Document | Description |
+|----------|-------------|
+| [../SECURITY.md](../SECURITY.md) | Security best practices and guidelines |
+| [../api/README.md](../api/README.md) | API integration and token management |
+| [../routing/README.md](../routing/README.md) | Route guards and navigation integration |
 
 ## Common Use Cases
 
@@ -670,15 +718,89 @@ if (canAccess('documents', 'create')) {
 }
 ```
 
-## Support
+## Additional Resources
 
-For issues, questions, or contributions, please refer to:
+### Learning Paths
 
-- GitHub Issues
-- Documentation
-- API Reference
-- Security Policy
+**New to Authentication?**
+1. Read the [Overview](./OVERVIEW.md) to understand the module
+2. Follow the [Quick Start](#quick-start) guide above
+3. Explore [Common Patterns](./PATTERNS.md) for real-world examples
+
+**Implementing RBAC?**
+1. Start with [RBAC.md](./RBAC.md) for core concepts
+2. See [PATTERNS.md - Pattern 3](./PATTERNS.md#pattern-3-role-based-access-control) for implementation
+3. Check [TROUBLESHOOTING.md - RBAC Issues](./TROUBLESHOOTING.md#rbac-issues) for common problems
+
+**Integrating Active Directory?**
+1. Review [ACTIVE_DIRECTORY.md](./ACTIVE_DIRECTORY.md) for setup
+2. See [PATTERNS.md - Pattern 2](./PATTERNS.md#pattern-2-active-directory-integration) for examples
+3. Check [TROUBLESHOOTING.md - AD Issues](./TROUBLESHOOTING.md#active-directory-issues) for solutions
+
+**Security Concerns?**
+1. Review [../SECURITY.md](../SECURITY.md) for best practices
+2. See [AUTH_SERVICE.md - Security](./AUTH_SERVICE.md#security-considerations) for implementation
+3. Check [TROUBLESHOOTING.md - Security Issues](./TROUBLESHOOTING.md#security-issues) for common vulnerabilities
+
+### Feature Matrix
+
+| Feature | Basic Auth | AD Integration | RBAC | SSO | MFA |
+|---------|-----------|----------------|------|-----|-----|
+| Login/Logout | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Token Management | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Role-Based Access | - | ✓ | ✓ | ✓ | ✓ |
+| Permission System | - | - | ✓ | ✓ | ✓ |
+| Group Mapping | - | ✓ | ✓ | ✓ | ✓ |
+| Cross-Tab Sync | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Password Reset | ✓ | - | ✓ | - | ✓ |
+| 2FA/MFA | ✓ | ✓ | ✓ | ✓ | ✓ |
+
+### Configuration Quick Reference
+
+```tsx
+// Basic Authentication
+<AuthProvider config={{
+  loginEndpoint: '/api/auth/login',
+  autoRefresh: true,
+  persistAuth: true,
+}}>
+
+// Active Directory
+<ADProvider config={{
+  providerType: 'azure-ad',
+  azure: { tenantId, clientId },
+  enableSSO: true,
+}}>
+
+// RBAC
+<RBACProvider config={{
+  roles: { admin: { permissions: ['*'] } },
+  defaultDecision: 'deny',
+}}>
+```
+
+See [OVERVIEW.md - Configuration](./OVERVIEW.md#getting-started) for complete configuration options.
+
+## Support & Contributing
+
+### Getting Help
+- [Troubleshooting Guide](./TROUBLESHOOTING.md) - Common issues and solutions
+- [GitHub Issues](https://github.com/your-org/enzyme/issues) - Report bugs
+- [Documentation](https://docs.enzyme.dev) - Full documentation
+- [Discord Community](https://discord.gg/enzyme) - Community support
+
+### Contributing
+- [Contributing Guide](../../CONTRIBUTING.md) - How to contribute
+- [Code of Conduct](../../CODE_OF_CONDUCT.md) - Community guidelines
+- [Development Setup](../../DEVELOPMENT.md) - Local development
+
+## Version Information
+
+**Current Version:** 3.0.0
+**Last Updated:** 2025-11-29
+**Stability:** Stable
+**Breaking Changes:** See [CHANGELOG](../../CHANGELOG.md)
 
 ## License
 
-MIT License - see LICENSE file for details
+MIT License - see [LICENSE](../../LICENSE) file for details

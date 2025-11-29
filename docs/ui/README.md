@@ -217,21 +217,29 @@ Components are responsive by default and adapt to different screen sizes:
 
 ## Component Documentation
 
-For detailed documentation on each component category, see:
+### Component Categories
 
-- [Data Components](/home/user/enzyme/docs/ui/DATA_COMPONENTS.md)
-- [Feedback Components](/home/user/enzyme/docs/ui/FEEDBACK_COMPONENTS.md)
-- [Input Components](/home/user/enzyme/docs/ui/INPUT_COMPONENTS.md)
-- [Layout Components](/home/user/enzyme/docs/ui/LAYOUT_COMPONENTS.md)
-- [Navigation Components](/home/user/enzyme/docs/ui/NAVIGATION_COMPONENTS.md)
+For detailed documentation on each component category:
 
-## Theme System
+- **[Data Components](/home/user/enzyme/docs/ui/DATA_COMPONENTS.md)** - DataTable, VirtualizedDataTable
+- **[Feedback Components](/home/user/enzyme/docs/ui/FEEDBACK_COMPONENTS.md)** - Spinner, LoadingOverlay, Toast
+- **[Input Components](/home/user/enzyme/docs/ui/INPUT_COMPONENTS.md)** - Button, IconButton, ButtonGroup
+- **[Layout Components](/home/user/enzyme/docs/ui/LAYOUT_COMPONENTS.md)** - Page, Sidebar, TopNav
+- **[Navigation Components](/home/user/enzyme/docs/ui/NAVIGATION_COMPONENTS.md)** - MainNav, Breadcrumbs
 
-For information about theming and design tokens:
+### Related Documentation
 
-- [Theme System Overview](/home/user/enzyme/docs/theme/README.md)
-- [Theme Provider](/home/user/enzyme/docs/theme/PROVIDER.md)
-- [Design Tokens](/home/user/enzyme/docs/theme/DESIGN_TOKENS.md)
+**Theme System:**
+- **[Theme System Overview](/home/user/enzyme/docs/theme/README.md)** - Theming and design tokens
+- **[Dark Mode](/home/user/enzyme/docs/theme/DARK_MODE.md)** - Dark mode implementation guide
+- **[Theme Provider](/home/user/enzyme/docs/theme/PROVIDER.md)** - Theme provider setup
+- **[Design Tokens](/home/user/enzyme/docs/theme/DESIGN_TOKENS.md)** - Complete token reference
+
+**UX Utilities:**
+- **[UX Utilities](/home/user/enzyme/docs/ux/README.md)** - Loading states, skeletons, accessibility
+- **[Skeleton Factory](/home/user/enzyme/docs/ux/SKELETON_FACTORY.md)** - Loading placeholders
+- **[Loading States](/home/user/enzyme/docs/ux/LOADING_STATES.md)** - Progressive loading indicators
+- **[Accessibility](/home/user/enzyme/docs/ux/ACCESSIBILITY.md)** - Accessibility utilities
 
 ## Contributing
 

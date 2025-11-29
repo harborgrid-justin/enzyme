@@ -681,6 +681,267 @@ function ConnectionMonitor() {
 </RealtimeProvider>
 ```
 
+## Related Modules
+
+The Realtime module integrates seamlessly with other Enzyme modules for powerful data synchronization:
+
+### API Module
+Combine REST APIs with real-time updates using the [API Module](../api/README.md):
+
+```tsx
+import { useApiRequest } from '@missionfabric-js/enzyme/api';
+import { useRealtimeContext } from '@missionfabric-js/enzyme/realtime';
+import { useQueryClient } from '@tanstack/react-query';
+
+function LiveMetrics() {
+  const queryClient = useQueryClient();
+
+  // 1. Fetch initial data via REST API
+  const { data } = useApiRequest({
+    url: '/metrics',
+    queryKey: ['metrics'],
+  });
+
+  // 2. Subscribe to real-time updates
+  const { subscribe } = useRealtimeContext();
+
+  useEffect(() => {
+    return subscribe('metrics', (update) => {
+      // Update React Query cache with real-time data
+      queryClient.setQueryData(['metrics'], (old) => ({
+        ...old,
+        ...update,
+      }));
+    });
+  }, [subscribe, queryClient]);
+
+  return <Dashboard metrics={data} />;
+}
+```
+
+**See:** [API Documentation](../api/README.md) for REST API integration.
+
+### Queries Module
+Use query key factories with real-time data using the [Queries Module](../queries/README.md):
+
+```tsx
+import { createQueryKeyFactory } from '@missionfabric-js/enzyme/queries';
+import { useRealtimeContext } from '@missionfabric-js/enzyme/realtime';
+
+const messageKeys = createQueryKeyFactory('messages', {
+  all: () => ['messages'],
+  room: (roomId: string) => ['messages', 'room', roomId],
+});
+
+function ChatRoom({ roomId }) {
+  const queryClient = useQueryClient();
+  const { subscribe } = useRealtimeContext();
+
+  // Subscribe to new messages
+  useEffect(() => {
+    return subscribe(`room:${roomId}:messages`, (message) => {
+      queryClient.setQueryData(
+        messageKeys.room(roomId),
+        (old: Message[]) => [...old, message]
+      );
+    });
+  }, [roomId, subscribe, queryClient]);
+
+  // ... rest of component
+}
+```
+
+**See:** [Queries Documentation](../queries/README.md) for query key patterns.
+
+### State Management
+Sync real-time updates with global state using the [State Module](../state/README.md):
+
+```tsx
+import { useStore } from '@missionfabric-js/enzyme/state';
+import { useRealtimeContext } from '@missionfabric-js/enzyme/realtime';
+
+function NotificationSubscriber() {
+  const addNotification = useStore(state => state.addNotification);
+  const { subscribe } = useRealtimeContext();
+
+  useEffect(() => {
+    return subscribe('notifications', (notification) => {
+      // Add to global state
+      addNotification(notification);
+    });
+  }, [subscribe, addNotification]);
+
+  return null; // Background subscriber
+}
+```
+
+**See:** [State Documentation](../state/README.md) for state management patterns.
+
+### Streaming Module
+Combine WebSocket with SSR streaming using the [Streaming Module](../streaming/README.md):
+
+```tsx
+import { StreamBoundary } from '@missionfabric-js/enzyme/streaming';
+import { RealtimeProvider } from '@missionfabric-js/enzyme/realtime';
+
+function HybridDataFlow() {
+  return (
+    <RealtimeProvider config={{ type: 'websocket', url: '/ws' }}>
+      {/* SSR Streaming for initial content */}
+      <StreamBoundary priority="high">
+        <InitialContent />
+      </StreamBoundary>
+
+      {/* WebSocket for live updates */}
+      <StreamBoundary priority="normal">
+        <LiveUpdates />
+      </StreamBoundary>
+    </RealtimeProvider>
+  );
+}
+```
+
+**See:** [Streaming Documentation](../streaming/README.md) for SSR streaming.
+
+## Cross-Module Patterns
+
+### Complete Real-time Data Flow
+
+```tsx
+import { useApiRequest, useApiMutation } from '@missionfabric-js/enzyme/api';
+import { createQueryKeyFactory } from '@missionfabric-js/enzyme/queries';
+import { RealtimeProvider, useRealtimeContext } from '@missionfabric-js/enzyme/realtime';
+import { useStore } from '@missionfabric-js/enzyme/state';
+
+// 1. Define query keys
+const chatKeys = createQueryKeyFactory('chat', {
+  room: (roomId: string) => ['chat', 'room', roomId],
+  messages: (roomId: string) => ['chat', 'room', roomId, 'messages'],
+});
+
+// 2. Setup providers
+function App() {
+  return (
+    <RealtimeProvider config={{ type: 'websocket', url: '/ws' }}>
+      <ChatApp />
+    </RealtimeProvider>
+  );
+}
+
+// 3. Implement chat with hybrid data flow
+function ChatRoom({ roomId }) {
+  const queryClient = useQueryClient();
+  const currentUser = useStore(state => state.user);
+
+  // Fetch initial messages via REST
+  const { data: messages } = useApiRequest({
+    url: `/chat/${roomId}/messages`,
+    queryKey: chatKeys.messages(roomId),
+  });
+
+  // Send messages via REST
+  const sendMessage = useApiMutation({
+    method: 'POST',
+    url: `/chat/${roomId}/messages`,
+    // Don't invalidate - real-time will update
+  });
+
+  // Real-time updates
+  const { subscribe, send, isConnected } = useRealtimeContext();
+
+  useEffect(() => {
+    // Subscribe to room messages
+    const unsubscribe = subscribe(`room:${roomId}`, (event) => {
+      switch (event.type) {
+        case 'message':
+          // Update cache optimistically
+          queryClient.setQueryData(
+            chatKeys.messages(roomId),
+            (old: Message[]) => [...old, event.data]
+          );
+          break;
+
+        case 'typing':
+          // Update UI state
+          // ... handle typing indicator
+          break;
+
+        case 'user-joined':
+        case 'user-left':
+          // Update presence
+          // ... handle presence
+          break;
+      }
+    });
+
+    // Join room
+    send(`room:${roomId}:join`, {
+      userId: currentUser.id,
+      username: currentUser.name,
+    });
+
+    return () => {
+      // Leave room on unmount
+      send(`room:${roomId}:leave`, { userId: currentUser.id });
+      unsubscribe();
+    };
+  }, [roomId, subscribe, send, queryClient, currentUser]);
+
+  const handleSend = async (text: string) => {
+    // Send via REST (will broadcast via WebSocket)
+    await sendMessage.mutate({ text });
+  };
+
+  return (
+    <div>
+      <ConnectionStatus connected={isConnected} />
+      <MessageList messages={messages} />
+      <MessageInput onSend={handleSend} />
+    </div>
+  );
+}
+```
+
+### Multi-Tab Presence Sync
+
+```tsx
+import { useRealtimeContext } from '@missionfabric-js/enzyme/realtime';
+import { createBroadcastSync } from '@missionfabric-js/enzyme/state';
+
+function PresenceSync() {
+  const { send } = useRealtimeContext();
+  const userId = useStore(state => state.user.id);
+
+  // Sync across browser tabs
+  const sync = createBroadcastSync(useStore, {
+    channelName: 'presence-sync',
+    syncKeys: ['isActive', 'lastActivity'],
+  });
+
+  useEffect(() => {
+    sync.start();
+
+    // Only leader tab sends presence
+    if (sync.isLeader()) {
+      const interval = setInterval(() => {
+        send('presence', {
+          userId,
+          status: 'active',
+          timestamp: Date.now(),
+        });
+      }, 30000);
+
+      return () => {
+        clearInterval(interval);
+        sync.stop();
+      };
+    }
+  }, [sync, send, userId]);
+
+  return null;
+}
+```
+
 ## API Reference
 
 See the [Advanced Features Overview](../advanced/README.md) for complete API documentation.

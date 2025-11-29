@@ -805,9 +805,20 @@ function createBoundSelector<TState, TResult>(
 
 ## Related Documentation
 
+### State Management Core
 - [Core](./CORE.md) - Store and slice factories
 - [Stores](./STORES.md) - Store architecture
 - [Hooks](./HOOKS.md) - React hooks
 - [Selectors](./SELECTORS.md) - Selector patterns
 - [Slices](./SLICES.md) - Slice documentation
 - [Sync](./SYNC.md) - Multi-tab synchronization
+- [README](./README.md) - State management overview
+
+### TypeScript Resources
+- [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/intro.html) - Official TypeScript docs
+- [Zustand TypeScript Guide](https://github.com/pmndrs/zustand#typescript) - Zustand with TypeScript
+- [Immer TypeScript](https://immerjs.github.io/immer/typescript) - Immer type definitions
+
+### Best Practices
+- [Architecture](../ARCHITECTURE.md) - System design with TypeScript
+- [Testing Guide](../TESTING.md) - Testing typed stores

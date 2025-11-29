@@ -341,20 +341,99 @@ The theme system is optimized for performance:
 
 ## Documentation
 
-For detailed information, see:
+### Core Documentation
 
-- [Theme Provider](/home/user/enzyme/docs/theme/PROVIDER.md) - Setup and configuration
-- [Design Tokens](/home/user/enzyme/docs/theme/DESIGN_TOKENS.md) - Complete token reference
-- [Type Definitions](/home/user/enzyme/docs/theme/TYPES.md) - TypeScript types
+- **[Theme Provider](/home/user/enzyme/docs/theme/PROVIDER.md)** - Setup and configuration guide
+- **[Dark Mode](/home/user/enzyme/docs/theme/DARK_MODE.md)** - Complete dark mode implementation guide
+- **[Design Tokens](/home/user/enzyme/docs/theme/DESIGN_TOKENS.md)** - Comprehensive token reference
+- **[Type Definitions](/home/user/enzyme/docs/theme/TYPES.md)** - TypeScript type definitions
+
+### Related Documentation
+
+- **[UI Components](/home/user/enzyme/docs/ui/README.md)** - Theme-aware UI components
+- **[UX Utilities](/home/user/enzyme/docs/ux/README.md)** - UX features (skeletons use theme colors)
+- **[Accessibility](/home/user/enzyme/docs/ux/ACCESSIBILITY.md)** - Color contrast checking
 
 ## Examples
 
+### Quick Examples
+
+**Basic Setup:**
+```typescript
+import { ThemeProvider } from '@missionfabric-js/enzyme';
+
+function App() {
+  return (
+    <ThemeProvider>
+      <YourApp />
+    </ThemeProvider>
+  );
+}
+```
+
+**Dark Mode Toggle:**
+```typescript
+import { useThemeContext } from '@missionfabric-js/enzyme';
+
+function ThemeToggle() {
+  const { resolvedTheme, toggleTheme } = useThemeContext();
+
+  return (
+    <button onClick={toggleTheme}>
+      {resolvedTheme === 'dark' ? '🌙' : '☀️'}
+    </button>
+  );
+}
+```
+
+**Theme-Aware Component:**
+```typescript
+function Card({ children }) {
+  return (
+    <div
+      style={{
+        backgroundColor: 'var(--color-bg-card)',
+        color: 'var(--color-text-primary)',
+        borderColor: 'var(--color-border-default)'
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+```
+
+**Custom Theme:**
+```typescript
+import { ThemeProvider } from '@missionfabric-js/enzyme';
+
+const customPalette = {
+  light: {
+    primary: { default: '#6366f1', hover: '#4f46e5' },
+    background: { primary: '#ffffff' },
+    text: { primary: '#111827' }
+  },
+  dark: {
+    primary: { default: '#818cf8', hover: '#6366f1' },
+    background: { primary: '#0f172a' },
+    text: { primary: '#f1f5f9' }
+  }
+};
+
+<ThemeProvider palette={customPalette}>
+  <App />
+</ThemeProvider>
+```
+
+### Complete Examples
+
 See the theme examples directory for complete usage examples:
-- Basic theme setup
-- Custom theme provider
-- Dark mode toggle
-- Theme-aware components
-- CSS variable usage
+- Basic theme setup with system preference
+- Custom theme provider with branding
+- Dark mode toggle with persistence
+- Theme-aware components with CSS variables
+- Dynamic theme switching
+- WCAG contrast validation
 
 ## Troubleshooting
 

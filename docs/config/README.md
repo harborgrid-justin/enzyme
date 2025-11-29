@@ -574,6 +574,67 @@ function ConfigInspector() {
 }
 ```
 
+## Integration
+
+### With Feature Flags
+
+Configuration and feature flags work together seamlessly:
+
+```tsx
+import { useConfig } from '@/config';
+import { useFeatureFlag } from '@/lib/flags';
+
+function AdaptiveFeature() {
+  const flagEnabled = useFeatureFlag('new-feature');
+  const [config, setConfig] = useConfig('features', 'newFeature');
+
+  return flagEnabled ? <NewFeature config={config} /> : <OldFeature />;
+}
+```
+
+See [Feature Flags](../flags/README.md) for more details.
+
+### With Security
+
+Secure configuration management:
+
+```tsx
+import { useConfig } from '@/config';
+import { useSecureStorage } from '@/lib/security';
+
+function SecureConfig() {
+  const [apiKey, setApiKey] = useSecureStorage('api_key', '');
+  const [apiUrl] = useConfig('api', 'baseUrl');
+
+  return <ApiClient baseUrl={apiUrl} apiKey={apiKey} />;
+}
+```
+
+See [Security Module](../security/README.md) for more details.
+
+### With Authentication
+
+Authentication-aware configuration:
+
+```tsx
+import { useAuth } from '@/lib/auth';
+import { useConfig } from '@/config';
+
+function UserPreferences() {
+  const { user } = useAuth();
+  const [theme, setTheme] = useConfig('ui', 'theme', user?.preferences?.theme || 'light');
+
+  return (
+    <select value={theme} onChange={(e) => setTheme(e.target.value)}>
+      <option value="light">Light</option>
+      <option value="dark">Dark</option>
+    </select>
+  );
+}
+```
+
+See [Auth Module](../auth/README.md) for more details.
+
 ## Related Documentation
 
 - [ENV.md](./ENV.md) - Environment configuration and validation
@@ -585,6 +646,13 @@ function ConfigInspector() {
 
 ## See Also
 
+### Internal Documentation
+- [Feature Flags](../flags/README.md) - Feature flag integration
+- [Security Module](../security/README.md) - Secure configuration storage
+- [Auth Module](../auth/README.md) - Authentication configuration
+- [Contexts](../advanced/CONTEXTS.md) - Configuration context and providers
+
+### Implementation
 - `/config/` - Configuration implementation
 - `/config/hooks/` - React hooks
-- Feature flags documentation (`/docs/flags/`)
+- `/config/validation/` - Zod schemas and validation

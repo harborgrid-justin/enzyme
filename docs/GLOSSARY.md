@@ -636,8 +636,8 @@ React component for handling loading states declaratively.
 Creating objects/functions through a factory function.
 
 ```typescript
-const store = createStore(config);
-const router = createRouter(routes);
+const useAppStore = createAppStore((set) => ({ /* state */ }));
+const router = createRouter({ routes });
 ```
 
 ### Provider Pattern

@@ -242,8 +242,29 @@ git push origin feature/my-feature
 
 ## Code Style
 
-### TypeScript
+### TypeScript Guidelines
 
+```typescript
+// Use explicit types for public APIs
+export function useAuth(): AuthContextValue {
+  // ...
+}
+
+// Use interfaces for object shapes
+export interface User {
+  id: string;
+  email: string;
+  roles: Role[];
+}
+
+// Use type for unions and primitives
+export type Role = 'admin' | 'manager' | 'user' | 'guest';
+
+// Export types alongside implementations
+export { useAuth, type AuthContextValue };
+```
+
+**Best Practices:**
 - Use TypeScript for all code
 - Enable strict mode
 - Provide explicit types for public APIs
@@ -268,8 +289,31 @@ export function createStore(initialState) {
 }
 ```
 
-### React Components
+### Component Guidelines
 
+```tsx
+// Use function components with explicit return types
+export function MyComponent({ prop1, prop2 }: MyComponentProps): JSX.Element {
+  return <div>{/* ... */}</div>;
+}
+
+// Define props interfaces
+export interface MyComponentProps {
+  /** Description of prop1 */
+  prop1: string;
+  /** Description of prop2 */
+  prop2?: number;
+}
+
+// Use forwardRef when needed
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  function Button({ children, ...props }, ref) {
+    return <button ref={ref} {...props}>{children}</button>;
+  }
+);
+```
+
+**Best Practices:**
 - Use function components
 - Use TypeScript for props
 - Use hooks instead of classes
@@ -291,6 +335,60 @@ export function Button({ onClick, children, variant = 'primary' }: ButtonProps) 
   );
 }
 ```
+
+### Hook Guidelines
+
+```tsx
+// Name hooks with 'use' prefix
+export function useMyHook(options: MyHookOptions): MyHookResult {
+  // Implementation
+}
+
+// Define options and result types
+export interface MyHookOptions {
+  enabled?: boolean;
+  onSuccess?: (data: unknown) => void;
+}
+
+export interface MyHookResult {
+  data: unknown;
+  isLoading: boolean;
+  error: Error | null;
+}
+```
+
+### File Organization
+
+```typescript
+// Order of exports in index.ts files:
+
+// 1. Types
+export type { MyType, MyInterface };
+
+// 2. Constants
+export { MY_CONSTANT, DEFAULT_CONFIG };
+
+// 3. Utilities
+export { helperFunction, utilityFunction };
+
+// 4. Hooks
+export { useMyHook, useAnotherHook };
+
+// 5. Components
+export { MyComponent, AnotherComponent };
+```
+
+### Naming Conventions
+
+| Type | Convention | Example |
+|------|------------|---------|
+| Components | PascalCase | `UserProfile` |
+| Hooks | camelCase with `use` | `useAuth` |
+| Functions | camelCase | `formatDate` |
+| Constants | UPPER_SNAKE_CASE | `DEFAULT_TIMEOUT` |
+| Types/Interfaces | PascalCase | `UserConfig` |
+| Files (components) | PascalCase | `UserProfile.tsx` |
+| Files (utilities) | camelCase | `formatDate.ts` |
 
 ### File Naming
 
@@ -346,7 +444,9 @@ import type { User } from './types';
 
 - All new features must have tests
 - Bug fixes should include regression tests
-- Maintain or improve code coverage
+- Minimum 80% code coverage for new code
+- Critical paths require 100% coverage
+- Integration tests for complex features
 - Tests should be fast and isolated
 
 ### Running Tests
@@ -360,6 +460,47 @@ npm run test:watch
 
 # Run tests with coverage
 npm run test:coverage
+```
+
+### Test Structure
+
+```typescript
+// test file: MyComponent.test.tsx
+
+import { render, screen, fireEvent } from '@testing-library/react';
+import { MyComponent } from './MyComponent';
+
+describe('MyComponent', () => {
+  describe('rendering', () => {
+    it('renders correctly with default props', () => {
+      render(<MyComponent />);
+      expect(screen.getByRole('button')).toBeInTheDocument();
+    });
+
+    it('renders children', () => {
+      render(<MyComponent>Child content</MyComponent>);
+      expect(screen.getByText('Child content')).toBeInTheDocument();
+    });
+  });
+
+  describe('interactions', () => {
+    it('calls onClick when clicked', () => {
+      const onClick = jest.fn();
+      render(<MyComponent onClick={onClick} />);
+
+      fireEvent.click(screen.getByRole('button'));
+
+      expect(onClick).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('edge cases', () => {
+    it('handles empty data gracefully', () => {
+      render(<MyComponent data={[]} />);
+      expect(screen.getByText('No data')).toBeInTheDocument();
+    });
+  });
+});
 ```
 
 ### Writing Tests
@@ -381,18 +522,25 @@ describe('UserProfile', () => {
 
 **Hook Tests:**
 ```typescript
-import { renderHook } from '@testing-library/react';
-import { useCounter } from './useCounter';
+import { renderHook, act } from '@testing-library/react';
+import { useMyHook } from './useMyHook';
 
-describe('useCounter', () => {
-  it('increments counter', () => {
-    const { result } = renderHook(() => useCounter());
+describe('useMyHook', () => {
+  it('returns initial state', () => {
+    const { result } = renderHook(() => useMyHook());
 
-    act(() => {
-      result.current.increment();
+    expect(result.current.data).toBeNull();
+    expect(result.current.isLoading).toBe(false);
+  });
+
+  it('updates state on action', async () => {
+    const { result } = renderHook(() => useMyHook());
+
+    await act(async () => {
+      await result.current.fetchData();
     });
 
-    expect(result.current.count).toBe(1);
+    expect(result.current.data).toBeDefined();
   });
 });
 ```
@@ -420,25 +568,52 @@ describe('formatDate', () => {
 - Include examples
 - Update relevant docs
 
+Each module should have documentation covering:
+
+1. **Overview** - What the module does
+2. **Quick Start** - Basic usage example
+3. **API Reference** - All exports with types
+4. **Examples** - Common use cases
+5. **Best Practices** - Do's and don'ts
+
 ### JSDoc Format
 
 ```typescript
 /**
- * Creates an authenticated API client
+ * Authenticates a user with the provided credentials.
  *
- * @param config - Client configuration
- * @returns Configured API client instance
+ * @param credentials - User login credentials
+ * @param credentials.email - User's email address
+ * @param credentials.password - User's password
+ * @returns Promise resolving to the authenticated user
+ * @throws {AuthError} When authentication fails
  *
  * @example
  * ```typescript
- * const client = createApiClient({
- *   baseURL: 'https://api.example.com',
- *   timeout: 10000,
+ * const user = await login({
+ *   email: 'user@example.com',
+ *   password: 'password123',
  * });
  * ```
  */
-export function createApiClient(config: ApiClientConfig): ApiClient {
+export async function login(credentials: LoginCredentials): Promise<User> {
   // Implementation
+}
+```
+
+### Inline Comments
+
+```typescript
+// Good: Explains why, not what
+// Skip validation for system users to allow automated processes
+if (user.type === 'system') {
+  return true;
+}
+
+// Bad: States the obvious
+// Check if user is admin
+if (user.role === 'admin') {
+  // ...
 }
 ```
 
@@ -574,6 +749,59 @@ Follow [Semantic Versioning](https://semver.org/):
 
 ---
 
+## Issue Guidelines
+
+### Bug Reports
+
+```markdown
+## Bug Description
+Clear description of the bug.
+
+## Steps to Reproduce
+1. Go to '...'
+2. Click on '...'
+3. See error
+
+## Expected Behavior
+What you expected to happen.
+
+## Actual Behavior
+What actually happened.
+
+## Environment
+- Library version:
+- React version:
+- Browser:
+- OS:
+
+## Screenshots
+If applicable.
+
+## Additional Context
+Any other relevant information.
+```
+
+### Feature Requests
+
+```markdown
+## Feature Description
+Clear description of the feature.
+
+## Use Case
+Why is this feature needed?
+
+## Proposed Solution
+How should it work?
+
+## Alternatives Considered
+Other approaches considered.
+
+## Additional Context
+Any other relevant information.
+```
+
+---
+
 ## Getting Help
 
 ### Questions?
@@ -593,13 +821,14 @@ Follow [Semantic Versioning](https://semver.org/):
 ## Recognition
 
 Contributors are recognized:
-- In CHANGELOG.md
+- In [CHANGELOG.md](./CHANGELOG.md) for significant contributions
 - In GitHub releases
 - In project documentation
+- GitHub's contributor list
 
-Thank you for contributing to enzyme! 🎉
+Thank you for contributing to enzyme!
 
 ---
 
 **Last Updated:** 2025-11-29
-**Version:** 1.0.5
+**Version:** 4.0.0

@@ -160,12 +160,15 @@ interface AppLinkProps<TPath extends string> {
 
 ## Navigation Hooks
 
-### useTypedNavigate
+### useTypedNavigate / useRouteNavigate
 
-Type-safe programmatic navigation.
+Type-safe programmatic navigation hooks. Both hooks provide the same functionality with slightly different APIs.
+
+**Note**: `useTypedNavigate` and `useRouteNavigate` are aliases providing the same type-safe navigation capabilities. Use whichever fits your naming preference.
 
 ```typescript
 import { useTypedNavigate } from '@/lib/routing';
+// Or: import { useRouteNavigate } from '@/lib/routing';
 
 function MyComponent() {
   const { navigateTo, goBack, goForward } = useTypedNavigate();

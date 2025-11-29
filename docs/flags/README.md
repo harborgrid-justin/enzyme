@@ -442,17 +442,92 @@ describe('Feature Flags', () => {
 });
 ```
 
-## Related Documentation
+## Detailed Documentation
 
-- [PROVIDER.md](./PROVIDER.md) - Feature Flag Provider setup
-- [COMPONENTS.md](./COMPONENTS.md) - Flag components (FlagGate, etc.)
-- [HOOKS.md](./HOOKS.md) - Feature flag hooks
-- [INTEGRATION.md](./INTEGRATION.md) - Library and domain integrations
+For in-depth information on specific flag features:
+
+- **[PROVIDER.md](./PROVIDER.md)** - Feature Flag Provider setup and configuration
+- **[COMPONENTS.md](./COMPONENTS.md)** - Flag components (FlagGate, FlagGateAll, FlagGateAny)
+- **[HOOKS.md](./HOOKS.md)** - Feature flag hooks API reference
+- **[INTEGRATION.md](./INTEGRATION.md)** - Library and domain integrations
+- **[AB_TESTING.md](./AB_TESTING.md)** - A/B testing and experimentation guide
+- **[CONDITIONAL_RENDERING.md](./CONDITIONAL_RENDERING.md)** - Conditional rendering patterns
+
+## Integration
+
+### With Security
+
+Feature flags can be used to progressively roll out security features:
+
+```tsx
+import { useFeatureFlag } from '@/lib/flags';
+import { useSecurityContext } from '@/lib/security';
+
+function SecurityFeature() {
+  const advancedSecurity = useFeatureFlag('advanced-security');
+  const { config } = useSecurityContext();
+
+  if (advancedSecurity) {
+    config.csrf.tokenRotationInterval = 300000; // 5 minutes
+  }
+
+  return <SecureApp />;
+}
+```
+
+See [Security Module](../security/README.md) for more details.
+
+### With Authentication
+
+Control access to features based on authentication and feature flags:
+
+```tsx
+import { useAuth } from '@/lib/auth';
+import { useFeatureFlag } from '@/lib/flags';
+
+function PremiumFeature() {
+  const { user } = useAuth();
+  const premiumEnabled = useFeatureFlag('premium-features');
+
+  if (!user?.isPremium || !premiumEnabled) {
+    return <UpgradePrompt />;
+  }
+
+  return <PremiumContent />;
+}
+```
+
+See [Auth Module](../auth/README.md) for more details.
+
+### With Configuration
+
+Feature flags work seamlessly with the configuration system:
+
+```tsx
+import { useConfig } from '@/config';
+import { useFeatureFlag } from '@/lib/flags';
+
+function ConfigurableFeature() {
+  const newLayout = useFeatureFlag('new-layout');
+  const [layoutConfig] = useConfig('ui', 'layout');
+
+  return newLayout ? <NewLayout config={layoutConfig} /> : <OldLayout />;
+}
+```
+
+See [Configuration Module](../config/README.md) for more details.
 
 ## See Also
 
+### Internal Documentation
+- [Security Module](../security/README.md) - Flag-controlled security features
+- [Auth Module](../auth/README.md) - Authentication with feature flags
+- [Configuration](../config/README.md) - Config and feature flag integration
+- [Contexts](../advanced/CONTEXTS.md) - Feature flag context and providers
+
+### Implementation
 - `/lib/flags/` - Core implementation
-- `/lib/flags/advanced/` - Advanced features
+- `/lib/flags/advanced/` - Advanced features (engine, variants, rollouts)
 - `/lib/flags/analytics/` - Analytics and tracking
 - `/lib/flags/integration/` - Integration patterns
-- `/lib/flags/providers/` - Data providers
+- `/lib/flags/providers/` - Data providers (local, remote, WebSocket)
