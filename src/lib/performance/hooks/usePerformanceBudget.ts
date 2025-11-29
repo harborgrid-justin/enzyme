@@ -108,7 +108,7 @@ export function usePerformanceBudget(
 
   // State
   const [budgetStatuses, setBudgetStatuses] = useState<BudgetStatusSummary[]>([]);
-  const [degradationState, setDegradationState] = useState<DegradationState>('none');
+  const [degradationState, setDegradationState] = useState<DegradationState>({ isActive: false, level: 'none', activeStrategies: [] });
 
   // Get budget manager instance - use useState for initialization
   const [manager] = useState<PerformanceBudgetManager>(() => {

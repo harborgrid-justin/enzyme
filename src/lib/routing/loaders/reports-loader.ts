@@ -14,7 +14,7 @@ async function fetchReport(id: string): Promise<unknown> {
  * Fetch reports list using the centralized API client
  */
 async function fetchReports(params: Record<string, unknown>): Promise<unknown> {
-  const response = await apiClient.get('/api/reports', { params });
+  const response = await apiClient.get('/api/reports', { params: params as Record<string, string | number | boolean | readonly (string | number | boolean)[]> });
   return response.data;
 }
 

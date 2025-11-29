@@ -25,8 +25,8 @@
  */
 
 import { httpClient, type HttpClientConfig } from './http';
-import { serviceRegistry, setupDefaultServices, type ServiceConfig } from './ServiceCircuitBreaker';
-import { offlineQueue, type OfflineQueueOptions } from './PersistentOfflineQueue';
+import { serviceRegistry, setupDefaultServices, type ServiceConfig } from './service-circuit-breaker';
+import { offlineQueue, type OfflineQueueOptions } from './persistent-offline-queue';
 import {
   enhancedInterceptorChain,
   createTracingInterceptors,
@@ -36,10 +36,10 @@ import {
   type CircuitBreakerConfig,
   type TimingConfig,
   type TraceSpan,
-} from './EnhancedInterceptors';
-import { createVersionedApi, type ApiVersion, VersioningStrategy } from './ApiVersioning';
-import { globalDeduplicator } from './DataLoaderBatching';
-import { globalMutationQueue } from './OptimisticMutations';
+} from './enhanced-interceptors';
+import { createVersionedApi, type ApiVersion, VersioningStrategy } from './api-versioning';
+import { globalDeduplicator } from './data-loader-batching';
+import { globalMutationQueue } from './optimistic-mutations';
 import { globalEventBus } from '../shared/event-utils';
 import { networkMonitor } from '../utils/networkStatus';
 

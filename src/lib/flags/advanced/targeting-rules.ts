@@ -661,10 +661,17 @@ export class TargetingRulesEngine {
 // ============================================================================
 
 /**
+ * Mutable targeting rule type for builder.
+ */
+type MutableTargetingRule = {
+  -readonly [K in keyof TargetingRule]: TargetingRule[K];
+};
+
+/**
  * Fluent builder for creating targeting rules.
  */
 export class TargetingRuleBuilder {
-  private rule: Partial<TargetingRule> = {
+  private rule: Partial<MutableTargetingRule> = {
     enabled: true,
     priority: 0,
   };

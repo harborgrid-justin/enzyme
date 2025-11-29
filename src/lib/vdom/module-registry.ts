@@ -667,7 +667,14 @@ type ModuleRegistrationBuilder = {
 
 export function createModuleRegistration(id: string, name: string): ModuleRegistrationBuilder {
   const moduleId = createModuleId(id);
-  const config: ModuleBoundaryConfig = { id: moduleId, name };
+  const config: {
+    id: ModuleId;
+    name: string;
+    security?: Partial<ModuleSecurityConfig>;
+    hydration?: Partial<HydrationConfig>;
+    dependencies?: ModuleDependency[];
+    [key: string]: unknown;
+  } = { id: moduleId, name };
   const options: ModuleRegistrationOptions = {};
   const dependencies: ModuleDependency[] = [];
 
@@ -691,21 +698,31 @@ export function createModuleRegistration(id: string, name: string): ModuleRegist
       return this;
     },
 
+    withSecurity(security: Partial<ModuleSecurityConfig>) {
+      config.security = { ...config.security, ...security };
+      return this;
+    },
+
+    withHydration(hydration: Partial<HydrationConfig>) {
+      config.hydration = { ...config.hydration, ...hydration };
+      return this;
+    },
+
     withHMR(enabled = true) {
       options.hmrEnabled = enabled;
       return this;
     },
 
     withVersion(version: string) {
-      (config as { version: string }).version = version;
+      (config as unknown as { version: string }).version = version;
       return this;
     },
 
     register(registry?: ModuleRegistry) {
-      const finalConfig = {
+      const finalConfig: ModuleBoundaryConfig = {
         ...config,
         dependencies: dependencies.length > 0 ? dependencies : undefined,
-      };
+      } as ModuleBoundaryConfig;
 
       const reg = registry ?? getDefaultRegistry();
       return reg.register(finalConfig, options);

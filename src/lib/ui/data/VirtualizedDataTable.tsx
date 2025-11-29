@@ -15,7 +15,7 @@
  */
 
 import React, { memo, useMemo, useCallback, useId, useState, useRef, useEffect, type CSSProperties, type ReactNode } from 'react';
-import { FixedSizeList as List, type ListChildComponentProps } from 'react-window';
+import { FixedSizeList as List, type ListChildComponentProps, type FixedSizeList } from 'react-window';
 
 /**
  * Column definition for virtualized table
@@ -224,6 +224,12 @@ function VirtualizedRowInner<T>({
 }: ListChildComponentProps): React.ReactElement {
   const { data, columns, rowKey, onRowClick, focusedIndex, onRowFocus, onKeyDown } = rowData as RowData<T>;
   const row = data[index];
+
+  // Guard against undefined row (should not happen in normal virtualized list usage)
+  if (!row) {
+    return <div style={style} />;
+  }
+
   const key = getRowKey(row, rowKey);
   const rowRef = useRef<HTMLDivElement>(null);
   const isFocused = focusedIndex === index;
@@ -344,7 +350,7 @@ function VirtualizedDataTableInner<T>({
 }: VirtualizedDataTableProps<T>): React.ReactElement {
   // State for keyboard navigation - track which row is focused
   const [focusedIndex, setFocusedIndex] = useState<number>(-1);
-  const listRef = useRef<{ scrollToItem: (index: number, align: string) => void } | null>(null);
+  const listRef = useRef<FixedSizeList | null>(null);
 
   // Handler for keyboard navigation
   const handleKeyDown = useCallback((event: React.KeyboardEvent, currentIndex: number) => {

@@ -11,4 +11,4 @@ export {
   type ConflictStrategy,
   type BroadcastSyncConfig,
   type BroadcastSyncInstance,
-} from './BroadcastSync';
+} from './broadcast-sync';

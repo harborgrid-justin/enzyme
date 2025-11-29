@@ -33,6 +33,16 @@ import type {
   ParamsFor as _ParamsFor
 } from './route-parameter-types';
 
+// Re-export types for external use
+export type { ParsedRouteSegment, RouteSegmentType } from './route-segment-types';
+export type {
+  ExtractRequiredParams,
+  ExtractOptionalParams,
+  RouteParams,
+  HasParams,
+  ParamsFor
+} from './route-parameter-types';
+
 // =============================================================================
 // Route Builder Types
 // =============================================================================

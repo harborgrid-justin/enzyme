@@ -237,7 +237,7 @@ class PriorityQueue<T extends { priority: number }> {
  * for backpressure detection and handling.
  */
 class StreamBuffer {
-  private buffer: StreamChunk[] = [];
+  private buffer: (StreamChunk | undefined)[] = [];
   private readonly capacity: number;
   private readonly highWaterMark: number;
   private head = 0;
@@ -441,7 +441,7 @@ export class StreamingEngine {
    */
   registerBoundary(id: string, config: StreamConfig): void {
     if (this.boundaries.has(id)) {
-      const error: Error = createStreamError(
+      const error: StreamError = createStreamError(
         StreamErrorCode.ConfigError,
         `Boundary with ID "${id}" already exists`,
         { boundaryId: id }
@@ -533,7 +533,7 @@ export class StreamingEngine {
   start(id: string): void {
     const boundary = this.boundaries.get(id);
     if (!boundary) {
-      const error: Error = createStreamError(
+      const error: StreamError = createStreamError(
         StreamErrorCode.ConfigError,
         `Boundary "${id}" not found`,
         { boundaryId: id }
@@ -542,7 +542,7 @@ export class StreamingEngine {
     }
 
     if (!this.canTransitionTo(boundary.state, StreamState.Pending)) {
-      const error: Error = createStreamError(
+      const error: StreamError = createStreamError(
         StreamErrorCode.StateError,
         `Cannot start boundary "${id}" from state "${boundary.state}"`,
         { boundaryId: id }
@@ -576,7 +576,7 @@ export class StreamingEngine {
   pause(id: string): void {
     const boundary = this.boundaries.get(id);
     if (!boundary) {
-      const error: Error = createStreamError(
+      const error: StreamError = createStreamError(
         StreamErrorCode.ConfigError,
         `Boundary "${id}" not found`,
         { boundaryId: id }
@@ -585,7 +585,7 @@ export class StreamingEngine {
     }
 
     if (!this.canTransitionTo(boundary.state, StreamState.Paused)) {
-      const error: Error = createStreamError(
+      const error: StreamError = createStreamError(
         StreamErrorCode.StateError,
         `Cannot pause boundary "${id}" from state "${boundary.state}"`,
         { boundaryId: id }
@@ -608,7 +608,7 @@ export class StreamingEngine {
   resume(id: string): void {
     const boundary = this.boundaries.get(id);
     if (!boundary) {
-      const error: Error = createStreamError(
+      const error: StreamError = createStreamError(
         StreamErrorCode.ConfigError,
         `Boundary "${id}" not found`,
         { boundaryId: id }
@@ -617,7 +617,7 @@ export class StreamingEngine {
     }
 
     if (boundary.state !== StreamState.Paused) {
-      const error: Error = createStreamError(
+      const error: StreamError = createStreamError(
         StreamErrorCode.StateError,
         `Cannot resume boundary "${id}" from state "${boundary.state}"`,
         { boundaryId: id }
@@ -997,7 +997,7 @@ export class StreamingEngine {
         break;
 
       case BackpressureStrategy.Error: {
-        const error: Error = createStreamError(
+        const error: StreamError = createStreamError(
           StreamErrorCode.BufferOverflow,
           'Buffer overflow - backpressure strategy is error',
           { boundaryId: boundary.id }
@@ -1013,7 +1013,7 @@ export class StreamingEngine {
       return false;
     }
 
-    const error: Error = createStreamError(
+    const error: StreamError = createStreamError(
       StreamErrorCode.BufferOverflow,
       'Buffer full and backpressure strategy does not allow dropping',
       { boundaryId: boundary.id, chunkId: chunk.id }

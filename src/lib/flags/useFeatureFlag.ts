@@ -1,5 +1,5 @@
 import { useFeatureFlagContext } from './FeatureFlagProvider';
-import type { FlagKey } from './flagKeys';
+import type { FlagKey } from './flag-keys';
 
 /**
  * Hook: useFeatureFlag("new-dashboard").

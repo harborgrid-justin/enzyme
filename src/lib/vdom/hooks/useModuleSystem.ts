@@ -36,12 +36,12 @@ export function useModuleSystem(): ModuleSystemContextValue {
 export function useModuleHierarchy(): {
   moduleId: ModuleId | null;
   depth: number;
-  path: readonly ModuleId[];
+  path: ModuleId[];
 } {
   return useContext<{
     moduleId: ModuleId | null;
     depth: number;
-    path: readonly ModuleId[];
+    path: ModuleId[];
   }>(ModuleHierarchyContext);
 }
 

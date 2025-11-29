@@ -499,7 +499,7 @@ export class CachedProvider implements FlagProvider {
   /**
    * Check if the provider is healthy.
    */
-  async isHealthy(): boolean {
+  async isHealthy(): Promise<boolean> {
     return this.provider.isHealthy();
   }
 

@@ -1481,7 +1481,7 @@ API_URL=https://api.prod.com        # ❌ Not exposed
 
 ```typescript
 // Enable all library debug logs
-import { enableDebugMode } from '@/lib/flags/debugMode';
+import { enableDebugMode } from '@/lib/flags/debug-mode';
 
 if (import.meta.env.DEV) {
   enableDebugMode();

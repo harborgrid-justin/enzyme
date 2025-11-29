@@ -318,7 +318,7 @@ export class PolicyEvaluator {
 
     // Evaluate resources
     if ((policy.resources?.length ?? 0) > 0) {
-      const resourceMatch = this.evaluateResources(policy.resources, request);
+      const resourceMatch = this.evaluateResources(policy.resources ?? [], request);
       if (!resourceMatch) {
         return {
           policyId: policy.id,
@@ -330,7 +330,7 @@ export class PolicyEvaluator {
 
     // Evaluate actions
     if ((policy.actions?.length ?? 0) > 0) {
-      const actionMatch = this.evaluateActions(policy.actions, request);
+      const actionMatch = this.evaluateActions(policy.actions ?? [], request);
       if (!actionMatch) {
         return {
           policyId: policy.id,
@@ -343,7 +343,7 @@ export class PolicyEvaluator {
     // Evaluate conditions
     if ((policy.conditions?.length ?? 0) > 0) {
       const conditionsMatch = this.evaluateConditions(
-        policy.conditions,
+        policy.conditions ?? [],
         request,
         context
       );

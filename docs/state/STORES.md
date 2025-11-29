@@ -714,7 +714,7 @@ featureStoreRegistry.getStore('tasks').getState()
 Enable debug mode to log all state changes:
 
 ```typescript
-import { isDebugModeEnabled } from '@/lib/flags/debugMode';
+import { isDebugModeEnabled } from '@/lib/flags/debug-mode';
 
 if (isDebugModeEnabled()) {
   // Debug-specific code

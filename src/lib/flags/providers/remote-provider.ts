@@ -355,7 +355,7 @@ export class RemoteProvider implements FlagProvider {
       ...this.config.headers,
     };
 
-    if (this.config.apiKey) {
+    if (this.config.apiKey !== null && this.config.apiKey !== undefined && this.config.apiKey !== '') {
       headers['Authorization'] = `Bearer ${this.config.apiKey}`;
     }
 
@@ -369,8 +369,8 @@ export class RemoteProvider implements FlagProvider {
     if (ctx?.user?.id !== null && ctx?.user?.id !== undefined && ctx.user.id !== '') {
       params['userId'] = ctx.user.id;
     }
-    if (ctx?.application?.environment !== null && ctx?.application?.environment !== undefined && ctx.application.environment !== '') {
-      params['environment'] = ctx.application.environment;
+    if (ctx?.application?.environment !== null && ctx?.application?.environment !== undefined) {
+      params['environment'] = String(ctx.application.environment);
     }
     if (ctx?.application?.version !== null && ctx?.application?.version !== undefined && ctx.application.version !== '') {
       params['version'] = ctx.application.version;
@@ -516,7 +516,7 @@ export class RemoteProvider implements FlagProvider {
     };
   }
 
-  private async sleep(ms: number): void {
+  private async sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 

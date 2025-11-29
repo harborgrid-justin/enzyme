@@ -1111,7 +1111,7 @@ export class HydrationScheduler {
     if (Array.isArray(thresholdValue)) {
       threshold = thresholdValue.slice() as number[];
     } else if (thresholdValue != null) {
-      threshold = thresholdValue;
+      threshold = thresholdValue as number;
     } else {
       threshold = 0;
     }

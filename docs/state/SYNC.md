@@ -14,7 +14,7 @@ The sync module enables real-time state synchronization across browser tabs/wind
 - Graceful degradation for unsupported browsers
 - DevTools integration for debugging sync events
 
-**File:** `/home/user/enzyme/src/lib/state/sync/BroadcastSync.ts`
+**File:** `/home/user/enzyme/src/lib/state/sync/broadcast-sync.ts`
 
 ## Quick Start
 

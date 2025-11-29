@@ -36,4 +36,4 @@ export {
   type ApiClient,
   type PaginatedResponse,
   type ListQueryParams,
-} from '../apiClients';
+} from '../api-clients';

@@ -29,7 +29,7 @@ import type {
   Point2D,
   SpacingConstraintParams,
   VisibilityConstraintParams,
-} from './types.ts';
+} from './types';
 
 // =============================================================================
 // CONSTANTS

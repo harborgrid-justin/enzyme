@@ -605,7 +605,7 @@ export function validatePermissionMatrix(matrix: PermissionMatrix): string[] {
     // Check for conflicting allow/deny
     if (entry.allowedActions != null && entry.deniedActions != null) {
       const overlap = entry.allowedActions.filter(a =>
-        entry.deniedActions.includes(a)
+        (entry.deniedActions ?? []).includes(a)
       );
       if (overlap.length > 0) {
         errors.push(

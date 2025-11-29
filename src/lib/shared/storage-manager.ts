@@ -9,7 +9,7 @@
  * @see {@link https://example.com/docs/storage} for architecture documentation
  */
 
-import { getErrorHandler } from './UnifiedErrorHandler';
+import { getErrorHandler } from './unified-error-handler';
 
 /**
  * Storage type options
@@ -582,7 +582,7 @@ export class StorageManager {
  *
  * @example
  * ```typescript
- * import { getStorage } from '@/lib/shared/StorageManager';
+ * import { getStorage } from '@/lib/shared/storage-manager';
  *
  * const storage = getStorage();
  * storage.setItem('key', 'value');

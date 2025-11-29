@@ -47,7 +47,7 @@ import React, {
   useState,
 } from 'react';
 import { useFeatureFlag } from '../useFeatureFlag';
-import type { FlagKey } from '../flagKeys';
+import type { FlagKey } from '../flag-keys';
 
 // =============================================================================
 // Types
@@ -424,7 +424,7 @@ export function FlagConfigurableMulti({
   strategy = 'first',
   getFlag: customGetFlag,
 }: FlagConfigurableMultiProps): ReactElement | null {
-  const hookGetFlag = (): void => {
+  const hookGetFlag = (): boolean => {
     // This is a simplified version - in real use, integrate with useFeatureFlags
     return false;
   };

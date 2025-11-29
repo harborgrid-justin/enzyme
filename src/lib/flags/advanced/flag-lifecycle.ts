@@ -629,10 +629,17 @@ export class LifecycleManager {
 // ============================================================================
 
 /**
+ * Mutable lifecycle type for builder.
+ */
+type MutableFlagLifecycle = {
+  -readonly [K in keyof FlagLifecycle]: FlagLifecycle[K];
+};
+
+/**
  * Fluent builder for creating lifecycle metadata.
  */
 export class LifecycleBuilder {
-  private lifecycle: Partial<FlagLifecycle> = {};
+  private lifecycle: Partial<MutableFlagLifecycle> = {};
 
   constructor(createdBy: string) {
     const now = new Date();

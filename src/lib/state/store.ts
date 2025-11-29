@@ -18,7 +18,7 @@ import { immer } from 'zustand/middleware/immer';
 import { uiSlice, type UISlice } from './slices/uiSlice';
 import { sessionSlice, type SessionSlice } from './slices/sessionSlice';
 import { settingsSlice, type SettingsSlice } from './slices/settingsSlice';
-import { isDebugModeEnabled } from '../flags/debugMode';
+import { isDebugModeEnabled } from '../flags/debug-mode';
 
 // ============================================================================
 // Store Types
@@ -420,7 +420,7 @@ export function resetAllFeatureStores(clearRegistry = true): void {
   featureStores.forEach((store, _name) => {
     // Type the store's getState method properly
     type StoreWithReset = { reset?: () => void; _reset?: () => void };
-    const state = (store.getState as () => StoreWithReset)();
+    const state = ((store as { getState: () => StoreWithReset }).getState)();
     if (typeof state.reset === 'function') {
       state.reset();
     } else if (typeof state._reset === 'function') {

@@ -575,7 +575,7 @@ export function useOptimisticList<T extends ListItem>(
   create: (item: Omit<T, 'id'>) => Promise<T>;
   update: (id: string, updates: Partial<T>) => Promise<T>;
   remove: (id: string) => Promise<void>;
-  refresh: () => Promise<void>;
+  refresh: () => Promise<T[]>;
   reset: (newItems?: T[]) => void;
 } {
   const {
@@ -839,21 +839,14 @@ export function useOptimisticList<T extends ListItem>(
   return {
     // State
     items,
-    confirmedItems,
     isPending,
     error,
-    pendingOps,
-    pendingIds,
 
     // Actions
-    add,
+    create: add,
     update,
     remove,
     refresh,
     reset,
-
-    // Utilities
-    getItem: (id: string) => items.find((item) => item.id === id),
-    isItemPending: (id: string) => pendingIds.has(id),
   };
 }

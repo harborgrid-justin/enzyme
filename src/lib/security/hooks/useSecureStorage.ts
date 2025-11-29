@@ -153,12 +153,11 @@ export function useSecureStorage<T>(
 
   // Remove value from storage
   const removeValue = useCallback(async (): Promise<void> => {
-    await Promise.resolve(); // Satisfy require-await lint rule
     try {
       setError(null);
 
       const storageInstance = getStorage();
-      const result = storageInstance.removeItem(key);
+      const result = await storageInstance.removeItem(key);
 
       if (!mountedRef.current) return;
 

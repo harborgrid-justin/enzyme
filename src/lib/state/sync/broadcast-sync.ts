@@ -15,7 +15,7 @@
  *
  * @example
  * ```typescript
- * import { createBroadcastSync } from './sync/BroadcastSync';
+ * import { createBroadcastSync } from './sync/broadcast-sync';
  * import { useStore } from './store';
  *
  * const sync = createBroadcastSync(useStore, {

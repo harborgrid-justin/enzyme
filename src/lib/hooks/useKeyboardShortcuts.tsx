@@ -13,7 +13,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFeatureFlag } from '../flags/useFeatureFlag';
-import { flagKeys } from '../flags/flagKeys';
+import { flagKeys } from '../flags/flag-keys';
 
 /**
  * Keyboard shortcut definition

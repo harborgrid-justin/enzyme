@@ -117,12 +117,12 @@ export function createSlice<
           partial: Partial<TStore>,
           replace: boolean,
           action: { type: string }
-        ) => void)(updaterOrPartial as Partial<TStore>, false, { type });
+        ) => void)(updaterOrPartial as unknown as Partial<TStore>, false, { type });
       }
     };
 
     // Create slice-scoped getter that extracts only slice state
-    const sliceGet: SliceGetter<TState> = (): void => {
+    const sliceGet: SliceGetter<TState> = (): TState => {
       const state = get();
       const sliceState = {} as TState;
       for (const key of Object.keys(initialState)) {

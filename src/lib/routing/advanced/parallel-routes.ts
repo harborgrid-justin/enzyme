@@ -311,7 +311,7 @@ export class ParallelRoutes {
       activeSlots: Array.from(this.slotStates.entries())
         .filter(([_, state]) => state.isActive)
         .map(([name]) => name),
-      refreshSlot: (slotName: string) => {
+      refreshSlot: async (slotName: string) => {
         this.updateSlotState(slotName, { isLoading: true, hasError: false, error: null });
         // Actual refresh logic would be implemented by the consumer
       },

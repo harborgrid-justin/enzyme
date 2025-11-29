@@ -194,7 +194,7 @@ const useAuthStore = create(
 ### Using BroadcastChannel
 
 ```tsx
-import { createBroadcastSync } from '@/lib/state/sync/BroadcastSync';
+import { createBroadcastSync } from '@/lib/state/sync/broadcast-sync';
 
 const useCartStore = create(
   persist(
@@ -220,7 +220,7 @@ createBroadcastSync(useCartStore, {
 ### Handling Sync Conflicts
 
 ```tsx
-import { createBroadcastSync } from '@/lib/state/sync/BroadcastSync';
+import { createBroadcastSync } from '@/lib/state/sync/broadcast-sync';
 
 createBroadcastSync(useStore, {
   channelName: 'app-sync',

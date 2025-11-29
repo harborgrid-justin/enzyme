@@ -31,7 +31,7 @@ export {
   type QueuedMutation,
   type MutationQueueConfig,
   type QueueStatus,
-} from '../OptimisticMutations';
+} from '../optimistic-mutations';
 
 // Type-Safe API Client
 export {
@@ -62,4 +62,4 @@ export {
   type TypedApiClientConfig,
   type User,
   type PaginationParams,
-} from '../TypeSafeApiClient';
+} from '../type-safe-api-client';

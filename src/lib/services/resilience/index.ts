@@ -22,7 +22,7 @@ export {
   type ServiceConfig,
   type ServiceStatus,
   type ServiceStateChangeEvent,
-} from '../ServiceCircuitBreaker';
+} from '../service-circuit-breaker';
 
 // Persistent Offline Queue
 export {
@@ -33,7 +33,7 @@ export {
   type OfflineQueueOptions,
   type EnqueueOptions,
   type QueueStats,
-} from '../PersistentOfflineQueue';
+} from '../persistent-offline-queue';
 
 // Enhanced Interceptors
 export {
@@ -56,4 +56,4 @@ export {
   type TimingConfig,
   type TimingData,
   type RetryConfig,
-} from '../EnhancedInterceptors';
+} from '../enhanced-interceptors';

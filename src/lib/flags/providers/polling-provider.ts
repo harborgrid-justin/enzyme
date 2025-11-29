@@ -342,7 +342,7 @@ export class PollingProvider implements FlagProvider {
   /**
    * Check if the provider is healthy.
    */
-  async isHealthy(): boolean {
+  async isHealthy(): Promise<boolean> {
     return (
       this.consecutiveFailures < this.config.maxFailures &&
       (await this.provider.isHealthy())

@@ -649,7 +649,7 @@ describe('useGlobalStore hooks', () => {
     it('should handle selector that returns undefined', () => {
       // Act
       const { result } = renderHook(() =>
-        useGlobalStore((state) => (state as Record<string, unknown>).nonexistentProperty)
+        useGlobalStore((state) => (state as unknown as Record<string, unknown>).nonexistentProperty)
       );
 
       // Assert

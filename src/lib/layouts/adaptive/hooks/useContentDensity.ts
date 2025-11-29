@@ -10,7 +10,7 @@
 
 import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { ContentDensity, Dimensions, UseContentDensityReturn } from '../types.ts';
+import type { ContentDensity, Dimensions, UseContentDensityReturn } from '../types';
 
 // =============================================================================
 // CONSTANTS

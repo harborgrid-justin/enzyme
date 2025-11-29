@@ -210,6 +210,10 @@ export class ExposureTracker {
     }
     const userMap = this.userExposures.get(userId);
 
+    if (!userMap) {
+      return null;
+    }
+
     // Check for existing exposure
     const existing = userMap.get(exposureKey);
     const isFirstExposure = !existing;
@@ -470,8 +474,14 @@ export class ExposureTracker {
     for (const [userId, userMap] of this.userExposures.entries()) {
       for (const exposure of userMap.values()) {
         if (exposure.experimentId === experimentId && exposure.cohort != null && exposure.cohort !== '') {
-          cohorts[exposure.cohort] ??= [];
-          cohorts[exposure.cohort]?.push(userId);
+          if (!cohorts[exposure.cohort]) {
+            cohorts[exposure.cohort] = [];
+          }
+          // Add null check to satisfy TypeScript
+          const cohortArray = cohorts[exposure.cohort];
+          if (cohortArray) {
+            cohortArray.push(userId);
+          }
         }
       }
     }
@@ -538,9 +548,9 @@ export class ExposureTracker {
 
     try {
       for (const exposure of exposures) {
-        const result = this.config.onExposure(exposure);
-        if (result instanceof Promise) {
-          await result;
+        const result = this.config.onExposure(exposure) as unknown;
+        if (result && typeof result === 'object' && 'then' in result && typeof result.then === 'function') {
+          await result as Promise<void>;
         }
       }
       this.log(`Flushed ${exposures.length} exposures`);
@@ -667,7 +677,7 @@ export class ExposureTracker {
    * Enable or disable tracking.
    */
   setEnabled(enabled: boolean): void {
-    this.config.enabled = enabled;
+    (this.config as { enabled: boolean }).enabled = enabled;
     if (enabled) {
       this.startFlushTimer();
     } else {

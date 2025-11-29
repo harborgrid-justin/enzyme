@@ -345,7 +345,7 @@ export class CompositeGuard implements RouteGuard {
     }
 
     // For 'any', allow if any passed
-    let finalResult: GuardResult;
+    let finalResult: GuardResultObject;
     if (passed.length > 0) {
       finalResult = GuardResult.allow();
     } else if (this.config.mergeResults) {

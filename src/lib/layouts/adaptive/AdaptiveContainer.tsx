@@ -65,7 +65,7 @@ const DENSITY_THRESHOLDS = {
 /**
  * Hook to access container context.
  */
-export function useContainerContext(): ContainerContextValue | undefined {
+export function useContainerContext(): ContainerContextValue | null {
   return useContext(ContainerContext);
 }
 

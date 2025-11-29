@@ -9,8 +9,8 @@ import React, {
 import { FeatureFlagContext } from '../contexts/FeatureFlagContext';
 import { env } from '../../config/env';
 import { getDefaultFlags } from '../../config/featureFlagConfig';
-import type { FlagKey } from './flagKeys';
-import { _setFlagProviderInitialized, _updateRuntimeFlags, _resetFlagProvider } from './debugMode';
+import type { FlagKey } from './flag-keys';
+import { _setFlagProviderInitialized, _updateRuntimeFlags, _resetFlagProvider } from './debug-mode';
 
 interface FeatureFlagContextValue {
   flags: Record<string, boolean>;

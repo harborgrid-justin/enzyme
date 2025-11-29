@@ -228,7 +228,7 @@ export interface PreloadResource {
 export function createEarlyHints(resources: PreloadResource[]): string[] {
   return resources.map((resource) => {
     let hint = `<${resource.href}>; rel=preload; as=${resource.as}`;
-    if (resource.crossOrigin != null && resource.crossOrigin !== '') {
+    if (resource.crossOrigin != null) {
       hint += `; crossorigin=${resource.crossOrigin}`;
     }
     if (resource.type != null && resource.type !== '') {

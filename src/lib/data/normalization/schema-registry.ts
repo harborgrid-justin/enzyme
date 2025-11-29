@@ -528,7 +528,7 @@ export function createSchemaRegistry(config: SchemaRegistryConfig = {}): SchemaR
             }
           }
 
-          if (targetName !== undefined && targetName !== '') {
+          if (targetName !== null && targetName !== '') {
             usedSchemas.add(targetName);
 
             if (!registeredSchemas.has(targetName)) {

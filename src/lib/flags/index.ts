@@ -78,11 +78,11 @@
 // ============================================================================
 
 export { FeatureFlagProvider, useFeatureFlagContext } from './FeatureFlagProvider';
-export { flagKeys, flagCategories, type FlagKey, type FlagCategory } from './flagKeys';
+export { flagKeys, flagCategories, type FlagKey, type FlagCategory } from './flag-keys';
 export { useFeatureFlag, useFeatureFlags, useFeatureFlagsStatus } from './useFeatureFlag';
 export { withFeatureFlag, withoutFeatureFlag } from './withFeatureFlag';
 export { FlagGate, FlagGateAll, FlagGateAny } from './FlagGate';
-export { isDebugModeEnabled, isFlagEnabled, isDevelopmentEnv } from './debugMode';
+export { isDebugModeEnabled, isFlagEnabled, isDevelopmentEnv } from './debug-mode';
 
 // ============================================================================
 // Advanced Module Re-exports

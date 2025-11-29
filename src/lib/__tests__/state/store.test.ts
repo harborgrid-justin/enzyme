@@ -673,7 +673,7 @@ describe('Store', () => {
   describe('DevTools integration', () => {
     it('should not expose store to window in non-debug mode', () => {
       // Assert - window.__STORE__ should not be defined
-      expect((window as Record<string, unknown>).__STORE__).toBeUndefined();
+      expect((window as unknown as Record<string, unknown>).__STORE__).toBeUndefined();
     });
   });
 });

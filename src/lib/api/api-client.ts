@@ -1183,7 +1183,7 @@ export class ApiClient {
     }
 
     // Add content type if body exists
-    if (config.body !== undefined && config.contentType != null && config.contentType !== '') {
+    if (config.body !== undefined && config.contentType != null) {
       headers.set('Content-Type', config.contentType);
     }
 

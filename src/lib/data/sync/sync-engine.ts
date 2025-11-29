@@ -646,7 +646,7 @@ export function createSyncEngine(config: SyncEngineConfig): SyncEngine {
       updateMetadata(entityType, id, {
         status: 'synced',
         lastSyncedAt: Date.now(),
-        remoteModifiedAt: remoteModifiedAt !== undefined && remoteModifiedAt !== 0 ? remoteModifiedAt : Date.now(),
+        remoteModifiedAt: remoteModifiedAt !== null && remoteModifiedAt !== undefined && remoteModifiedAt !== 0 ? remoteModifiedAt : Date.now(),
         retryCount: 0,
       });
 
@@ -947,9 +947,9 @@ export function createSyncEngine(config: SyncEngineConfig): SyncEngine {
   }
 
   return {
-    sync: syncEntity as <_T>(entityType: string, id: string, options?: Partial<SyncOptions>) => Promise<SyncResult>,
-    syncMany: syncManyEntities as (entityType: string, ids: string[], options?: Partial<SyncOptions>) => Promise<SyncResult>,
-    syncAll: syncAllEntities as (entityType: string, options?: Partial<SyncOptions>) => Promise<SyncResult>,
+    sync: syncEntity as <T = unknown>(entityType: string, id: string, options?: SyncOptions) => Promise<SyncResult<T>>,
+    syncMany: syncManyEntities as <T = unknown>(entityType: string, ids: string[], options?: SyncOptions) => Promise<SyncResult<T>[]>,
+    syncAll: syncAllEntities as <T = unknown>(entityType: string, options?: SyncOptions) => Promise<SyncResult<T>>,
     create: createEntity,
     update: updateEntity,
     delete: deleteEntity,

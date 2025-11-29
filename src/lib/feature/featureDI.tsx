@@ -394,10 +394,10 @@ export interface StorageService {
 export const StorageContract = createServiceContract<StorageService>(
   'storage',
   {
-    get: (key) => {
+    get: <T,>(key: string): T | null => {
       try {
         const item = localStorage.getItem(key);
-        return item !== null ? (JSON.parse(item) as unknown) : null;
+        return item !== null ? (JSON.parse(item) as T) : null;
       } catch {
         return null;
       }

@@ -1,9 +1,9 @@
-import { flagKeys, type FlagCategory } from '@/lib/flags/flagKeys';
+import { flagKeys, type FlagCategory } from '@/lib/flags/flag-keys';
 
 /**
  * Global default values & source keys for feature flags.
  *
- * @see /src/lib/flags/flagKeys.ts for flag key definitions
+ * @see /src/lib/flags/flag-keys.ts for flag key definitions
  * @see /src/lib/docs/FEATURE-FLAGS.md for usage documentation
  */
 

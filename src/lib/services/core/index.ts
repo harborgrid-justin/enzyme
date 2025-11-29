@@ -23,7 +23,7 @@ export {
   type TelemetryConfig,
   type ServiceMetric,
   type ServiceError,
-} from '../ServiceLayerFacade';
+} from '../service-layer-facade';
 
 // HTTP Client
 export {

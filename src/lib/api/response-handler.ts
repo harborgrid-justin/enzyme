@@ -205,7 +205,7 @@ export function createTransformPipeline<T, U = T>(
   };
   execute: (data: T) => U;
 } {
-  const transform = fn ?? ((data: T) => data as U);
+  const transform = fn ?? ((data: T) => data as unknown as U);
 
   return {
     pipe: <V>(nextFn: ResponseTransformer<U, V>) => {
