@@ -86,9 +86,8 @@ export async function checkAVIFSupport(): Promise<boolean> {
  */
 export function hasAsyncAwait(): boolean {
   try {
-    // Check if async/await is supported by testing syntax
-    eval('(async () => {})');
-    return true;
+    // Check if async/await is supported by testing constructor
+    return typeof (async function(){}).constructor === 'function';
   } catch {
     return false;
   }

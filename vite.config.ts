@@ -84,6 +84,7 @@ export default defineConfig({
         'node:module',
       ],
       output: {
+        exports: 'named',
         globals: {
           react: 'React',
           'react-dom': 'ReactDOM',
