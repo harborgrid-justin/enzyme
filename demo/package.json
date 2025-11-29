@@ -18,7 +18,7 @@
   "author": "MissionFabric",
   "license": "MIT",
   "dependencies": {
-    "@missionfabric-js/enzyme": "^1.0.4",
+    "@missionfabric-js/enzyme": "^1.0.5",
     "@tanstack/react-query": "^5.60.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

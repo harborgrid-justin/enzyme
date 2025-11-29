@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { AppLink } from '@missionfabric-js/enzyme/routing';
 
 const examples = [
   { id: '01', name: 'Basic Routing', path: '/example-01', desc: 'Enzyme routing system fundamentals', available: true },
@@ -54,7 +54,7 @@ export default function HomePage(): React.ReactElement {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredExamples.map((example) => (
-            <Link
+            <AppLink
               key={example.id}
               to={example.path}
               className="bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-200 p-6 border border-gray-200 hover:border-blue-400 group"
@@ -83,7 +83,7 @@ export default function HomePage(): React.ReactElement {
               <p className="text-sm text-gray-500">
                 {example.desc}
               </p>
-            </Link>
+            </AppLink>
           ))}
         </div>
 
