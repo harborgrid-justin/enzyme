@@ -63,6 +63,14 @@ Harbor React implements multiple security layers:
 
 ## Authentication
 
+> **See Also:** [Authentication Module Documentation](./auth/README.md) - Complete authentication system with AD integration, RBAC, SSO, and MFA.
+
+The Harbor React Template includes a comprehensive authentication system. For detailed documentation, see:
+- [Authentication Overview](./auth/OVERVIEW.md) - Architecture and features
+- [Auth Service](./auth/AUTH_SERVICE.md) - Core authentication API
+- [Common Patterns](./auth/PATTERNS.md) - Real-world examples
+- [Troubleshooting](./auth/TROUBLESHOOTING.md) - Common issues
+
 ### Authentication Flow
 
 ```
@@ -133,6 +141,8 @@ function LoginForm() {
 }
 ```
 
+For more authentication patterns, see [Authentication Patterns](./auth/PATTERNS.md).
+
 ### Protected Routes
 
 ```tsx
@@ -159,6 +169,8 @@ const router = createBrowserRouter([
   },
 ]);
 ```
+
+For advanced route protection, see [Route Guards Documentation](./auth/GUARDS.md).
 
 ### Session Management
 
@@ -190,9 +202,18 @@ authService.onSessionExpired(() => {
 });
 ```
 
+For session troubleshooting, see [Session Issues](./auth/TROUBLESHOOTING.md#session-issues).
+
 ---
 
 ## Authorization
+
+> **See Also:** [RBAC Documentation](./auth/RBAC.md) - Complete Role-Based Access Control system with hierarchies, permission matrices, and policies.
+
+The auth module provides a comprehensive RBAC system. For detailed documentation, see:
+- [RBAC Overview](./auth/RBAC.md) - Role hierarchy and permission matrix
+- [RBAC Patterns](./auth/PATTERNS.md#pattern-3-role-based-access-control) - Implementation examples
+- [RBAC Troubleshooting](./auth/TROUBLESHOOTING.md#rbac-issues) - Common issues
 
 ### Role-Based Access Control
 
@@ -230,6 +251,8 @@ export const roleHierarchy: Record<Role, number> = {
   admin: 4,
 };
 ```
+
+For advanced RBAC features including permission matrices and policy-based authorization, see [RBAC Documentation](./auth/RBAC.md).
 
 ### Authorization Guards
 
@@ -271,6 +294,8 @@ function SensitiveFeature() {
 }
 ```
 
+For more guard patterns, see [Route Guards Documentation](./auth/GUARDS.md).
+
 ### Programmatic Checks
 
 ```typescript
@@ -293,6 +318,8 @@ function UserActions({ user }) {
   );
 }
 ```
+
+For more authorization patterns, see [RBAC Patterns](./auth/PATTERNS.md#pattern-3-role-based-access-control).
 
 ---
 
@@ -502,7 +529,11 @@ const cookieOptions = {
 
 ## Secure Storage
 
+> **See Also:** [Token Management](./auth/AUTH_SERVICE.md#token-management) - Secure token storage and encryption in the auth module.
+
 ### Token Storage Best Practices
+
+The auth module provides built-in encrypted token storage. For configuration details, see [Auth Service Documentation](./auth/AUTH_SERVICE.md#security-considerations).
 
 ```typescript
 import { STORAGE_KEYS, setStorageItem, getStorageItem } from '@/config';
@@ -528,9 +559,21 @@ class TokenManager {
 // Only use for non-sensitive preferences
 setStorageItem(STORAGE_KEYS.THEME, 'dark'); // OK
 setStorageItem(STORAGE_KEYS.AUTH_TOKEN, token); // RISKY
+
+// PREFERRED: Use auth service with encrypted storage
+import { AuthProvider } from '@/lib/auth';
+
+<AuthProvider config={{
+  tokenStorage: 'sessionStorage', // Automatically encrypted
+  encryptTokens: true,
+}}>
+  <App />
+</AuthProvider>
 ```
 
 ### Secure Local Storage Wrapper
+
+The auth module includes built-in AES-GCM encryption for token storage. For manual encryption needs:
 
 ```typescript
 // Encrypted storage for sensitive data
@@ -555,6 +598,8 @@ function getSecureItem(key: string): string | null {
   }
 }
 ```
+
+For token storage troubleshooting, see [Token Issues](./auth/TROUBLESHOOTING.md#token-issues).
 
 ---
 
@@ -735,6 +780,15 @@ function sanitizeForLogging(data: unknown): unknown {
 
 ## Related Documentation
 
+### Authentication & Authorization
+- [Authentication Module](./auth/README.md) - Complete authentication system
+- [Auth Overview](./auth/OVERVIEW.md) - Architecture and features
+- [Auth Patterns](./auth/PATTERNS.md) - Implementation examples
+- [RBAC System](./auth/RBAC.md) - Role-based access control
+- [Active Directory](./auth/ACTIVE_DIRECTORY.md) - AD/Azure AD integration
+- [Auth Troubleshooting](./auth/TROUBLESHOOTING.md) - Common issues and solutions
+
+### General Documentation
 - [Architecture Overview](./ARCHITECTURE.md) - System architecture
 - [Configuration Guide](./CONFIGURATION.md) - Application configuration
 - [API Documentation](./API.md) - API layer and data fetching

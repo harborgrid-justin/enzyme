@@ -593,10 +593,82 @@ class StreamingMetrics {
 
 ---
 
+## Integration with Other Systems
+
+### Progressive Hydration Integration
+
+Combine streaming with auto-prioritized hydration for optimal performance:
+
+```tsx
+import { StreamBoundary } from '@/lib/streaming';
+import { HydrationBoundary } from '@/lib/hydration';
+
+function Page() {
+  return (
+    <div>
+      {/* Stream critical shell immediately, hydrate immediately */}
+      <StreamBoundary priority="critical">
+        <HydrationBoundary priority="critical" trigger="immediate">
+          <Header />
+        </HydrationBoundary>
+      </StreamBoundary>
+
+      {/* Stream content progressively, hydrate when visible */}
+      <StreamBoundary priority="high">
+        <HydrationBoundary priority="normal" trigger="visible">
+          <MainContent />
+        </HydrationBoundary>
+      </StreamBoundary>
+    </div>
+  );
+}
+```
+
+**Learn more:** [Auto-Prioritized Hydration](./hydration/STRATEGIES.md)
+
+### Performance Monitoring Integration
+
+Monitor streaming performance with real-time metrics:
+
+```tsx
+import { StreamBoundary } from '@/lib/streaming';
+import { usePerformanceMonitor } from '@/lib/performance';
+
+function MonitoredPage() {
+  const { trackMetric } = usePerformanceMonitor();
+
+  return (
+    <StreamBoundary
+      priority="critical"
+      onStreamStart={() => trackMetric('stream-start')}
+      onStreamComplete={() => trackMetric('stream-complete')}
+    >
+      <Content />
+    </StreamBoundary>
+  );
+}
+```
+
+**Learn more:** [Performance Monitoring](./performance/MONITORING.md)
+
 ## Related Documentation
 
-- [Architecture Overview](./ARCHITECTURE.md)
-- [Hydration Guide](./HYDRATION.md)
+### Core Systems
+
+- [Hydration System](./hydration/README.md) - Progressive hydration
+- [Auto-Prioritized Hydration](./hydration/STRATEGIES.md) - Hydration strategies
+- [VDOM Guide](./VDOM.md) - Virtual modular DOM
+
+### Performance
+
+- [Performance System](./performance/README.md) - Complete performance monitoring
+- [Web Vitals](./performance/WEB_VITALS.md) - Core Web Vitals (LCP, INP, CLS, TTFB)
+- [Performance Monitoring](./performance/MONITORING.md) - Real-time monitoring
+
+### Architecture
+
+- [Architecture Overview](./ARCHITECTURE.md) - System architecture
+- [Template Performance](./PERFORMANCE.md) - Template-level optimization
 - [Performance Guide](./PERFORMANCE.md)
 - [VDOM Guide](./VDOM.md)
 

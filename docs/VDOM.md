@@ -856,13 +856,113 @@ function PerformanceMonitor({ moduleId }) {
 
 ---
 
+## Integration with Other Systems
+
+### Progressive Hydration Integration
+
+Combine VDOM module boundaries with progressive hydration:
+
+```tsx
+import { ModuleBoundary } from '@/lib/vdom';
+import { HydrationBoundary } from '@/lib/hydration';
+
+function ModularPage() {
+  return (
+    <div>
+      {/* Each module hydrates independently */}
+      <ModuleBoundary id="header">
+        <HydrationBoundary priority="critical" trigger="immediate">
+          <Header />
+        </HydrationBoundary>
+      </ModuleBoundary>
+
+      <ModuleBoundary id="content">
+        <HydrationBoundary priority="normal" trigger="visible">
+          <Content />
+        </HydrationBoundary>
+      </ModuleBoundary>
+    </div>
+  );
+}
+```
+
+**Learn more:** [Auto-Prioritized Hydration](./hydration/STRATEGIES.md)
+
+### Performance Monitoring Integration
+
+Track VDOM reconciliation performance:
+
+```tsx
+import { ModuleBoundary } from '@/lib/vdom';
+import { usePerformanceMonitor } from '@/lib/performance';
+
+function MonitoredModule({ id, children }) {
+  const { trackMetric } = usePerformanceMonitor();
+
+  return (
+    <ModuleBoundary
+      id={id}
+      onReconcile={(duration) => {
+        trackMetric('vdom-reconciliation', { module: id, duration });
+      }}
+    >
+      {children}
+    </ModuleBoundary>
+  );
+}
+```
+
+**Learn more:** [Performance Monitoring](./performance/MONITORING.md)
+
+### Streaming Integration
+
+Stream VDOM modules progressively:
+
+```tsx
+import { ModuleBoundary } from '@/lib/vdom';
+import { StreamBoundary } from '@/lib/streaming';
+
+function StreamedModules() {
+  return (
+    <div>
+      <StreamBoundary priority="critical">
+        <ModuleBoundary id="shell">
+          <Shell />
+        </ModuleBoundary>
+      </StreamBoundary>
+
+      <StreamBoundary priority="high">
+        <ModuleBoundary id="content">
+          <Content />
+        </ModuleBoundary>
+      </StreamBoundary>
+    </div>
+  );
+}
+```
+
+**Learn more:** [Dynamic HTML Streaming](./STREAMING.md)
+
 ## Related Documentation
 
-- [Architecture Overview](./ARCHITECTURE.md)
-- [Streaming Guide](./STREAMING.md)
-- [Hydration Guide](./HYDRATION.md)
-- [Performance Guide](./PERFORMANCE.md)
-- [Security Guide](./SECURITY.md)
+### Core Systems
+
+- [Hydration System](./hydration/README.md) - Progressive hydration
+- [Auto-Prioritized Hydration](./hydration/STRATEGIES.md) - Hydration strategies
+- [Streaming Guide](./STREAMING.md) - Progressive HTML streaming
+
+### Performance
+
+- [Performance System](./performance/README.md) - Complete performance monitoring
+- [Web Vitals](./performance/WEB_VITALS.md) - Core Web Vitals optimization
+- [Performance Monitoring](./performance/MONITORING.md) - Real-time monitoring
+- [Render Tracking](./performance/RENDER_TRACKING.md) - Component performance
+
+### Architecture
+
+- [Architecture Overview](./ARCHITECTURE.md) - System architecture
+- [Security Guide](./SECURITY.md) - Security features
+- [Template Performance](./PERFORMANCE.md) - Template-level optimization
 
 ---
 

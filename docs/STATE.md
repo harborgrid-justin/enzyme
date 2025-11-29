@@ -659,13 +659,23 @@ const useUsers = () => useQuery({
 
 ## Related Documentation
 
+### Comprehensive State Management Docs
+- [State Module Documentation](./state/README.md) - **Complete state management system guide**
+  - [Core Utilities](./state/CORE.md) - Store factories, slice creation, selectors
+  - [Stores](./state/STORES.md) - Global store, feature stores, persistence
+  - [Slices](./state/SLICES.md) - UI, Session, Settings slices
+  - [Hooks](./state/HOOKS.md) - React hooks for state access
+  - [Selectors](./state/SELECTORS.md) - Memoized selector patterns
+  - [Synchronization](./state/SYNC.md) - Multi-tab sync with BroadcastChannel
+  - [Types](./state/TYPES.md) - TypeScript type definitions
+
 ### Core Concepts
 - [Architecture Overview](./ARCHITECTURE.md) - System design and data flow
 - [Feature Architecture](./FEATURES.md) - Feature-level state patterns
 - [API Documentation](./API.md) - Data fetching and caching strategies
 
 ### Hooks & Components
-- [Hooks Reference](./HOOKS_REFERENCE.md) - State management hooks
+- [Hooks Reference](./HOOKS_REFERENCE.md) - General React hooks
 - [Components Reference](./COMPONENTS_REFERENCE.md) - State-aware components
 
 ### Performance

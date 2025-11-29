@@ -1201,7 +1201,20 @@ All defaults are SSR-safe (fallback to safe defaults if APIs unavailable).
 
 ## Related Documentation
 
+### State Management Core
 - [Hooks](./HOOKS.md) - React hooks for accessing slices
 - [Selectors](./SELECTORS.md) - Memoized selector patterns
 - [Stores](./STORES.md) - Store architecture and persistence
+- [Core](./CORE.md) - Creating custom slices
 - [Types](./TYPES.md) - TypeScript type definitions
+- [README](./README.md) - State management overview
+
+### Integration Points
+- [Auth Module](../../src/lib/auth/README.md) - Session slice integration
+- [Theme Module](../../src/lib/theme/README.md) - Settings slice integration
+- [Routing](../NAVIGATION.md) - Navigation history integration
+
+### Best Practices
+- [Performance Guide](../PERFORMANCE.md) - Slice optimization
+- [Architecture](../ARCHITECTURE.md) - System design patterns
+- [Testing Guide](../TESTING.md) - Testing slices

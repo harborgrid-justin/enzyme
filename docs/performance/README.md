@@ -12,6 +12,8 @@
 - [Optimization Strategies](#optimization-strategies)
 - [Benchmarking](#benchmarking)
 - [Best Practices](#best-practices)
+- [Integration with Other Systems](#integration-with-other-systems)
+- [Related Documentation](#related-documentation)
 
 ## Overview
 
@@ -237,20 +239,22 @@ export function AppRouter() {
 
 ## Performance Modules
 
-### [Lazy Loading](./LAZY_LOADING.md)
-Universal lazy loading for components, images, and modules with network awareness.
+### Core Monitoring
 
-### [Predictive Prefetching](./PREFETCHING.md)
-AI-driven navigation prediction and intelligent resource prefetching.
+- **[Web Vitals](./WEB_VITALS.md)** - Comprehensive Core Web Vitals collection (LCP, INP, CLS, FCP, TTFB)
+- **[Performance Monitoring](./MONITORING.md)** - Real-time monitoring, long tasks, memory pressure, RUM
+- **[Performance Budgets](./BUDGETS.md)** - Budget enforcement with automatic degradation strategies
 
-### [Render Tracking](./RENDER_TRACKING.md)
-Component render performance monitoring and optimization detection.
+### Optimization
 
-### [Performance Observatory](./OBSERVATORY.md)
-Real-time performance dashboard with Web Vitals visualization.
+- **[Lazy Loading](./LAZY_LOADING.md)** - Universal lazy loading for components, images, and modules
+- **[Predictive Prefetching](./PREFETCHING.md)** - AI-driven navigation prediction and resource prefetching
+- **[Render Tracking](./RENDER_TRACKING.md)** - Component render performance monitoring
 
-### [Configuration](./CONFIG.md)
-Performance budgets, thresholds, and configuration options.
+### Tools
+
+- **[Performance Observatory](./OBSERVATORY.md)** - Real-time performance dashboard
+- **[Configuration](./CONFIG.md)** - Performance budgets, thresholds, and configuration options
 
 ## Optimization Strategies
 
@@ -518,13 +522,84 @@ function MediaGallery() {
 - [ ] Production sampling enabled
 - [ ] Analytics endpoint configured
 
+## Integration with Other Systems
+
+### Hydration System Integration
+
+Performance monitoring works seamlessly with the progressive hydration system:
+
+```tsx
+import { HydrationProvider } from '@/lib/hydration';
+import { PerformanceProvider } from '@/lib/performance';
+
+function App() {
+  return (
+    <PerformanceProvider>
+      <HydrationProvider>
+        <YourApp />
+      </HydrationProvider>
+    </PerformanceProvider>
+  );
+}
+```
+
+**Learn more:** [Auto-Prioritized Hydration](../hydration/STRATEGIES.md)
+
+### Streaming Integration
+
+Combine performance monitoring with progressive HTML streaming:
+
+```typescript
+import { initPerformanceMonitoring } from '@/lib/performance';
+import { renderToPipeableStream } from 'react-dom/server';
+
+await initPerformanceMonitoring({
+  trackSSRPerformance: true,
+  onStreamChunk: (chunk) => {
+    console.log('Chunk streamed:', chunk.size);
+  }
+});
+```
+
+**Learn more:** [Dynamic HTML Streaming](../STREAMING.md)
+
+### VDOM Integration
+
+Monitor Virtual Modular DOM reconciliation performance:
+
+```typescript
+import { VDOMProfiler } from '@/lib/performance';
+
+const profiler = new VDOMProfiler({
+  trackModuleBoundaries: true,
+  onSlowReconciliation: (module, duration) => {
+    console.warn(`Slow reconciliation in ${module}: ${duration}ms`);
+  }
+});
+```
+
+**Learn more:** [Virtual Modular DOM](../VDOM.md)
+
 ## Related Documentation
 
-- [Lazy Loading Guide](./LAZY_LOADING.md)
-- [Predictive Prefetching](./PREFETCHING.md)
-- [Render Tracking](./RENDER_TRACKING.md)
-- [Performance Observatory](./OBSERVATORY.md)
-- [Configuration Reference](./CONFIG.md)
+### Performance System
+
+- [Web Vitals Guide](./WEB_VITALS.md) - Core Web Vitals collection and optimization
+- [Performance Monitoring](./MONITORING.md) - Real-time monitoring and RUM
+- [Performance Budgets](./BUDGETS.md) - Budget enforcement and degradation
+- [Lazy Loading Guide](./LAZY_LOADING.md) - Resource optimization
+- [Predictive Prefetching](./PREFETCHING.md) - Navigation prediction
+- [Render Tracking](./RENDER_TRACKING.md) - Component performance
+- [Performance Observatory](./OBSERVATORY.md) - Real-time dashboard
+- [Configuration Reference](./CONFIG.md) - Settings and options
+
+### Related Systems
+
+- [Hydration System](../hydration/README.md) - Progressive hydration
+- [Auto-Prioritized Hydration](../hydration/STRATEGIES.md) - Hydration strategies
+- [Streaming Guide](../STREAMING.md) - Progressive HTML streaming
+- [VDOM Guide](../VDOM.md) - Virtual modular DOM
+- [Template Performance](../PERFORMANCE.md) - Template-level optimization
 
 ## Debugging Performance Issues
 

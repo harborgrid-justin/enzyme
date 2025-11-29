@@ -622,6 +622,279 @@ Verify:
 - Using appropriate chunk sizes
 - Monitoring the right metrics (TTFB, FCP)
 
+## Related Modules
+
+The Streaming module integrates with other Enzyme modules for progressive data delivery:
+
+### Realtime Module
+Combine SSR streaming with WebSocket updates using the [Realtime Module](../realtime/README.md):
+
+```tsx
+import { StreamBoundary, StreamProvider } from '@missionfabric-js/enzyme/streaming';
+import { RealtimeProvider, useRealtimeContext } from '@missionfabric-js/enzyme/realtime';
+
+function HybridApp() {
+  return (
+    <StreamProvider>
+      <RealtimeProvider config={{ type: 'websocket', url: '/ws' }}>
+        {/* Initial shell streams immediately */}
+        <StreamBoundary priority="high">
+          <AppShell />
+        </StreamBoundary>
+
+        {/* Content streams when ready */}
+        <StreamBoundary priority="normal">
+          <InitialData />
+        </StreamBoundary>
+
+        {/* Live updates via WebSocket */}
+        <LiveDataSubscriber />
+      </RealtimeProvider>
+    </StreamProvider>
+  );
+}
+
+function LiveDataSubscriber() {
+  const { subscribe } = useRealtimeContext();
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    return subscribe('updates', (data) => {
+      queryClient.setQueryData(['live-data'], data);
+    });
+  }, [subscribe, queryClient]);
+
+  return null;
+}
+```
+
+**See:** [Realtime Documentation](../realtime/README.md) for WebSocket and SSE integration.
+
+### API Module
+Stream large API responses progressively using the [API Module](../api/README.md):
+
+```tsx
+import { useStream } from '@missionfabric-js/enzyme/streaming';
+import { apiClient } from '@missionfabric-js/enzyme/api';
+
+function LargeDataFetch() {
+  const { state, isStreaming, start } = useStream('large-dataset');
+
+  useEffect(() => {
+    // Fetch with streaming enabled
+    start(async () => {
+      const response = await apiClient.get('/large-dataset', {
+        responseType: 'stream',
+      });
+
+      // Process chunks as they arrive
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        // Process chunk
+      }
+    });
+  }, [start]);
+
+  return (
+    <div>
+      {isStreaming && <ProgressIndicator />}
+      <DataTable data={state} />
+    </div>
+  );
+}
+```
+
+**See:** [API Documentation](../api/README.md) for HTTP client features.
+
+### Queries Module
+Use query keys with streaming data using the [Queries Module](../queries/README.md):
+
+```tsx
+import { createQueryKeyFactory } from '@missionfabric-js/enzyme/queries';
+import { StreamBoundary } from '@missionfabric-js/enzyme/streaming';
+
+const dataKeys = createQueryKeyFactory('data', {
+  stream: (id: string) => ['data', 'stream', id],
+});
+
+function StreamingData({ dataId }) {
+  return (
+    <StreamBoundary
+      boundaryId={dataKeys.stream(dataId).join('/')}
+      fallback={<Skeleton />}
+    >
+      <DataContent dataId={dataId} />
+    </StreamBoundary>
+  );
+}
+```
+
+**See:** [Queries Documentation](../queries/README.md) for query patterns.
+
+### State Management
+Update global state as data streams in using the [State Module](../state/README.md):
+
+```tsx
+import { useStore } from '@missionfabric-js/enzyme/state';
+import { useStream } from '@missionfabric-js/enzyme/streaming';
+
+function ProgressTracker() {
+  const setProgress = useStore(state => state.setProgress);
+  const { state, progress } = useStream('upload');
+
+  useEffect(() => {
+    if (progress) {
+      setProgress(progress);
+    }
+  }, [progress, setProgress]);
+
+  return <ProgressBar value={progress} />;
+}
+```
+
+**See:** [State Documentation](../state/README.md) for state management.
+
+## Cross-Module Patterns
+
+### Progressive Enhancement with Streaming + Realtime
+
+```tsx
+import { StreamProvider, StreamBoundary } from '@missionfabric-js/enzyme/streaming';
+import { RealtimeProvider, useRealtimeContext } from '@missionfabric-js/enzyme/realtime';
+import { useApiRequest } from '@missionfabric-js/enzyme/api';
+import { createQueryKeyFactory } from '@missionfabric-js/enzyme/queries';
+
+const dashboardKeys = createQueryKeyFactory('dashboard', {
+  metrics: () => ['dashboard', 'metrics'],
+  activity: () => ['dashboard', 'activity'],
+});
+
+function DashboardApp() {
+  return (
+    <StreamProvider config={{ chunkSize: 'auto', prioritizeAboveFold: true }}>
+      <RealtimeProvider config={{ type: 'websocket', url: '/ws/dashboard' }}>
+        {/* Phase 1: Stream shell immediately */}
+        <StreamBoundary priority="high" name="shell">
+          <DashboardShell />
+        </StreamBoundary>
+
+        {/* Phase 2: Stream critical metrics */}
+        <Suspense fallback={<MetricsSkeleton />}>
+          <StreamBoundary priority="high" name="metrics">
+            <CriticalMetrics />
+          </StreamBoundary>
+        </Suspense>
+
+        {/* Phase 3: Stream charts */}
+        <Suspense fallback={<ChartsSkeleton />}>
+          <StreamBoundary priority="normal" name="charts">
+            <DashboardCharts />
+          </StreamBoundary>
+        </Suspense>
+
+        {/* Phase 4: Enable live updates */}
+        <LiveDataSync />
+      </RealtimeProvider>
+    </StreamProvider>
+  );
+}
+
+function CriticalMetrics() {
+  // Fetch initial data (streams during SSR)
+  const { data } = useApiRequest({
+    url: '/dashboard/metrics',
+    queryKey: dashboardKeys.metrics(),
+  });
+
+  return <MetricsDisplay data={data} />;
+}
+
+function LiveDataSync() {
+  const queryClient = useQueryClient();
+  const { subscribe } = useRealtimeContext();
+
+  useEffect(() => {
+    // Subscribe to real-time updates after streaming completes
+    const unsubscribeMetrics = subscribe('dashboard:metrics', (update) => {
+      queryClient.setQueryData(dashboardKeys.metrics(), (old) => ({
+        ...old,
+        ...update,
+      }));
+    });
+
+    const unsubscribeActivity = subscribe('dashboard:activity', (event) => {
+      queryClient.setQueryData(dashboardKeys.activity(), (old) => [
+        event,
+        ...(old || []),
+      ]);
+    });
+
+    return () => {
+      unsubscribeMetrics();
+      unsubscribeActivity();
+    };
+  }, [subscribe, queryClient]);
+
+  return null;
+}
+```
+
+### Backpressure Management
+
+```tsx
+import { useStream, useStreamPriority } from '@missionfabric-js/enzyme/streaming';
+import { useStore } from '@missionfabric-js/enzyme/state';
+
+function LargeFileUpload() {
+  const { state, start, pause, resume, abort } = useStream('upload');
+  const { setPriority } = useStreamPriority();
+  const networkSpeed = useStore(state => state.networkSpeed);
+
+  useEffect(() => {
+    // Adjust stream priority based on network conditions
+    if (networkSpeed === 'slow') {
+      setPriority('upload', 'low');
+      pause(); // Pause to prevent overwhelming slow connection
+    } else {
+      setPriority('upload', 'high');
+      resume();
+    }
+  }, [networkSpeed, setPriority, pause, resume]);
+
+  const handleUpload = async (file: File) => {
+    start(async () => {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      await fetch('/upload', {
+        method: 'POST',
+        body: formData,
+      });
+    });
+  };
+
+  return (
+    <div>
+      <input type="file" onChange={(e) => handleUpload(e.target.files[0])} />
+      {state.isStreaming && (
+        <div>
+          <ProgressBar value={state.progress} />
+          <button onClick={pause}>Pause</button>
+          <button onClick={resume}>Resume</button>
+          <button onClick={abort}>Cancel</button>
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
 ## API Reference
 
 See the [Advanced Features Overview](../advanced/README.md) for complete API documentation.

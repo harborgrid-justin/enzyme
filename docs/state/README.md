@@ -2,6 +2,36 @@
 
 > Enterprise-grade Zustand-based state management with production middleware stack
 
+## Table of Contents
+
+### Getting Started
+- [Overview](#overview)
+- [Quick Start](#quick-start)
+- [Architecture](#architecture)
+- [Key Features](#key-features)
+
+### Core Documentation
+- [Core Utilities](./CORE.md) - Store factories, slice creation, selector utilities
+- [Stores](./STORES.md) - Global store, feature stores, persistence
+- [Slices](./SLICES.md) - UI, Session, Settings slice documentation
+- [Hooks](./HOOKS.md) - React hooks for state access
+- [Selectors](./SELECTORS.md) - Memoized selectors and patterns
+- [Synchronization](./SYNC.md) - Multi-tab sync with BroadcastChannel
+- [Types](./TYPES.md) - TypeScript type definitions
+
+### Integration & Performance
+- [Performance Guide](../PERFORMANCE.md) - State optimization strategies
+- [Hydration Guide](../HYDRATION.md) - State hydration patterns
+- [Hooks Reference](../HOOKS_REFERENCE.md) - General hooks documentation
+- [Architecture](../ARCHITECTURE.md) - System design and data flow
+
+### Advanced Topics
+- [Feature Stores](./STORES.md#creating-feature-stores) - Modular state management
+- [Store Patterns](./STORES.md#advanced-patterns) - Optimistic updates, computed state
+- [Multi-tab Coordination](./SYNC.md#leader-election) - Leader election and cross-tab sync
+- [Persistence Strategies](./STORES.md#persistence) - Version migrations and hydration
+- [DevTools Integration](./STORES.md#debugging) - Debugging with Redux DevTools
+
 ## Overview
 
 The `@missionfabric-js/enzyme` state management system is built on [Zustand](https://github.com/pmndrs/zustand) and provides a complete, production-ready state management solution with:
@@ -13,6 +43,8 @@ The `@missionfabric-js/enzyme` state management system is built on [Zustand](htt
 - **Memoized selectors** for optimal performance
 - **Type-safe slices** with automatic action naming
 - **Feature stores** for modular architecture
+
+Perfect for applications that need predictable state management without the ceremony of Redux, while maintaining type safety and developer experience through comprehensive TypeScript support and Redux DevTools integration.
 
 ## Quick Start
 
@@ -74,6 +106,59 @@ function SettingsPanel() {
   );
 }
 ```
+
+## Key Features
+
+### 1. Lightweight & Modern
+- Built on Zustand - minimal boilerplate, no Provider wrapper required
+- Stores are singletons - accessible anywhere in your application
+- Core ~3KB, Immer ~14KB, Persist ~2KB gzipped
+- Simple hooks-first API for React
+
+### 2. Immutable Updates with Immer
+Write mutable code that produces immutable updates:
+```typescript
+set((state) => {
+  state.items.push(newItem); // Looks mutable, but produces immutable update
+  state.count += 1;
+});
+```
+
+### 3. Type Safety & IntelliSense
+- Full TypeScript support with automatic type inference
+- Type-safe slices with automatic action naming
+- Typed selectors prevent runtime errors
+- Rich IDE autocomplete and type checking
+
+### 4. Redux DevTools Integration
+- All actions automatically named for debugging
+- Time-travel debugging in development
+- State snapshots and history
+- Action replay and inspection
+
+### 5. Persistence & Hydration
+- Automatic localStorage persistence
+- Versioned migrations for breaking changes
+- Selective persistence with whitelisting
+- Hydration tracking to prevent FOUC
+
+### 6. Multi-Tab Synchronization
+- Real-time state sync via BroadcastChannel
+- Leader election for coordinated operations
+- Configurable conflict resolution
+- Throttled/debounced sync to prevent excessive messaging
+
+### 7. Performance Optimized
+- Memoized selectors for derived state
+- Shallow equality checks prevent unnecessary renders
+- Parameterized selectors with LRU caching
+- Minimal re-renders with granular selectors
+
+### 8. Modular Architecture
+- Slice-based organization like Redux Toolkit
+- Feature stores for isolated modules
+- Lazy-loaded feature stores for code splitting
+- Global registry for cross-feature communication
 
 ## Architecture
 
@@ -619,14 +704,231 @@ export function ReportsList() {
 }
 ```
 
+## When to Use What
+
+### Global Store vs Feature Store vs Local State
+
+**Use Global Store for:**
+- User preferences that persist across sessions
+- UI state accessed from multiple parts of the app (sidebar, modals, toasts)
+- Session data and authentication state
+- Application-wide feature flags and settings
+
+**Use Feature Store for:**
+- Large feature modules with isolated state
+- Code-split features with their own state management
+- Team boundaries (different teams managing different stores)
+- Testing isolation (easier to test in isolation)
+
+**Use Local State (useState) for:**
+- Component-only state (form inputs, UI toggles)
+- Transient state (hover states, animation triggers)
+- Derived state from props or global state
+- State that doesn't need to persist or be shared
+
+### State Management vs Server State
+
+**Use Zustand Store for:**
+- Client-side UI state and preferences
+- Local application state
+- Cross-component coordination
+- State that persists across page reloads
+
+**Use TanStack Query for:**
+- Server data (API responses)
+- Data that needs caching
+- Data shared across components
+- Real-time synchronization with server
+- Pagination and infinite scroll
+
+See [State Management Guide](../STATE.md) for the dual-state approach pattern.
+
+## Troubleshooting
+
+### Component Re-renders Too Often
+**Solution:** Make selectors more specific:
+```typescript
+// ❌ Bad - selects entire object, re-renders on any change
+const state = useStore((state) => state.todos);
+
+// ✅ Good - only re-renders when items change
+const items = useStore((state) => state.todos.items);
+```
+
+### State Not Persisting
+**Solution:** Ensure persistence is enabled and key is unique:
+```typescript
+createAppStore({
+  persist: {
+    key: 'unique-storage-key',
+    partialize: (state) => ({ session: state.session }),
+  },
+});
+```
+
+### DevTools Not Showing Actions
+**Solution:** Ensure actions are named in slice creator:
+```typescript
+createSlice({
+  name: 'mySlice', // This name appears in DevTools
+  actions: (set) => ({
+    myAction: () => set(...), // Action name shown
+  }),
+});
+```
+
+### Cross-Tab Sync Not Working
+**Solution:** Ensure same channel name and browser supports BroadcastChannel:
+```typescript
+// Check support
+if ('BroadcastChannel' in window) {
+  useBroadcastSync({ channelName: 'app-state' });
+}
+```
+
 ## Related Modules
 
+The State module integrates seamlessly with other Enzyme modules for comprehensive state management:
+
+### Queries Module
+Combine global state with React Query for server-client state synchronization using the [Queries Module](../queries/README.md):
+
+```typescript
+import { useStore } from '@missionfabric-js/enzyme/state';
+import { createQueryKeyFactory } from '@missionfabric-js/enzyme/queries';
+import { useApiRequest } from '@missionfabric-js/enzyme/api';
+
+const userKeys = createQueryKeyFactory('users', {
+  current: () => ['users', 'current'],
+});
+
+function UserProfile() {
+  // Server state (React Query)
+  const { data: serverUser } = useApiRequest({
+    url: '/users/me',
+    queryKey: userKeys.current(),
+  });
+
+  // Client state (Zustand)
+  const clientPreferences = useStore(state => state.preferences);
+  const setPreferences = useStore(state => state.setPreferences);
+
+  // Sync server data to global state
+  useEffect(() => {
+    if (serverUser) {
+      useStore.getState().setUser(serverUser);
+    }
+  }, [serverUser]);
+
+  return (
+    <div>
+      <h1>{serverUser?.name}</h1>
+      <ThemeToggle
+        theme={clientPreferences.theme}
+        onChange={(theme) => setPreferences({ theme })}
+      />
+    </div>
+  );
+}
+```
+
+**See:** [Queries Documentation](../queries/README.md) for React Query patterns.
+
+### API Module
+Integrate API mutations with global state updates using the [API Module](../api/README.md):
+
+```typescript
+import { useStore } from '@missionfabric-js/enzyme/state';
+import { useApiMutation } from '@missionfabric-js/enzyme/api';
+
+function UpdateProfile() {
+  const user = useStore(state => state.user);
+  const setUser = useStore(state => state.setUser);
+
+  const updateProfile = useApiMutation({
+    method: 'PATCH',
+    url: '/profile',
+    onMutate: (variables) => {
+      // Optimistic update to global state
+      const previousUser = user;
+      setUser({ ...user, ...variables });
+      return { previousUser };
+    },
+    onError: (error, variables, context) => {
+      // Rollback on error
+      setUser(context.previousUser);
+    },
+    onSuccess: (data) => {
+      // Update with server response
+      setUser(data);
+    },
+  });
+
+  return (
+    <ProfileForm
+      user={user}
+      onSave={(data) => updateProfile.mutate(data)}
+    />
+  );
+}
+```
+
+**See:** [API Documentation](../api/README.md) for HTTP client and mutations.
+
+### Realtime Module
+Sync real-time updates with global state using the [Realtime Module](../realtime/README.md):
+
+```typescript
+import { useStore } from '@missionfabric-js/enzyme/state';
+import { useRealtimeContext } from '@missionfabric-js/enzyme/realtime';
+
+function NotificationSync() {
+  const addNotification = useStore(state => state.addNotification);
+  const { subscribe } = useRealtimeContext();
+
+  useEffect(() => {
+    return subscribe('notifications', (notification) => {
+      // Add real-time notification to global state
+      addNotification(notification);
+    });
+  }, [subscribe, addNotification]);
+
+  return null;
+}
+```
+
+**See:** [Realtime Documentation](../realtime/README.md) for WebSocket integration.
+
+### Additional Modules
 - **[Data Management](../data/README.md)** - Data validation, normalization, sync
-- **[Queries](../queries/README.md)** - React Query integration
 - **[Forms](../forms/README.md)** - Form state management
+- **[Theme](../theme/README.md)** - Theme state integration
+- **[Auth](../auth/README.md)** - Authentication state integration
+
+## Related Documentation
+
+### Core Guides
+- [State Management Guide](../STATE.md) - Dual-state approach with Zustand and TanStack Query
+- [Performance Guide](../PERFORMANCE.md) - State optimization strategies
+- [Hydration Guide](../HYDRATION.md) - State hydration patterns and SSR
+- [Architecture Overview](../ARCHITECTURE.md) - System design and data flow
+
+### Hook References
+- [Hooks Reference](../HOOKS_REFERENCE.md) - General React hooks documentation
+- [State Hooks](./HOOKS.md) - State-specific hooks (useStore, useSidebar, etc.)
+
+### Testing & Migration
+- [Testing Guide](../TESTING.md) - Testing state management
+- [Migration Guide](../MIGRATION.md) - Migrating from Redux or other state libraries
 
 ## Resources
 
 - [Zustand Documentation](https://github.com/pmndrs/zustand)
 - [Immer Documentation](https://immerjs.github.io/immer/)
 - [Redux DevTools](https://github.com/reduxjs/redux-devtools)
+- [BroadcastChannel API](https://developer.mozilla.org/en-US/docs/Web/API/BroadcastChannel)
+
+---
+
+**Version:** 3.0.0
+**Last Updated:** 2025-11-29

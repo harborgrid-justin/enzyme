@@ -950,7 +950,18 @@ const users = useStore(selectActiveUsers);
 
 ## Related Documentation
 
+### State Management
 - [Selectors](./SELECTORS.md) - Memoized selector patterns
 - [Slices](./SLICES.md) - Slice structure and actions
 - [Stores](./STORES.md) - Store architecture
 - [Types](./TYPES.md) - TypeScript type definitions
+- [README](./README.md) - State management overview
+
+### Performance & Optimization
+- [Performance Guide](../PERFORMANCE.md) - State optimization strategies
+- [Hydration Guide](../HYDRATION.md) - State hydration patterns
+- [Hooks Reference](../HOOKS_REFERENCE.md) - General React hooks documentation
+
+### Best Practices
+- [Architecture](../ARCHITECTURE.md) - System design patterns
+- [Testing Guide](../TESTING.md) - Testing components with state

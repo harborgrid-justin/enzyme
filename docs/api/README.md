@@ -622,10 +622,156 @@ import { apiClient } from '@/lib/api';
 const { data } = await apiClient.get<User[]>('/users');
 ```
 
+## Related Modules
+
+The API module integrates seamlessly with other Enzyme modules:
+
+### Queries Module
+The [Queries Module](../queries/README.md) provides React Query integration utilities that work with the API client:
+
+```typescript
+import { createQueryKeyFactory } from '@missionfabric-js/enzyme/queries';
+import { useApiRequest } from '@missionfabric-js/enzyme/api';
+
+const userKeys = createQueryKeyFactory('users', {
+  all: () => ['users'],
+  detail: (id: string) => ['users', id],
+});
+
+function UserProfile({ userId }) {
+  const { data } = useApiRequest({
+    url: `/users/${userId}`,
+    queryKey: userKeys.detail(userId),
+  });
+
+  return <div>{data?.name}</div>;
+}
+```
+
+**See:** [Queries Documentation](../queries/README.md) for query key factories and caching patterns.
+
+### State Management
+Integrate API calls with global state using the [State Module](../state/README.md):
+
+```typescript
+import { useStore } from '@missionfabric-js/enzyme/state';
+import { useApiMutation } from '@missionfabric-js/enzyme/api';
+
+function UpdateProfile() {
+  const setUser = useStore(state => state.setUser);
+
+  const mutation = useApiMutation({
+    method: 'PATCH',
+    url: '/profile',
+    onSuccess: (data) => {
+      setUser(data); // Update global state
+    },
+  });
+
+  return <button onClick={() => mutation.mutate(profileData)}>Save</button>;
+}
+```
+
+**See:** [State Documentation](../state/README.md) for state management patterns.
+
+### Realtime Module
+Combine REST APIs with real-time updates using the [Realtime Module](../realtime/README.md):
+
+```typescript
+import { useApiRequest } from '@missionfabric-js/enzyme/api';
+import { useRealtimeContext } from '@missionfabric-js/enzyme/realtime';
+
+function LiveDashboard() {
+  // Initial data fetch
+  const { data } = useApiRequest({ url: '/metrics', queryKey: ['metrics'] });
+
+  // Real-time updates
+  const { subscribe } = useRealtimeContext();
+
+  useEffect(() => {
+    return subscribe('metrics', (update) => {
+      queryClient.setQueryData(['metrics'], update);
+    });
+  }, [subscribe]);
+
+  return <MetricsDisplay data={data} />;
+}
+```
+
+**See:** [Realtime Documentation](../realtime/README.md) for WebSocket and SSE integration.
+
+### Streaming Module
+Stream large responses progressively using the [Streaming Module](../streaming/README.md):
+
+```typescript
+import { useStream } from '@missionfabric-js/enzyme/streaming';
+
+function LargeDataset() {
+  const { state, isStreaming } = useStream('dataset');
+
+  return (
+    <div>
+      {isStreaming && <ProgressBar />}
+      <DataTable data={state} />
+    </div>
+  );
+}
+```
+
+**See:** [Streaming Documentation](../streaming/README.md) for progressive data loading.
+
+## Cross-Module Patterns
+
+### Complete Data Flow Pattern
+
+```typescript
+import { useApiRequest, useApiMutation } from '@missionfabric-js/enzyme/api';
+import { createQueryKeyFactory } from '@missionfabric-js/enzyme/queries';
+import { useStore } from '@missionfabric-js/enzyme/state';
+import { useRealtimeContext } from '@missionfabric-js/enzyme/realtime';
+
+// 1. Query keys
+const taskKeys = createQueryKeyFactory('tasks', {
+  all: () => ['tasks'],
+  detail: (id: string) => ['tasks', id],
+});
+
+// 2. Fetch initial data
+function TaskManager() {
+  const { data: tasks } = useApiRequest({
+    url: '/tasks',
+    queryKey: taskKeys.all(),
+  });
+
+  // 3. Update global state
+  const setActiveTasks = useStore(state => state.setActiveTasks);
+  useEffect(() => {
+    if (tasks) setActiveTasks(tasks);
+  }, [tasks, setActiveTasks]);
+
+  // 4. Real-time updates
+  const { subscribe } = useRealtimeContext();
+  useEffect(() => {
+    return subscribe('tasks:updated', (update) => {
+      queryClient.setQueryData(taskKeys.detail(update.id), update);
+    });
+  }, [subscribe]);
+
+  // 5. Mutations
+  const createTask = useApiMutation({
+    method: 'POST',
+    url: '/tasks',
+    invalidateQueries: [taskKeys.all()],
+  });
+
+  return <TaskList tasks={tasks} onCreate={createTask} />;
+}
+```
+
 ## Support
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/enzyme/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/enzyme/discussions)
+- **Issues**: [GitHub Issues](https://github.com/harborgrid-justin/enzyme/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/harborgrid-justin/enzyme/discussions)
 - **Documentation**: [Full Documentation](../../README.md)
 
 ## License

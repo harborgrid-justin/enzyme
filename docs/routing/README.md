@@ -1,10 +1,34 @@
 # Routing Module
 
-> Type-safe, auto-discovery routing system for React Router with enterprise-grade features
+> Type-safe file-system routing with automatic route discovery, guards, prefetching, and React Router integration
+
+## Table of Contents
+
+1. [Overview](#overview)
+2. [Key Features](#key-features)
+3. [Architecture](#architecture)
+4. [Exports](#exports)
+5. [Quick Start](#quick-start)
+6. [File-Based Routing Conventions](#file-based-routing-conventions)
+7. [React Router Integration](#react-router-integration)
+8. [Common Patterns](#common-patterns)
+9. [Core Concepts](#core-concepts)
+10. [Configuration](#configuration)
+11. [Performance Considerations](#performance-considerations)
+12. [Troubleshooting](#troubleshooting)
+13. [Best Practices](#best-practices)
+14. [Migration Guide](#migration-guide)
+15. [Testing](#testing)
+16. [Examples](#examples)
+17. [Related Documentation](#related-documentation)
 
 ## Overview
 
-The `@missionfabric-js/enzyme` routing module provides a comprehensive, type-safe routing solution built on React Router. It combines automatic route discovery, compile-time type checking, and enterprise features like guards, middleware, and advanced routing patterns.
+The `@missionfabric-js/enzyme` routing module provides a Next.js-style file-system routing experience for React Router applications with full TypeScript support. It automatically discovers routes from your file structure, generates type-safe navigation helpers, detects conflicts, and provides powerful guard mechanisms for authorization and feature gating.
+
+This module transforms React Router from a manual routing configuration into an automated, type-safe system that catches routing errors at compile time, prevents route conflicts before deployment, and provides enterprise-grade features like route guards, middleware, parallel routes, and intelligent prefetching.
+
+Perfect for large applications with many routes, this module eliminates boilerplate, prevents routing bugs, and provides a superior developer experience through autocomplete, type checking, and automatic route generation.
 
 ## Key Features
 
@@ -16,8 +40,32 @@ The `@missionfabric-js/enzyme` routing module provides a comprehensive, type-saf
 - **Conflict Detection**: Build-time validation and route conflict detection
 - **Prefetching**: Intelligent route and data prefetching
 - **Navigation Utilities**: Type-safe navigation hooks and components
+- **Route Middleware**: Pipeline-based middleware execution
+- **Route Analytics**: Navigation tracking and metrics
+- **SEO Metadata**: Per-route metadata and title management
+- **Automatic Code Splitting**: Per-route lazy loading
 
 ## Architecture
+
+The routing module follows a discovery → validation → generation pipeline:
+
+```
+File System
+     ↓
+Auto Scanner (watches for changes)
+     ↓
+Discovery Engine (parse segments)
+     ↓
+Conflict Detector (find duplicates)
+     ↓
+Route Transformer (apply middleware)
+     ↓
+Route Builder (generate React Router config)
+     ↓
+Router (with type-safe navigation)
+```
+
+### Module Organization
 
 The routing module is organized into several layers:
 
@@ -35,6 +83,103 @@ routing/
 ├── createRouter.tsx   # Router factory
 └── linking.tsx        # Navigation components
 ```
+
+### Integration Points
+
+The routing module integrates seamlessly with other Enzyme modules:
+
+- **[Auth Module](../auth/README.md)**: Route guards use auth state for user authentication and permissions
+- **[RBAC Module](../auth/RBAC.md)**: Role-based and permission-based route guards
+- **[Flags Module](../flags/README.md)**: Feature flag gates for conditional route access
+- **[Performance Module](../performance/README.md)**: Route-based code splitting and prefetching
+- **[Analytics Module](../analytics/README.md)**: Navigation tracking and route metrics
+
+## Exports
+
+### Router Creation
+
+- `createRouter()` - Create React Router from file system with enhanced features
+- `createSimpleRouter()` - Create router with minimal configuration
+- `createRouteBuilder()` - Build routes programmatically with type safety
+- `createRouteDefinition()` - Define single route with metadata
+
+### Type-Safe Navigation
+
+- `AppLink` - Type-safe link component with prefetching (see [NAVIGATION.md](./NAVIGATION.md))
+- `useTypedNavigate()` - Type-safe navigation hook with parameter validation
+- `useRouteNavigate()` - Alternative navigation hook with route metadata
+- `usePrefetchHandlers()` - Prefetch route on hover/focus
+- `useRouteMetadata()` - Access route metadata (title, description, etc.)
+- `useNavigationAnalytics()` - Track navigation events
+- `useBreadcrumbs()` - Automatic breadcrumb generation
+- `useActiveRoute()` - Detect if a route is currently active
+
+### Route Discovery
+
+- `scanRouteFiles()` - Scan file system for routes with glob patterns
+- `AutoScanner` - Automatic route scanner with watch mode
+- `DiscoveryEngine` - Route discovery orchestrator
+- `WatchMode` - Hot reload for route changes in development
+- `RouteTransformer` - Transform discovered routes with middleware
+
+### Conflict Detection
+
+- `detectRouteConflicts()` - Find route conflicts (duplicates, shadows)
+- `detectConflicts()` - Comprehensive conflict analysis with report
+- `sortRoutesBySpecificity()` - Order routes by priority
+- `generateConflictReport()` - Human-readable conflict report
+
+### Route Guards
+
+- `RequireAuth` - Authentication guard component
+- `RequireRole` - Role-based guard component
+- `RequirePermission` - Permission-based guard component
+- `createAuthGuard()` - Custom auth guard factory
+- `createRoleGuard()` - Custom role guard factory
+- `createPermissionGuard()` - Custom permission guard factory
+- `createFeatureGuard()` - Feature flag guard factory
+- `GuardResolver` - Guard evaluation engine
+
+### Advanced Routing
+
+- `ParallelRoutes` - Multiple routes in slots for complex layouts
+- `InterceptingRouteManager` - Modal routes and overlays
+- `CatchAllRouteManager` - Wildcard routes for dynamic content
+- `OptionalSegmentManager` - Optional path segments
+- `RouteGroupManager` - Route organization without URL impact
+- `MiddlewareChain` - Route middleware pipeline
+
+### Route Building
+
+- `buildPath()` - Build path with parameters and query strings
+- `buildRoutePath()` - Generate route path from segments
+- `buildRouteTree()` - Build route hierarchy for nested routes
+- `matchRoute()` - Match path against pattern
+- `extractRouteParams()` - Parse params from path
+
+### Data Loaders
+
+See [LOADERS.md](./LOADERS.md) for complete loader documentation.
+
+### Utilities
+
+- `routeRegistry` - Global route registry for route management
+- `validateRoute()` - Validate route definition
+- `generateRouteTypeDefinitions()` - Generate TypeScript types
+- `buildUrl()` - Construct URLs with query params
+- `parseQueryString()` - Parse query parameters
+
+### Types
+
+See [TYPES.md](./TYPES.md) for complete type reference. Key types:
+
+- `RouteDefinition` - Route configuration object
+- `RouteParams` - Path parameter types
+- `RouteMetadata` - Route metadata (title, description, etc.)
+- `RouteGuardResult` - Guard evaluation result
+- `DiscoveredRoute` - Auto-discovered route
+- `RouteConflict` - Conflict detection result
+- `TypedNavigate` - Type-safe navigate function
 
 ## Quick Start
 
@@ -103,7 +248,7 @@ const router = createRouter(routeTree);
 
 ## File-Based Routing Conventions
 
-The module supports Next.js-style file-based routing:
+The module supports Next.js-style file-based routing with comprehensive conventions:
 
 | File/Folder | Route Pattern | Description |
 |-------------|---------------|-------------|
@@ -111,9 +256,36 @@ The module supports Next.js-style file-based routing:
 | `about.tsx` | `/about` | Static route |
 | `[id].tsx` | `/:id` | Dynamic segment |
 | `[[id]].tsx` | `/:id?` | Optional segment |
-| `[...slug].tsx` | `/*` | Catch-all route |
+| `[...slug].tsx` | `/*` | Catch-all route (required) |
+| `[[...slug]].tsx` | `/*` (optional) | Optional catch-all route |
 | `(auth)/login.tsx` | `/login` | Route group (ignored in path) |
 | `_layout.tsx` | Layout wrapper | Layout component |
+| `@modal/photo.tsx` | Parallel slot | Modal/sidebar slot |
+| `(..)photo/[id].tsx` | Intercepting route | Modal intercept from parent |
+
+### File System Example
+
+```
+src/pages/
+├── index.tsx           → /
+├── about.tsx           → /about
+├── users/
+│   ├── index.tsx       → /users
+│   ├── [id].tsx        → /users/:id
+│   └── [id]/
+│       └── edit.tsx    → /users/:id/edit
+├── (auth)/             → Route group (no path segment)
+│   ├── login.tsx       → /login
+│   └── register.tsx    → /register
+├── blog/
+│   └── [...slug].tsx   → /blog/* (catch-all)
+├── dashboard/
+│   ├── @analytics/     → Parallel slot
+│   │   └── index.tsx
+│   └── [[tab]].tsx     → /dashboard/:tab? (optional)
+└── photos/
+    └── (..)modal.tsx   → Intercepting route
+```
 
 ## React Router Integration
 
@@ -137,25 +309,164 @@ const router = createRouter(routes, {
 });
 ```
 
-## Route Patterns
+## Common Patterns
 
-### Protected Routes
+### Pattern 1: File-System Routes with Type Safety
+
+Automatic route discovery with full type checking:
 
 ```typescript
-import { createAuthGuard, createRoleGuard } from '@/lib/routing/guards';
+// src/pages/users/[id].tsx
+export default function UserProfile() {
+  const params = useParams<{ id: string }>();
+  return <div>User {params.id}</div>;
+}
 
-const authGuard = createAuthGuard({
-  loginPath: '/login',
-  returnUrlParam: 'returnUrl',
-});
+// Navigate with type checking
+function UserList() {
+  const navigate = useTypedNavigate();
 
-const adminGuard = createRoleGuard({
-  requiredRoles: ['admin'],
-  redirectTo: '/unauthorized',
+  return (
+    <div>
+      <button onClick={() => navigate('/users/:id', {
+        params: { id: '123' } // ✅ Type-checked
+      })}>
+        View User
+      </button>
+    </div>
+  );
+}
+```
+
+### Pattern 2: Protected Routes with Guards
+
+Declarative route protection with authentication and authorization:
+
+```typescript
+// src/pages/admin/dashboard.tsx
+import { RequireRole } from '@/lib/routing';
+
+export default function AdminDashboard() {
+  return (
+    <RequireRole role="admin" fallback={<Unauthorized />}>
+      <DashboardContent />
+    </RequireRole>
+  );
+}
+
+// Or use route metadata
+export const metadata = {
+  auth: {
+    required: true,
+    roles: ['admin'],
+  },
+};
+```
+
+### Pattern 3: Route Groups for Organization
+
+Organize routes without affecting URLs:
+
+```typescript
+// File structure:
+// src/pages/(marketing)/
+//   ├── index.tsx         → /
+//   ├── about.tsx         → /about
+//   └── contact.tsx       → /contact
+// src/pages/(app)/
+//   ├── dashboard.tsx     → /dashboard
+//   └── settings.tsx      → /settings
+
+// Groups organize routes without affecting URLs
+// Both groups can have their own layouts
+```
+
+### Pattern 4: Parallel Routes (Slots)
+
+Render multiple independent routes simultaneously:
+
+```typescript
+// src/pages/dashboard/@analytics/index.tsx
+export default function Analytics() {
+  return <AnalyticsPanel />;
+}
+
+// src/pages/dashboard/@activity/index.tsx
+export default function Activity() {
+  return <ActivityFeed />;
+}
+
+// src/pages/dashboard/layout.tsx
+export default function DashboardLayout({ analytics, activity }) {
+  return (
+    <div className="dashboard">
+      <div className="sidebar">{activity}</div>
+      <div className="main">{analytics}</div>
+    </div>
+  );
+}
+```
+
+### Pattern 5: Intercepting Routes (Modals)
+
+Show modal views when navigating from specific locations:
+
+```typescript
+// src/pages/photos/[id].tsx
+// Full page photo view
+export default function PhotoPage() {
+  return <PhotoDetailPage />;
+}
+
+// src/pages/(.)photos/[id].tsx
+// Modal photo view when navigating from gallery
+export default function PhotoModal() {
+  return (
+    <Modal>
+      <PhotoDetailPage />
+    </Modal>
+  );
+}
+
+// Interception levels:
+// (.) intercepts from same level
+// (..) intercepts from parent level
+// (...) intercepts from root
+```
+
+### Pattern 6: Intelligent Prefetching
+
+Pre-load routes for instant navigation:
+
+```typescript
+import { usePrefetchHandlers } from '@/lib/routing';
+
+function Navigation() {
+  const { onMouseEnter, onFocus } = usePrefetchHandlers('/dashboard');
+
+  return (
+    <Link
+      to="/dashboard"
+      onMouseEnter={onMouseEnter}
+      onFocus={onFocus}
+    >
+      Dashboard
+    </Link>
+  );
+}
+
+// Or use automatic prefetching
+import { setupPrefetching } from '@/lib/routing';
+
+setupPrefetching({
+  strategy: 'viewport', // Prefetch when link enters viewport
+  delay: 200, // Debounce hover events
 });
 ```
 
-### Data Loading
+### Pattern 7: Data Loading with Loaders
+
+Pre-fetch data before route renders:
 
 ```typescript
 // In your route file
@@ -170,7 +481,9 @@ export default function UserPage() {
 }
 ```
 
-### Lazy Loading
+### Pattern 8: Lazy Loading with Code Splitting
+
+Automatic code splitting per route:
 
 ```typescript
 import { lazy } from 'react';
@@ -251,6 +564,184 @@ Detailed documentation for each subsystem:
 - [**DISCOVERY.md**](./DISCOVERY.md) - Auto route discovery system
 - [**NAVIGATION.md**](./NAVIGATION.md) - Navigation components and hooks
 - [**TYPES.md**](./TYPES.md) - Type definitions reference
+
+## Configuration
+
+### Router Configuration
+
+Comprehensive router configuration with all available options:
+
+```typescript
+import { createRouter } from '@/lib/routing';
+
+const router = createRouter({
+  // Route discovery
+  routes: './src/pages',
+  include: ['**/*.tsx', '**/*.jsx'],
+  exclude: ['**/*.test.tsx', '**/_*.tsx'],
+
+  // Guards
+  guards: {
+    auth: true, // Enable auth guards
+    permissions: true, // Enable permission checks
+    features: true, // Enable feature flag gates
+  },
+
+  // Performance
+  prefetch: {
+    enabled: true,
+    strategy: 'hover', // 'hover' | 'viewport' | 'intent'
+  },
+
+  // Code splitting
+  lazy: true, // Lazy load all routes
+
+  // Fallbacks
+  loading: <PageLoader />,
+  error: <ErrorPage />,
+  notFound: <NotFoundPage />,
+
+  // Watch mode (dev only)
+  watch: import.meta.env.DEV,
+});
+```
+
+### Route Metadata
+
+Per-route metadata for SEO, auth, and analytics:
+
+```typescript
+// In route file
+export const metadata = {
+  title: 'User Profile',
+  description: 'View and edit user profile',
+
+  // SEO
+  meta: {
+    robots: 'index,follow',
+    keywords: ['profile', 'user'],
+  },
+
+  // Auth
+  auth: {
+    required: true,
+    roles: ['user'],
+    permissions: ['users:read'],
+  },
+
+  // Feature flags
+  features: {
+    required: ['new-profiles'],
+    any: ['beta-access', 'early-access'],
+  },
+
+  // Analytics
+  analytics: {
+    pageType: 'profile',
+    category: 'user',
+  },
+
+  // Prefetch
+  prefetch: {
+    enabled: true,
+    priority: 'high',
+  },
+};
+```
+
+## Performance Considerations
+
+1. **Code Splitting**: Each route automatically split into separate chunk
+2. **Prefetching**: Routes prefetched on hover/viewport for instant navigation
+3. **Bundle Size**: Core ~18KB, discovery ~8KB, guards ~6KB gzipped
+4. **Tree Shaking**: Unused route guards and features tree-shaken
+5. **Route Caching**: Discovered routes cached to avoid re-scanning
+6. **Watch Mode**: Efficient file watching with debouncing
+
+### Optimization Tips
+
+```typescript
+// Enable prefetching for critical routes
+<AppLink to="/dashboard" prefetch={true} prefetchDelay={100}>
+  Dashboard
+</AppLink>
+
+// Preload routes on app initialization
+useEffect(() => {
+  prefetchRoute('/dashboard');
+  prefetchRoute('/profile');
+}, []);
+
+// Use parallel loading for independent data
+export async function loader({ params }) {
+  const [user, posts, comments] = await Promise.all([
+    fetchUser(params.id),
+    fetchUserPosts(params.id),
+    fetchUserComments(params.id),
+  ]);
+  return { user, posts, comments };
+}
+```
+
+## Troubleshooting
+
+### Issue: Route Not Found After Adding File
+
+**Solution:** Ensure file matches naming convention and restart dev server:
+
+```bash
+# File must export default component
+export default function MyPage() { ... }
+
+# Or restart with watch mode
+npm run dev
+```
+
+### Issue: Type Errors on Navigation
+
+**Solution:** Regenerate route types:
+
+```bash
+npm run routes:generate
+```
+
+### Issue: Route Conflict Errors
+
+**Solution:** Use conflict detector to identify issues:
+
+```typescript
+import { detectRouteConflicts, generateConflictReport } from '@/lib/routing';
+
+const conflicts = detectRouteConflicts(routes);
+console.log(generateConflictReport(conflicts));
+```
+
+### Issue: Guard Not Working
+
+**Solution:** Ensure guard is registered and providers are present:
+
+```typescript
+<AuthProvider>
+  <RBACProvider>
+    <RouterProvider router={router} />
+  </RBACProvider>
+</AuthProvider>
+```
+
+### Issue: Prefetching Not Working
+
+**Solution:** Check prefetch configuration and ensure routes are registered:
+
+```typescript
+// Enable prefetching in router
+const router = createRouter(routes, {
+  prefetchOnHover: true,
+  prefetchDelay: 100,
+});
+
+// Or enable per-link
+<AppLink to="/dashboard" prefetch={true}>Dashboard</AppLink>
+```
 
 ## Best Practices
 
@@ -375,6 +866,66 @@ import { AppLink } from '@/lib/routing';
 </AppLink>
 ```
 
+## Testing
+
+### Testing Routes
+
+```typescript
+import { createMemoryRouter, RouterProvider } from 'react-router-dom';
+import { render, screen } from '@testing-library/react';
+
+describe('UserProfile', () => {
+  it('renders user profile', () => {
+    const router = createMemoryRouter(
+      [
+        {
+          path: '/users/:id',
+          element: <UserProfile />,
+        },
+      ],
+      {
+        initialEntries: ['/users/123'],
+      }
+    );
+
+    render(<RouterProvider router={router} />);
+    expect(screen.getByText(/user 123/i)).toBeInTheDocument();
+  });
+});
+```
+
+### Testing Guards
+
+```typescript
+import { RequireRole } from '@/lib/routing';
+
+describe('AdminDashboard', () => {
+  it('shows dashboard for admin', () => {
+    render(
+      <AuthProvider value={{ user: { role: 'admin' } }}>
+        <RequireRole role="admin">
+          <AdminDashboard />
+        </RequireRole>
+      </AuthProvider>
+    );
+
+    expect(screen.getByText('Admin Dashboard')).toBeInTheDocument();
+  });
+
+  it('redirects non-admin users', () => {
+    render(
+      <AuthProvider value={{ user: { role: 'user' } }}>
+        <RequireRole role="admin">
+          <AdminDashboard />
+        </RequireRole>
+      </AuthProvider>
+    );
+
+    expect(screen.queryByText('Admin Dashboard')).not.toBeInTheDocument();
+  });
+});
+```
+
 ## Examples
 
 See the [examples](../../examples/routing) directory for complete examples:
@@ -390,18 +941,33 @@ See the [examples](../../examples/routing) directory for complete examples:
 
 See the [Type Definitions](./TYPES.md) for complete API documentation.
 
-## Contributing
-
-When adding new routing features:
-
-1. Keep core utilities framework-agnostic (in `core/`)
-2. Add proper TypeScript types
-3. Include conflict detection if needed
-4. Add documentation and examples
-5. Write tests for new functionality
-
 ## Related Documentation
 
-- [State Management](../state/README.md)
-- [Form Handling](../forms/README.md)
-- [API Integration](../api/README.md)
+### Core Routing Documentation
+
+- [**CORE.md**](./CORE.md) - Core routing utilities and type system
+- [**GUARDS.md**](./GUARDS.md) - Route guards and authorization
+- [**LOADERS.md**](./LOADERS.md) - Data loaders and fetching patterns
+- [**ADVANCED.md**](./ADVANCED.md) - Advanced routing patterns
+- [**DISCOVERY.md**](./DISCOVERY.md) - Auto route discovery system
+- [**NAVIGATION.md**](./NAVIGATION.md) - Navigation components and hooks
+- [**TYPES.md**](./TYPES.md) - Type definitions reference
+
+### Route Configuration Systems
+
+- [**AUTO_ROUTES.md**](../AUTO_ROUTES.md) - Config-based auto-route system (alternative approach)
+
+### Integration Modules
+
+- [**Auth Module**](../auth/README.md) - Authentication and authorization
+- [**RBAC Module**](../auth/RBAC.md) - Role-based access control
+- [**Flags Module**](../flags/README.md) - Feature flags and gates
+- [**Performance Module**](../performance/README.md) - Code splitting and optimization
+- [**Analytics Module**](../analytics/README.md) - Route analytics and tracking
+
+### Related Patterns
+
+- [**State Management**](../state/README.md) - State management with routing
+- [**Form Handling**](../forms/README.md) - Forms and route actions
+- [**API Integration**](../api/README.md) - API calls and loaders
+- [**Layouts**](../layouts/README.md) - Layout system integration

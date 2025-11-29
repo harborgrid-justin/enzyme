@@ -486,7 +486,43 @@ Potential improvements:
 
 ---
 
+## Comparison: Auto-Routes vs File-System Routing
+
+The Enzyme package provides two complementary routing approaches:
+
+### Config-Based Auto-Routes (This Document)
+
+- **Source**: `route-config.ts` - Single configuration file
+- **Approach**: Define routes once, auto-generate everywhere
+- **Best For**: Traditional applications with explicit route definitions
+- **Benefits**: Centralized control, easy to see all routes, simple migration from manual routes
+- **Example**: `PRODUCTS_LIST: { path: '/products', component: '@/pages/products/ProductListPage' }`
+
+### File-System Based Routing (Routing Module)
+
+- **Source**: File system - Routes discovered from file structure
+- **Approach**: Next.js-style file-based routing with auto-discovery
+- **Best For**: Large applications with many routes, Next.js-like developer experience
+- **Benefits**: Zero configuration, automatic route generation, visual route structure
+- **Example**: `src/pages/products/index.tsx` → `/products`
+
+**See [Routing Module](./routing/README.md) for file-system based routing documentation.**
+
+### Which Approach to Use?
+
+- **Use Config-Based Auto-Routes** if you prefer centralized control and explicit route definitions
+- **Use File-System Routing** if you want automatic route discovery and Next.js-style conventions
+- **Use Both**: They can coexist - use file-system routing for main app, config-based for specific areas
+
 ## Related Documentation
+
+### Routing System
+
+- [**Routing Module**](./routing/README.md) - File-system based routing (alternative approach)
+- [**Route Guards**](./routing/GUARDS.md) - Authentication and authorization guards
+- [**Route Discovery**](./routing/DISCOVERY.md) - Auto route discovery from file system
+- [**Navigation**](./routing/NAVIGATION.md) - Type-safe navigation components
+- [**Advanced Routing**](./routing/ADVANCED.md) - Parallel routes, intercepting routes, etc.
 
 ### Core Concepts
 - [Architecture Overview](./ARCHITECTURE.md) - System design and routing architecture
@@ -496,6 +532,8 @@ Potential improvements:
 ### Features & Security
 - [Feature Architecture](./FEATURES.md) - Feature-based routing
 - [Security Guide](./SECURITY.md) - Protected routes and authorization
+- [Auth Module](./auth/README.md) - Authentication system
+- [RBAC Module](./auth/RBAC.md) - Role-based access control
 
 ### Performance
 - [Performance Guide](./PERFORMANCE.md) - Route prefetching strategies

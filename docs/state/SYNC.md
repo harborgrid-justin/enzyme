@@ -738,6 +738,17 @@ useEffect(() => {
 
 ## Related Documentation
 
-- [Stores](./STORES.md) - Store architecture
+### State Management
+- [Stores](./STORES.md) - Store architecture and persistence
 - [Core](./CORE.md) - Store creation utilities
 - [Types](./TYPES.md) - TypeScript type definitions
+- [README](./README.md) - State management overview
+
+### Cross-Cutting Concerns
+- [Coordination Module](../../src/lib/coordination/README.md) - Provider orchestration and state coordination
+- [Performance Guide](../PERFORMANCE.md) - Optimization strategies for multi-tab apps
+- [Architecture](../ARCHITECTURE.md) - System design patterns
+
+### Browser APIs
+- [BroadcastChannel API](https://developer.mozilla.org/en-US/docs/Web/API/BroadcastChannel) - MDN documentation
+- [Structured Clone Algorithm](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm) - Data serialization

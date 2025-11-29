@@ -847,7 +847,17 @@ describe('selectUserById', () => {
 
 ## Related Documentation
 
+### State Management
 - [Hooks](./HOOKS.md) - React hooks for state access
 - [Core](./CORE.md) - Selector factory functions
 - [Stores](./STORES.md) - Store architecture
 - [Types](./TYPES.md) - TypeScript type definitions
+- [README](./README.md) - State management overview
+
+### Performance & Optimization
+- [Performance Guide](../PERFORMANCE.md) - Selector optimization strategies
+- [Architecture](../ARCHITECTURE.md) - System design and memoization patterns
+
+### Advanced Topics
+- [Slices](./SLICES.md) - Slice-specific selectors
+- [Sync](./SYNC.md) - Multi-tab synchronization

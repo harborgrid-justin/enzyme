@@ -283,9 +283,16 @@ Enzyme exports 27 specialized modules, each designed for specific functionality:
 |--------|-------------|-------------|
 | **State** | `@missionfabric-js/enzyme/state` | Zustand-based global state management |
 | **Data** | `@missionfabric-js/enzyme/data` | Data structures and transformations |
-| **Queries** | `@missionfabric-js/enzyme/queries` | React Query integration and data fetching |
+| **Queries** | `@missionfabric-js/enzyme/queries` | React Query utilities and query key factories |
 | **API** | `@missionfabric-js/enzyme/api` | HTTP client and API utilities |
 | **Contexts** | `@missionfabric-js/enzyme/contexts` | React context providers and consumers |
+
+**Recommended Reading:**
+- [State Management Guide](./state/README.md) - Zustand state management with persistence and multi-tab sync
+- [Queries Module Guide](./queries/README.md) - React Query integration patterns and query key factories
+- [API Client Guide](./api/README.md) - HTTP client, hooks, and advanced features
+- [Realtime Module Guide](./realtime/README.md) - WebSocket and SSE for live data
+- [Streaming Module Guide](./streaming/README.md) - Progressive data delivery and SSR streaming
 
 ### Routing & Navigation
 
@@ -345,6 +352,136 @@ Enzyme exports 27 specialized modules, each designed for specific functionality:
 | Module | Import Path | Description |
 |--------|-------------|-------------|
 | **Hooks** | `@missionfabric-js/enzyme/hooks` | Collection of custom React hooks |
+
+---
+
+## Documentation Map
+
+### Complete Documentation Hierarchy
+
+```
+@missionfabric-js/enzyme Documentation
+│
+├── 📘 Master Index → INDEX.md
+│   ├── All 28 Modules
+│   ├── Alphabetical Function Index (A-Z)
+│   ├── Alphabetical Hook Index (80+ hooks)
+│   ├── Alphabetical Component Index (50+ components)
+│   └── Quick Reference by Task
+│
+├── 🧭 Navigation Guide → NAVIGATION.md
+│   ├── Breadcrumb Navigation
+│   ├── Sidebar Navigation Tree
+│   ├── Sequential Reading Paths
+│   └── Learning Paths (Beginner → Advanced)
+│
+├── 🚀 Getting Started (Start Here!)
+│   ├── Quick Start (10 min) → QUICKSTART.md
+│   ├── Comprehensive Tutorial → GETTING_STARTED.md
+│   └── Configuration Setup → CONFIGURATION.md
+│
+├── 📖 Core Concepts
+│   ├── System Architecture → ARCHITECTURE.md
+│   ├── Feature-Based Design → FEATURES.md
+│   └── Module Documentation → MODULE_DOCUMENTATION.md
+│
+├── 📚 Complete API Reference
+│   ├── Main Package API → ENZYME_API_DOCUMENTATION.md
+│   ├── All Module APIs → MODULE_API_DOCUMENTATION.md
+│   ├── System & Types → SYSTEM_AND_TYPES_API_DOCUMENTATION.md
+│   ├── Hooks Reference → HOOKS_REFERENCE.md
+│   ├── Components Reference → COMPONENTS_REFERENCE.md
+│   └── Config Reference → CONFIG_REFERENCE.md
+│
+├── 📝 Development Guides
+│   ├── State Management → STATE.md
+│   ├── Routing System → AUTO_ROUTES.md
+│   ├── API & Data Fetching → API.md
+│   ├── Security & Auth → SECURITY.md
+│   ├── Performance → PERFORMANCE.md
+│   ├── Testing → TESTING.md
+│   ├── Design System → DESIGN_SYSTEM.md
+│   └── Environment Setup → ENVIRONMENT.md
+│
+├── 🔬 Advanced Features
+│   ├── Progressive Streaming → STREAMING.md
+│   ├── Auto-Hydration → HYDRATION.md
+│   ├── Virtual Modular DOM → VDOM.md
+│   └── Adaptive Layouts → LAYOUTS.md
+│
+├── 🆘 Support & Help
+│   ├── Frequently Asked Questions → FAQ.md
+│   ├── Troubleshooting → TROUBLESHOOTING.md
+│   ├── Migration Guides → MIGRATION.md
+│   ├── Deployment → DEPLOYMENT.md
+│   └── Glossary → GLOSSARY.md
+│
+└── 🔧 Reference & Templates
+    ├── Module Template → MODULE_README_TEMPLATE.md
+    └── Integration Examples → integration/
+```
+
+### Quick Navigation by Experience Level
+
+**New to Enzyme? Start here:**
+1. [Quick Start Guide](./QUICKSTART.md) - 10 minutes to your first app
+2. [Getting Started Tutorial](./GETTING_STARTED.md) - Comprehensive walkthrough
+3. [Architecture Overview](./ARCHITECTURE.md) - Understanding the framework
+
+**Building Your First Feature?**
+1. [Features Guide](./FEATURES.md) - Feature-based architecture
+2. [State Management](./STATE.md) - Managing application state
+3. [API & Data Fetching](./API.md) - Fetching and caching data
+4. [Components Reference](./COMPONENTS_REFERENCE.md) - UI component library
+
+**Need a Specific API?**
+1. [Master Index](./INDEX.md) - Alphabetical function/hook/component index
+2. [Hooks Reference](./HOOKS_REFERENCE.md) - All 80+ custom hooks
+3. [Complete API Documentation](./ENZYME_API_DOCUMENTATION.md) - Every export
+
+**Optimizing Performance?**
+1. [Performance Guide](./PERFORMANCE.md) - Optimization strategies
+2. [Hydration System](./HYDRATION.md) - Auto-prioritized hydration
+3. [Streaming Guide](./STREAMING.md) - Progressive HTML streaming
+4. [VDOM Guide](./VDOM.md) - Virtual modular DOM
+
+**Having Issues?**
+1. [FAQ](./FAQ.md) - Common questions answered
+2. [Troubleshooting Guide](./TROUBLESHOOTING.md) - Problem-solving
+3. [Migration Guide](./MIGRATION.md) - Migrating from other frameworks
+
+### Learning Paths
+
+**Path 1: Beginner (4-6 hours)**
+```
+README → QUICKSTART → GETTING_STARTED → CONFIGURATION → ARCHITECTURE
+```
+
+**Path 2: Core Development (6-8 hours)**
+```
+FEATURES → STATE → AUTO_ROUTES → API → SECURITY → PERFORMANCE
+```
+
+**Path 3: Advanced Features (4-6 hours)**
+```
+STREAMING → HYDRATION → VDOM → LAYOUTS → MODULE_DOCUMENTATION
+```
+
+**Path 4: API Reference (As needed)**
+```
+INDEX → ENZYME_API → MODULE_API → HOOKS_REFERENCE → COMPONENTS_REFERENCE
+```
+
+### Documentation Quick Stats
+
+| Category | Count | Examples |
+|----------|-------|----------|
+| **Total Modules** | 28 | api, auth, state, routing, performance, etc. |
+| **Custom Hooks** | 80+ | useAuth, useQuery, usePerformance, etc. |
+| **UI Components** | 50+ | Button, Modal, Card, Table, etc. |
+| **Functions** | 200+ | createRouter, buildPath, sanitizeHTML, etc. |
+| **Documentation Files** | 37 | Guides, references, tutorials |
+| **Code Examples** | 500+ | Throughout all documentation |
 
 ---
 
@@ -413,14 +550,27 @@ import {
 ```typescript
 import {
   createApiClient,  // API client factory
-  useQuery,         // Query hook
-  useMutation,      // Mutation hook
-  QueryProvider,    // Query context provider
-  queryClient,      // Global query client
+  useApiRequest,    // Data fetching hook
+  useApiMutation,   // Mutation hook
+  ApiClientProvider,// API context provider
+  apiClient,        // Default API client
 } from '@missionfabric-js/enzyme/api';
 ```
 
-[Full API Documentation](./API.md)
+[Full API Documentation](./api/README.md) | [Advanced Features](./api/ADVANCED.md)
+
+#### Queries (`/queries`)
+
+```typescript
+import {
+  createQueryKeyFactory,  // Type-safe query key factory
+  commonQueryOptions,     // Preset query configurations
+  useQueryWithRetry,      // Query with custom retry
+  useInvalidateQueries,   // Query invalidation helper
+} from '@missionfabric-js/enzyme/queries';
+```
+
+[Full Queries Documentation](./queries/README.md)
 
 #### Performance (`/performance`)
 

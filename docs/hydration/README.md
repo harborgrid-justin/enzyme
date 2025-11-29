@@ -12,6 +12,8 @@ Progressive hydration system for optimal server-side rendering (SSR) performance
 - [SSR/SSG Patterns](#ssrssg-patterns)
 - [Performance Optimization](#performance-optimization)
 - [Examples](#examples)
+- [Integration with Other Systems](#integration-with-other-systems)
+- [Related Documentation](#related-documentation)
 
 ## Overview
 
@@ -20,10 +22,21 @@ The Hydration System provides progressive hydration capabilities to optimize ini
 ### Key Features
 
 - **Progressive Hydration**: Prioritize above-the-fold content
+- **Auto-Prioritized Scheduling**: 5-level priority queue system (critical → high → normal → low → idle)
 - **Deferred Hydration**: Delay hydration of non-critical components
 - **Interaction Replay**: Capture and replay user interactions during hydration
 - **Priority Scheduling**: Control hydration order with priority levels
 - **Automatic Scheduling**: Intelligent hydration based on idle time
+- **Frame Budget Management**: Never blocks main thread > 50ms
+- **Visibility-Based**: IntersectionObserver integration
+- **Network-Aware**: Adapt to connection quality
+
+### Performance Targets
+
+- **INP**: < 100ms (interaction responsiveness)
+- **TTI Reduction**: 40% improvement over full hydration
+- **Frame Budget**: < 50ms per hydration task
+- **Above-the-Fold**: < 500ms time to hydration
 
 ## Core Concepts
 
@@ -564,6 +577,122 @@ Verify:
 - Heavy components are deferred
 - Not hydrating too much content immediately
 
-## API Reference
+## Integration with Other Systems
 
-See the [Advanced Features Overview](../advanced/README.md) for complete API documentation.
+### Performance Monitoring Integration
+
+Track hydration performance with the performance monitoring system:
+
+```tsx
+import { HydrationProvider } from '@/lib/hydration';
+import { PerformanceProvider, useHydrationMetrics } from '@/lib/performance';
+
+function App() {
+  return (
+    <PerformanceProvider>
+      <HydrationProvider>
+        <YourApp />
+        <HydrationPerformanceMonitor />
+      </HydrationProvider>
+    </PerformanceProvider>
+  );
+}
+
+function HydrationPerformanceMonitor() {
+  const { timeToFullHydration, hydratedCount } = useHydrationMetrics();
+
+  useEffect(() => {
+    if (timeToFullHydration) {
+      analytics.track('Hydration Complete', {
+        duration: timeToFullHydration,
+        components: hydratedCount,
+      });
+    }
+  }, [timeToFullHydration]);
+
+  return null;
+}
+```
+
+**Learn more:** [Performance Monitoring](../performance/MONITORING.md)
+
+### Streaming Integration
+
+Combine progressive hydration with HTML streaming:
+
+```tsx
+import { HydrationProvider } from '@/lib/hydration';
+import { StreamBoundary } from '@/lib/streaming';
+
+function Page() {
+  return (
+    <HydrationProvider>
+      {/* Stream shell immediately */}
+      <StreamBoundary priority="critical">
+        <HydrationBoundary priority="critical">
+          <Header />
+        </HydrationBoundary>
+      </StreamBoundary>
+
+      {/* Stream and hydrate content progressively */}
+      <StreamBoundary priority="high">
+        <HydrationBoundary priority="normal" trigger="visible">
+          <MainContent />
+        </HydrationBoundary>
+      </StreamBoundary>
+    </HydrationProvider>
+  );
+}
+```
+
+**Learn more:** [Dynamic HTML Streaming](../STREAMING.md)
+
+### VDOM Integration
+
+Use modular DOM boundaries with progressive hydration:
+
+```tsx
+import { HydrationBoundary } from '@/lib/hydration';
+import { ModuleBoundary } from '@/lib/vdom';
+
+function ModularPage() {
+  return (
+    <div>
+      {/* Each module boundary hydrates independently */}
+      <ModuleBoundary id="header">
+        <HydrationBoundary priority="critical">
+          <Header />
+        </HydrationBoundary>
+      </ModuleBoundary>
+
+      <ModuleBoundary id="content">
+        <HydrationBoundary priority="normal" trigger="visible">
+          <Content />
+        </HydrationBoundary>
+      </ModuleBoundary>
+    </div>
+  );
+}
+```
+
+**Learn more:** [Virtual Modular DOM](../VDOM.md)
+
+## Related Documentation
+
+### Hydration System
+
+- [Auto-Prioritized Strategies](./STRATEGIES.md) - Advanced hydration patterns and scheduling
+
+### Performance System
+
+- [Web Vitals](../performance/WEB_VITALS.md) - Core Web Vitals (LCP, INP, CLS)
+- [Performance Monitoring](../performance/MONITORING.md) - Real-time monitoring and RUM
+- [Performance Budgets](../performance/BUDGETS.md) - Budget enforcement
+- [Performance Observatory](../performance/OBSERVATORY.md) - Performance dashboard
+
+### Related Systems
+
+- [Streaming Guide](../STREAMING.md) - Progressive HTML streaming
+- [VDOM Guide](../VDOM.md) - Virtual modular DOM
+- [Performance Guide](../PERFORMANCE.md) - Template-level performance
+- [Advanced Features](../advanced/README.md) - Complete API documentation

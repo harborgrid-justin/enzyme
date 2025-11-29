@@ -24,6 +24,43 @@ The VDOM Module System provides a flexible architecture for composing applicatio
 - **Hierarchical Modules**: Nested module support
 - **Context Integration**: Seamless React context usage
 
+## Quick Start
+
+```tsx
+import { ModuleProvider, ModuleSlot, useModule } from '@missionfabric-js/enzyme/vdom';
+
+function App() {
+  return (
+    <ModuleProvider>
+      <ModuleSlot
+        moduleId="dashboard-widget"
+        fallback={<WidgetSkeleton />}
+      />
+    </ModuleProvider>
+  );
+}
+
+function DynamicModule() {
+  const { module, isLoading, error } = useModule('remote-component');
+
+  if (isLoading) return <Loading />;
+  if (error) return <Error error={error} />;
+
+  return <module.Component />;
+}
+```
+
+### Available Exports
+
+| Export | Type | Description |
+|--------|------|-------------|
+| `ModuleProvider` | Component | Context provider for module system |
+| `ModuleSlot` | Component | Render slot for dynamic modules |
+| `ModuleBoundary` | Component | Error boundary for modules |
+| `useModule` | Hook | Load and access modules |
+| `useSecureModule` | Hook | Sandboxed module loading |
+| `useModuleState` | Hook | Module state management |
+
 ## Core Concepts
 
 ### Module Architecture
@@ -652,3 +689,18 @@ function TenantApp({ tenantId }) {
 ## API Reference
 
 See the [Advanced Features Overview](../advanced/README.md) for complete API documentation.
+
+## Related Documentation
+
+### Main Documentation
+- [Documentation Index](/home/user/enzyme/docs/INDEX.md) - All documentation resources
+- [Architecture Guide](/home/user/enzyme/docs/ARCHITECTURE.md) - System architecture
+- [Advanced Features](/home/user/enzyme/docs/advanced/README.md) - Advanced feature guides
+
+### Related Modules
+- [Shared Utilities](/home/user/enzyme/docs/shared/README.md) - Event bus and utilities
+- [Layouts](/home/user/enzyme/docs/layouts/README.md) - Layout components
+- [Hooks](/home/user/enzyme/docs/hooks/README.md) - Custom hooks for modules
+
+### Integration Guides
+- [Integration Patterns](/home/user/enzyme/docs/integration/README.md) - How modules work together

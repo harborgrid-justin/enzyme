@@ -574,10 +574,12 @@ MIT License — see [LICENSE](LICENSE) for details.
 
 ## 🔗 Documentation
 
+> **📘 [Complete Documentation Hub →](docs/README.md)** - Master documentation index with navigation, learning paths, and comprehensive guides
+
 ### Getting Started
-- [Documentation Index](docs/INDEX.md) - Complete documentation map
-- [Quick Start Guide](docs/QUICKSTART.md) - Get productive in minutes
+- [Quick Start Guide](docs/QUICKSTART.md) - Get productive in 10 minutes
 - [Getting Started](docs/GETTING_STARTED.md) - Comprehensive introduction
+- [Master Index](docs/INDEX.md) - Complete documentation map with all modules, hooks, and components
 
 ### Architecture & Concepts
 - [Architecture Overview](docs/ARCHITECTURE.md) - System design and patterns

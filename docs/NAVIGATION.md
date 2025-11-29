@@ -1,6 +1,257 @@
 # Documentation Navigation Reference
 
-> **Purpose**: This document provides a comprehensive navigation structure for the @missionfabric-js/enzyme documentation. Use this as a sidebar reference or table of contents for documentation sites.
+> **Purpose**: This document provides a comprehensive navigation structure for the @missionfabric-js/enzyme documentation. Use this as a sidebar reference, breadcrumb navigation, or sequential reading guide.
+
+---
+
+## Navigation Quick Links
+
+| Type | Purpose |
+|------|---------|
+| [Breadcrumb Navigation](#breadcrumb-navigation) | Hierarchical page location |
+| [Sidebar Navigation](#sidebar-navigation-tree) | Full documentation tree |
+| [Sequential Reading](#sequential-reading-path) | Previous/Next page links |
+| [Primary Navigation](#primary-navigation) | Main navigation categories |
+
+---
+
+## Breadcrumb Navigation
+
+Use these breadcrumb paths to show users their current location in the documentation hierarchy:
+
+### Getting Started Pages
+
+```
+Home > Getting Started > Quick Start
+Home > Getting Started > Installation
+Home > Getting Started > First Application
+Home > Getting Started > Tutorial
+```
+
+### Core Concepts Pages
+
+```
+Home > Core Concepts > Architecture
+Home > Core Concepts > Features
+Home > Core Concepts > Philosophy
+Home > Core Concepts > Design Patterns
+```
+
+### API Reference Pages
+
+```
+Home > API Reference > Complete API
+Home > API Reference > Module APIs
+Home > API Reference > Hooks
+Home > API Reference > Components
+Home > API Reference > Configuration
+```
+
+### Development Guides Pages
+
+```
+Home > Guides > Configuration
+Home > Guides > State Management
+Home > Guides > Routing
+Home > Guides > API & Data Fetching
+Home > Guides > Authentication
+Home > Guides > Performance
+Home > Guides > Testing
+```
+
+### Advanced Topics Pages
+
+```
+Home > Advanced > Streaming
+Home > Advanced > Hydration
+Home > Advanced > VDOM
+Home > Advanced > Layouts
+Home > Advanced > Real-time
+```
+
+### Support Pages
+
+```
+Home > Support > FAQ
+Home > Support > Troubleshooting
+Home > Support > Migration
+```
+
+---
+
+## Sequential Reading Path
+
+Follow this order for learning the framework comprehensively:
+
+### Learning Path 1: Getting Started (Beginner)
+
+| Order | Document | Previous | Next |
+|-------|----------|----------|------|
+| 1 | [README.md](./README.md) | - | [QUICKSTART.md](./QUICKSTART.md) |
+| 2 | [QUICKSTART.md](./QUICKSTART.md) | [README.md](./README.md) | [GETTING_STARTED.md](./GETTING_STARTED.md) |
+| 3 | [GETTING_STARTED.md](./GETTING_STARTED.md) | [QUICKSTART.md](./QUICKSTART.md) | [CONFIGURATION.md](./CONFIGURATION.md) |
+| 4 | [CONFIGURATION.md](./CONFIGURATION.md) | [GETTING_STARTED.md](./GETTING_STARTED.md) | [ARCHITECTURE.md](./ARCHITECTURE.md) |
+
+### Learning Path 2: Core Concepts (Intermediate)
+
+| Order | Document | Previous | Next |
+|-------|----------|----------|------|
+| 1 | [ARCHITECTURE.md](./ARCHITECTURE.md) | [CONFIGURATION.md](./CONFIGURATION.md) | [FEATURES.md](./FEATURES.md) |
+| 2 | [FEATURES.md](./FEATURES.md) | [ARCHITECTURE.md](./ARCHITECTURE.md) | [STATE.md](./STATE.md) |
+| 3 | [STATE.md](./STATE.md) | [FEATURES.md](./FEATURES.md) | [AUTO_ROUTES.md](./AUTO_ROUTES.md) |
+| 4 | [AUTO_ROUTES.md](./AUTO_ROUTES.md) | [STATE.md](./STATE.md) | [API.md](./API.md) |
+| 5 | [API.md](./API.md) | [AUTO_ROUTES.md](./AUTO_ROUTES.md) | [SECURITY.md](./SECURITY.md) |
+
+### Learning Path 3: Security & Performance (Intermediate)
+
+| Order | Document | Previous | Next |
+|-------|----------|----------|------|
+| 1 | [SECURITY.md](./SECURITY.md) | [API.md](./API.md) | [PERFORMANCE.md](./PERFORMANCE.md) |
+| 2 | [PERFORMANCE.md](./PERFORMANCE.md) | [SECURITY.md](./SECURITY.md) | [TESTING.md](./TESTING.md) |
+| 3 | [TESTING.md](./TESTING.md) | [PERFORMANCE.md](./PERFORMANCE.md) | [DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md) |
+| 4 | [DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md) | [TESTING.md](./TESTING.md) | [STREAMING.md](./STREAMING.md) |
+
+### Learning Path 4: Advanced Features (Advanced)
+
+| Order | Document | Previous | Next |
+|-------|----------|----------|------|
+| 1 | [STREAMING.md](./STREAMING.md) | [DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md) | [HYDRATION.md](./HYDRATION.md) |
+| 2 | [HYDRATION.md](./HYDRATION.md) | [STREAMING.md](./STREAMING.md) | [VDOM.md](./VDOM.md) |
+| 3 | [VDOM.md](./VDOM.md) | [HYDRATION.md](./HYDRATION.md) | [LAYOUTS.md](./LAYOUTS.md) |
+| 4 | [LAYOUTS.md](./LAYOUTS.md) | [VDOM.md](./VDOM.md) | [MODULE_DOCUMENTATION.md](./MODULE_DOCUMENTATION.md) |
+
+### Reference Path: API Documentation
+
+| Order | Document | Previous | Next |
+|-------|----------|----------|------|
+| 1 | [ENZYME_API_DOCUMENTATION.md](./ENZYME_API_DOCUMENTATION.md) | - | [MODULE_API_DOCUMENTATION.md](./MODULE_API_DOCUMENTATION.md) |
+| 2 | [MODULE_API_DOCUMENTATION.md](./MODULE_API_DOCUMENTATION.md) | [ENZYME_API_DOCUMENTATION.md](./ENZYME_API_DOCUMENTATION.md) | [SYSTEM_AND_TYPES_API_DOCUMENTATION.md](./SYSTEM_AND_TYPES_API_DOCUMENTATION.md) |
+| 3 | [SYSTEM_AND_TYPES_API_DOCUMENTATION.md](./SYSTEM_AND_TYPES_API_DOCUMENTATION.md) | [MODULE_API_DOCUMENTATION.md](./MODULE_API_DOCUMENTATION.md) | [HOOKS_REFERENCE.md](./HOOKS_REFERENCE.md) |
+| 4 | [HOOKS_REFERENCE.md](./HOOKS_REFERENCE.md) | [SYSTEM_AND_TYPES_API_DOCUMENTATION.md](./SYSTEM_AND_TYPES_API_DOCUMENTATION.md) | [COMPONENTS_REFERENCE.md](./COMPONENTS_REFERENCE.md) |
+| 5 | [COMPONENTS_REFERENCE.md](./COMPONENTS_REFERENCE.md) | [HOOKS_REFERENCE.md](./HOOKS_REFERENCE.md) | [CONFIG_REFERENCE.md](./CONFIG_REFERENCE.md) |
+| 6 | [CONFIG_REFERENCE.md](./CONFIG_REFERENCE.md) | [COMPONENTS_REFERENCE.md](./COMPONENTS_REFERENCE.md) | - |
+
+---
+
+## Sidebar Navigation Tree
+
+Complete hierarchical navigation tree for documentation sites:
+
+```
+📘 @missionfabric-js/enzyme Documentation
+│
+├── 🏠 Home
+│   └── README.md
+│
+├── 🚀 Getting Started
+│   ├── Quick Start (10 min) → QUICKSTART.md
+│   ├── Full Tutorial → GETTING_STARTED.md
+│   ├── Installation
+│   └── Configuration → CONFIGURATION.md
+│
+├── 📖 Core Concepts
+│   ├── Architecture → ARCHITECTURE.md
+│   ├── Features → FEATURES.md
+│   ├── Philosophy & Patterns
+│   └── Module System → MODULE_DOCUMENTATION.md
+│
+├── 📚 API Reference
+│   ├── Complete API → ENZYME_API_DOCUMENTATION.md
+│   ├── Module APIs → MODULE_API_DOCUMENTATION.md
+│   ├── System & Types → SYSTEM_AND_TYPES_API_DOCUMENTATION.md
+│   ├── Hooks → HOOKS_REFERENCE.md
+│   ├── Components → COMPONENTS_REFERENCE.md
+│   └── Configuration → CONFIG_REFERENCE.md
+│
+├── 📝 Development Guides
+│   ├── Configuration
+│   │   ├── Overview → CONFIGURATION.md
+│   │   ├── Reference → CONFIG_REFERENCE.md
+│   │   └── Environment → ENVIRONMENT.md
+│   │
+│   ├── State Management
+│   │   ├── Guide → STATE.md
+│   │   ├── Zustand Patterns
+│   │   ├── React Query
+│   │   └── Multi-tab Sync
+│   │
+│   ├── Routing & Navigation
+│   │   ├── Auto-Routes → AUTO_ROUTES.md
+│   │   ├── File-system Routing
+│   │   ├── Route Guards
+│   │   └── Navigation Hooks
+│   │
+│   ├── API & Data
+│   │   ├── API Guide → API.md
+│   │   ├── HTTP Client
+│   │   ├── Data Fetching
+│   │   ├── Mutations
+│   │   └── Caching
+│   │
+│   ├── Security
+│   │   ├── Guide → SECURITY.md
+│   │   ├── Authentication
+│   │   ├── Authorization (RBAC)
+│   │   ├── Route Protection
+│   │   └── Active Directory
+│   │
+│   ├── Performance
+│   │   ├── Guide → PERFORMANCE.md
+│   │   ├── Optimization
+│   │   ├── Monitoring
+│   │   ├── Web Vitals
+│   │   └── Budgets
+│   │
+│   ├── Testing
+│   │   ├── Guide → TESTING.md
+│   │   ├── Unit Tests
+│   │   ├── Integration Tests
+│   │   └── E2E Tests
+│   │
+│   └── Design System
+│       ├── Guide → DESIGN_SYSTEM.md
+│       ├── Theming
+│       ├── Components
+│       └── Tokens
+│
+├── 🔬 Advanced Topics
+│   ├── Streaming
+│   │   ├── Guide → STREAMING.md
+│   │   ├── Progressive HTML
+│   │   ├── Chunked Transfer
+│   │   └── Real-time Updates
+│   │
+│   ├── Hydration
+│   │   ├── Guide → HYDRATION.md
+│   │   ├── Auto-prioritized
+│   │   ├── Selective
+│   │   └── Strategies
+│   │
+│   ├── Virtual Modular DOM
+│   │   ├── Guide → VDOM.md
+│   │   ├── Module Isolation
+│   │   ├── Lazy Loading
+│   │   └── Security Sandbox
+│   │
+│   └── Layouts
+│       ├── Guide → LAYOUTS.md
+│       ├── Adaptive Layouts
+│       ├── Context-aware
+│       └── Responsive System
+│
+├── 🆘 Support
+│   ├── FAQ → FAQ.md
+│   ├── Troubleshooting → TROUBLESHOOTING.md
+│   ├── Migration → MIGRATION.md
+│   ├── Deployment → DEPLOYMENT.md
+│   └── Glossary → GLOSSARY.md
+│
+└── 🔧 Reference
+    ├── Master Index → INDEX.md
+    ├── Navigation → NAVIGATION.md (this file)
+    ├── Module Template → MODULE_README_TEMPLATE.md
+    └── Examples → integration/
+```
 
 ---
 

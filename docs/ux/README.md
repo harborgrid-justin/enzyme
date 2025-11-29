@@ -1,26 +1,154 @@
 # UX Utilities
 
-Enhanced user experience utilities for error recovery, loading states, and progressive enhancement.
+> Enhanced user experience utilities for loading states, skeleton screens, accessibility, error recovery, and progressive enhancement
 
 ## Table of Contents
 
 - [Overview](#overview)
-- [Error Recovery](#error-recovery)
-- [Loading States](#loading-states)
-- [Progressive Enhancement](#progressive-enhancement)
-- [Examples](#examples)
+- [Quick Start](#quick-start)
+- [Core Features](#core-features)
+  - [Skeleton Screens](#skeleton-screens)
+  - [Loading States](#loading-states)
+  - [Accessibility](#accessibility)
+  - [Error Recovery](#error-recovery)
+  - [Progressive Enhancement](#progressive-enhancement)
+- [Documentation](#documentation)
+- [Related Resources](#related-resources)
 
 ## Overview
 
-The UX Utilities module provides robust, user-friendly components and hooks for handling errors, loading states, and progressive feature availability.
+The UX Utilities module provides a comprehensive suite of tools for creating exceptional user experiences. It includes skeleton screens for perceived performance, intelligent loading state management, accessibility enhancements, error recovery patterns, and progressive enhancement utilities.
 
-### Key Features
+## Quick Start
 
-- **Intelligent Error Recovery**: Automatic retry with exponential backoff
-- **Progressive Loading**: Phased loading indicators
-- **Offline Support**: Graceful degradation when offline
-- **Accessibility**: ARIA attributes and screen reader support
-- **Customizable**: Flexible styling and behavior
+```typescript
+import {
+  // Skeleton screens
+  createCardSkeleton,
+  createListSkeleton,
+  SkeletonFactory,
+
+  // Loading states
+  LoadingIndicator,
+  ProgressiveLoader,
+  ProgressBar,
+  useLoadingState,
+
+  // Accessibility
+  announce,
+  createFocusTrap,
+  prefersReducedMotion,
+
+  // Error recovery
+  ErrorRecovery,
+  OfflineRecovery,
+
+  // Progressive enhancement
+  ProgressiveEnhancementProvider,
+  useCapability
+} from '@missionfabric-js/enzyme/ux';
+```
+
+## Core Features
+
+### Skeleton Screens
+
+Dynamic skeleton screen generation with pre-built patterns and custom configurations.
+
+**Key Capabilities:**
+- Pre-built patterns (article, profile, card, list, table)
+- Custom skeleton creation
+- Animation variants (pulse, wave, shimmer, none)
+- Responsive layouts
+- Theme integration
+
+**Example:**
+
+```typescript
+import { createCardSkeleton, createListSkeleton } from '@missionfabric-js/enzyme/ux';
+
+function LoadingView() {
+  return (
+    <div>
+      {createCardSkeleton({ hasImage: true, textLines: 3 })}
+      {createListSkeleton({ items: 5, hasAvatar: true })}
+    </div>
+  );
+}
+```
+
+**📖 Full Documentation:** [Skeleton Factory](/home/user/enzyme/docs/ux/SKELETON_FACTORY.md)
+
+### Loading States
+
+Intelligent loading state management with progressive indicators and timeout handling.
+
+**Key Capabilities:**
+- Progressive loading phases (spinner → skeleton → message)
+- Minimum display time to prevent flash
+- Timeout detection and handling
+- Progress tracking (determinate and indeterminate)
+- Screen reader announcements
+- Context-based state management
+
+**Example:**
+
+```typescript
+import { ProgressiveLoader } from '@missionfabric-js/enzyme/ux';
+
+function DataView() {
+  const { data, isLoading, error, refetch } = useQuery('data');
+
+  return (
+    <ProgressiveLoader
+      loading={isLoading}
+      error={error}
+      spinnerPlaceholder={<Spinner />}
+      skeletonPlaceholder={<DataSkeleton />}
+      onRetry={refetch}
+    >
+      <DataDisplay data={data} />
+    </ProgressiveLoader>
+  );
+}
+```
+
+**📖 Full Documentation:** [Loading States](/home/user/enzyme/docs/ux/LOADING_STATES.md)
+
+### Accessibility
+
+Comprehensive accessibility utilities for WCAG compliance.
+
+**Key Capabilities:**
+- Screen reader announcements
+- Focus management and trapping
+- Roving tabindex for keyboard navigation
+- Skip links for keyboard users
+- ARIA attribute helpers
+- Reduced motion support
+- Color contrast checking
+
+**Example:**
+
+```typescript
+import { announce, createFocusTrap, prefersReducedMotion } from '@missionfabric-js/enzyme/ux';
+
+// Screen reader announcements
+announce('Data loaded successfully');
+
+// Focus trap for modals
+const trap = createFocusTrap({
+  container: modalElement,
+  escapeDeactivates: true,
+  onEscape: closeModal
+});
+trap.activate();
+
+// Respect motion preferences
+const shouldAnimate = !prefersReducedMotion();
+```
+
+**📖 Full Documentation:** [Accessibility](/home/user/enzyme/docs/ux/ACCESSIBILITY.md)
 
 ## Error Recovery
 
@@ -555,6 +683,36 @@ function App() {
 5. **Accessible**: Use ARIA attributes and screen reader announcements
 6. **Offline Support**: Handle network issues gracefully
 
-## API Reference
+## Documentation
 
-See the [Advanced Features Overview](../advanced/README.md) for complete API documentation.
+### Detailed Guides
+
+- **[Skeleton Factory](/home/user/enzyme/docs/ux/SKELETON_FACTORY.md)** - Dynamic skeleton screen generation
+- **[Loading States](/home/user/enzyme/docs/ux/LOADING_STATES.md)** - Intelligent loading state management
+- **[Accessibility](/home/user/enzyme/docs/ux/ACCESSIBILITY.md)** - Comprehensive accessibility utilities
+
+### Related Documentation
+
+- **[UI Components](/home/user/enzyme/docs/ui/README.md)** - Accessible UI component library
+- **[Theme System](/home/user/enzyme/docs/theme/README.md)** - Theming and design tokens
+- **[Dark Mode](/home/user/enzyme/docs/theme/DARK_MODE.md)** - Dark mode implementation
+- **[Feedback Components](/home/user/enzyme/docs/ui/FEEDBACK_COMPONENTS.md)** - Loading spinners and overlays
+
+## Related Resources
+
+### Internal
+
+- [Advanced Features](../advanced/README.md) - Advanced UX patterns
+- [Design System](../ui/README.md) - Complete design system
+- [Performance](../performance/README.md) - Performance optimization
+
+### External
+
+- [WCAG Guidelines](https://www.w3.org/WAI/WCAG21/quickref/) - Web accessibility standards
+- [ARIA Authoring Practices](https://www.w3.org/WAI/ARIA/apg/) - ARIA patterns and examples
+- [React Accessibility](https://react.dev/learn/accessibility) - React accessibility guide
+
+---
+
+**Version:** 3.0.0
+**Last Updated:** 2025-11-29

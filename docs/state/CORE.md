@@ -868,7 +868,23 @@ persist: {
 
 ## Related Documentation
 
+### State Management Core
 - [Stores](./STORES.md) - Global store structure and usage
 - [Slices](./SLICES.md) - Built-in UI, Session, Settings slices
 - [Selectors](./SELECTORS.md) - Selector patterns and examples
+- [Hooks](./HOOKS.md) - React hooks for state access
 - [Types](./TYPES.md) - TypeScript type definitions
+- [README](./README.md) - State management overview
+
+### Persistence & Hydration
+- [Hydration Guide](../HYDRATION.md) - State hydration patterns and SSR
+- [Performance Guide](../PERFORMANCE.md) - Optimization strategies
+
+### Advanced Topics
+- [Sync](./SYNC.md) - Multi-tab synchronization with BroadcastChannel
+- [Architecture](../ARCHITECTURE.md) - System design patterns
+- [Migration Guide](../MIGRATION.md) - Migrating from Redux
+
+### External Resources
+- [Zustand Documentation](https://github.com/pmndrs/zustand) - Official Zustand docs
+- [Immer Documentation](https://immerjs.github.io/immer/) - Immer guide
