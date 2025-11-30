@@ -1080,6 +1080,40 @@ const routes = applyRouteGuards(routeConfigs);
 | Prefetch | Link | recentlyViewed | - | Performance |
 | Block Nav | useBlocker | isDirty | - | Unsaved changes |
 
+## Related Documentation
+
+### Integration Guides
+- [README.md](./README.md) - Integration overview
+- [AUTH_SECURITY_STATE.md](./AUTH_SECURITY_STATE.md) - Auth with state
+- [REALTIME_QUERIES_SERVICES.md](./REALTIME_QUERIES_SERVICES.md) - Real-time patterns
+
+### Routing System
+- [Routing](../routing/README.md) - Routing overview
+- [Route Core](../routing/CORE.md) - Core routing utilities
+- [Route Guards](../routing/GUARDS.md) - Guard implementation
+- [Route Loaders](../routing/LOADERS.md) - Data loading
+- [Route Navigation](../routing/NAVIGATION.md) - Navigation patterns
+- [Route Advanced](../routing/ADVANCED.md) - Advanced patterns
+- [Route Types](../routing/TYPES.md) - Type definitions
+
+### State Management
+- [State System](../state/README.md) - State management overview
+- [State Stores](../state/STORES.md) - Store patterns
+- [State Slices](../state/SLICES.md) - Slice architecture
+- [State Hooks](../state/HOOKS.md) - State hooks
+- [State Selectors](../state/SELECTORS.md) - Selector patterns
+
+### Authentication
+- [Auth System](../auth/README.md) - Authentication overview
+- [Auth Guards](../auth/GUARDS.md) - Authentication guards
+- [Auth Patterns](../auth/PATTERNS.md) - Auth patterns
+- [RBAC](../auth/RBAC.md) - Role-based access control
+
+### Configuration & API
+- [Config System](../config/README.md) - Configuration
+- [API Client](../api/README.md) - API integration
+- [API Hooks](../api/HOOKS.md) - Data fetching
+
 ---
 
 *Last updated: 2024 | Harbor React Framework v2.0*

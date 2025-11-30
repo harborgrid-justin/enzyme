@@ -870,11 +870,24 @@ Now that you have the basics, explore these topics:
 
 ## Related Documentation
 
+### Core Guides
 - [Quick Start](./QUICKSTART.md) - Fast 10-minute setup guide
 - [Architecture Overview](./ARCHITECTURE.md) - System architecture and design
 - [Configuration Guide](./CONFIGURATION.md) - Application configuration
 - [Environment Setup](./ENVIRONMENT.md) - Environment variables and setup
 - [Deployment Guide](./DEPLOYMENT.md) - Production deployment
+
+### Module Documentation
+- [API Module](./api/README.md) - HTTP client and data fetching patterns
+- [Auth Module](./auth/README.md) - Authentication and authorization
+- [State Module](./state/README.md) - State management with Zustand
+- [Routing Module](./routing/README.md) - Type-safe routing and navigation
+- [UI Module](./ui/README.md) - Component library and design system
+- [Config Module](./config/README.md) - Configuration management
+- [Security Module](./security/README.md) - Security best practices
+- [Performance Module](./performance/README.md) - Performance optimization
+- [Theme Module](./theme/README.md) - Theming and styling
+- [Hooks Module](./hooks/README.md) - Custom React hooks
 
 ---
 

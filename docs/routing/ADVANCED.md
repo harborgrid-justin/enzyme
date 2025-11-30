@@ -749,7 +749,20 @@ export async function loader({ params }: { params: RouteParams }) {
 
 ## Related Documentation
 
-- [Core Routing](./CORE.md)
-- [Route Guards](./GUARDS.md)
-- [Route Discovery](./DISCOVERY.md)
-- [Type Definitions](./TYPES.md)
+### Routing System
+- [README.md](./README.md) - Routing overview
+- [CORE.md](./CORE.md) - Core routing utilities
+- [GUARDS.md](./GUARDS.md) - Route guards
+- [LOADERS.md](./LOADERS.md) - Data loaders
+- [NAVIGATION.md](./NAVIGATION.md) - Navigation components
+- [DISCOVERY.md](./DISCOVERY.md) - Route discovery
+- [TYPES.md](./TYPES.md) - Type definitions
+
+### Authentication & State
+- [Auth Guards](../auth/GUARDS.md) - Advanced guard patterns
+- [Auth System](../auth/README.md) - Auth integration
+- [State System](../state/README.md) - Advanced state patterns
+- [State Stores](../state/STORES.md) - Feature stores with routing
+
+### Integration
+- [Routing Integration](../integration/ROUTING_STATE_GUARDS.md) - Complete integration patterns

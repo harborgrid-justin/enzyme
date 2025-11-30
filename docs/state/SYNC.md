@@ -739,14 +739,25 @@ useEffect(() => {
 ## Related Documentation
 
 ### State Management
-- [Stores](./STORES.md) - Store architecture and persistence
-- [Core](./CORE.md) - Store creation utilities
-- [Types](./TYPES.md) - TypeScript type definitions
-- [README](./README.md) - State management overview
+- [README.md](./README.md) - State management overview
+- [CORE.md](./CORE.md) - Store and slice factories
+- [STORES.md](./STORES.md) - Store patterns
+- [SLICES.md](./SLICES.md) - Slice documentation
+- [SELECTORS.md](./SELECTORS.md) - Selector patterns
+- [HOOKS.md](./HOOKS.md) - React hooks
+- [TYPES.md](./TYPES.md) - Type definitions
 
-### Cross-Cutting Concerns
-- [Coordination Module](../../src/lib/coordination/README.md) - Provider orchestration and state coordination
-- [Performance Guide](../PERFORMANCE.md) - Optimization strategies for multi-tab apps
+### Real-time & Sync
+- [Config Dynamic](../config/DYNAMIC.md) - Runtime config synchronization
+- [Realtime Integration](../integration/REALTIME_QUERIES_SERVICES.md) - Real-time data sync
+- [API Client](../api/README.md) - API synchronization patterns
+
+### Configuration
+- [Config System](../config/README.md) - Configuration persistence and sync
+- [Config Registry](../config/REGISTRY.md) - Config change subscriptions
+
+### Performance & Architecture
+- [Performance Guide](../PERFORMANCE.md) - Optimization strategies
 - [Architecture](../ARCHITECTURE.md) - System design patterns
 
 ### Browser APIs

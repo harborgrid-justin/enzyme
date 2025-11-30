@@ -907,19 +907,43 @@ function NotificationSync() {
 
 ## Related Documentation
 
+### State Management Core
+- [CORE.md](./CORE.md) - Core factories and utilities
+- [STORES.md](./STORES.md) - Store patterns and examples
+- [SLICES.md](./SLICES.md) - Slice architecture
+- [SELECTORS.md](./SELECTORS.md) - Selector patterns
+- [HOOKS.md](./HOOKS.md) - React hooks
+- [SYNC.md](./SYNC.md) - Multi-tab synchronization
+- [TYPES.md](./TYPES.md) - TypeScript types
+
+### Configuration & Features
+- [Config System](../config/README.md) - Configuration management and dynamic config
+- [Config Hooks](../config/HOOKS.md) - Configuration React hooks
+- [Config Registry](../config/REGISTRY.md) - Configuration storage and discovery
+- [Feature Flags](../flags/README.md) - Feature flag integration with state
+- [Flag Hooks](../flags/HOOKS.md) - Feature flag React hooks
+
+### Routing & Navigation
+- [Routing](../routing/README.md) - Routing system overview
+- [Route Guards](../routing/GUARDS.md) - Authentication and authorization guards
+- [Route Loaders](../routing/LOADERS.md) - Data loading with state
+- [Routing Core](../routing/CORE.md) - Core routing patterns
+
+### Data & API
+- [API Client](../api/README.md) - API integration patterns
+- [API Hooks](../api/HOOKS.md) - Data fetching hooks
+- [React Hooks](../hooks/README.md) - General React hooks patterns
+
+### Integration Guides
+- [Routing, State & Guards](../integration/ROUTING_STATE_GUARDS.md) - Routing with state management
+- [Auth & Security](../integration/AUTH_SECURITY_STATE.md) - Authentication with state
+- [Realtime & Services](../integration/REALTIME_QUERIES_SERVICES.md) - Real-time data sync
+
 ### Core Guides
 - [State Management Guide](../STATE.md) - Dual-state approach with Zustand and TanStack Query
 - [Performance Guide](../PERFORMANCE.md) - State optimization strategies
 - [Hydration Guide](../HYDRATION.md) - State hydration patterns and SSR
 - [Architecture Overview](../ARCHITECTURE.md) - System design and data flow
-
-### Hook References
-- [Hooks Reference](../HOOKS_REFERENCE.md) - General React hooks documentation
-- [State Hooks](./HOOKS.md) - State-specific hooks (useStore, useSidebar, etc.)
-
-### Testing & Migration
-- [Testing Guide](../TESTING.md) - Testing state management
-- [Migration Guide](../MIGRATION.md) - Migrating from Redux or other state libraries
 
 ## Resources
 

@@ -691,10 +691,26 @@ config.subscribeToState((state) => {
 });
 ```
 
-## See Also
+## Related Documentation
 
+### Configuration System
 - [README.md](./README.md) - Configuration overview
 - [ENV.md](./ENV.md) - Environment configuration
 - [REGISTRY.md](./REGISTRY.md) - Configuration registry
 - [HOOKS.md](./HOOKS.md) - Configuration hooks
 - [TYPES.md](./TYPES.md) - TypeScript types
+- [PROVIDERS.md](./PROVIDERS.md) - Configuration providers
+
+### State & Sync
+- [State System](../state/README.md) - State management with dynamic updates
+- [State Sync](../state/SYNC.md) - Multi-tab state synchronization
+- [State Dynamic Patterns](../state/STORES.md) - Dynamic store patterns
+
+### Features & API
+- [Feature Flags](../flags/README.md) - Feature flag integration
+- [API Client](../api/README.md) - API configuration sync
+- [Realtime Sync](../integration/REALTIME_QUERIES_SERVICES.md) - Real-time configuration updates
+
+### Authentication
+- [Auth System](../auth/README.md) - Dynamic auth configuration
+- [Auth Patterns](../auth/PATTERNS.md) - Auth config patterns

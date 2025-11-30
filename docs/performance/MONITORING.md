@@ -781,13 +781,24 @@ alertManager.start();
 
 ## Related Documentation
 
-- [Web Vitals](./WEB_VITALS.md) - Core Web Vitals collection
-- [Performance Budgets](./BUDGETS.md) - Budget enforcement
-- [Observatory Dashboard](./OBSERVATORY.md) - Real-time dashboard
-- [Render Tracking](./RENDER_TRACKING.md) - Component performance
-- [Lazy Loading](./LAZY_LOADING.md) - Resource optimization
-- [Prefetching](./PREFETCHING.md) - Predictive prefetching
-- [Streaming Guide](../STREAMING.md) - Progressive HTML streaming
+### Performance System
+- [README.md](./README.md) - Performance overview
+- [WEB_VITALS.md](./WEB_VITALS.md) - Core Web Vitals collection
+- [BUDGETS.md](./BUDGETS.md) - Budget enforcement
+- [OBSERVATORY.md](./OBSERVATORY.md) - Real-time dashboard
+- [RENDER_TRACKING.md](./RENDER_TRACKING.md) - Component performance
+- [LAZY_LOADING.md](./LAZY_LOADING.md) - Resource optimization
+- [PREFETCHING.md](./PREFETCHING.md) - Predictive prefetching
+
+### Monitoring System
+- [Monitoring Overview](../monitoring/README.md) - Error and performance monitoring
+- [Error Boundaries](../monitoring/ERROR_BOUNDARIES.md) - Error tracking
+- [Monitoring Types](../monitoring/TYPES.md) - Type definitions
+
+### Hydration & Integration
+- [Hydration System](../hydration/README.md) - Hydration monitoring
+- [Hydration Strategies](../hydration/STRATEGIES.md) - Hydration performance
+- [Performance Integration](../integration/PERFORMANCE_MONITORING_HYDRATION.md) - Complete integration guide
 
 ---
 

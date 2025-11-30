@@ -623,6 +623,30 @@ import type {
 
 ## See Also
 
-- [Theme System Overview](/home/user/enzyme/docs/theme/README.md)
-- [Theme Provider](/home/user/enzyme/docs/theme/PROVIDER.md)
-- [Type Definitions](/home/user/enzyme/docs/theme/TYPES.md)
+- [Theme System Overview](./README.md)
+- [Theme Provider](./PROVIDER.md)
+- [Type Definitions](./TYPES.md)
+
+---
+
+## Related Documentation
+
+### Theme System
+- [Theme System Overview](./README.md) - Complete theme system guide
+- [Theme Provider](./PROVIDER.md) - Theme provider setup
+- [Type Definitions](./TYPES.md) - TypeScript types for tokens
+- [Dark Mode](./DARK_MODE.md) - Dark mode color palettes
+
+### UI & Components
+- [UI Components](../ui/README.md) - Components using design tokens
+- [Design System](../DESIGN_SYSTEM.md) - Tailwind design tokens and patterns
+- [Components Reference](../COMPONENTS_REFERENCE.md) - Component styling APIs
+
+### Styling & Implementation
+- [Input Components](../ui/INPUT_COMPONENTS.md) - Button variants and sizes
+- [Feedback Components](../ui/FEEDBACK_COMPONENTS.md) - Loading animations and colors
+- [Layout Components](../ui/LAYOUT_COMPONENTS.md) - Layout spacing and structure
+
+### Accessibility
+- [Accessibility](../ux/ACCESSIBILITY.md) - WCAG-compliant color contrast
+- [Dark Mode](./DARK_MODE.md) - Accessible dark mode contrast ratios

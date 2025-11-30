@@ -656,14 +656,24 @@ const policy = {
 };
 ```
 
-## See Also
+## Related Documentation
 
-- [XSS Prevention](./XSS.md) - Cross-site scripting protection
+### Security Module
+- [Security Overview](./README.md) - Complete security infrastructure
+- [XSS Prevention](./XSS.md) - Cross-site scripting protection with sanitization
 - [CSRF Protection](./CSRF.md) - Cross-site request forgery protection
-- [Security Overview](./README.md) - Security module overview
-- [Auth Integration](../auth/README.md) - Authentication system
-- [MDN CSP Documentation](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP)
+- [Secure Storage](./SECURE_STORAGE.md) - Encrypted client-side storage
+
+### Authentication & Application Security
+- [Authentication Module](../auth/README.md) - Secure authentication system
+- [Security Best Practices](../SECURITY.md) - Application security guidelines
+- [API Module](../api/README.md) - API security and headers
+- [Configuration](../config/README.md) - Security configuration
+
+### External Resources
+- [MDN CSP Documentation](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP) - Complete CSP reference
 - [CSP Evaluator](https://csp-evaluator.withgoogle.com/) - Google's CSP validation tool
+- [OWASP CSP Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Content_Security_Policy_Cheat_Sheet.html)
 
 ---
 

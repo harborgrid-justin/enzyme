@@ -586,10 +586,38 @@ function DashboardSkeleton() {
 
 ## See Also
 
-- [Loading States](/home/user/enzyme/docs/ux/LOADING_STATES.md) - Progressive loading indicators
-- [Accessibility](/home/user/enzyme/docs/ux/ACCESSIBILITY.md) - Accessibility features
-- [UI Components](/home/user/enzyme/docs/ui/README.md) - UI component library
-- [Theme System](/home/user/enzyme/docs/theme/README.md) - Theming and design tokens
+- [Loading States](./LOADING_STATES.md) - Progressive loading indicators
+- [Accessibility](./ACCESSIBILITY.md) - Accessibility features
+- [UI Components](../ui/README.md) - UI component library
+- [Theme System](../theme/README.md) - Theming and design tokens
+
+---
+
+## Related Documentation
+
+### UX & Experience
+- [UX Overview](./README.md) - Complete UX utilities guide
+- [Loading States](./LOADING_STATES.md) - Loading patterns and strategies
+- [Accessibility](./ACCESSIBILITY.md) - WCAG compliance for skeletons
+
+### UI Components
+- [Feedback Components](../ui/FEEDBACK_COMPONENTS.md) - Loading spinners and overlays
+- [Data Components](../ui/DATA_COMPONENTS.md) - Table and list skeletons
+- [Layout Components](../ui/LAYOUT_COMPONENTS.md) - Page loading skeletons
+- [UI Components Overview](../ui/README.md) - Complete component library
+
+### Theme & Styling
+- [Theme System](../theme/README.md) - Theme-aware skeleton colors
+- [Design Tokens](../theme/DESIGN_TOKENS.md) - Colors, spacing, animations for skeletons
+- [Dark Mode](../theme/DARK_MODE.md) - Dark mode skeleton styling
+
+### Performance
+- [Performance Guide](../performance/README.md) - CLS prevention with skeletons
+- [Layouts Guide](../LAYOUTS.md) - CLS prevention and layout reservations
+
+### Integration
+- [UI + Theme Integration](../integration/UI_THEME_HOOKS_ACCESSIBILITY.md) - Skeleton integration patterns
+- [Components Reference](../COMPONENTS_REFERENCE.md) - Skeleton component APIs
 
 ---
 

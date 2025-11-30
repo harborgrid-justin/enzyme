@@ -697,8 +697,19 @@ const authInterceptor: RequestInterceptor = (config) => {
 };
 ```
 
-## See Also
+## Related Documentation
 
-- [API Client](./API_CLIENT.md) - Core HTTP client
-- [Types Reference](./TYPES.md) - TypeScript types
-- [Advanced Features](./ADVANCED.md) - Gateway and middleware
+### API Documentation
+- **[API Module Overview](./README.md)** - Complete API module guide
+- **[API Client](./API_CLIENT.md)** - HTTP client, configuration, and utilities
+- **[Hooks](./HOOKS.md)** - React hooks for data fetching
+- **[Types](./TYPES.md)** - TypeScript type reference
+- **[Advanced Features](./ADVANCED.md)** - API Gateway and middleware
+
+### Integration Guides
+- **[State Management](../state/README.md)** - Global state integration
+- **[Shared Utilities](../shared/README.md)** - Event bus utilities
+- **[Configuration](../config/README.md)** - Configuration options
+
+### Reference
+- **[Performance Guide](../performance/README.md)** - Performance optimization

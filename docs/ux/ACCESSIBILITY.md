@@ -861,10 +861,39 @@ This module helps achieve WCAG 2.1 compliance:
 
 ## See Also
 
-- [Loading States](/home/user/enzyme/docs/ux/LOADING_STATES.md) - Accessible loading indicators
-- [Skeleton Factory](/home/user/enzyme/docs/ux/SKELETON_FACTORY.md) - Loading placeholders
-- [UI Components](/home/user/enzyme/docs/ui/README.md) - Accessible UI components
+- [Loading States](./LOADING_STATES.md) - Accessible loading indicators
+- [Skeleton Factory](./SKELETON_FACTORY.md) - Loading placeholders
+- [UI Components](../ui/README.md) - Accessible UI components
 - [WCAG Guidelines](https://www.w3.org/WAI/WCAG21/quickref/) - Official WCAG documentation
+
+---
+
+## Related Documentation
+
+### UX & Experience
+- [UX Overview](./README.md) - Complete UX utilities guide
+- [Loading States](./LOADING_STATES.md) - Accessible loading patterns
+- [Skeleton Factory](./SKELETON_FACTORY.md) - ARIA-aware loading placeholders
+
+### UI Components
+- [UI Components Overview](../ui/README.md) - Accessible component library
+- [Input Components](../ui/INPUT_COMPONENTS.md) - Accessible forms and buttons
+- [Navigation Components](../ui/NAVIGATION_COMPONENTS.md) - Accessible navigation
+- [Feedback Components](../ui/FEEDBACK_COMPONENTS.md) - Accessible feedback
+
+### Theme & Styling
+- [Theme System](../theme/README.md) - Accessible color palettes
+- [Design Tokens](../theme/DESIGN_TOKENS.md) - WCAG-compliant color tokens
+- [Dark Mode](../theme/DARK_MODE.md) - Accessible dark mode contrast
+
+### Integration
+- [UI + Theme + Hooks + Accessibility](../integration/UI_THEME_HOOKS_ACCESSIBILITY.md) - Integrated accessibility
+- [Components Reference](../COMPONENTS_REFERENCE.md) - Accessibility props and patterns
+
+### External Resources
+- [WCAG 2.1 Quick Reference](https://www.w3.org/WAI/WCAG21/quickref/) - Official guidelines
+- [ARIA Authoring Practices](https://www.w3.org/WAI/ARIA/apg/) - ARIA patterns
+- [React Accessibility](https://react.dev/learn/accessibility) - React-specific guidance
 
 ---
 

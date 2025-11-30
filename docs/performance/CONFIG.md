@@ -611,6 +611,17 @@ if (status === 'exceeded') {
 
 ## Related Documentation
 
-- [Performance Overview](./README.md)
-- [Performance Observatory](./OBSERVATORY.md)
-- [Bundle Optimization](./README.md#bundle-optimization)
+### Performance System
+- [README.md](./README.md) - Performance overview
+- [BUDGETS.md](./BUDGETS.md) - Performance budgets
+- [MONITORING.md](./MONITORING.md) - Performance monitoring
+- [OBSERVATORY.md](./OBSERVATORY.md) - Performance dashboard
+- [WEB_VITALS.md](./WEB_VITALS.md) - Core Web Vitals
+
+### Configuration
+- [Config System](../config/README.md) - Configuration management
+- [Config Types](../config/TYPES.md) - Configuration types
+
+### Monitoring & Hydration
+- [Monitoring System](../monitoring/README.md) - Monitoring integration
+- [Hydration System](../hydration/README.md) - Hydration configuration

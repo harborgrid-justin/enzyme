@@ -913,6 +913,38 @@ Performance Monitoring:
                         ├── User Timing ──┤
 ```
 
+## Related Documentation
+
+### Integration Guides
+- [README.md](./README.md) - Integration overview
+- [FEATURE_FLAGS_ERROR_BOUNDARIES_FULLSTACK.md](./FEATURE_FLAGS_ERROR_BOUNDARIES_FULLSTACK.md) - Flags and error handling
+- [REALTIME_QUERIES_SERVICES.md](./REALTIME_QUERIES_SERVICES.md) - Real-time data patterns
+
+### Performance System
+- [Performance](../performance/README.md) - Performance overview
+- [Web Vitals](../performance/WEB_VITALS.md) - Core Web Vitals
+- [Performance Monitoring](../performance/MONITORING.md) - Monitoring system
+- [Performance Budgets](../performance/BUDGETS.md) - Budget enforcement
+- [Lazy Loading](../performance/LAZY_LOADING.md) - Resource optimization
+- [Prefetching](../performance/PREFETCHING.md) - Predictive prefetching
+- [Render Tracking](../performance/RENDER_TRACKING.md) - Component tracking
+- [Observatory](../performance/OBSERVATORY.md) - Performance dashboard
+
+### Monitoring & Errors
+- [Monitoring System](../monitoring/README.md) - Error and performance monitoring
+- [Error Boundaries](../monitoring/ERROR_BOUNDARIES.md) - Error handling
+- [Monitoring Types](../monitoring/TYPES.md) - Type definitions
+
+### Hydration & State
+- [Hydration System](../hydration/README.md) - Progressive hydration
+- [Hydration Strategies](../hydration/STRATEGIES.md) - Hydration patterns
+- [State System](../state/README.md) - State hydration
+- [State Stores](../state/STORES.md) - Store patterns
+
+### Routing & API
+- [Routing](../routing/README.md) - Route-based code splitting
+- [API Client](../api/README.md) - API performance patterns
+
 ---
 
 *Last updated: 2024 | Harbor React Framework v2.0*

@@ -479,11 +479,23 @@ env | grep VITE_
 
 ## Related Documentation
 
+### Core Guides
 - [Environment Setup](./ENVIRONMENT.md) - Detailed environment configuration
 - [Configuration Guide](./CONFIGURATION.md) - Application configuration
 - [Performance Guide](./PERFORMANCE.md) - Performance optimization
 - [Security Guide](./SECURITY.md) - Security best practices
 - [Architecture Overview](./ARCHITECTURE.md) - System architecture
+
+### Module Documentation
+- [API Module](./api/README.md) - API endpoint configuration
+- [Auth Module](./auth/README.md) - Authentication deployment
+- [State Module](./state/README.md) - State persistence
+- [Routing Module](./routing/README.md) - Route configuration
+- [Config Module](./config/README.md) - Environment configuration
+- [Security Module](./security/README.md) - Production security
+- [Performance Module](./performance/README.md) - Production optimization
+- [Theme Module](./theme/README.md) - Theme deployment
+- [Hooks Module](./hooks/README.md) - Hooks in production
 
 ---
 

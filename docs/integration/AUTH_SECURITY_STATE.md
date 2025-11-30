@@ -863,6 +863,34 @@ const updateProfile = (data) => {
 | Encrypted Data | `user.id` | `SecureStorage` | `preferences` | User data |
 | Multi-Tenant | `AuthProvider` | `SecurityProvider` | `tenant` | SaaS apps |
 
+## Related Documentation
+
+### Integration Guides
+- [README.md](./README.md) - Integration overview
+- [ROUTING_STATE_GUARDS.md](./ROUTING_STATE_GUARDS.md) - Routing with auth guards
+- [FEATURE_FLAGS_ERROR_BOUNDARIES_FULLSTACK.md](./FEATURE_FLAGS_ERROR_BOUNDARIES_FULLSTACK.md) - Feature flags with auth
+
+### Authentication
+- [Auth System](../auth/README.md) - Authentication overview
+- [Auth Guards](../auth/GUARDS.md) - Route guards implementation
+- [Auth Patterns](../auth/PATTERNS.md) - Auth patterns and best practices
+- [Auth Provider](../auth/AUTH_PROVIDER.md) - Auth provider setup
+- [RBAC](../auth/RBAC.md) - Role-based access control
+- [Auth Service](../auth/AUTH_SERVICE.md) - Auth service API
+
+### State Management
+- [State System](../state/README.md) - State management overview
+- [State Stores](../state/STORES.md) - Store patterns
+- [State Slices](../state/SLICES.md) - Session and settings slices
+- [State Hooks](../state/HOOKS.md) - State hooks
+- [State Sync](../state/SYNC.md) - Multi-tab synchronization
+
+### Routing & API
+- [Routing](../routing/README.md) - Routing system
+- [Route Guards](../routing/GUARDS.md) - Route protection
+- [API Client](../api/README.md) - API integration
+- [API Hooks](../api/HOOKS.md) - Data fetching hooks
+
 ---
 
 *Last updated: 2024 | Harbor React Framework v2.0*

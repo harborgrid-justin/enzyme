@@ -622,11 +622,19 @@ import { apiClient } from '@/lib/api';
 const { data } = await apiClient.get<User[]>('/users');
 ```
 
-## Related Modules
+## Related Documentation
 
-The API module integrates seamlessly with other Enzyme modules:
+### Core API Documentation
+- **[API Client](./API_CLIENT.md)** - HTTP client, configuration, and utilities
+- **[Hooks](./HOOKS.md)** - React hooks for data fetching and mutations
+- **[Types](./TYPES.md)** - Complete TypeScript type reference
+- **[Interceptors](./INTERCEPTORS.md)** - Request/response interceptors
+- **[Advanced Features](./ADVANCED.md)** - Gateway, orchestration, metrics
+- **[Auto Generation](./AUTO_GENERATION.md)** - Auto-generate REST APIs
 
-### Queries Module
+### Integration with Other Modules
+
+#### Queries Module
 The [Queries Module](../queries/README.md) provides React Query integration utilities that work with the API client:
 
 ```typescript
@@ -650,7 +658,7 @@ function UserProfile({ userId }) {
 
 **See:** [Queries Documentation](../queries/README.md) for query key factories and caching patterns.
 
-### State Management
+#### State Management
 Integrate API calls with global state using the [State Module](../state/README.md):
 
 ```typescript
@@ -674,7 +682,7 @@ function UpdateProfile() {
 
 **See:** [State Documentation](../state/README.md) for state management patterns.
 
-### Realtime Module
+#### Realtime Module
 Combine REST APIs with real-time updates using the [Realtime Module](../realtime/README.md):
 
 ```typescript
@@ -700,8 +708,31 @@ function LiveDashboard() {
 
 **See:** [Realtime Documentation](../realtime/README.md) for WebSocket and SSE integration.
 
-### Streaming Module
-Stream large responses progressively using the [Streaming Module](../streaming/README.md):
+#### Shared Utilities
+Common utilities for hooks and helpers used by API module. See [Shared Module](../shared/README.md):
+
+```typescript
+import { globalEventBus, StorageManager } from '@missionfabric-js/enzyme/shared';
+
+// Use shared event bus for API events
+globalEventBus.on('api:error', handleApiError);
+
+// Use shared storage for caching
+const storage = new StorageManager();
+await storage.set('api:cache:users', users, { ttl: 300000 });
+```
+
+**See:** [Shared Documentation](../shared/README.md) for event bus and storage utilities.
+
+### Additional Resources
+- **[Hooks Reference](../HOOKS_REFERENCE.md)** - Complete hooks API reference
+- **[Types Documentation](../types/README.md)** - TypeScript type definitions
+- **[Performance Guide](../performance/README.md)** - Performance optimization
+- **[Configuration](../config/README.md)** - Configuration options
+
+### External Links
+- [TanStack Query Documentation](https://tanstack.com/query/latest)
+- [Fetch API Reference](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)
 
 ```typescript
 import { useStream } from '@missionfabric-js/enzyme/streaming';

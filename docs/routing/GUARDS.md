@@ -858,6 +858,21 @@ describe('AuthGuard', () => {
 
 ## Related Documentation
 
-- [Navigation](./NAVIGATION.md)
-- [Advanced Routing](./ADVANCED.md)
-- [Type Definitions](./TYPES.md)
+### Routing System
+- [README.md](./README.md) - Routing overview
+- [CORE.md](./CORE.md) - Core routing utilities
+- [NAVIGATION.md](./NAVIGATION.md) - Navigation components
+- [LOADERS.md](./LOADERS.md) - Data loaders
+- [ADVANCED.md](./ADVANCED.md) - Advanced routing patterns
+- [TYPES.md](./TYPES.md) - Type definitions
+
+### Authentication
+- [Auth Guards](../auth/GUARDS.md) - Authentication guard implementations
+- [Auth System](../auth/README.md) - Authentication overview
+- [Auth Patterns](../auth/PATTERNS.md) - Auth integration patterns
+- [RBAC](../auth/RBAC.md) - Role-based access control
+
+### State & Integration
+- [State System](../state/README.md) - State with route guards
+- [State Stores](../state/STORES.md) - Auth state management
+- [Routing Integration](../integration/ROUTING_STATE_GUARDS.md) - Complete routing, state, and guards guide

@@ -724,13 +724,24 @@ const collector = new VitalsCollector({
 
 ## Related Documentation
 
-- [Performance Observatory](./OBSERVATORY.md) - Real-time performance dashboard
-- [Performance Monitoring](./MONITORING.md) - Comprehensive monitoring system
-- [Performance Budgets](./BUDGETS.md) - Budget enforcement and degradation
-- [Render Tracking](./RENDER_TRACKING.md) - Component render performance
-- [Performance Guide](../PERFORMANCE.md) - Template-level performance
-- [Streaming Guide](../STREAMING.md) - Progressive HTML streaming
+### Performance System
+- [README.md](./README.md) - Performance overview
+- [OBSERVATORY.md](./OBSERVATORY.md) - Real-time performance dashboard
+- [MONITORING.md](./MONITORING.md) - Comprehensive monitoring system
+- [BUDGETS.md](./BUDGETS.md) - Budget enforcement and degradation
+- [RENDER_TRACKING.md](./RENDER_TRACKING.md) - Component render performance
+- [LAZY_LOADING.md](./LAZY_LOADING.md) - Resource optimization
+- [PREFETCHING.md](./PREFETCHING.md) - Predictive prefetching
+
+### Monitoring System
+- [Monitoring Overview](../monitoring/README.md) - Error and performance monitoring
+- [Error Boundaries](../monitoring/ERROR_BOUNDARIES.md) - Error tracking
+- [Monitoring Types](../monitoring/TYPES.md) - Type definitions
+
+### Hydration & Integration
 - [Hydration System](../hydration/README.md) - Progressive hydration
+- [Hydration Strategies](../hydration/STRATEGIES.md) - Hydration patterns
+- [Performance Integration](../integration/PERFORMANCE_MONITORING_HYDRATION.md) - Complete integration guide
 
 ---
 

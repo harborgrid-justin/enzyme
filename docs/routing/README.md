@@ -944,30 +944,31 @@ See the [Type Definitions](./TYPES.md) for complete API documentation.
 ## Related Documentation
 
 ### Core Routing Documentation
+- [CORE.md](./CORE.md) - Core routing utilities and type system
+- [GUARDS.md](./GUARDS.md) - Route guards and authorization
+- [LOADERS.md](./LOADERS.md) - Data loaders and fetching patterns
+- [ADVANCED.md](./ADVANCED.md) - Advanced routing patterns
+- [DISCOVERY.md](./DISCOVERY.md) - Auto route discovery system
+- [NAVIGATION.md](./NAVIGATION.md) - Navigation components and hooks
+- [TYPES.md](./TYPES.md) - Type definitions reference
 
-- [**CORE.md**](./CORE.md) - Core routing utilities and type system
-- [**GUARDS.md**](./GUARDS.md) - Route guards and authorization
-- [**LOADERS.md**](./LOADERS.md) - Data loaders and fetching patterns
-- [**ADVANCED.md**](./ADVANCED.md) - Advanced routing patterns
-- [**DISCOVERY.md**](./DISCOVERY.md) - Auto route discovery system
-- [**NAVIGATION.md**](./NAVIGATION.md) - Navigation components and hooks
-- [**TYPES.md**](./TYPES.md) - Type definitions reference
+### Authentication & Authorization
+- [Auth System](../auth/README.md) - Authentication and authorization
+- [Auth Guards](../auth/GUARDS.md) - Authentication route guards
+- [Auth Patterns](../auth/PATTERNS.md) - Auth integration patterns
+- [RBAC](../auth/RBAC.md) - Role-based access control
 
-### Route Configuration Systems
+### State Management
+- [State System](../state/README.md) - State management with routing
+- [State Stores](../state/STORES.md) - Route-aware state stores
+- [State Hooks](../state/HOOKS.md) - State hooks for routing
 
-- [**AUTO_ROUTES.md**](../AUTO_ROUTES.md) - Config-based auto-route system (alternative approach)
+### Integration & Data
+- [API Integration](../api/README.md) - API calls and loaders
+- [API Hooks](../api/HOOKS.md) - Data fetching with routing
+- [Feature Flags](../flags/README.md) - Feature flags and gates
+- [Routing Integration](../integration/ROUTING_STATE_GUARDS.md) - Routing with state and guards
 
-### Integration Modules
-
-- [**Auth Module**](../auth/README.md) - Authentication and authorization
-- [**RBAC Module**](../auth/RBAC.md) - Role-based access control
-- [**Flags Module**](../flags/README.md) - Feature flags and gates
-- [**Performance Module**](../performance/README.md) - Code splitting and optimization
-- [**Analytics Module**](../analytics/README.md) - Route analytics and tracking
-
-### Related Patterns
-
-- [**State Management**](../state/README.md) - State management with routing
-- [**Form Handling**](../forms/README.md) - Forms and route actions
-- [**API Integration**](../api/README.md) - API calls and loaders
-- [**Layouts**](../layouts/README.md) - Layout system integration
+### Performance & Advanced
+- [Performance](../performance/README.md) - Code splitting and optimization
+- [Lazy Loading](../performance/LAZY_LOADING.md) - Route lazy loading

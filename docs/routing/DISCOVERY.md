@@ -689,6 +689,16 @@ const routes = await scanRouteFilesCached(process.cwd(), config);
 
 ## Related Documentation
 
-- [Core Routing](./CORE.md)
-- [Advanced Routing](./ADVANCED.md)
-- [Type Definitions](./TYPES.md)
+### Routing System
+- [README.md](./README.md) - Routing overview
+- [CORE.md](./CORE.md) - Core routing utilities
+- [GUARDS.md](./GUARDS.md) - Route guards
+- [LOADERS.md](./LOADERS.md) - Data loaders
+- [NAVIGATION.md](./NAVIGATION.md) - Navigation components
+- [ADVANCED.md](./ADVANCED.md) - Advanced patterns
+- [TYPES.md](./TYPES.md) - Type definitions
+
+### State & Auth
+- [State System](../state/README.md) - Route state management
+- [Auth Guards](../auth/GUARDS.md) - Auto-discovered guards
+- [Auth System](../auth/README.md) - Auth integration

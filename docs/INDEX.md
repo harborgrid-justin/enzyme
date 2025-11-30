@@ -857,6 +857,22 @@ Understanding which modules depend on which:
 
 ---
 
+## Related Documentation
+
+### Module Documentation
+- [API Module](./api/README.md) - HTTP client, type-safe API calls, request/response handling
+- [Auth Module](./auth/README.md) - Authentication, authorization, RBAC, Active Directory integration
+- [State Module](./state/README.md) - Zustand state management with persistence and multi-tab sync
+- [Routing Module](./routing/README.md) - Type-safe routing, route guards, navigation
+- [UI Module](./ui/README.md) - Component library (Button, Card, Modal, etc.)
+- [Config Module](./config/README.md) - Configuration management, validation, environment detection
+- [Security Module](./security/README.md) - CSP, CSRF protection, XSS prevention, secure storage
+- [Performance Module](./performance/README.md) - Performance monitoring, Core Web Vitals, metrics
+- [Theme Module](./theme/README.md) - Dark/light mode, design tokens, color palettes
+- [Hooks Module](./hooks/README.md) - Custom React hooks for common patterns
+
+---
+
 <div align="center">
 
 **Master Documentation Index for @missionfabric-js/enzyme**

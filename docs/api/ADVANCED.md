@@ -843,9 +843,24 @@ const timeSeries = collector.getTimeSeriesData('/api/users', {
 });
 ```
 
-## See Also
+## Related Documentation
 
-- [API Client](./API_CLIENT.md) - Core HTTP client
-- [Hooks](./HOOKS.md) - React hooks for API requests
-- [Auto Generation](./AUTO_GENERATION.md) - Auto-generate APIs from file structure
-- [Types Reference](./TYPES.md) - TypeScript types
+### API Documentation
+- **[API Module Overview](./README.md)** - Complete API module guide
+- **[API Client](./API_CLIENT.md)** - HTTP client and configuration
+- **[Hooks](./HOOKS.md)** - React hooks for data fetching
+- **[Types](./TYPES.md)** - TypeScript type reference
+- **[Interceptors](./INTERCEPTORS.md)** - Request/response interceptors
+- **[Auto Generation](./AUTO_GENERATION.md)** - Auto-generate REST APIs
+
+### Integration Guides
+- **[Queries Module](../queries/README.md)** - React Query integration
+- **[Performance Module](../performance/README.md)** - Performance monitoring
+- **[State Management](../state/README.md)** - Global state integration
+
+### Advanced Topics
+- **[Security Module](../security/README.md)** - RBAC and authentication
+- **[Realtime Module](../realtime/README.md)** - WebSocket integration
+
+### Reference
+- **[Configuration](../config/README.md)** - Configuration options

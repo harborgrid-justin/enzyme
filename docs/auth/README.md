@@ -28,6 +28,8 @@ Comprehensive authentication and role-based access control (RBAC) system with Ac
 - [API Module](../api/README.md) - Token injection and API integration
 - [Routing Module](../routing/README.md) - Route metadata and navigation
 - [State Module](../state/README.md) - Auth state synchronization
+- [Security Module](../security/README.md) - Comprehensive security infrastructure
+- [Integration Guide](../integration/AUTH_SECURITY_STATE.md) - Auth, security, and state integration
 
 ---
 
@@ -483,8 +485,12 @@ const authConfig = createAuthConfig({
 | Document | Description |
 |----------|-------------|
 | [../SECURITY.md](../SECURITY.md) | Security best practices and guidelines |
+| [../security/README.md](../security/README.md) | Security module - XSS, CSRF, CSP, and secure storage |
+| [../security/CSRF.md](../security/CSRF.md) | CSRF protection for authentication requests |
+| [../security/SECURE_STORAGE.md](../security/SECURE_STORAGE.md) | Encrypted token storage |
 | [../api/README.md](../api/README.md) | API integration and token management |
 | [../routing/README.md](../routing/README.md) | Route guards and navigation integration |
+| [../config/README.md](../config/README.md) | Configuration management |
 
 ## Common Use Cases
 

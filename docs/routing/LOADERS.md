@@ -664,6 +664,20 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 
 ## Related Documentation
 
-- [Core Routing](./CORE.md)
-- [Navigation](./NAVIGATION.md)
-- [Guards](./GUARDS.md)
+### Routing System
+- [README.md](./README.md) - Routing overview
+- [CORE.md](./CORE.md) - Core routing utilities
+- [GUARDS.md](./GUARDS.md) - Route guards
+- [NAVIGATION.md](./NAVIGATION.md) - Navigation components
+- [ADVANCED.md](./ADVANCED.md) - Advanced patterns
+- [TYPES.md](./TYPES.md) - Type definitions
+
+### State & API
+- [State System](../state/README.md) - State with data loading
+- [State Stores](../state/STORES.md) - Data stores
+- [API Client](../api/README.md) - API integration
+- [API Hooks](../api/HOOKS.md) - Data fetching hooks
+
+### Authentication & Integration
+- [Auth Guards](../auth/GUARDS.md) - Loader with auth
+- [Routing Integration](../integration/ROUTING_STATE_GUARDS.md) - Complete integration guide

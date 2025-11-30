@@ -824,7 +824,21 @@ type LinkProps<T extends string> = RequiresParams<T> extends true
 
 ## Related Documentation
 
-- [Core Routing](./CORE.md)
-- [Route Guards](./GUARDS.md)
-- [Navigation](./NAVIGATION.md)
-- [Route Discovery](./DISCOVERY.md)
+### Routing System
+- [README.md](./README.md) - Routing overview
+- [CORE.md](./CORE.md) - Core routing utilities
+- [GUARDS.md](./GUARDS.md) - Route guards
+- [LOADERS.md](./LOADERS.md) - Data loaders
+- [NAVIGATION.md](./NAVIGATION.md) - Navigation components
+- [DISCOVERY.md](./DISCOVERY.md) - Route discovery
+- [ADVANCED.md](./ADVANCED.md) - Advanced patterns
+
+### Type Systems
+- [State Types](../state/TYPES.md) - State type definitions
+- [API Types](../api/TYPES.md) - API type definitions
+- [Auth Types](../auth/TYPES.md) - Authentication types
+- [Config Types](../config/TYPES.md) - Configuration types
+
+### Integration
+- [Auth Guards](../auth/GUARDS.md) - Guard type usage
+- [State System](../state/README.md) - State type integration

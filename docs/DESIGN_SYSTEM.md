@@ -350,11 +350,26 @@ const Input = ({ error, ...props }) => (
 
 ## Related Documentation
 
+### Core Documentation
 - [Architecture Overview](./ARCHITECTURE.md) - System architecture and design decisions
 - [Components Reference](./COMPONENTS_REFERENCE.md) - UI component library documentation
 - [Configuration Guide](./CONFIGURATION.md) - Configuration system overview
-- [Hooks Reference](./HOOKS_REFERENCE.md) - Custom hooks documentation
+- [Getting Started](./GETTING_STARTED.md) - Setup and installation
+
+### Theme System
+- [Theme System](./theme/README.md) - Theme provider and color system
+- [Design Tokens](./theme/DESIGN_TOKENS.md) - Enzyme design tokens (different from Tailwind)
+- [Dark Mode](./theme/DARK_MODE.md) - Dark mode implementation
+
+### UI Components
+- [UI Components](./ui/README.md) - Component library using design tokens
+- [Input Components](./ui/INPUT_COMPONENTS.md) - Button variants from design tokens
+- [Feedback Components](./ui/FEEDBACK_COMPONENTS.md) - Status badges and containers
+
+### Styling & Implementation
+- [Layouts](./LAYOUTS.md) - Layout components and containers
 - [Performance Guide](./PERFORMANCE.md) - Performance optimization strategies
+- [Hooks Reference](./HOOKS_REFERENCE.md) - Custom hooks documentation
 
 ## Support
 

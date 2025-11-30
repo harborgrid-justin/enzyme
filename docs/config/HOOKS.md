@@ -723,10 +723,22 @@ describe('useConfig', () => {
 });
 ```
 
-## See Also
+## Related Documentation
 
+### Configuration System
 - [README.md](./README.md) - Configuration overview
 - [REGISTRY.md](./REGISTRY.md) - Configuration registry
 - [PROVIDERS.md](./PROVIDERS.md) - Configuration providers
 - [DYNAMIC.md](./DYNAMIC.md) - Dynamic configuration
+- [ENV.md](./ENV.md) - Environment configuration
 - [TYPES.md](./TYPES.md) - TypeScript types
+
+### Other Hooks
+- [State Hooks](../state/HOOKS.md) - State management hooks
+- [API Hooks](../api/HOOKS.md) - API data fetching hooks
+- [Feature Flag Hooks](../flags/HOOKS.md) - Feature flag hooks
+- [Auth Hooks](../auth/HOOKS.md) - Authentication hooks
+
+### State & API Integration
+- [State System](../state/README.md) - Using config with state
+- [API Client](../api/README.md) - API configuration patterns

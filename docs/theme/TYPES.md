@@ -698,6 +698,24 @@ const style = buildStyle({
 
 ## See Also
 
-- [Theme System Overview](/home/user/enzyme/docs/theme/README.md)
-- [Theme Provider](/home/user/enzyme/docs/theme/PROVIDER.md)
-- [Design Tokens](/home/user/enzyme/docs/theme/DESIGN_TOKENS.md)
+- [Theme System Overview](./README.md)
+- [Theme Provider](./PROVIDER.md)
+- [Design Tokens](./DESIGN_TOKENS.md)
+
+---
+
+## Related Documentation
+
+### Theme System
+- [Theme System Overview](./README.md) - Complete theme system guide
+- [Theme Provider](./PROVIDER.md) - Theme provider types and configuration
+- [Design Tokens](./DESIGN_TOKENS.md) - Token values and usage
+- [Dark Mode](./DARK_MODE.md) - Theme mode types
+
+### TypeScript & Development
+- [Getting Started](../GETTING_STARTED.md) - TypeScript setup
+- [Components Reference](../COMPONENTS_REFERENCE.md) - Component prop types
+
+### Integration
+- [UI Components](../ui/README.md) - Components with type-safe props
+- [Hooks Reference](../hooks/README.md) - Type-safe theme hooks

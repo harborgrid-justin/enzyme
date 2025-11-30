@@ -978,8 +978,21 @@ If you're still experiencing issues:
    - [Create an Issue](https://github.com/your-org/enzyme/issues/new)
    - Include: error messages, code samples, browser/environment details
 
-## See Also
+## Related Documentation
 
-- [Security Best Practices](../SECURITY.md)
-- [Performance Optimization](../PERFORMANCE.md)
-- [Testing Guide](../TESTING.md)
+### Authentication Module
+- [Authentication Module](./README.md) - Main authentication documentation
+- [Auth Overview](./OVERVIEW.md) - Architecture and debugging
+- [Auth Service](./AUTH_SERVICE.md) - Token management issues
+- [Auth Provider](./AUTH_PROVIDER.md) - Provider configuration issues
+- [Auth Hooks](./HOOKS.md) - Hook-related problems
+- [Route Guards](./GUARDS.md) - Guard and routing issues
+- [RBAC System](./RBAC.md) - Permission and role issues
+- [Active Directory](./ACTIVE_DIRECTORY.md) - AD-specific troubleshooting
+- [Common Patterns](./PATTERNS.md) - Correct implementation patterns
+
+### Debugging & Support
+- [Security Best Practices](../SECURITY.md) - Security-related issues
+- [Security Module](../security/README.md) - Security troubleshooting
+- [API Module](../api/README.md) - API authentication issues
+- [Configuration](../config/README.md) - Configuration problems

@@ -610,6 +610,30 @@ const routes: NavRoute[] = [
 
 ## See Also
 
-- [Layout Components](/home/user/enzyme/docs/ui/LAYOUT_COMPONENTS.md) - For navigation containers
-- [Auth Module](/home/user/enzyme/docs/auth/README.md) - For role-based access
-- [Feature Flags](/home/user/enzyme/docs/flags/README.md) - For feature toggles
+- [Layout Components](./LAYOUT_COMPONENTS.md) - For navigation containers
+- [Auth Module](../auth/README.md) - For role-based access
+- [Feature Flags](../flags/README.md) - For feature toggles
+
+---
+
+## Related Documentation
+
+### UI Components
+- [UI Components Overview](./README.md) - Complete UI component library guide
+- [Data Components](./DATA_COMPONENTS.md) - Tables and data display
+- [Layout Components](./LAYOUT_COMPONENTS.md) - Page structure and navigation containers
+- [Input Components](./INPUT_COMPONENTS.md) - Forms and user input
+- [Feedback Components](./FEEDBACK_COMPONENTS.md) - Loading, errors, and notifications
+
+### Theme & Styling
+- [Theme System](../theme/README.md) - Theme provider and color palettes
+- [Design Tokens](../theme/DESIGN_TOKENS.md) - Colors, spacing, navigation styling
+- [Dark Mode](../theme/DARK_MODE.md) - Dark mode navigation styling
+
+### Security & Access
+- [Auth Module](../auth/README.md) - Authentication and authorization
+- [Feature Flags](../flags/README.md) - Feature toggles for navigation
+
+### Integration
+- [Components Reference](../COMPONENTS_REFERENCE.md) - Complete navigation API
+- [Layouts](../LAYOUTS.md) - Navigation in adaptive layouts
