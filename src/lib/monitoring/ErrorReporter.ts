@@ -42,6 +42,17 @@ const defaultConfig: ErrorReporterConfig = {
 };
 
 /**
+ * Maximum number of errors to queue before dropping
+ */
+const MAX_ERROR_QUEUE_SIZE = 100;
+
+/**
+ * Rate limiting configuration
+ */
+const RATE_LIMIT_WINDOW_MS = 60000; // 1 minute
+const MAX_ERRORS_PER_WINDOW = 50;
+
+/**
  * Error reporter state
  */
 let config: ErrorReporterConfig = defaultConfig;
@@ -50,20 +61,87 @@ let errorQueue: ErrorReport[] = [];
 let isInitialized = false;
 
 /**
+ * Rate limiting state
+ */
+let errorTimestamps: number[] = [];
+
+/**
+ * Store references to event handlers for proper cleanup
+ * This prevents event listener accumulation when initErrorReporter is called multiple times
+ */
+let globalErrorHandler: ((event: ErrorEvent) => void) | null = null;
+let unhandledRejectionHandler: ((event: PromiseRejectionEvent) => void) | null = null;
+
+/**
  * Initialize the error reporter
  */
 export function initErrorReporter(options: Partial<ErrorReporterConfig> = {}): void {
+  // Clean up existing handlers first to prevent accumulation
+  cleanupErrorHandlers();
+
   config = { ...defaultConfig, ...options };
   isInitialized = true;
-  
-  // Set up global error handlers
+
+  // Set up global error handlers with stored references
   if (typeof window !== 'undefined') {
-    window.addEventListener('error', handleGlobalError);
-    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    globalErrorHandler = handleGlobalError;
+    unhandledRejectionHandler = handleUnhandledRejection;
+
+    window.addEventListener('error', globalErrorHandler);
+    window.addEventListener('unhandledrejection', unhandledRejectionHandler);
   }
-  
+
   // Flush any queued errors
   flushErrorQueue();
+}
+
+/**
+ * Clean up error handlers
+ * Call this when resetting the error reporter or before re-initialization
+ */
+export function cleanupErrorHandlers(): void {
+  if (typeof window !== 'undefined') {
+    if (globalErrorHandler !== null) {
+      window.removeEventListener('error', globalErrorHandler);
+      globalErrorHandler = null;
+    }
+    if (unhandledRejectionHandler !== null) {
+      window.removeEventListener('unhandledrejection', unhandledRejectionHandler);
+      unhandledRejectionHandler = null;
+    }
+  }
+}
+
+/**
+ * Reset error reporter state
+ * Useful for testing or when unmounting the application
+ */
+export function resetErrorReporter(): void {
+  cleanupErrorHandlers();
+  config = defaultConfig;
+  currentContext = {};
+  errorQueue = [];
+  errorTimestamps = [];
+  isInitialized = false;
+}
+
+/**
+ * Check if we're within rate limits
+ */
+function isWithinRateLimit(): boolean {
+  const now = Date.now();
+  // Clean up old timestamps
+  errorTimestamps = errorTimestamps.filter(
+    (timestamp) => now - timestamp < RATE_LIMIT_WINDOW_MS
+  );
+  return errorTimestamps.length < MAX_ERRORS_PER_WINDOW;
+}
+
+/**
+ * Record an error for rate limiting
+ */
+function recordErrorForRateLimit(): void {
+  errorTimestamps.push(Date.now());
 }
 
 /**
@@ -118,11 +196,25 @@ export function reportError(
     return;
   }
 
+  // Apply rate limiting
+  if (!isWithinRateLimit()) {
+    if (isDebugModeEnabled()) {
+      console.warn('[Error Reporter] Rate limit exceeded, dropping error');
+    }
+    return;
+  }
+
+  recordErrorForRateLimit();
+
   if (isInitialized && config.enabled) {
     void sendErrorReport(finalReport);
   } else {
-    // Queue error for later
-    errorQueue.push(finalReport);
+    // Queue error for later with bounds checking
+    if (errorQueue.length < MAX_ERROR_QUEUE_SIZE) {
+      errorQueue.push(finalReport);
+    } else if (isDebugModeEnabled()) {
+      console.warn('[Error Reporter] Error queue full, dropping error');
+    }
   }
   
   // Log when debug mode is enabled
@@ -294,6 +386,8 @@ function flushErrorQueue(): void {
  */
 export const ErrorReporter = {
   init: initErrorReporter,
+  cleanup: cleanupErrorHandlers,
+  reset: resetErrorReporter,
   setUserContext,
   setErrorContext,
   clearErrorContext,
