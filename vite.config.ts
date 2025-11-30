@@ -60,7 +60,8 @@ export default defineConfig({
       entry: createEntryPoints(),
       name: 'DefendrEnzyme',
       fileName: (format, entryName) => {
-        const ext = format === 'es' ? 'mjs' : 'js';
+        // Use .cjs for CommonJS to work with "type": "module" in package.json
+        const ext = format === 'es' ? 'mjs' : 'cjs';
         return `${entryName}.${ext}`;
       },
       formats: ['es', 'cjs'],

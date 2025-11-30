@@ -1,6 +1,6 @@
 {
   "name": "@missionfabric-js/enzyme",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Enterprise React framework with advanced routing, state management, performance optimizations, and plug-and-play architecture",
   "type": "module",
   "license": "MIT",
@@ -33,154 +33,154 @@
     "rbac",
     "enzyme"
   ],
-  "main": "./dist/index.js",
+  "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
+      "require": "./dist/index.cjs"
     },
     "./api": {
       "types": "./dist/lib/api/index.d.ts",
       "import": "./dist/lib/api/index.mjs",
-      "require": "./dist/lib/api/index.js"
+      "require": "./dist/lib/api/index.cjs"
     },
     "./auth": {
       "types": "./dist/lib/auth/index.d.ts",
       "import": "./dist/lib/auth/index.mjs",
-      "require": "./dist/lib/auth/index.js"
+      "require": "./dist/lib/auth/index.cjs"
     },
     "./config": {
       "types": "./dist/lib/config/index.d.ts",
       "import": "./dist/lib/config/index.mjs",
-      "require": "./dist/lib/config/index.js"
+      "require": "./dist/lib/config/index.cjs"
     },
     "./contexts": {
       "types": "./dist/lib/contexts/index.d.ts",
       "import": "./dist/lib/contexts/index.mjs",
-      "require": "./dist/lib/contexts/index.js"
+      "require": "./dist/lib/contexts/index.cjs"
     },
     "./coordination": {
       "types": "./dist/lib/coordination/index.d.ts",
       "import": "./dist/lib/coordination/index.mjs",
-      "require": "./dist/lib/coordination/index.js"
+      "require": "./dist/lib/coordination/index.cjs"
     },
     "./data": {
       "types": "./dist/lib/data/index.d.ts",
       "import": "./dist/lib/data/index.mjs",
-      "require": "./dist/lib/data/index.js"
+      "require": "./dist/lib/data/index.cjs"
     },
     "./flags": {
       "types": "./dist/lib/flags/index.d.ts",
       "import": "./dist/lib/flags/index.mjs",
-      "require": "./dist/lib/flags/index.js"
+      "require": "./dist/lib/flags/index.cjs"
     },
     "./hydration": {
       "types": "./dist/lib/hydration/index.d.ts",
       "import": "./dist/lib/hydration/index.mjs",
-      "require": "./dist/lib/hydration/index.js"
+      "require": "./dist/lib/hydration/index.cjs"
     },
     "./layouts": {
       "types": "./dist/lib/layouts/index.d.ts",
       "import": "./dist/lib/layouts/index.mjs",
-      "require": "./dist/lib/layouts/index.js"
+      "require": "./dist/lib/layouts/index.cjs"
     },
     "./monitoring": {
       "types": "./dist/lib/monitoring/index.d.ts",
       "import": "./dist/lib/monitoring/index.mjs",
-      "require": "./dist/lib/monitoring/index.js"
+      "require": "./dist/lib/monitoring/index.cjs"
     },
     "./performance": {
       "types": "./dist/lib/performance/index.d.ts",
       "import": "./dist/lib/performance/index.mjs",
-      "require": "./dist/lib/performance/index.js"
+      "require": "./dist/lib/performance/index.cjs"
     },
     "./queries": {
       "types": "./dist/lib/queries/index.d.ts",
       "import": "./dist/lib/queries/index.mjs",
-      "require": "./dist/lib/queries/index.js"
+      "require": "./dist/lib/queries/index.cjs"
     },
     "./realtime": {
       "types": "./dist/lib/realtime/index.d.ts",
       "import": "./dist/lib/realtime/index.mjs",
-      "require": "./dist/lib/realtime/index.js"
+      "require": "./dist/lib/realtime/index.cjs"
     },
     "./routing": {
       "types": "./dist/lib/routing/index.d.ts",
       "import": "./dist/lib/routing/index.mjs",
-      "require": "./dist/lib/routing/index.js"
+      "require": "./dist/lib/routing/index.cjs"
     },
     "./security": {
       "types": "./dist/lib/security/index.d.ts",
       "import": "./dist/lib/security/index.mjs",
-      "require": "./dist/lib/security/index.js"
+      "require": "./dist/lib/security/index.cjs"
     },
     "./services": {
       "types": "./dist/lib/services/index.d.ts",
       "import": "./dist/lib/services/index.mjs",
-      "require": "./dist/lib/services/index.js"
+      "require": "./dist/lib/services/index.cjs"
     },
     "./shared": {
       "types": "./dist/lib/shared/index.d.ts",
       "import": "./dist/lib/shared/index.mjs",
-      "require": "./dist/lib/shared/index.js"
+      "require": "./dist/lib/shared/index.cjs"
     },
     "./state": {
       "types": "./dist/lib/state/index.d.ts",
       "import": "./dist/lib/state/index.mjs",
-      "require": "./dist/lib/state/index.js"
+      "require": "./dist/lib/state/index.cjs"
     },
     "./streaming": {
       "types": "./dist/lib/streaming/index.d.ts",
       "import": "./dist/lib/streaming/index.mjs",
-      "require": "./dist/lib/streaming/index.js"
+      "require": "./dist/lib/streaming/index.cjs"
     },
     "./theme": {
       "types": "./dist/lib/theme/index.d.ts",
       "import": "./dist/lib/theme/index.mjs",
-      "require": "./dist/lib/theme/index.js"
+      "require": "./dist/lib/theme/index.cjs"
     },
     "./ui": {
       "types": "./dist/lib/ui/index.d.ts",
       "import": "./dist/lib/ui/index.mjs",
-      "require": "./dist/lib/ui/index.js"
+      "require": "./dist/lib/ui/index.cjs"
     },
     "./utils": {
       "types": "./dist/lib/utils/index.d.ts",
       "import": "./dist/lib/utils/index.mjs",
-      "require": "./dist/lib/utils/index.js"
+      "require": "./dist/lib/utils/index.cjs"
     },
     "./ux": {
       "types": "./dist/lib/ux/index.d.ts",
       "import": "./dist/lib/ux/index.mjs",
-      "require": "./dist/lib/ux/index.js"
+      "require": "./dist/lib/ux/index.cjs"
     },
     "./vdom": {
       "types": "./dist/lib/vdom/index.d.ts",
       "import": "./dist/lib/vdom/index.mjs",
-      "require": "./dist/lib/vdom/index.js"
+      "require": "./dist/lib/vdom/index.cjs"
     },
     "./core": {
       "types": "./dist/lib/core/index.d.ts",
       "import": "./dist/lib/core/index.mjs",
-      "require": "./dist/lib/core/index.js"
+      "require": "./dist/lib/core/index.cjs"
     },
     "./feature": {
       "types": "./dist/lib/feature/index.d.ts",
       "import": "./dist/lib/feature/index.mjs",
-      "require": "./dist/lib/feature/index.js"
+      "require": "./dist/lib/feature/index.cjs"
     },
     "./hooks": {
       "types": "./dist/lib/hooks/index.d.ts",
       "import": "./dist/lib/hooks/index.mjs",
-      "require": "./dist/lib/hooks/index.js"
+      "require": "./dist/lib/hooks/index.cjs"
     },
     "./system": {
       "types": "./dist/lib/system/index.d.ts",
       "import": "./dist/lib/system/index.mjs",
-      "require": "./dist/lib/system/index.js"
+      "require": "./dist/lib/system/index.cjs"
     },
     "./package.json": "./package.json"
   },
