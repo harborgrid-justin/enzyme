@@ -23,6 +23,7 @@ import {
 } from 'react';
 import React from 'react';
 import { createPortal } from 'react-dom';
+import { isReactEnvironmentHealthy } from '@/lib/core/react-env';
 import { createModuleId } from './types';
 import { useOptionalModuleContext } from './ModuleBoundary';
 import { useModuleSystem } from './ModuleProviderExports';
@@ -469,10 +470,22 @@ export interface ModulePortalSlotProps {
   target: string;
   /** Content to render in portal */
   children: ReactNode;
+  /**
+   * Whether to render children inline as fallback when portal cannot be created.
+   * This prevents blank pages when React environment issues occur.
+   * @default true
+   */
+  fallbackToInline?: boolean;
+  /**
+   * Custom fallback content to render when portal fails.
+   */
+  fallback?: ReactNode;
 }
 
 /**
  * Renders content into a portal target outside the module boundary.
+ * Includes fallback rendering to prevent blank pages when React
+ * environment issues occur (e.g., multiple React instances).
  *
  * @example
  * ```tsx
@@ -490,27 +503,100 @@ export interface ModulePortalSlotProps {
 export const ModulePortalSlot: FC<ModulePortalSlotProps> = ({
   target,
   children,
+  fallbackToInline = true,
+  fallback,
 }) => {
   const [targetElement, setTargetElement] = useState<Element | null>(null);
+  const [portalError, setPortalError] = useState<boolean>(false);
+  const [isEnvHealthy, setIsEnvHealthy] = useState<boolean | null>(null);
+
+  // Check React environment health
+  useEffect(() => {
+    try {
+      // Only check on client-side
+      if (typeof window === 'undefined') {
+        queueMicrotask(() => setIsEnvHealthy(true));
+        return;
+      }
+      const healthy = isReactEnvironmentHealthy();
+      queueMicrotask(() => setIsEnvHealthy(healthy));
+    } catch {
+      queueMicrotask(() => {
+        setIsEnvHealthy(false);
+        setPortalError(true);
+      });
+    }
+  }, []);
 
   useLayoutEffect(() => {
-    const element = document.getElementById(target);
-    if (element) {
-      // Use microtask to avoid synchronous setState in effect
-      void Promise.resolve().then(() => {
-        setTargetElement(element);
-      });
-    } else {
-      devWarn(`Portal target "${target}" not found`);
+    // Skip if environment is unhealthy
+    if (isEnvHealthy === false) {
+      queueMicrotask(() => setPortalError(true));
+      return;
     }
-  }, [target]);
 
+    try {
+      const element = document.getElementById(target);
+      if (element !== null) {
+        // Use microtask to avoid synchronous setState in effect
+        queueMicrotask(() => {
+          setTargetElement(element);
+        });
+      } else {
+        devWarn(`Portal target "${target}" not found`);
+        // Set error flag if target not found and fallback is enabled
+        if (fallbackToInline) {
+          queueMicrotask(() => setPortalError(true));
+        }
+      }
+    } catch (err) {
+      devWarn(`Portal creation failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      queueMicrotask(() => setPortalError(true));
+    }
+  }, [target, isEnvHealthy, fallbackToInline]);
+
+  // Render fallback if portal fails or environment is unhealthy
+  if (portalError || isEnvHealthy === false) {
+    if (fallback !== undefined) {
+      return <>{fallback}</>;
+    }
+    if (fallbackToInline) {
+      return (
+        <div data-portal-fallback="true" data-portal-target={target}>
+          {children}
+        </div>
+      );
+    }
+    return null;
+  }
+
+  // Render children inline while waiting for portal target
   if (!targetElement) {
+    if (fallbackToInline) {
+      return (
+        <div data-portal-pending="true" data-portal-target={target} style={{ display: 'contents' }}>
+          {children}
+        </div>
+      );
+    }
     return null;
   }
 
   // Use React.createPortal
-  return createPortal(children, targetElement);
+  try {
+    return createPortal(children, targetElement);
+  } catch (err) {
+    devWarn(`Portal rendering failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    // Fallback to inline rendering on portal error
+    if (fallbackToInline) {
+      return (
+        <div data-portal-error="true" data-portal-target={target}>
+          {children}
+        </div>
+      );
+    }
+    return null;
+  }
 };
 
 ModulePortalSlot.displayName = 'ModulePortalSlot';
