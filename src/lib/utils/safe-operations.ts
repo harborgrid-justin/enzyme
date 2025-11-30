@@ -300,7 +300,7 @@ export function safeLocalStorageSet(key: string, value: unknown): boolean {
     return true;
   } catch (error) {
     // Handle QuotaExceededError and other storage errors
-    if (error instanceof DOMException && error.code === 22) {
+    if (error instanceof DOMException && error.name === 'QuotaExceededError') {
       console.warn('[Storage] Quota exceeded for key:', key);
     }
     return false;
