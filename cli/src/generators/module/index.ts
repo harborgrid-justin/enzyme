@@ -31,15 +31,14 @@ export class ModuleGenerator extends BaseGenerator<ModuleGeneratorOptions> {
 
   protected async generate(): Promise<GeneratedFile[]> {
     const files: GeneratedFile[] = [];
-    const moduleName = toKebabCase(this.options.name);
     const modulePath = resolveModulePath(this.options.name);
 
     // Determine what to include
-    const includeRoutes = this.options.withRoutes || this.options.full;
-    const includeState = this.options.withState || this.options.full;
-    const includeApi = this.options.withApi || this.options.full;
-    const includeComponents = this.options.withComponents || this.options.full;
-    const includeHooks = this.options.withHooks || this.options.full;
+    const includeRoutes = this.options.withRoutes === true || this.options.full === true;
+    const includeState = this.options.withState === true || this.options.full === true;
+    const includeApi = this.options.withApi === true || this.options.full === true;
+    const includeComponents = this.options.withComponents === true || this.options.full === true;
+    const includeHooks = this.options.withHooks === true || this.options.full === true;
 
     // Generate module index
     files.push({
@@ -683,7 +682,6 @@ ${moduleName}Item.displayName = '${moduleName}Item';
 
   private generateHooks(): GeneratedFile[] {
     const moduleName = toPascalCase(this.options.name);
-    const camelName = toCamelCase(this.options.name);
     const modulePath = resolveModulePath(this.options.name);
 
     return [
@@ -774,7 +772,7 @@ export interface ${moduleName}FilterOptions {
 `;
   }
 
-  protected async afterGenerate(result: { files: string[] }): Promise<void> {
+  protected async afterGenerate(result: import('../base').GeneratorResult): Promise<void> {
     await super.afterGenerate(result);
 
     const moduleName = toPascalCase(this.options.name);

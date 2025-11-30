@@ -7,7 +7,7 @@
 
 import { execSync } from 'child_process';
 import { unlinkSync, existsSync, readFileSync, writeFileSync, readdirSync, statSync, rmdirSync } from 'fs';
-import { resolve, join, dirname } from 'path';
+import { resolve, join } from 'path';
 import { ConfigManager } from '../config/manager.js';
 import { FeatureType } from './add.js';
 
@@ -116,7 +116,13 @@ export async function removeFeature(
   const { config } = await manager.load();
 
   // Check if feature is enabled
-  if (!config.features?.[feature] && feature !== 'flags') {
+  if (feature !== 'flags' && !config.features?.[feature as keyof typeof config.features]) {
+    console.log(`⚠️  Feature "${feature}" is not enabled`);
+    return;
+  }
+
+  // Special check for flags in metadata
+  if (feature === 'flags' && !config.metadata?.flags) {
     console.log(`⚠️  Feature "${feature}" is not enabled`);
     return;
   }
@@ -221,7 +227,7 @@ export async function removeFeature(
           cwd,
           stdio: 'inherit',
         });
-      } catch (error) {
+      } catch {
         console.error('⚠️  Failed to uninstall dependencies');
       }
     }
@@ -255,7 +261,7 @@ async function checkDependencies(
   for (const [dependsOn, features] of Object.entries(dependencies)) {
     if (dependsOn === feature) {
       for (const feat of features) {
-        if (config.features?.[feat]) {
+        if (config.features?.[feat as keyof typeof config.features]) {
           dependent.push(feat);
         }
       }

@@ -28,7 +28,7 @@ export function generateRoutes(template: TemplateType, context: TemplateContext)
 /**
  * Minimal template routes
  */
-function generateMinimalRoutes(context: TemplateContext): Record<string, string> {
+function generateMinimalRoutes(_context: TemplateContext): Record<string, string> {
   // Minimal template doesn't use routing, routes are handled in App.tsx
   return {};
 }

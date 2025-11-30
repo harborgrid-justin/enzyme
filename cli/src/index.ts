@@ -21,7 +21,6 @@ import { fileURLToPath } from 'url';
 
 // Command imports
 import { newCommand } from './commands/new.js';
-import { generateCommand } from './commands/generate.js';
 import { configInit, configGet, configSet, configList, configValidate } from './commands/config.js';
 import { addFeature, listFeatures, type FeatureType } from './commands/add.js';
 import { createGenerateCommand } from './commands/generate.js';
@@ -37,44 +36,31 @@ import { getBuiltInPlugins } from './plugins/built-in/index.js';
 import { CommandContext, GlobalOptions } from './types/index.js';
 
 // Optional imports for additional commands
-let removeFeature: any, checkRemoval: any, upgrade: any, printUpgradeInfo: any, doctor: any;
-let analyzeProject: any, formatAnalysisResult: any, migrate: any;
+let removeFeature: any, upgrade: any, printUpgradeInfo: any, doctor: any;
 let validateFiles: any, formatValidationResults: any;
 
 // Try to import optional commands
 try {
   const removeModule = await import('./commands/remove.js');
   removeFeature = removeModule.removeFeature;
-  checkRemoval = removeModule.checkRemoval;
-} catch {}
+} catch { /* Optional module */ }
 
 try {
   const upgradeModule = await import('./commands/upgrade.js');
   upgrade = upgradeModule.upgrade;
   printUpgradeInfo = upgradeModule.printUpgradeInfo;
-} catch {}
+} catch { /* Optional module */ }
 
 try {
   const doctorModule = await import('./commands/doctor.js');
   doctor = doctorModule.doctor;
-} catch {}
-
-try {
-  const analyzeModule = await import('./analyze/index.js');
-  analyzeProject = analyzeModule.analyzeProject;
-  formatAnalysisResult = analyzeModule.formatAnalysisResult;
-} catch {}
-
-try {
-  const migrateModule = await import('./migrate/index.js');
-  migrate = migrateModule.migrate;
-} catch {}
+} catch { /* Optional module */ }
 
 try {
   const validationModule = await import('./validation/index.js');
   validateFiles = validationModule.validateFiles;
   formatValidationResults = validationModule.formatValidationResults;
-} catch {}
+} catch { /* Optional module */ }
 
 // Get package.json for version
 const __filename = fileURLToPath(import.meta.url);
@@ -310,7 +296,7 @@ const analyzeCmd = program
   .option('--json', 'Output as JSON')
   .option('--verbose', 'Show detailed analysis');
 
-analyzeCmd.action(async (options) => {
+analyzeCmd.action(async (_options) => {
   const context = await createContext(program.opts());
   const cmd = createAnalyzeCommand(context);
   await cmd.parseAsync([], { from: 'user' });
@@ -343,7 +329,7 @@ const migrateCmd = program
   .option('--to <version>', 'Target version')
   .option('--dry-run', 'Show what would be migrated without making changes');
 
-migrateCmd.action(async (options) => {
+migrateCmd.action(async (_options) => {
   const context = await createContext(program.opts());
   const cmd = createMigrateCommand(context);
   await cmd.parseAsync([], { from: 'user' });
@@ -373,7 +359,7 @@ const docsCmd = program
   .description('Generate and manage project documentation')
   .option('--output <dir>', 'Output directory', 'docs');
 
-docsCmd.action(async (options) => {
+docsCmd.action(async (_options) => {
   const context = await createContext(program.opts());
   const cmd = createDocsCommand(context);
   await cmd.parseAsync([], { from: 'user' });
@@ -443,7 +429,7 @@ program
 
     console.log(formatValidationResults(results));
 
-    const hasErrors = results.some(r => !r.valid);
+    const hasErrors = results.some((r: { valid: boolean }) => !r.valid);
     if (hasErrors) {
       process.exit(1);
     }

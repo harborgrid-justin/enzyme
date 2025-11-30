@@ -256,7 +256,7 @@ export type { ${pageName}PageProps } from './${pageName}Page';
 `;
   }
 
-  protected async afterGenerate(result: { files: string[] }): Promise<void> {
+  protected async afterGenerate(result: import('../base').GeneratorResult): Promise<void> {
     await super.afterGenerate(result);
 
     const pageName = toPascalCase(this.options.name);

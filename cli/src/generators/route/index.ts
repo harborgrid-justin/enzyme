@@ -397,7 +397,7 @@ export async function action({ params, request }: ActionFunctionArgs): Promise<$
     return segments.join('') || 'Index';
   }
 
-  protected async afterGenerate(result: { files: string[] }): Promise<void> {
+  protected async afterGenerate(result: import('../base').GeneratorResult): Promise<void> {
     await super.afterGenerate(result);
 
     this.log(`\n✓ Generated route for ${this.options.path} successfully!`, 'success');

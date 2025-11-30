@@ -22,7 +22,7 @@ export const gitPlugin: Plugin = {
       try {
         await execa('git', ['--version']);
         context.logger.debug('Git is available');
-      } catch (error) {
+      } catch {
         context.logger.warn('Git is not available. Git integration will be disabled.');
       }
     },

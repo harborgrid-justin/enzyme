@@ -11,7 +11,6 @@ import {
   codeBlock,
   parametersTable,
   deprecationNotice,
-  badge,
   generateTOC,
   TOCItem,
   writeDocFile,
@@ -377,7 +376,7 @@ function generateHookUsageTips(hook: ParsedHook): string {
 /**
  * Generate common patterns section
  */
-function generateCommonPatterns(hook: ParsedHook): string {
+function generateCommonPatterns(_hook: ParsedHook): string {
   let content = '';
 
   content += paragraph('Here are common ways to use this hook:');
@@ -396,7 +395,7 @@ function generateCommonPatterns(hook: ParsedHook): string {
 /**
  * Generate troubleshooting section
  */
-function generateTroubleshooting(hook: ParsedHook): string {
+function generateTroubleshooting(_hook: ParsedHook): string {
   let content = '';
 
   content += paragraph('Common issues and solutions:');

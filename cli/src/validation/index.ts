@@ -6,7 +6,7 @@
  */
 
 import { readFileSync, existsSync } from 'fs';
-import { resolve, relative, basename, extname } from 'path';
+import { relative, basename, extname } from 'path';
 
 export interface ValidationRule {
   name: string;
@@ -203,8 +203,8 @@ export class ValidationEngine {
 
         const hasDefaultExport =
           context.content.includes('export default') ||
-          context.content.includes('export { ') &&
-          context.content.includes('as default');
+          (context.content.includes('export { ') &&
+          context.content.includes('as default'));
 
         if (!hasDefaultExport) {
           return [
@@ -545,7 +545,7 @@ export function formatValidationResults(results: ValidationResult[]): string {
 /**
  * Create pre-commit hook
  */
-export function createPreCommitHook(cwd: string = process.cwd()): string {
+export function createPreCommitHook(): string {
   return `#!/bin/sh
 # Enzyme validation pre-commit hook
 

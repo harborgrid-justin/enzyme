@@ -4,7 +4,7 @@
 
 import type { TemplateContext } from '../utils';
 
-export function generateTsConfig(context: TemplateContext): Record<string, any> {
+export function generateTsConfig(_context: TemplateContext): Record<string, unknown> {
   return {
     compilerOptions: {
       // Language & Environment

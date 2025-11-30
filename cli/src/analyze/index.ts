@@ -6,7 +6,7 @@
  */
 
 import { readFileSync, readdirSync, statSync, existsSync } from 'fs';
-import { join, resolve, relative, extname } from 'path';
+import { join, resolve, relative } from 'path';
 import { ConfigManager } from '../config/manager.js';
 import { EnzymeConfig, Features } from '../config/schema.js';
 
@@ -100,7 +100,7 @@ export class ProjectAnalyzer {
   /**
    * Analyze project
    */
-  async analyze(options: AnalyzeOptions = {}): Promise<AnalysisResult> {
+  async analyze(_options: AnalyzeOptions = {}): Promise<AnalysisResult> {
     // Load configuration
     const configManager = new ConfigManager(this.cwd);
     const { config } = await configManager.load();
@@ -232,7 +232,6 @@ export class ProjectAnalyzer {
     const unused: string[] = [];
     const deprecated: string[] = [];
 
-    const enzymeImportPattern = /from\s+['"]@missionfabric-js\/enzyme(?:\/([^'"]+))?['"]/g;
     const importPattern = /import\s+.*?\s+from\s+['"]([^'"]+)['"]/g;
 
     for (const file of this.files) {

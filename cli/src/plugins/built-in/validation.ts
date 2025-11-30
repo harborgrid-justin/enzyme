@@ -203,7 +203,8 @@ export function validateNamingConvention(
  * Validate file name
  */
 export function validateFileName(fileName: string): boolean {
-  // Check for invalid characters
+  // Check for invalid characters (including control chars 0x00-0x1f)
+  // eslint-disable-next-line no-control-regex
   const invalidChars = /[<>:"|?*\x00-\x1f]/;
   if (invalidChars.test(fileName)) {
     return false;
@@ -222,7 +223,8 @@ export function validateFileName(fileName: string): boolean {
  * Validate directory path
  */
 export function validateDirectoryPath(path: string): boolean {
-  // Check for invalid characters
+  // Check for invalid characters (including control chars 0x00-0x1f)
+  // eslint-disable-next-line no-control-regex
   const invalidChars = /[<>:"|?*\x00-\x1f]/;
   return !invalidChars.test(path);
 }

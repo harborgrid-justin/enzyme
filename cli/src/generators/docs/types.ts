@@ -155,7 +155,7 @@ export interface TemplateHelpers {
 export interface PluginAPI {
   registerGenerator: (name: string, generator: Generator) => void;
   registerTemplate: (name: string, template: string) => void;
-  registerHelper: (name: string, helper: Function) => void;
+  registerHelper: (name: string, helper: (...args: unknown[]) => unknown) => void;
   onBeforeGenerate: (hook: (config: GeneratorConfig) => void) => void;
   onAfterGenerate: (hook: (result: BuildResult) => void) => void;
 }

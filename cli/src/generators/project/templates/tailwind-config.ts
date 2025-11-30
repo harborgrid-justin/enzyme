@@ -4,7 +4,7 @@
 
 import type { TemplateContext } from '../utils';
 
-export function generateTailwindConfig(context: TemplateContext): string {
+export function generateTailwindConfig(_context: TemplateContext): string {
   return `import type { Config } from 'tailwindcss';
 
 const config: Config = {

@@ -5,7 +5,6 @@
 
 import * as ts from 'typescript';
 import * as path from 'path';
-import * as fs from 'fs';
 
 export interface ParsedSymbol {
   name: string;
@@ -163,7 +162,6 @@ export class TypeScriptParser {
     node: ts.FunctionDeclaration,
     sourceFile: ts.SourceFile
   ): ParsedFunction {
-    const symbol = this.checker.getSymbolAtLocation(node.name!);
     const jsDoc = this.getJSDocComments(node);
     const { line } = sourceFile.getLineAndCharacterOfPosition(node.getStart());
 
@@ -439,7 +437,8 @@ export class TypeScriptParser {
    */
   private isExported(node: ts.Node): boolean {
     return (
-      node.modifiers?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword) || false
+      ts.canHaveModifiers(node) &&
+      ts.getModifiers(node)?.some((m: ts.Modifier) => m.kind === ts.SyntaxKind.ExportKeyword) || false
     );
   }
 

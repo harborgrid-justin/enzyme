@@ -4,7 +4,7 @@
 
 import type { TemplateContext } from '../utils';
 
-export function generatePrettierConfig(context: TemplateContext): Record<string, any> {
+export function generatePrettierConfig(_context: TemplateContext): Record<string, unknown> {
   return {
     semi: true,
     trailingComma: 'es5',

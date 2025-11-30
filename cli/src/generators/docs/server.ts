@@ -5,6 +5,7 @@
 
 import * as http from 'http';
 import * as fs from 'fs/promises';
+import { watch as fsWatch } from 'fs';
 import * as path from 'path';
 import { logger } from './utils';
 import {
@@ -142,7 +143,7 @@ async function serveMarkdown(
 
     res.writeHead(200, { 'Content-Type': 'text/html' });
     res.end(html);
-  } catch (error) {
+  } catch {
     serve404(res);
   }
 }
@@ -161,7 +162,7 @@ async function serveJSON(
     const content = await fs.readFile(filePath, 'utf-8');
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(content);
-  } catch (error) {
+  } catch {
     serve404(res);
   }
 }
@@ -180,7 +181,7 @@ async function serveCSS(
     const content = await fs.readFile(filePath, 'utf-8');
     res.writeHead(200, { 'Content-Type': 'text/css' });
     res.end(content);
-  } catch (error) {
+  } catch {
     // Serve default CSS
     res.writeHead(200, { 'Content-Type': 'text/css' });
     res.end(getDefaultCSS());
@@ -201,7 +202,7 @@ async function serveJS(
     const content = await fs.readFile(filePath, 'utf-8');
     res.writeHead(200, { 'Content-Type': 'application/javascript' });
     res.end(content);
-  } catch (error) {
+  } catch {
     serve404(res);
   }
 }
@@ -258,7 +259,7 @@ function serve500(res: http.ServerResponse, error: any): void {
  */
 async function renderMarkdownAsHTML(
   markdown: string,
-  url: string,
+  _url: string,
   directory: string
 ): Promise<string> {
   // Simple markdown to HTML conversion
@@ -553,7 +554,7 @@ async function watchFiles(
 ): Promise<FileWatcher> {
   let debounceTimeout: NodeJS.Timeout | null = null;
 
-  const watcher = fs.watch(directory, { recursive: true }, (eventType, filename) => {
+  const watcher = fsWatch(directory, { recursive: true }, (_eventType, filename) => {
     if (filename && filename.endsWith('.md')) {
       // Debounce changes
       if (debounceTimeout) {
@@ -571,8 +572,7 @@ async function watchFiles(
       if (debounceTimeout) {
         clearTimeout(debounceTimeout);
       }
-      // Note: fs.watch doesn't return a close method in all Node versions
-      // This is a simplified implementation
+      watcher.close();
     },
   };
 }

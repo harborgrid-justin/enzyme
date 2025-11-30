@@ -3,7 +3,7 @@
  * @module plugins/loader
  */
 
-import { resolve, dirname } from 'path';
+import { resolve } from 'path';
 import { pathToFileURL } from 'url';
 import {
   Plugin,
@@ -15,7 +15,6 @@ import {
   GenerationResult,
 } from '../types/index.js';
 import { exists, isFile } from '../utils/fs.js';
-import { logger } from '../utils/logger.js';
 
 /**
  * Plugin manager implementation

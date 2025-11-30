@@ -4,7 +4,6 @@
  */
 
 import * as path from 'path';
-import * as fs from 'fs/promises';
 import {
   heading,
   paragraph,
@@ -12,8 +11,6 @@ import {
   table,
   TableColumn,
   TableRow,
-  generateTOC,
-  TOCItem,
   writeDocFile,
   findFiles,
   logger,
@@ -26,16 +23,6 @@ import {
 } from './utils';
 import { DocsConfig } from './index';
 
-interface RouteConfig {
-  path: string;
-  element?: string;
-  loader?: string;
-  action?: string;
-  guards?: string[];
-  roles?: string[];
-  children?: RouteConfig[];
-  meta?: Record<string, any>;
-}
 
 interface RouteDoc {
   path: string;
@@ -84,7 +71,7 @@ export async function generateRouteDocs(config: DocsConfig): Promise<void> {
  */
 async function parseRoutes(
   routeFiles: string[],
-  config: DocsConfig
+  _config: DocsConfig
 ): Promise<RouteDoc[]> {
   const routes: RouteDoc[] = [];
 
@@ -121,7 +108,7 @@ async function parseRoutes(
 /**
  * Extract component from route definition
  */
-function extractComponent(content: string, routePath: string): string {
+function extractComponent(content: string, _routePath: string): string {
   const elementMatch = content.match(/element:\s*<([A-Z][a-zA-Z0-9]*)/);
   return elementMatch ? elementMatch[1] : 'Unknown';
 }
@@ -129,7 +116,7 @@ function extractComponent(content: string, routePath: string): string {
 /**
  * Extract loader function
  */
-function extractLoader(content: string, routePath: string): string | undefined {
+function extractLoader(content: string, _routePath: string): string | undefined {
   const loaderMatch = content.match(/loader:\s*([a-zA-Z0-9_]+)/);
   return loaderMatch ? loaderMatch[1] : undefined;
 }
@@ -137,7 +124,7 @@ function extractLoader(content: string, routePath: string): string | undefined {
 /**
  * Extract action function
  */
-function extractAction(content: string, routePath: string): string | undefined {
+function extractAction(content: string, _routePath: string): string | undefined {
   const actionMatch = content.match(/action:\s*([a-zA-Z0-9_]+)/);
   return actionMatch ? actionMatch[1] : undefined;
 }

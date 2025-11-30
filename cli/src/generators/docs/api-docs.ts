@@ -4,7 +4,7 @@
  */
 
 import * as path from 'path';
-import { createParser, ParsedFunction, ParsedInterface, ParsedSymbol } from './parser';
+import { createParser, ParsedFunction, ParsedInterface } from './parser';
 import {
   heading,
   paragraph,
@@ -17,7 +17,6 @@ import {
   TOCItem,
   writeDocFile,
   findFiles,
-  groupBy,
   logger,
   formatExample,
   formatType,

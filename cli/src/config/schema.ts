@@ -90,6 +90,15 @@ export const LintingSchema = z.object({
 });
 
 /**
+ * Git configuration schema
+ */
+export const GitSchema = z.object({
+  enabled: z.boolean().default(true).describe('Enable git integration'),
+  autoCommit: z.boolean().default(false).describe('Auto-commit generated files'),
+  commitMessage: z.string().optional().describe('Commit message template'),
+});
+
+/**
  * Main Enzyme configuration schema
  */
 export const EnzymeConfigSchema = z.object({
@@ -124,6 +133,12 @@ export const EnzymeConfigSchema = z.object({
   // Linting
   linting: LintingSchema.optional(),
 
+  // Git integration
+  git: GitSchema.optional(),
+
+  // Template directories
+  templateDirs: z.array(z.string()).optional().describe('Custom template directories'),
+
   // Plugins
   plugins: PluginsSchema,
 
@@ -154,6 +169,7 @@ export type TypeScriptConfig = z.infer<typeof TypeScriptSchema>;
 export type BuildConfig = z.infer<typeof BuildSchema>;
 export type TestingConfig = z.infer<typeof TestingSchema>;
 export type LintingConfig = z.infer<typeof LintingSchema>;
+export type GitConfig = z.infer<typeof GitSchema>;
 export type EnzymeConfig = z.infer<typeof EnzymeConfigSchema>;
 export type PartialEnzymeConfig = z.infer<typeof PartialEnzymeConfigSchema>;
 export type ConfigFile = z.infer<typeof ConfigFileSchema>;

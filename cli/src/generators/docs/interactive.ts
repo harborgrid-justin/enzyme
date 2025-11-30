@@ -4,7 +4,6 @@
  */
 
 import * as path from 'path';
-import * as fs from 'fs/promises';
 import {
   heading,
   paragraph,
@@ -105,7 +104,7 @@ function parseDocument(
  */
 function determineDocType(
   category: string,
-  path: string
+  _path: string
 ): 'api' | 'component' | 'hook' | 'route' | 'guide' {
   if (category.includes('api')) return 'api';
   if (category.includes('component')) return 'component';
