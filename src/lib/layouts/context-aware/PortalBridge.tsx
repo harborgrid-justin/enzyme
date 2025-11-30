@@ -9,10 +9,12 @@
  * - Manages z-index automatically
  * - Supports event bridging back to source
  * - Handles nested portals correctly
+ * - Resilient fallback rendering when portals fail
+ * - React environment validation to prevent blank pages
  *
  * @module layouts/context-aware/PortalBridge
  * @author Agent 4 - PhD Context Systems Expert
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 import React, {
@@ -24,6 +26,7 @@ import React, {
 } from 'react';
 import { PortalBridgeContext } from '../../contexts/PortalBridgeContext';
 import { createPortal } from 'react-dom';
+import { isReactEnvironmentHealthy, checkReactEnvironment } from '../../core/react-env';
 
 import type {
   PortalContext,
@@ -107,6 +110,9 @@ export function PortalBridge({
   className,
   style,
   'data-testid': testId,
+  fallbackToInline = true,
+  fallback,
+  onPortalError,
 }: PortalBridgeProps): React.JSX.Element | null {
   // Refs
   const sourceRef = useRef<HTMLDivElement>(null);
@@ -117,6 +123,8 @@ export function PortalBridge({
   const [portalContext, setPortalContext] = useState<PortalContext | null>(null);
   const [isReady, setIsReady] = useState(false);
   const [portalContainer, setPortalContainer] = useState<HTMLDivElement | null>(null);
+  const [portalError, setPortalError] = useState<Error | null>(null);
+  const [reactEnvHealthy, setReactEnvHealthy] = useState<boolean | null>(null);
 
   // Get current DOM context
   const domContext = useDOMContextValue();
@@ -126,6 +134,39 @@ export function PortalBridge({
 
   // Check if we're in SSR
   const isSSR = typeof window === 'undefined';
+
+  // Check React environment health on mount
+  useEffect(() => {
+    if (isSSR) {
+      queueMicrotask(() => setReactEnvHealthy(true));
+      return;
+    }
+
+    try {
+      const healthy = isReactEnvironmentHealthy();
+      queueMicrotask(() => {
+        setReactEnvHealthy(healthy);
+
+        if (!healthy) {
+          const envStatus = checkReactEnvironment({ logWarnings: true });
+          const errorMsg = envStatus.issues
+            .filter(i => i.severity === 'error')
+            .map(i => i.message)
+            .join('; ');
+          const err = new Error(`React environment unhealthy: ${errorMsg}`);
+          setPortalError(err);
+          onPortalError?.(err);
+        }
+      });
+    } catch (err) {
+      queueMicrotask(() => {
+        setReactEnvHealthy(false);
+        const error = err instanceof Error ? err : new Error('React environment check failed');
+        setPortalError(error);
+        onPortalError?.(error);
+      });
+    }
+  }, [isSSR, onPortalError]);
 
   /**
    * Resolves the portal target element.
@@ -236,8 +277,11 @@ export function PortalBridge({
         },
       };
 
-      setPortalContext(fullContext as unknown as PortalContext | null);
-      setIsReady(true);
+      // Set state asynchronously to avoid synchronous setState in effect
+      queueMicrotask(() => {
+        setPortalContext(fullContext as unknown as PortalContext | null);
+        setIsReady(true);
+      });
 
       // Register with z-index manager
       const zIndexManager = getZIndexManager();
@@ -285,6 +329,32 @@ export function PortalBridge({
     }
   }, [domContext, portalContext]);
 
+  // Determine if we should render fallback content
+  const shouldRenderFallback =
+    portalError !== null ||
+    reactEnvHealthy === false ||
+    (isSSR && fallbackToInline);
+
+  // Render fallback content inline if portal fails
+  const renderFallbackContent = () => {
+    if (fallback !== undefined) {
+      return fallback;
+    }
+    if (fallbackToInline) {
+      return (
+        <div
+          className={className}
+          style={style}
+          data-testid={testId}
+          data-portal-fallback="true"
+        >
+          {children}
+        </div>
+      );
+    }
+    return null;
+  };
+
   // Render source marker and portal
   return (
     <>
@@ -295,8 +365,11 @@ export function PortalBridge({
         style={{ display: 'contents' }}
       />
 
-      {/* Portal content */}
-      {isReady && portalContainer != null && portalContext != null && (
+      {/* Fallback rendering when portal cannot be created */}
+      {shouldRenderFallback && renderFallbackContent()}
+
+      {/* Portal content - only render if environment is healthy and portal is ready */}
+      {!shouldRenderFallback && isReady && portalContainer != null && portalContext != null && (
         <PortalBridgeContext.Provider value={{
           registerPortal: (_id: string, _container: HTMLElement) => {
             // Implementation for registering portal
@@ -323,6 +396,16 @@ export function PortalBridge({
             portalContainer
           )}
         </PortalBridgeContext.Provider>
+      )}
+
+      {/* Inline fallback when portal is not ready but environment is healthy */}
+      {!shouldRenderFallback && !isReady && fallbackToInline && (
+        <div
+          data-portal-pending="true"
+          style={{ display: 'contents' }}
+        >
+          {children}
+        </div>
       )}
     </>
   );

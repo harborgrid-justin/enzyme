@@ -557,6 +557,21 @@ export interface PortalBridgeProps extends ContextAwareComponentProps {
   onPortalMount?: (portal: PortalContext) => void;
   /** Callback when portal is unmounted */
   onPortalUnmount?: () => void;
+  /**
+   * Whether to render children inline as fallback when portal cannot be created.
+   * This prevents blank pages when React environment issues occur.
+   * @default true
+   */
+  fallbackToInline?: boolean;
+  /**
+   * Custom fallback content to render when portal fails.
+   * If not provided and fallbackToInline is true, children will render inline.
+   */
+  fallback?: React.ReactNode;
+  /**
+   * Callback when portal initialization fails.
+   */
+  onPortalError?: (error: Error) => void;
 }
 
 /**
