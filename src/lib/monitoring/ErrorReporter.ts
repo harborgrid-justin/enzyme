@@ -118,7 +118,8 @@ export function cleanupErrorHandlers(): void {
  */
 export function resetErrorReporter(): void {
   cleanupErrorHandlers();
-  config = defaultConfig;
+  // Clone defaultConfig to avoid mutating the shared default object
+  config = { ...defaultConfig };
   currentContext = {};
   errorQueue = [];
   errorTimestamps = [];
