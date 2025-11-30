@@ -975,13 +975,21 @@ function LogoutButton() {
 }
 ```
 
-## See Also
+## Related Documentation
 
-- [Authentication Overview](./OVERVIEW.md)
-- [Authentication Service](./AUTH_SERVICE.md)
-- [React Hooks](./HOOKS.md)
-- [Route Guards](./GUARDS.md)
-- [RBAC System](./RBAC.md)
-- [Active Directory](./ACTIVE_DIRECTORY.md)
-- [Troubleshooting](./TROUBLESHOOTING.md)
-- [Security Best Practices](../SECURITY.md)
+### Authentication Module
+- [Authentication Module](./README.md) - Main authentication documentation
+- [Auth Overview](./OVERVIEW.md) - Architecture and pattern design
+- [Auth Service](./AUTH_SERVICE.md) - Service methods used in patterns
+- [Auth Provider](./AUTH_PROVIDER.md) - Provider configuration
+- [Auth Hooks](./HOOKS.md) - Hooks used in patterns
+- [Route Guards](./GUARDS.md) - Guards demonstrated in patterns
+- [RBAC System](./RBAC.md) - RBAC patterns and examples
+- [Active Directory](./ACTIVE_DIRECTORY.md) - AD integration patterns
+- [Troubleshooting](./TROUBLESHOOTING.md) - Pattern-specific issues
+
+### Implementation Guides
+- [Security Best Practices](../SECURITY.md) - Secure implementation patterns
+- [State Management](../state/README.md) - State patterns with auth
+- [API Module](../api/README.md) - API integration patterns
+- [Configuration](../config/README.md) - Configuration patterns

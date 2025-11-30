@@ -686,10 +686,22 @@ describe('ConfigRegistry', () => {
 });
 ```
 
-## See Also
+## Related Documentation
 
+### Configuration System
 - [README.md](./README.md) - Configuration overview
 - [ENV.md](./ENV.md) - Environment configuration
 - [DYNAMIC.md](./DYNAMIC.md) - Dynamic configuration
-- [TYPES.md](./TYPES.md) - TypeScript types
 - [HOOKS.md](./HOOKS.md) - Configuration hooks
+- [PROVIDERS.md](./PROVIDERS.md) - Configuration providers
+- [TYPES.md](./TYPES.md) - TypeScript types
+
+### State Management
+- [State Stores](../state/STORES.md) - Store registry patterns
+- [State System](../state/README.md) - State management architecture
+- [State Types](../state/TYPES.md) - State type definitions
+
+### Auth & API
+- [Auth System](../auth/README.md) - Auth configuration registry
+- [API Client](../api/README.md) - API registry patterns
+- [API Types](../api/TYPES.md) - API configuration types

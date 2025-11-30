@@ -570,11 +570,24 @@ import { queryClient } from '@/lib/queries';
 
 ## Related Documentation
 
+### Core Guides
 - [Documentation Index](./INDEX.md) - Main documentation hub
 - [Getting Started Guide](./GETTING_STARTED.md) - Complete setup guide
 - [Architecture Overview](./ARCHITECTURE.md) - System architecture
 - [Configuration Guide](./CONFIGURATION.md) - Application configuration
 - [Environment Setup](./ENVIRONMENT.md) - Environment variables
+
+### Module Documentation
+- [API Module](./api/README.md) - Migrating API calls
+- [Auth Module](./auth/README.md) - Migrating authentication
+- [State Module](./state/README.md) - Migrating state management
+- [Routing Module](./routing/README.md) - Migrating routing
+- [UI Module](./ui/README.md) - Migrating UI components
+- [Config Module](./config/README.md) - Migrating configuration
+- [Security Module](./security/README.md) - Migrating security
+- [Performance Module](./performance/README.md) - Performance migration
+- [Theme Module](./theme/README.md) - Migrating theming
+- [Hooks Module](./hooks/README.md) - Migrating custom hooks
 
 ### Getting Help
 

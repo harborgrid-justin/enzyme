@@ -1207,6 +1207,35 @@ User Action     Client Cache     API Server     WebSocket
 | Presence | cache | channel | - | Collaboration |
 | Invalidation | invalidateQueries | events | - | Cache consistency |
 
+## Related Documentation
+
+### Integration Guides
+- [README.md](./README.md) - Integration overview
+- [PERFORMANCE_MONITORING_HYDRATION.md](./PERFORMANCE_MONITORING_HYDRATION.md) - Performance patterns
+- [ROUTING_STATE_GUARDS.md](./ROUTING_STATE_GUARDS.md) - Routing with state
+
+### API & Data
+- [API Client](../api/README.md) - API client overview
+- [API Hooks](../api/HOOKS.md) - Data fetching hooks
+- [API Advanced](../api/ADVANCED.md) - Advanced patterns
+- [API Types](../api/TYPES.md) - Type definitions
+
+### State Management
+- [State System](../state/README.md) - State management overview
+- [State Stores](../state/STORES.md) - Store patterns
+- [State Sync](../state/SYNC.md) - Multi-tab synchronization
+- [State Hooks](../state/HOOKS.md) - State hooks
+
+### Configuration
+- [Config System](../config/README.md) - Configuration management
+- [Config Dynamic](../config/DYNAMIC.md) - Dynamic configuration
+- [Config Hooks](../config/HOOKS.md) - Configuration hooks
+
+### Performance & Monitoring
+- [Performance](../performance/README.md) - Performance optimization
+- [Monitoring System](../monitoring/README.md) - Error monitoring
+- [Hydration](../hydration/README.md) - Progressive hydration
+
 ---
 
 *Last updated: 2024 | Harbor React Framework v2.0*

@@ -908,6 +908,18 @@ Image Loading:
 
 ## Related Documentation
 
-- [Predictive Prefetching](./PREFETCHING.md)
-- [Bundle Optimization](./README.md#bundle-optimization)
-- [Performance Configuration](./CONFIG.md)
+### Performance System
+- [README.md](./README.md) - Performance overview
+- [PREFETCHING.md](./PREFETCHING.md) - Predictive prefetching
+- [CONFIG.md](./CONFIG.md) - Performance configuration
+- [BUDGETS.md](./BUDGETS.md) - Performance budgets
+- [MONITORING.md](./MONITORING.md) - Performance monitoring
+
+### Hydration & Routing
+- [Hydration System](../hydration/README.md) - Progressive hydration
+- [Hydration Strategies](../hydration/STRATEGIES.md) - Lazy hydration patterns
+- [Routing](../routing/README.md) - Route-based lazy loading
+
+### Integration
+- [Performance Integration](../integration/PERFORMANCE_MONITORING_HYDRATION.md) - Complete integration
+- [Monitoring System](../monitoring/README.md) - Load monitoring

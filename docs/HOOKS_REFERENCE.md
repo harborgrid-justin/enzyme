@@ -725,10 +725,23 @@ function useProductDetails(productId: string) {
 
 ## Related Documentation
 
-- [State Management](./STATE.md)
-- [API Documentation](./API.md)
-- [Performance Guide](./PERFORMANCE.md)
-- [Components Reference](./COMPONENTS_REFERENCE.md)
+### Hooks Documentation
+- **[Hooks Overview](./hooks/README.md)** - Complete hooks module guide
+- **[Hooks Quick Reference](./hooks/QUICK_REFERENCE.md)** - Quick API lookup
+- **[Migration Checklist](./hooks/MIGRATION_CHECKLIST.md)** - Migration guide
+
+### Module Documentation
+- **[API Module](./api/README.md)** - API client and request hooks
+- **[API Hooks](./api/HOOKS.md)** - Detailed API hooks documentation
+- **[Queries Module](./queries/README.md)** - React Query integration
+- **[State Management](./state/README.md)** - Global state hooks
+- **[Performance](./performance/README.md)** - Performance monitoring hooks
+- **[Realtime](./realtime/README.md)** - WebSocket and SSE hooks
+- **[Shared Utilities](./shared/README.md)** - Shared hook utilities
+
+### Reference
+- **[Documentation Index](./INDEX.md)** - All documentation resources
+- **[Architecture Guide](./ARCHITECTURE.md)** - System architecture
 
 ---
 

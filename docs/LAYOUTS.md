@@ -783,10 +783,27 @@ function ContextAwareModal({ children }) {
 
 ## Related Documentation
 
-- [Architecture Overview](./ARCHITECTURE.md)
-- [Performance Guide](./PERFORMANCE.md)
-- [Design System](./DESIGN_SYSTEM.md)
-- [Components Reference](./COMPONENTS_REFERENCE.md)
+### Core Documentation
+- [Architecture Overview](./ARCHITECTURE.md) - System architecture
+- [Advanced Layouts](./layouts/README.md) - Container queries and responsive patterns
+- [Components Reference](./COMPONENTS_REFERENCE.md) - Component APIs
+
+### UI & Components
+- [UI Components](./ui/README.md) - UI component library
+- [Layout Components](./ui/LAYOUT_COMPONENTS.md) - Layout component details
+- [Design System](./DESIGN_SYSTEM.md) - Design tokens and layout patterns
+
+### UX & Performance
+- [Loading States](./ux/LOADING_STATES.md) - Loading patterns with layout reservation
+- [Skeleton Factory](./ux/SKELETON_FACTORY.md) - CLS-preventing skeletons
+- [Performance Guide](./PERFORMANCE.md) - CLS prevention and optimization
+
+### Theme & Styling
+- [Theme System](./theme/README.md) - Theme-aware layouts
+- [Design Tokens](./theme/DESIGN_TOKENS.md) - Spacing and layout tokens
+
+### Integration
+- [UI + Theme + Hooks Integration](./integration/UI_THEME_HOOKS_ACCESSIBILITY.md) - Layout integration patterns
 
 ---
 

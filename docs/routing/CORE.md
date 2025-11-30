@@ -714,6 +714,21 @@ function sortRoutes(routes: Route[]) {
 
 ## Related Documentation
 
-- [Type Definitions](./TYPES.md)
-- [Route Guards](./GUARDS.md)
-- [Route Discovery](./DISCOVERY.md)
+### Routing System
+- [README.md](./README.md) - Routing overview
+- [TYPES.md](./TYPES.md) - Type definitions
+- [GUARDS.md](./GUARDS.md) - Route guards
+- [LOADERS.md](./LOADERS.md) - Data loaders
+- [NAVIGATION.md](./NAVIGATION.md) - Navigation utilities
+- [DISCOVERY.md](./DISCOVERY.md) - Route discovery
+- [ADVANCED.md](./ADVANCED.md) - Advanced patterns
+
+### Authentication & State
+- [Auth Guards](../auth/GUARDS.md) - Authentication route guards
+- [Auth System](../auth/README.md) - Auth integration
+- [State System](../state/README.md) - State management with routing
+- [State Stores](../state/STORES.md) - Route-based state
+
+### Integration
+- [Routing Integration](../integration/ROUTING_STATE_GUARDS.md) - Routing, state, and guards
+- [API Integration](../api/README.md) - API with routing

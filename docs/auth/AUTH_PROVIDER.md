@@ -542,9 +542,20 @@ customRender(<MyComponent />, {
    </AuthProvider>
    ```
 
-## See Also
+## Related Documentation
 
-- [HOOKS.md](./HOOKS.md) - Authentication hooks
-- [AUTH_SERVICE.md](./AUTH_SERVICE.md) - Core auth service
-- [GUARDS.md](./GUARDS.md) - Route guards
-- [TYPES.md](./TYPES.md) - Type definitions
+### Authentication Module
+- [Authentication Module](./README.md) - Main authentication documentation
+- [Auth Overview](./OVERVIEW.md) - Architecture and features
+- [Auth Service](./AUTH_SERVICE.md) - Core authentication service API
+- [Auth Hooks](./HOOKS.md) - React hooks (useAuth, useAuthState, etc.)
+- [Route Guards](./GUARDS.md) - Component-based route protection
+- [RBAC System](./RBAC.md) - Role-Based Access Control
+- [Common Patterns](./PATTERNS.md) - Implementation examples
+- [Troubleshooting](./TROUBLESHOOTING.md) - Common issues
+
+### Security & Integration
+- [Security Module](../security/README.md) - Security infrastructure
+- [Secure Storage](../security/SECURE_STORAGE.md) - Encrypted token storage
+- [State Management](../state/README.md) - Auth state management
+- [API Module](../api/README.md) - API client integration

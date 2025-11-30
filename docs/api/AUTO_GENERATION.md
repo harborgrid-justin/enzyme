@@ -727,9 +727,22 @@ Use fine-grained permissions for better access control.
 
 Add JSDoc comments to handlers for better OpenAPI documentation.
 
-## See Also
+## Related Documentation
 
-- [API Client](./API_CLIENT.md) - Core HTTP client
-- [Hooks](./HOOKS.md) - React hooks for API requests
-- [Advanced Features](./ADVANCED.md) - Gateway, orchestration, metrics
-- [RBAC Integration](./ADVANCED.md#rbac-integration) - Access control
+### API Documentation
+- **[API Module Overview](./README.md)** - Complete API module guide
+- **[API Client](./API_CLIENT.md)** - HTTP client configuration
+- **[Hooks](./HOOKS.md)** - React hooks for data fetching
+- **[Types](./TYPES.md)** - TypeScript type reference
+- **[Advanced Features](./ADVANCED.md)** - Gateway, orchestration, metrics
+
+### Integration Guides
+- **[Configuration](../config/README.md)** - Configuration options
+- **[State Management](../state/README.md)** - Global state integration
+
+### Security
+- **[Security Module](../security/README.md)** - RBAC and access control
+- **[Advanced Features - RBAC](./ADVANCED.md#rbac-integration)** - Role-based access control
+
+### Reference
+- **[OpenAPI Specification](https://swagger.io/specification/)** - API documentation standard

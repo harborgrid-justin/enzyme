@@ -1068,6 +1068,37 @@ export const DASHBOARD_METRICS = {
 | Hydration | hydration | SSR | Performance, UI |
 | UI | ui | Components | Theme, A11y |
 
+## Related Documentation
+
+### Integration Guides
+- [README.md](./README.md) - Integration overview
+- [AUTH_SECURITY_STATE.md](./AUTH_SECURITY_STATE.md) - Auth, security, and state
+- [PERFORMANCE_MONITORING_HYDRATION.md](./PERFORMANCE_MONITORING_HYDRATION.md) - Performance and monitoring
+
+### Feature Flags
+- [Flags System](../flags/README.md) - Feature flags overview
+- [Flag Hooks](../flags/HOOKS.md) - Feature flag hooks
+- [Flag Components](../flags/COMPONENTS.md) - Flag components
+- [A/B Testing](../flags/AB_TESTING.md) - A/B testing patterns
+- [Flag Provider](../flags/PROVIDER.md) - Provider setup
+- [Flag Integration](../flags/INTEGRATION.md) - Integration patterns
+
+### Monitoring & Errors
+- [Monitoring System](../monitoring/README.md) - Error and performance monitoring
+- [Error Boundaries](../monitoring/ERROR_BOUNDARIES.md) - Error boundary implementation
+- [Monitoring Types](../monitoring/TYPES.md) - Type definitions
+
+### State & Config
+- [State System](../state/README.md) - State management
+- [State Stores](../state/STORES.md) - Store patterns
+- [Config System](../config/README.md) - Configuration
+- [Config Dynamic](../config/DYNAMIC.md) - Dynamic configuration
+
+### Performance & Hydration
+- [Performance](../performance/README.md) - Performance optimization
+- [Hydration System](../hydration/README.md) - Progressive hydration
+- [API Client](../api/README.md) - API integration
+
 ---
 
 *Last updated: 2024 | Harbor React Framework v2.0*

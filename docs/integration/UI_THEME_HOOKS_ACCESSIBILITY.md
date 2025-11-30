@@ -1251,6 +1251,32 @@ export function withAccessibility<P extends object>(
 }
 ```
 
+## Related Documentation
+
+### Integration Guides
+- [README.md](./README.md) - Integration overview
+- [FEATURE_FLAGS_ERROR_BOUNDARIES_FULLSTACK.md](./FEATURE_FLAGS_ERROR_BOUNDARIES_FULLSTACK.md) - Feature flags with UI
+- [PERFORMANCE_MONITORING_HYDRATION.md](./PERFORMANCE_MONITORING_HYDRATION.md) - UI performance
+
+### React Hooks
+- [Hooks Guide](../hooks/README.md) - General React hooks
+- [State Hooks](../state/HOOKS.md) - State management hooks
+- [Config Hooks](../config/HOOKS.md) - Configuration hooks
+- [API Hooks](../api/HOOKS.md) - Data fetching hooks
+- [Flag Hooks](../flags/HOOKS.md) - Feature flag hooks
+
+### State & Config
+- [State System](../state/README.md) - State management
+- [State Slices](../state/SLICES.md) - UI and settings slices
+- [Config System](../config/README.md) - Configuration management
+- [Config Providers](../config/PROVIDERS.md) - Provider patterns
+
+### Performance & Monitoring
+- [Performance](../performance/README.md) - UI performance optimization
+- [Render Tracking](../performance/RENDER_TRACKING.md) - Component tracking
+- [Monitoring](../monitoring/README.md) - Error monitoring
+- [Hydration](../hydration/README.md) - Progressive hydration
+
 ---
 
 *Last updated: 2024 | Harbor React Framework v2.0*

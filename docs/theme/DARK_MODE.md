@@ -810,10 +810,33 @@ if (!supportsSystemTheme) {
 
 ## See Also
 
-- [Theme Provider](/home/user/enzyme/docs/theme/PROVIDER.md) - Theme provider setup
-- [Design Tokens](/home/user/enzyme/docs/theme/DESIGN_TOKENS.md) - Design token reference
-- [Type Definitions](/home/user/enzyme/docs/theme/TYPES.md) - TypeScript types
-- [UI Components](/home/user/enzyme/docs/ui/README.md) - Theme-aware components
+- [Theme Provider](./PROVIDER.md) - Theme provider setup
+- [Design Tokens](./DESIGN_TOKENS.md) - Design token reference
+- [Type Definitions](./TYPES.md) - TypeScript types
+- [UI Components](../ui/README.md) - Theme-aware components
+
+---
+
+## Related Documentation
+
+### Theme System
+- [Theme System Overview](./README.md) - Complete theme system guide
+- [Theme Provider](./PROVIDER.md) - Theme provider configuration
+- [Design Tokens](./DESIGN_TOKENS.md) - Color palettes and tokens
+- [Type Definitions](./TYPES.md) - Theme mode types
+
+### UI & Components
+- [UI Components](../ui/README.md) - Dark mode-aware components
+- [Design System](../DESIGN_SYSTEM.md) - Dark mode design patterns
+- [Components Reference](../COMPONENTS_REFERENCE.md) - Component dark mode styling
+
+### Accessibility
+- [Accessibility](../ux/ACCESSIBILITY.md) - Dark mode contrast compliance
+- [WCAG Contrast](../ux/ACCESSIBILITY.md#color-contrast) - Contrast ratio testing
+
+### Implementation
+- [Feature Flags](../flags/README.md) - Dark mode feature flag
+- [Getting Started](../GETTING_STARTED.md) - Initial dark mode setup
 
 ---
 

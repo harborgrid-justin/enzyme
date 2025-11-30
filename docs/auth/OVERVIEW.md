@@ -302,6 +302,33 @@ function AdminPage() {
 - **[Troubleshooting](./TROUBLESHOOTING.md)** - Common issues and solutions
 - **[Security](../SECURITY.md)** - Security best practices
 
+## Related Documentation
+
+### Authentication Module
+- [Authentication Module](./README.md) - Main authentication documentation
+- [Auth Provider](./AUTH_PROVIDER.md) - AuthProvider component and configuration
+- [Auth Service](./AUTH_SERVICE.md) - Core authentication service API
+- [Auth Hooks](./HOOKS.md) - React hooks for authentication
+- [Route Guards](./GUARDS.md) - Component-based route protection
+- [RBAC System](./RBAC.md) - Role-Based Access Control
+- [Common Patterns](./PATTERNS.md) - Real-world implementation examples
+- [Type Definitions](./TYPES.md) - TypeScript types and interfaces
+- [Active Directory](./ACTIVE_DIRECTORY.md) - AD/Azure AD integration
+- [Troubleshooting](./TROUBLESHOOTING.md) - Common issues and solutions
+
+### Security
+- [Security Module](../security/README.md) - Comprehensive security infrastructure
+- [Security Best Practices](../SECURITY.md) - Application security guidelines
+- [CSRF Protection](../security/CSRF.md) - Cross-site request forgery prevention
+- [Secure Storage](../security/SECURE_STORAGE.md) - Encrypted token storage
+
+### Integration
+- [Auth-Security-State Integration](../integration/AUTH_SECURITY_STATE.md) - Integrated system usage
+- [API Module](../api/README.md) - API client with authentication
+- [State Management](../state/README.md) - Auth state management
+- [Routing](../routing/README.md) - Protected routes and navigation
+- [Configuration](../config/README.md) - Authentication configuration
+
 ## Version Information
 
 **Current Version:** 3.0.0

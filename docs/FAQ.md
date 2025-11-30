@@ -538,10 +538,23 @@ See: [Streaming Guide](./STREAMING.md) | [Hydration Guide](./HYDRATION.md)
 
 ## See Also
 
+### Core Resources
 - [Troubleshooting Guide](./TROUBLESHOOTING.md) - Common issues and solutions
 - [Documentation Index](./INDEX.md) - All documentation
 - [Quick Start](./QUICKSTART.md) - Get started quickly
 - [Examples](../src/lib/docs/examples/) - Code examples
+
+### Module Documentation
+- [API Module](./api/README.md) - API questions answered
+- [Auth Module](./auth/README.md) - Authentication FAQ
+- [State Module](./state/README.md) - State management FAQ
+- [Routing Module](./routing/README.md) - Routing FAQ
+- [UI Module](./ui/README.md) - UI component FAQ
+- [Config Module](./config/README.md) - Configuration FAQ
+- [Security Module](./security/README.md) - Security FAQ
+- [Performance Module](./performance/README.md) - Performance FAQ
+- [Theme Module](./theme/README.md) - Theming FAQ
+- [Hooks Module](./hooks/README.md) - Hooks FAQ
 
 ---
 

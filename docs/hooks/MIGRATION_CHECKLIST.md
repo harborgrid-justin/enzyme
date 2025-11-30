@@ -298,10 +298,18 @@ Migration is complete when:
 - [ ] Code review approved
 - [ ] Documentation updated
 
-## Support
+## Related Documentation
 
-Questions? See:
-- [Hooks README](/home/user/enzyme/docs/hooks/README.md)
-- [Quick Reference](/home/user/enzyme/docs/hooks/QUICK_REFERENCE.md)
-- [Documentation Index](/home/user/enzyme/docs/INDEX.md) - All documentation resources
-- [Library Overview](/home/user/enzyme/src/lib/README.md) - Library overview
+### Hooks Documentation
+- **[Hooks Overview](./README.md)** - Complete hooks module guide
+- **[Quick Reference](./QUICK_REFERENCE.md)** - Quick API lookup for all hooks
+- **[Hooks Reference](../HOOKS_REFERENCE.md)** - Complete hooks API reference
+
+### Migration Resources
+- **[State Management](../state/README.md)** - State hooks migration
+- **[API Module](../api/README.md)** - API hooks migration
+- **[Performance](../performance/README.md)** - Performance hooks migration
+
+### Reference
+- **[Documentation Index](../INDEX.md)** - All documentation resources
+- **[Library Overview](../../src/lib/README.md)** - Library overview and setup

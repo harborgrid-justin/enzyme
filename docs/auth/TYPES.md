@@ -987,9 +987,20 @@ const adConfig: ADConfig = {
 };
 ```
 
-## See Also
+## Related Documentation
 
-- [README.md](./README.md) - Auth module overview
-- [AUTH_SERVICE.md](./AUTH_SERVICE.md) - Auth service
-- [RBAC.md](./RBAC.md) - RBAC system
-- [ACTIVE_DIRECTORY.md](./ACTIVE_DIRECTORY.md) - AD integration
+### Authentication Module
+- [Authentication Module](./README.md) - Main authentication documentation
+- [Auth Overview](./OVERVIEW.md) - Type usage in architecture
+- [Auth Service](./AUTH_SERVICE.md) - Service method signatures
+- [Auth Provider](./AUTH_PROVIDER.md) - Provider prop types
+- [Auth Hooks](./HOOKS.md) - Hook return types
+- [Route Guards](./GUARDS.md) - Guard component prop types
+- [RBAC System](./RBAC.md) - RBAC type definitions
+- [Active Directory](./ACTIVE_DIRECTORY.md) - AD-specific types
+- [Common Patterns](./PATTERNS.md) - Type usage examples
+
+### Related Type Systems
+- [Security Module](../security/README.md) - Security-related types
+- [API Module](../api/README.md) - API types and auth integration
+- [State Management](../state/README.md) - State type definitions

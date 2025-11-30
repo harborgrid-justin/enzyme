@@ -680,13 +680,24 @@ The secure storage system uses:
 3. **Browser DevTools**: Data visible in memory during use
 4. **XSS Vulnerabilities**: Compromised page can access decrypted data
 
-## See Also
+## Related Documentation
 
-- [CSRF Protection](./CSRF.md) - Cross-site request forgery protection
-- [XSS Prevention](./XSS.md) - Cross-site scripting protection
-- [Security Overview](./README.md) - Security module overview
-- [Auth Module](../auth/README.md) - Authentication with secure storage
-- [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API)
+### Security Module
+- [Security Overview](./README.md) - Complete security infrastructure
+- [XSS Prevention](./XSS.md) - Protect encrypted data from XSS
+- [CSRF Protection](./CSRF.md) - Protect storage operations
+- [CSP Management](./CSP.md) - Content Security Policy
+
+### Authentication & Token Storage
+- [Authentication Module](../auth/README.md) - Authentication with secure token storage
+- [Auth Service](../auth/AUTH_SERVICE.md) - Token management and encryption
+- [Security Best Practices](../SECURITY.md) - Secure storage guidelines
+- [Configuration](../config/README.md) - Storage configuration
+
+### External Resources
+- [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API) - Browser encryption APIs
+- [OWASP Cryptographic Storage](https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html) - Best practices
+- [MDN SubtleCrypto](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto) - Encryption interface
 
 ---
 

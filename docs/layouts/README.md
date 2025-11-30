@@ -604,14 +604,27 @@ See the [Advanced Features Overview](../advanced/README.md) for complete API doc
 ## Related Documentation
 
 ### Main Documentation
-- [Documentation Index](/home/user/enzyme/docs/INDEX.md) - All documentation resources
-- [Architecture Guide](/home/user/enzyme/docs/ARCHITECTURE.md) - System architecture
-- [Advanced Features](/home/user/enzyme/docs/advanced/README.md) - Advanced feature guides
+- [Documentation Index](../INDEX.md) - All documentation resources
+- [Architecture Guide](../ARCHITECTURE.md) - System architecture
+- [Layouts Overview](../LAYOUTS.md) - Adaptive and context-aware layouts guide
+- [Advanced Features](../advanced/README.md) - Advanced feature guides
 
-### Related Modules
-- [UI Components](/home/user/enzyme/docs/ui/README.md) - UI component library
-- [Hooks](/home/user/enzyme/docs/hooks/README.md) - Layout hooks and utilities
-- [VDOM](/home/user/enzyme/docs/vdom/README.md) - Module system for layouts
+### UI Components
+- [UI Components](../ui/README.md) - UI component library
+- [Layout Components](../ui/LAYOUT_COMPONENTS.md) - Page, Sidebar, TopNav components
+- [Data Components](../ui/DATA_COMPONENTS.md) - Responsive data tables
 
-### Integration Guides
-- [Integration Patterns](/home/user/enzyme/docs/integration/README.md) - How modules work together
+### Theme & Styling
+- [Theme System](../theme/README.md) - Theme-aware responsive design
+- [Design Tokens](../theme/DESIGN_TOKENS.md) - Spacing, breakpoint tokens
+- [Design System](../DESIGN_SYSTEM.md) - Design tokens and layout patterns
+
+### UX & Performance
+- [Loading States](../ux/LOADING_STATES.md) - Layout-aware loading states
+- [Skeleton Factory](../ux/SKELETON_FACTORY.md) - Skeleton layouts
+- [Performance Guide](../performance/README.md) - Layout performance optimization
+
+### Hooks & Integration
+- [Hooks](../hooks/README.md) - Layout hooks and utilities
+- [Integration Patterns](../integration/README.md) - How modules work together
+- [UI + Theme Integration](../integration/UI_THEME_HOOKS_ACCESSIBILITY.md) - Layout integration

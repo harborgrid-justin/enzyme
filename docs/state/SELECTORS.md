@@ -848,6 +848,25 @@ describe('selectUserById', () => {
 ## Related Documentation
 
 ### State Management
+- [README.md](./README.md) - State management overview
+- [CORE.md](./CORE.md) - Store and slice factories
+- [STORES.md](./STORES.md) - Store patterns
+- [SLICES.md](./SLICES.md) - Slice creation
+- [HOOKS.md](./HOOKS.md) - React hooks
+- [SYNC.md](./SYNC.md) - Multi-tab synchronization
+- [TYPES.md](./TYPES.md) - Type definitions
+
+### Data & Queries
+- [API Hooks](../api/HOOKS.md) - API hooks with selectors
+- [Query Patterns](../api/README.md) - Data fetching strategies
+- [React Hooks](../hooks/README.md) - Hook patterns and best practices
+
+### Configuration & Routing
+- [Config Hooks](../config/HOOKS.md) - Configuration value selectors
+- [Config Registry](../config/REGISTRY.md) - Config value access patterns
+- [Routing](../routing/README.md) - Route-based selectors
+
+### State Management
 - [Hooks](./HOOKS.md) - React hooks for state access
 - [Core](./CORE.md) - Selector factory functions
 - [Stores](./STORES.md) - Store architecture

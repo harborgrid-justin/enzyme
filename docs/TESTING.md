@@ -450,9 +450,22 @@ test:
 
 ## Related Documentation
 
+### Core Guides
 - [Architecture](./ARCHITECTURE.md) - System architecture overview
 - [Components Reference](./COMPONENTS_REFERENCE.md) - Component API documentation
 - [Hooks Reference](./HOOKS_REFERENCE.md) - Custom hooks documentation
 - [Deployment Guide](./DEPLOYMENT.md) - Production deployment and CI/CD
 - [Environment Setup](./ENVIRONMENT.md) - Environment configuration
 - [API Documentation](./API.md) - API layer and data fetching
+
+### Module Documentation
+- [API Module](./api/README.md) - Testing API calls
+- [Auth Module](./auth/README.md) - Testing authentication
+- [State Module](./state/README.md) - Testing state management
+- [Routing Module](./routing/README.md) - Testing routing
+- [UI Module](./ui/README.md) - Testing UI components
+- [Config Module](./config/README.md) - Testing configuration
+- [Security Module](./security/README.md) - Testing security
+- [Performance Module](./performance/README.md) - Performance testing
+- [Theme Module](./theme/README.md) - Testing theming
+- [Hooks Module](./hooks/README.md) - Testing custom hooks

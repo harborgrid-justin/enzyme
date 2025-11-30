@@ -951,17 +951,28 @@ const users = useStore(selectActiveUsers);
 ## Related Documentation
 
 ### State Management
-- [Selectors](./SELECTORS.md) - Memoized selector patterns
-- [Slices](./SLICES.md) - Slice structure and actions
-- [Stores](./STORES.md) - Store architecture
-- [Types](./TYPES.md) - TypeScript type definitions
-- [README](./README.md) - State management overview
+- [README.md](./README.md) - State management overview
+- [CORE.md](./CORE.md) - Store and slice factories
+- [STORES.md](./STORES.md) - Store patterns
+- [SLICES.md](./SLICES.md) - Slice creation
+- [SELECTORS.md](./SELECTORS.md) - Selector patterns
+- [SYNC.md](./SYNC.md) - Multi-tab synchronization
+- [TYPES.md](./TYPES.md) - Type definitions
 
-### Performance & Optimization
+### Other Hooks
+- [React Hooks](../hooks/README.md) - General React hooks guide
+- [API Hooks](../api/HOOKS.md) - API data fetching hooks
+- [Config Hooks](../config/HOOKS.md) - Configuration hooks
+- [Feature Flag Hooks](../flags/HOOKS.md) - Feature flag hooks
+
+### Routing & Configuration
+- [Routing Core](../routing/README.md) - Routing with hooks
+- [Route Guards](../routing/GUARDS.md) - Authentication guards with hooks
+- [Config System](../config/README.md) - Configuration integration
+
+### Integration & Performance
+- [Routing State](../integration/ROUTING_STATE_GUARDS.md) - Routing with state management
+- [API Integration](../api/README.md) - API client with state
 - [Performance Guide](../PERFORMANCE.md) - State optimization strategies
 - [Hydration Guide](../HYDRATION.md) - State hydration patterns
-- [Hooks Reference](../HOOKS_REFERENCE.md) - General React hooks documentation
-
-### Best Practices
 - [Architecture](../ARCHITECTURE.md) - System design patterns
-- [Testing Guide](../TESTING.md) - Testing components with state

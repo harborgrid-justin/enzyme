@@ -498,9 +498,20 @@ function LoginComponent() {
 }
 ```
 
-## See Also
+## Related Documentation
 
-- [AUTH_PROVIDER.md](./AUTH_PROVIDER.md) - Auth Provider component
-- [AUTH_SERVICE.md](./AUTH_SERVICE.md) - Core auth service
-- [GUARDS.md](./GUARDS.md) - Route guards
-- [TYPES.md](./TYPES.md) - Type definitions
+### Authentication Module
+- [Authentication Module](./README.md) - Main authentication documentation
+- [Auth Overview](./OVERVIEW.md) - Architecture and features
+- [Auth Provider](./AUTH_PROVIDER.md) - Provider component that powers these hooks
+- [Auth Service](./AUTH_SERVICE.md) - Underlying authentication service
+- [Route Guards](./GUARDS.md) - Component-based route protection
+- [RBAC System](./RBAC.md) - RBAC hooks (useRBAC, usePermissions)
+- [Common Patterns](./PATTERNS.md) - Hook usage patterns
+- [Type Definitions](./TYPES.md) - Hook return types and parameters
+- [Troubleshooting](./TROUBLESHOOTING.md) - Hook-related issues
+
+### Related Hooks
+- [State Management](../state/README.md) - State management hooks
+- [API Module](../api/README.md) - API hooks with authentication
+- [Security Module](../security/README.md) - Security hooks

@@ -783,18 +783,28 @@ function sanitizeForLogging(data: unknown): unknown {
 ### Authentication & Authorization
 - [Authentication Module](./auth/README.md) - Complete authentication system
 - [Auth Overview](./auth/OVERVIEW.md) - Architecture and features
+- [Auth Service](./auth/AUTH_SERVICE.md) - Token management and secure storage
 - [Auth Patterns](./auth/PATTERNS.md) - Implementation examples
 - [RBAC System](./auth/RBAC.md) - Role-based access control
 - [Active Directory](./auth/ACTIVE_DIRECTORY.md) - AD/Azure AD integration
 - [Auth Troubleshooting](./auth/TROUBLESHOOTING.md) - Common issues and solutions
 
+### Security Module
+- [Security Infrastructure](./security/README.md) - XSS, CSRF, CSP, and secure storage
+- [CSRF Protection](./security/CSRF.md) - Cross-site request forgery prevention
+- [XSS Prevention](./security/XSS.md) - Cross-site scripting protection
+- [CSP Management](./security/CSP.md) - Content Security Policy
+- [Secure Storage](./security/SECURE_STORAGE.md) - Encrypted client-side storage
+
+### Integration
+- [Auth-Security-State Integration](./integration/AUTH_SECURITY_STATE.md) - Integrated system usage
+- [API Module](./api/README.md) - API client with security features
+- [Routing Module](./routing/README.md) - Protected routes
+
 ### General Documentation
+- [Getting Started](./GETTING_STARTED.md) - Quick start guide
 - [Architecture Overview](./ARCHITECTURE.md) - System architecture
-- [Configuration Guide](./CONFIGURATION.md) - Application configuration
-- [API Documentation](./API.md) - API layer and data fetching
-- [Testing Guide](./TESTING.md) - Testing strategies
-- [Deployment Guide](./DEPLOYMENT.md) - Production deployment
-- [Environment Setup](./ENVIRONMENT.md) - Environment configuration
+- [Configuration Guide](./config/README.md) - Application configuration
 
 ---
 

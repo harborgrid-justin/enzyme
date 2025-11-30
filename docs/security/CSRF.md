@@ -683,14 +683,23 @@ fetch('/api/action', {
 });
 ```
 
-## See Also
+## Related Documentation
 
+### Security Module
+- [Security Overview](./README.md) - Complete security infrastructure
 - [XSS Prevention](./XSS.md) - Cross-site scripting protection
-- [CSP Management](./CSP.md) - Content Security Policy
-- [Security Overview](./README.md) - Security module overview
-- [Auth Module](../auth/README.md) - Authentication system
-- [API Module](../api/README.md) - API client integration
-- [OWASP CSRF Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html)
+- [CSP Management](./CSP.md) - Content Security Policy with nonces
+- [Secure Storage](./SECURE_STORAGE.md) - Encrypted token storage
+
+### Authentication & API Integration
+- [Authentication Module](../auth/README.md) - Authentication with CSRF protection
+- [Auth Service](../auth/AUTH_SERVICE.md) - Token management and security
+- [API Module](../api/README.md) - API client with automatic CSRF headers
+- [Security Best Practices](../SECURITY.md) - CSRF protection guidelines
+
+### External Resources
+- [OWASP CSRF Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html) - Comprehensive CSRF guide
+- [MDN Same-Origin Policy](https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy)
 
 ---
 

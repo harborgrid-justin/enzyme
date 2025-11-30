@@ -774,11 +774,22 @@ interface FeatureFlagConfig {
 }
 ```
 
-## See Also
+## Related Documentation
 
+### Configuration System
 - [README.md](./README.md) - Configuration overview
 - [REGISTRY.md](./REGISTRY.md) - Configuration registry
 - [DYNAMIC.md](./DYNAMIC.md) - Dynamic configuration
 - [ENV.md](./ENV.md) - Environment configuration
 - [HOOKS.md](./HOOKS.md) - Configuration hooks
 - [PROVIDERS.md](./PROVIDERS.md) - Configuration providers
+
+### Type Systems
+- [State Types](../state/TYPES.md) - State type definitions
+- [API Types](../api/TYPES.md) - API type definitions
+- [Auth Types](../auth/TYPES.md) - Authentication types
+
+### Integration
+- [State System](../state/README.md) - State type integration
+- [API Client](../api/README.md) - API type usage
+- [Auth System](../auth/README.md) - Auth type patterns

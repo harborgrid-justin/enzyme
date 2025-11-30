@@ -655,6 +655,33 @@ function App() {
 }
 ```
 
+## Related Documentation
+
+### Performance System
+- [BUDGETS.md](./BUDGETS.md) - Performance budgets and enforcement
+- [CONFIG.md](./CONFIG.md) - Performance configuration
+- [LAZY_LOADING.md](./LAZY_LOADING.md) - Resource lazy loading
+- [MONITORING.md](./MONITORING.md) - Performance monitoring
+- [OBSERVATORY.md](./OBSERVATORY.md) - Performance dashboard
+- [PREFETCHING.md](./PREFETCHING.md) - Predictive prefetching
+- [RENDER_TRACKING.md](./RENDER_TRACKING.md) - Component render tracking
+- [WEB_VITALS.md](./WEB_VITALS.md) - Core Web Vitals metrics
+
+### Monitoring & Observability
+- [Monitoring System](../monitoring/README.md) - Error and performance monitoring
+- [Error Boundaries](../monitoring/ERROR_BOUNDARIES.md) - Error tracking
+- [Monitoring Types](../monitoring/TYPES.md) - Monitoring type definitions
+
+### Hydration & Rendering
+- [Hydration System](../hydration/README.md) - Progressive hydration
+- [Hydration Strategies](../hydration/STRATEGIES.md) - Hydration patterns
+- [State Hydration](../state/README.md) - State hydration patterns
+
+### Integration
+- [Performance Integration](../integration/PERFORMANCE_MONITORING_HYDRATION.md) - Complete integration guide
+- [Routing](../routing/README.md) - Route-based code splitting
+- [State Management](../state/README.md) - State performance optimization
+
 ## Support
 
 For issues or questions:
