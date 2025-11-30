@@ -12,6 +12,9 @@ const getLibSubdirectories = () => {
       const itemPath = resolve(libPath, item);
       if (!statSync(itemPath).isDirectory()) return false;
       
+      // Exclude types directory as it only contains TypeScript definitions
+      if (item === 'types') return false;
+      
       // Check if index.ts or index.tsx exists
       const indexTs = resolve(itemPath, 'index.ts');
       const indexTsx = resolve(itemPath, 'index.tsx');
