@@ -1,0 +1,131 @@
+---
+title: {{moduleName}}
+category: {{category}}
+type: module
+generated: {{generated}}
+---
+
+# {{moduleName}}
+
+{{#if description}}
+{{description}}
+{{/if}}
+
+## Overview
+
+{{#if functionCount}}
+**Functions**: {{functionCount}}
+{{/if}}
+{{#if interfaceCount}}
+**Interfaces**: {{interfaceCount}}
+{{/if}}
+{{#if componentCount}}
+**Components**: {{componentCount}}
+{{/if}}
+{{#if hookCount}}
+**Hooks**: {{hookCount}}
+{{/if}}
+
+## Installation
+
+```bash
+npm install @missionfabric-js/enzyme
+```
+
+## Usage
+
+```typescript
+import { {{#each exports}}{{this}}{{#unless @last}}, {{/unless}}{{/each}} } from '@missionfabric-js/enzyme/{{modulePath}}';
+```
+
+{{#if functions}}
+## Functions
+
+{{#each functions}}
+### {{name}}
+
+{{#if documentation}}
+{{documentation}}
+{{/if}}
+
+```typescript
+{{#if isAsync}}async {{/if}}function {{name}}({{#each parameters}}{{name}}: {{type}}{{#unless @last}}, {{/unless}}{{/each}}): {{returnType}}
+```
+
+[View full documentation →](./{{slug name}}.md)
+
+{{/each}}
+{{/if}}
+
+{{#if interfaces}}
+## Interfaces
+
+{{#each interfaces}}
+### {{name}}
+
+{{#if documentation}}
+{{documentation}}
+{{/if}}
+
+[View full documentation →](./{{slug name}}.md)
+
+{{/each}}
+{{/if}}
+
+{{#if components}}
+## Components
+
+{{#each components}}
+### {{name}}
+
+{{#if documentation}}
+{{documentation}}
+{{/if}}
+
+[View full documentation →](./{{slug name}}.md)
+
+{{/each}}
+{{/if}}
+
+{{#if hooks}}
+## Hooks
+
+{{#each hooks}}
+### {{name}}
+
+{{#if documentation}}
+{{documentation}}
+{{/if}}
+
+[View full documentation →](./{{slug name}}.md)
+
+{{/each}}
+{{/if}}
+
+{{#if examples}}
+## Examples
+
+{{#each examples}}
+```typescript
+{{this}}
+```
+{{/each}}
+{{/if}}
+
+## Related Modules
+
+{{#if relatedModules}}
+{{#each relatedModules}}
+- [{{name}}](../{{slug name}}/index.md)
+{{/each}}
+{{else}}
+No related modules.
+{{/if}}
+
+---
+
+**Source**: `{{filePath}}`
+
+{{#if version}}
+**Version**: {{version}}
+{{/if}}
