@@ -557,7 +557,7 @@ export * from './types';
 `;
   }
 
-  protected async afterGenerate(result: { files: string[] }): Promise<void> {
+  protected async afterGenerate(result: import('../base').GeneratorResult): Promise<void> {
     await super.afterGenerate(result);
 
     const serviceName = toCamelCase(this.options.name) + 'Service';

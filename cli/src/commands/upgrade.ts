@@ -144,7 +144,7 @@ export async function upgrade(options: UpgradeOptions = {}): Promise<UpgradeResu
         { cwd, stdio: 'inherit' }
       );
       console.log('✓ Package upgraded');
-    } catch (error) {
+    } catch {
       errors.push('Failed to upgrade package');
       return {
         success: false,
@@ -170,7 +170,7 @@ export async function upgrade(options: UpgradeOptions = {}): Promise<UpgradeResu
     try {
       execSync('npm test', { cwd, stdio: 'inherit' });
       console.log('✓ Tests passed');
-    } catch (error) {
+    } catch {
       warnings.push('Tests failed after upgrade. Please review and fix.');
     }
   }
@@ -334,7 +334,7 @@ function getBreakingChanges(fromVersion: string, toVersion: string): string[] {
 /**
  * Update peer dependencies
  */
-async function updatePeerDependencies(cwd: string, targetVersion: string): Promise<void> {
+async function updatePeerDependencies(cwd: string, _targetVersion: string): Promise<void> {
   const packageJsonPath = resolve(cwd, 'package.json');
   const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
 
@@ -368,7 +368,7 @@ async function updatePeerDependencies(cwd: string, targetVersion: string): Promi
         stdio: 'inherit',
       });
       console.log('✓ Peer dependencies updated');
-    } catch (error) {
+    } catch {
       console.warn('⚠️  Failed to update some peer dependencies');
     }
   } else {

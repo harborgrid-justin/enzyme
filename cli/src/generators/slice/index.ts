@@ -440,7 +440,7 @@ export const selectIsPositive = (state: ${typeName}State): boolean => state.coun
     return template;
   }
 
-  protected async afterGenerate(result: { files: string[] }): Promise<void> {
+  protected async afterGenerate(result: import('../base').GeneratorResult): Promise<void> {
     await super.afterGenerate(result);
 
     const sliceName = toCamelCase(this.options.name) + 'Slice';

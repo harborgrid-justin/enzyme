@@ -5,9 +5,8 @@
 
 import { Command } from 'commander';
 import { CommandContext } from '../types/index.js';
-import { writeFile, ensureDir, readFile } from '../utils/fs.js';
+import { writeFile, ensureDir } from '../utils/fs.js';
 import { resolve, join } from 'path';
-import { renderTemplate } from '../utils/template.js';
 
 /**
  * Create docs command

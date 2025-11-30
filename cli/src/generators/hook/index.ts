@@ -5,11 +5,10 @@
 
 import * as path from 'path';
 import { BaseGenerator, type GeneratorOptions, type GeneratedFile } from '../base';
-import type { HookOptions, HookType } from '../types';
+import type { HookOptions } from '../types';
 import {
   resolveHookPath,
   toCamelCase,
-  createBaseContext,
   validateHookName,
 } from '../utils';
 
@@ -605,7 +604,7 @@ describe('${hookName}', () => {
 `;
   }
 
-  protected async afterGenerate(result: { files: string[] }): Promise<void> {
+  protected async afterGenerate(result: import('../base').GeneratorResult): Promise<void> {
     await super.afterGenerate(result);
 
     const hookName = this.options.name.startsWith('use')

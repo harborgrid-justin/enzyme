@@ -4,7 +4,7 @@
 
 import type { TemplateContext } from '../utils';
 
-export function generateViteConfig(context: TemplateContext): string {
+export function generateViteConfig(_context: TemplateContext): string {
   return `import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'path';

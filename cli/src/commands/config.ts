@@ -9,14 +9,12 @@
  * - validate: Validate config file
  */
 
-import { writeFileSync, existsSync, readFileSync } from 'fs';
+import { writeFileSync } from 'fs';
 import { resolve } from 'path';
 import { ConfigManager } from '../config/manager.js';
 import {
   EnzymeConfig,
   DEFAULT_CONFIG,
-  validateConfig,
-  CONFIG_FILE_NAMES,
 } from '../config/schema.js';
 
 export interface ConfigInitOptions {
@@ -64,7 +62,7 @@ export async function configInit(options: ConfigInitOptions = {}): Promise<void>
     );
   }
 
-  let config: Partial<EnzymeConfig> = { ...DEFAULT_CONFIG };
+  const config: Partial<EnzymeConfig> = { ...DEFAULT_CONFIG };
 
   if (interactive) {
     console.log('Creating Enzyme configuration...\n');
@@ -327,48 +325,4 @@ function printConfigTable(config: EnzymeConfig, prefix: string = ''): void {
       console.log(`  ${fullKey.padEnd(40)} ${displayValue}`);
     }
   }
-}
-
-/**
- * Interactive prompt helper
- */
-async function prompt(question: string, defaultValue?: string): Promise<string> {
-  // In production, this would use readline or inquirer
-  // For now, return default value
-  return defaultValue || '';
-}
-
-/**
- * Confirm prompt helper
- */
-async function confirm(question: string, defaultValue: boolean = true): Promise<boolean> {
-  // In production, this would use readline or inquirer
-  // For now, return default value
-  return defaultValue;
-}
-
-/**
- * Select prompt helper
- */
-async function select(
-  question: string,
-  choices: string[],
-  defaultValue?: string
-): Promise<string> {
-  // In production, this would use readline or inquirer
-  // For now, return default value or first choice
-  return defaultValue || choices[0];
-}
-
-/**
- * Multi-select prompt helper
- */
-async function multiSelect(
-  question: string,
-  choices: string[],
-  defaultValues?: string[]
-): Promise<string[]> {
-  // In production, this would use readline or inquirer
-  // For now, return default values or empty array
-  return defaultValues || [];
 }

@@ -15,9 +15,12 @@ export type {
   BuildConfig,
   TestingConfig,
   LintingConfig,
-  EnzymeConfig as ConfigSchemaType,
+  EnzymeConfig,
   PartialEnzymeConfig,
 } from '../config/schema.js';
+
+// Import for local use in this file
+import type { EnzymeConfig } from '../config/schema.js';
 
 /**
  * Global CLI options available to all commands
@@ -59,6 +62,20 @@ export interface Logger {
   success(message: string, ...args: unknown[]): void;
   setLevel(level: LogLevel): void;
   setVerbose(verbose: boolean): void;
+  startSpinner(message: string): void;
+  updateSpinner(message: string): void;
+  succeedSpinner(message?: string): void;
+  failSpinner(message?: string): void;
+  warnSpinner(message?: string): void;
+  infoSpinner(message?: string): void;
+  stopSpinner(): void;
+  newLine(): void;
+  divider(): void;
+  header(message: string): void;
+  table(data: Record<string, string | number>[]): void;
+  list(items: string[], options?: { bullet?: string; indent?: number }): void;
+  json(obj: unknown, pretty?: boolean): void;
+  child(prefix: string): Logger;
 }
 
 /**
@@ -79,6 +96,11 @@ export interface TemplateContext {
 }
 
 /**
+ * Template helper function type
+ */
+export type TemplateHelper = (...args: any[]) => any;
+
+/**
  * Template compilation options
  */
 export interface TemplateOptions {
@@ -87,7 +109,7 @@ export interface TemplateOptions {
   /** Data context for template */
   context: TemplateContext;
   /** Additional Handlebars helpers */
-  helpers?: Record<string, (...args: unknown[]) => unknown>;
+  helpers?: Record<string, TemplateHelper>;
 }
 
 /**
@@ -116,60 +138,6 @@ export interface CommandContext {
   config: EnzymeConfig;
   /** Plugin manager */
   pluginManager: PluginManager;
-}
-
-/**
- * Enzyme CLI configuration
- */
-export interface EnzymeConfig {
-  /** Project name */
-  name?: string;
-  /** Project version */
-  version?: string;
-  /** Component output directory */
-  componentDir?: string;
-  /** Page output directory */
-  pageDir?: string;
-  /** Hook output directory */
-  hookDir?: string;
-  /** Service output directory */
-  serviceDir?: string;
-  /** Test output directory */
-  testDir?: string;
-  /** Default component template */
-  defaultTemplate?: string;
-  /** Enable TypeScript */
-  typescript?: boolean;
-  /** Enable CSS Modules */
-  cssModules?: boolean;
-  /** CSS preprocessor (scss, less, stylus) */
-  cssPreprocessor?: 'scss' | 'less' | 'stylus' | 'none';
-  /** Enable Storybook integration */
-  storybook?: boolean;
-  /** Enable testing library integration */
-  testing?: boolean;
-  /** Testing framework (jest, vitest) */
-  testFramework?: 'jest' | 'vitest';
-  /** Linting configuration */
-  linting?: {
-    enabled: boolean;
-    eslint?: boolean;
-    prettier?: boolean;
-  };
-  /** Git integration */
-  git?: {
-    enabled: boolean;
-    autoCommit?: boolean;
-    commitMessage?: string;
-  };
-  /** Custom plugins */
-  plugins?: string[];
-  /** Template directories */
-  templateDirs?: string[];
-  /** File naming convention */
-  fileNaming?: 'kebab' | 'pascal' | 'camel' | 'snake';
-  /** Import style */
-  importStyle?: 'named' | 'default';
 }
 
 /**
@@ -219,6 +187,10 @@ export interface PluginManager {
     hookName: T,
     ...args: Parameters<NonNullable<PluginHooks[T]>>
   ): Promise<void>;
+  /** Get plugin count */
+  readonly count: number;
+  /** Set command context */
+  setContext(context: CommandContext): void;
 }
 
 /**

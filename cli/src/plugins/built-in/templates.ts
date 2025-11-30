@@ -3,9 +3,13 @@
  * @module plugins/built-in/templates
  */
 
+import { fileURLToPath } from 'url';
+import { dirname, resolve } from 'path';
 import { Plugin, GenerationContext, ValidationResult } from '../../types/index.js';
-import { exists, readFile, findFiles } from '../../utils/fs.js';
-import { resolve, join } from 'path';
+import { exists, findFiles } from '../../utils/fs.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 /**
  * Template registry
@@ -27,7 +31,7 @@ export const templatesPlugin: Plugin = {
       // Load templates from configured directories
       const templateDirs = [
         resolve(__dirname, '../../../templates'), // Built-in templates
-        ...(context.config.templateDirs?.map((dir) => resolve(context.cwd, dir)) || []),
+        ...(context.config.templateDirs?.map((dir: string) => resolve(context.cwd, dir)) || []),
       ];
 
       for (const dir of templateDirs) {

@@ -4,7 +4,7 @@
 
 import type { TemplateContext } from '../utils';
 
-export function generateEslintConfig(context: TemplateContext): string {
+export function generateEslintConfig(_context: TemplateContext): string {
   return `import js from '@eslint/js';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';

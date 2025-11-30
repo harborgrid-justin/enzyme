@@ -5,7 +5,7 @@
 
 import * as fs from 'fs-extra';
 import { glob } from 'glob';
-import { resolve, dirname, join } from 'path';
+import { dirname } from 'path';
 import { FileOperationResult, FileSystemOptions } from '../types/index.js';
 
 /**

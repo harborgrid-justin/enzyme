@@ -11,7 +11,7 @@
 import { resolve, join } from 'path';
 import { existsSync } from 'fs';
 import { mkdir } from 'fs/promises';
-import { renderTemplate, writeFile, copyTemplate } from './utils';
+import { writeFile } from './utils';
 import { generatePackageJson } from './templates/package-json';
 import { generateTsConfig } from './templates/tsconfig';
 import { generateViteConfig } from './templates/vite-config';

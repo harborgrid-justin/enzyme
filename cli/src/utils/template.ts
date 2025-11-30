@@ -4,7 +4,7 @@
  */
 
 import Handlebars from 'handlebars';
-import { TemplateContext, TemplateOptions } from '../types/index.js';
+import { TemplateContext, TemplateOptions, TemplateHelper } from '../types/index.js';
 import { convertNamingConvention } from './path.js';
 
 /**
@@ -160,9 +160,9 @@ export class TemplateEngine {
    * Register multiple helpers
    * @param helpers - Object with helper functions
    */
-  registerHelpers(helpers: Record<string, Handlebars.HelperDelegate>): void {
+  registerHelpers(helpers: Record<string, TemplateHelper>): void {
     Object.entries(helpers).forEach(([name, fn]) => {
-      this.registerHelper(name, fn);
+      this.registerHelper(name, fn as Handlebars.HelperDelegate);
     });
   }
 
@@ -227,7 +227,7 @@ export const templateEngine = new TemplateEngine();
 export function renderTemplate(
   source: string,
   context: TemplateContext,
-  helpers?: Record<string, Handlebars.HelperDelegate>
+  helpers?: Record<string, TemplateHelper>
 ): string {
   return templateEngine.render({ source, context, helpers });
 }
@@ -255,7 +255,7 @@ export function registerHelper(name: string, fn: Handlebars.HelperDelegate): voi
  * Register multiple global helpers
  * @param helpers - Object with helper functions
  */
-export function registerHelpers(helpers: Record<string, Handlebars.HelperDelegate>): void {
+export function registerHelpers(helpers: Record<string, TemplateHelper>): void {
   templateEngine.registerHelpers(helpers);
 }
 

@@ -6,12 +6,10 @@
  */
 
 import { readFileSync, existsSync, writeFileSync } from 'fs';
-import { resolve, dirname } from 'path';
-import { parse as parseYaml } from 'yaml';
+import { resolve } from 'path';
+import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import {
   EnzymeConfig,
-  PartialEnzymeConfig,
-  EnzymeConfigSchema,
   DEFAULT_CONFIG,
   CONFIG_FILE_NAMES,
   ENV_PREFIX,
@@ -69,7 +67,7 @@ export class ConfigManager {
     }
 
     // 3. Configuration file
-    const fileConfig = this.loadFromFile();
+    const fileConfig = await this.loadFromFile();
     if (fileConfig) {
       this.sources.push(fileConfig);
     }
@@ -139,13 +137,13 @@ export class ConfigManager {
   /**
    * Load configuration from file
    */
-  private loadFromFile(): ConfigSource | null {
+  private async loadFromFile(): Promise<ConfigSource | null> {
     for (const fileName of CONFIG_FILE_NAMES) {
       const filePath = resolve(this.cwd, fileName);
 
       if (existsSync(filePath)) {
         try {
-          const config = this.parseConfigFile(filePath);
+          const config = await this.parseConfigFile(filePath);
           return {
             type: 'file',
             path: filePath,
@@ -165,25 +163,27 @@ export class ConfigManager {
   /**
    * Parse configuration file
    */
-  private parseConfigFile(filePath: string): Partial<EnzymeConfig> {
-    const content = readFileSync(filePath, 'utf-8');
+  private async parseConfigFile(filePath: string): Promise<Partial<EnzymeConfig>> {
     const ext = filePath.split('.').pop();
 
     switch (ext) {
-      case 'json':
+      case 'json': {
+        const content = readFileSync(filePath, 'utf-8');
         return JSON.parse(content);
+      }
 
       case 'yaml':
-      case 'yml':
+      case 'yml': {
+        const content = readFileSync(filePath, 'utf-8');
         return parseYaml(content);
+      }
 
       case 'js':
       case 'mjs':
-      case 'cjs':
-        // Dynamic import for JS config files
-        // In production, this would use actual dynamic import
-        // For now, we'll try to parse as JSON
-        return JSON.parse(content);
+      case 'cjs': {
+        const module = await import(filePath);
+        return module.default || module;
+      }
 
       default:
         throw new Error(`Unsupported config file format: ${ext}`);
@@ -308,8 +308,7 @@ export class ConfigManager {
 
       case 'yaml':
       case 'yml':
-        // In production, use yaml.stringify
-        content = JSON.stringify(this.config, null, 2);
+        content = stringifyYaml(this.config);
         break;
 
       default:

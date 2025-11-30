@@ -139,17 +139,17 @@ export function renderTemplate(template: string, context: TemplateContext): stri
   });
 
   // Handle if blocks
-  result = result.replace(/\{\{#if (\w+)\}\}([\s\S]*?)\{\{\/if\}\}/g, (match, condition, content) => {
+  result = result.replace(/\{\{#if (\w+)\}\}([\s\S]*?)\{\{\/if\}\}/g, (_match, condition, content) => {
     return context[condition] ? content : '';
   });
 
   // Handle unless blocks
-  result = result.replace(/\{\{#unless (\w+)\}\}([\s\S]*?)\{\{\/unless\}\}/g, (match, condition, content) => {
+  result = result.replace(/\{\{#unless (\w+)\}\}([\s\S]*?)\{\{\/unless\}\}/g, (_match, condition, content) => {
     return !context[condition] ? content : '';
   });
 
   // Handle each blocks
-  result = result.replace(/\{\{#each (\w+)\}\}([\s\S]*?)\{\{\/each\}\}/g, (match, arrayName, content) => {
+  result = result.replace(/\{\{#each (\w+)\}\}([\s\S]*?)\{\{\/each\}\}/g, (_match, arrayName, content) => {
     const array = context[arrayName];
     if (!Array.isArray(array)) return '';
 

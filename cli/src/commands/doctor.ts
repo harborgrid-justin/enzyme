@@ -65,7 +65,7 @@ export async function doctor(options: DoctorOptions = {}): Promise<DoctorResult>
           check.status = 'pass';
           check.message = `${check.message} (fixed)`;
           console.log(`✓ Fixed: ${check.name}`);
-        } catch (error) {
+        } catch {
           console.error(`✗ Failed to fix: ${check.name}`);
         }
       }
@@ -94,7 +94,7 @@ export async function doctor(options: DoctorOptions = {}): Promise<DoctorResult>
 /**
  * Check environment
  */
-async function checkEnvironment(cwd: string): Promise<HealthCheck[]> {
+async function checkEnvironment(_cwd: string): Promise<HealthCheck[]> {
   const checks: HealthCheck[] = [];
 
   // Check Node.js version
@@ -133,7 +133,7 @@ async function checkEnvironment(cwd: string): Promise<HealthCheck[]> {
         ? 'Update npm: npm install -g npm@latest'
         : undefined,
     });
-  } catch (error) {
+  } catch {
     checks.push({
       name: 'npm version',
       category: 'environment',
@@ -152,7 +152,7 @@ async function checkEnvironment(cwd: string): Promise<HealthCheck[]> {
       status: 'pass',
       message: 'Git is installed ✓',
     });
-  } catch (error) {
+  } catch {
     checks.push({
       name: 'Git',
       category: 'environment',
@@ -259,7 +259,7 @@ async function checkDependencies(cwd: string): Promise<HealthCheck[]> {
   try {
     const circularCheck = await checkCircularDependencies(cwd);
     checks.push(circularCheck);
-  } catch (error) {
+  } catch {
     // Skip if check fails
   }
 
@@ -294,7 +294,7 @@ async function checkConfiguration(cwd: string): Promise<HealthCheck[]> {
         status: 'pass',
         message: 'Configuration is valid ✓',
       });
-    } catch (error) {
+    } catch {
       checks.push({
         name: 'Configuration valid',
         category: 'configuration',
@@ -321,7 +321,7 @@ async function checkConfiguration(cwd: string): Promise<HealthCheck[]> {
         message: hasStrictMode ? 'Strict mode enabled ✓' : 'Strict mode not enabled',
         fix: !hasStrictMode ? 'Enable in tsconfig.json: "strict": true' : undefined,
       });
-    } catch (error) {
+    } catch {
       checks.push({
         name: 'TypeScript configuration',
         category: 'configuration',
@@ -387,7 +387,7 @@ async function checkCodeQuality(cwd: string): Promise<HealthCheck[]> {
         status: 'pass',
         message: 'TypeScript compiles without errors ✓',
       });
-    } catch (error) {
+    } catch {
       checks.push({
         name: 'TypeScript compilation',
         category: 'code',
@@ -433,7 +433,7 @@ async function checkPerformance(cwd: string): Promise<HealthCheck[]> {
 /**
  * Check for circular dependencies
  */
-async function checkCircularDependencies(cwd: string): Promise<HealthCheck> {
+async function checkCircularDependencies(_cwd: string): Promise<HealthCheck> {
   // Simplified check - in production would use madge or similar
   return {
     name: 'Circular dependencies',

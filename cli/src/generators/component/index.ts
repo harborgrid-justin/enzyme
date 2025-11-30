@@ -9,7 +9,6 @@ import type { ComponentOptions } from '../types';
 import {
   resolveComponentPath,
   toPascalCase,
-  createBaseContext,
   validateComponentName,
 } from '../utils';
 
@@ -320,7 +319,7 @@ export function useStyles(): {
 `;
   }
 
-  protected async afterGenerate(result: { files: string[] }): Promise<void> {
+  protected async afterGenerate(result: import('../base').GeneratorResult): Promise<void> {
     await super.afterGenerate(result);
 
     const componentName = toPascalCase(this.options.name);

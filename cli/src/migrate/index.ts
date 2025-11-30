@@ -5,7 +5,7 @@
  * for Enzyme framework upgrades.
  */
 
-import { readFileSync, writeFileSync, existsSync, copyFileSync, readdirSync, statSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, copyFileSync, readdirSync, statSync, mkdirSync } from 'fs';
 import { resolve, join, relative } from 'path';
 import { execSync } from 'child_process';
 
@@ -257,8 +257,6 @@ export class MigrationManager {
    * Copy directory recursively
    */
   private copyDirectory(src: string, dest: string): void {
-    const { mkdirSync } = require('fs');
-
     if (!existsSync(dest)) {
       mkdirSync(dest, { recursive: true });
     }

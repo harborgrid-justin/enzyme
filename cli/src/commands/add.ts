@@ -44,9 +44,30 @@ export interface FeatureFile {
 }
 
 /**
+ * Helper type for feature config updates
+ */
+type FeatureConfigUpdate = {
+  features?: Partial<EnzymeConfig['features']>;
+  metadata?: Record<string, any>;
+};
+
+/**
+ * Feature definition with proper config typing
+ */
+export interface FeatureDefinitionTyped {
+  name: FeatureType;
+  description: string;
+  dependencies: string[];
+  devDependencies?: string[];
+  files: FeatureFile[];
+  configUpdates: FeatureConfigUpdate;
+  postInstall?: (cwd: string) => Promise<void>;
+}
+
+/**
  * Feature definitions
  */
-const FEATURES: Record<FeatureType, FeatureDefinition> = {
+const FEATURES: Record<FeatureType, FeatureDefinitionTyped> = {
   auth: {
     name: 'auth',
     description: 'Authentication and authorization',
@@ -411,7 +432,6 @@ export const flagsConfig: FlagsConfig = {
       },
     ],
     configUpdates: {
-      features: {} as any, // flags is not in features, but we can add to metadata
       metadata: {
         flags: true,
       },
@@ -442,7 +462,13 @@ export async function addFeature(
   const { config } = await manager.load();
 
   // Check if feature is already enabled
-  if (config.features?.[feature]) {
+  if (feature !== 'flags' && config.features?.[feature as keyof typeof config.features]) {
+    console.log(`⚠️  Feature "${feature}" is already enabled`);
+    return;
+  }
+
+  // Special check for flags in metadata
+  if (feature === 'flags' && config.metadata?.flags) {
     console.log(`⚠️  Feature "${feature}" is already enabled`);
     return;
   }
@@ -460,7 +486,7 @@ export async function addFeature(
           cwd,
           stdio: 'inherit',
         });
-      } catch (error) {
+      } catch {
         throw new Error('Failed to install dependencies');
       }
     }
@@ -478,7 +504,7 @@ export async function addFeature(
           cwd,
           stdio: 'inherit',
         });
-      } catch (error) {
+      } catch {
         throw new Error('Failed to install dev dependencies');
       }
     }
@@ -515,7 +541,7 @@ export async function addFeature(
   if (!options.skipConfig) {
     console.log('\nUpdating configuration...');
 
-    manager.update(featureDef.configUpdates);
+    manager.update(featureDef.configUpdates as Partial<EnzymeConfig>);
 
     if (dryRun) {
       console.log('[DRY RUN] Update configuration');
@@ -527,7 +553,7 @@ export async function addFeature(
 
   // 4. Update providers if needed
   if (!dryRun) {
-    await updateProviders(cwd, feature, featureDef);
+    await updateProviders(cwd, feature);
   }
 
   // 5. Run post-install hook
@@ -539,7 +565,7 @@ export async function addFeature(
   console.log(`\n✅ Feature "${feature}" added successfully!`);
 
   // Print next steps
-  printNextSteps(feature, featureDef);
+  printNextSteps(feature);
 }
 
 /**
@@ -547,8 +573,7 @@ export async function addFeature(
  */
 async function updateProviders(
   cwd: string,
-  feature: FeatureType,
-  featureDef: FeatureDefinition
+  feature: FeatureType
 ): Promise<void> {
   const appFilePath = resolve(cwd, 'src/App.tsx');
 
@@ -610,7 +635,7 @@ async function updateProviders(
 /**
  * Print next steps
  */
-function printNextSteps(feature: FeatureType, featureDef: FeatureDefinition): void {
+function printNextSteps(feature: FeatureType): void {
   console.log('\nNext steps:');
 
   switch (feature) {
