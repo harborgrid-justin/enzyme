@@ -60,3 +60,18 @@ export {
   type UseRealtimeStreamOptions,
   type UseRealtimeStreamResult,
 } from './useRealtimeStream';
+
+// Circuit breaker for realtime connections
+export {
+  RealtimeCircuitBreaker,
+  ConnectionTimeoutError,
+  createWebSocketCircuitBreaker,
+  createSSECircuitBreaker,
+  getRealtimeCircuitBreaker,
+  resetAllRealtimeCircuitBreakers,
+  getAllRealtimeCircuitBreakerMetrics,
+  disposeAllRealtimeCircuitBreakers,
+  type RealtimeCircuitBreakerConfig,
+  type RealtimeConnectionState,
+  type RealtimeConnectionMetrics,
+} from './realtime-circuit-breaker';

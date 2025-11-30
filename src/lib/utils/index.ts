@@ -335,3 +335,37 @@ export {
   generateCSPNonce,
   deriveKey,
 } from './crypto-utils';
+
+// Safe operation utilities
+export {
+  // JSON parsing
+  safeJSONParse,
+  parseJSONSafe,
+  parseJSONWithValidation,
+  safeJSONStringify,
+  JSONParseError,
+  // Operation timeouts
+  withOperationTimeout,
+  withTimeoutFallback,
+  withSyncTimeout,
+  OperationTimeoutError,
+  // Storage operations
+  safeLocalStorageGet,
+  safeLocalStorageSet,
+  safeLocalStorageRemove,
+  safeSessionStorageGet,
+  safeSessionStorageSet,
+  // Property access
+  safeGet,
+  // Function execution
+  safeExecute,
+  safeExecuteAsync,
+  // Promise utilities
+  safePromiseAll,
+  safePromiseAllNamed,
+  // Event handler safety
+  createSafeHandler,
+  createSafeReactHandler,
+  // Types
+  type SafeResult,
+} from './safe-operations';

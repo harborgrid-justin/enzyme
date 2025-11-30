@@ -397,6 +397,23 @@ export function cleanupVDOM(): void {
   resetDefaultEventBus();
 }
 
+// =============================================================================
+// Module Circuit Breaker
+// =============================================================================
+export {
+  ModuleCircuitBreaker,
+  ModuleCircuitOpenError,
+  getModuleCircuitBreaker,
+  resetModuleCircuitBreaker,
+  setModuleCircuitBreaker,
+  withModuleCircuitBreaker,
+  withModuleCircuitBreakerFallback,
+  canLoadModules,
+  getModuleCircuitState,
+  type ModuleCircuitBreakerConfig,
+  type ModuleLoadingMetrics as ModuleCircuitBreakerMetrics,
+} from './module-circuit-breaker';
+
 // Re-export helper functions
 import { getDefaultPool } from './vdom-pool';
 import { getDefaultRegistry } from './module-registry';

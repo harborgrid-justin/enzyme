@@ -34,6 +34,8 @@ export {
 export {
   ErrorReporter,
   initErrorReporter,
+  cleanupErrorHandlers,
+  resetErrorReporter,
   setUserContext,
   setErrorContext,
   clearErrorContext,
@@ -127,3 +129,17 @@ export {
   type SessionData,
   type CrashAnalyticsConfig,
 } from './CrashAnalytics';
+
+// =============================================================================
+// PROVIDER ERROR BOUNDARIES
+// =============================================================================
+export {
+  ProviderErrorBoundary,
+  withProviderErrorBoundary,
+  AuthProviderBoundary,
+  ConfigProviderBoundary,
+  RealtimeProviderBoundary,
+  SecurityProviderBoundary,
+  type ProviderErrorBoundaryConfig,
+  type ProviderErrorBoundaryProps,
+} from './ProviderErrorBoundary';
