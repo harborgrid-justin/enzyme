@@ -9,4 +9,7 @@ coverage
 
 # Demo folder for development testing
 demo/node_modules/
-scripts/
+
+# ESLint cache
+.eslintcache
+scripts/.eslintcache
