@@ -2,6 +2,8 @@
 
 Official command-line interface for scaffolding [Enzyme](https://github.com/harborgrid-justin/enzyme) React projects.
 
+> **Note:** This is the standalone CLI tool for Enzyme. For the main Enzyme framework, see [enzyme](https://github.com/harborgrid-justin/enzyme).
+
 ## Installation
 
 ```bash
@@ -429,8 +431,8 @@ To develop the CLI locally:
 
 ```bash
 # Clone repository
-git clone https://github.com/harborgrid-justin/enzyme.git
-cd enzyme/cli
+git clone https://github.com/harborgrid-justin/enzyme-cli.git
+cd enzyme-cli
 
 # Install dependencies
 npm install
@@ -447,14 +449,15 @@ enzyme new test-app
 
 ## Contributing
 
-Contributions are welcome! Please read our [Contributing Guide](../CONTRIBUTING.md) for details.
+Contributions are welcome! Please read our [Contributing Guide](./CONTRIBUTING.md) for details.
 
 ## License
 
-MIT © MissionFabric
+MIT © Defendr Team
 
 ## Links
 
-- [Enzyme Documentation](https://github.com/harborgrid-justin/enzyme)
-- [Report Issues](https://github.com/harborgrid-justin/enzyme/issues)
+- [Enzyme Framework](https://github.com/harborgrid-justin/enzyme)
+- [Enzyme Documentation](https://github.com/harborgrid-justin/enzyme/blob/master/README.md)
+- [Report Issues](https://github.com/harborgrid-justin/enzyme-cli/issues)
 - [NPM Package](https://www.npmjs.com/package/@missionfabric-js/enzyme-cli)

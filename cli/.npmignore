@@ -1,25 +1,16 @@
 # Source files (only include built dist)
 src/
-scripts/
+docs/
 
 # Configuration files
 .eslintrc*
 .prettierrc*
 .eslintcache
 .gitignore
-.husky/
 eslint.config.js
-eslint-plugin-no-barrel-imports.js
-playwright.config.ts
-postcss.config.js
-tailwind.config.ts
 tsconfig*.json
-vite.config.ts
-vitest.config.ts
-vite-plugin-routes.ts
 
 # Development files
-docs/
 *.md
 !README.md
 *.log
@@ -33,9 +24,7 @@ coverage/
 # Test files
 __tests__/
 *.test.ts
-*.test.tsx
 *.spec.ts
-*.spec.tsx
 test/
 tests/
 
@@ -52,16 +41,11 @@ tmp/
 *~
 .DS_Store
 
-# Build artifacts that shouldn't be published
-fast-refresh-report.json
-FAST_REFRESH_*.md
-
 # Lock files (consumers should generate their own)
 package-lock.json
 yarn.lock
 pnpm-lock.yaml
 
-demo/
-scripts/
-test/
-cli/
+# CLI-specific files to exclude
+templates/
+examples/
