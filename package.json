@@ -1,6 +1,6 @@
 {
   "name": "@missionfabric-js/enzyme",
-  "version": "1.0.6",
+  "version": "1.1.0",
   "description": "Enterprise React framework with advanced routing, state management, performance optimizations, and plug-and-play architecture",
   "type": "module",
   "license": "MIT",
