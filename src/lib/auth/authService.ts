@@ -525,10 +525,10 @@ class AuthService {
    */
   private clearTokens(): void {
     const storage = this.getSecureStorage();
-    // Clear from secure storage
-    storage.removeItem(SECURE_TOKEN_KEYS.ACCESS_TOKEN);
-    storage.removeItem(SECURE_TOKEN_KEYS.REFRESH_TOKEN);
-    storage.removeItem(SECURE_TOKEN_KEYS.TOKEN_EXPIRY);
+    // Clear from secure storage (fire and forget with void)
+    void storage.removeItem(SECURE_TOKEN_KEYS.ACCESS_TOKEN);
+    void storage.removeItem(SECURE_TOKEN_KEYS.REFRESH_TOKEN);
+    void storage.removeItem(SECURE_TOKEN_KEYS.TOKEN_EXPIRY);
 
     // Clear in-memory cache
     this.tokenCache = {

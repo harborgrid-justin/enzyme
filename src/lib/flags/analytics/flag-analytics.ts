@@ -246,19 +246,19 @@ export class FlagAnalytics {
     metrics.lastSeen = event.timestamp;
 
     // Update variant counts
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+     
     const currentCount = metrics.variantCounts.get(event.variantId) ?? 0;
     metrics.variantCounts.set(event.variantId, currentCount + 1);
 
     // Track unique users
     if (event.userId != null && event.userId !== '') {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+       
       metrics.uniqueUsers.add(event.userId);
     }
 
     // Track unique sessions
     if (event.sessionId != null && event.sessionId !== '') {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+       
       metrics.uniqueSessions.add(event.sessionId);
     }
 

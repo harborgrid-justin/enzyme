@@ -530,7 +530,7 @@ export class RenderScheduler {
     return new Promise((resolve) => {
       // Use scheduler.yield() if available (Chrome 115+)
       if (hasSchedulerYieldAPI(globalThis)) {
-        const scheduler = (globalThis as typeof globalThis & { scheduler: { yield: () => Promise<void> } }).scheduler;
+        const {scheduler} = (globalThis as typeof globalThis & { scheduler: { yield: () => Promise<void> } });
         void scheduler.yield().then(resolve);
       } else {
         // Fallback to setTimeout

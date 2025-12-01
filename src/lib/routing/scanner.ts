@@ -248,22 +248,22 @@ async function scanDirectory(
       const parsedSegments = parseDirectoryPath(dirRelative, entryName);
       const segments: readonly ParsedRouteSegment[] = parsedSegments;
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+       
       const isLayout = Array.from(segments).some((s) => s.type === 'layout');
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+       
       const lastSegment = Array.from(segments)[segments.length - 1];
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+       
       const isIndex = lastSegment?.type === 'index';
 
       const route: DiscoveredRoute = {
         filePath: entryPath,
         relativePath,
         urlPath: segmentsToUrlPath(parsedSegments),
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+         
         segments,
         isLayout,
         isIndex,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+         
         depth: Array.from(segments).filter((s) => s.type !== 'group').length,
       };
 
@@ -488,22 +488,22 @@ export async function scanRouteFilesParallel(
         const parsedSegments = parseDirectoryPath(dirRelative, entryName);
         const segments: readonly ParsedRouteSegment[] = parsedSegments;
 
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+         
         const isLayout = Array.from(segments).some((s) => s.type === 'layout');
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+         
         const lastSegment = Array.from(segments)[segments.length - 1];
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+         
         const isIndex = lastSegment?.type === 'index';
 
         const route: DiscoveredRoute = {
           filePath: entryPath,
           relativePath,
           urlPath: segmentsToUrlPath(parsedSegments),
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+           
           segments,
           isLayout,
           isIndex,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+           
           depth: Array.from(segments).filter((s) => s.type !== 'group').length,
         };
 
@@ -645,22 +645,22 @@ export function applyIncrementalChanges(
 
         const parsedSegments = parseDirectoryPath(dirRelative, filename);
         const segments: readonly ParsedRouteSegment[] = parsedSegments;
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+         
         const isLayout = Array.from(segments).some((s) => s.type === 'layout');
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+         
         const lastSegment = Array.from(segments)[segments.length - 1];
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+         
         const isIndex = lastSegment?.type === 'index';
 
         const route: DiscoveredRoute = {
           filePath: change.filePath,
           relativePath,
           urlPath: segmentsToUrlPath(parsedSegments),
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+           
           segments,
           isLayout,
           isIndex,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+           
           depth: Array.from(segments).filter((s) => s.type !== 'group').length,
         };
 

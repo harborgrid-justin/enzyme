@@ -4,6 +4,7 @@
  * and defensive coding patterns to prevent blocking and crashes
  */
 
+import type React from 'react';
 import { TimeoutError } from './resilience';
 
 /**

@@ -723,7 +723,7 @@ export class ADTokenHandler {
       // Clear from secure storage if available
       if (this.secureStorage !== undefined && this.secureStorage !== null) {
         try {
-          this.secureStorage.clear();
+          void this.secureStorage.clear();
         } catch (error) {
           this.log('Error clearing secure storage:', error);
         }

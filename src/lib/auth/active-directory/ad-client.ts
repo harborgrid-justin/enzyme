@@ -212,7 +212,7 @@ export class ADClient {
         },
         body: new URLSearchParams({
           grant_type: 'refresh_token',
-          refresh_token: refreshToken as string,
+          refresh_token: refreshToken,
           client_id: this.getClientId(),
           scope: getConfiguredScopes(this.config).join(' '),
         }),

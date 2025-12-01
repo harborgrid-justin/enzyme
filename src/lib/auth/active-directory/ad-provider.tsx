@@ -663,7 +663,7 @@ export function ADProvider({
   }, []);
 
   const forceReauth = useCallback(async () => {
-    logout({ localOnly: true });
+    await logout({ localOnly: true });
     await login({ prompt: 'login', scopes: getDefaultScopes(config) });
   }, [logout, login, config]);
 

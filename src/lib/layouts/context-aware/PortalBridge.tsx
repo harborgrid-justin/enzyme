@@ -336,7 +336,7 @@ export function PortalBridge({
     (isSSR && fallbackToInline);
 
   // Render fallback content inline if portal fails
-  const renderFallbackContent = () => {
+  const renderFallbackContent = async () => {
     if (fallback !== undefined) {
       return fallback;
     }
