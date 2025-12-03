@@ -2,13 +2,16 @@
 
 ## Overview
 
-This document summarizes the barrel export optimization completed in **v4.0.0** of the Harbor React Library. This critical performance fix reduces bundle sizes by **82%** and improves Lighthouse scores by **27 points**.
+This document summarizes the barrel export optimization completed in **v4.0.0** of the Harbor React Library. This
+critical performance fix reduces bundle sizes by **82%** and improves Lighthouse scores by **27 points**.
 
 ---
 
 ## Problem Statement
 
-The main barrel export (`/reuse/templates/react/src/lib/index.ts`) was exporting **1,000+ items** from **25+ submodules** using `export *` statements. This prevented effective tree-shaking and added **500-700KB** to every bundle, regardless of actual usage.
+The main barrel export (`/reuse/templates/react/src/lib/index.ts`) was exporting **1,000+ items** from **25+ submodules
+** using `export *` statements. This prevented effective tree-shaking and added **500-700KB** to every bundle,
+regardless of actual usage.
 
 ### Root Cause
 
@@ -77,22 +80,22 @@ Created comprehensive tooling:
 
 ### Bundle Size Impact
 
-| Scenario | Before | After | Savings |
-|----------|--------|-------|---------|
-| **Minimal Import** | 847 KB | 33 KB | **-96.1%** |
-| **Typical App** | 847 KB | 89 KB | **-89.5%** |
-| **Heavy Usage** | 983 KB | 124 KB | **-87.4%** |
+| Scenario           | Before | After  | Savings    |
+|--------------------|--------|--------|------------|
+| **Minimal Import** | 847 KB | 33 KB  | **-96.1%** |
+| **Typical App**    | 847 KB | 89 KB  | **-89.5%** |
+| **Heavy Usage**    | 983 KB | 124 KB | **-87.4%** |
 
 ### Performance Metrics
 
-| Metric | Before | After | Improvement |
-|--------|--------|-------|-------------|
-| **Parse Time (3G)** | 2.1s | 0.6s | **-71.4%** |
-| **Build Time** | 18.3s | 9.1s | **-50.3%** |
-| **Lighthouse Score** | 67 | 94 | **+27 points** |
-| **LCP** | 3.8s | 1.4s | **-63.2%** |
-| **FID** | 180ms | 45ms | **-75.0%** |
-| **TTI** | 4.2s | 2.1s | **-50.0%** |
+| Metric               | Before | After | Improvement    |
+|----------------------|--------|-------|----------------|
+| **Parse Time (3G)**  | 2.1s   | 0.6s  | **-71.4%**     |
+| **Build Time**       | 18.3s  | 9.1s  | **-50.3%**     |
+| **Lighthouse Score** | 67     | 94    | **+27 points** |
+| **LCP**              | 3.8s   | 1.4s  | **-63.2%**     |
+| **FID**              | 180ms  | 45ms  | **-75.0%**     |
+| **TTI**              | 4.2s   | 2.1s  | **-50.0%**     |
 
 ### Core Web Vitals
 
@@ -107,12 +110,12 @@ Created comprehensive tooling:
 
 ### Developer Experience
 
-| Metric | Before | After | Improvement |
-|--------|--------|-------|-------------|
-| **Hot Reload** | 1,200ms | 340ms | **-71.7%** |
-| **Type Check** | 8.2s | 4.1s | **-50.0%** |
-| **Auto-import** | 850ms | 120ms | **-85.9%** |
-| **IDE Memory** | 1,240 MB | 520 MB | **-58.1%** |
+| Metric          | Before   | After  | Improvement |
+|-----------------|----------|--------|-------------|
+| **Hot Reload**  | 1,200ms  | 340ms  | **-71.7%**  |
+| **Type Check**  | 8.2s     | 4.1s   | **-50.0%**  |
+| **Auto-import** | 850ms    | 120ms  | **-85.9%**  |
+| **IDE Memory**  | 1,240 MB | 520 MB | **-58.1%**  |
 
 ### Cost Savings
 
@@ -141,6 +144,7 @@ Created comprehensive tooling:
 **File**: `/reuse/templates/react/src/lib/BARREL_EXPORT_MIGRATION.md`
 
 **Contents:**
+
 - Why this change matters
 - Performance impact analysis
 - Module-by-module import guide
@@ -156,6 +160,7 @@ Created comprehensive tooling:
 **File**: `/reuse/templates/react/scripts/codemods/migrate-barrel-imports.ts`
 
 **Features:**
+
 - Automatically converts imports
 - Maps 400+ exports to correct submodules
 - Preserves type-only imports
@@ -163,6 +168,7 @@ Created comprehensive tooling:
 - Reports unknown exports
 
 **Usage**:
+
 ```bash
 npm run migrate:barrel-imports          # Apply changes
 npm run migrate:barrel-imports:dry      # Preview changes
@@ -173,6 +179,7 @@ npm run migrate:barrel-imports:dry      # Preview changes
 **File**: `/reuse/templates/react/eslint-plugin-no-barrel-imports.js`
 
 **Features:**
+
 - Warns about main index imports
 - Suggests correct submodule
 - Auto-fix capability
@@ -186,6 +193,7 @@ npm run migrate:barrel-imports:dry      # Preview changes
 **File**: `/reuse/templates/react/src/lib/BUNDLE_SIZE_IMPACT_REPORT.md`
 
 **Contents:**
+
 - Detailed bundle size analysis
 - Build performance metrics
 - Runtime performance data
@@ -203,6 +211,7 @@ npm run migrate:barrel-imports:dry      # Preview changes
 **File**: `/reuse/templates/react/package.json`
 
 Added scripts:
+
 ```json
 {
   "migrate:barrel-imports": "...",
@@ -368,22 +377,26 @@ This prevents auto-imports from suggesting the main index.
 ## Rollout Plan
 
 ### Phase 1: v4.0.0 (Current)
+
 ✅ Main index minimized
 ✅ ESLint warnings enabled
 ✅ Migration tools available
 ✅ Documentation complete
 
 ### Phase 2: v4.1.0 (Q1 2025)
+
 - Improved codemod with better type handling
 - Bundle analyzer integration in CI
 - Performance budgets enforced
 
 ### Phase 3: v5.0.0 (Q2 2025)
+
 - ESLint errors (not warnings)
 - Runtime deprecation warnings in dev
 - Updated documentation everywhere
 
 ### Phase 4: v6.0.0 (Q4 2025)
+
 - Main index removed entirely
 - All imports must use submodules
 - Breaking change with major version bump
@@ -433,17 +446,20 @@ This prevents auto-imports from suggesting the main index.
 ## Credits
 
 **Performance Engineering Team**
+
 - Optimization Strategy
 - Benchmarking & Analysis
 - Migration Tools Development
 - Documentation
 
 **Architecture Team**
+
 - Code Review
 - Standards Compliance
 - Testing Validation
 
 **Developer Experience Team**
+
 - Tooling Integration
 - ESLint Rule Development
 - VSCode Configuration

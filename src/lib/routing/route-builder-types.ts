@@ -9,10 +9,9 @@ import type { RouteParams } from './route-parameter-types';
  * - For routes without params: `() => TPath`
  * - For routes with params: `(params: RouteParams<TPath>, query?: QueryParams) => string`
  */
-export type RouteBuilder<TPath extends string> =
-  keyof RouteParams<TPath> extends never
-    ? (query?: Record<string, string | undefined>) => TPath
-    : (params: RouteParams<TPath>, query?: Record<string, string | undefined>) => string;
+export type RouteBuilder<TPath extends string> = keyof RouteParams<TPath> extends never
+  ? (query?: Record<string, string | undefined>) => TPath
+  : (params: RouteParams<TPath>, query?: Record<string, string | undefined>) => string;
 
 /**
  * Type-safe route registry with builders for all routes

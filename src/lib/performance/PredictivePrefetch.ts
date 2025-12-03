@@ -248,6 +248,166 @@ export class PredictivePrefetchEngine {
   }
 
   /**
+   * Get predicted next routes from current page
+   */
+  getPredictions(currentPath: string): RoutePrediction[] {
+    const normalizedPath = normalizePath(currentPath);
+    const predictions: RoutePrediction[] = [];
+
+    // 1. Markov chain predictions
+    const markovPredictions = this.getMarkovPredictions(normalizedPath);
+    predictions.push(...markovPredictions);
+
+    // 2. Time pattern predictions
+    const timePredictions = this.getTimePatternPredictions();
+    predictions.push(...timePredictions);
+
+    // 3. Session context predictions
+    const sessionPredictions = this.getSessionContextPredictions();
+    predictions.push(...sessionPredictions);
+
+    // 4. Static route priorities
+    const staticPredictions = this.getStaticPredictions(normalizedPath);
+    predictions.push(...staticPredictions);
+
+    // Deduplicate and sort by probability
+    const deduped = this.deduplicatePredictions(predictions);
+
+    // Filter by threshold
+    const filtered = deduped.filter(
+      (p) => p.probability >= this.config.probabilityThreshold
+    );
+
+    this.log(`Predictions for ${normalizedPath}:`, filtered);
+
+    return filtered.slice(0, this.config.maxPrefetchCount);
+  }
+
+  /**
+   * Execute prefetch for predicted routes
+   */
+  async prefetchPredictedRoutes(currentPath: string): Promise<void> {
+    // Check network conditions
+    if (!this.shouldPrefetch()) {
+      this.log('Skipping prefetch due to network conditions');
+      return;
+    }
+
+    const predictions = this.getPredictions(currentPath);
+
+    for (const prediction of predictions) {
+      await this.prefetchRoute(prediction.route);
+    }
+  }
+
+  // ==========================================================================
+  // Prediction
+  // ==========================================================================
+
+  /**
+   * Prefetch a specific route
+   */
+  async prefetchRoute(routePath: string): Promise<void> {
+    const normalizedPath = normalizePath(routePath);
+
+    // Skip if already prefetched
+    if (this.prefetchedRoutes.has(normalizedPath)) {
+      return;
+    }
+
+    const route = this.routeRegistry.get(normalizedPath);
+    if (!route) {
+      this.log(`Route not found in registry: ${normalizedPath}`);
+      return;
+    }
+
+    this.prefetchedRoutes.add(normalizedPath);
+    this.log(`Prefetching route: ${normalizedPath}`);
+
+    // Prefetch module (code splitting)
+    if (route.loader) {
+      try {
+        await route.loader();
+        this.log(`Module prefetched: ${normalizedPath}`);
+      } catch (error) {
+        this.log(`Module prefetch failed: ${normalizedPath}`, error);
+      }
+    }
+
+    // Prefetch data
+    if (route.queries && this.queryClient) {
+      for (const query of route.queries) {
+        try {
+          await this.queryClient.prefetchQuery({
+            queryKey: query.queryKey,
+            queryFn: query.queryFn,
+            staleTime: query.staleTime ?? 5 * 60 * 1000,
+          });
+          this.log(`Data prefetched: ${JSON.stringify(query.queryKey)}`);
+        } catch (error) {
+          this.log(`Data prefetch failed: ${JSON.stringify(query.queryKey)}`, error);
+        }
+      }
+    }
+
+    // Preload static assets
+    if (route.assets) {
+      route.assets.forEach((asset) => {
+        this.preloadAsset(asset);
+      });
+    }
+  }
+
+  /**
+   * Clear all learned patterns
+   */
+  clearPatterns(): void {
+    this.transitionMatrix.clear();
+    this.timePatterns = [];
+    this.sessionHistory = [];
+    this.prefetchedRoutes.clear();
+    localStorage.removeItem(this.config.storageKey);
+    this.log('Cleared all patterns');
+  }
+
+  /**
+   * Get analytics about learned patterns
+   */
+  getAnalytics(): {
+    totalTransitions: number;
+    uniqueRoutes: number;
+    timePatterns: number;
+    topRoutes: Array<{ route: string; visits: number }>;
+  } {
+    const routeVisits = new Map<string, number>();
+
+    this.transitionMatrix.forEach((transitions) => {
+      transitions.forEach((count, route) => {
+        routeVisits.set(route, (routeVisits.get(route) ?? 0) + count);
+      });
+    });
+
+    const topRoutes = Array.from(routeVisits.entries())
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10)
+      .map(([route, visits]) => ({ route, visits: Math.round(visits) }));
+
+    return {
+      totalTransitions: Array.from(this.transitionMatrix.values())
+        .flatMap((t) => Array.from(t.values()))
+        .reduce((a, b) => a + b, 0),
+      uniqueRoutes: new Set([
+        ...this.transitionMatrix.keys(),
+        ...Array.from(this.transitionMatrix.values()).flatMap((t) =>
+          Array.from(t.keys())
+        ),
+      ]).size,
+      timePatterns: this.timePatterns.length,
+      topRoutes,
+    };
+  }
+
+  /**
    * Update transition matrix with new navigation
    */
   private updateTransitionMatrix(from: string, to: string): void {
@@ -308,46 +468,6 @@ export class PredictivePrefetchEngine {
     }
   }
 
-  // ==========================================================================
-  // Prediction
-  // ==========================================================================
-
-  /**
-   * Get predicted next routes from current page
-   */
-  getPredictions(currentPath: string): RoutePrediction[] {
-    const normalizedPath = normalizePath(currentPath);
-    const predictions: RoutePrediction[] = [];
-
-    // 1. Markov chain predictions
-    const markovPredictions = this.getMarkovPredictions(normalizedPath);
-    predictions.push(...markovPredictions);
-
-    // 2. Time pattern predictions
-    const timePredictions = this.getTimePatternPredictions();
-    predictions.push(...timePredictions);
-
-    // 3. Session context predictions
-    const sessionPredictions = this.getSessionContextPredictions();
-    predictions.push(...sessionPredictions);
-
-    // 4. Static route priorities
-    const staticPredictions = this.getStaticPredictions(normalizedPath);
-    predictions.push(...staticPredictions);
-
-    // Deduplicate and sort by probability
-    const deduped = this.deduplicatePredictions(predictions);
-
-    // Filter by threshold
-    const filtered = deduped.filter(
-      (p) => p.probability >= this.config.probabilityThreshold
-    );
-
-    this.log(`Predictions for ${normalizedPath}:`, filtered);
-
-    return filtered.slice(0, this.config.maxPrefetchCount);
-  }
-
   /**
    * Get predictions from transition matrix (Markov chain)
    */
@@ -388,6 +508,10 @@ export class PredictivePrefetchEngine {
       source: 'time-pattern' as const,
     }));
   }
+
+  // ==========================================================================
+  // Prefetching
+  // ==========================================================================
 
   /**
    * Get predictions based on session context
@@ -461,79 +585,8 @@ export class PredictivePrefetchEngine {
   }
 
   // ==========================================================================
-  // Prefetching
+  // Persistence
   // ==========================================================================
-
-  /**
-   * Execute prefetch for predicted routes
-   */
-  async prefetchPredictedRoutes(currentPath: string): Promise<void> {
-    // Check network conditions
-    if (!this.shouldPrefetch()) {
-      this.log('Skipping prefetch due to network conditions');
-      return;
-    }
-
-    const predictions = this.getPredictions(currentPath);
-
-    for (const prediction of predictions) {
-      await this.prefetchRoute(prediction.route);
-    }
-  }
-
-  /**
-   * Prefetch a specific route
-   */
-  async prefetchRoute(routePath: string): Promise<void> {
-    const normalizedPath = normalizePath(routePath);
-
-    // Skip if already prefetched
-    if (this.prefetchedRoutes.has(normalizedPath)) {
-      return;
-    }
-
-    const route = this.routeRegistry.get(normalizedPath);
-    if (!route) {
-      this.log(`Route not found in registry: ${normalizedPath}`);
-      return;
-    }
-
-    this.prefetchedRoutes.add(normalizedPath);
-    this.log(`Prefetching route: ${normalizedPath}`);
-
-    // Prefetch module (code splitting)
-    if (route.loader) {
-      try {
-        await route.loader();
-        this.log(`Module prefetched: ${normalizedPath}`);
-      } catch (error) {
-        this.log(`Module prefetch failed: ${normalizedPath}`, error);
-      }
-    }
-
-    // Prefetch data
-    if (route.queries && this.queryClient) {
-      for (const query of route.queries) {
-        try {
-          await this.queryClient.prefetchQuery({
-            queryKey: query.queryKey,
-            queryFn: query.queryFn,
-            staleTime: query.staleTime ?? 5 * 60 * 1000,
-          });
-          this.log(`Data prefetched: ${JSON.stringify(query.queryKey)}`);
-        } catch (error) {
-          this.log(`Data prefetch failed: ${JSON.stringify(query.queryKey)}`, error);
-        }
-      }
-    }
-
-    // Preload static assets
-    if (route.assets) {
-      route.assets.forEach((asset) => {
-        this.preloadAsset(asset);
-      });
-    }
-  }
 
   /**
    * Preload a static asset
@@ -580,10 +633,6 @@ export class PredictivePrefetchEngine {
     );
   }
 
-  // ==========================================================================
-  // Persistence
-  // ==========================================================================
-
   /**
    * Persist learned patterns to storage
    */
@@ -602,6 +651,10 @@ export class PredictivePrefetchEngine {
       this.log('Failed to persist patterns:', error);
     }
   }
+
+  // ==========================================================================
+  // Analytics
+  // ==========================================================================
 
   /**
    * Load persisted patterns from storage
@@ -635,59 +688,6 @@ export class PredictivePrefetchEngine {
     } catch (error) {
       this.log('Failed to load persisted patterns:', error);
     }
-  }
-
-  /**
-   * Clear all learned patterns
-   */
-  clearPatterns(): void {
-    this.transitionMatrix.clear();
-    this.timePatterns = [];
-    this.sessionHistory = [];
-    this.prefetchedRoutes.clear();
-    localStorage.removeItem(this.config.storageKey);
-    this.log('Cleared all patterns');
-  }
-
-  // ==========================================================================
-  // Analytics
-  // ==========================================================================
-
-  /**
-   * Get analytics about learned patterns
-   */
-  getAnalytics(): {
-    totalTransitions: number;
-    uniqueRoutes: number;
-    timePatterns: number;
-    topRoutes: Array<{ route: string; visits: number }>;
-  } {
-    const routeVisits = new Map<string, number>();
-
-    this.transitionMatrix.forEach((transitions) => {
-      transitions.forEach((count, route) => {
-        routeVisits.set(route, (routeVisits.get(route) ?? 0) + count);
-      });
-    });
-
-    const topRoutes = Array.from(routeVisits.entries())
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 10)
-      .map(([route, visits]) => ({ route, visits: Math.round(visits) }));
-
-    return {
-      totalTransitions: Array.from(this.transitionMatrix.values())
-        .flatMap((t) => Array.from(t.values()))
-        .reduce((a, b) => a + b, 0),
-      uniqueRoutes: new Set([
-        ...this.transitionMatrix.keys(),
-        ...Array.from(this.transitionMatrix.values()).flatMap((t) =>
-          Array.from(t.keys())
-        ),
-      ]).size,
-      timePatterns: this.timePatterns.length,
-      topRoutes,
-    };
   }
 
   // ==========================================================================

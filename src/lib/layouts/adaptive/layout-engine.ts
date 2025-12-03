@@ -155,7 +155,6 @@ function isTextHeavyContent(element: HTMLElement): boolean {
  * ```
  */
 export class LayoutEngine implements LayoutEngineInterface {
-  private _config: LayoutEngineConfig;
   private readonly _resizeObserver: ResizeObserver;
   private readonly _callbacks: Map<HTMLElement, (entry: ResizeObserverEntry) => void>;
   private readonly _elementCache: WeakMap<HTMLElement, ContentAnalysis>;
@@ -176,6 +175,8 @@ export class LayoutEngine implements LayoutEngineInterface {
     // Create shared ResizeObserver with debouncing
     this._resizeObserver = new ResizeObserver(this._handleResize.bind(this));
   }
+
+  private _config: LayoutEngineConfig;
 
   /**
    * Current engine configuration.

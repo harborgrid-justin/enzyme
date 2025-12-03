@@ -17,10 +17,7 @@ import {
   LoadingPriority,
 } from './types';
 import { getDefaultRegistry, type ModuleRegistry } from './module-registry';
-import {
-  DEFAULT_TIMEOUT,
-  DEFAULT_RETRY_BASE_DELAY,
-} from '@/lib/core/config/constants';
+import { DEFAULT_TIMEOUT, DEFAULT_RETRY_BASE_DELAY } from '@/lib/core/config/constants';
 
 // ============================================================================
 // Types
@@ -149,8 +146,7 @@ export class ModuleLoader {
   private readonly prefetchHints: Map<ModuleId, PrefetchHint> = new Map();
 
   /** Intersection observers for visibility-based prefetch */
-  private readonly visibilityObservers: Map<ModuleId, IntersectionObserver> =
-    new Map();
+  private readonly visibilityObservers: Map<ModuleId, IntersectionObserver> = new Map();
 
   /** Loading metrics */
   private metrics: LoadingMetrics = {
@@ -177,7 +173,7 @@ export class ModuleLoader {
 
     // Initialize priority queues
     Object.values(LoadingPriority)
-      .filter((v): v is LoadingPriority => typeof v === 'number')
+      .filter((_v): _v is LoadingPriority => true)
       .forEach((priority) => {
         this.queues.set(priority, []);
       });
@@ -188,15 +184,30 @@ export class ModuleLoader {
   // ==========================================================================
 
   /**
+   * Gets the number of pending loads.
+   */
+  get pendingCount(): number {
+    let count = 0;
+    for (const queue of this.queues.values()) {
+      count += queue.length;
+    }
+    return count;
+  }
+
+  /**
+   * Gets the number of currently loading modules.
+   */
+  get loadingCount(): number {
+    return this.loading.size;
+  }
+
+  /**
    * Loads a module with the given options.
    * @param moduleId - Module to load
    * @param options - Loading options
    * @returns Loaded component
    */
-  async load(
-    moduleId: ModuleId,
-    options: ModuleLoadOptions = {}
-  ): Promise<ComponentType<unknown>> {
+  async load(moduleId: ModuleId, options: ModuleLoadOptions = {}): Promise<ComponentType<unknown>> {
     const opts = { ...DEFAULT_LOAD_OPTIONS, ...options };
 
     // Check if already loaded (cache hit)
@@ -280,6 +291,10 @@ export class ModuleLoader {
     return results;
   }
 
+  // ==========================================================================
+  // Prefetching
+  // ==========================================================================
+
   /**
    * Gets the loading state of a module.
    * @param moduleId - Module ID
@@ -309,10 +324,6 @@ export class ModuleLoader {
 
     return false;
   }
-
-  // ==========================================================================
-  // Prefetching
-  // ==========================================================================
 
   /**
    * Adds a prefetch hint for a module.
@@ -361,6 +372,66 @@ export class ModuleLoader {
       observer.disconnect();
       this.visibilityObservers.delete(moduleId);
     }
+  }
+
+  /**
+   * Gets loading metrics.
+   * @returns Loading metrics
+   */
+  getMetrics(): LoadingMetrics {
+    return { ...this.metrics };
+  }
+
+  /**
+   * Resets loading metrics.
+   */
+  resetMetrics(): void {
+    this.metrics = {
+      totalLoaded: 0,
+      totalLoadTime: 0,
+      averageLoadTime: 0,
+      failedLoads: 0,
+      cacheHits: 0,
+      prefetchHits: 0,
+    };
+  }
+
+  // ==========================================================================
+  // Queue Processing
+  // ==========================================================================
+
+  /**
+   * Clears all queues and cancels pending loads.
+   */
+  clearQueues(): void {
+    for (const [priority, queue] of this.queues) {
+      for (const task of queue) {
+        task.reject(new Error('Queue cleared'));
+      }
+      this.queues.set(priority, []);
+    }
+
+    this.loadingStates.clear();
+  }
+
+  /**
+   * Disposes the loader and cleans up resources.
+   */
+  dispose(): void {
+    this.clearQueues();
+
+    // Clean up observers
+    for (const observer of this.visibilityObservers.values()) {
+      observer.disconnect();
+    }
+    this.visibilityObservers.clear();
+
+    // Cancel idle callback
+    if (this.idleCallbackId !== null && 'cancelIdleCallback' in window) {
+      window.cancelIdleCallback(this.idleCallbackId);
+    }
+
+    this.prefetchHints.clear();
   }
 
   /**
@@ -433,7 +504,7 @@ export class ModuleLoader {
   }
 
   // ==========================================================================
-  // Queue Processing
+  // Metrics & Management
   // ==========================================================================
 
   /**
@@ -484,7 +555,7 @@ export class ModuleLoader {
    */
   private getNextTask(): LoadingTask | null {
     const priorities: readonly LoadingPriority[] = Object.values(LoadingPriority)
-      .filter((v): v is LoadingPriority => typeof v === 'number')
+      .filter((_v): _v is LoadingPriority => true)
       .sort((a, b) => a - b);
 
     for (const priority of priorities) {
@@ -547,8 +618,7 @@ export class ModuleLoader {
       const loadTime = Date.now() - startTime;
       this.metrics.totalLoaded++;
       this.metrics.totalLoadTime += loadTime;
-      this.metrics.averageLoadTime =
-        this.metrics.totalLoadTime / this.metrics.totalLoaded;
+      this.metrics.averageLoadTime = this.metrics.totalLoadTime / this.metrics.totalLoaded;
 
       // Update state
       this.updateLoadingState(moduleId, {
@@ -610,10 +680,7 @@ export class ModuleLoader {
    * @param moduleId - Module ID
    * @param options - Loading options
    */
-  private async loadDependencies(
-    moduleId: ModuleId,
-    options: ModuleLoadOptions
-  ): Promise<void> {
+  private async loadDependencies(moduleId: ModuleId, options: ModuleLoadOptions): Promise<void> {
     const config = this.registry.getConfig(moduleId);
     if (!config?.dependencies || config.dependencies.length === 0) {
       return;
@@ -653,89 +720,8 @@ export class ModuleLoader {
    * @param moduleId - Module ID
    * @param state - New state
    */
-  private updateLoadingState(
-    moduleId: ModuleId,
-    state: ModuleLoadingState
-  ): void {
+  private updateLoadingState(moduleId: ModuleId, state: ModuleLoadingState): void {
     this.loadingStates.set(moduleId, state);
-  }
-
-  // ==========================================================================
-  // Metrics & Management
-  // ==========================================================================
-
-  /**
-   * Gets loading metrics.
-   * @returns Loading metrics
-   */
-  getMetrics(): LoadingMetrics {
-    return { ...this.metrics };
-  }
-
-  /**
-   * Resets loading metrics.
-   */
-  resetMetrics(): void {
-    this.metrics = {
-      totalLoaded: 0,
-      totalLoadTime: 0,
-      averageLoadTime: 0,
-      failedLoads: 0,
-      cacheHits: 0,
-      prefetchHits: 0,
-    };
-  }
-
-  /**
-   * Gets the number of pending loads.
-   */
-  get pendingCount(): number {
-    let count = 0;
-    for (const queue of this.queues.values()) {
-      count += queue.length;
-    }
-    return count;
-  }
-
-  /**
-   * Gets the number of currently loading modules.
-   */
-  get loadingCount(): number {
-    return this.loading.size;
-  }
-
-  /**
-   * Clears all queues and cancels pending loads.
-   */
-  clearQueues(): void {
-    for (const [priority, queue] of this.queues) {
-      for (const task of queue) {
-        task.reject(new Error('Queue cleared'));
-      }
-      this.queues.set(priority, []);
-    }
-
-    this.loadingStates.clear();
-  }
-
-  /**
-   * Disposes the loader and cleans up resources.
-   */
-  dispose(): void {
-    this.clearQueues();
-
-    // Clean up observers
-    for (const observer of this.visibilityObservers.values()) {
-      observer.disconnect();
-    }
-    this.visibilityObservers.clear();
-
-    // Cancel idle callback
-    if (this.idleCallbackId !== null && 'cancelIdleCallback' in window) {
-      window.cancelIdleCallback(this.idleCallbackId);
-    }
-
-    this.prefetchHints.clear();
   }
 }
 
@@ -800,10 +786,7 @@ export async function loadModule(
  * @param moduleId - Module to prefetch
  * @param probability - Likelihood of needing the module
  */
-export function prefetchModule(
-  moduleId: ModuleId,
-  probability: number = 0.5
-): void {
+export function prefetchModule(moduleId: ModuleId, probability: number = 0.5): void {
   getDefaultLoader().addPrefetchHint({
     moduleId,
     probability,

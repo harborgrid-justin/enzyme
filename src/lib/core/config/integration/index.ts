@@ -4,8 +4,4 @@
  * @module core/config/integration
  */
 
-export {
-  AppConfigBridge,
-  getAppConfigBridge,
-  initLibConfigFromApp,
-} from './AppConfigBridge';
+export { AppConfigBridge, getAppConfigBridge, initLibConfigFromApp } from './AppConfigBridge';

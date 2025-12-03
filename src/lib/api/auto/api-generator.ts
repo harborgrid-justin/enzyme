@@ -24,11 +24,8 @@
  * ```
  */
 
-import type { HttpMethod, ContentType } from '../types';
-import type {
-  ScannedApiRoute,
-  ApiFileType,
-} from './route-scanner';
+import type { ContentType, HttpMethod } from '../types';
+import type { ApiFileType, ScannedApiRoute } from './route-scanner';
 
 // =============================================================================
 // Types
@@ -95,9 +92,7 @@ export interface EndpointHandler {
 /**
  * Endpoint handler function signature
  */
-export type EndpointHandlerFn = (
-  context: EndpointContext
-) => unknown | Promise<unknown>;
+export type EndpointHandlerFn = (context: EndpointContext) => unknown | Promise<unknown>;
 
 /**
  * Context passed to endpoint handlers
@@ -365,17 +360,11 @@ export interface ApiGeneratorConfig {
     exportName: string
   ) => Promise<EndpointHandlerFn | undefined>;
   /** Schema resolver function */
-  readonly schemaResolver?: (
-    filePath: string
-  ) => Promise<EndpointSchemaDefinition | undefined>;
+  readonly schemaResolver?: (filePath: string) => Promise<EndpointSchemaDefinition | undefined>;
   /** Middleware resolver function */
-  readonly middlewareResolver?: (
-    filePath: string
-  ) => Promise<MiddlewareFn[]>;
+  readonly middlewareResolver?: (filePath: string) => Promise<MiddlewareFn[]>;
   /** Access resolver function (for _access.ts files) */
-  readonly accessResolver?: (
-    filePath: string
-  ) => Promise<Partial<ComputedAccess> | undefined>;
+  readonly accessResolver?: (filePath: string) => Promise<Partial<ComputedAccess> | undefined>;
   /** Default rate limit configuration */
   readonly defaultRateLimit?: RateLimitConfig;
   /** Default cache configuration */
@@ -473,7 +462,7 @@ export function generateDisplayName(route: ScannedApiRoute, method: HttpMethod):
 export function generateDescription(route: ScannedApiRoute, method: HttpMethod): string {
   const resource = route.resourceName;
   const descriptions: Record<HttpMethod, (r: string, isCollection: boolean) => string> = {
-    GET: (r, c) => c ? `Retrieve a list of ${r}` : `Retrieve a single ${r} by ID`,
+    GET: (r, c) => (c ? `Retrieve a list of ${r}` : `Retrieve a single ${r} by ID`),
     POST: (r) => `Create a new ${r}`,
     PUT: (r) => `Update an existing ${r}`,
     PATCH: (r) => `Partially update an existing ${r}`,
@@ -551,7 +540,8 @@ export function computeAccess(
   }
 
   // Merge with override
-  const base: ComputedAccess = {
+
+  return {
     isPublic: accessOverride?.isPublic ?? isPublic,
     requiresAuth: accessOverride?.requiresAuth ?? requiresAuth,
     requiredRoles: accessOverride?.requiredRoles ?? requiredRoles,
@@ -563,8 +553,6 @@ export function computeAccess(
     inheritedFrom,
     overrides,
   };
-
-  return base;
 }
 
 /**
@@ -701,17 +689,17 @@ export async function generateEndpoint(
   if (route.hasMiddleware && config.middlewareResolver) {
     const middlewarePath = route.filePath.replace(/[^/\\]+$/, '_middleware.ts');
     const middlewareFns = await config.middlewareResolver(middlewarePath);
-    middleware.push(...middlewareFns.map((fn, i) => ({
-      name: `middleware_${i}`,
-      fn,
-      priority: i,
-    })));
+    middleware.push(
+      ...middlewareFns.map((fn, i) => ({
+        name: `middleware_${i}`,
+        fn,
+        priority: i,
+      }))
+    );
   }
 
   const id = generateEndpointId(route, method);
-  const operationId = config.generateOperationIds
-    ? generateOperationId(route, method)
-    : id;
+  const operationId = config.generateOperationIds ? generateOperationId(route, method) : id;
 
   return {
     id,
@@ -960,9 +948,7 @@ export function generateOpenAPISpec(
           description: 'Internal server error',
         },
       },
-      security: endpoint.access.requiresAuth
-        ? [{ bearerAuth: [] }]
-        : undefined,
+      security: endpoint.access.requiresAuth ? [{ bearerAuth: [] }] : undefined,
       deprecated: endpoint.deprecated?.deprecated,
     };
 

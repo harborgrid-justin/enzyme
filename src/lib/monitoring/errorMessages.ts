@@ -76,7 +76,7 @@ const MESSAGE_TEMPLATES: Record<ErrorCategory, MessageTemplate> = {
   network: {
     title: 'Connection Issue',
     description: (ctx) =>
-      (ctx?.userAction !== undefined && ctx?.userAction !== null && ctx?.userAction !== '')
+      ctx?.userAction !== undefined && ctx?.userAction !== null && ctx?.userAction !== ''
         ? `We couldn't ${ctx.userAction} because of a network issue.`
         : 'Unable to connect to our servers.',
     suggestions: () => [
@@ -91,17 +91,14 @@ const MESSAGE_TEMPLATES: Record<ErrorCategory, MessageTemplate> = {
   authentication: {
     title: 'Session Expired',
     description: () => 'Your session has expired for security reasons.',
-    suggestions: () => [
-      'Log in again to continue',
-      'Your work may have been saved automatically',
-    ],
+    suggestions: () => ['Log in again to continue', 'Your work may have been saved automatically'],
     recoverable: true,
   },
 
   authorization: {
     title: 'Access Denied',
     description: (ctx) =>
-      (ctx?.resource !== undefined && ctx?.resource !== null && ctx?.resource !== '')
+      ctx?.resource !== undefined && ctx?.resource !== null && ctx?.resource !== ''
         ? `You don't have permission to access ${ctx.resource}.`
         : "You don't have permission to perform this action.",
     suggestions: () => [
@@ -125,7 +122,7 @@ const MESSAGE_TEMPLATES: Record<ErrorCategory, MessageTemplate> = {
   server: {
     title: 'Server Error',
     description: (ctx) =>
-      (ctx?.feature != null && ctx.feature.length > 0)
+      ctx?.feature != null && ctx.feature.length > 0
         ? `We're having trouble with ${ctx.feature} right now.`
         : 'Something went wrong on our end.',
     suggestions: () => [
@@ -151,7 +148,7 @@ const MESSAGE_TEMPLATES: Record<ErrorCategory, MessageTemplate> = {
   timeout: {
     title: 'Request Timed Out',
     description: (ctx) =>
-      (ctx?.userAction != null && ctx.userAction.length > 0)
+      ctx?.userAction != null && ctx.userAction.length > 0
         ? `The request to ${ctx.userAction} took too long.`
         : 'The request took longer than expected.',
     suggestions: () => [
@@ -166,10 +163,7 @@ const MESSAGE_TEMPLATES: Record<ErrorCategory, MessageTemplate> = {
   rate_limit: {
     title: 'Slow Down',
     description: () => "You're making requests too quickly.",
-    suggestions: () => [
-      'Wait a moment before trying again',
-      'Avoid rapid clicking or refreshing',
-    ],
+    suggestions: () => ['Wait a moment before trying again', 'Avoid rapid clicking or refreshing'],
     recoverable: true,
     retryAfter: 30000,
   },
@@ -258,10 +252,7 @@ export function getToastMessage(error: AppError, context?: ErrorMessageContext):
  * @param context - Optional context
  * @returns Toast message with type and duration
  */
-export function getToastNotification(
-  error: AppError,
-  context?: ErrorMessageContext
-): ToastMessage {
+export function getToastNotification(error: AppError, context?: ErrorMessageContext): ToastMessage {
   const template = MESSAGE_TEMPLATES[error.category];
   const message = template.description(context);
 
@@ -459,10 +450,7 @@ export function getRecoveryActions(error: AppError): {
  * @param context - Optional context
  * @returns Formatted string for logging
  */
-export function formatErrorForLogging(
-  error: AppError,
-  context?: ErrorMessageContext
-): string {
+export function formatErrorForLogging(error: AppError, context?: ErrorMessageContext): string {
   const parts: string[] = [
     `[${error.category.toUpperCase()}] ${error.message}`,
     `ID: ${error.id}`,
@@ -513,9 +501,5 @@ export function shouldShowError(error: AppError): boolean {
   }
 
   // Don't show low severity errors in production
-  if (!isDev() && error.severity === 'low') {
-    return false;
-  }
-
-  return true;
+  return !(!isDev() && error.severity === 'low');
 }

@@ -131,12 +131,7 @@ export interface UseContentDensityOptions {
  * ```
  */
 export function useContentDensity(options: UseContentDensityOptions): UseContentDensityReturn {
-  const {
-    containerRef,
-    autoRecalculate = true,
-    debounceMs = 150,
-    itemSelector,
-  } = options;
+  const { containerRef, autoRecalculate = true, debounceMs = 150, itemSelector } = options;
 
   // State
   const [density, setDensity] = useState<ContentDensity>('minimal');
@@ -157,9 +152,10 @@ export function useContentDensity(options: UseContentDensityOptions): UseContent
     if (container == null) return;
 
     // Get items
-    const items = itemSelector != null && itemSelector !== ''
-      ? Array.from(container.querySelectorAll(itemSelector))
-      : Array.from(container.children);
+    const items =
+      itemSelector != null && itemSelector !== ''
+        ? Array.from(container.querySelectorAll(itemSelector))
+        : Array.from(container.children);
 
     const count = items.length;
     setItemCount(count);
@@ -231,7 +227,7 @@ export function useContentDensity(options: UseContentDensityOptions): UseContent
 
   // Set up observers
   useEffect(() => {
-    if (autoRecalculate !== true) return;
+    if (!autoRecalculate) return;
 
     const container = containerRef.current;
     if (container == null) return;

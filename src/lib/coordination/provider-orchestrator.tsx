@@ -26,19 +26,14 @@ import {
   type FC,
 } from 'react';
 
-import type {
-  ProviderDefinition,
-  ProviderOrchestratorConfig,
-} from './types';
+import type { ProviderDefinition, ProviderOrchestratorConfig } from './types';
 
 // Re-export for convenience
 export { DefaultLoadingFallback, DefaultErrorFallback } from './default-components';
 export type { LoadingFallbackProps, ErrorFallbackProps } from './default-components';
 
 // Import for internal use
-import {
-  DefaultLoadingFallback,
-} from './default-components';
+import { DefaultLoadingFallback } from './default-components';
 
 // ============================================================================
 // Types
@@ -63,9 +58,7 @@ interface ProviderEntry extends ProviderDefinition {
 /**
  * Topological sort for provider dependencies.
  */
-function sortProvidersByDependencies(
-  providers: ProviderDefinition[]
-): ProviderDefinition[] {
+function sortProvidersByDependencies(providers: ProviderDefinition[]): ProviderDefinition[] {
   const sorted: ProviderDefinition[] = [];
   const visited = new Set<string>();
   const visiting = new Set<string>();
@@ -296,9 +289,7 @@ export class ProviderOrchestratorImpl {
     }
 
     // Get enabled providers
-    const enabledProviders = Array.from(this.providers.values()).filter(
-      (p) => p.isEnabled
-    );
+    const enabledProviders = Array.from(this.providers.values()).filter((p) => p.isEnabled);
 
     // Sort by dependencies
     const sortedDefinitions = sortProvidersByDependencies(enabledProviders);
@@ -323,9 +314,7 @@ export class ProviderOrchestratorImpl {
    * @returns Array of provider IDs in order
    */
   getProviderOrder(): string[] {
-    const enabledProviders = Array.from(this.providers.values()).filter(
-      (p) => p.isEnabled
-    );
+    const enabledProviders = Array.from(this.providers.values()).filter((p) => p.isEnabled);
     const sorted = sortProvidersByDependencies(enabledProviders);
     return sorted.map((p) => p.id);
   }
@@ -450,9 +439,7 @@ export function getProviderOrchestrator(
  * Sets the global provider orchestrator.
  * @param orchestrator - Orchestrator instance
  */
-export function setProviderOrchestrator(
-  orchestrator: ProviderOrchestratorImpl
-): void {
+export function setProviderOrchestrator(orchestrator: ProviderOrchestratorImpl): void {
   globalOrchestrator = orchestrator;
 }
 

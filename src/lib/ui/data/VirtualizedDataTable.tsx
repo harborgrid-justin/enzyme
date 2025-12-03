@@ -14,8 +14,22 @@
  * />
  */
 
-import React, { memo, useMemo, useCallback, useId, useState, useRef, useEffect, type CSSProperties, type ReactNode } from 'react';
-import { FixedSizeList as List, type ListChildComponentProps, type FixedSizeList } from 'react-window';
+import React, {
+  memo,
+  useMemo,
+  useCallback,
+  useId,
+  useState,
+  useRef,
+  useEffect,
+  type CSSProperties,
+  type ReactNode,
+} from 'react';
+import {
+  FixedSizeList as List,
+  type ListChildComponentProps,
+  type FixedSizeList,
+} from 'react-window';
 
 /**
  * Column definition for virtualized table
@@ -222,35 +236,36 @@ function VirtualizedRowInner<T>({
   style,
   data: rowData,
 }: ListChildComponentProps): React.ReactElement {
-  const { data, columns, rowKey, onRowClick, focusedIndex, onRowFocus, onKeyDown } = rowData as RowData<T>;
+  const { data, columns, rowKey, onRowClick, focusedIndex, onRowFocus, onKeyDown } =
+    rowData as RowData<T>;
   const row = data[index];
 
-  // Guard against undefined row (should not happen in normal virtualized list usage)
-  if (!row) {
-    return <div style={style} />;
-  }
-
-  const key = getRowKey(row, rowKey);
-  const rowRef = useRef<HTMLDivElement>(null);
+  // Hooks must be called unconditionally
+  const rowRef = useRef<HTMLDivElement | null>(null);
   const isFocused = focusedIndex === index;
 
   // Focus this row when it becomes the focused index
   useEffect(() => {
-    if (isFocused && rowRef.current) {
+    if (isFocused && rowRef.current !== null) {
       rowRef.current.focus();
     }
   }, [isFocused]);
 
   // Calculate row style with hover effect
-  const computedRowStyle = useMemo((): CSSProperties => ({
-    ...style,
-    ...rowStyle,
-    cursor: onRowClick ? 'pointer' : 'default',
-  }), [style, onRowClick]);
+  const computedRowStyle = useMemo(
+    (): CSSProperties => ({
+      ...style,
+      ...rowStyle,
+      cursor: onRowClick !== undefined ? 'pointer' : 'default',
+    }),
+    [style, onRowClick]
+  );
 
   // Handle row click
   const handleClick = useCallback(() => {
-    onRowClick?.(row);
+    if (row !== undefined) {
+      onRowClick?.(row);
+    }
   }, [onRowClick, row]);
 
   // Handle focus
@@ -259,15 +274,25 @@ function VirtualizedRowInner<T>({
   }, [onRowFocus, index]);
 
   // Handle keyboard events
-  const handleKeyDown = useCallback((event: React.KeyboardEvent) => {
-    onKeyDown(event, index);
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent) => {
+      onKeyDown(event, index);
 
-    // Handle Enter/Space for row activation
-    if ((event.key === 'Enter' || event.key === ' ') && onRowClick) {
-      event.preventDefault();
-      onRowClick(row);
-    }
-  }, [onKeyDown, index, onRowClick, row]);
+      // Handle Enter/Space for row activation
+      if ((event.key === 'Enter' || event.key === ' ') && onRowClick !== undefined && row !== undefined) {
+        event.preventDefault();
+        onRowClick(row);
+      }
+    },
+    [onKeyDown, index, onRowClick, row]
+  );
+
+  // Guard against undefined row (should not happen in normal virtualized list usage)
+  if (row === undefined) {
+    return <div style={style} />;
+  }
+
+  const key = getRowKey(row, rowKey);
 
   return (
     <div
@@ -289,7 +314,11 @@ function VirtualizedRowInner<T>({
           cellContent = column.cell(value, row, index);
         } else if (value !== null && value !== undefined) {
           // Safe stringification: only convert primitives
-          if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+          if (
+            typeof value === 'string' ||
+            typeof value === 'number' ||
+            typeof value === 'boolean'
+          ) {
             cellContent = String(value);
           } else {
             cellContent = '';
@@ -307,7 +336,7 @@ function VirtualizedRowInner<T>({
               width: column.width,
               minWidth: column.minWidth,
               textAlign: column.align ?? 'left',
-              flex: (column.width !== undefined && column.width !== null) ? 'none' : 1,
+              flex: column.width !== undefined && column.width !== null ? 'none' : 1,
             }}
           >
             {cellContent}
@@ -353,36 +382,39 @@ function VirtualizedDataTableInner<T>({
   const listRef = useRef<FixedSizeList | null>(null);
 
   // Handler for keyboard navigation
-  const handleKeyDown = useCallback((event: React.KeyboardEvent, currentIndex: number) => {
-    let newIndex = currentIndex;
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent, currentIndex: number) => {
+      let newIndex = currentIndex;
 
-    switch (event.key) {
-      case 'ArrowDown':
-        event.preventDefault();
-        newIndex = Math.min(currentIndex + 1, data.length - 1);
-        break;
-      case 'ArrowUp':
-        event.preventDefault();
-        newIndex = Math.max(currentIndex - 1, 0);
-        break;
-      case 'Home':
-        event.preventDefault();
-        newIndex = 0;
-        break;
-      case 'End':
-        event.preventDefault();
-        newIndex = data.length - 1;
-        break;
-      default:
-        return;
-    }
+      switch (event.key) {
+        case 'ArrowDown':
+          event.preventDefault();
+          newIndex = Math.min(currentIndex + 1, data.length - 1);
+          break;
+        case 'ArrowUp':
+          event.preventDefault();
+          newIndex = Math.max(currentIndex - 1, 0);
+          break;
+        case 'Home':
+          event.preventDefault();
+          newIndex = 0;
+          break;
+        case 'End':
+          event.preventDefault();
+          newIndex = data.length - 1;
+          break;
+        default:
+          return;
+      }
 
-    if (newIndex !== currentIndex) {
-      setFocusedIndex(newIndex);
-      // Scroll the row into view
-      listRef.current?.scrollToItem(newIndex, 'smart');
-    }
-  }, [data.length]);
+      if (newIndex !== currentIndex) {
+        setFocusedIndex(newIndex);
+        // Scroll the row into view
+        listRef.current?.scrollToItem(newIndex, 'smart');
+      }
+    },
+    [data.length]
+  );
 
   // Handler for row focus
   const handleRowFocus = useCallback((index: number) => {
@@ -390,29 +422,38 @@ function VirtualizedDataTableInner<T>({
   }, []);
 
   // Memoize item data to prevent unnecessary re-renders
-  const itemData = useMemo((): RowData<T> => ({
-    data,
-    columns,
-    rowKey,
-    onRowClick,
-    focusedIndex,
-    onRowFocus: handleRowFocus,
-    onKeyDown: handleKeyDown,
-  }), [data, columns, rowKey, onRowClick, focusedIndex, handleRowFocus, handleKeyDown]);
+  const itemData = useMemo(
+    (): RowData<T> => ({
+      data,
+      columns,
+      rowKey,
+      onRowClick,
+      focusedIndex,
+      onRowFocus: handleRowFocus,
+      onKeyDown: handleKeyDown,
+    }),
+    [data, columns, rowKey, onRowClick, focusedIndex, handleRowFocus, handleKeyDown]
+  );
 
   // Memoize computed heights
   const listHeight = useMemo(() => height - headerHeight, [height, headerHeight]);
 
   // Memoize loading/empty container styles with dynamic height
-  const loadingStyle = useMemo((): CSSProperties => ({
-    ...loadingContainerStyle,
-    height: listHeight,
-  }), [listHeight]);
+  const loadingStyle = useMemo(
+    (): CSSProperties => ({
+      ...loadingContainerStyle,
+      height: listHeight,
+    }),
+    [listHeight]
+  );
 
-  const emptyStyle = useMemo((): CSSProperties => ({
-    ...emptyContainerStyle,
-    height: listHeight,
-  }), [listHeight]);
+  const emptyStyle = useMemo(
+    (): CSSProperties => ({
+      ...emptyContainerStyle,
+      height: listHeight,
+    }),
+    [listHeight]
+  );
 
   // Generate unique ID for keyboard help - use React 18's useId() for SSR-safe IDs
   const reactId = useId();
@@ -447,7 +488,7 @@ function VirtualizedDataTableInner<T>({
               width: column.width,
               minWidth: column.minWidth,
               textAlign: column.align ?? 'left',
-              flex: (column.width !== undefined && column.width !== null) ? 'none' : 1,
+              flex: column.width !== undefined && column.width !== null ? 'none' : 1,
             }}
           >
             {column.header}
@@ -464,9 +505,7 @@ function VirtualizedDataTableInner<T>({
 
       {/* Empty state */}
       {!isLoading && data.length === 0 && (
-        <div style={emptyStyle}>
-          {emptyState ?? 'No data available'}
-        </div>
+        <div style={emptyStyle}>{emptyState ?? 'No data available'}</div>
       )}
 
       {/* Virtualized rows */}
@@ -488,7 +527,9 @@ function VirtualizedDataTableInner<T>({
 }
 
 // Export memoized component
-export const VirtualizedDataTable = memo(VirtualizedDataTableInner) as typeof VirtualizedDataTableInner;
+export const VirtualizedDataTable = memo(
+  VirtualizedDataTableInner
+) as typeof VirtualizedDataTableInner;
 
 /**
  * Hook to determine if virtualization should be used
@@ -497,9 +538,6 @@ export const VirtualizedDataTable = memo(VirtualizedDataTableInner) as typeof Vi
  * @returns Whether virtualization should be used
  */
 // eslint-disable-next-line react-refresh/only-export-components
-export function useVirtualizationRecommended(
-  dataLength: number,
-  threshold: number = 100
-): boolean {
+export function useVirtualizationRecommended(dataLength: number, threshold: number = 100): boolean {
   return useMemo(() => dataLength > threshold, [dataLength, threshold]);
 }

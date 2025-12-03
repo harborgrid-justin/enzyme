@@ -51,12 +51,12 @@ import {
  * Composite guard execution strategy
  */
 export type CompositeStrategy =
-  | 'all'        // All guards must pass (AND)
-  | 'any'        // Any guard can pass (OR)
-  | 'first'      // Use first guard result
-  | 'priority'   // Execute in priority order
+  | 'all' // All guards must pass (AND)
+  | 'any' // Any guard can pass (OR)
+  | 'first' // Use first guard result
+  | 'priority' // Execute in priority order
   | 'sequential' // Execute all in sequence
-  | 'parallel';  // Execute all in parallel
+  | 'parallel'; // Execute all in parallel
 
 /**
  * Composite guard configuration
@@ -144,7 +144,7 @@ export class CompositeGuard implements RouteGuard {
     const mergedConfig = { ...DEFAULT_COMPOSITE_CONFIG, ...config };
     this.config = mergedConfig;
     this.name = mergedConfig.name ?? 'composite';
-    this.priority = Math.min(...config.guards.map(g => g.priority ?? 100));
+    this.priority = Math.min(...config.guards.map((g) => g.priority ?? 100));
 
     // Sort guards by priority
     this.sortedGuards = [...config.guards].sort(
@@ -186,6 +186,27 @@ export class CompositeGuard implements RouteGuard {
       default:
         return this.executeAll(timing, context, startTime);
     }
+  }
+
+  /**
+   * Check if guard applies to a path
+   */
+  appliesTo(path: string): boolean {
+    return this.sortedGuards.some((g) => g.appliesTo(path));
+  }
+
+  /**
+   * Get all guards in this composite
+   */
+  getGuards(): readonly RouteGuard[] {
+    return this.sortedGuards;
+  }
+
+  /**
+   * Get strategy
+   */
+  getStrategy(): CompositeStrategy {
+    return this.config.strategy ?? 'all';
   }
 
   /**
@@ -234,8 +255,13 @@ export class CompositeGuard implements RouteGuard {
               passed,
               failed,
               skipped: this.sortedGuards
-                .filter(g => !passed.includes(g.name) && !failed.includes(g.name) && !skipped.includes(g.name))
-                .map(g => g.name),
+                .filter(
+                  (g) =>
+                    !passed.includes(g.name) &&
+                    !failed.includes(g.name) &&
+                    !skipped.includes(g.name)
+                )
+                .map((g) => g.name),
               strategy: 'all',
             };
           }
@@ -265,7 +291,7 @@ export class CompositeGuard implements RouteGuard {
     }
 
     // Merge results
-    const results = guardResults.map(gr => gr.result);
+    const results = guardResults.map((gr) => gr.result);
     const finalResult = this.config.mergeResults
       ? this.config.mergeResults(results)
       : mergeGuardResults(results);
@@ -324,8 +350,13 @@ export class CompositeGuard implements RouteGuard {
               passed,
               failed,
               skipped: this.sortedGuards
-                .filter(g => !passed.includes(g.name) && !failed.includes(g.name) && !skipped.includes(g.name))
-                .map(g => g.name),
+                .filter(
+                  (g) =>
+                    !passed.includes(g.name) &&
+                    !failed.includes(g.name) &&
+                    !skipped.includes(g.name)
+                )
+                .map((g) => g.name),
               strategy: 'any',
             };
           }
@@ -349,10 +380,11 @@ export class CompositeGuard implements RouteGuard {
     if (passed.length > 0) {
       finalResult = GuardResult.allow();
     } else if (this.config.mergeResults) {
-      finalResult = this.config.mergeResults(guardResults.map(gr => gr.result));
+      finalResult = this.config.mergeResults(guardResults.map((gr) => gr.result));
     } else {
-      finalResult = getFirstRedirect(guardResults.map(gr => gr.result)) ??
-        GuardResult.deny(getDenialReasons(guardResults.map(gr => gr.result)).join('; '));
+      finalResult =
+        getFirstRedirect(guardResults.map((gr) => gr.result)) ??
+        GuardResult.deny(getDenialReasons(guardResults.map((gr) => gr.result)).join('; '));
     }
 
     return {
@@ -384,16 +416,18 @@ export class CompositeGuard implements RouteGuard {
 
       return {
         result,
-        guardResults: [{
-          guardName: guard.name,
-          result,
-          durationMs: Date.now() - execStart,
-          timedOut: false,
-        }],
+        guardResults: [
+          {
+            guardName: guard.name,
+            result,
+            durationMs: Date.now() - execStart,
+            timedOut: false,
+          },
+        ],
         totalDurationMs: Date.now() - startTime,
         passed: result.type === 'allow' ? [guard.name] : [],
         failed: result.type !== 'allow' ? [guard.name] : [],
-        skipped: this.sortedGuards.filter(g => g.name !== guard.name).map(g => g.name),
+        skipped: this.sortedGuards.filter((g) => g.name !== guard.name).map((g) => g.name),
         strategy: 'first',
       };
     }
@@ -405,7 +439,7 @@ export class CompositeGuard implements RouteGuard {
       totalDurationMs: Date.now() - startTime,
       passed: [],
       failed: [],
-      skipped: this.sortedGuards.map(g => g.name),
+      skipped: this.sortedGuards.map((g) => g.name),
       strategy: 'first',
     };
   }
@@ -469,7 +503,7 @@ export class CompositeGuard implements RouteGuard {
       }
     }
 
-    const results = guardResults.map(gr => gr.result);
+    const results = guardResults.map((gr) => gr.result);
     const finalResult = this.config.mergeResults
       ? this.config.mergeResults(results)
       : mergeGuardResults(results);
@@ -493,10 +527,10 @@ export class CompositeGuard implements RouteGuard {
     context: GuardContext,
     startTime: number
   ): Promise<CompositeExecutionResult> {
-    const applicableGuards = this.sortedGuards.filter(g => g.appliesTo(context.path));
+    const applicableGuards = this.sortedGuards.filter((g) => g.appliesTo(context.path));
     const skipped = this.sortedGuards
-      .filter(g => !applicableGuards.includes(g))
-      .map(g => g.name);
+      .filter((g) => !applicableGuards.includes(g))
+      .map((g) => g.name);
 
     const timeout = this.config.timeout ?? 30000;
 
@@ -529,10 +563,14 @@ export class CompositeGuard implements RouteGuard {
     });
 
     const guardResults = await Promise.all(execPromises);
-    const passed = guardResults.filter(gr => gr.result.type === 'allow').map(gr => gr.guardName);
-    const failed = guardResults.filter(gr => gr.result.type !== 'allow').map(gr => gr.guardName);
+    const passed = guardResults
+      .filter((gr) => gr.result.type === 'allow')
+      .map((gr) => gr.guardName);
+    const failed = guardResults
+      .filter((gr) => gr.result.type !== 'allow')
+      .map((gr) => gr.guardName);
 
-    const results = guardResults.map(gr => gr.result);
+    const results = guardResults.map((gr) => gr.result);
     const finalResult = this.config.mergeResults
       ? this.config.mergeResults(results)
       : mergeGuardResults(results);
@@ -546,27 +584,6 @@ export class CompositeGuard implements RouteGuard {
       skipped,
       strategy: 'parallel',
     };
-  }
-
-  /**
-   * Check if guard applies to a path
-   */
-  appliesTo(path: string): boolean {
-    return this.sortedGuards.some(g => g.appliesTo(path));
-  }
-
-  /**
-   * Get all guards in this composite
-   */
-  getGuards(): readonly RouteGuard[] {
-    return this.sortedGuards;
-  }
-
-  /**
-   * Get strategy
-   */
-  getStrategy(): CompositeStrategy {
-    return this.config.strategy ?? 'all';
   }
 }
 

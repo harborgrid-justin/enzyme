@@ -30,7 +30,7 @@ import type {
   ExtractOptionalParams,
   RouteParams,
   HasParams,
-  ParamsFor as _ParamsFor
+  ParamsFor as _ParamsFor,
 } from './route-parameter-types';
 
 // Re-export types for external use
@@ -40,7 +40,7 @@ export type {
   ExtractOptionalParams,
   RouteParams,
   HasParams,
-  ParamsFor
+  ParamsFor,
 } from './route-parameter-types';
 
 // =============================================================================
@@ -52,10 +52,9 @@ export type {
  * - For routes without params: `() => TPath`
  * - For routes with params: `(params: RouteParams<TPath>, query?: QueryParams) => string`
  */
-export type RouteBuilder<TPath extends string> =
-  keyof RouteParams<TPath> extends never
-    ? (query?: Record<string, string | undefined>) => TPath
-    : (params: RouteParams<TPath>, query?: Record<string, string | undefined>) => string;
+export type RouteBuilder<TPath extends string> = keyof RouteParams<TPath> extends never
+  ? (query?: Record<string, string | undefined>) => TPath
+  : (params: RouteParams<TPath>, query?: Record<string, string | undefined>) => string;
 
 /**
  * Type-safe route registry with builders for all routes
@@ -117,7 +116,7 @@ export interface RouteDefinition<
   TPath extends string = string,
   TParams extends Record<string, string> = Record<string, string>,
   _TSearchParams extends Record<string, string | undefined> = Record<string, string | undefined>,
-  _TLoaderData = unknown
+  _TLoaderData = unknown,
 > {
   /** Unique route identifier */
   readonly id: string;
@@ -348,7 +347,7 @@ export type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
  */
 export type RoutePathFromId<
   TRegistry extends Record<string, string>,
-  TId extends keyof TRegistry
+  TId extends keyof TRegistry,
 > = TRegistry[TId];
 
 // =============================================================================
@@ -361,14 +360,13 @@ export type RoutePathFromId<
  * @example
  * ExtractSegments<'/users/:id/posts/:postId'> = ['users', ':id', 'posts', ':postId']
  */
-export type ExtractSegments<TPath extends string> =
-  TPath extends `/${infer Rest}`
-    ? ExtractSegments<Rest>
-    : TPath extends `${infer Segment}/${infer Rest}`
-      ? [Segment, ...ExtractSegments<Rest>]
-      : TPath extends ''
-        ? []
-        : [TPath];
+export type ExtractSegments<TPath extends string> = TPath extends `/${infer Rest}`
+  ? ExtractSegments<Rest>
+  : TPath extends `${infer Segment}/${infer Rest}`
+    ? [Segment, ...ExtractSegments<Rest>]
+    : TPath extends ''
+      ? []
+      : [TPath];
 
 /**
  * Count the depth of a route path
@@ -385,8 +383,10 @@ export type RouteDepth<TPath extends string> = ExtractSegments<TPath>['length'];
  * IsChildRoute<'/users/:id', '/users'> = true
  * IsChildRoute<'/users', '/users/:id'> = false
  */
-export type IsChildRoute<TChild extends string, TParent extends string> =
-  TChild extends `${TParent}/${infer _Rest}` ? true : false;
+export type IsChildRoute<
+  TChild extends string,
+  TParent extends string,
+> = TChild extends `${TParent}/${infer _Rest}` ? true : false;
 
 /**
  * Get the parent path of a route
@@ -394,51 +394,55 @@ export type IsChildRoute<TChild extends string, TParent extends string> =
  * @example
  * GetParentPath<'/users/:id/posts'> = '/users/:id'
  */
-export type GetParentPath<TPath extends string> =
-  TPath extends `${infer Parent}/${infer _Last}`
-    ? Parent extends ''
-      ? '/'
-      : Parent
-    : '/';
+export type GetParentPath<TPath extends string> = TPath extends `${infer Parent}/${infer _Last}`
+  ? Parent extends ''
+    ? '/'
+    : Parent
+  : '/';
 
 /**
  * Check if a path segment is dynamic
  */
-export type IsDynamicSegment<TSegment extends string> =
-  TSegment extends `:${infer _Param}` ? true : false;
+export type IsDynamicSegment<TSegment extends string> = TSegment extends `:${infer _Param}`
+  ? true
+  : false;
 
 /**
  * Check if a path segment is optional
  */
-export type IsOptionalSegment<TSegment extends string> =
-  TSegment extends `:${infer _Param}?` ? true : false;
+export type IsOptionalSegment<TSegment extends string> = TSegment extends `:${infer _Param}?`
+  ? true
+  : false;
 
 /**
  * Check if a path segment is catch-all
  */
-export type IsCatchAllSegment<TSegment extends string> =
-  TSegment extends '*' ? true : false;
+export type IsCatchAllSegment<TSegment extends string> = TSegment extends '*' ? true : false;
 
 /**
  * Get all static segments from a path
  */
 export type StaticSegments<TPath extends string> = {
-  [K in keyof ExtractSegments<TPath>]: K extends number ? 
-    (ExtractSegments<TPath>[K] extends string ? 
-      (IsDynamicSegment<ExtractSegments<TPath>[K]> extends true
+  [K in keyof ExtractSegments<TPath>]: K extends number
+    ? ExtractSegments<TPath>[K] extends string
+      ? IsDynamicSegment<ExtractSegments<TPath>[K]> extends true
         ? never
-        : ExtractSegments<TPath>[K]) : never) : never;
+        : ExtractSegments<TPath>[K]
+      : never
+    : never;
 }[number];
 
 /**
  * Get all dynamic segments from a path
  */
 export type DynamicSegments<TPath extends string> = {
-  [K in keyof ExtractSegments<TPath>]: K extends number ? 
-    (ExtractSegments<TPath>[K] extends string ? 
-      (IsDynamicSegment<ExtractSegments<TPath>[K]> extends true
+  [K in keyof ExtractSegments<TPath>]: K extends number
+    ? ExtractSegments<TPath>[K] extends string
+      ? IsDynamicSegment<ExtractSegments<TPath>[K]> extends true
         ? ExtractSegments<TPath>[K]
-        : never) : never) : never;
+        : never
+      : never
+    : never;
 }[number];
 
 // =============================================================================
@@ -555,12 +559,7 @@ export interface MiddlewareChain<TContext = unknown> {
 /**
  * Prefetch strategy for a route
  */
-export type PrefetchStrategy =
-  | 'hover'
-  | 'viewport'
-  | 'idle'
-  | 'mount'
-  | 'none';
+export type PrefetchStrategy = 'hover' | 'viewport' | 'idle' | 'mount' | 'none';
 
 /**
  * Prefetch priority level
@@ -752,8 +751,9 @@ export type ParamNames<TPath extends string> = keyof RouteParams<TPath>;
  * type NoParams = RequiresParams<'/about'>; // false
  * ```
  */
-export type RequiresParams<TPath extends string> =
-  keyof ExtractRequiredParams<TPath> extends never ? false : true;
+export type RequiresParams<TPath extends string> = keyof ExtractRequiredParams<TPath> extends never
+  ? false
+  : true;
 
 /**
  * Check if a route has only optional parameters
@@ -779,10 +779,9 @@ export type HasOnlyOptionalParams<TPath extends string> =
  * @template TPath - A route path string
  * @returns A numeric literal type
  */
-export type ParamCount<TPath extends string> =
-  keyof RouteParams<TPath> extends never
-    ? 0
-    : TupleFromUnion<keyof RouteParams<TPath>>['length'];
+export type ParamCount<TPath extends string> = keyof RouteParams<TPath> extends never
+  ? 0
+  : TupleFromUnion<keyof RouteParams<TPath>>['length'];
 
 /**
  * Convert a union type to a tuple (for counting)
@@ -796,19 +795,18 @@ type TupleFromUnion<T, L = LastOfUnion<T>> = [T] extends [never]
  * Get the last element of a union type
  * @internal
  */
-type LastOfUnion<T> = UnionToIntersection<
-  T extends unknown ? (t: T) => T : never
-> extends (t: infer L) => unknown
-  ? L
-  : never;
+type LastOfUnion<T> =
+  UnionToIntersection<T extends unknown ? (t: T) => T : never> extends (t: infer L) => unknown
+    ? L
+    : never;
 
 /**
  * Convert a union to an intersection
  * @internal
  */
-type UnionToIntersection<U> = (
-  U extends unknown ? (k: U) => void : never
-) extends (k: infer I) => void
+type UnionToIntersection<U> = (U extends unknown ? (k: U) => void : never) extends (
+  k: infer I
+) => void
   ? I
   : never;
 
@@ -823,22 +821,23 @@ type UnionToIntersection<U> = (
  * // { to: '/users/:id'; params: { id: string }; query?: Record<string, string> }
  * ```
  */
-export type TypedLinkProps<TPath extends string> = RequiresParams<TPath> extends true
-  ? {
-      readonly to: TPath;
-      readonly params: RouteParams<TPath>;
-      readonly query?: Record<string, string | undefined>;
-    }
-  : HasOnlyOptionalParams<TPath> extends true
+export type TypedLinkProps<TPath extends string> =
+  RequiresParams<TPath> extends true
     ? {
         readonly to: TPath;
-        readonly params?: RouteParams<TPath>;
+        readonly params: RouteParams<TPath>;
         readonly query?: Record<string, string | undefined>;
       }
-    : {
-        readonly to: TPath;
-        readonly query?: Record<string, string | undefined>;
-      };
+    : HasOnlyOptionalParams<TPath> extends true
+      ? {
+          readonly to: TPath;
+          readonly params?: RouteParams<TPath>;
+          readonly query?: Record<string, string | undefined>;
+        }
+      : {
+          readonly to: TPath;
+          readonly query?: Record<string, string | undefined>;
+        };
 
 /**
  * Create a type-safe navigation function type
@@ -852,11 +851,12 @@ export type TypedLinkProps<TPath extends string> = RequiresParams<TPath> extends
  * navigate({ id: '123' }); // Type-safe!
  * ```
  */
-export type TypedNavigate<TPath extends string> = RequiresParams<TPath> extends true
-  ? (params: RouteParams<TPath>, options?: TypedNavigationOptions) => void
-  : HasOnlyOptionalParams<TPath> extends true
-    ? (params?: RouteParams<TPath>, options?: TypedNavigationOptions) => void
-    : (options?: TypedNavigationOptions) => void;
+export type TypedNavigate<TPath extends string> =
+  RequiresParams<TPath> extends true
+    ? (params: RouteParams<TPath>, options?: TypedNavigationOptions) => void
+    : HasOnlyOptionalParams<TPath> extends true
+      ? (params?: RouteParams<TPath>, options?: TypedNavigationOptions) => void
+      : (options?: TypedNavigationOptions) => void;
 
 /**
  * Validate that a path string matches the expected route pattern
@@ -870,8 +870,9 @@ export type TypedNavigate<TPath extends string> = RequiresParams<TPath> extends 
  * type Invalid = ValidatePath<'/users/:id', '/posts/123'>; // false
  * ```
  */
-export type ValidatePath<TPath extends string, TActual extends string> =
-  TActual extends TPath ? true : false;
+export type ValidatePath<TPath extends string, TActual extends string> = TActual extends TPath
+  ? true
+  : false;
 
 /**
  * Build a URL path type from a pattern and params
@@ -887,7 +888,7 @@ export type ValidatePath<TPath extends string, TActual extends string> =
  */
 export type BuildPath<
   TPath extends string,
-  TParams extends Record<string, string>
+  TParams extends Record<string, string>,
 > = TPath extends `${infer Start}:${infer Param}/${infer Rest}`
   ? `${Start}${TParams[Param & keyof TParams]}/${BuildPath<`/${Rest}`, TParams>}`
   : TPath extends `${infer Start}:${infer Param}`
@@ -925,7 +926,7 @@ export type QueryParamsFromSchema<TSchema> = TSchema extends { parse: (data: unk
  */
 export type CompleteRouteDefinition<
   TPath extends string,
-  TMeta extends Record<string, unknown> = Record<string, unknown>
+  TMeta extends Record<string, unknown> = Record<string, unknown>,
 > = {
   readonly path: TPath;
   readonly params: ReadonlyArray<ParamNames<TPath>>;

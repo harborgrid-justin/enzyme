@@ -197,7 +197,7 @@ export async function withRetry<T>(
  * ```
  */
 export class RetryPolicy {
-  private config: RetryConfig;
+  private readonly config: RetryConfig;
 
   constructor(config: RetryConfig = {}) {
     this.config = config;
@@ -324,7 +324,8 @@ export async function withTimeout<T>(
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const result = await Promise.race([
+
+    return await Promise.race([
       fn(),
       new Promise<never>((_, reject) => {
         controller.signal.addEventListener('abort', () => {
@@ -336,7 +337,6 @@ export async function withTimeout<T>(
         });
       }),
     ]);
-    return result;
   } finally {
     clearTimeout(timeoutId);
   }
@@ -492,7 +492,7 @@ export function debounce<Args extends unknown[], R>(
     }
 
     invokeFunc();
-    return deferred?.promise ?? Promise.resolve(undefined);
+    return deferred?.promise ?? undefined;
   }
 
   function pending(): boolean {
@@ -714,15 +714,6 @@ export class Mutex {
     });
   }
 
-  private release(): void {
-    const next = this.queue.shift();
-    if (next) {
-      next();
-    } else {
-      this.locked = false;
-    }
-  }
-
   /** Execute a function with exclusive lock */
   async runExclusive<T>(fn: () => Promise<T>): Promise<T> {
     const release = await this.acquire();
@@ -741,6 +732,15 @@ export class Mutex {
   /** Get the number of waiting acquires */
   getQueueLength(): number {
     return this.queue.length;
+  }
+
+  private release(): void {
+    const next = this.queue.shift();
+    if (next) {
+      next();
+    } else {
+      this.locked = false;
+    }
   }
 }
 
@@ -784,14 +784,6 @@ export class Semaphore {
     });
   }
 
-  private release(): void {
-    this.permits++;
-    const next = this.queue.shift();
-    if (next) {
-      next();
-    }
-  }
-
   /** Execute a function with a permit */
   async runWithPermit<T>(fn: () => Promise<T>): Promise<T> {
     const release = await this.acquire();
@@ -815,6 +807,14 @@ export class Semaphore {
   /** Get max permits configured */
   getMaxPermits(): number {
     return this.maxPermits;
+  }
+
+  private release(): void {
+    this.permits++;
+    const next = this.queue.shift();
+    if (next) {
+      next();
+    }
   }
 }
 
@@ -912,8 +912,8 @@ export async function pMap<T, R>(
 
   await Promise.all(
     items.map(async (item, index) => {
-      const result = await semaphore.runWithPermit(async () => mapper(item, index));
-      results[index] = result;
+
+      results[index] = await semaphore.runWithPermit(async () => mapper(item, index));
     })
   );
 

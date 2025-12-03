@@ -331,8 +331,8 @@ export class MiddlewareChain {
       if (mw.enabled !== true) return false;
       if (options.skip?.includes(mw.name) === true) return false;
       if (options.only && !options.only.includes(mw.name)) return false;
-      if (!this.matchesRoute(mw, context.path)) return false;
-      return true;
+      return this.matchesRoute(mw, context.path);
+
     });
 
     // Build execution chain
@@ -392,6 +392,46 @@ export class MiddlewareChain {
       },
       executionOrder: Object.freeze(executionOrder),
     };
+  }
+
+  /**
+   * Get all registered middleware
+   */
+  getMiddleware(): readonly RegisteredMiddleware[] {
+    return [...this.middleware];
+  }
+
+  /**
+   * Get middleware by name
+   */
+  getByName(name: string): RegisteredMiddleware | undefined {
+    return this.middleware.find(m => m.name === name);
+  }
+
+  /**
+   * Set default timeout
+   */
+  setDefaultTimeout(timeout: number): this {
+    this.defaultTimeout = timeout;
+    return this;
+  }
+
+  /**
+   * Clear all middleware
+   */
+  clear(): this {
+    this.middleware = [];
+    return this;
+  }
+
+  /**
+   * Clone the chain
+   */
+  clone(): MiddlewareChain {
+    const chain = new MiddlewareChain();
+    chain.middleware = [...this.middleware];
+    chain.defaultTimeout = this.defaultTimeout;
+    return chain;
   }
 
   /**
@@ -457,46 +497,6 @@ export class MiddlewareChain {
 
     const regex = new RegExp(`^${regexStr}$`);
     return regex.test(path);
-  }
-
-  /**
-   * Get all registered middleware
-   */
-  getMiddleware(): readonly RegisteredMiddleware[] {
-    return [...this.middleware];
-  }
-
-  /**
-   * Get middleware by name
-   */
-  getByName(name: string): RegisteredMiddleware | undefined {
-    return this.middleware.find(m => m.name === name);
-  }
-
-  /**
-   * Set default timeout
-   */
-  setDefaultTimeout(timeout: number): this {
-    this.defaultTimeout = timeout;
-    return this;
-  }
-
-  /**
-   * Clear all middleware
-   */
-  clear(): this {
-    this.middleware = [];
-    return this;
-  }
-
-  /**
-   * Clone the chain
-   */
-  clone(): MiddlewareChain {
-    const chain = new MiddlewareChain();
-    chain.middleware = [...this.middleware];
-    chain.defaultTimeout = this.defaultTimeout;
-    return chain;
   }
 }
 

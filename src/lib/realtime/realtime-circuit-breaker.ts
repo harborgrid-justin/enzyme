@@ -35,7 +35,9 @@ export interface RealtimeCircuitBreakerConfig {
 /**
  * Default configuration for realtime circuit breaker
  */
-const DEFAULT_CONFIG: Required<Omit<RealtimeCircuitBreakerConfig, 'onStateChange' | 'onCircuitOpen' | 'onCircuitRecovery'>> = {
+const DEFAULT_CONFIG: Required<
+  Omit<RealtimeCircuitBreakerConfig, 'onStateChange' | 'onCircuitOpen' | 'onCircuitRecovery'>
+> = {
   failureThreshold: 3,
   successThreshold: 1,
   resetTimeout: 300000, // 5 minutes - longer for realtime connections
@@ -81,7 +83,9 @@ export interface RealtimeConnectionMetrics {
  */
 export class RealtimeCircuitBreaker {
   private breaker: CircuitBreaker;
-  private config: Required<Omit<RealtimeCircuitBreakerConfig, 'onStateChange' | 'onCircuitOpen' | 'onCircuitRecovery'>> & {
+  private config: Required<
+    Omit<RealtimeCircuitBreakerConfig, 'onStateChange' | 'onCircuitOpen' | 'onCircuitRecovery'>
+  > & {
     onStateChange?: RealtimeCircuitBreakerConfig['onStateChange'];
     onCircuitOpen?: RealtimeCircuitBreakerConfig['onCircuitOpen'];
     onCircuitRecovery?: RealtimeCircuitBreakerConfig['onCircuitRecovery'];
@@ -113,23 +117,6 @@ export class RealtimeCircuitBreaker {
         this.config.onStateChange?.(from, to);
       },
     });
-  }
-
-  /**
-   * Handle circuit state changes
-   */
-  private handleCircuitStateChange(from: CircuitState, to: CircuitState): void {
-    if (to === 'open') {
-      this.connectionState = 'circuit_open';
-      this.config.onCircuitOpen?.();
-      console.warn('[RealtimeCircuitBreaker] Circuit opened - stopping reconnection attempts');
-    } else if (from === 'open' && to === 'half-open') {
-      this.connectionState = 'reconnecting';
-      console.info('[RealtimeCircuitBreaker] Circuit half-open - attempting recovery');
-    } else if (to === 'closed' && from !== 'closed') {
-      this.config.onCircuitRecovery?.();
-      console.info('[RealtimeCircuitBreaker] Circuit recovered');
-    }
   }
 
   /**
@@ -242,36 +229,13 @@ export class RealtimeCircuitBreaker {
   }
 
   /**
-   * Apply timeout to connection factory
-   */
-  private async withConnectionTimeout<T>(
-    connectionFactory: () => Promise<T>,
-    timeout: number
-  ): Promise<T> {
-    return new Promise((resolve, reject) => {
-      const timeoutId = setTimeout(() => {
-        reject(new ConnectionTimeoutError(`Connection timed out after ${timeout}ms`));
-      }, timeout);
-
-      connectionFactory()
-        .then((result) => {
-          clearTimeout(timeoutId);
-          resolve(result);
-        })
-        .catch((error) => {
-          clearTimeout(timeoutId);
-          reject(error);
-        });
-    });
-  }
-
-  /**
    * Get connection metrics
    */
   getMetrics(): RealtimeConnectionMetrics {
-    const averageReconnectTime = this.reconnectTimes.length > 0
-      ? this.reconnectTimes.reduce((a, b) => a + b, 0) / this.reconnectTimes.length
-      : 0;
+    const averageReconnectTime =
+      this.reconnectTimes.length > 0
+        ? this.reconnectTimes.reduce((a, b) => a + b, 0) / this.reconnectTimes.length
+        : 0;
 
     return {
       consecutiveFailures: this.consecutiveFailures,
@@ -293,29 +257,31 @@ export class RealtimeCircuitBreaker {
       return;
     }
 
-    this.healthCheckTimer = setInterval(async () => {
-      if (this.disposed) {
-        this.stopHealthCheck();
-        return;
-      }
-
-      try {
-        const isHealthy = await checkFn();
-        if (isHealthy) {
-          // Health check success in open state can trigger half-open
-          if (this.breaker.getState() === 'open') {
-            console.info('[RealtimeCircuitBreaker] Health check passed - circuit may recover');
-          }
-        } else {
-          // Health check failure while connected indicates degradation
-          if (this.connectionState === 'connected') {
-            this.connectionState = 'degraded';
-          }
+    this.healthCheckTimer = setInterval(() => {
+      void (async () => {
+        if (this.disposed) {
+          this.stopHealthCheck();
+          return;
         }
-      } catch {
-        // Health check errors are logged but don't affect circuit state
-        console.warn('[RealtimeCircuitBreaker] Health check failed');
-      }
+
+        try {
+          const isHealthy = await checkFn();
+          if (isHealthy) {
+            // Health check success in open state can trigger half-open
+            if (this.breaker.getState() === 'open') {
+              console.info('[RealtimeCircuitBreaker] Health check passed - circuit may recover');
+            }
+          } else {
+            // Health check failure while connected indicates degradation
+            if (this.connectionState === 'connected') {
+              this.connectionState = 'degraded';
+            }
+          }
+        } catch {
+          // Health check errors are logged but don't affect circuit state
+          console.warn('[RealtimeCircuitBreaker] Health check failed');
+        }
+      })();
     }, this.config.healthCheckInterval);
   }
 
@@ -346,6 +312,47 @@ export class RealtimeCircuitBreaker {
     this.disposed = true;
     this.stopHealthCheck();
     this.connectionState = 'disconnected';
+  }
+
+  /**
+   * Handle circuit state changes
+   */
+  private handleCircuitStateChange(from: CircuitState, to: CircuitState): void {
+    if (to === 'open') {
+      this.connectionState = 'circuit_open';
+      this.config.onCircuitOpen?.();
+      console.warn('[RealtimeCircuitBreaker] Circuit opened - stopping reconnection attempts');
+    } else if (from === 'open' && to === 'half-open') {
+      this.connectionState = 'reconnecting';
+      console.info('[RealtimeCircuitBreaker] Circuit half-open - attempting recovery');
+    } else if (to === 'closed' && from !== 'closed') {
+      this.config.onCircuitRecovery?.();
+      console.info('[RealtimeCircuitBreaker] Circuit recovered');
+    }
+  }
+
+  /**
+   * Apply timeout to connection factory
+   */
+  private async withConnectionTimeout<T>(
+    connectionFactory: () => Promise<T>,
+    timeout: number
+  ): Promise<T> {
+    return new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        reject(new ConnectionTimeoutError(`Connection timed out after ${timeout}ms`));
+      }, timeout);
+
+      connectionFactory()
+        .then((result) => {
+          clearTimeout(timeoutId);
+          resolve(result);
+        })
+        .catch((error: unknown) => {
+          clearTimeout(timeoutId);
+          reject(error instanceof Error ? error : new Error(String(error)));
+        });
+    });
   }
 }
 

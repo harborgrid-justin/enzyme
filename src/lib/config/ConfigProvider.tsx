@@ -30,11 +30,7 @@ import React, {
   useMemo,
   type ReactNode,
 } from 'react';
-import type {
-  ConfigRecord,
-  ConfigValue,
-  ConfigSchema,
-} from './types';
+import type { ConfigRecord, ConfigValue, ConfigSchema } from './types';
 import { ConfigLoader } from './config-loader';
 import { RuntimeConfig } from './runtime-config';
 import { getValueAtPath, hasPath } from './config-merger';
@@ -53,7 +49,9 @@ export interface ConfigContextValue<T extends ConfigRecord = ConfigRecord> {
   has: (path: string) => boolean;
   reset: () => void;
   reload: () => Promise<void>;
-  subscribe: (listener: (event: import('../contexts/ConfigContext').ConfigChangeEvent) => void) => () => void;
+  subscribe: (
+    listener: (event: import('../contexts/ConfigContext').ConfigChangeEvent) => void
+  ) => () => void;
   isLoading: boolean;
   error: Error | null;
 }
@@ -186,7 +184,7 @@ export function ConfigProvider<T extends ConfigRecord = ConfigRecord>({
 
   // Get value at path
   const get = useCallback(
-    <V = ConfigValue>(path: string, defaultValue?: V): V => {
+    <V = ConfigValue,>(path: string, defaultValue?: V): V => {
       return getValueAtPath<V>(config, path, defaultValue);
     },
     [config]
@@ -248,18 +246,21 @@ export function ConfigProvider<T extends ConfigRecord = ConfigRecord>({
 
   // Subscribe to changes
   const subscribe = useCallback(
-    (listener: (event: import('../contexts/ConfigContext').ConfigChangeEvent) => void): (() => void) => {
+    (
+      listener: (event: import('../contexts/ConfigContext').ConfigChangeEvent) => void
+    ): (() => void) => {
       return runtimeConfig.subscribe((event) => {
         // Convert ConfigEvent to ConfigChangeEvent
         // Map event types: 'error' events are not exposed to the context listener
         if (event.type === 'change' || event.type === 'reload') {
-          const mappedChanges = event.type === 'change' && event.changes
-            ? event.changes.map((c) => ({
-                path: c.path,
-                oldValue: c.previousValue ?? null,
-                newValue: c.newValue,
-              }))
-            : undefined;
+          const mappedChanges =
+            event.type === 'change' && event.changes
+              ? event.changes.map((c) => ({
+                  path: c.path,
+                  oldValue: c.previousValue ?? null,
+                  newValue: c.newValue,
+                }))
+              : undefined;
           listener({
             type: event.type === 'reload' ? 'reload' : 'change',
             changes: mappedChanges,
@@ -287,7 +288,7 @@ export function ConfigProvider<T extends ConfigRecord = ConfigRecord>({
   );
 
   // Render loading state
-  if (isLoading === true && loadingComponent != null) {
+  if (isLoading && loadingComponent != null) {
     return <>{loadingComponent}</>;
   }
 
@@ -297,9 +298,7 @@ export function ConfigProvider<T extends ConfigRecord = ConfigRecord>({
   }
 
   return (
-    <ConfigContext.Provider value={value as ConfigContextValue}>
-      {children}
-    </ConfigContext.Provider>
+    <ConfigContext.Provider value={value as ConfigContextValue}>{children}</ConfigContext.Provider>
   );
 }
 
@@ -311,9 +310,7 @@ export function ConfigProvider<T extends ConfigRecord = ConfigRecord>({
  * Hook to access the configuration context.
  */
 // eslint-disable-next-line react-refresh/only-export-components
-export function useConfigContext<
-  T extends ConfigRecord = ConfigRecord
->(): ConfigContextValue<T> {
+export function useConfigContext<T extends ConfigRecord = ConfigRecord>(): ConfigContextValue<T> {
   const context = useContext(ConfigContext);
   if (context == null) {
     throw new Error('useConfigContext must be used within a ConfigProvider');
@@ -326,7 +323,7 @@ export function useConfigContext<
  */
 // eslint-disable-next-line react-refresh/only-export-components
 export function useOptionalConfigContext<
-  T extends ConfigRecord = ConfigRecord
+  T extends ConfigRecord = ConfigRecord,
 >(): ConfigContextValue<T> | null {
   return useContext(ConfigContext) as ConfigContextValue<T> | null;
 }
@@ -339,10 +336,7 @@ export function useOptionalConfigContext<
  * HOC to inject configuration as props.
  */
 // eslint-disable-next-line react-refresh/only-export-components
-export function withConfig<
-  P extends object,
-  T extends ConfigRecord = ConfigRecord
->(
+export function withConfig<P extends object, T extends ConfigRecord = ConfigRecord>(
   Component: React.ComponentType<P & { config: ConfigContextValue<T> }>
 ): React.FC<P> {
   return function WithConfig(props: P) {

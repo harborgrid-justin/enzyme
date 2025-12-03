@@ -565,6 +565,15 @@ export class FeatureBridgeImpl {
   // ==========================================================================
 
   /**
+   * Disposes the bridge.
+   */
+  dispose(): void {
+    this.features.clear();
+    this.capabilityIndex.clear();
+    this.loadingPromises.clear();
+  }
+
+  /**
    * Handles missing capability/feature.
    */
   private handleMissing<T>(
@@ -641,15 +650,6 @@ export class FeatureBridgeImpl {
         reject(error instanceof Error ? error : new Error(String(error)));
       }
     });
-  }
-
-  /**
-   * Disposes the bridge.
-   */
-  dispose(): void {
-    this.features.clear();
-    this.capabilityIndex.clear();
-    this.loadingPromises.clear();
   }
 }
 

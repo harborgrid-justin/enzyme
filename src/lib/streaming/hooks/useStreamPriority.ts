@@ -30,21 +30,11 @@
  * ```
  */
 
-import {
-  useState,
-  useCallback,
-  useEffect,
-  useRef,
-  useMemo,
-} from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 
 import { useOptionalStreamContext } from '../StreamProvider';
 
-import {
-  type UseStreamPriorityResult,
-  StreamPriority,
-  PRIORITY_VALUES,
-} from '../types';
+import { type UseStreamPriorityResult, StreamPriority, PRIORITY_VALUES } from '../types';
 
 // ============================================================================
 // Priority Level Ordering
@@ -494,7 +484,7 @@ export function useDeferredPriority(
 ): UseStreamPriorityResult {
   return useStreamPriority(boundaryId, {
     ...options,
-  initialPriority: StreamPriority.Low,
-  escalateOnInteraction: true,
-});
+    initialPriority: StreamPriority.Low,
+    escalateOnInteraction: true,
+  });
 }

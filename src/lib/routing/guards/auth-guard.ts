@@ -143,6 +143,49 @@ export class AuthGuard extends BaseRouteGuard {
   }
 
   /**
+   * Get authentication state for a context
+   */
+  async getAuthState(context: GuardContext): Promise<AuthState> {
+    const isAuthenticated = await this.checkAuthStatus(context);
+
+    let expiresAt: number | undefined;
+    let needsRefresh = false;
+
+    if (isAuthenticated && context.user?.metadata?.['expiresAt'] != null) {
+      expiresAt = context.user.metadata['expiresAt'] as number;
+      const threshold = this.authConfig.refreshThreshold ?? 0;
+      needsRefresh = (expiresAt - Date.now()) < threshold;
+    }
+
+    return {
+      isAuthenticated,
+      expiresAt,
+      needsRefresh,
+    };
+  }
+
+  /**
+   * Check if a specific path requires authentication
+   */
+  requiresAuth(path: string): boolean {
+    return !this.isPublicPath(path);
+  }
+
+  /**
+   * Get public paths configuration
+   */
+  getPublicPaths(): readonly string[] {
+    return this.authConfig.publicPaths ?? [];
+  }
+
+  /**
+   * Get login path
+   */
+  getLoginPath(): string {
+    return this.authConfig.loginPath ?? '/login';
+  }
+
+  /**
    * Check authentication status
    */
   private async checkAuthentication(context: GuardContext): Promise<GuardResultObject> {
@@ -159,7 +202,7 @@ export class AuthGuard extends BaseRouteGuard {
     // Check authentication status
     const isAuthenticated = await this.checkAuthStatus(context);
 
-    if (isAuthenticated !== true) {
+    if (!isAuthenticated) {
       return this.buildLoginRedirect(context);
     }
 
@@ -273,49 +316,6 @@ export class AuthGuard extends BaseRouteGuard {
         console.warn('Token refresh failed:', error);
       }
     }
-  }
-
-  /**
-   * Get authentication state for a context
-   */
-  async getAuthState(context: GuardContext): Promise<AuthState> {
-    const isAuthenticated = await this.checkAuthStatus(context);
-
-    let expiresAt: number | undefined;
-    let needsRefresh = false;
-
-    if (isAuthenticated && context.user?.metadata?.['expiresAt'] != null) {
-      expiresAt = context.user.metadata['expiresAt'] as number;
-      const threshold = this.authConfig.refreshThreshold ?? 0;
-      needsRefresh = (expiresAt - Date.now()) < threshold;
-    }
-
-    return {
-      isAuthenticated,
-      expiresAt,
-      needsRefresh,
-    };
-  }
-
-  /**
-   * Check if a specific path requires authentication
-   */
-  requiresAuth(path: string): boolean {
-    return !this.isPublicPath(path);
-  }
-
-  /**
-   * Get public paths configuration
-   */
-  getPublicPaths(): readonly string[] {
-    return this.authConfig.publicPaths ?? [];
-  }
-
-  /**
-   * Get login path
-   */
-  getLoginPath(): string {
-    return this.authConfig.loginPath ?? '/login';
   }
 }
 

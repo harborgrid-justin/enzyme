@@ -219,7 +219,7 @@ export const INTERSECTION_THRESHOLDS = [0, 0.1, 0.25, 0.5, 0.75, 0.9, 1] as cons
  * File size limits.
  */
 export const SIZE_LIMITS = {
-  MAX_UPLOAD_SIZE: 10 * 1024 * 1024,      // 10MB
-  MAX_IMAGE_SIZE: 5 * 1024 * 1024,        // 5MB
-  MAX_CACHE_SIZE: 50 * 1024 * 1024,       // 50MB
+  MAX_UPLOAD_SIZE: 10 * 1024 * 1024, // 10MB
+  MAX_IMAGE_SIZE: 5 * 1024 * 1024, // 5MB
+  MAX_CACHE_SIZE: 50 * 1024 * 1024, // 50MB
 } as const;

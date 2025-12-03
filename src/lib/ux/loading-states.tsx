@@ -186,10 +186,7 @@ export function LoadingProvider({
   onTimeout,
   onError,
 }: LoadingProviderProps): React.ReactElement {
-  const config = useMemo(
-    () => ({ ...DEFAULT_CONFIG, ...configOverride }),
-    [configOverride]
-  );
+  const config = useMemo(() => ({ ...DEFAULT_CONFIG, ...configOverride }), [configOverride]);
 
   const [state, setState] = useState<LoadingState>('idle');
   const [phase, setPhase] = useState<LoadingPhase>('initial');
@@ -223,15 +220,9 @@ export function LoadingProvider({
       setErrorValue(null);
 
       // Progressive phase transitions
-      phaseTimers.current.push(
-        setTimeout(() => setPhase('spinner'), config.spinnerDelay)
-      );
-      phaseTimers.current.push(
-        setTimeout(() => setPhase('skeleton'), config.skeletonDelay)
-      );
-      phaseTimers.current.push(
-        setTimeout(() => setPhase('message'), config.messageDelay)
-      );
+      phaseTimers.current.push(setTimeout(() => setPhase('spinner'), config.spinnerDelay));
+      phaseTimers.current.push(setTimeout(() => setPhase('skeleton'), config.skeletonDelay));
+      phaseTimers.current.push(setTimeout(() => setPhase('message'), config.messageDelay));
 
       // Timeout handling
       timeoutTimer.current = setTimeout(() => {
@@ -333,9 +324,7 @@ export function LoadingProvider({
     ]
   );
 
-  return (
-    <LoadingContext.Provider value={value}>{children}</LoadingContext.Provider>
-  );
+  return <LoadingContext.Provider value={value}>{children}</LoadingContext.Provider>;
 }
 
 // ============================================================================
@@ -415,16 +404,9 @@ export function LoadingIndicator({
     .join(' ');
 
   return (
-    <div
-      className={containerClasses}
-      role="status"
-      aria-live="polite"
-      aria-busy="true"
-    >
+    <div className={containerClasses} role="status" aria-live="polite" aria-busy="true">
       {showSpinner && (spinner || <DefaultSpinner size={size} />)}
-      {message && (
-        <span className="loading-indicator__message">{message}</span>
-      )}
+      {message && <span className="loading-indicator__message">{message}</span>}
       <span className="sr-only">Loading{message ? `: ${message}` : ''}...</span>
     </div>
   );
@@ -449,10 +431,7 @@ export function ProgressiveLoader({
   config: configOverride,
   onRetry,
 }: ProgressiveLoaderProps): React.ReactElement {
-  const config = useMemo(
-    () => ({ ...DEFAULT_CONFIG, ...configOverride }),
-    [configOverride]
-  );
+  const config = useMemo(() => ({ ...DEFAULT_CONFIG, ...configOverride }), [configOverride]);
 
   const [phase, setPhase] = useState<LoadingPhase>('initial');
   const [timedOut, setTimedOut] = useState(false);
@@ -468,9 +447,7 @@ export function ProgressiveLoader({
       phaseTimers.current = [];
 
       // Set up phase transitions
-      phaseTimers.current.push(
-        setTimeout(() => setPhase('spinner'), config.spinnerDelay)
-      );
+      phaseTimers.current.push(setTimeout(() => setPhase('spinner'), config.spinnerDelay));
 
       if (skeletonPlaceholder !== undefined && skeletonPlaceholder !== null) {
         phaseTimers.current.push(
@@ -674,9 +651,7 @@ export function ProgressBar({
 /**
  * Hook for managing async loading state
  */
-export function useLoadingState(
-  config: Partial<LoadingConfig> = {}
-): {
+export function useLoadingState(config: Partial<LoadingConfig> = {}): {
   isLoading: boolean;
   phase: LoadingPhase;
   error: Error | null;
@@ -705,18 +680,10 @@ export function useLoadingState(
     setPhase('initial');
     setErrorState(null);
 
-    timers.current.push(
-      setTimeout(() => setPhase('spinner'), fullConfig.spinnerDelay)
-    );
-    timers.current.push(
-      setTimeout(() => setPhase('skeleton'), fullConfig.skeletonDelay)
-    );
-    timers.current.push(
-      setTimeout(() => setPhase('message'), fullConfig.messageDelay)
-    );
-    timers.current.push(
-      setTimeout(() => setPhase('timeout'), fullConfig.timeoutThreshold)
-    );
+    timers.current.push(setTimeout(() => setPhase('spinner'), fullConfig.spinnerDelay));
+    timers.current.push(setTimeout(() => setPhase('skeleton'), fullConfig.skeletonDelay));
+    timers.current.push(setTimeout(() => setPhase('message'), fullConfig.messageDelay));
+    timers.current.push(setTimeout(() => setPhase('timeout'), fullConfig.timeoutThreshold));
   }, [fullConfig, clearTimers]);
 
   const stopLoading = useCallback(() => {

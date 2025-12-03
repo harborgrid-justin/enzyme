@@ -34,12 +34,7 @@ import type {
   ConfigEventListener,
   ConfigSourceType,
 } from './types';
-import {
-  getValueAtPath,
-  setValueAtPath,
-  deleteValueAtPath,
-  hasPath,
-} from './config-merger';
+import { getValueAtPath, setValueAtPath, deleteValueAtPath, hasPath } from './config-merger';
 
 // ============================================================================
 // Types
@@ -340,22 +335,6 @@ export class RuntimeConfig<T extends ConfigRecord = ConfigRecord> {
     this.history = [];
   }
 
-  private recordChange(changes: ConfigChange[]): void {
-    this.history.push({
-      changes,
-      timestamp: new Date(),
-    });
-
-    // Trim history if needed
-    while (this.history.length > this.options.maxHistory) {
-      this.history.shift();
-    }
-  }
-
-  // ==========================================================================
-  // Subscriptions
-  // ==========================================================================
-
   /**
    * Subscribe to configuration events.
    */
@@ -365,6 +344,10 @@ export class RuntimeConfig<T extends ConfigRecord = ConfigRecord> {
       this.listeners.delete(listener);
     };
   }
+
+  // ==========================================================================
+  // Subscriptions
+  // ==========================================================================
 
   /**
    * Subscribe to changes at a specific path.
@@ -388,20 +371,6 @@ export class RuntimeConfig<T extends ConfigRecord = ConfigRecord> {
     return this.subscribe(wrappedListener);
   }
 
-  private emitEvent(event: ConfigEvent): void {
-    for (const listener of this.listeners) {
-      try {
-        listener(event);
-      } catch (error) {
-        this.log('Error in event listener:', error);
-      }
-    }
-  }
-
-  // ==========================================================================
-  // Utilities
-  // ==========================================================================
-
   /**
    * Create a snapshot of the current configuration.
    */
@@ -414,6 +383,32 @@ export class RuntimeConfig<T extends ConfigRecord = ConfigRecord> {
    */
   restore(snapshot: T): void {
     this.reset(snapshot);
+  }
+
+  // ==========================================================================
+  // Utilities
+  // ==========================================================================
+
+  private recordChange(changes: ConfigChange[]): void {
+    this.history.push({
+      changes,
+      timestamp: new Date(),
+    });
+
+    // Trim history if needed
+    while (this.history.length > this.options.maxHistory) {
+      this.history.shift();
+    }
+  }
+
+  private emitEvent(event: ConfigEvent): void {
+    for (const listener of this.listeners) {
+      try {
+        listener(event);
+      } catch (error) {
+        this.log('Error in event listener:', error);
+      }
+    }
   }
 
   private log(message: string, ...args: unknown[]): void {

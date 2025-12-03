@@ -199,9 +199,7 @@ export interface AdvancedPerformanceConfig {
 /**
  * Initialize all advanced performance tools
  */
-export function initAdvancedPerformance(
-  config: AdvancedPerformanceConfig = {}
-): {
+export function initAdvancedPerformance(config: AdvancedPerformanceConfig = {}): {
   profiler: ReturnType<typeof getPerformanceProfiler> | null;
   bundleAnalyzer: ReturnType<typeof getBundleAnalyzer> | null;
   criticalPathAnalyzer: ReturnType<typeof getCriticalPathAnalyzer> | null;
@@ -222,18 +220,12 @@ export function initAdvancedPerformance(
     memoryMonitorInterval = 5000,
   } = config;
 
-  const profiler = enableProfiling
-    ? getPerformanceProfiler(profilerConfig)
-    : null;
-  const bundleAnalyzer = enableBundleAnalysis
-    ? getBundleAnalyzer(bundleAnalyzerConfig)
-    : null;
+  const profiler = enableProfiling ? getPerformanceProfiler(profilerConfig) : null;
+  const bundleAnalyzer = enableBundleAnalysis ? getBundleAnalyzer(bundleAnalyzerConfig) : null;
   const criticalPathAnalyzer = enableCriticalPathAnalysis
     ? getCriticalPathAnalyzer(criticalPathConfig)
     : null;
-  const idleScheduler = enableIdleScheduling
-    ? getIdleScheduler(idleSchedulerConfig)
-    : null;
+  const idleScheduler = enableIdleScheduling ? getIdleScheduler(idleSchedulerConfig) : null;
   const memoryMonitor = enableMemoryMonitoring ? getMemoryMonitor() : null;
 
   // Start services

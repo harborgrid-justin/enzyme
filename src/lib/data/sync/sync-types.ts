@@ -101,10 +101,7 @@ export interface SyncSource<T = unknown> {
   /** Delete multiple entities */
   deleteMany: (entityType: string, ids: string[]) => Promise<void>;
   /** Subscribe to changes (if supported) */
-  subscribe?: (
-    entityType: string,
-    callback: (event: SyncEvent<T>) => void
-  ) => () => void;
+  subscribe?: (entityType: string, callback: (event: SyncEvent<T>) => void) => () => void;
   /** Get last modified timestamp */
   getLastModified?: (entityType: string, id: string) => Promise<number | null>;
   /** Check if entity exists */
@@ -189,9 +186,17 @@ export interface SyncOperation {
  */
 export interface SyncEngine {
   /** Sync a single entity */
-  sync: <T = unknown>(entityType: string, id: string, options?: SyncOptions) => Promise<SyncResult<T>>;
+  sync: <T = unknown>(
+    entityType: string,
+    id: string,
+    options?: SyncOptions
+  ) => Promise<SyncResult<T>>;
   /** Sync multiple entities */
-  syncMany: <T = unknown>(entityType: string, ids: string[], options?: SyncOptions) => Promise<SyncResult<T>[]>;
+  syncMany: <T = unknown>(
+    entityType: string,
+    ids: string[],
+    options?: SyncOptions
+  ) => Promise<SyncResult<T>[]>;
   /** Sync all entities of a type */
   syncAll: <T = unknown>(entityType: string, options?: SyncOptions) => Promise<SyncResult<T>>;
   /** Create entity */

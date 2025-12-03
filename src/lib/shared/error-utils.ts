@@ -70,16 +70,6 @@ export class AppError extends Error {
     this.isRetryable = options.isRetryable ?? this.determineRetryable();
   }
 
-  private determineRetryable(): boolean {
-    const retryableCategories: ErrorCategory[] = [
-      'network',
-      'timeout',
-      'rate_limit',
-      'server',
-    ];
-    return retryableCategories.includes(this.category);
-  }
-
   /**
    * Convert to plain object for serialization.
    */
@@ -96,6 +86,16 @@ export class AppError extends Error {
       isRetryable: this.isRetryable,
       stack: this.stack,
     };
+  }
+
+  private determineRetryable(): boolean {
+    const retryableCategories: ErrorCategory[] = [
+      'network',
+      'timeout',
+      'rate_limit',
+      'server',
+    ];
+    return retryableCategories.includes(this.category);
   }
 }
 
@@ -629,7 +629,7 @@ export function failure<E>(error: E): Result<never, E> {
  */
 export async function tryCatch<T>(
   fn: () => Promise<T>
-): Promise<Result<T, AppError>> {
+): Promise<Result<T>> {
   try {
     const data = await fn();
     return success(data);
@@ -641,7 +641,7 @@ export async function tryCatch<T>(
 /**
  * Sync version of tryCatch.
  */
-export function tryCatchSync<T>(fn: () => T): Result<T, AppError> {
+export function tryCatchSync<T>(fn: () => T): Result<T> {
   try {
     const data = fn();
     return success(data);

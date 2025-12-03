@@ -286,49 +286,6 @@ export class ExposureTracker {
     return events;
   }
 
-  private isDuplicateExposure(
-    existing: ExposureRecord | undefined,
-    now: Date
-  ): boolean {
-    if (!existing) {
-      return false;
-    }
-
-    const timeSinceLastExposure =
-      now.getTime() - existing.lastExposedAt.getTime();
-    return timeSinceLastExposure < this.config.deduplicationWindow;
-  }
-
-  private getExposureKey(flagKey: string, experimentId?: string): string {
-    return experimentId != null && experimentId !== '' ? `${flagKey}:${experimentId}` : flagKey;
-  }
-
-  private enforceMaxExposures(userId: UserId): void {
-    const userMap = this.userExposures.get(userId);
-    if (!userMap) {
-      return;
-    }
-
-    if (userMap.size > this.config.maxExposuresPerUser) {
-      // Remove oldest exposures
-      const entries = Array.from(userMap.entries()).sort(
-        (a, b) => a[1].lastExposedAt.getTime() - b[1].lastExposedAt.getTime()
-      );
-
-      const toRemove = entries.slice(
-        0,
-        userMap.size - this.config.maxExposuresPerUser
-      );
-      for (const [key] of toRemove) {
-        userMap.delete(key);
-      }
-    }
-  }
-
-  // ==========================================================================
-  // Exposure Queries
-  // ==========================================================================
-
   /**
    * Get exposure record for a user and flag.
    */
@@ -395,6 +352,10 @@ export class ExposureTracker {
     };
   }
 
+  // ==========================================================================
+  // Exposure Queries
+  // ==========================================================================
+
   /**
    * Check if user was exposed to a flag.
    */
@@ -443,10 +404,6 @@ export class ExposureTracker {
     return counts;
   }
 
-  // ==========================================================================
-  // Experiment Support
-  // ==========================================================================
-
   /**
    * Get all users in an experiment.
    */
@@ -474,14 +431,8 @@ export class ExposureTracker {
     for (const [userId, userMap] of this.userExposures.entries()) {
       for (const exposure of userMap.values()) {
         if (exposure.experimentId === experimentId && exposure.cohort != null && exposure.cohort !== '') {
-          if (!cohorts[exposure.cohort]) {
-            cohorts[exposure.cohort] = [];
-          }
-          // Add null check to satisfy TypeScript
-          const cohortArray = cohorts[exposure.cohort];
-          if (cohortArray) {
-            cohortArray.push(userId);
-          }
+          cohorts[exposure.cohort] ??= [];
+          cohorts[exposure.cohort].push(userId);
         }
       }
     }
@@ -508,7 +459,7 @@ export class ExposureTracker {
   }
 
   // ==========================================================================
-  // Subscriptions
+  // Experiment Support
   // ==========================================================================
 
   /**
@@ -520,20 +471,6 @@ export class ExposureTracker {
       this.listeners.delete(listener);
     };
   }
-
-  private notifyListeners(exposure: ExposureEvent): void {
-    for (const listener of this.listeners) {
-      try {
-        listener(exposure);
-      } catch (error) {
-        this.log('Error in exposure listener:', error);
-      }
-    }
-  }
-
-  // ==========================================================================
-  // Flushing
-  // ==========================================================================
 
   /**
    * Flush pending exposures.
@@ -550,7 +487,7 @@ export class ExposureTracker {
       for (const exposure of exposures) {
         const result = this.config.onExposure(exposure) as unknown;
         if (result && typeof result === 'object' && 'then' in result && typeof result.then === 'function') {
-          await result as Promise<void>;
+          await (result as Promise<void>);
         }
       }
       this.log(`Flushed ${exposures.length} exposures`);
@@ -560,6 +497,117 @@ export class ExposureTracker {
       this.log('Error flushing exposures:', error);
     }
   }
+
+  /**
+   * Clear all exposure data.
+   */
+  clear(): void {
+    this.userExposures.clear();
+    this.pendingExposures = [];
+
+    if (this.config.persistent && typeof localStorage !== 'undefined') {
+      localStorage.removeItem(`${this.config.storagePrefix}data`);
+    }
+
+    this.log('Exposure data cleared');
+  }
+
+  // ==========================================================================
+  // Subscriptions
+  // ==========================================================================
+
+  /**
+   * Clear exposures for a specific user.
+   */
+  clearUser(userId: UserId): void {
+    this.userExposures.delete(userId);
+    this.saveToStorage();
+    this.log(`Cleared exposures for user: ${userId}`);
+  }
+
+  /**
+   * Shutdown the tracker.
+   */
+  async shutdown(): Promise<void> {
+    this.stopFlushTimer();
+    await this.flush();
+    this.saveToStorage();
+    this.listeners.clear();
+    this.log('Exposure tracker shutdown');
+  }
+
+  // ==========================================================================
+  // Flushing
+  // ==========================================================================
+
+  /**
+   * Enable or disable tracking.
+   */
+  setEnabled(enabled: boolean): void {
+    (this.config as { enabled: boolean }).enabled = enabled;
+    if (enabled) {
+      this.startFlushTimer();
+    } else {
+      this.stopFlushTimer();
+    }
+  }
+
+  private isDuplicateExposure(
+    existing: ExposureRecord | undefined,
+    now: Date
+  ): boolean {
+    if (!existing) {
+      return false;
+    }
+
+    const timeSinceLastExposure =
+      now.getTime() - existing.lastExposedAt.getTime();
+    return timeSinceLastExposure < this.config.deduplicationWindow;
+  }
+
+  private getExposureKey(flagKey: string, experimentId?: string): string {
+    return experimentId != null && experimentId !== '' ? `${flagKey}:${experimentId}` : flagKey;
+  }
+
+  // ==========================================================================
+  // Storage
+  // ==========================================================================
+
+  private enforceMaxExposures(userId: UserId): void {
+    const userMap = this.userExposures.get(userId);
+    if (!userMap) {
+      return;
+    }
+
+    if (userMap.size > this.config.maxExposuresPerUser) {
+      // Remove oldest exposures
+      const entries = Array.from(userMap.entries()).sort(
+        (a, b) => a[1].lastExposedAt.getTime() - b[1].lastExposedAt.getTime()
+      );
+
+      const toRemove = entries.slice(
+        0,
+        userMap.size - this.config.maxExposuresPerUser
+      );
+      for (const [key] of toRemove) {
+        userMap.delete(key);
+      }
+    }
+  }
+
+  private notifyListeners(exposure: ExposureEvent): void {
+    for (const listener of this.listeners) {
+      try {
+        listener(exposure);
+      } catch (error) {
+        this.log('Error in exposure listener:', error);
+      }
+    }
+  }
+
+  // ==========================================================================
+  // Lifecycle
+  // ==========================================================================
 
   private startFlushTimer(): void {
     if (this.flushTimer) {
@@ -577,10 +625,6 @@ export class ExposureTracker {
       this.flushTimer = null;
     }
   }
-
-  // ==========================================================================
-  // Storage
-  // ==========================================================================
 
   private loadFromStorage(): void {
     if (!this.config.persistent || typeof localStorage === 'undefined') {
@@ -632,56 +676,6 @@ export class ExposureTracker {
       );
     } catch (error) {
       this.log('Error saving to storage:', error);
-    }
-  }
-
-  // ==========================================================================
-  // Lifecycle
-  // ==========================================================================
-
-  /**
-   * Clear all exposure data.
-   */
-  clear(): void {
-    this.userExposures.clear();
-    this.pendingExposures = [];
-
-    if (this.config.persistent && typeof localStorage !== 'undefined') {
-      localStorage.removeItem(`${this.config.storagePrefix}data`);
-    }
-
-    this.log('Exposure data cleared');
-  }
-
-  /**
-   * Clear exposures for a specific user.
-   */
-  clearUser(userId: UserId): void {
-    this.userExposures.delete(userId);
-    this.saveToStorage();
-    this.log(`Cleared exposures for user: ${userId}`);
-  }
-
-  /**
-   * Shutdown the tracker.
-   */
-  async shutdown(): Promise<void> {
-    this.stopFlushTimer();
-    await this.flush();
-    this.saveToStorage();
-    this.listeners.clear();
-    this.log('Exposure tracker shutdown');
-  }
-
-  /**
-   * Enable or disable tracking.
-   */
-  setEnabled(enabled: boolean): void {
-    (this.config as { enabled: boolean }).enabled = enabled;
-    if (enabled) {
-      this.startFlushTimer();
-    } else {
-      this.stopFlushTimer();
     }
   }
 

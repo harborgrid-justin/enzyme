@@ -34,14 +34,14 @@ function DynamicModule() {
 
 ## Exports
 
-| Export | Type | Description |
-|--------|------|-------------|
-| `ModuleProvider` | Component | Context provider for module system |
-| `ModuleSlot` | Component | Render slot for dynamic modules |
-| `ModuleBoundary` | Component | Error boundary for modules |
-| `useModule` | Hook | Load and access modules |
-| `useSecureModule` | Hook | Sandboxed module loading |
-| `useModuleState` | Hook | Module state management |
+| Export            | Type      | Description                        |
+|-------------------|-----------|------------------------------------|
+| `ModuleProvider`  | Component | Context provider for module system |
+| `ModuleSlot`      | Component | Render slot for dynamic modules    |
+| `ModuleBoundary`  | Component | Error boundary for modules         |
+| `useModule`       | Hook      | Load and access modules            |
+| `useSecureModule` | Hook      | Sandboxed module loading           |
+| `useModuleState`  | Hook      | Module state management            |
 
 ## See Also
 

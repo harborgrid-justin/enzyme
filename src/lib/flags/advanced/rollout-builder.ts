@@ -40,10 +40,7 @@ export class RolloutBuilder {
   /**
    * Create a scheduled rollout.
    */
-  static scheduled(
-    stages: RolloutStage[],
-    options?: { autoAdvance?: boolean }
-  ): ScheduledRollout {
+  static scheduled(stages: RolloutStage[], options?: { autoAdvance?: boolean }): ScheduledRollout {
     return {
       strategy: 'scheduled',
       stages,
@@ -170,8 +167,6 @@ export class RolloutStageBuilder {
    * Build the stages.
    */
   build(): RolloutStage[] {
-    return [...this.stages].sort(
-      (a, b) => a.startTime.getTime() - b.startTime.getTime()
-    );
+    return [...this.stages].sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
   }
 }

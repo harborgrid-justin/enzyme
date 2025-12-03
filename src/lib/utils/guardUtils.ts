@@ -100,10 +100,9 @@ export function isDateString(value: unknown): value is string {
  * Check if value is a Promise
  */
 export function isPromise<T = unknown>(value: unknown): value is Promise<T> {
-  return value instanceof Promise || (
-    isObject(value) &&
-    isFunction((value).then) &&
-    isFunction((value).catch)
+  return (
+    value instanceof Promise ||
+    (isObject(value) && isFunction(value.then) && isFunction(value.catch))
   );
 }
 
@@ -130,10 +129,7 @@ export function isOneOf<T>(value: unknown, allowedValues: readonly T[]): value i
 /**
  * Check if object has key
  */
-export function hasKey<K extends string>(
-  obj: unknown,
-  key: K
-): obj is Record<K, unknown> {
+export function hasKey<K extends string>(obj: unknown, key: K): obj is Record<K, unknown> {
   return isObject(obj) && key in obj;
 }
 
@@ -188,10 +184,7 @@ export function isUuid(value: unknown): value is string {
 /**
  * Narrow type or return undefined
  */
-export function narrow<T>(
-  value: unknown,
-  guard: (value: unknown) => value is T
-): T | undefined {
+export function narrow<T>(value: unknown, guard: (value: unknown) => value is T): T | undefined {
   return guard(value) ? value : undefined;
 }
 
@@ -209,18 +202,18 @@ export function narrowOr<T>(
 /**
  * Create a type guard for object shape
  */
-export function createShapeGuard<T extends Record<string, unknown>>(
-  shape: { [K in keyof T]: (value: unknown) => value is T[K] }
-): (value: unknown) => value is T {
+export function createShapeGuard<T extends Record<string, unknown>>(shape: {
+  [K in keyof T]: (value: unknown) => value is T[K];
+}): (value: unknown) => value is T {
   return (value: unknown): value is T => {
     if (!isObject(value)) return false;
-    
+
     for (const key of Object.keys(shape) as (keyof T)[]) {
-      if (!(key in value) || !shape[key]((value)[key as string])) {
+      if (!(key in value) || !shape[key](value[key as string])) {
         return false;
       }
     }
-    
+
     return true;
   };
 }

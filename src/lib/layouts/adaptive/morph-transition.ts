@@ -278,7 +278,6 @@ function lerpTransform(from: Transform3D, to: Transform3D, t: number): Transform
  * ```
  */
 export class MorphController implements MorphControllerInterface {
-  private _config: MorphTransitionConfig;
   private _activeContext: AnimationContext | null = null;
   private _animationFrameId: number | null = null;
   private _destroyed: boolean = false;
@@ -286,6 +285,8 @@ export class MorphController implements MorphControllerInterface {
   constructor(config: Partial<MorphTransitionConfig> = {}) {
     this._config = { ...DEFAULT_MORPH_TRANSITION_CONFIG, ...config };
   }
+
+  private _config: MorphTransitionConfig;
 
   /**
    * Current configuration.
@@ -385,7 +386,10 @@ export class MorphController implements MorphControllerInterface {
       }
     }
 
-    const context: AnimationContext = {
+
+
+
+    return {
       batchId: generateBatchId(),
       snapshots,
       progress: 0,
@@ -393,8 +397,6 @@ export class MorphController implements MorphControllerInterface {
       startTime: null,
       cancel: () => this.cancel(),
     };
-
-    return context;
   }
 
   /**
@@ -408,7 +410,7 @@ export class MorphController implements MorphControllerInterface {
 
     // Cancel any existing animation
     if (this._activeContext?.isRunning === true) {
-      if (this._config.interruptible === true) {
+      if (this._config.interruptible) {
         this.cancel();
       } else {
         // Wait for current animation to complete

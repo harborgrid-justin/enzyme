@@ -178,113 +178,6 @@ export class AnalyticsManager {
   }
 
   /**
-   * Generate session ID
-   */
-  private generateSessionId(): string {
-    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  }
-
-  /**
-   * Setup context information
-   */
-  private setupContext(): void {
-    if (typeof window === 'undefined') return;
-
-    this.context = {
-      page: {
-        path: window.location.pathname,
-        title: document.title,
-        referrer: document.referrer,
-      },
-      device: {
-        type: this.getDeviceType(),
-        os: this.getOS(),
-        browser: this.getBrowser(),
-        screen: `${window.screen.width}x${window.screen.height}`,
-      },
-      location: {
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        language: navigator.language,
-      },
-      campaign: this.getUTMParams(),
-    };
-  }
-
-  /**
-   * Get device type
-   */
-  private getDeviceType(): string {
-    const ua = navigator.userAgent;
-    if (/tablet/i.test(ua)) return 'tablet';
-    if (/mobile/i.test(ua)) return 'mobile';
-    return 'desktop';
-  }
-
-  /**
-   * Get OS
-   */
-  private getOS(): string {
-    const ua = navigator.userAgent;
-    if (/windows/i.test(ua)) return 'Windows';
-    if (/mac/i.test(ua)) return 'macOS';
-    if (/linux/i.test(ua)) return 'Linux';
-    if (/android/i.test(ua)) return 'Android';
-    if (/ios|iphone|ipad/i.test(ua)) return 'iOS';
-    return 'Unknown';
-  }
-
-  /**
-   * Get browser
-   */
-  private getBrowser(): string {
-    const ua = navigator.userAgent;
-    if (/chrome/i.test(ua)) return 'Chrome';
-    if (/firefox/i.test(ua)) return 'Firefox';
-    if (/safari/i.test(ua)) return 'Safari';
-    if (/edge/i.test(ua)) return 'Edge';
-    return 'Unknown';
-  }
-
-  /**
-   * Get UTM parameters
-   */
-  private getUTMParams(): AnalyticsContext['campaign'] {
-    if (typeof window === 'undefined') return {};
-
-    const params = new URLSearchParams(window.location.search);
-    return {
-      source: params.get('utm_source') ?? undefined,
-      medium: params.get('utm_medium') ?? undefined,
-      campaign: params.get('utm_campaign') ?? undefined,
-      term: params.get('utm_term') ?? undefined,
-      content: params.get('utm_content') ?? undefined,
-    };
-  }
-
-  /**
-   * Setup session tracking
-   */
-  private setupSessionTracking(): void {
-    if (typeof window === 'undefined') return;
-
-    // Reset session on activity after timeout
-    let lastActivity = Date.now();
-
-    const resetSessionIfNeeded = (): void => {
-      const now = Date.now();
-      if (now - lastActivity > this.config.sessionTimeout) {
-        this.sessionId = this.generateSessionId();
-        this.sessionStart = now;
-      }
-      lastActivity = now;
-    };
-
-    window.addEventListener('click', resetSessionIfNeeded, { passive: true });
-    window.addEventListener('keydown', resetSessionIfNeeded, { passive: true });
-    window.addEventListener('scroll', resetSessionIfNeeded, { passive: true });
-  }
-
-  /**
    * Register analytics provider
    */
   async registerProvider(
@@ -330,60 +223,6 @@ export class AnalyticsManager {
    */
   getConsent(): ConsentCategories {
     return { ...this.consent };
-  }
-
-  /**
-   * Check if tracking is allowed
-   */
-  private canTrack(): boolean {
-    if (!this.config.enabled) return false;
-    if (this.consent.analytics !== true) return false;
-
-    // Sample rate check
-    if (this.config.sampleRate < 1) {
-      if (Math.random() > this.config.sampleRate) return false;
-    }
-
-    return true;
-  }
-
-  /**
-   * Sanitize event properties
-   */
-  private sanitizeProperties(
-    properties: Record<string, unknown>
-  ): Record<string, unknown> {
-    const sanitized: Record<string, unknown> = {};
-
-    for (const [key, value] of Object.entries(properties)) {
-      // Remove PHI fields entirely
-      if (this.config.phiFields.includes(key.toLowerCase())) {
-        continue;
-      }
-
-      // Hash PII fields
-      if (this.config.piiFields.includes(key.toLowerCase())) {
-        sanitized[key] = this.hashValue(String(value));
-        continue;
-      }
-
-      sanitized[key] = value;
-    }
-
-    return sanitized;
-  }
-
-  /**
-   * Simple hash function for PII
-   */
-  private hashValue(value: string): string {
-    let hash = 0;
-    for (let i = 0; i < value.length; i++) {
-      const char = value.charCodeAt(i);
-      hash = (hash << 5) - hash + char;
-      hash = hash & hash;
-    }
-    return `hashed_${Math.abs(hash).toString(16)}`;
   }
 
   /**
@@ -437,49 +276,6 @@ export class AnalyticsManager {
     }
 
     this.sendEvent(event);
-  }
-
-  /**
-   * Send event to providers
-   */
-  private sendEvent(event: AnalyticsEvent): void {
-    for (const provider of this.providers.values()) {
-      try {
-        provider.track(event);
-      } catch (error) {
-        logger.error('[Analytics] Track failed', { provider: provider.name, error });
-      }
-    }
-
-    if (this.config.debug) {
-      logger.debug('[Analytics] Event tracked', { event });
-    }
-  }
-
-  /**
-   * Queue event for later
-   */
-  private queueEvent(event: AnalyticsEvent): void {
-    if (this.eventQueue.length >= this.config.maxQueueSize) {
-      this.eventQueue.shift(); // Remove oldest
-    }
-    this.eventQueue.push(event);
-  }
-
-  /**
-   * Flush event queue
-   */
-  private flushQueue(): void {
-    const events = [...this.eventQueue];
-    this.eventQueue = [];
-
-    for (const event of events) {
-      this.sendEvent(event);
-    }
-
-    if (events.length > 0) {
-      logger.debug('[Analytics] Queue flushed', { count: events.length });
-    }
   }
 
   /**
@@ -629,6 +425,210 @@ export class AnalyticsManager {
       duration: Date.now() - this.sessionStart,
     };
   }
+
+  /**
+   * Generate session ID
+   */
+  private generateSessionId(): string {
+    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  /**
+   * Setup context information
+   */
+  private setupContext(): void {
+    if (typeof window === 'undefined') return;
+
+    this.context = {
+      page: {
+        path: window.location.pathname,
+        title: document.title,
+        referrer: document.referrer,
+      },
+      device: {
+        type: this.getDeviceType(),
+        os: this.getOS(),
+        browser: this.getBrowser(),
+        screen: `${window.screen.width}x${window.screen.height}`,
+      },
+      location: {
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        language: navigator.language,
+      },
+      campaign: this.getUTMParams(),
+    };
+  }
+
+  /**
+   * Get device type
+   */
+  private getDeviceType(): string {
+    const ua = navigator.userAgent;
+    if (/tablet/i.test(ua)) return 'tablet';
+    if (/mobile/i.test(ua)) return 'mobile';
+    return 'desktop';
+  }
+
+  /**
+   * Get OS
+   */
+  private getOS(): string {
+    const ua = navigator.userAgent;
+    if (/windows/i.test(ua)) return 'Windows';
+    if (/mac/i.test(ua)) return 'macOS';
+    if (/linux/i.test(ua)) return 'Linux';
+    if (/android/i.test(ua)) return 'Android';
+    if (/ios|iphone|ipad/i.test(ua)) return 'iOS';
+    return 'Unknown';
+  }
+
+  /**
+   * Get browser
+   */
+  private getBrowser(): string {
+    const ua = navigator.userAgent;
+    if (/chrome/i.test(ua)) return 'Chrome';
+    if (/firefox/i.test(ua)) return 'Firefox';
+    if (/safari/i.test(ua)) return 'Safari';
+    if (/edge/i.test(ua)) return 'Edge';
+    return 'Unknown';
+  }
+
+  /**
+   * Get UTM parameters
+   */
+  private getUTMParams(): AnalyticsContext['campaign'] {
+    if (typeof window === 'undefined') return {};
+
+    const params = new URLSearchParams(window.location.search);
+    return {
+      source: params.get('utm_source') ?? undefined,
+      medium: params.get('utm_medium') ?? undefined,
+      campaign: params.get('utm_campaign') ?? undefined,
+      term: params.get('utm_term') ?? undefined,
+      content: params.get('utm_content') ?? undefined,
+    };
+  }
+
+  /**
+   * Setup session tracking
+   */
+  private setupSessionTracking(): void {
+    if (typeof window === 'undefined') return;
+
+    // Reset session on activity after timeout
+    let lastActivity = Date.now();
+
+    const resetSessionIfNeeded = (): void => {
+      const now = Date.now();
+      if (now - lastActivity > this.config.sessionTimeout) {
+        this.sessionId = this.generateSessionId();
+        this.sessionStart = now;
+      }
+      lastActivity = now;
+    };
+
+    window.addEventListener('click', resetSessionIfNeeded, { passive: true });
+    window.addEventListener('keydown', resetSessionIfNeeded, { passive: true });
+    window.addEventListener('scroll', resetSessionIfNeeded, { passive: true });
+  }
+
+  /**
+   * Check if tracking is allowed
+   */
+  private canTrack(): boolean {
+    if (!this.config.enabled) return false;
+    if (!this.consent.analytics) return false;
+
+    // Sample rate check
+    if (this.config.sampleRate < 1) {
+      if (Math.random() > this.config.sampleRate) return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Sanitize event properties
+   */
+  private sanitizeProperties(
+    properties: Record<string, unknown>
+  ): Record<string, unknown> {
+    const sanitized: Record<string, unknown> = {};
+
+    for (const [key, value] of Object.entries(properties)) {
+      // Remove PHI fields entirely
+      if (this.config.phiFields.includes(key.toLowerCase())) {
+        continue;
+      }
+
+      // Hash PII fields
+      if (this.config.piiFields.includes(key.toLowerCase())) {
+        sanitized[key] = this.hashValue(String(value));
+        continue;
+      }
+
+      sanitized[key] = value;
+    }
+
+    return sanitized;
+  }
+
+  /**
+   * Simple hash function for PII
+   */
+  private hashValue(value: string): string {
+    let hash = 0;
+    for (let i = 0; i < value.length; i++) {
+      const char = value.charCodeAt(i);
+      hash = (hash << 5) - hash + char;
+      hash = hash & hash;
+    }
+    return `hashed_${Math.abs(hash).toString(16)}`;
+  }
+
+  /**
+   * Send event to providers
+   */
+  private sendEvent(event: AnalyticsEvent): void {
+    for (const provider of this.providers.values()) {
+      try {
+        provider.track(event);
+      } catch (error) {
+        logger.error('[Analytics] Track failed', { provider: provider.name, error });
+      }
+    }
+
+    if (this.config.debug) {
+      logger.debug('[Analytics] Event tracked', { event });
+    }
+  }
+
+  /**
+   * Queue event for later
+   */
+  private queueEvent(event: AnalyticsEvent): void {
+    if (this.eventQueue.length >= this.config.maxQueueSize) {
+      this.eventQueue.shift(); // Remove oldest
+    }
+    this.eventQueue.push(event);
+  }
+
+  /**
+   * Flush event queue
+   */
+  private flushQueue(): void {
+    const events = [...this.eventQueue];
+    this.eventQueue = [];
+
+    for (const event of events) {
+      this.sendEvent(event);
+    }
+
+    if (events.length > 0) {
+      logger.debug('[Analytics] Queue flushed', { count: events.length });
+    }
+  }
 }
 
 // ============================================================================
@@ -638,10 +638,11 @@ export class AnalyticsManager {
 /**
  * Console analytics provider for development
  */
-export class ConsoleAnalyticsProvider implements AnalyticsProvider {
+class ConsoleAnalyticsProvider implements AnalyticsProvider {
   name = 'console';
 
   async initialize(): Promise<void> {
+    await Promise.resolve(); // Satisfy require-await lint rule
     logger.info('[ConsoleAnalytics] Initialized');
   }
 
@@ -675,6 +676,8 @@ export class ConsoleAnalyticsProvider implements AnalyticsProvider {
     console.info('👤 Analytics: User Properties', properties);
   }
 }
+
+export default ConsoleAnalyticsProvider;
 
 // ============================================================================
 // Default Instance

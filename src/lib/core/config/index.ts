@@ -263,11 +263,7 @@ export {
 // Integration
 // =============================================================================
 
-export {
-  AppConfigBridge,
-  getAppConfigBridge,
-  initLibConfigFromApp,
-} from './integration';
+export { AppConfigBridge, getAppConfigBridge, initLibConfigFromApp } from './integration';
 
 // =============================================================================
 // React Hooks

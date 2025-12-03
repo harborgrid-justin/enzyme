@@ -94,59 +94,9 @@ export class TypedWorker<TInput, TOutput> {
   private messageCounter = 0;
   private terminated = false;
 
-  constructor(
-    workerUrl: string | URL,
-    options: WorkerOptions = {}
-  ) {
+  constructor(workerUrl: string | URL, options: WorkerOptions = {}) {
     this.worker = new Worker(workerUrl, options);
     this.setupListeners();
-  }
-
-  /**
-   * Setup message listeners
-   */
-  private setupListeners(): void {
-    this.worker.onmessage = (event: MessageEvent<WorkerResponse<TOutput>>) => {
-      const response = event.data;
-      const deferred = this.pendingTasks.get(response.id);
-
-      if (!deferred) {
-        logger.warn('[Worker] Received response for unknown task', { id: response.id });
-        return;
-      }
-
-      if (response.type === 'progress') {
-        const callback = this.progressCallbacks.get(response.id);
-        if (callback && response.progress !== undefined) {
-          callback(response.progress);
-        }
-        return;
-      }
-
-      this.pendingTasks.delete(response.id);
-      this.progressCallbacks.delete(response.id);
-
-      if (response.type === 'error') {
-        deferred.reject(new Error(response.error ?? 'Worker error'));
-      } else {
-        deferred.resolve(response.payload);
-      }
-    };
-
-    this.worker.onerror = (event: ErrorEvent) => {
-      logger.error('[Worker] Error', { message: event.message });
-      
-      // Reject all pending tasks
-      for (const [id, deferred] of this.pendingTasks) {
-        deferred.reject(new Error(`Worker error: ${event.message}`));
-        this.pendingTasks.delete(id);
-        this.progressCallbacks.delete(id);
-      }
-    };
-
-    this.worker.onmessageerror = (event: MessageEvent) => {
-      logger.error('[Worker] Message error', { event });
-    };
   }
 
   /**
@@ -232,6 +182,53 @@ export class TypedWorker<TInput, TOutput> {
   getPendingCount(): number {
     return this.pendingTasks.size;
   }
+
+  /**
+   * Setup message listeners
+   */
+  private setupListeners(): void {
+    this.worker.onmessage = (event: MessageEvent<WorkerResponse<TOutput>>) => {
+      const response = event.data;
+      const deferred = this.pendingTasks.get(response.id);
+
+      if (!deferred) {
+        logger.warn('[Worker] Received response for unknown task', { id: response.id });
+        return;
+      }
+
+      if (response.type === 'progress') {
+        const callback = this.progressCallbacks.get(response.id);
+        if (callback && response.progress !== undefined) {
+          callback(response.progress);
+        }
+        return;
+      }
+
+      this.pendingTasks.delete(response.id);
+      this.progressCallbacks.delete(response.id);
+
+      if (response.type === 'error') {
+        deferred.reject(new Error(response.error ?? 'Worker error'));
+      } else {
+        deferred.resolve(response.payload);
+      }
+    };
+
+    this.worker.onerror = (event: ErrorEvent) => {
+      logger.error('[Worker] Error', { message: event.message });
+
+      // Reject all pending tasks
+      for (const [id, deferred] of this.pendingTasks) {
+        deferred.reject(new Error(`Worker error: ${event.message}`));
+        this.pendingTasks.delete(id);
+        this.progressCallbacks.delete(id);
+      }
+    };
+
+    this.worker.onmessageerror = (event: MessageEvent) => {
+      logger.error('[Worker] Message error', { event });
+    };
+  }
 }
 
 // ============================================================================
@@ -258,8 +255,8 @@ interface PoolWorker {
  */
 export class WorkerPool<TInput = unknown, TOutput = unknown> {
   private config: Required<WorkerPoolConfig>;
-  private workerUrl: string | URL;
-  private workerOptions: WorkerOptions;
+  private readonly workerUrl: string | URL;
+  private readonly workerOptions: WorkerOptions;
   private workers = new Map<string, PoolWorker>();
   private taskQueue: WorkerTask<TInput, TOutput>[] = [];
   private pendingResponses = new Map<string, Deferred<TOutput>>();
@@ -284,6 +281,135 @@ export class WorkerPool<TInput = unknown, TOutput = unknown> {
     if (this.config.warmUp) {
       this.warmUp();
     }
+  }
+
+  /**
+   * Execute a task
+   */
+  async execute(
+    type: string,
+    input: TInput,
+    options: {
+      priority?: number;
+      timeout?: number;
+      transferables?: Transferable[];
+      onProgress?: (progress: number) => void;
+    } = {}
+  ): Promise<TOutput> {
+    if (this.disposed) {
+      throw new Error('Worker pool has been disposed');
+    }
+
+    return new Promise((resolve, reject) => {
+      const task: WorkerTask<TInput, TOutput> = {
+        id: `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        type,
+        input,
+        priority: options.priority ?? 0,
+        timeout: options.timeout,
+        transferables: options.transferables,
+        onProgress: options.onProgress,
+        resolve,
+        reject,
+      };
+
+      this.taskQueue.push(task);
+      this.processQueue();
+    });
+  }
+
+  /**
+   * Get pool statistics
+   */
+  getStats(): {
+    totalWorkers: number;
+    idleWorkers: number;
+    busyWorkers: number;
+    queuedTasks: number;
+    totalTasksCompleted: number;
+    totalErrors: number;
+  } {
+    let idleWorkers = 0;
+    let busyWorkers = 0;
+    let totalTasksCompleted = 0;
+    let totalErrors = 0;
+
+    for (const worker of this.workers.values()) {
+      if (worker.status === 'idle') idleWorkers++;
+      if (worker.status === 'busy') busyWorkers++;
+      totalTasksCompleted += worker.tasksCompleted;
+      totalErrors += worker.errorCount;
+    }
+
+    return {
+      totalWorkers: this.workers.size,
+      idleWorkers,
+      busyWorkers,
+      queuedTasks: this.taskQueue.length,
+      totalTasksCompleted,
+      totalErrors,
+    };
+  }
+
+  /**
+   * Get worker info
+   */
+  getWorkerInfo(): WorkerInfo[] {
+    return Array.from(this.workers.values()).map((w) => ({
+      id: w.id,
+      status: w.status,
+      currentTask: w.currentTaskId,
+      tasksCompleted: w.tasksCompleted,
+      errorCount: w.errorCount,
+      createdAt: w.createdAt,
+      lastActiveAt: w.lastActiveAt,
+    }));
+  }
+
+  /**
+   * Resize pool
+   */
+  resize(maxWorkers: number): void {
+    this.config.maxWorkers = maxWorkers;
+
+    // Terminate excess idle workers
+    while (this.workers.size > maxWorkers) {
+      const idleWorker = this.getAvailableWorker();
+      if (idleWorker) {
+        this.terminateWorker(idleWorker.id);
+      } else {
+        break;
+      }
+    }
+  }
+
+  /**
+   * Dispose pool
+   */
+  dispose(): void {
+    if (this.disposed) return;
+
+    this.disposed = true;
+
+    // Reject all queued tasks
+    for (const task of this.taskQueue) {
+      task.reject(new Error('Worker pool disposed'));
+    }
+    this.taskQueue = [];
+
+    // Reject all pending responses
+    for (const [_id, deferred] of this.pendingResponses) {
+      deferred.reject(new Error('Worker pool disposed'));
+    }
+    this.pendingResponses.clear();
+    this.progressCallbacks.clear();
+
+    // Terminate all workers
+    for (const workerId of this.workers.keys()) {
+      this.terminateWorker(workerId);
+    }
+
+    logger.info('[WorkerPool] Disposed');
   }
 
   /**
@@ -367,9 +493,9 @@ export class WorkerPool<TInput = unknown, TOutput = unknown> {
     };
 
     poolWorker.worker.onerror = (event: ErrorEvent) => {
-      logger.error('[WorkerPool] Worker error', { 
-        workerId: poolWorker.id, 
-        message: event.message 
+      logger.error('[WorkerPool] Worker error', {
+        workerId: poolWorker.id,
+        message: event.message,
       });
 
       poolWorker.errorCount++;
@@ -507,41 +633,6 @@ export class WorkerPool<TInput = unknown, TOutput = unknown> {
   }
 
   /**
-   * Execute a task
-   */
-  async execute(
-    type: string,
-    input: TInput,
-    options: {
-      priority?: number;
-      timeout?: number;
-      transferables?: Transferable[];
-      onProgress?: (progress: number) => void;
-    } = {}
-  ): Promise<TOutput> {
-    if (this.disposed) {
-      throw new Error('Worker pool has been disposed');
-    }
-
-    return new Promise((resolve, reject) => {
-      const task: WorkerTask<TInput, TOutput> = {
-        id: `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        type,
-        input,
-        priority: options.priority ?? 0,
-        timeout: options.timeout,
-        transferables: options.transferables,
-        onProgress: options.onProgress,
-        resolve,
-        reject,
-      };
-
-      this.taskQueue.push(task);
-      this.processQueue();
-    });
-  }
-
-  /**
    * Terminate a specific worker
    */
   private terminateWorker(workerId: string): void {
@@ -556,104 +647,10 @@ export class WorkerPool<TInput = unknown, TOutput = unknown> {
     worker.status = 'terminated';
     this.workers.delete(workerId);
 
-    logger.debug('[WorkerPool] Worker terminated', { 
-      workerId, 
-      remaining: this.workers.size 
+    logger.debug('[WorkerPool] Worker terminated', {
+      workerId,
+      remaining: this.workers.size,
     });
-  }
-
-  /**
-   * Get pool statistics
-   */
-  getStats(): {
-    totalWorkers: number;
-    idleWorkers: number;
-    busyWorkers: number;
-    queuedTasks: number;
-    totalTasksCompleted: number;
-    totalErrors: number;
-  } {
-    let idleWorkers = 0;
-    let busyWorkers = 0;
-    let totalTasksCompleted = 0;
-    let totalErrors = 0;
-
-    for (const worker of this.workers.values()) {
-      if (worker.status === 'idle') idleWorkers++;
-      if (worker.status === 'busy') busyWorkers++;
-      totalTasksCompleted += worker.tasksCompleted;
-      totalErrors += worker.errorCount;
-    }
-
-    return {
-      totalWorkers: this.workers.size,
-      idleWorkers,
-      busyWorkers,
-      queuedTasks: this.taskQueue.length,
-      totalTasksCompleted,
-      totalErrors,
-    };
-  }
-
-  /**
-   * Get worker info
-   */
-  getWorkerInfo(): WorkerInfo[] {
-    return Array.from(this.workers.values()).map((w) => ({
-      id: w.id,
-      status: w.status,
-      currentTask: w.currentTaskId,
-      tasksCompleted: w.tasksCompleted,
-      errorCount: w.errorCount,
-      createdAt: w.createdAt,
-      lastActiveAt: w.lastActiveAt,
-    }));
-  }
-
-  /**
-   * Resize pool
-   */
-  resize(maxWorkers: number): void {
-    this.config.maxWorkers = maxWorkers;
-
-    // Terminate excess idle workers
-    while (this.workers.size > maxWorkers) {
-      const idleWorker = this.getAvailableWorker();
-      if (idleWorker) {
-        this.terminateWorker(idleWorker.id);
-      } else {
-        break;
-      }
-    }
-  }
-
-  /**
-   * Dispose pool
-   */
-  dispose(): void {
-    if (this.disposed) return;
-
-    this.disposed = true;
-
-    // Reject all queued tasks
-    for (const task of this.taskQueue) {
-      task.reject(new Error('Worker pool disposed'));
-    }
-    this.taskQueue = [];
-
-    // Reject all pending responses
-    for (const [_id, deferred] of this.pendingResponses) {
-      deferred.reject(new Error('Worker pool disposed'));
-    }
-    this.pendingResponses.clear();
-    this.progressCallbacks.clear();
-
-    // Terminate all workers
-    for (const workerId of this.workers.keys()) {
-      this.terminateWorker(workerId);
-    }
-
-    logger.info('[WorkerPool] Disposed');
   }
 }
 
@@ -772,7 +769,7 @@ export function extractTransferables(obj: unknown): Transferable[] {
  * Shared worker wrapper
  */
 export class TypedSharedWorker<TInput, TOutput> {
-  private worker: SharedWorker | null = null;
+  private readonly worker: SharedWorker | null = null;
   private pendingTasks = new Map<string, Deferred<TOutput>>();
   private messageCounter = 0;
 
@@ -791,30 +788,6 @@ export class TypedSharedWorker<TInput, TOutput> {
    */
   isSupported(): boolean {
     return this.worker !== null;
-  }
-
-  /**
-   * Setup listeners
-   */
-  private setupListeners(): void {
-    if (!this.worker) return;
-
-    this.worker.port.onmessage = (event: MessageEvent<WorkerResponse<TOutput>>) => {
-      const response = event.data;
-      const deferred = this.pendingTasks.get(response.id);
-
-      if (!deferred) return;
-
-      this.pendingTasks.delete(response.id);
-
-      if (response.type === 'error') {
-        deferred.reject(new Error(response.error ?? 'Worker error'));
-      } else {
-        deferred.resolve(response.payload);
-      }
-    };
-
-    this.worker.port.start();
   }
 
   /**
@@ -840,6 +813,30 @@ export class TypedSharedWorker<TInput, TOutput> {
     this.worker.port.postMessage(message);
 
     return deferred.promise;
+  }
+
+  /**
+   * Setup listeners
+   */
+  private setupListeners(): void {
+    if (!this.worker) return;
+
+    this.worker.port.onmessage = (event: MessageEvent<WorkerResponse<TOutput>>) => {
+      const response = event.data;
+      const deferred = this.pendingTasks.get(response.id);
+
+      if (!deferred) return;
+
+      this.pendingTasks.delete(response.id);
+
+      if (response.type === 'error') {
+        deferred.reject(new Error(response.error ?? 'Worker error'));
+      } else {
+        deferred.resolve(response.payload);
+      }
+    };
+
+    this.worker.port.start();
   }
 }
 

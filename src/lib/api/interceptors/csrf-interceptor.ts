@@ -126,7 +126,9 @@ function getCsrfTokenFromCookie(cookieName: string): string | null {
 // Default Configuration
 // =============================================================================
 
-const DEFAULT_CONFIG: Required<Omit<CsrfInterceptorConfig, 'tokenExtractor' | 'onMissingToken' | 'excludePatterns'>> = {
+const DEFAULT_CONFIG: Required<
+  Omit<CsrfInterceptorConfig, 'tokenExtractor' | 'onMissingToken' | 'excludePatterns'>
+> = {
   cookieName: 'csrf_token',
   headerName: 'X-CSRF-Token',
   protectedMethods: ['POST', 'PUT', 'PATCH', 'DELETE'],
@@ -200,9 +202,7 @@ export function createCsrfInterceptor(config: CsrfInterceptorConfig = {}): Reque
     }
 
     // Get CSRF token
-    const token = tokenExtractor
-      ? tokenExtractor()
-      : getCsrfTokenFromCookie(cookieName);
+    const token = tokenExtractor ? tokenExtractor() : getCsrfTokenFromCookie(cookieName);
 
     // Handle missing token
     if (token === undefined || token === null || token === '') {

@@ -10,11 +10,7 @@
 
 import { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 
-import type {
-  ScrollContainer,
-  ScrollDirection,
-  UseScrollContextReturn,
-} from '../types';
+import type { ScrollContainer, ScrollDirection, UseScrollContextReturn } from '../types';
 import { useDOMContextValue } from '../DOMContextProvider';
 import {
   type ScrollTracker,
@@ -133,9 +129,9 @@ export function useScrollContext(): UseScrollContextReturn {
  * }
  * ```
  */
-export function useScrollContainer(
-  containerRef: { readonly current: HTMLElement | null }
-): ScrollContainer | null {
+export function useScrollContainer(containerRef: {
+  readonly current: HTMLElement | null;
+}): ScrollContainer | null {
   const [scrollState, setScrollState] = useState<ScrollContainer | null>(null);
   const trackerRef = useRef<ScrollTracker | null>(null);
 
@@ -439,13 +435,8 @@ export function useScrollToBottom(): {
  * }
  * ```
  */
-export function useScrollIntoView(): (
-  element: Element,
-  options?: ScrollIntoViewOptions
-) => void {
+export function useScrollIntoView(): (element: Element, options?: ScrollIntoViewOptions) => void {
   return useCallback((element: Element, options?: ScrollIntoViewOptions) => {
-    element.scrollIntoView(
-    options ?? { behavior: 'smooth', block: 'center' }
-  );
-}, []);
+    element.scrollIntoView(options ?? { behavior: 'smooth', block: 'center' });
+  }, []);
 }

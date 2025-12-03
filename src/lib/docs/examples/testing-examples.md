@@ -24,6 +24,7 @@
 ## Component Testing Basics
 
 ### Example 1: Simple Component Test
+
 **Use Case:** Test basic rendering and props
 **Difficulty:** ⭐ Basic
 
@@ -57,12 +58,14 @@ describe('Button', () => {
 **Explanation:** Basic component tests verify rendering, props application, and DOM attributes.
 
 **See Also:**
+
 - [Example 2](#example-2-testing-user-interactions)
 - [Testing Library Docs](https://testing-library.com/docs/react-testing-library/intro/)
 
 ---
 
 ### Example 2: Testing User Interactions
+
 **Use Case:** Test click handlers and user events
 **Difficulty:** ⭐ Basic
 
@@ -104,6 +107,7 @@ describe('Counter', () => {
 ---
 
 ### Example 3: Testing Conditional Rendering
+
 **Use Case:** Verify components show/hide based on state
 **Difficulty:** ⭐ Basic
 
@@ -143,6 +147,7 @@ describe('Modal', () => {
 ---
 
 ### Example 4: Testing Lists
+
 **Use Case:** Verify list rendering and filtering
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -187,6 +192,7 @@ describe('UserList', () => {
 ## Hook Testing
 
 ### Example 5: Testing Custom Hooks
+
 **Use Case:** Test hook logic in isolation
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -235,6 +241,7 @@ describe('useCounter', () => {
 ---
 
 ### Example 6: Testing Hooks with Dependencies
+
 **Use Case:** Test hook updates when deps change
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -287,6 +294,7 @@ describe('useFetch', () => {
 ## Testing with React Query
 
 ### Example 7: Testing Query Hooks
+
 **Use Case:** Test components using React Query
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -350,6 +358,7 @@ describe('UserProfile', () => {
 ---
 
 ### Example 8: Testing Mutations
+
 **Use Case:** Test mutation hooks and optimistic updates
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -423,6 +432,7 @@ describe('useUpdateUser', () => {
 ## Testing State Management
 
 ### Example 9: Testing Zustand Stores
+
 **Use Case:** Test store actions and state
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -466,6 +476,7 @@ describe('useCounterStore', () => {
 ---
 
 ### Example 10: Testing Store Slices
+
 **Use Case:** Test individual store slices
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -503,6 +514,7 @@ describe('userSlice', () => {
 ## Testing Routing
 
 ### Example 11: Testing Navigation
+
 **Use Case:** Test programmatic navigation
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -533,6 +545,7 @@ describe('Navigation', () => {
 ---
 
 ### Example 12: Testing Protected Routes
+
 **Use Case:** Test authentication guards
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -572,6 +585,7 @@ describe('Protected Routes', () => {
 ## Testing Authentication
 
 ### Example 13: Testing Login Flow
+
 **Use Case:** Complete login interaction test
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -631,6 +645,7 @@ describe('LoginForm', () => {
 ## Testing Forms
 
 ### Example 14: Testing Form Validation
+
 **Use Case:** Validate form inputs
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -682,6 +697,7 @@ describe('RegistrationForm', () => {
 ---
 
 ### Example 15: Testing Form Submission
+
 **Use Case:** Test successful and failed submissions
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -731,6 +747,7 @@ describe('ContactForm', () => {
 ## Async Testing
 
 ### Example 16: Testing Loading States
+
 **Use Case:** Verify loading indicators
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -772,6 +789,7 @@ describe('UserList', () => {
 ---
 
 ### Example 17: Testing Debounced Functions
+
 **Use Case:** Test debounced search input
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -813,6 +831,7 @@ describe('SearchInput', () => {
 ---
 
 ### Example 18: Testing Race Conditions
+
 **Use Case:** Ensure correct data with rapid updates
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -845,6 +864,7 @@ describe('UserProfile', () => {
 ## Testing Error Boundaries
 
 ### Example 19: Testing Error Boundary
+
 **Use Case:** Verify error boundary catches errors
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -895,6 +915,7 @@ describe('ErrorBoundary', () => {
 ## Mocking
 
 ### Example 20: Mocking API Calls with MSW
+
 **Use Case:** Mock HTTP requests
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -948,6 +969,7 @@ describe('UserList', () => {
 ---
 
 ### Example 21: Mocking Modules
+
 **Use Case:** Mock external dependencies
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -982,6 +1004,7 @@ describe('UserManager', () => {
 ---
 
 ### Example 22: Mocking Timers
+
 **Use Case:** Test time-dependent code
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -1016,6 +1039,7 @@ describe('AutoSave', () => {
 ---
 
 ### Example 23: Mocking Date
+
 **Use Case:** Test date-dependent logic
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -1050,6 +1074,7 @@ describe('DateDisplay', () => {
 ## Integration Tests
 
 ### Example 24: Full User Flow Test
+
 **Use Case:** Test complete feature workflow
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -1093,6 +1118,7 @@ describe('Todo App Integration', () => {
 ---
 
 ### Example 25: Multi-Step Form Test
+
 **Use Case:** Test wizard/multi-step forms
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -1139,6 +1165,7 @@ describe('Registration Wizard', () => {
 ## E2E Testing with Playwright
 
 ### Example 26: Basic E2E Test
+
 **Use Case:** End-to-end browser test
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -1180,6 +1207,7 @@ test.describe('Login Flow', () => {
 ---
 
 ### Example 27: Testing Forms E2E
+
 **Use Case:** Complete form interaction
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -1210,6 +1238,7 @@ test('create new post', async ({ page }) => {
 ---
 
 ### Example 28: Testing Navigation E2E
+
 **Use Case:** Multi-page navigation flow
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -1240,6 +1269,7 @@ test('navigate through app', async ({ page }) => {
 ---
 
 ### Example 29: Testing Authentication E2E
+
 **Use Case:** Full auth flow with persistence
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -1286,6 +1316,7 @@ test.describe('Authentication E2E', () => {
 ---
 
 ### Example 30: Mobile Testing
+
 **Use Case:** Test responsive behavior
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -1317,6 +1348,7 @@ test.describe('Mobile Navigation', () => {
 ---
 
 ### Example 31: Visual Regression Testing
+
 **Use Case:** Detect visual changes
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -1349,6 +1381,7 @@ test('modal visual regression', async ({ page }) => {
 ---
 
 ### Example 32: Performance Testing
+
 **Use Case:** Measure page performance
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -1383,6 +1416,7 @@ test('page loads within performance budget', async ({ page }) => {
 ---
 
 ### Example 33: Testing WebSocket Connections
+
 **Use Case:** Test real-time features
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -1420,6 +1454,7 @@ test('receives real-time updates', async ({ page }) => {
 ---
 
 ### Example 34: Accessibility Testing
+
 **Use Case:** Verify accessibility standards
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -1470,6 +1505,7 @@ test('modal is keyboard accessible', async ({ page }) => {
 ---
 
 ### Example 35: Testing File Downloads
+
 **Use Case:** Verify file download functionality
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -1505,6 +1541,7 @@ test('downloads report file', async ({ page }) => {
 ## Best Practices
 
 ### Testing Strategy
+
 - ✅ **DO** write tests alongside code (TDD when beneficial)
 - ✅ **DO** test user behavior, not implementation
 - ✅ **DO** use descriptive test names
@@ -1513,6 +1550,7 @@ test('downloads report file', async ({ page }) => {
 - ❌ **DON'T** write tests that depend on each other
 
 ### Test Organization
+
 - ✅ **DO** group related tests with `describe`
 - ✅ **DO** use `beforeEach`/`afterEach` for setup/cleanup
 - ✅ **DO** keep tests focused and simple
@@ -1521,6 +1559,7 @@ test('downloads report file', async ({ page }) => {
 - ❌ **DON'T** write overly complex tests
 
 ### Queries and Assertions
+
 - ✅ **DO** use semantic queries (`getByRole`, `getByLabelText`)
 - ✅ **DO** use `waitFor` for async assertions
 - ✅ **DO** test loading and error states
@@ -1529,6 +1568,7 @@ test('downloads report file', async ({ page }) => {
 - ❌ **DON'T** rely on implementation details (CSS classes, etc.)
 
 ### Mocking
+
 - ✅ **DO** use MSW for API mocking
 - ✅ **DO** mock external services
 - ✅ **DO** reset mocks between tests
@@ -1537,6 +1577,7 @@ test('downloads report file', async ({ page }) => {
 - ❌ **DON'T** forget to restore mocks
 
 ### E2E Tests
+
 - ✅ **DO** test critical user journeys
 - ✅ **DO** run E2E tests in CI/CD
 - ✅ **DO** use page object pattern for complex flows
@@ -1549,6 +1590,7 @@ test('downloads report file', async ({ page }) => {
 ## Anti-Patterns
 
 ### ❌ Testing Implementation Details
+
 ```tsx
 // BAD - Testing internal state
 expect(component.state.count).toBe(1);
@@ -1558,6 +1600,7 @@ expect(screen.getByText('Count: 1')).toBeInTheDocument();
 ```
 
 ### ❌ Using Test IDs Unnecessarily
+
 ```tsx
 // BAD
 <button data-testid="submit-button">Submit</button>
@@ -1569,6 +1612,7 @@ screen.getByRole('button', { name: /submit/i });
 ```
 
 ### ❌ Not Cleaning Up
+
 ```tsx
 // BAD - Timers leak to other tests
 test('auto saves', () => {
@@ -1584,6 +1628,7 @@ afterEach(() => {
 ```
 
 ### ❌ Shared Test State
+
 ```tsx
 // BAD
 let user;

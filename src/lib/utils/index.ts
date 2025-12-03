@@ -284,7 +284,6 @@ export {
 // Analytics utilities
 export {
   AnalyticsManager,
-  ConsoleAnalyticsProvider,
   analytics,
   trackEvent,
   trackPageView,
@@ -302,6 +301,7 @@ export {
   type UserProperties,
   type ConsentCategories,
 } from './analytics';
+export { default as ConsoleAnalyticsProvider } from './analytics';
 
 // Service Worker registration utilities
 export {

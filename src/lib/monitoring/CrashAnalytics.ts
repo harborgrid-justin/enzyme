@@ -225,13 +225,6 @@ class CrashAnalyticsManager {
   }
 
   /**
-   * Generate unique session ID
-   */
-  private generateSessionId(): string {
-    return `session_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
-  }
-
-  /**
    * Initialize crash analytics
    */
   init(): void {
@@ -269,6 +262,144 @@ class CrashAnalyticsManager {
         referrer: document.referrer,
       },
     });
+  }
+
+  /**
+   * Add a breadcrumb
+   */
+  addBreadcrumb(crumb: Omit<Breadcrumb, 'timestamp'>): void {
+    const breadcrumb: Breadcrumb = {
+      ...crumb,
+      timestamp: Date.now(),
+    };
+
+    this.breadcrumbs.push(breadcrumb);
+
+    // Trim to max size
+    if (this.breadcrumbs.length > this.config.maxBreadcrumbs) {
+      this.breadcrumbs = this.breadcrumbs.slice(-this.config.maxBreadcrumbs);
+    }
+  }
+
+  /**
+   * Add a user action
+   */
+  addUserAction(action: Omit<UserAction, 'timestamp'>): void {
+    if (!this.isRecording) return;
+
+    const userAction: UserAction = {
+      ...action,
+      timestamp: Date.now(),
+    };
+
+    // Mask sensitive input values
+    if (this.config.maskInputs && (action.value !== undefined) && (action.value !== null) && (action.value !== '')) {
+      userAction.value = '***';
+    }
+
+    this.userActions.push(userAction);
+
+    // Trim to max size
+    if (this.userActions.length > this.config.maxUserActions) {
+      this.userActions = this.userActions.slice(-this.config.maxUserActions);
+    }
+  }
+
+  /**
+   * Record an error
+   */
+  recordError(error: AppError): void {
+    this.errors.push(error);
+
+    this.addBreadcrumb({
+      type: 'error',
+      category: error.category,
+      message: error.message,
+      level: 'error',
+      data: {
+        id: error.id,
+        severity: error.severity,
+      },
+    });
+  }
+
+  /**
+   * Get session data for crash report
+   */
+  getSessionData(): SessionData {
+    return {
+      sessionId: this.sessionId,
+      userId: this.config.getUserId?.(),
+      startTime: this.startTime,
+      breadcrumbs: [...this.breadcrumbs],
+      userActions: [...this.userActions],
+      performanceMetrics: this.getPerformanceMetrics(),
+      deviceInfo: this.getDeviceInfo(),
+      errors: [...this.errors],
+    };
+  }
+
+  /**
+   * Get breadcrumbs
+   */
+  getBreadcrumbs(): Breadcrumb[] {
+    return [...this.breadcrumbs];
+  }
+
+  /**
+   * Get recent breadcrumbs (last N)
+   */
+  getRecentBreadcrumbs(count: number = 20): Breadcrumb[] {
+    return this.breadcrumbs.slice(-count);
+  }
+
+  /**
+   * Clear all data
+   */
+  clear(): void {
+    this.breadcrumbs = [];
+    this.userActions = [];
+    this.errors = [];
+  }
+
+  /**
+   * Start new session
+   */
+  startNewSession(): void {
+    this.clear();
+    this.sessionId = this.generateSessionId();
+    this.startTime = Date.now();
+    this.isRecording = Math.random() < this.config.sessionSampleRate;
+  }
+
+  /**
+   * Dispose and cleanup
+   */
+  dispose(): void {
+    this.cleanupFns.forEach((fn) => fn());
+    this.cleanupFns = [];
+    this.initialized = false;
+  }
+
+  /**
+   * Check if initialized
+   */
+  isInitialized(): boolean {
+    return this.initialized;
+  }
+
+  /**
+   * Get session ID
+   */
+  getSessionId(): string {
+    return this.sessionId;
+  }
+
+  /**
+   * Generate unique session ID
+   */
+  private generateSessionId(): string {
+    return `session_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   }
 
   /**
@@ -514,81 +645,6 @@ class CrashAnalyticsManager {
   }
 
   /**
-   * Add a breadcrumb
-   */
-  addBreadcrumb(crumb: Omit<Breadcrumb, 'timestamp'>): void {
-    const breadcrumb: Breadcrumb = {
-      ...crumb,
-      timestamp: Date.now(),
-    };
-
-    this.breadcrumbs.push(breadcrumb);
-
-    // Trim to max size
-    if (this.breadcrumbs.length > this.config.maxBreadcrumbs) {
-      this.breadcrumbs = this.breadcrumbs.slice(-this.config.maxBreadcrumbs);
-    }
-  }
-
-  /**
-   * Add a user action
-   */
-  addUserAction(action: Omit<UserAction, 'timestamp'>): void {
-    if (!this.isRecording) return;
-
-    const userAction: UserAction = {
-      ...action,
-      timestamp: Date.now(),
-    };
-
-    // Mask sensitive input values
-    if ((this.config.maskInputs === true) && (action.value !== undefined) && (action.value !== null) && (action.value !== '')) {
-      userAction.value = '***';
-    }
-
-    this.userActions.push(userAction);
-
-    // Trim to max size
-    if (this.userActions.length > this.config.maxUserActions) {
-      this.userActions = this.userActions.slice(-this.config.maxUserActions);
-    }
-  }
-
-  /**
-   * Record an error
-   */
-  recordError(error: AppError): void {
-    this.errors.push(error);
-
-    this.addBreadcrumb({
-      type: 'error',
-      category: error.category,
-      message: error.message,
-      level: 'error',
-      data: {
-        id: error.id,
-        severity: error.severity,
-      },
-    });
-  }
-
-  /**
-   * Get session data for crash report
-   */
-  getSessionData(): SessionData {
-    return {
-      sessionId: this.sessionId,
-      userId: this.config.getUserId?.(),
-      startTime: this.startTime,
-      breadcrumbs: [...this.breadcrumbs],
-      userActions: [...this.userActions],
-      performanceMetrics: this.getPerformanceMetrics(),
-      deviceInfo: this.getDeviceInfo(),
-      errors: [...this.errors],
-    };
-  }
-
-  /**
    * Get current performance metrics
    */
   private getPerformanceMetrics(): PerformanceMetrics {
@@ -666,7 +722,7 @@ class CrashAnalyticsManager {
         break;
       }
 
-      if (current.className && typeof current.className === 'string') {
+      if (current.className) {
         const classes = current.className.split(' ').filter(Boolean).slice(0, 2);
         if (classes.length) {
           selector += `.${classes.join('.')}`;
@@ -704,62 +760,6 @@ class CrashAnalyticsManager {
     } catch {
       return '[Object]';
     }
-  }
-
-  /**
-   * Get breadcrumbs
-   */
-  getBreadcrumbs(): Breadcrumb[] {
-    return [...this.breadcrumbs];
-  }
-
-  /**
-   * Get recent breadcrumbs (last N)
-   */
-  getRecentBreadcrumbs(count: number = 20): Breadcrumb[] {
-    return this.breadcrumbs.slice(-count);
-  }
-
-  /**
-   * Clear all data
-   */
-  clear(): void {
-    this.breadcrumbs = [];
-    this.userActions = [];
-    this.errors = [];
-  }
-
-  /**
-   * Start new session
-   */
-  startNewSession(): void {
-    this.clear();
-    this.sessionId = this.generateSessionId();
-    this.startTime = Date.now();
-    this.isRecording = Math.random() < this.config.sessionSampleRate;
-  }
-
-  /**
-   * Dispose and cleanup
-   */
-  dispose(): void {
-    this.cleanupFns.forEach((fn) => fn());
-    this.cleanupFns = [];
-    this.initialized = false;
-  }
-
-  /**
-   * Check if initialized
-   */
-  isInitialized(): boolean {
-    return this.initialized;
-  }
-
-  /**
-   * Get session ID
-   */
-  getSessionId(): string {
-    return this.sessionId;
   }
 }
 

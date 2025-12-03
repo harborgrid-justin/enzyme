@@ -191,10 +191,7 @@ export const PRESETS = {
     { transform: 'scale(1)', opacity: 1 },
     { transform: 'scale(0.9)', opacity: 0 },
   ],
-  rotate: [
-    { transform: 'rotate(0deg)' },
-    { transform: 'rotate(360deg)' },
-  ],
+  rotate: [{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }],
   shake: [
     { transform: 'translateX(0)' },
     { transform: 'translateX(-10px)' },
@@ -203,11 +200,7 @@ export const PRESETS = {
     { transform: 'translateX(10px)' },
     { transform: 'translateX(0)' },
   ],
-  pulse: [
-    { transform: 'scale(1)' },
-    { transform: 'scale(1.05)' },
-    { transform: 'scale(1)' },
-  ],
+  pulse: [{ transform: 'scale(1)' }, { transform: 'scale(1.05)' }, { transform: 'scale(1)' }],
 };
 
 // ============================================================================
@@ -320,7 +313,7 @@ export class AnimationOrchestrator {
       const delayValue = delays[index] ?? 0;
       const controller = this.animate(el, keyframes, {
         ...fullOptions,
-        delay: (fullOptions.delay ?? 0) + (typeof delayValue === 'number' && !Number.isNaN(delayValue) ? delayValue : 0),
+        delay: (fullOptions.delay ?? 0) + (!Number.isNaN(delayValue) ? delayValue : 0),
       });
       controllers.push(controller);
     });
@@ -540,9 +533,7 @@ export class AnimationOrchestrator {
 
     if (duration === 0) {
       // Apply final state immediately
-      const finalKeyframe = Array.isArray(keyframes)
-        ? keyframes[keyframes.length - 1]
-        : keyframes;
+      const finalKeyframe = Array.isArray(keyframes) ? keyframes[keyframes.length - 1] : keyframes;
 
       if (!finalKeyframe) {
         return this.createNoopController('finished');

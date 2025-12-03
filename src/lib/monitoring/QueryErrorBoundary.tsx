@@ -82,7 +82,7 @@ function DefaultQueryErrorFallback({
           d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
         />
       </svg>
-      
+
       <h2
         style={{
           fontSize: '1.125rem',
@@ -93,7 +93,7 @@ function DefaultQueryErrorFallback({
       >
         Failed to load data
       </h2>
-      
+
       <p
         style={{
           color: '#9a3412',
@@ -103,7 +103,7 @@ function DefaultQueryErrorFallback({
       >
         {getUserFriendlyMessage(error)}
       </p>
-      
+
       <div style={{ display: 'flex', gap: '0.5rem' }}>
         {isRetryable && (
           <button
@@ -122,7 +122,7 @@ function DefaultQueryErrorFallback({
             Retry
           </button>
         )}
-        
+
         <button
           onClick={reset}
           style={{
@@ -154,15 +154,15 @@ export class QueryErrorBoundary extends Component<
     super(props);
     this.state = { hasError: false, error: null };
   }
-  
+
   static getDerivedStateFromError(error: Error): QueryErrorBoundaryState {
     const appError = normalizeError(error);
     return { hasError: true, error: appError };
   }
-  
+
   override componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     const appError = normalizeError(error);
-    
+
     // Report to error monitoring
     ErrorReporter.reportError(error, {
       action: 'query_error',
@@ -171,24 +171,24 @@ export class QueryErrorBoundary extends Component<
         componentStack: errorInfo.componentStack,
       },
     });
-    
+
     // Call custom error handler
     this.props.onError?.(appError);
   }
-  
+
   handleReset = (): void => {
     this.setState({ hasError: false, error: null });
   };
-  
+
   handleRetry = (): void => {
     this.setState({ hasError: false, error: null });
     this.props.onRetry?.();
   };
-  
+
   override render(): ReactNode {
     const { hasError, error } = this.state;
     const { children, fallback } = this.props;
-    
+
     if (hasError && error) {
       const fallbackProps: QueryErrorFallbackProps = {
         error,
@@ -196,7 +196,7 @@ export class QueryErrorBoundary extends Component<
         retry: this.handleRetry,
         isRetryable: isRetryableError(error),
       };
-      
+
       if (typeof fallback === 'function') {
         return fallback(fallbackProps);
       }
@@ -204,10 +204,10 @@ export class QueryErrorBoundary extends Component<
       if (fallback != null) {
         return fallback;
       }
-      
+
       return <DefaultQueryErrorFallback {...fallbackProps} />;
     }
-    
+
     return children;
   }
 }

@@ -106,9 +106,7 @@ const configModules: Map<ConfigNamespace, ConfigModule[]> = new Map();
  * });
  * ```
  */
-export function registerConfigModule<T extends ConfigRecord>(
-  module: ConfigModule<T>
-): void {
+export function registerConfigModule<T extends ConfigRecord>(module: ConfigModule<T>): void {
   const existing = configModules.get(module.namespace) ?? [];
   existing.push(module as ConfigModule);
   existing.sort((a, b) => a.priority - b.priority);
@@ -162,9 +160,7 @@ interface ConfigLayer<T extends ConfigRecord = ConfigRecord> {
  * @param layers - Configuration layers to merge
  * @returns Merged configuration
  */
-export function mergeConfigLayers<T extends ConfigRecord>(
-  layers: ConfigLayer<T>[]
-): T {
+export function mergeConfigLayers<T extends ConfigRecord>(layers: ConfigLayer<T>[]): T {
   // Sort by priority (lower = applied first)
   const sorted = [...layers].sort((a, b) => a.priority - b.priority);
 
@@ -186,7 +182,10 @@ function deepMerge<T extends ConfigRecord>(target: T, source: Partial<T>): T {
       const targetValue = result[key];
 
       if (isPlainObject(sourceValue) && isPlainObject(targetValue)) {
-        result[key] = deepMerge(targetValue as ConfigRecord, sourceValue as ConfigRecord) as T[Extract<keyof T, string>];
+        result[key] = deepMerge(
+          targetValue as ConfigRecord,
+          sourceValue as ConfigRecord
+        ) as T[Extract<keyof T, string>];
       } else if (sourceValue !== undefined) {
         result[key] = sourceValue as T[Extract<keyof T, string>];
       }
@@ -271,6 +270,45 @@ export class ConfigDiscovery {
   }
 
   /**
+   * Discover configuration for a specific namespace
+   */
+  public async discoverNamespace<T extends ConfigRecord>(namespace: ConfigNamespace): Promise<T> {
+    const modules = configModules.get(namespace) ?? [];
+    const currentEnv = env.appEnv as ConfigEnvironment;
+
+    const layers: ConfigLayer<T>[] = [];
+
+    for (const module of modules) {
+      if (module.environments && !module.environments.includes(currentEnv)) {
+        continue;
+      }
+
+      const config = await this.resolveConfig(module);
+      layers.push({
+        source: 'base',
+        config: config as T,
+        priority: module.priority,
+      });
+    }
+
+    return mergeConfigLayers(layers);
+  }
+
+  /**
+   * Get discovery status
+   */
+  public isInitialized(): boolean {
+    return this.initialized;
+  }
+
+  /**
+   * Get discovered files
+   */
+  public getDiscoveredFiles(): DiscoveredConfigFile[] {
+    return Array.from(this.discoveredFiles.values());
+  }
+
+  /**
    * Load all registered configuration modules
    */
   private async loadRegisteredModules(): Promise<void> {
@@ -343,9 +381,7 @@ export class ConfigDiscovery {
   /**
    * Resolve configuration from a module
    */
-  private async resolveConfig<T extends ConfigRecord>(
-    module: ConfigModule<T>
-  ): Promise<T> {
+  private async resolveConfig<T extends ConfigRecord>(module: ConfigModule<T>): Promise<T> {
     if (typeof module.config === 'function') {
       const result = module.config();
       return result instanceof Promise ? await result : result;
@@ -369,47 +405,6 @@ export class ConfigDiscovery {
     for (const [key, value] of Object.entries(config)) {
       this.registry.set(namespace, key, value, options);
     }
-  }
-
-  /**
-   * Discover configuration for a specific namespace
-   */
-  public async discoverNamespace<T extends ConfigRecord>(
-    namespace: ConfigNamespace
-  ): Promise<T> {
-    const modules = configModules.get(namespace) ?? [];
-    const currentEnv = env.appEnv as ConfigEnvironment;
-
-    const layers: ConfigLayer<T>[] = [];
-
-    for (const module of modules) {
-      if (module.environments && !module.environments.includes(currentEnv)) {
-        continue;
-      }
-
-      const config = await this.resolveConfig(module);
-      layers.push({
-        source: 'base',
-        config: config as T,
-        priority: module.priority,
-      });
-    }
-
-    return mergeConfigLayers(layers);
-  }
-
-  /**
-   * Get discovery status
-   */
-  public isInitialized(): boolean {
-    return this.initialized;
-  }
-
-  /**
-   * Get discovered files
-   */
-  public getDiscoveredFiles(): DiscoveredConfigFile[] {
-    return Array.from(this.discoveredFiles.values());
   }
 }
 
@@ -458,20 +453,23 @@ const pluginConfigs: Map<string, PluginConfig> = new Map();
  * });
  * ```
  */
-export function registerPluginConfig<T extends ConfigRecord>(
-  plugin: PluginConfig<T>
-): void {
+export function registerPluginConfig<T extends ConfigRecord>(plugin: PluginConfig<T>): void {
   pluginConfigs.set(plugin.id, plugin as PluginConfig);
 
   // Also register in the config registry under plugin namespace
   const namespace = createNamespace(`plugin:${plugin.id}`);
   const registry = getConfigRegistry();
 
-  registry.set(namespace, 'meta', {
-    id: plugin.id,
-    name: plugin.name,
-    version: plugin.version,
-  } as unknown as import('./types').ConfigValue, { source: 'plugin', freeze: true });
+  registry.set(
+    namespace,
+    'meta',
+    {
+      id: plugin.id,
+      name: plugin.name,
+      version: plugin.version,
+    } as unknown as import('./types').ConfigValue,
+    { source: 'plugin', freeze: true }
+  );
 
   for (const [key, value] of Object.entries(plugin.config)) {
     registry.set(namespace, key, value, { source: 'plugin' });
@@ -541,9 +539,7 @@ const featureConfigs: Map<string, FeatureConfig> = new Map();
  * });
  * ```
  */
-export function registerFeatureConfig<T extends ConfigRecord>(
-  feature: FeatureConfig<T>
-): void {
+export function registerFeatureConfig<T extends ConfigRecord>(feature: FeatureConfig<T>): void {
   featureConfigs.set(feature.id, feature as FeatureConfig);
 }
 
@@ -695,9 +691,7 @@ let discoveryInstance: ConfigDiscovery | null = null;
 /**
  * Get or create the configuration discovery instance
  */
-export function getConfigDiscovery(
-  options?: ConfigDiscoveryOptions
-): ConfigDiscovery {
+export function getConfigDiscovery(options?: ConfigDiscoveryOptions): ConfigDiscovery {
   discoveryInstance ??= new ConfigDiscovery(options);
   return discoveryInstance;
 }

@@ -66,16 +66,9 @@ export interface RBACProviderProps {
   /** Loading component */
   loadingComponent?: ReactNode;
   /** Callback when permission check occurs */
-  onPermissionCheck?: (
-    permission: Permission,
-    granted: boolean
-  ) => void;
+  onPermissionCheck?: (permission: Permission, granted: boolean) => void;
   /** Callback when access check occurs */
-  onAccessCheck?: (
-    resource: string,
-    action: PermissionAction,
-    granted: boolean
-  ) => void;
+  onAccessCheck?: (resource: string, action: PermissionAction, granted: boolean) => void;
 }
 
 // =============================================================================
@@ -149,12 +142,12 @@ export function RBACProvider({
 
   useEffect(() => {
     if (!isRBACEnabled) {
-      setState(prev => ({ ...prev, initialized: true, loading: false }));
+      setState((prev) => ({ ...prev, initialized: true, loading: false }));
       return;
     }
 
     const initialize = async (): Promise<void> => {
-      setState(prev => ({ ...prev, loading: true, error: null }));
+      setState((prev) => ({ ...prev, loading: true, error: null }));
 
       try {
         let roles = userRoles;
@@ -175,7 +168,7 @@ export function RBACProvider({
           ...user?.metadata,
         });
 
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           initialized: true,
           loading: false,
@@ -184,7 +177,7 @@ export function RBACProvider({
           lastRefresh: Date.now(),
         }));
       } catch (error) {
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           loading: false,
           error: error instanceof Error ? error.message : 'Failed to initialize RBAC',
@@ -274,9 +267,10 @@ export function RBACProvider({
     (resource: string, action: PermissionAction, resourceId?: string): boolean => {
       if (!isRBACEnabled) return true;
 
-      const granted = (resourceId !== null && resourceId !== undefined && resourceId !== '')
-        ? engine.checkResourcePermission(resource, resourceId, action)
-        : engine.canAccess(resource, action);
+      const granted =
+        resourceId !== null && resourceId !== undefined && resourceId !== ''
+          ? engine.checkResourcePermission(resource, resourceId, action)
+          : engine.canAccess(resource, action);
 
       onAccessCheck?.(resource, action, granted);
 
@@ -302,11 +296,7 @@ export function RBACProvider({
   );
 
   const checkResourcePermission = useCallback(
-    (
-      resourceType: string,
-      resourceId: string,
-      action: PermissionAction
-    ): boolean => {
+    (resourceType: string, resourceId: string, action: PermissionAction): boolean => {
       if (!isRBACEnabled) return true;
       return engine.checkResourcePermission(resourceType, resourceId, action);
     },
@@ -323,14 +313,14 @@ export function RBACProvider({
 
   const getRoleDefinitions = useCallback((): RoleDefinition[] => {
     return state.userRoles
-      .map(roleId => config.roles.find(r => r.id === roleId))
+      .map((roleId) => config.roles.find((r) => r.id === roleId))
       .filter((r): r is RoleDefinition => r !== undefined);
   }, [state.userRoles, config.roles]);
 
   const refreshPermissions = useCallback(async (): Promise<void> => {
     if (!fetchPermissions) return;
 
-    setState(prev => ({ ...prev, loading: true }));
+    setState((prev) => ({ ...prev, loading: true }));
 
     try {
       const { roles, permissions } = await fetchPermissions();
@@ -341,7 +331,7 @@ export function RBACProvider({
         ...user?.metadata,
       });
 
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         loading: false,
         userRoles: roles,
@@ -349,7 +339,7 @@ export function RBACProvider({
         lastRefresh: Date.now(),
       }));
     } catch (error) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         loading: false,
         error: error instanceof Error ? error.message : 'Failed to refresh permissions',
@@ -359,7 +349,7 @@ export function RBACProvider({
 
   const clearCache = useCallback((): void => {
     engine.clearCache();
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       evaluationCache: new Map(),
     }));
@@ -411,7 +401,7 @@ export function RBACProvider({
   // ===========================================================================
 
   // Show loading during initialization
-  if (state.loading === true && loadingComponent !== null && loadingComponent !== undefined) {
+  if (state.loading && loadingComponent !== null && loadingComponent !== undefined) {
     return <>{loadingComponent}</>;
   }
 
@@ -420,9 +410,5 @@ export function RBACProvider({
     return <>{children}</>;
   }
 
-  return (
-    <RBACContext.Provider value={contextValue}>
-    {children}
-  </RBACContext.Provider>
-);
+  return <RBACContext.Provider value={contextValue}>{children}</RBACContext.Provider>;
 }

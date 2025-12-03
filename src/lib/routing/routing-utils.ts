@@ -1,10 +1,10 @@
 import { useCallback, useMemo } from 'react';
-import { 
-  useSearchParams, 
-  useParams, 
-  useLocation, 
+import {
+  useSearchParams,
+  useParams,
+  useLocation,
   useNavigate,
-  type NavigateOptions 
+  type NavigateOptions,
 } from 'react-router-dom';
 import { type RoutePath, type RouteParams, type RouteQuery } from './routes';
 
@@ -99,11 +99,7 @@ export function useRouteNavigate(): {
   );
 
   const navigateWithParams = useCallback(
-    <T extends keyof RouteParams>(
-      path: T,
-      params: RouteParams[T],
-      options?: NavigateOptions
-    ) => {
+    <T extends keyof RouteParams>(path: T, params: RouteParams[T], options?: NavigateOptions) => {
       let resolvedPath: string = path;
       for (const [key, value] of Object.entries(params)) {
         resolvedPath = resolvedPath.replace(`:${key}`, encodeURIComponent(String(value)));
@@ -127,7 +123,11 @@ export function useRouteNavigate(): {
             let stringValue: string;
             if (typeof value === 'object') {
               stringValue = JSON.stringify(value);
-            } else if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+            } else if (
+              typeof value === 'string' ||
+              typeof value === 'number' ||
+              typeof value === 'boolean'
+            ) {
               stringValue = String(value);
             } else {
               stringValue = JSON.stringify(value);
@@ -164,7 +164,7 @@ export function useRouteNavigate(): {
  */
 export function useQueryParams<T extends Record<string, string | undefined>>(): [
   Partial<T>,
-  (params: Partial<T>, replace?: boolean) => void
+  (params: Partial<T>, replace?: boolean) => void,
 ] {
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -178,10 +178,8 @@ export function useQueryParams<T extends Record<string, string | undefined>>(): 
 
   const setQuery = useCallback(
     (params: Partial<T>, replace: boolean = false) => {
-      const newParams = replace 
-        ? new URLSearchParams() 
-        : new URLSearchParams(searchParams);
-      
+      const newParams = replace ? new URLSearchParams() : new URLSearchParams(searchParams);
+
       for (const [key, value] of Object.entries(params)) {
         if (value === undefined || value === null || value === '') {
           newParams.delete(key);
@@ -189,7 +187,7 @@ export function useQueryParams<T extends Record<string, string | undefined>>(): 
           newParams.set(key, String(value));
         }
       }
-      
+
       setSearchParams(newParams, { replace: true });
     },
     [searchParams, setSearchParams]

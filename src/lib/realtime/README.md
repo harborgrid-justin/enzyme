@@ -4,7 +4,8 @@
 
 ## Overview
 
-The realtime module provides WebSocket connections, Server-Sent Events (SSE), and real-time data synchronization with automatic reconnection.
+The realtime module provides WebSocket connections, Server-Sent Events (SSE), and real-time data synchronization with
+automatic reconnection.
 
 ## Quick Start
 
@@ -37,12 +38,12 @@ function LiveDashboard() {
 
 ## Exports
 
-| Export | Type | Description |
-|--------|------|-------------|
-| `RealtimeProvider` | Component | WebSocket/SSE provider |
-| `useRealtime` | Hook | Connection state and controls |
-| `useSubscription` | Hook | Subscribe to channels |
-| `usePresence` | Hook | User presence tracking |
+| Export             | Type      | Description                   |
+|--------------------|-----------|-------------------------------|
+| `RealtimeProvider` | Component | WebSocket/SSE provider        |
+| `useRealtime`      | Hook      | Connection state and controls |
+| `useSubscription`  | Hook      | Subscribe to channels         |
+| `usePresence`      | Hook      | User presence tracking        |
 
 ## See Also
 

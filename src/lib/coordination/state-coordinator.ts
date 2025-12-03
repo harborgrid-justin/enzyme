@@ -82,10 +82,7 @@ function deepEqual(a: unknown, b: unknown): boolean {
   if (aKeys.length !== bKeys.length) return false;
 
   return aKeys.every((key) =>
-    deepEqual(
-      (a as Record<string, unknown>)[key],
-      (b as Record<string, unknown>)[key]
-    )
+    deepEqual((a as Record<string, unknown>)[key], (b as Record<string, unknown>)[key])
   );
 }
 
@@ -114,9 +111,7 @@ function setAtPath<T>(obj: T, path: string[], value: unknown): T {
 
   return {
     ...current,
-    [head]: tail.length === 0
-      ? value
-      : setAtPath(current[head] ?? {}, tail, value),
+    [head]: tail.length === 0 ? value : setAtPath(current[head] ?? {}, tail, value),
   } as T;
 }
 
@@ -300,9 +295,7 @@ export class StateCoordinatorImpl implements StateCoordinator {
     }
 
     const currentValue = entry.registration.getState();
-    const newValue = typeof value === 'function'
-      ? (value as (prev: T) => T)(currentValue)
-      : value;
+    const newValue = typeof value === 'function' ? (value as (prev: T) => T)(currentValue) : value;
 
     entry.registration.setState(newValue);
   }
@@ -531,9 +524,7 @@ export class StateCoordinatorImpl implements StateCoordinator {
       }
 
       // Transform value
-      const transformedValue = rule.transform
-        ? rule.transform(sourceValue)
-        : sourceValue;
+      const transformedValue = rule.transform ? rule.transform(sourceValue) : sourceValue;
 
       // Get current target state
       const targetState = targetEntry.registration.getState();
@@ -610,9 +601,7 @@ export function resetStateCoordinator(): void {
 /**
  * Registers a state slice with the global coordinator.
  */
-export function registerStateSlice<T>(
-  registration: StateSliceRegistration<T>
-): void {
+export function registerStateSlice<T>(registration: StateSliceRegistration<T>): void {
   getStateCoordinator().registerSlice(registration);
 }
 

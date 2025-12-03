@@ -70,9 +70,7 @@ interface DependencyResolution {
  * @param libraries - Map of library entries
  * @returns Dependency resolution result
  */
-function topologicalSort(
-  libraries: Map<LibraryId, LibraryEntry>
-): DependencyResolution {
+function topologicalSort(libraries: Map<LibraryId, LibraryEntry>): DependencyResolution {
   const result: DependencyResolution = {
     success: true,
     order: [],
@@ -165,11 +163,7 @@ function groupByPhase(
  * @param timeout - Timeout in milliseconds
  * @param label - Label for error messages
  */
-async function withTimeout<T>(
-  fn: () => Promise<T>,
-  timeout: number,
-  label: string
-): Promise<T> {
+async function withTimeout<T>(fn: () => Promise<T>, timeout: number, label: string): Promise<T> {
   return new Promise<T>((resolve, reject) => {
     const timeoutId = setTimeout(() => {
       reject(new Error(`Timeout (${timeout}ms) for: ${label}`));
@@ -374,7 +368,7 @@ export class LifecycleManagerImpl implements LifecycleManager {
         }
 
         try {
-          const healthy = await Promise.resolve(entry.healthCheck());
+          const healthy = await entry.healthCheck();
           return [id, healthy];
         } catch {
           return [id, false];
@@ -452,9 +446,7 @@ export class LifecycleManagerImpl implements LifecycleManager {
       const resolution = topologicalSort(this.libraries);
 
       if (!resolution.success) {
-        const cycleStr = resolution.cycles
-          .map((c) => c.join(' -> '))
-          .join('; ');
+        const cycleStr = resolution.cycles.map((c) => c.join(' -> ')).join('; ');
         throw new Error(`Circular dependencies detected: ${cycleStr}`);
       }
 
@@ -517,10 +509,7 @@ export class LifecycleManagerImpl implements LifecycleManager {
   /**
    * Initializes libraries in parallel.
    */
-  private async initializeLibrariesParallel(
-    ids: LibraryId[],
-    timeout?: number
-  ): Promise<void> {
+  private async initializeLibrariesParallel(ids: LibraryId[], timeout?: number): Promise<void> {
     const promises = ids.map(async (id) => this.initializeLibrary(id, timeout));
     await Promise.all(promises);
   }
@@ -528,10 +517,7 @@ export class LifecycleManagerImpl implements LifecycleManager {
   /**
    * Initializes libraries sequentially.
    */
-  private async initializeLibrariesSequential(
-    ids: LibraryId[],
-    timeout?: number
-  ): Promise<void> {
+  private async initializeLibrariesSequential(ids: LibraryId[], timeout?: number): Promise<void> {
     // Sort by dependency order
     const sorted = ids.sort((a, b) => {
       const aIndex = this.initializationOrder.indexOf(a);
@@ -577,9 +563,7 @@ export class LifecycleManagerImpl implements LifecycleManager {
         entry.lastError = error instanceof Error ? error : new Error(String(error));
 
         // Handle retry
-        const maxRetries = this.config.phases.find(
-          (p) => p.id === entry.phase
-        )?.retries ?? 0;
+        const maxRetries = this.config.phases.find((p) => p.id === entry.phase)?.retries ?? 0;
 
         if (entry.retryCount < maxRetries) {
           entry.retryCount++;
@@ -593,9 +577,10 @@ export class LifecycleManagerImpl implements LifecycleManager {
       }
     };
 
-    entry.initPromise = timeout !== undefined && timeout !== 0
-      ? withTimeout(doInit, timeout, `Initialize ${entry.name}`)
-      : doInit();
+    entry.initPromise =
+      timeout !== undefined && timeout !== 0
+        ? withTimeout(doInit, timeout, `Initialize ${entry.name}`)
+        : doInit();
 
     try {
       await entry.initPromise;
@@ -691,9 +676,7 @@ export async function resetLifecycleManager(): Promise<void> {
 /**
  * Registers a library with the global lifecycle manager.
  */
-export function registerLibrary(
-  registration: Omit<LibraryRegistration, 'state'>
-): void {
+export function registerLibrary(registration: Omit<LibraryRegistration, 'state'>): void {
   getLifecycleManager().registerLibrary(registration);
 }
 

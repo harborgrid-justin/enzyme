@@ -16,11 +16,7 @@
  * ```
  */
 
-import type {
-  ConfigRecord,
-  ConfigValue,
-  MergeOptions,
-} from './types';
+import type { ConfigRecord, ConfigValue, MergeOptions } from './types';
 
 // ============================================================================
 // Config Merger
@@ -94,19 +90,13 @@ export class ConfigMerger {
 
       // Handle arrays
       if (Array.isArray(sourceValue)) {
-        result[key] = this.mergeArrays(
-          Array.isArray(targetValue) ? targetValue : [],
-          sourceValue
-        );
+        result[key] = this.mergeArrays(Array.isArray(targetValue) ? targetValue : [], sourceValue);
         continue;
       }
 
       // Handle objects
       if (this.isPlainObject(sourceValue) && this.isPlainObject(targetValue)) {
-        result[key] = this.deepMerge(
-          targetValue as ConfigRecord,
-          sourceValue as ConfigRecord
-        );
+        result[key] = this.deepMerge(targetValue as ConfigRecord, sourceValue as ConfigRecord);
         continue;
       }
 
@@ -216,7 +206,7 @@ export function getValueAtPath<T = ConfigValue>(
     }
   }
 
-  return (current as T) ?? defaultValue as T;
+  return (current as T) ?? (defaultValue as T);
 }
 
 /**
@@ -256,7 +246,7 @@ export function setValueAtPath(
       if (typeof current[part] !== 'object' || current[part] === null) {
         current[part] = {};
       } else {
-        current[part] = { ...(current[part]) };
+        current[part] = { ...current[part] };
       }
       current = current[part] as Record<string, unknown>;
     }
@@ -287,10 +277,7 @@ export function setValueAtPath(
 /**
  * Delete a value at a path.
  */
-export function deleteValueAtPath(
-  config: ConfigRecord,
-  path: string
-): ConfigRecord {
+export function deleteValueAtPath(config: ConfigRecord, path: string): ConfigRecord {
   const parts = path.split('.');
   const result = { ...config };
 
@@ -310,7 +297,7 @@ export function deleteValueAtPath(
     if (typeof current[part] !== 'object' || current[part] === null) {
       return result; // Path doesn't exist
     }
-    current[part] = { ...(current[part]) };
+    current[part] = { ...current[part] };
     current = current[part] as Record<string, unknown>;
   }
 
@@ -385,10 +372,7 @@ export interface ConfigDiff {
 /**
  * Calculate the difference between two configurations.
  */
-export function diffConfigs(
-  oldConfig: ConfigRecord,
-  newConfig: ConfigRecord
-): ConfigDiff {
+export function diffConfigs(oldConfig: ConfigRecord, newConfig: ConfigRecord): ConfigDiff {
   const added: Record<string, ConfigValue> = {};
   const removed: string[] = [];
   const changed: Array<{
@@ -436,20 +420,13 @@ export function diffConfigs(
 /**
  * Flatten a nested configuration to dot-notation paths.
  */
-export function flattenConfig(
-  config: ConfigRecord,
-  prefix = ''
-): Record<string, ConfigValue> {
+export function flattenConfig(config: ConfigRecord, prefix = ''): Record<string, ConfigValue> {
   const result: Record<string, ConfigValue> = {};
 
   for (const [key, value] of Object.entries(config)) {
     const path = prefix ? `${prefix}.${key}` : key;
 
-    if (
-      value !== null &&
-      typeof value === 'object' &&
-      !Array.isArray(value)
-    ) {
+    if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
       Object.assign(result, flattenConfig(value as ConfigRecord, path));
     } else {
       result[path] = value;
@@ -462,9 +439,7 @@ export function flattenConfig(
 /**
  * Unflatten a dot-notation configuration to nested structure.
  */
-export function unflattenConfig(
-  flat: Record<string, ConfigValue>
-): ConfigRecord {
+export function unflattenConfig(flat: Record<string, ConfigValue>): ConfigRecord {
   let result: ConfigRecord = {};
 
   for (const [path, value] of Object.entries(flat)) {

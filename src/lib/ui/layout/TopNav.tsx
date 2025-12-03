@@ -3,7 +3,17 @@
  * @description Global top navigation UI
  */
 
-import React, { type ReactNode, useState, useRef, useEffect, useCallback, memo, useMemo, type KeyboardEvent as ReactKeyboardEvent, type CSSProperties } from 'react';
+import React, {
+  type ReactNode,
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  memo,
+  useMemo,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type CSSProperties,
+} from 'react';
 
 /**
  * Custom hook for keyboard navigation in dropdown menus
@@ -14,51 +24,54 @@ function useDropdownKeyboardNavigation(
   isOpen: boolean,
   onClose: () => void
 ): (event: ReactKeyboardEvent) => void {
-  return useCallback((event: ReactKeyboardEvent) => {
-    if (!isOpen || !menuRef.current) return;
+  return useCallback(
+    (event: ReactKeyboardEvent) => {
+      if (!isOpen || !menuRef.current) return;
 
-    const menuItems = menuRef.current.querySelectorAll<HTMLElement>(
-      'button[role="menuitem"]:not([disabled])'
-    );
-    if (menuItems.length === 0) return;
+      const menuItems = menuRef.current.querySelectorAll<HTMLElement>(
+        'button[role="menuitem"]:not([disabled])'
+      );
+      if (menuItems.length === 0) return;
 
-    const currentIndex = Array.from(menuItems).findIndex(
-      (item) => item === document.activeElement
-    );
+      const currentIndex = Array.from(menuItems).findIndex(
+        (item) => item === document.activeElement
+      );
 
-    switch (event.key) {
-      case 'Escape':
-        event.preventDefault();
-        onClose();
-        break;
-      case 'ArrowDown':
-        event.preventDefault();
-        if (currentIndex < 0) {
+      switch (event.key) {
+        case 'Escape':
+          event.preventDefault();
+          onClose();
+          break;
+        case 'ArrowDown':
+          event.preventDefault();
+          if (currentIndex < 0) {
+            menuItems[0]?.focus();
+          } else if (currentIndex < menuItems.length - 1) {
+            menuItems[currentIndex + 1]?.focus();
+          } else {
+            menuItems[0]?.focus(); // Wrap to start
+          }
+          break;
+        case 'ArrowUp':
+          event.preventDefault();
+          if (currentIndex <= 0) {
+            menuItems[menuItems.length - 1]?.focus(); // Wrap to end
+          } else {
+            menuItems[currentIndex - 1]?.focus();
+          }
+          break;
+        case 'Home':
+          event.preventDefault();
           menuItems[0]?.focus();
-        } else if (currentIndex < menuItems.length - 1) {
-          menuItems[currentIndex + 1]?.focus();
-        } else {
-          menuItems[0]?.focus(); // Wrap to start
-        }
-        break;
-      case 'ArrowUp':
-        event.preventDefault();
-        if (currentIndex <= 0) {
-          menuItems[menuItems.length - 1]?.focus(); // Wrap to end
-        } else {
-          menuItems[currentIndex - 1]?.focus();
-        }
-        break;
-      case 'Home':
-        event.preventDefault();
-        menuItems[0]?.focus();
-        break;
-      case 'End':
-        event.preventDefault();
-        menuItems[menuItems.length - 1]?.focus();
-        break;
-    }
-  }, [isOpen, menuRef, onClose]);
+          break;
+        case 'End':
+          event.preventDefault();
+          menuItems[menuItems.length - 1]?.focus();
+          break;
+      }
+    },
+    [isOpen, menuRef, onClose]
+  );
 }
 
 /**
@@ -91,35 +104,35 @@ export interface UserMenuItem {
 export interface TopNavProps {
   /** Logo or brand element */
   logo?: ReactNode;
-  
+
   /** Navigation items */
   items?: NavItem[];
-  
+
   /** Currently active item ID */
   activeId?: string;
-  
+
   /** Right-side actions */
   actions?: ReactNode;
-  
+
   /** User info for menu */
   user?: {
     name: string;
     email?: string;
     avatar?: string;
   };
-  
+
   /** User menu items */
   userMenuItems?: UserMenuItem[];
-  
+
   /** Search component */
   search?: ReactNode;
-  
+
   /** Fixed position at top */
   fixed?: boolean;
-  
+
   /** Background color */
   backgroundColor?: string;
-  
+
   /** Height */
   height?: number;
 }
@@ -248,211 +261,203 @@ const chevronBaseStyle: CSSProperties = {
 /**
  * Top navigation component - memoized for performance
  */
-export const TopNav = memo(({
-  logo,
-  items = [],
-  activeId,
-  actions,
-  user,
-  userMenuItems = [],
-  search,
-  fixed = true,
-  backgroundColor = '#ffffff',
-  height = 64,
-}: TopNavProps): React.ReactElement => {
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const userMenuRef = useRef<HTMLDivElement>(null);
-  
-  // Close menu on click outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent): void {
-      if (userMenuRef.current !== null && !userMenuRef.current.contains(event.target as Node)) {
-        setUserMenuOpen(false);
+export const TopNav = memo(
+  ({
+    logo,
+    items = [],
+    activeId,
+    actions,
+    user,
+    userMenuItems = [],
+    search,
+    fixed = true,
+    backgroundColor = '#ffffff',
+    height = 64,
+  }: TopNavProps): React.ReactElement => {
+    const [userMenuOpen, setUserMenuOpen] = useState(false);
+    const userMenuRef = useRef<HTMLDivElement>(null);
+
+    // Close menu on click outside
+    useEffect(() => {
+      function handleClickOutside(event: MouseEvent): void {
+        if (userMenuRef.current !== null && !userMenuRef.current.contains(event.target as Node)) {
+          setUserMenuOpen(false);
+        }
       }
-    }
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
-  // Close menu callback for user menu
-  const closeUserMenu = useCallback(() => setUserMenuOpen(false), []);
+    // Close menu callback for user menu
+    const closeUserMenu = useCallback(() => setUserMenuOpen(false), []);
 
-  // Toggle user menu callback
-  const toggleUserMenu = useCallback(() => setUserMenuOpen((prev) => !prev), []);
+    // Toggle user menu callback
+    const toggleUserMenu = useCallback(() => setUserMenuOpen((prev) => !prev), []);
 
-  // Keyboard navigation for user menu (ArrowUp, ArrowDown, Home, End, Escape)
-  const handleUserMenuKeyDown = useDropdownKeyboardNavigation(
-    userMenuRef,
-    userMenuOpen,
-    closeUserMenu
-  );
+    // Keyboard navigation for user menu (ArrowUp, ArrowDown, Home, End, Escape)
+    const handleUserMenuKeyDown = useDropdownKeyboardNavigation(
+      userMenuRef,
+      userMenuOpen,
+      closeUserMenu
+    );
 
-  // Memoize header style since it depends on props
-  const headerStyle = useMemo<CSSProperties>(() => ({
-    position: fixed ? 'fixed' : 'relative',
-    top: 0,
-    left: 0,
-    right: 0,
-    height,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '0 1.5rem',
-    backgroundColor,
-    borderBottom: '1px solid #e5e7eb',
-    zIndex: 1000,
-  }), [fixed, height, backgroundColor]);
+    // Memoize header style since it depends on props
+    const headerStyle = useMemo<CSSProperties>(
+      () => ({
+        position: fixed ? 'fixed' : 'relative',
+        top: 0,
+        left: 0,
+        right: 0,
+        height,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 1.5rem',
+        backgroundColor,
+        borderBottom: '1px solid #e5e7eb',
+        zIndex: 1000,
+      }),
+      [fixed, height, backgroundColor]
+    );
 
-  // Memoize search container style
-  const searchContainerStyle = useMemo<CSSProperties>(() => ({
-    flex: 1,
-    maxWidth: '32rem',
-    margin: '0 2rem',
-  }), []);
+    // Memoize search container style
+    const searchContainerStyle = useMemo<CSSProperties>(
+      () => ({
+        flex: 1,
+        maxWidth: '32rem',
+        margin: '0 2rem',
+      }),
+      []
+    );
 
-  // Memoize spacer style
-  const spacerStyle = useMemo<CSSProperties>(() => ({ height }), [height]);
+    // Memoize spacer style
+    const spacerStyle = useMemo<CSSProperties>(() => ({ height }), [height]);
 
-  // Memoize chevron style based on menu state
-  const chevronStyle = useMemo<CSSProperties>(() => ({
-    ...chevronBaseStyle,
-    transform: userMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-  }), [userMenuOpen]);
+    // Memoize chevron style based on menu state
+    const chevronStyle = useMemo<CSSProperties>(
+      () => ({
+        ...chevronBaseStyle,
+        transform: userMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+      }),
+      [userMenuOpen]
+    );
 
-  // Create stable menu item click handlers using data attributes
-  const handleMenuItemClick = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
-    const {menuItemId} = event.currentTarget.dataset;
-    if (menuItemId !== undefined && menuItemId !== '') {
-      const menuItem = userMenuItems.find((item) => item.id === menuItemId);
-      menuItem?.onClick?.();
-      setUserMenuOpen(false);
-    }
-  }, [userMenuItems]);
+    // Create stable menu item click handlers using data attributes
+    const handleMenuItemClick = useCallback(
+      (event: React.MouseEvent<HTMLButtonElement>) => {
+        const { menuItemId } = event.currentTarget.dataset;
+        if (menuItemId !== undefined && menuItemId !== '') {
+          const menuItem = userMenuItems.find((item) => item.id === menuItemId);
+          menuItem?.onClick?.();
+          setUserMenuOpen(false);
+        }
+      },
+      [userMenuItems]
+    );
 
-  return (
-    <>
-      {/* Spacer when fixed */}
-      {fixed && <div style={spacerStyle} />}
+    return (
+      <>
+        {/* Spacer when fixed */}
+        {fixed && <div style={spacerStyle} />}
 
-      <header style={headerStyle}>
-        {/* Left section: Logo + Nav */}
-        <div style={leftSectionStyle}>
-          {logo !== undefined && (
-            <div style={logoContainerStyle}>
-              {logo}
-            </div>
-          )}
+        <header style={headerStyle}>
+          {/* Left section: Logo + Nav */}
+          <div style={leftSectionStyle}>
+            {logo !== undefined && <div style={logoContainerStyle}>{logo}</div>}
 
-          {items.length > 0 && (
-            <nav style={navStyle}>
-              {items.map((item) => (
-                <NavButton
-                  key={item.id}
-                  item={item}
-                  isActive={activeId === item.id}
-                />
-              ))}
-            </nav>
-          )}
-        </div>
-
-        {/* Center section: Search */}
-        {search !== undefined && (
-          <div style={searchContainerStyle}>
-            {search}
+            {items.length > 0 && (
+              <nav style={navStyle}>
+                {items.map((item) => (
+                  <NavButton key={item.id} item={item} isActive={activeId === item.id} />
+                ))}
+              </nav>
+            )}
           </div>
-        )}
 
-        {/* Right section: Actions + User */}
-        <div style={rightSectionStyle}>
-          {actions}
+          {/* Center section: Search */}
+          {search !== undefined && <div style={searchContainerStyle}>{search}</div>}
 
-          {user !== undefined && (
-            <div ref={userMenuRef} style={userMenuContainerStyle} onKeyDown={handleUserMenuKeyDown}>
-              <button
-                onClick={toggleUserMenu}
-                aria-haspopup="menu"
-                aria-expanded={userMenuOpen}
-                aria-label={`User menu for ${user.name}`}
-                style={userButtonStyle}
+          {/* Right section: Actions + User */}
+          <div style={rightSectionStyle}>
+            {actions}
+
+            {user !== undefined && (
+              <div
+                ref={userMenuRef}
+                style={userMenuContainerStyle}
+                onKeyDown={handleUserMenuKeyDown}
               >
-                {(user.avatar !== undefined && user.avatar !== '') ? (
-                  <img
-                    src={user.avatar}
-                    alt={user.name}
-                    style={avatarImageStyle}
-                  />
-                ) : (
-                  <div style={avatarPlaceholderStyle} aria-hidden="true">
-                    {user.name.charAt(0).toUpperCase()}
+                <button
+                  onClick={toggleUserMenu}
+                  aria-haspopup="menu"
+                  aria-expanded={userMenuOpen}
+                  aria-label={`User menu for ${user.name}`}
+                  style={userButtonStyle}
+                >
+                  {user.avatar !== undefined && user.avatar !== '' ? (
+                    <img src={user.avatar} alt={user.name} style={avatarImageStyle} />
+                  ) : (
+                    <div style={avatarPlaceholderStyle} aria-hidden="true">
+                      {user.name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                    style={chevronStyle}
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </button>
+
+                {/* User dropdown menu */}
+                {userMenuOpen && (
+                  <div role="menu" aria-label="User menu" style={dropdownMenuStyle}>
+                    {/* User info header */}
+                    <div style={userInfoHeaderStyle}>
+                      <div style={userNameStyle}>{user.name}</div>
+                      {user.email !== undefined && user.email !== '' && (
+                        <div style={userEmailStyle}>{user.email}</div>
+                      )}
+                    </div>
+
+                    {/* Menu items */}
+                    <div style={menuItemsContainerStyle}>
+                      {userMenuItems.map((menuItem) =>
+                        menuItem.divider === true ? (
+                          <div key={menuItem.id} role="separator" style={dividerStyle} />
+                        ) : (
+                          <button
+                            key={menuItem.id}
+                            role="menuitem"
+                            data-menu-item-id={menuItem.id}
+                            onClick={handleMenuItemClick}
+                            style={menuItemButtonStyle}
+                          >
+                            {menuItem.icon}
+                            {menuItem.label}
+                          </button>
+                        )
+                      )}
+                    </div>
                   </div>
                 )}
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  aria-hidden="true"
-                  style={chevronStyle}
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </button>
-
-              {/* User dropdown menu */}
-              {userMenuOpen && (
-                <div
-                  role="menu"
-                  aria-label="User menu"
-                  style={dropdownMenuStyle}
-                >
-                  {/* User info header */}
-                  <div style={userInfoHeaderStyle}>
-                    <div style={userNameStyle}>{user.name}</div>
-                    {user.email !== undefined && user.email !== '' && (
-                      <div style={userEmailStyle}>
-                        {user.email}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Menu items */}
-                  <div style={menuItemsContainerStyle}>
-                    {userMenuItems.map((menuItem) =>
-                      menuItem.divider === true ? (
-                        <div
-                          key={menuItem.id}
-                          role="separator"
-                          style={dividerStyle}
-                        />
-                      ) : (
-                        <button
-                          key={menuItem.id}
-                          role="menuitem"
-                          data-menu-item-id={menuItem.id}
-                          onClick={handleMenuItemClick}
-                          style={menuItemButtonStyle}
-                        >
-                          {menuItem.icon}
-                          {menuItem.label}
-                        </button>
-                      )
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </header>
-    </>
-  );
-});
+              </div>
+            )}
+          </div>
+        </header>
+      </>
+    );
+  }
+);
 
 TopNav.displayName = 'TopNav';
 
@@ -503,10 +508,7 @@ interface NavButtonProps {
 /**
  * Navigation button component - memoized for performance
  */
-const NavButton = memo(({
-  item,
-  isActive,
-}: NavButtonProps): React.ReactElement => {
+const NavButton = memo(({ item, isActive }: NavButtonProps): React.ReactElement => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const hasDropdown = item.items !== undefined && item.items.length > 0;
@@ -523,11 +525,7 @@ const NavButton = memo(({
   const closeDropdown = useCallback(() => setDropdownOpen(false), []);
 
   // Keyboard navigation for dropdown (ArrowUp, ArrowDown, Home, End, Escape)
-  const handleKeyDown = useDropdownKeyboardNavigation(
-    dropdownRef,
-    dropdownOpen,
-    closeDropdown
-  );
+  const handleKeyDown = useDropdownKeyboardNavigation(dropdownRef, dropdownOpen, closeDropdown);
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -545,36 +543,45 @@ const NavButton = memo(({
   }, [dropdownOpen]);
 
   // Memoize button style based on state
-  const buttonStyle = useMemo<CSSProperties>(() => ({
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.25rem',
-    padding: '0.5rem 0.75rem',
-    border: 'none',
-    backgroundColor: isActive ? '#f3f4f6' : 'transparent',
-    color: isActive ? '#111827' : '#6b7280',
-    cursor: (item.disabled ?? false) ? 'not-allowed' : 'pointer',
-    opacity: (item.disabled ?? false) ? 0.5 : 1,
-    borderRadius: '0.375rem',
-    fontSize: '0.875rem',
-    fontWeight: isActive ? '500' : '400',
-  }), [isActive, item.disabled]);
+  const buttonStyle = useMemo<CSSProperties>(
+    () => ({
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.25rem',
+      padding: '0.5rem 0.75rem',
+      border: 'none',
+      backgroundColor: isActive ? '#f3f4f6' : 'transparent',
+      color: isActive ? '#111827' : '#6b7280',
+      cursor: (item.disabled ?? false) ? 'not-allowed' : 'pointer',
+      opacity: (item.disabled ?? false) ? 0.5 : 1,
+      borderRadius: '0.375rem',
+      fontSize: '0.875rem',
+      fontWeight: isActive ? '500' : '400',
+    }),
+    [isActive, item.disabled]
+  );
 
   // Create stable dropdown item click handler using data attributes
-  const handleDropdownItemClick = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
-    const {childId} = event.currentTarget.dataset;
-    if (childId !== undefined && childId !== '' && item.items !== undefined) {
-      const child = item.items.find((c) => c.id === childId);
-      child?.onClick?.();
-      setDropdownOpen(false);
-    }
-  }, [item.items]);
+  const handleDropdownItemClick = useCallback(
+    (event: React.MouseEvent<HTMLButtonElement>) => {
+      const { childId } = event.currentTarget.dataset;
+      if (childId !== undefined && childId !== '' && item.items !== undefined) {
+        const child = item.items.find((c) => c.id === childId);
+        child?.onClick?.();
+        setDropdownOpen(false);
+      }
+    },
+    [item.items]
+  );
 
   // Memoize dropdown item style generator
-  const getDropdownItemStyle = useCallback((disabled?: boolean): CSSProperties => ({
-    ...navDropdownItemBaseStyle,
-    cursor: (disabled === true) ? 'not-allowed' : 'pointer',
-  }), []);
+  const getDropdownItemStyle = useCallback(
+    (disabled?: boolean): CSSProperties => ({
+      ...navDropdownItemBaseStyle,
+      cursor: disabled === true ? 'not-allowed' : 'pointer',
+    }),
+    []
+  );
 
   return (
     <div ref={dropdownRef} style={navButtonContainerStyle} onKeyDown={handleKeyDown}>
@@ -600,11 +607,7 @@ const NavButton = memo(({
 
       {/* Dropdown menu */}
       {hasDropdown && dropdownOpen && item.items !== undefined && (
-        <div
-          role="menu"
-          aria-label={`${item.label} submenu`}
-          style={navDropdownMenuStyle}
-        >
+        <div role="menu" aria-label={`${item.label} submenu`} style={navDropdownMenuStyle}>
           {item.items.map((child) => (
             <button
               key={child.id}

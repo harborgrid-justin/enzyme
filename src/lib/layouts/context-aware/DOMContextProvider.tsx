@@ -159,9 +159,10 @@ export function DOMContextProvider({
   // State - generate initial state inline to avoid ref issues
   const [context, setContext] = useState<DOMContext>(() => ({
     ...defaultDOMContext,
-    viewport: initialViewport != null
-      ? { ...defaultDOMContext.viewport, ...initialViewport }
-      : defaultDOMContext.viewport,
+    viewport:
+      initialViewport != null
+        ? { ...defaultDOMContext.viewport, ...initialViewport }
+        : defaultDOMContext.viewport,
     contextId,
     isSSR,
   }));
@@ -204,9 +205,8 @@ export function DOMContextProvider({
     const portal: PortalContext | null = portalManager.getContextForElement(element);
 
     // Get z-index context
-    const zIndex: ZIndexContext = trackZIndex === true
-      ? zIndexManager.getZIndexContext(element)
-      : defaultDOMContext.zIndex;
+    const zIndex: ZIndexContext =
+      trackZIndex === true ? zIndexManager.getZIndexContext(element) : defaultDOMContext.zIndex;
 
     return {
       ancestors,
@@ -449,7 +449,10 @@ export interface WithDOMContextProps {
 export function withDOMContext<P extends WithDOMContextProps>(
   Component: React.ComponentType<P>
 ): React.ComponentType<Omit<P, 'domContext'>> {
-  const displayName = (Component.displayName != null && Component.displayName !== '') ? Component.displayName : (Component.name ?? 'Component');
+  const displayName =
+    Component.displayName != null && Component.displayName !== ''
+      ? Component.displayName
+      : (Component.name ?? 'Component');
 
   const WrappedComponent = (props: Omit<P, 'domContext'>): React.JSX.Element => {
     const domContext = useDOMContextValue();
@@ -468,7 +471,10 @@ export function withDOMContext<P extends WithDOMContextProps>(
 /**
  * Props for NestedDOMContextProvider.
  */
-export interface NestedDOMContextProviderProps extends Omit<DOMContextProviderProps, 'initialViewport'> {
+export interface NestedDOMContextProviderProps extends Omit<
+  DOMContextProviderProps,
+  'initialViewport'
+> {
   /** Whether to inherit from parent context */
   inheritParent?: boolean;
 }
@@ -497,9 +503,8 @@ export function NestedDOMContextProvider({
   const parentContext = useDOMContextValue();
 
   // If inheriting and parent is initialized, merge viewport
-  const initialViewport = inheritParent && parentContext.isInitialized
-    ? parentContext.viewport
-    : undefined;
+  const initialViewport =
+    inheritParent && parentContext.isInitialized ? parentContext.viewport : undefined;
 
   return (
     <DOMContextProvider {...props} initialViewport={initialViewport}>
@@ -528,9 +533,7 @@ export function NestedDOMContextProvider({
  * }
  * ```
  */
-export function useDOMContextSelector<T>(
-  selector: (context: DOMContext) => T
-): T {
-const context = useDOMContextValue();
-return useMemo(() => selector(context), [context, selector]);
+export function useDOMContextSelector<T>(selector: (context: DOMContext) => T): T {
+  const context = useDOMContextValue();
+  return useMemo(() => selector(context), [context, selector]);
 }

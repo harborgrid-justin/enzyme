@@ -290,33 +290,6 @@ export class LifecycleManager {
     };
   }
 
-  private validateTransition(
-    from: FlagLifecycleState,
-    to: FlagLifecycleState
-  ): void {
-    if (!isValidTransition(from, to)) {
-      throw new Error(
-        `Invalid state transition from '${from}' to '${to}'`
-      );
-    }
-  }
-
-  private getDefaultReviewDate(from: Date): Date {
-    const reviewDate = new Date(from);
-    reviewDate.setDate(reviewDate.getDate() + 30); // 30 days default
-    return reviewDate;
-  }
-
-  private getDefaultRemovalDate(from: Date): Date {
-    const removalDate = new Date(from);
-    removalDate.setDate(removalDate.getDate() + 90); // 90 days default
-    return removalDate;
-  }
-
-  // ==========================================================================
-  // Activity Tracking
-  // ==========================================================================
-
   /**
    * Record activity for a flag.
    */
@@ -330,10 +303,6 @@ export class LifecycleManager {
   getLastActivity(flagId: FlagId): Date | undefined {
     return this.activityLog.get(flagId);
   }
-
-  // ==========================================================================
-  // Health & Analysis
-  // ==========================================================================
 
   /**
    * Get health status for a flag.
@@ -414,6 +383,10 @@ export class LifecycleManager {
     };
   }
 
+  // ==========================================================================
+  // Activity Tracking
+  // ==========================================================================
+
   /**
    * Get stale flags (no activity in specified days).
    */
@@ -445,6 +418,10 @@ export class LifecycleManager {
         flag.lifecycle.state !== 'archived'
     );
   }
+
+  // ==========================================================================
+  // Health & Analysis
+  // ==========================================================================
 
   /**
    * Get deprecated flags ready for removal.
@@ -592,10 +569,6 @@ export class LifecycleManager {
     };
   }
 
-  // ==========================================================================
-  // Event Handling
-  // ==========================================================================
-
   /**
    * Add event listener.
    */
@@ -611,6 +584,33 @@ export class LifecycleManager {
     if (index > -1) {
       this.eventListeners.splice(index, 1);
     }
+  }
+
+  private validateTransition(
+    from: FlagLifecycleState,
+    to: FlagLifecycleState
+  ): void {
+    if (!isValidTransition(from, to)) {
+      throw new Error(
+        `Invalid state transition from '${from}' to '${to}'`
+      );
+    }
+  }
+
+  // ==========================================================================
+  // Event Handling
+  // ==========================================================================
+
+  private getDefaultReviewDate(from: Date): Date {
+    const reviewDate = new Date(from);
+    reviewDate.setDate(reviewDate.getDate() + 30); // 30 days default
+    return reviewDate;
+  }
+
+  private getDefaultRemovalDate(from: Date): Date {
+    const removalDate = new Date(from);
+    removalDate.setDate(removalDate.getDate() + 90); // 90 days default
+    return removalDate;
   }
 
   private emitEvent(event: LifecycleEvent): void {

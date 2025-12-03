@@ -72,9 +72,7 @@ export interface OptimisticConfig {
 /**
  * Mutation function type
  */
-export type MutationFn<T, TArgs extends unknown[] = unknown[]> = (
-  ...args: TArgs
-) => Promise<T>;
+export type MutationFn<T, TArgs extends unknown[] = unknown[]> = (...args: TArgs) => Promise<T>;
 
 /**
  * Optimistic value updater
@@ -84,11 +82,7 @@ export type OptimisticUpdater<T> = (currentValue: T) => T;
 /**
  * Conflict resolver
  */
-export type ConflictResolver<T> = (
-  localValue: T,
-  serverValue: T,
-  baseValue: T
-) => T;
+export type ConflictResolver<T> = (localValue: T, serverValue: T, baseValue: T) => T;
 
 /**
  * Update listener
@@ -186,10 +180,7 @@ export class OptimisticUpdateManager<T> {
     // Execute mutation
     const execute = async (): Promise<void> => {
       try {
-        const serverValue = await this.executeWithTimeout(
-          mutation(...args),
-          this.config.timeout
-        );
+        const serverValue = await this.executeWithTimeout(mutation(...args), this.config.timeout);
 
         // Confirm the update
         update.status = 'confirmed';
@@ -248,10 +239,7 @@ export class OptimisticUpdateManager<T> {
     await this.sleep(delay);
 
     try {
-      const serverValue = await this.executeWithTimeout(
-        mutation(...args),
-        this.config.timeout
-      );
+      const serverValue = await this.executeWithTimeout(mutation(...args), this.config.timeout);
 
       update.status = 'confirmed';
       this.currentValue = serverValue;
@@ -290,18 +278,14 @@ export class OptimisticUpdateManager<T> {
    * Get pending updates
    */
   getPendingUpdates(): OptimisticUpdate<T>[] {
-    return Array.from(this.updates.values()).filter(
-      (u) => u.status === 'pending'
-    );
+    return Array.from(this.updates.values()).filter((u) => u.status === 'pending');
   }
 
   /**
    * Get failed updates
    */
   getFailedUpdates(): OptimisticUpdate<T>[] {
-    return Array.from(this.updates.values()).filter(
-      (u) => u.status === 'failed'
-    );
+    return Array.from(this.updates.values()).filter((u) => u.status === 'failed');
   }
 
   /**
@@ -450,27 +434,15 @@ export class OptimisticListManager<T extends { id: string }> {
   /**
    * Optimistically add an item
    */
-  async addItem(
-    item: T,
-    mutation: MutationFn<T[]>
-  ): Promise<OptimisticResult<T[]>> {
-    return this.manager.applyUpdate(
-      (items) => [...items, item],
-      mutation
-    );
+  async addItem(item: T, mutation: MutationFn<T[]>): Promise<OptimisticResult<T[]>> {
+    return this.manager.applyUpdate((items) => [...items, item], mutation);
   }
 
   /**
    * Optimistically remove an item
    */
-  async removeItem(
-    id: string,
-    mutation: MutationFn<T[]>
-  ): Promise<OptimisticResult<T[]>> {
-    return this.manager.applyUpdate(
-      (items) => items.filter((item) => item.id !== id),
-      mutation
-    );
+  async removeItem(id: string, mutation: MutationFn<T[]>): Promise<OptimisticResult<T[]>> {
+    return this.manager.applyUpdate((items) => items.filter((item) => item.id !== id), mutation);
   }
 
   /**
@@ -482,10 +454,7 @@ export class OptimisticListManager<T extends { id: string }> {
     mutation: MutationFn<T[]>
   ): Promise<OptimisticResult<T[]>> {
     return this.manager.applyUpdate(
-      (items) =>
-        items.map((item) =>
-          item.id === id ? { ...item, ...updates } : item
-        ),
+      (items) => items.map((item) => (item.id === id ? { ...item, ...updates } : item)),
       mutation
     );
   }
@@ -498,17 +467,14 @@ export class OptimisticListManager<T extends { id: string }> {
     toIndex: number,
     mutation: MutationFn<T[]>
   ): Promise<OptimisticResult<T[]>> {
-    return this.manager.applyUpdate(
-      (items) => {
-        const result = [...items];
-        const removed = result.splice(fromIndex, 1)[0];
-        if (removed !== undefined) {
-          result.splice(toIndex, 0, removed);
-        }
-        return result;
-      },
-      mutation
-    );
+    return this.manager.applyUpdate((items) => {
+      const result = [...items];
+      const removed = result.splice(fromIndex, 1)[0];
+      if (removed !== undefined) {
+        result.splice(toIndex, 0, removed);
+      }
+      return result;
+    }, mutation);
   }
 
   /**
@@ -640,22 +606,14 @@ export function mergeWithConflictResolution<T>(
 /**
  * Default conflict resolver (server wins)
  */
-export function serverWinsResolver<T>(
-  _localValue: T,
-  serverValue: T,
-  _baseValue: T
-): T {
+export function serverWinsResolver<T>(_localValue: T, serverValue: T, _baseValue: T): T {
   return serverValue;
 }
 
 /**
  * Client wins conflict resolver
  */
-export function clientWinsResolver<T>(
-  localValue: T,
-  _serverValue: T,
-  _baseValue: T
-): T {
+export function clientWinsResolver<T>(localValue: T, _serverValue: T, _baseValue: T): T {
   return localValue;
 }
 

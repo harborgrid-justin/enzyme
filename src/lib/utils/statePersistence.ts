@@ -99,33 +99,6 @@ export class StatePersister<T extends object> {
   }
 
   /**
-   * Filter state based on whitelist/blacklist
-   */
-  private filterState(state: T): Partial<T> {
-    const filtered: Partial<T> = {};
-    const keys = Object.keys(state) as Array<keyof T>;
-
-    for (const key of keys) {
-      // Skip blacklisted keys
-      if (this.config.blacklist.includes(key)) {
-        continue;
-      }
-
-      // If whitelist exists and key is not in it, skip
-      if (
-        this.config.whitelist.length > 0 &&
-        !this.config.whitelist.includes(key)
-      ) {
-        continue;
-      }
-
-      filtered[key] = state[key];
-    }
-
-    return filtered;
-  }
-
-  /**
    * Persist state to storage
    */
   async persist(state: T): Promise<void> {
@@ -156,47 +129,11 @@ export class StatePersister<T extends object> {
   }
 
   /**
-   * Persist state immediately
-   */
-  private async persistImmediate(state: T): Promise<void> {
-    try {
-      const filteredState = this.filterState(state);
-      const serialized = this.config.serialize(filteredState as T);
-
-      const persisted: PersistedState<unknown> = {
-        state: serialized,
-        version: this.config.version,
-        timestamp: Date.now(),
-      };
-
-      await this.config.storage.set(this.config.key, persisted, {
-        ttl: this.config.ttl,
-      });
-
-      this.lastPersistTime = Date.now();
-
-      if (this.config.debug) {
-        logger.debug('[StatePersister] State persisted', {
-          key: this.config.key,
-          version: this.config.version,
-        });
-      }
-    } catch (error) {
-      if (error instanceof StorageQuotaError) {
-        logger.warn('[StatePersister] Storage quota exceeded, clearing old data');
-        this.config.storage.cleanup();
-      } else {
-        logger.error('[StatePersister] Failed to persist state', { error });
-      }
-    }
-  }
-
-  /**
    * Rehydrate state from storage
    */
   async rehydrate(): Promise<RehydrateResult<Partial<T>>> {
     // Skip PHI data
-    if (this.config.containsPHI === true) {
+    if (this.config.containsPHI) {
       return {
         state: {} as Partial<T>,
         error: null,
@@ -298,26 +235,6 @@ export class StatePersister<T extends object> {
   }
 
   /**
-   * Run migrations
-   */
-  private runMigrations(
-    state: unknown,
-    fromVersion: number,
-    toVersion: number
-  ): unknown {
-    let migratedState = state;
-
-    for (let v = fromVersion + 1; v <= toVersion; v++) {
-      const migration = this.config.migrations[v];
-      if (migration) {
-        migratedState = migration(migratedState);
-      }
-    }
-
-    return migratedState;
-  }
-
-  /**
    * Merge persisted state with initial state
    */
   mergeStates(initial: T, persisted: Partial<T> | null): T {
@@ -341,7 +258,7 @@ export class StatePersister<T extends object> {
    */
   clear(): void {
     this.config.storage.remove(this.config.key);
-    
+
     if (this.pendingPersist) {
       clearTimeout(this.pendingPersist);
       this.pendingPersist = null;
@@ -357,6 +274,89 @@ export class StatePersister<T extends object> {
       this.pendingPersist = null;
     }
     await this.persistImmediate(state);
+  }
+
+  /**
+   * Filter state based on whitelist/blacklist
+   */
+  private filterState(state: T): Partial<T> {
+    const filtered: Partial<T> = {};
+    const keys = Object.keys(state) as Array<keyof T>;
+
+    for (const key of keys) {
+      // Skip blacklisted keys
+      if (this.config.blacklist.includes(key)) {
+        continue;
+      }
+
+      // If whitelist exists and key is not in it, skip
+      if (
+        this.config.whitelist.length > 0 &&
+        !this.config.whitelist.includes(key)
+      ) {
+        continue;
+      }
+
+      filtered[key] = state[key];
+    }
+
+    return filtered;
+  }
+
+  /**
+   * Persist state immediately
+   */
+  private async persistImmediate(state: T): Promise<void> {
+    try {
+      const filteredState = this.filterState(state);
+      const serialized = this.config.serialize(filteredState as T);
+
+      const persisted: PersistedState<unknown> = {
+        state: serialized,
+        version: this.config.version,
+        timestamp: Date.now(),
+      };
+
+      await this.config.storage.set(this.config.key, persisted, {
+        ttl: this.config.ttl,
+      });
+
+      this.lastPersistTime = Date.now();
+
+      if (this.config.debug) {
+        logger.debug('[StatePersister] State persisted', {
+          key: this.config.key,
+          version: this.config.version,
+        });
+      }
+    } catch (error) {
+      if (error instanceof StorageQuotaError) {
+        logger.warn('[StatePersister] Storage quota exceeded, clearing old data');
+        this.config.storage.cleanup();
+      } else {
+        logger.error('[StatePersister] Failed to persist state', { error });
+      }
+    }
+  }
+
+  /**
+   * Run migrations
+   */
+  private runMigrations(
+    state: unknown,
+    fromVersion: number,
+    toVersion: number
+  ): unknown {
+    let migratedState = state;
+
+    for (let v = fromVersion + 1; v <= toVersion; v++) {
+      const migration = this.config.migrations[v];
+      if (migration) {
+        migratedState = migration(migratedState);
+      }
+    }
+
+    return migratedState;
   }
 }
 
@@ -589,8 +589,8 @@ export interface StateSnapshot<T> {
 export class StateSnapshotManager<T extends object> {
   private snapshots: StateSnapshot<T>[] = [];
   private currentIndex = -1;
-  private maxSnapshots: number;
-  private persister: StatePersister<{ snapshots: StateSnapshot<T>[]; currentIndex: number }> | null;
+  private readonly maxSnapshots: number;
+  private readonly persister: StatePersister<{ snapshots: StateSnapshot<T>[]; currentIndex: number }> | null;
 
   constructor(
     key: string,

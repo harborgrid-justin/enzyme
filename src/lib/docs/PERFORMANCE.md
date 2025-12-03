@@ -33,13 +33,13 @@ The performance system provides:
 
 ### Performance Targets
 
-| Metric | Good | Needs Improvement | Poor |
-|--------|------|-------------------|------|
-| LCP | < 2.5s | 2.5s - 4.0s | > 4.0s |
-| INP | < 200ms | 200ms - 500ms | > 500ms |
-| CLS | < 0.1 | 0.1 - 0.25 | > 0.25 |
-| FCP | < 1.8s | 1.8s - 3.0s | > 3.0s |
-| TTFB | < 800ms | 800ms - 1.8s | > 1.8s |
+| Metric | Good    | Needs Improvement | Poor    |
+|--------|---------|-------------------|---------|
+| LCP    | < 2.5s  | 2.5s - 4.0s       | > 4.0s  |
+| INP    | < 200ms | 200ms - 500ms     | > 500ms |
+| CLS    | < 0.1   | 0.1 - 0.25        | > 0.25  |
+| FCP    | < 1.8s  | 1.8s - 3.0s       | > 3.0s  |
+| TTFB   | < 800ms | 800ms - 1.8s      | > 1.8s  |
 
 ---
 

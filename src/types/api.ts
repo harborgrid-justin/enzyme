@@ -92,9 +92,35 @@ export type RedirectionStatusCode = 300 | 301 | 302 | 303 | 304 | 305 | 306 | 30
  * Client error status codes (4xx)
  */
 export type ClientErrorStatusCode =
-  | 400 | 401 | 402 | 403 | 404 | 405 | 406 | 407 | 408 | 409
-  | 410 | 411 | 412 | 413 | 414 | 415 | 416 | 417 | 418 | 421
-  | 422 | 423 | 424 | 425 | 426 | 428 | 429 | 431 | 451;
+  | 400
+  | 401
+  | 402
+  | 403
+  | 404
+  | 405
+  | 406
+  | 407
+  | 408
+  | 409
+  | 410
+  | 411
+  | 412
+  | 413
+  | 414
+  | 415
+  | 416
+  | 417
+  | 418
+  | 421
+  | 422
+  | 423
+  | 424
+  | 425
+  | 426
+  | 428
+  | 429
+  | 431
+  | 451;
 
 /**
  * Server error status codes (5xx)
@@ -885,12 +911,17 @@ export interface HealthCheckResponse {
   /**
    * Individual service health statuses
    */
-  readonly services: Readonly<Record<string, {
-    readonly status: 'healthy' | 'unhealthy';
-    readonly latency?: number;
-    readonly message?: string;
-    readonly lastCheck?: string;
-  }>>;
+  readonly services: Readonly<
+    Record<
+      string,
+      {
+        readonly status: 'healthy' | 'unhealthy';
+        readonly latency?: number;
+        readonly message?: string;
+        readonly lastCheck?: string;
+      }
+    >
+  >;
 
   /**
    * System metrics
@@ -922,9 +953,7 @@ export interface HealthCheckResponse {
  * }
  * ```
  */
-export function isApiErrorResponse(
-  response: unknown
-): response is ApiErrorResponse {
+export function isApiErrorResponse(response: unknown): response is ApiErrorResponse {
   return (
     typeof response === 'object' &&
     response !== null &&
@@ -943,14 +972,14 @@ export function isApiErrorResponse(
 export function isApiSuccessResponse<T>(
   response: ApiResponse<T> | ApiErrorResponse
 ): response is ApiResponse<T> {
-  return response.success === true;
+  return response.success;
 }
 
 /**
  * Type guard to check if an error is a validation error
  *
- * @param error - The error response to check
- * @returns True if the error is a validation error
+ * @param response
+ * @param response
  */
 export function isValidationErrorResponse(
   response: ApiErrorResponse

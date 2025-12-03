@@ -143,6 +143,73 @@ export class RequestQueue {
   }
 
   /**
+   * Pause queue processing
+   */
+  pause(): void {
+    this.paused = true;
+  }
+
+  /**
+   * Resume queue processing
+   */
+  resume(): void {
+    this.paused = false;
+    if (this.queue.length > 0) {
+      void this.process();
+    }
+  }
+
+  /**
+   * Clear queue
+   */
+  clear(error?: Error): void {
+    const clearError = error ?? new Error('Queue cleared');
+    for (const item of this.queue) {
+      item.deferred.reject(clearError);
+      if (item.dedupKey !== undefined && item.dedupKey !== '') {
+        this.dedupMap.delete(item.dedupKey);
+      }
+    }
+    this.queue = [];
+  }
+
+  /**
+   * Get queue statistics
+   */
+  getStats(): {
+    queued: number;
+    processing: number;
+    maxConcurrency: number;
+    paused: boolean;
+  } {
+    return {
+      queued: this.queue.length,
+      processing: this.config.concurrency - this.semaphore.availablePermits(),
+      maxConcurrency: this.config.concurrency,
+      paused: this.paused,
+    };
+  }
+
+  /**
+   * Remove item from queue by id
+   */
+  remove(id: string): boolean {
+    const index = this.queue.findIndex((item) => item.id === id);
+    if (index !== -1) {
+      const item = this.queue[index];
+      if (item !== undefined) {
+        item.deferred.reject(new Error('Request removed from queue'));
+        if (item.dedupKey !== undefined && item.dedupKey !== '') {
+          this.dedupMap.delete(item.dedupKey);
+        }
+      }
+      this.queue.splice(index, 1);
+      return true;
+    }
+    return false;
+  }
+
+  /**
    * Insert item by priority
    */
   private insertByPriority(item: QueueItem<unknown>): void {
@@ -225,73 +292,6 @@ export class RequestQueue {
       ),
     ]);
   }
-
-  /**
-   * Pause queue processing
-   */
-  pause(): void {
-    this.paused = true;
-  }
-
-  /**
-   * Resume queue processing
-   */
-  resume(): void {
-    this.paused = false;
-    if (this.queue.length > 0) {
-      void this.process();
-    }
-  }
-
-  /**
-   * Clear queue
-   */
-  clear(error?: Error): void {
-    const clearError = error ?? new Error('Queue cleared');
-    for (const item of this.queue) {
-      item.deferred.reject(clearError);
-      if (item.dedupKey !== undefined && item.dedupKey !== '') {
-        this.dedupMap.delete(item.dedupKey);
-      }
-    }
-    this.queue = [];
-  }
-
-  /**
-   * Get queue statistics
-   */
-  getStats(): {
-    queued: number;
-    processing: number;
-    maxConcurrency: number;
-    paused: boolean;
-  } {
-    return {
-      queued: this.queue.length,
-      processing: this.config.concurrency - this.semaphore.availablePermits(),
-      maxConcurrency: this.config.concurrency,
-      paused: this.paused,
-    };
-  }
-
-  /**
-   * Remove item from queue by id
-   */
-  remove(id: string): boolean {
-    const index = this.queue.findIndex((item) => item.id === id);
-    if (index !== -1) {
-      const item = this.queue[index];
-      if (item !== undefined) {
-        item.deferred.reject(new Error('Request removed from queue'));
-        if (item.dedupKey !== undefined && item.dedupKey !== '') {
-          this.dedupMap.delete(item.dedupKey);
-        }
-      }
-      this.queue.splice(index, 1);
-      return true;
-    }
-    return false;
-  }
 }
 
 /**
@@ -326,35 +326,6 @@ export class RateLimiter {
       strategy: config.strategy ?? 'delay',
       maxQueueSize: config.maxQueueSize ?? 100,
     };
-  }
-
-  /**
-   * Check if request is allowed
-   */
-  private isAllowed(): boolean {
-    this.cleanOldRequests();
-    return this.requests.length < this.config.maxRequests;
-  }
-
-  /**
-   * Clean requests outside window
-   */
-  private cleanOldRequests(): void {
-    const cutoff = Date.now() - this.config.windowMs;
-    this.requests = this.requests.filter((time) => time > cutoff);
-  }
-
-  /**
-   * Get time until next available slot
-   */
-  private getWaitTime(): number {
-    if (this.isAllowed()) return 0;
-
-    this.cleanOldRequests();
-    if (this.requests.length === 0) return 0;
-
-    const oldestRequest = Math.min(...this.requests);
-    return Math.max(0, oldestRequest + this.config.windowMs - Date.now());
   }
 
   /**
@@ -410,19 +381,6 @@ export class RateLimiter {
   }
 
   /**
-   * Process queued requests
-   */
-  private processQueue(): void {
-    if (this.queue.length === 0) return;
-
-    const waitTime = this.getWaitTime();
-    if (waitTime > 0) {
-      // Schedule check for next available slot
-      setTimeout(() => this.processQueue(), waitTime);
-    }
-  }
-
-  /**
    * Execute with rate limiting
    */
   async execute<T>(fn: () => Promise<T>): Promise<T> {
@@ -464,6 +422,48 @@ export class RateLimiter {
       item.reject(error);
     }
     this.queue = [];
+  }
+
+  /**
+   * Check if request is allowed
+   */
+  private isAllowed(): boolean {
+    this.cleanOldRequests();
+    return this.requests.length < this.config.maxRequests;
+  }
+
+  /**
+   * Clean requests outside window
+   */
+  private cleanOldRequests(): void {
+    const cutoff = Date.now() - this.config.windowMs;
+    this.requests = this.requests.filter((time) => time > cutoff);
+  }
+
+  /**
+   * Get time until next available slot
+   */
+  private getWaitTime(): number {
+    if (this.isAllowed()) return 0;
+
+    this.cleanOldRequests();
+    if (this.requests.length === 0) return 0;
+
+    const oldestRequest = Math.min(...this.requests);
+    return Math.max(0, oldestRequest + this.config.windowMs - Date.now());
+  }
+
+  /**
+   * Process queued requests
+   */
+  private processQueue(): void {
+    if (this.queue.length === 0) return;
+
+    const waitTime = this.getWaitTime();
+    if (waitTime > 0) {
+      // Schedule check for next available slot
+      setTimeout(() => this.processQueue(), waitTime);
+    }
   }
 }
 
@@ -544,6 +544,30 @@ export class RequestBatcher<K, V> {
       )
     );
   }
+
+  /**
+   * Clear pending batch
+   */
+  clear(): void {
+    if (this.timer) {
+      clearTimeout(this.timer);
+      this.timer = null;
+    }
+
+    const error = new Error('Batcher cleared');
+    for (const [, deferred] of this.batch) {
+      deferred.reject(error);
+    }
+    this.batch.clear();
+  }
+
+  /**
+   * Get pending count
+   */
+  getPendingCount(): number {
+    return this.batch.size;
+  }
+
   /**
    * Schedule batch execution
    */
@@ -604,29 +628,6 @@ export class RequestBatcher<K, V> {
         deferred.reject(error as Error);
       }
     }
-  }
-
-  /**
-   * Clear pending batch
-   */
-  clear(): void {
-    if (this.timer) {
-      clearTimeout(this.timer);
-      this.timer = null;
-    }
-
-    const error = new Error('Batcher cleared');
-    for (const [, deferred] of this.batch) {
-      deferred.reject(error);
-    }
-    this.batch.clear();
-  }
-
-  /**
-   * Get pending count
-   */
-  getPendingCount(): number {
-    return this.batch.size;
   }
 }
 

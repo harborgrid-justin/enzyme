@@ -10,9 +10,7 @@ import { TimeoutError } from './resilience';
 /**
  * Result type for operations that can fail
  */
-export type SafeResult<T, E = Error> =
-  | { success: true; data: T }
-  | { success: false; error: E };
+export type SafeResult<T, E = Error> = { success: true; data: T } | { success: false; error: E };
 
 /**
  * JSON parse error
@@ -134,10 +132,7 @@ export function parseJSONWithValidation<T>(
     if (error instanceof JSONParseError) {
       throw error;
     }
-    throw new JSONParseError(
-      error instanceof Error ? error.message : 'Unknown parse error',
-      value
-    );
+    throw new JSONParseError(error instanceof Error ? error.message : 'Unknown parse error', value);
   }
 }
 
@@ -192,8 +187,8 @@ export async function withOperationTimeout<T>(
   });
 
   try {
-    const result = await Promise.race([operation(), timeoutPromise]);
-    return result;
+
+    return await Promise.race([operation(), timeoutPromise]);
   } finally {
     if (timeoutId !== null) {
       clearTimeout(timeoutId);
@@ -251,11 +246,7 @@ export async function withSyncTimeout<T>(
   timeoutMs: number,
   operationName = 'operation'
 ): Promise<T> {
-  return withOperationTimeout(
-    async () => operation(),
-    timeoutMs,
-    operationName
-  );
+  return await withOperationTimeout(async () => operation(), timeoutMs, operationName);
 }
 
 // ============================================================================
@@ -406,11 +397,7 @@ export function safeGet<T>(obj: unknown, path: string, fallback: T): T {
  * @param onError - Optional error handler
  * @returns The function result or fallback
  */
-export function safeExecute<T>(
-  fn: () => T,
-  fallback: T,
-  onError?: (error: unknown) => void
-): T {
+export function safeExecute<T>(fn: () => T, fallback: T, onError?: (error: unknown) => void): T {
   try {
     return fn();
   } catch (error) {
@@ -460,9 +447,7 @@ export async function safeExecuteAsync<T>(
  * ]);
  * ```
  */
-export async function safePromiseAll<T>(
-  promises: Promise<T>[]
-): Promise<{
+export async function safePromiseAll<T>(promises: Promise<T>[]): Promise<{
   results: T[];
   errors: { index: number; error: unknown }[];
   allSucceeded: boolean;
@@ -523,10 +508,12 @@ export async function safePromiseAllNamed<T extends Record<string, Promise<unkno
 
   settled.forEach((result, index) => {
     const key = keys[index];
-    if (result.status === 'fulfilled') {
-      results[key] = result.value as Awaited<T[typeof key]>;
-    } else {
-      errors[key] = result.reason;
+    if (key !== undefined) {
+      if (result.status === 'fulfilled') {
+        results[key] = result.value as Awaited<T[typeof key]>;
+      } else {
+        errors[key] = result.reason as unknown;
+      }
     }
   });
 

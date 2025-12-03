@@ -285,7 +285,7 @@ export function detectNetworkConditions(): NetworkConditions {
 export class BundleOptimizer {
   private static instance: BundleOptimizer;
   private config: Required<BundleOptimizerConfig>;
-  private deviceCapabilities: DeviceCapabilities;
+  private readonly deviceCapabilities: DeviceCapabilities;
   private networkConditions: NetworkConditions;
   private loadedPolyfills: Set<string> = new Set();
   private loadingStrategy: LoadingStrategy;
@@ -329,6 +329,228 @@ export class BundleOptimizer {
   }
 
   /**
+   * Subscribe to network changes
+   */
+  onNetworkChange(callback: (conditions: NetworkConditions) => void): () => void {
+    this.networkChangeCallbacks.add(callback);
+    return () => this.networkChangeCallbacks.delete(callback);
+  }
+
+  /**
+   * Load required polyfills
+   */
+  async loadPolyfills(): Promise<void> {
+    const neededPolyfills = this.config.polyfills.filter(
+      (p) => !p.detect() && !this.loadedPolyfills.has(p.feature)
+    );
+
+    this.log(`Loading ${neededPolyfills.length} polyfills`);
+
+    await Promise.all(
+      neededPolyfills.map(async (polyfill) => {
+        try {
+          await polyfill.load();
+          this.loadedPolyfills.add(polyfill.feature);
+          this.log(`Loaded polyfill: ${polyfill.feature}`);
+        } catch (error) {
+          console.error(`Failed to load polyfill: ${polyfill.feature}`, error);
+        }
+      })
+    );
+  }
+
+  /**
+   * Check if polyfill is needed
+   */
+  needsPolyfill(feature: string): boolean {
+    const polyfill = this.config.polyfills.find((p) => p.feature === feature);
+    return polyfill ? !polyfill.detect() : false;
+  }
+
+  /**
+   * Get optimal module for current conditions
+   */
+  getOptimalModule(moduleName: string): string {
+    const alternative = this.config.alternatives.find(
+      (a) => a.original === moduleName &&
+        a.useAlternativeWhen(this.deviceCapabilities, this.networkConditions)
+    );
+
+    if (alternative) {
+      this.log(`Using alternative for ${moduleName}: ${alternative.alternative}`);
+      return alternative.alternative;
+    }
+
+    return moduleName;
+  }
+
+  /**
+   * Priority-based dynamic import
+   */
+  async importWithPriority<T>(
+    importFn: () => Promise<T>,
+    options: {
+      priority?: 'critical' | 'high' | 'normal' | 'low';
+      moduleId?: string;
+      timeout?: number;
+    } = {}
+  ): Promise<T> {
+    const { priority = 'normal', moduleId, timeout = 30000 } = options;
+
+    // Check if already loading
+    if (moduleId != null && moduleId !== '' && this.importQueue.has(moduleId)) {
+      return this.importQueue.get(moduleId) as Promise<T>;
+    }
+
+    // Defer low priority imports on constrained connections
+    if (priority === 'low' && this.loadingStrategy.deferNonCritical) {
+      await new Promise((resolve) => {
+        if (typeof requestIdleCallback !== 'undefined') {
+          requestIdleCallback(() => resolve(undefined));
+        } else {
+          setTimeout(resolve, 100);
+        }
+      });
+    }
+
+    const importPromise = Promise.race([
+      importFn(),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Import timeout')), timeout)
+      ),
+    ]);
+
+    if (moduleId != null && moduleId !== '') {
+      this.importQueue.set(moduleId, importPromise);
+    }
+
+    try {
+
+      return await importPromise;
+    } finally {
+      if (moduleId != null && moduleId !== '') {
+        this.importQueue.delete(moduleId);
+      }
+    }
+  }
+
+  // ============================================================================
+  // Polyfill Management
+  // ============================================================================
+
+  /**
+   * Preload modules based on route prediction
+   */
+  preloadModules(modules: Array<() => Promise<unknown>>): void {
+    if (!this.loadingStrategy.preload) {
+      this.log('Preloading disabled due to network/device constraints');
+      return;
+    }
+
+    const preloadCount = Math.min(modules.length, this.loadingStrategy.preloadDistance);
+
+    for (let i = 0; i < preloadCount; i++) {
+      // Use idle callback for preloading
+      if (typeof requestIdleCallback !== 'undefined') {
+        requestIdleCallback(() => {
+          const moduleLoader = modules[i];
+          if (moduleLoader) {
+            moduleLoader().catch(() => {
+              // Silently fail preloads
+            });
+          }
+        });
+      }
+    }
+  }
+
+  /**
+   * Analyze loaded resources
+   */
+  analyzeLoadedResources(): {
+    totalSize: number;
+    jsSize: number;
+    cssSize: number;
+    imageSize: number;
+    largestResources: Array<{ name: string; size: number; type: string }>;
+    slowestResources: Array<{ name: string; duration: number; type: string }>;
+  } {
+    const entries = performance.getEntriesByType('resource');
+
+    let totalSize = 0;
+    let jsSize = 0;
+    let cssSize = 0;
+    let imageSize = 0;
+    const resources: Array<{ name: string; size: number; duration: number; type: string }> = [];
+
+    entries.forEach((entry) => {
+      const size = entry.transferSize || 0;
+      totalSize += size;
+
+      let type = 'other';
+      if (entry.name.endsWith('.js') || entry.initiatorType === 'script') {
+        type = 'js';
+        jsSize += size;
+      } else if (entry.name.endsWith('.css') || entry.initiatorType === 'css') {
+        type = 'css';
+        cssSize += size;
+      } else if (entry.initiatorType === 'img' || /\.(jpg|jpeg|png|gif|webp|avif|svg)$/i.test(entry.name)) {
+        type = 'image';
+        imageSize += size;
+      }
+
+      resources.push({
+        name: entry.name,
+        size,
+        duration: entry.duration,
+        type,
+      });
+    });
+
+    // Sort for largest and slowest
+    const sortedBySize = [...resources].sort((a, b) => b.size - a.size);
+    const sortedByDuration = [...resources].sort((a, b) => b.duration - a.duration);
+
+    return {
+      totalSize,
+      jsSize,
+      cssSize,
+      imageSize,
+      largestResources: sortedBySize.slice(0, 10).map(({ name, size, type }) => ({ name, size, type })),
+      slowestResources: sortedByDuration.slice(0, 10).map(({ name, duration, type }) => ({ name, duration, type })),
+    };
+  }
+
+  // ============================================================================
+  // Module Management
+  // ============================================================================
+
+  /**
+   * Get device capabilities
+   */
+  getDeviceCapabilities(): DeviceCapabilities {
+    return { ...this.deviceCapabilities };
+  }
+
+  /**
+   * Get network conditions
+   */
+  getNetworkConditions(): NetworkConditions {
+    return { ...this.networkConditions };
+  }
+
+  /**
+   * Get loading strategy
+   */
+  getLoadingStrategy(): LoadingStrategy {
+    return { ...this.loadingStrategy };
+  }
+
+  // ============================================================================
+  // Resource Analysis
+  // ============================================================================
+
+  /**
    * Get default capabilities
    */
   private getDefaultCapabilities(): DeviceCapabilities {
@@ -344,6 +566,10 @@ export class BundleOptimizer {
       tier: 'mid-range',
     };
   }
+
+  // ============================================================================
+  // Getters
+  // ============================================================================
 
   /**
    * Calculate optimal loading strategy
@@ -404,232 +630,6 @@ export class BundleOptimizer {
    */
   private notifyNetworkChange(): void {
     this.networkChangeCallbacks.forEach((cb) => cb(this.networkConditions));
-  }
-
-  /**
-   * Subscribe to network changes
-   */
-  onNetworkChange(callback: (conditions: NetworkConditions) => void): () => void {
-    this.networkChangeCallbacks.add(callback);
-    return () => this.networkChangeCallbacks.delete(callback);
-  }
-
-  // ============================================================================
-  // Polyfill Management
-  // ============================================================================
-
-  /**
-   * Load required polyfills
-   */
-  async loadPolyfills(): Promise<void> {
-    const neededPolyfills = this.config.polyfills.filter(
-      (p) => !p.detect() && !this.loadedPolyfills.has(p.feature)
-    );
-
-    this.log(`Loading ${neededPolyfills.length} polyfills`);
-
-    await Promise.all(
-      neededPolyfills.map(async (polyfill) => {
-        try {
-          await polyfill.load();
-          this.loadedPolyfills.add(polyfill.feature);
-          this.log(`Loaded polyfill: ${polyfill.feature}`);
-        } catch (error) {
-          console.error(`Failed to load polyfill: ${polyfill.feature}`, error);
-        }
-      })
-    );
-  }
-
-  /**
-   * Check if polyfill is needed
-   */
-  needsPolyfill(feature: string): boolean {
-    const polyfill = this.config.polyfills.find((p) => p.feature === feature);
-    return polyfill ? !polyfill.detect() : false;
-  }
-
-  // ============================================================================
-  // Module Management
-  // ============================================================================
-
-  /**
-   * Get optimal module for current conditions
-   */
-  getOptimalModule(moduleName: string): string {
-    const alternative = this.config.alternatives.find(
-      (a) => a.original === moduleName &&
-        a.useAlternativeWhen(this.deviceCapabilities, this.networkConditions)
-    );
-
-    if (alternative) {
-      this.log(`Using alternative for ${moduleName}: ${alternative.alternative}`);
-      return alternative.alternative;
-    }
-
-    return moduleName;
-  }
-
-  /**
-   * Priority-based dynamic import
-   */
-  async importWithPriority<T>(
-    importFn: () => Promise<T>,
-    options: {
-      priority?: 'critical' | 'high' | 'normal' | 'low';
-      moduleId?: string;
-      timeout?: number;
-    } = {}
-  ): Promise<T> {
-    const { priority = 'normal', moduleId, timeout = 30000 } = options;
-
-    // Check if already loading
-    if (moduleId != null && moduleId !== '' && this.importQueue.has(moduleId)) {
-      return this.importQueue.get(moduleId) as Promise<T>;
-    }
-
-    // Defer low priority imports on constrained connections
-    if (priority === 'low' && this.loadingStrategy.deferNonCritical) {
-      await new Promise((resolve) => {
-        if (typeof requestIdleCallback !== 'undefined') {
-          requestIdleCallback(() => resolve(undefined));
-        } else {
-          setTimeout(resolve, 100);
-        }
-      });
-    }
-
-    const importPromise = Promise.race([
-      importFn(),
-      new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Import timeout')), timeout)
-      ),
-    ]);
-
-    if (moduleId != null && moduleId !== '') {
-      this.importQueue.set(moduleId, importPromise);
-    }
-
-    try {
-      const result = await importPromise;
-      return result;
-    } finally {
-      if (moduleId != null && moduleId !== '') {
-        this.importQueue.delete(moduleId);
-      }
-    }
-  }
-
-  /**
-   * Preload modules based on route prediction
-   */
-  preloadModules(modules: Array<() => Promise<unknown>>): void {
-    if (!this.loadingStrategy.preload) {
-      this.log('Preloading disabled due to network/device constraints');
-      return;
-    }
-
-    const preloadCount = Math.min(modules.length, this.loadingStrategy.preloadDistance);
-
-    for (let i = 0; i < preloadCount; i++) {
-      // Use idle callback for preloading
-      if (typeof requestIdleCallback !== 'undefined') {
-        requestIdleCallback(() => {
-          const moduleLoader = modules[i];
-          if (moduleLoader) {
-            moduleLoader().catch(() => {
-              // Silently fail preloads
-            });
-          }
-        });
-      }
-    }
-  }
-
-  // ============================================================================
-  // Resource Analysis
-  // ============================================================================
-
-  /**
-   * Analyze loaded resources
-   */
-  analyzeLoadedResources(): {
-    totalSize: number;
-    jsSize: number;
-    cssSize: number;
-    imageSize: number;
-    largestResources: Array<{ name: string; size: number; type: string }>;
-    slowestResources: Array<{ name: string; duration: number; type: string }>;
-  } {
-    const entries = performance.getEntriesByType('resource');
-
-    let totalSize = 0;
-    let jsSize = 0;
-    let cssSize = 0;
-    let imageSize = 0;
-    const resources: Array<{ name: string; size: number; duration: number; type: string }> = [];
-
-    entries.forEach((entry) => {
-      const size = entry.transferSize || 0;
-      totalSize += size;
-
-      let type = 'other';
-      if (entry.name.endsWith('.js') || entry.initiatorType === 'script') {
-        type = 'js';
-        jsSize += size;
-      } else if (entry.name.endsWith('.css') || entry.initiatorType === 'css') {
-        type = 'css';
-        cssSize += size;
-      } else if (entry.initiatorType === 'img' || /\.(jpg|jpeg|png|gif|webp|avif|svg)$/i.test(entry.name)) {
-        type = 'image';
-        imageSize += size;
-      }
-
-      resources.push({
-        name: entry.name,
-        size,
-        duration: entry.duration,
-        type,
-      });
-    });
-
-    // Sort for largest and slowest
-    const sortedBySize = [...resources].sort((a, b) => b.size - a.size);
-    const sortedByDuration = [...resources].sort((a, b) => b.duration - a.duration);
-
-    return {
-      totalSize,
-      jsSize,
-      cssSize,
-      imageSize,
-      largestResources: sortedBySize.slice(0, 10).map(({ name, size, type }) => ({ name, size, type })),
-      slowestResources: sortedByDuration.slice(0, 10).map(({ name, duration, type }) => ({ name, duration, type })),
-    };
-  }
-
-  // ============================================================================
-  // Getters
-  // ============================================================================
-
-  /**
-   * Get device capabilities
-   */
-  getDeviceCapabilities(): DeviceCapabilities {
-    return { ...this.deviceCapabilities };
-  }
-
-  /**
-   * Get network conditions
-   */
-  getNetworkConditions(): NetworkConditions {
-    return { ...this.networkConditions };
-  }
-
-  /**
-   * Get loading strategy
-   */
-  getLoadingStrategy(): LoadingStrategy {
-    return { ...this.loadingStrategy };
   }
 
   /**

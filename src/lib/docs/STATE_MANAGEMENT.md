@@ -28,6 +28,7 @@
 ### When to Use Global State
 
 ✅ **Use global state for:**
+
 - User authentication and session
 - UI preferences (theme, sidebar state)
 - Application settings
@@ -35,6 +36,7 @@
 - Data that needs persistence
 
 ❌ **Don't use global state for:**
+
 - Component-local UI state
 - Form state (use local state)
 - Derived/computed values
@@ -108,10 +110,17 @@ function Counter() {
 
   return (
     <div>
-      <p>Count: {count}</p>
-      <button onClick={increment}>Increment</button>
-    </div>
-  );
+      <p>Count
+:
+  {
+    count
+  }
+  </p>
+  < button
+  onClick = { increment } > Increment < /button>
+    < /div>
+)
+  ;
 }
 ```
 

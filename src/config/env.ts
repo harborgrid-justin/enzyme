@@ -126,7 +126,7 @@ class EnvParser {
 
     if (isNaN(parsed)) {
       this.warnings.push(
-        `Invalid number for ${fullKey}: "${value}", using default: ${String(defaultValue)}`,
+        `Invalid number for ${fullKey}: "${value}", using default: ${String(defaultValue)}`
       );
       return defaultValue;
     }
@@ -134,11 +134,7 @@ class EnvParser {
     return parsed;
   }
 
-  getEnum<T extends string>(
-    key: string,
-    validValues: readonly T[],
-    defaultValue: T,
-  ): T {
+  getEnum<T extends string>(key: string, validValues: readonly T[], defaultValue: T): T {
     const fullKey = `${this.prefix}${key}`;
     const value = import.meta.env[fullKey] as T | undefined;
 
@@ -148,7 +144,7 @@ class EnvParser {
 
     if (!validValues.includes(value)) {
       this.warnings.push(
-        `Invalid value for ${fullKey}: "${value}". Valid values: ${validValues.join(', ')}. Using default: ${defaultValue}`,
+        `Invalid value for ${fullKey}: "${value}". Valid values: ${validValues.join(', ')}. Using default: ${defaultValue}`
       );
       return defaultValue;
     }
@@ -190,7 +186,7 @@ function buildEnvConfig(): EnvConfig {
   const appEnv = parser.getEnum(
     'APP_ENV',
     ['development', 'staging', 'production', 'test'] as const,
-    'development',
+    'development'
   );
 
   const config: EnvConfig = {
@@ -211,7 +207,7 @@ function buildEnvConfig(): EnvConfig {
     featureFlagsSource: parser.getEnum(
       'FEATURE_FLAGS_SOURCE',
       ['local', 'remote', 'launchdarkly'] as const,
-      'local',
+      'local'
     ),
     featureFlagsRefreshInterval: parser.getNumber('FEATURE_FLAGS_REFRESH_INTERVAL', 60000),
 
@@ -228,11 +224,11 @@ function buildEnvConfig(): EnvConfig {
     logLevel: parser.getEnum(
       'LOG_LEVEL',
       ['debug', 'info', 'warn', 'error', 'silent'] as const,
-      appEnv === 'production' ? 'warn' : 'debug',
+      appEnv === 'production' ? 'warn' : 'debug'
     ),
     enablePerformanceMonitoring: parser.getBoolean(
       'ENABLE_PERFORMANCE_MONITORING',
-      appEnv === 'production',
+      appEnv === 'production'
     ),
 
     // Analytics
@@ -246,8 +242,8 @@ function buildEnvConfig(): EnvConfig {
     buildTime: parser.getOptionalString('BUILD_TIME', new Date().toISOString()),
 
     // Computed flags
-    isDev: import.meta.env['DEV'] === true,
-    isProd: import.meta.env['PROD'] === true,
+    isDev: import.meta.env['DEV'],
+    isProd: import.meta.env['PROD'],
     isTest: appEnv === 'test',
     isStaging: appEnv === 'staging',
   };

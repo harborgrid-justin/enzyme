@@ -74,11 +74,7 @@ export function useSanitizedContent(
   content: string,
   options: UseSanitizedContentOptions = {}
 ): UseSanitizedContentResult {
-  const {
-    autoSanitize = true,
-    onThreatsDetected,
-    ...sanitizationOptions
-  } = options;
+  const { autoSanitize = true, onThreatsDetected, ...sanitizationOptions } = options;
 
   // State
   const [sanitizedHTML, setSanitizedHTML] = useState<string>('');
@@ -126,12 +122,9 @@ export function useSanitizedContent(
   );
 
   // Context-aware encode function
-  const encode = useCallback(
-    (text: string, context: HTMLEncodingContext): string => {
-      return encodeForContext(text, context);
-    },
-    []
-  );
+  const encode = useCallback((text: string, context: HTMLEncodingContext): string => {
+    return encodeForContext(text, context);
+  }, []);
 
   // Computed isSafe
   const isSafe = threats.length === 0;
@@ -180,26 +173,30 @@ export function useSafeInnerHTML(
   useEffect(() => {
     if (!content) {
       // Schedule state update to avoid cascading renders
-      Promise.resolve().then(() => {
-        setResult({
-          html: '',
-          wasModified: false,
-          removedItems: [],
-          warnings: [],
+      Promise.resolve()
+        .then(() => {
+          setResult({
+            html: '',
+            wasModified: false,
+            removedItems: [],
+            warnings: [],
+          });
+        })
+        .catch(() => {
+          // Ignore errors
         });
-      }).catch(() => {
-        // Ignore errors
-      });
       return;
     }
 
     const sanitized = sanitizeHTML(content, options);
     // Schedule state update to avoid cascading renders
-    Promise.resolve().then(() => {
-      setResult(sanitized);
-    }).catch(() => {
-      // Ignore errors
-    });
+    Promise.resolve()
+      .then(() => {
+        setResult(sanitized);
+      })
+      .catch(() => {
+        // Ignore errors
+      });
   }, [content, options]);
 
   const props = useMemo(
@@ -265,16 +262,18 @@ export function useValidatedInput(
   useEffect(() => {
     if (!input) {
       // Schedule state update to avoid cascading renders
-      Promise.resolve().then(() => {
-        setState({
-          isValid: true,
-          threats: [],
-          preview: '',
-          sanitized: '',
+      Promise.resolve()
+        .then(() => {
+          setState({
+            isValid: true,
+            threats: [],
+            preview: '',
+            sanitized: '',
+          });
+        })
+        .catch(() => {
+          // Ignore errors
         });
-      }).catch(() => {
-        // Ignore errors
-      });
       return;
     }
 
@@ -285,16 +284,18 @@ export function useValidatedInput(
     const result = sanitizeHTML(input, options);
 
     // Schedule state update to avoid cascading renders
-    Promise.resolve().then(() => {
-      setState({
-        isValid: !detection.isDangerous,
-        threats: detection.details,
-        preview: result.html,
-        sanitized: result.html,
+    Promise.resolve()
+      .then(() => {
+        setState({
+          isValid: !detection.isDangerous,
+          threats: detection.details,
+          preview: result.html,
+          sanitized: result.html,
+        });
+      })
+      .catch(() => {
+        // Ignore errors
       });
-    }).catch(() => {
-      // Ignore errors
-    });
   }, [input, options]);
 
   return state;
@@ -345,10 +346,7 @@ export function useSafeText(content: string): string {
  * }
  * ```
  */
-export function useContextEncoder(): (
-  content: string,
-  context: HTMLEncodingContext
-) => string {
+export function useContextEncoder(): (content: string, context: HTMLEncodingContext) => string {
   return useCallback((content: string, context: HTMLEncodingContext) => {
     return encodeForContext(content, context);
   }, []);

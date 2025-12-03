@@ -15,13 +15,7 @@
 
 /* eslint-disable react-refresh/only-export-components, @typescript-eslint/prefer-nullish-coalescing, @typescript-eslint/no-misused-promises, @typescript-eslint/strict-boolean-expressions, react-hooks/set-state-in-effect */
 
-import React, {
-  useState,
-  useEffect,
-  useCallback,
-  useMemo,
-  type ReactNode,
-} from 'react';
+import React, { useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
 import { isDev } from '@/lib/core/config/env-helper';
 
 // ============================================================================
@@ -177,11 +171,7 @@ export function classifyError(error: Error): ErrorCategory {
   }
 
   // Permission errors
-  if (
-    message.includes('forbidden') ||
-    message.includes('permission') ||
-    message.includes('403')
-  ) {
+  if (message.includes('forbidden') || message.includes('permission') || message.includes('403')) {
     return 'permission';
   }
 
@@ -207,11 +197,7 @@ export function classifyError(error: Error): ErrorCategory {
   }
 
   // Validation errors
-  if (
-    message.includes('validation') ||
-    message.includes('invalid') ||
-    message.includes('400')
-  ) {
+  if (message.includes('validation') || message.includes('invalid') || message.includes('400')) {
     return 'validation';
   }
 
@@ -262,7 +248,7 @@ export function getUserMessage(category: ErrorCategory, error: Error): string {
     case 'permission':
       return "You don't have permission to perform this action. Please contact your administrator.";
     case 'notFound':
-      return "The requested resource could not be found. It may have been moved or deleted.";
+      return 'The requested resource could not be found. It may have been moved or deleted.';
     case 'timeout':
       return 'The request took too long to complete. Please try again.';
     case 'server':
@@ -286,11 +272,7 @@ export function getRecoverySuggestions(category: ErrorCategory): string[] {
         'Disable VPN or proxy if enabled',
       ];
     case 'auth':
-      return [
-        'Sign in again',
-        'Clear your browser cookies',
-        'Try a different browser',
-      ];
+      return ['Sign in again', 'Clear your browser cookies', 'Try a different browser'];
     case 'permission':
       return [
         'Contact your administrator',
@@ -321,10 +303,7 @@ export function getRecoverySuggestions(category: ErrorCategory): string[] {
 /**
  * Create error info from an error
  */
-export function createErrorInfo(
-  error: Error,
-  categoryOverride?: ErrorCategory
-): ErrorInfo {
+export function createErrorInfo(error: Error, categoryOverride?: ErrorCategory): ErrorInfo {
   const category = categoryOverride || classifyError(error);
 
   return {
@@ -384,17 +363,20 @@ export function ErrorRecovery({
       return;
     }
 
-    const timer = setTimeout(async () => {
-      setIsRetrying(true);
-      setRetryCount((c) => c + 1);
-      try {
-        await onRetry();
-      } catch {
-        // Retry failed, will be caught by next cycle
-      } finally {
-        setIsRetrying(false);
-      }
-    }, autoRetryDelay * Math.pow(2, retryCount));
+    const timer = setTimeout(
+      async () => {
+        setIsRetrying(true);
+        setRetryCount((c) => c + 1);
+        try {
+          await onRetry();
+        } catch {
+          // Retry failed, will be caught by next cycle
+        } finally {
+          setIsRetrying(false);
+        }
+      },
+      autoRetryDelay * Math.pow(2, retryCount)
+    );
 
     return () => clearTimeout(timer);
   }, [error, autoRetry, autoRetryDelay, maxAutoRetries, retryCount, errorInfo, onRetry]);
@@ -485,13 +467,9 @@ export function ErrorRecovery({
 
       {/* Content */}
       <div className="error-recovery__content">
-        <h2 className="error-recovery__title">
-          {getErrorTitle(errorInfo?.category || 'unknown')}
-        </h2>
+        <h2 className="error-recovery__title">{getErrorTitle(errorInfo?.category || 'unknown')}</h2>
 
-        <p className="error-recovery__message">
-          {message || errorInfo?.userMessage}
-        </p>
+        <p className="error-recovery__message">{message || errorInfo?.userMessage}</p>
 
         {/* Auto retry status */}
         {autoRetry && errorInfo?.isRetryable && retryCount > 0 && (
@@ -606,9 +584,7 @@ export function OfflineRecovery({
   }, []);
 
   // Format last sync time
-  const lastSyncText = lastSync
-    ? `Last synced ${formatTimeAgo(lastSync)}`
-    : 'Not synced';
+  const lastSyncText = lastSync ? `Last synced ${formatTimeAgo(lastSync)}` : 'Not synced';
 
   if (!showBanner) {
     return <>{children}</>;
@@ -622,11 +598,7 @@ export function OfflineRecovery({
       >
         <div className="offline-banner__content">
           <span className="offline-banner__icon">
-            {isOnline ? (
-              <OnlineIcon />
-            ) : (
-              <OfflineIcon />
-            )}
+            {isOnline ? <OnlineIcon /> : <OfflineIcon />}
           </span>
 
           <span className="offline-banner__message">
@@ -641,16 +613,10 @@ export function OfflineRecovery({
             </span>
           )}
 
-          {!isOnline && lastSync && (
-            <span className="offline-banner__sync">{lastSyncText}</span>
-          )}
+          {!isOnline && lastSync && <span className="offline-banner__sync">{lastSyncText}</span>}
 
           {!isOnline && onForceRetry && (
-            <button
-              type="button"
-              onClick={onForceRetry}
-              className="offline-banner__retry"
-            >
+            <button type="button" onClick={onForceRetry} className="offline-banner__retry">
               Retry
             </button>
           )}

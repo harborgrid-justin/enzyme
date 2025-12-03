@@ -8,12 +8,7 @@
  * @module auth/active-directory/core
  */
 
-import type {
-  ADGroup,
-  ADUser,
-  ADGroupRoleMapping,
-  ADGroupMappingConfig,
-} from '../types';
+import type { ADGroup, ADUser, ADGroupRoleMapping, ADGroupMappingConfig } from '../types';
 import type { Role, Permission } from '../../types';
 import { DEFAULT_GROUP_MAPPING_CONFIG } from '../ad-config';
 
@@ -71,7 +66,7 @@ export interface GroupMappingResult {
  * ```
  */
 export class ADGroupMapper {
-  private config: ADGroupMappingConfig;
+  private readonly config: ADGroupMappingConfig;
   private cache: Map<string, GroupMappingResult>;
   private cacheExpiry: number;
 
@@ -101,7 +96,11 @@ export class ADGroupMapper {
     const cacheKey = this.getCacheKey(groups);
 
     // Check cache
-    if ((this.config.cacheDuration != null && this.config.cacheDuration > 0) && this.cache.has(cacheKey)) {
+    if (
+      this.config.cacheDuration != null &&
+      this.config.cacheDuration > 0 &&
+      this.cache.has(cacheKey)
+    ) {
       if (Date.now() < this.cacheExpiry) {
         const cachedResult = this.cache.get(cacheKey);
         if (cachedResult != null) {
@@ -158,9 +157,7 @@ export class ADGroupMapper {
     groupIdentifier: string,
     matchType: ADGroupRoleMapping['matchType'] = 'exact'
   ): boolean {
-    return groups.some(group =>
-      this.matchesGroup(group, groupIdentifier, matchType)
-    );
+    return groups.some((group) => this.matchesGroup(group, groupIdentifier, matchType));
   }
 
   /**
@@ -179,7 +176,7 @@ export class ADGroupMapper {
     for (const mapping of this.config.mappings) {
       if (mapping.enabled === false) continue;
 
-      const matchedGroups = groups.filter(group => {
+      const matchedGroups = groups.filter((group) => {
         const matches = this.matchesGroup(group, mapping.groupIdentifier, mapping.matchType);
 
         if (!matches) return false;
@@ -197,9 +194,7 @@ export class ADGroupMapper {
       }
     }
 
-    return matches.sort((a, b) =>
-      (b.mapping.priority ?? 0) - (a.mapping.priority ?? 0)
-    );
+    return matches.sort((a, b) => (b.mapping.priority ?? 0) - (a.mapping.priority ?? 0));
   }
 
   /**
@@ -223,7 +218,7 @@ export class ADGroupMapper {
    */
   removeMapping(groupIdentifier: string): void {
     this.config.mappings = this.config.mappings.filter(
-      m => m.groupIdentifier !== groupIdentifier
+      (m) => m.groupIdentifier !== groupIdentifier
     );
     this.clearCache();
   }
@@ -234,13 +229,8 @@ export class ADGroupMapper {
    * @param groupIdentifier - Identifier of the mapping to update
    * @param updates - Partial updates to apply
    */
-  updateMapping(
-    groupIdentifier: string,
-    updates: Partial<ADGroupRoleMapping>
-  ): void {
-    const index = this.config.mappings.findIndex(
-      m => m.groupIdentifier === groupIdentifier
-    );
+  updateMapping(groupIdentifier: string, updates: Partial<ADGroupRoleMapping>): void {
+    const index = this.config.mappings.findIndex((m) => m.groupIdentifier === groupIdentifier);
 
     if (index >= 0) {
       const existing = this.config.mappings[index];
@@ -302,11 +292,11 @@ export class ADGroupMapper {
         appliedMappings: [],
       };
     }
-    const {role} = highestPriorityMapping.mapping;
+    const { role } = highestPriorityMapping.mapping;
 
     // Collect all permissions from all matched mappings
     const permissionSet = new Set<Permission>();
-    this.config.defaultPermissions.forEach(p => permissionSet.add(p));
+    this.config.defaultPermissions.forEach((p) => permissionSet.add(p));
 
     const appliedMappings: ADGroupRoleMapping[] = [];
     const allMatchedGroups: ADGroup[] = [];
@@ -315,7 +305,7 @@ export class ADGroupMapper {
       appliedMappings.push(mapping);
       allMatchedGroups.push(...matchedGroups);
 
-      mapping.additionalPermissions?.forEach(p => permissionSet.add(p));
+      mapping.additionalPermissions?.forEach((p) => permissionSet.add(p));
     }
 
     return {
@@ -349,8 +339,7 @@ export class ADGroupMapper {
         return groupName.endsWith(searchId) || groupId.endsWith(searchId);
 
       case 'pattern':
-        return this.matchPattern(groupName, searchId) ||
-               this.matchPattern(groupId, searchId);
+        return this.matchPattern(groupName, searchId) || this.matchPattern(groupId, searchId);
 
       default:
         return false;
@@ -376,7 +365,7 @@ export class ADGroupMapper {
    */
   private getCacheKey(groups: ADGroup[]): string {
     return groups
-      .map(g => g.id)
+      .map((g) => g.id)
       .sort()
       .join('|');
   }

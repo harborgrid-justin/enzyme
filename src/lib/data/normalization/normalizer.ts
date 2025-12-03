@@ -99,7 +99,8 @@ export class EntitySchema {
   constructor(name: string, definition?: Omit<EntitySchemaDefinition, 'name'>) {
     this.name = name;
     this.idAttribute = definition?.idAttribute ?? 'id';
-    this.relations = (definition?.relations != null ? definition.relations as Record<string, Schema> : {});
+    this.relations =
+      definition?.relations != null ? (definition.relations as Record<string, Schema>) : {};
     this.processStrategy = definition?.processStrategy;
     this.mergeStrategy = definition?.mergeStrategy ?? ((_, newEntity) => newEntity);
     this.excludeFields = definition?.excludeFields ?? [];
@@ -121,7 +122,10 @@ export class EntitySchema {
   define(relations: Record<string, Schema>): EntitySchema {
     return new EntitySchema(this.name, {
       idAttribute: this.idAttribute,
-      relations: { ...this.relations, ...relations } as Record<string, EntitySchema | ArraySchema | UnionSchema>,
+      relations: { ...this.relations, ...relations } as Record<
+        string,
+        EntitySchema | ArraySchema | UnionSchema
+      >,
       processStrategy: this.processStrategy,
       mergeStrategy: this.mergeStrategy,
       excludeFields: this.excludeFields,
@@ -199,8 +203,15 @@ export const schema = {
   /**
    * Create entity schema
    */
-  entity: (name: string, relations?: Record<string, Schema>, options?: Omit<EntitySchemaDefinition, 'name' | 'relations'>): EntitySchema =>
-    new EntitySchema(name, { ...options, relations: relations as Record<string, EntitySchema | ArraySchema | UnionSchema> | undefined }),
+  entity: (
+    name: string,
+    relations?: Record<string, Schema>,
+    options?: Omit<EntitySchemaDefinition, 'name' | 'relations'>
+  ): EntitySchema =>
+    new EntitySchema(name, {
+      ...options,
+      relations: relations as Record<string, EntitySchema | ArraySchema | UnionSchema> | undefined,
+    }),
 
   /**
    * Create array schema
@@ -215,8 +226,10 @@ export const schema = {
   /**
    * Create union schema
    */
-  union: (schemas: Record<string, EntitySchema>, schemaAttribute?: string | ((entity: Entity) => string)): UnionSchema =>
-    new UnionSchema(schemas, schemaAttribute),
+  union: (
+    schemas: Record<string, EntitySchema>,
+    schemaAttribute?: string | ((entity: Entity) => string)
+  ): UnionSchema => new UnionSchema(schemas, schemaAttribute),
 
   /**
    * Create value schema (pass-through)
@@ -270,10 +283,7 @@ function addEntity(
   const existing = context.entities[entityType][entityId];
   if (existing) {
     // Merge with existing
-    context.entities[entityType][entityId] = entitySchema.mergeStrategy(
-      existing,
-      processedEntity
-    );
+    context.entities[entityType][entityId] = entitySchema.mergeStrategy(existing, processedEntity);
   } else {
     context.entities[entityType][entityId] = processedEntity;
   }
@@ -287,11 +297,7 @@ function addEntity(
 /**
  * Normalize a value with a schema
  */
-function normalizeValue(
-  value: unknown,
-  schema: Schema,
-  context: NormalizationContext
-): unknown {
+function normalizeValue(value: unknown, schema: Schema, context: NormalizationContext): unknown {
   if (value === null || value === undefined) {
     return value;
   }
@@ -418,7 +424,7 @@ function normalizeUnion(
  * Normalize data with a schema
  *
  * @param data - Data to normalize
- * @param schema - Schema defining the structure
+ * @param inputSchema
  * @returns Normalized result with entities and result reference
  *
  * @example
@@ -451,7 +457,7 @@ export function normalize<TResult = string | string[]>(
  * Normalize and merge with existing entities
  *
  * @param data - New data to normalize
- * @param schema - Schema defining the structure
+ * @param inputSchema
  * @param existingEntities - Existing normalized entities
  * @returns Merged normalization result
  */
@@ -482,7 +488,7 @@ export function normalizeAndMerge<TResult = string | string[]>(
  * Normalize batch of data
  *
  * @param items - Array of items to normalize
- * @param schema - Entity schema for each item
+ * @param entitySchema
  * @returns Combined normalization result
  */
 export function normalizeBatch<T extends Entity>(
@@ -604,9 +610,7 @@ export function mergeEntities(
           }
           break;
         case 'merge':
-          result[entityType][id] = existing
-            ? { ...existing, ...entity }
-            : entity;
+          result[entityType][id] = existing ? { ...existing, ...entity } : entity;
           break;
       }
     }

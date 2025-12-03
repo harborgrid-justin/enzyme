@@ -48,6 +48,7 @@ export default [
           './demo/tsconfig.json',
           './demo/tsconfig.node.json',
           './scripts/tsconfig.json',
+          './cli/tsconfig.json',
         ],
         tsconfigRootDir: __dirname,
       },

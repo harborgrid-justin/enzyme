@@ -34,7 +34,11 @@ import type {
   LayoutState,
   MorphTransitionConfig,
 } from './types';
-import { DEFAULT_LAYOUT_ENGINE_CONFIG, DEFAULT_MORPH_TRANSITION_CONFIG, DEFAULT_CLS_GUARD_CONFIG } from './types';
+import {
+  DEFAULT_LAYOUT_ENGINE_CONFIG,
+  DEFAULT_MORPH_TRANSITION_CONFIG,
+  DEFAULT_CLS_GUARD_CONFIG,
+} from './types';
 import { createLayoutEngine } from './layout-engine';
 import { createMorphController } from './morph-transition';
 import { createCLSGuard } from './cls-guard';
@@ -55,7 +59,7 @@ type AdaptiveLayoutContextValueInternal = unknown;
 /**
  * Hook to access the adaptive layout context.
  *
- * @throws Error if used outside of AdaptiveLayout
+ * @throws Error if used outside AdaptiveLayout
  */
 export function useAdaptiveLayoutContext(): AdaptiveLayoutContextValue {
   const context = useContext(AdaptiveLayoutContext);
@@ -314,7 +318,16 @@ export function AdaptiveLayout({
       registerChild,
       unregisterChild,
     }),
-    [engine, morphController, clsGuard, constraintSolver, engineConfig, layoutState, registerChild, unregisterChild]
+    [
+      engine,
+      morphController,
+      clsGuard,
+      constraintSolver,
+      engineConfig,
+      layoutState,
+      registerChild,
+      unregisterChild,
+    ]
   );
 
   // Container styles based on layout mode
@@ -331,7 +344,7 @@ export function AdaptiveLayout({
         return {
           ...baseStyles,
           display: 'grid',
-          gridTemplateColumns: `repeat(auto-fit, minmax(${(layoutState?.gridConfig?.columns !== undefined && layoutState.gridConfig.columns !== null && layoutState.gridConfig.columns !== 0) ? `calc(100% / ${layoutState.gridConfig.columns} - ${layoutState.gridConfig.gap ?? 0}px)` : '200px'}, 1fr))`,
+          gridTemplateColumns: `repeat(auto-fit, minmax(${layoutState?.gridConfig?.columns !== undefined && layoutState.gridConfig.columns !== null && layoutState.gridConfig.columns !== 0 ? `calc(100% / ${layoutState.gridConfig.columns} - ${layoutState.gridConfig.gap ?? 0}px)` : '200px'}, 1fr))`,
           gap: `${layoutState?.gridConfig?.gap ?? 16}px`,
         };
       case 'list':
@@ -378,7 +391,11 @@ export function AdaptiveLayout({
   }, [currentMode, layoutState, style]);
 
   return (
-    <AdaptiveLayoutContext.Provider value={contextValue as unknown as import('../../contexts/AdaptiveLayoutContext.ts').AdaptiveLayoutContextValue}>
+    <AdaptiveLayoutContext.Provider
+      value={
+        contextValue as unknown as import('../../contexts/AdaptiveLayoutContext.ts').AdaptiveLayoutContextValue
+      }
+    >
       <div
         ref={containerRef}
         className={className}

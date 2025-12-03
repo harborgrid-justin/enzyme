@@ -276,21 +276,6 @@ export class OptionalSegmentRouteBuilder {
   }
 
   /**
-   * Build regex pattern for matching
-   */
-  private buildPattern(): RegExp {
-    const basePath = this.config.basePath.replace(/\/$/, '');
-    const escapedBase = basePath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-    // Each optional segment can be present or not
-    const segmentPatterns = this.orderedSegments
-      .map(() => '(?:/([^/]+))?');
-
-    const fullPattern = `^${escapedBase}${segmentPatterns.join('')}/?$`;
-    return new RegExp(fullPattern);
-  }
-
-  /**
    * Match a path against this route
    *
    * @param path - URL path to match
@@ -419,6 +404,21 @@ export class OptionalSegmentRouteBuilder {
    */
   getConfig(): Readonly<OptionalRouteBuilderConfig> {
     return this.config;
+  }
+
+  /**
+   * Build regex pattern for matching
+   */
+  private buildPattern(): RegExp {
+    const basePath = this.config.basePath.replace(/\/$/, '');
+    const escapedBase = basePath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    // Each optional segment can be present or not
+    const segmentPatterns = this.orderedSegments
+      .map(() => '(?:/([^/]+))?');
+
+    const fullPattern = `^${escapedBase}${segmentPatterns.join('')}/?$`;
+    return new RegExp(fullPattern);
   }
 }
 
@@ -575,7 +575,7 @@ export function createPaginationSegment(options: {
 export function createCategorySegment(
   categories: readonly string[],
   defaultCategory: string
-): OptionalSegment<string> {
+): OptionalSegment {
   return new OptionalSegment({
     name: 'category',
     defaultValue: defaultCategory,
@@ -593,7 +593,7 @@ export function createCategorySegment(
 export function createSortSegment(options: {
   allowedValues?: readonly string[];
   defaultValue?: string;
-} = {}): OptionalSegment<string> {
+} = {}): OptionalSegment {
   return new OptionalSegment({
     name: 'sort',
     defaultValue: options.defaultValue ?? 'default',

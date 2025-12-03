@@ -181,7 +181,7 @@ const CRITICAL_SELECTOR_PATTERNS = CRITICAL_SELECTORS.map((pattern) =>
  * Analyzes and classifies CSS rules
  */
 class CSSAnalyzer {
-  private viewportHeight: number;
+  private readonly viewportHeight: number;
   // private __analyzedRules: Map<string, AnalyzedCSSRule> = new Map();
   private aboveFoldElements: Set<Element> = new Set();
 
@@ -531,6 +531,13 @@ export class CriticalCSSExtractor {
   }
 
   /**
+   * Clear cache
+   */
+  clearCache(): void {
+    this.cache.clear();
+  }
+
+  /**
    * Extract LCP element styles
    */
   private extractLCPStyles(): string {
@@ -620,13 +627,6 @@ export class CriticalCSSExtractor {
       .replace(/\s*([{}:;,])\s*/g, '$1') // Remove space around symbols
       .replace(/;}/g, '}') // Remove trailing semicolons
       .trim();
-  }
-
-  /**
-   * Clear cache
-   */
-  clearCache(): void {
-    this.cache.clear();
   }
 
   /**

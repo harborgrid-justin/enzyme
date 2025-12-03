@@ -179,10 +179,7 @@ export class BundleAnalyzer {
   /**
    * Track a dynamic import
    */
-  async trackDynamicImport(
-    modulePath: string,
-    importPromise: Promise<unknown>
-  ): Promise<unknown> {
+  async trackDynamicImport(modulePath: string, importPromise: Promise<unknown>): Promise<unknown> {
     if (!this.config.enabled || !this.config.trackDynamicImports) {
       return importPromise;
     }
@@ -228,13 +225,9 @@ export class BundleAnalyzer {
     const chunks = Array.from(this.chunks.values());
     const totalSize = chunks.reduce((sum, c) => sum + c.size, 0);
 
-    const largestChunks = [...chunks]
-      .sort((a, b) => b.size - a.size)
-      .slice(0, 10);
+    const largestChunks = [...chunks].sort((a, b) => b.size - a.size).slice(0, 10);
 
-    const slowestChunks = [...chunks]
-      .sort((a, b) => b.loadTime - a.loadTime)
-      .slice(0, 10);
+    const slowestChunks = [...chunks].sort((a, b) => b.loadTime - a.loadTime).slice(0, 10);
 
     const duplicateModules = this.findDuplicateModules();
     const recommendations = this.config.generateRecommendations
@@ -390,7 +383,7 @@ export class BundleAnalyzer {
 
   private extractChunkId(url: string): string {
     try {
-      const {pathname} = new URL(url);
+      const { pathname } = new URL(url);
       const filename = pathname.split('/').pop() ?? url;
       // Remove hash and extension
       return filename.replace(/\.[a-f0-9]+\.js$/, '.js').replace(/\.js$/, '');
@@ -498,7 +491,7 @@ export function createTrackedImport(
   analyzer: BundleAnalyzer
 ): <T>(importFn: () => Promise<T>, modulePath: string) => Promise<T> {
   return async <T>(importFn: () => Promise<T>, modulePath: string): Promise<T> => {
-    return analyzer.trackDynamicImport(modulePath, importFn()) as Promise<T>;
+    return (await analyzer.trackDynamicImport(modulePath, importFn())) as Promise<T>;
   };
 }
 
@@ -507,7 +500,7 @@ export function createTrackedImport(
 // ============================================================================
 
 /**
- * Format bytes to human readable string
+ * Format bytes to human-readable string
  */
 export function formatBytes(bytes: number): string {
   if (bytes === 0) return '0 B';
@@ -547,9 +540,7 @@ let analyzerInstance: BundleAnalyzer | null = null;
 /**
  * Get or create the global bundle analyzer instance
  */
-export function getBundleAnalyzer(
-  config?: Partial<BundleAnalyzerConfig>
-): BundleAnalyzer {
+export function getBundleAnalyzer(config?: Partial<BundleAnalyzerConfig>): BundleAnalyzer {
   analyzerInstance ??= new BundleAnalyzer(config);
   return analyzerInstance;
 }

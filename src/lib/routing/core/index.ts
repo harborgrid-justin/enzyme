@@ -167,11 +167,7 @@ export {
 // Segment Parsing
 // =============================================================================
 
-export type {
-  RouteSegmentType,
-  ParsedRouteSegment,
-  SegmentParserConfig,
-} from './segment-parser';
+export type { RouteSegmentType, ParsedRouteSegment, SegmentParserConfig } from './segment-parser';
 
 export {
   // Configuration

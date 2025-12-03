@@ -110,9 +110,7 @@ export function isBigInt(value: unknown): value is bigint {
 /**
  * Check if value is a function.
  */
-export function isFunction(
-  value: unknown
-): value is (...args: unknown[]) => unknown {
+export function isFunction(value: unknown): value is (...args: unknown[]) => unknown {
   return typeof value === 'function';
 }
 
@@ -164,10 +162,7 @@ export function isNonEmptyArray<T = unknown>(value: unknown): value is [T, ...T[
  * }
  * ```
  */
-export function isArrayOf<T>(
-  value: unknown,
-  guard: (item: unknown) => item is T
-): value is T[] {
+export function isArrayOf<T>(value: unknown, guard: (item: unknown) => item is T): value is T[] {
   return Array.isArray(value) && value.every(guard);
 }
 
@@ -193,9 +188,7 @@ export function isDateString(value: unknown): value is string {
 export function isPromise<T = unknown>(value: unknown): value is Promise<T> {
   return (
     value instanceof Promise ||
-    (isObject(value) &&
-      isFunction((value).then) &&
-      isFunction((value).catch))
+    (isObject(value) && isFunction(value.then) && isFunction(value.catch))
   );
 }
 
@@ -216,9 +209,7 @@ export function isRegExp(value: unknown): value is RegExp {
 /**
  * Check if value is a Map.
  */
-export function isMap<K = unknown, V = unknown>(
-  value: unknown
-): value is Map<K, V> {
+export function isMap<K = unknown, V = unknown>(value: unknown): value is Map<K, V> {
   return value instanceof Map;
 }
 
@@ -241,9 +232,7 @@ export function isWeakMap<K extends object = object, V = unknown>(
 /**
  * Check if value is a WeakSet.
  */
-export function isWeakSet<T extends object = object>(
-  value: unknown
-): value is WeakSet<T> {
+export function isWeakSet<T extends object = object>(value: unknown): value is WeakSet<T> {
   return value instanceof WeakSet;
 }
 
@@ -278,8 +267,7 @@ export function isUrl(value: unknown): value is string {
  */
 export function isUuid(value: unknown): value is string {
   if (!isString(value)) return false;
-  const uuidRegex =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   return uuidRegex.test(value);
 }
 
@@ -320,10 +308,7 @@ export function isIsoDateString(value: unknown): value is string {
  * }
  * ```
  */
-export function hasKey<K extends string>(
-  obj: unknown,
-  key: K
-): obj is Record<K, unknown> {
+export function hasKey<K extends string>(obj: unknown, key: K): obj is Record<K, unknown> {
   return isObject(obj) && key in obj;
 }
 
@@ -400,10 +385,7 @@ export function assert<T>(
  * }
  * ```
  */
-export function isOneOf<T>(
-  value: unknown,
-  allowedValues: readonly T[]
-): value is T {
+export function isOneOf<T>(value: unknown, allowedValues: readonly T[]): value is T {
   return allowedValues.includes(value as T);
 }
 
@@ -416,10 +398,7 @@ export function isOneOf<T>(
  * // maybeString is string | undefined
  * ```
  */
-export function narrow<T>(
-  value: unknown,
-  guard: (value: unknown) => value is T
-): T | undefined {
+export function narrow<T>(value: unknown, guard: (value: unknown) => value is T): T | undefined {
   return guard(value) ? value : undefined;
 }
 
@@ -471,10 +450,7 @@ export function createShapeGuard<T extends Record<string, unknown>>(shape: {
     if (!isObject(value)) return false;
 
     for (const key of Object.keys(shape) as (keyof T)[]) {
-      if (
-        !(key in value) ||
-        !shape[key]((value)[key as string])
-      ) {
+      if (!(key in value) || !shape[key](value[key as string])) {
         return false;
       }
     }
@@ -486,16 +462,14 @@ export function createShapeGuard<T extends Record<string, unknown>>(shape: {
 /**
  * Create a type guard for optional object shape (allows undefined values).
  */
-export function createPartialShapeGuard<T extends Record<string, unknown>>(
-  shape: {
-    [K in keyof T]: (value: unknown) => value is T[K];
-  }
-): (value: unknown) => value is Partial<T> {
+export function createPartialShapeGuard<T extends Record<string, unknown>>(shape: {
+  [K in keyof T]: (value: unknown) => value is T[K];
+}): (value: unknown) => value is Partial<T> {
   return (value: unknown): value is Partial<T> => {
     if (!isObject(value)) return false;
 
     for (const key of Object.keys(shape) as (keyof T)[]) {
-      const propValue = (value)[key as string];
+      const propValue = value[key as string];
       if (propValue !== undefined && !shape[key](propValue)) {
         return false;
       }
@@ -585,15 +559,12 @@ export type RequireKeys<T, K extends keyof T> = T & Required<Pick<T, K>>;
 /**
  * Make specific keys optional
  */
-export type OptionalKeys<T, K extends keyof T> = Omit<T, K> &
-  Partial<Pick<T, K>>;
+export type OptionalKeys<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
 /**
  * Deep partial type
  */
-export type DeepPartial<T> = T extends object
-  ? { [P in keyof T]?: DeepPartial<T[P]> }
-  : T;
+export type DeepPartial<T> = T extends object ? { [P in keyof T]?: DeepPartial<T[P]> } : T;
 
 /**
  * Deep readonly type
@@ -605,9 +576,7 @@ export type DeepReadonly<T> = T extends object
 /**
  * Non-nullable values of an array
  */
-export type NonNullableArray<T> = T extends (infer U)[]
-  ? NonNullable<U>[]
-  : never;
+export type NonNullableArray<T> = T extends (infer U)[] ? NonNullable<U>[] : never;
 
 /**
  * Awaited type (unwrap Promise)
@@ -617,16 +586,12 @@ export type Awaited<T> = T extends Promise<infer U> ? U : T;
 /**
  * Function return type
  */
-export type ReturnTypeOf<T> = T extends (...args: unknown[]) => infer R
-  ? R
-  : never;
+export type ReturnTypeOf<T> = T extends (...args: unknown[]) => infer R ? R : never;
 
 /**
  * Function parameters type
  */
-export type ParametersOf<T> = T extends (...args: infer P) => unknown
-  ? P
-  : never;
+export type ParametersOf<T> = T extends (...args: infer P) => unknown ? P : never;
 
 // =============================================================================
 // Branded Types - Compile-time safety for primitive values
@@ -782,8 +747,7 @@ export const pct = (value: number): Percentage => value as Percentage;
  * const timeout = secondsToMs(sec(5)); // 5000ms
  * ```
  */
-export const secondsToMs = (seconds: Seconds): Milliseconds =>
-  ms((seconds as number) * 1000);
+export const secondsToMs = (seconds: Seconds): Milliseconds => ms((seconds as number) * 1000);
 
 /**
  * Converts Milliseconds to Seconds.
@@ -931,10 +895,7 @@ export function isErr<T, E>(result: Result<T, E>): result is { ok: false; error:
  * // strResult is Result<string, string> with value "5"
  * ```
  */
-export function mapResult<T, U, E>(
-  result: Result<T, E>,
-  fn: (value: T) => U
-): Result<U, E> {
+export function mapResult<T, U, E>(result: Result<T, E>, fn: (value: T) => U): Result<U, E> {
   return isOk(result) ? ok(fn(result.value)) : (result as unknown as Result<U, E>);
 }
 
@@ -957,10 +918,7 @@ export function mapResult<T, U, E>(
  * // mapped is Result<number, Error>
  * ```
  */
-export function mapError<T, E, F>(
-  result: Result<T, E>,
-  fn: (error: E) => F
-): Result<T, F> {
+export function mapError<T, E, F>(result: Result<T, E>, fn: (error: E) => F): Result<T, F> {
   return isErr(result) ? err(fn(result.error)) : (result as unknown as Result<T, F>);
 }
 

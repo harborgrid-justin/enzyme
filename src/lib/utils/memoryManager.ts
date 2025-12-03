@@ -63,33 +63,6 @@ export class ResourcePool<T> {
   }
 
   /**
-   * Pre-allocate minimum pool resources
-   */
-  private preallocate(): void {
-    for (let i = 0; i < this.config.minSize; i++) {
-      this.createEntry();
-    }
-  }
-
-  /**
-   * Create a new pool entry
-   */
-  private createEntry(): symbol {
-    const id = Symbol('pool-entry');
-    const now = Date.now();
-
-    this.pool.set(id, {
-      resource: this.config.factory(),
-      createdAt: now,
-      lastUsed: now,
-      useCount: 0,
-      isAcquired: false,
-    });
-
-    return id;
-  }
-
-  /**
    * Acquire a resource from the pool
    */
   acquire(): { resource: T; release: () => void } {
@@ -130,26 +103,6 @@ export class ResourcePool<T> {
       resource: tempResource,
       release: () => this.config.dispose(tempResource),
     };
-  }
-
-  /**
-   * Release a resource back to the pool
-   */
-  private release(id: symbol): void {
-    const entry = this.pool.get(id);
-    if (entry) {
-      entry.isAcquired = false;
-      entry.lastUsed = Date.now();
-    }
-  }
-
-  /**
-   * Start periodic cleanup of idle resources
-   */
-  private startCleanup(): void {
-    this.cleanupInterval = setInterval(() => {
-      this.cleanup();
-    }, this.config.idleTTL / 2);
   }
 
   /**
@@ -215,6 +168,53 @@ export class ResourcePool<T> {
 
     this.pool.clear();
   }
+
+  /**
+   * Pre-allocate minimum pool resources
+   */
+  private preallocate(): void {
+    for (let i = 0; i < this.config.minSize; i++) {
+      this.createEntry();
+    }
+  }
+
+  /**
+   * Create a new pool entry
+   */
+  private createEntry(): symbol {
+    const id = Symbol('pool-entry');
+    const now = Date.now();
+
+    this.pool.set(id, {
+      resource: this.config.factory(),
+      createdAt: now,
+      lastUsed: now,
+      useCount: 0,
+      isAcquired: false,
+    });
+
+    return id;
+  }
+
+  /**
+   * Release a resource back to the pool
+   */
+  private release(id: symbol): void {
+    const entry = this.pool.get(id);
+    if (entry) {
+      entry.isAcquired = false;
+      entry.lastUsed = Date.now();
+    }
+  }
+
+  /**
+   * Start periodic cleanup of idle resources
+   */
+  private startCleanup(): void {
+    this.cleanupInterval = setInterval(() => {
+      this.cleanup();
+    }, this.config.idleTTL / 2);
+  }
 }
 
 /**
@@ -225,7 +225,7 @@ export class WeakCache<K extends object, V> {
   private cache: Map<K, { ref: WeakRef<V extends object ? V : never>; expires: number }> =
     new Map();
   private registry: FinalizationRegistry<K>;
-  private defaultTTL: number;
+  private readonly defaultTTL: number;
 
   constructor(options: { defaultTTL?: number } = {}) {
     this.defaultTTL = options.defaultTTL ?? 5 * 60 * 1000; // 5 minutes
@@ -374,21 +374,6 @@ export class MemoryMonitor {
   }
 
   /**
-   * Get memory usage ratio (0-1)
-   */
-  private getUsageRatio(): number {
-    if (typeof performance !== 'undefined' && 'memory' in performance) {
-      const {memory} = (performance as Performance & {
-        memory?: { usedJSHeapSize: number; jsHeapSizeLimit: number };
-      });
-      if (memory) {
-        return memory.usedJSHeapSize / memory.jsHeapSizeLimit;
-      }
-    }
-    return 0;
-  }
-
-  /**
    * Get detailed memory info
    */
   getMemoryInfo(): {
@@ -399,13 +384,13 @@ export class MemoryMonitor {
     pressure: MemoryPressure;
   } | null {
     if (typeof performance !== 'undefined' && 'memory' in performance) {
-      const {memory} = (performance as Performance & {
+      const { memory } = performance as Performance & {
         memory?: {
           usedJSHeapSize: number;
           totalJSHeapSize: number;
           jsHeapSizeLimit: number;
         };
-      });
+      };
       if (memory) {
         return {
           usedHeap: memory.usedJSHeapSize,
@@ -428,6 +413,32 @@ export class MemoryMonitor {
   }
 
   /**
+   * Suggest garbage collection (hint only)
+   */
+  suggestGC(): void {
+    // Try to encourage GC by nullifying references
+    if (typeof globalThis !== 'undefined' && 'gc' in globalThis) {
+      const globalWithGC = globalThis as typeof globalThis & { gc: () => void };
+      globalWithGC.gc();
+    }
+  }
+
+  /**
+   * Get memory usage ratio (0-1)
+   */
+  private getUsageRatio(): number {
+    if (typeof performance !== 'undefined' && 'memory' in performance) {
+      const { memory } = performance as Performance & {
+        memory?: { usedJSHeapSize: number; jsHeapSizeLimit: number };
+      };
+      if (memory) {
+        return memory.usedJSHeapSize / memory.jsHeapSizeLimit;
+      }
+    }
+    return 0;
+  }
+
+  /**
    * Notify callbacks of pressure change
    */
   private notifyCallbacks(pressure: MemoryPressure): void {
@@ -437,17 +448,6 @@ export class MemoryMonitor {
       } catch (error) {
         console.error('[MemoryMonitor] Callback error:', error);
       }
-    }
-  }
-
-  /**
-   * Suggest garbage collection (hint only)
-   */
-  suggestGC(): void {
-    // Try to encourage GC by nullifying references
-    if (typeof globalThis !== 'undefined' && 'gc' in globalThis) {
-      const globalWithGC = globalThis as typeof globalThis & { gc: () => void };
-      globalWithGC.gc();
     }
   }
 }
@@ -465,6 +465,13 @@ export interface Disposable {
 export class DisposableRegistry {
   private disposables: Set<Disposable> = new Set();
   private isDisposed = false;
+
+  /**
+   * Get registration count
+   */
+  get count(): number {
+    return this.disposables.size;
+  }
 
   /**
    * Register a disposable resource
@@ -502,13 +509,6 @@ export class DisposableRegistry {
 
     this.disposables.clear();
   }
-
-  /**
-   * Get registration count
-   */
-  get count(): number {
-    return this.disposables.size;
-  }
 }
 
 /**
@@ -531,10 +531,17 @@ export function createDisposable(cleanup: () => void): Disposable {
  */
 export class LRUCache<K, V> {
   private cache: Map<K, V> = new Map();
-  private maxSize: number;
+  private readonly maxSize: number;
 
   constructor(maxSize: number) {
     this.maxSize = maxSize;
+  }
+
+  /**
+   * Get cache size
+   */
+  get size(): number {
+    return this.cache.size;
   }
 
   /**
@@ -587,13 +594,6 @@ export class LRUCache<K, V> {
    */
   clear(): void {
     this.cache.clear();
-  }
-
-  /**
-   * Get cache size
-   */
-  get size(): number {
-    return this.cache.size;
   }
 
   /**

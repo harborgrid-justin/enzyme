@@ -6,7 +6,7 @@
  * the streaming/ module hooks which handle React 18 SSR HTML streaming.
  */
 
-import { useEffect, useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRealtimeContext } from './RealtimeProvider';
 
 /**
@@ -51,12 +51,7 @@ export function useRealtimeStream<T = unknown>(
   channel: string,
   options: UseRealtimeStreamOptions<T> = {}
 ): UseRealtimeStreamResult<T> {
-  const {
-    enabled = true,
-    onMessage,
-    onError,
-    transform,
-  } = options;
+  const { enabled = true, onMessage, onError, transform } = options;
 
   const { isConnected, subscribe, send: contextSend } = useRealtimeContext();
   const [lastMessage, setLastMessage] = useState<T | null>(null);
@@ -77,11 +72,9 @@ export function useRealtimeStream<T = unknown>(
   useEffect(() => {
     if (!enabled) return;
 
-    const unsubscribe = subscribe(channel, (data: unknown) => {
+    return subscribe(channel, (data: unknown) => {
       try {
-        const transformed = transformRef.current
-          ? transformRef.current(data)
-          : (data as T);
+        const transformed = transformRef.current ? transformRef.current(data) : (data as T);
 
         setLastMessage(transformed);
         setMessages((prev) => [...prev, transformed]);
@@ -91,8 +84,6 @@ export function useRealtimeStream<T = unknown>(
         onErrorRef.current?.(error as Error);
       }
     });
-
-    return unsubscribe;
   }, [channel, enabled, subscribe]);
 
   /**
@@ -245,26 +236,23 @@ export function useRealtimePresence(channel: string): {
 } {
   const [users, setUsers] = useState<string[]>([]);
 
-  useRealtimeStream<{ type: string; userId: string; users?: string[] }>(
-    `presence:${channel}`,
-    {
-      onMessage: (data) => {
-        switch (data.type) {
-          case 'join':
-            setUsers((prev) => [...prev, data.userId]);
-            break;
-          case 'leave':
-            setUsers((prev) => prev.filter((id) => id !== data.userId));
-            break;
-          case 'sync':
-            if (data.users) {
-              setUsers(data.users);
-            }
-            break;
-        }
-      },
-    }
-  );
+  useRealtimeStream<{ type: string; userId: string; users?: string[] }>(`presence:${channel}`, {
+    onMessage: (data) => {
+      switch (data.type) {
+        case 'join':
+          setUsers((prev) => [...prev, data.userId]);
+          break;
+        case 'leave':
+          setUsers((prev) => prev.filter((id) => id !== data.userId));
+          break;
+        case 'sync':
+          if (data.users) {
+            setUsers(data.users);
+          }
+          break;
+      }
+    },
+  });
 
   return { users, count: users.length };
 }

@@ -544,8 +544,8 @@ export interface LibraryConfig {
 export function getTimingDefault<K extends keyof typeof TIMING_DEFAULTS>(
   key: K,
   override?: number
-): typeof TIMING_DEFAULTS[K] {
-  return (override ?? TIMING_DEFAULTS[key]) as typeof TIMING_DEFAULTS[K];
+): (typeof TIMING_DEFAULTS)[K] {
+  return (override ?? TIMING_DEFAULTS[key]) as (typeof TIMING_DEFAULTS)[K];
 }
 
 /**
@@ -554,8 +554,8 @@ export function getTimingDefault<K extends keyof typeof TIMING_DEFAULTS>(
 export function getCacheDefault<K extends keyof typeof CACHE_DEFAULTS>(
   key: K,
   override?: number
-): typeof CACHE_DEFAULTS[K] {
-  return (override ?? CACHE_DEFAULTS[key]) as typeof CACHE_DEFAULTS[K];
+): (typeof CACHE_DEFAULTS)[K] {
+  return (override ?? CACHE_DEFAULTS[key]) as (typeof CACHE_DEFAULTS)[K];
 }
 
 /**
@@ -564,8 +564,8 @@ export function getCacheDefault<K extends keyof typeof CACHE_DEFAULTS>(
 export function getQueueDefault<K extends keyof typeof QUEUE_DEFAULTS>(
   key: K,
   override?: number
-): typeof QUEUE_DEFAULTS[K] {
-  return (override ?? QUEUE_DEFAULTS[key]) as typeof QUEUE_DEFAULTS[K];
+): (typeof QUEUE_DEFAULTS)[K] {
+  return (override ?? QUEUE_DEFAULTS[key]) as (typeof QUEUE_DEFAULTS)[K];
 }
 
 // ============================================================================

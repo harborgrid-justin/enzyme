@@ -4,7 +4,8 @@
 
 ## Overview
 
-The coordination module handles provider orchestration, hook composition, state coordination, and context bridging across the application.
+The coordination module handles provider orchestration, hook composition, state coordination, and context bridging
+across the application.
 
 ## Quick Start
 
@@ -29,12 +30,12 @@ function Dashboard() {
 
 ## Exports
 
-| Export | Type | Description |
-|--------|------|-------------|
-| `useComposedHooks` | Hook | Compose multiple hooks |
-| `useContextBridge` | Hook | Bridge contexts across boundaries |
-| `StateCoordinator` | Class | Coordinate state across slices |
-| `ProviderOrchestrator` | Component | Orchestrate provider nesting |
+| Export                 | Type      | Description                       |
+|------------------------|-----------|-----------------------------------|
+| `useComposedHooks`     | Hook      | Compose multiple hooks            |
+| `useContextBridge`     | Hook      | Bridge contexts across boundaries |
+| `StateCoordinator`     | Class     | Coordinate state across slices    |
+| `ProviderOrchestrator` | Component | Orchestrate provider nesting      |
 
 ## Important
 

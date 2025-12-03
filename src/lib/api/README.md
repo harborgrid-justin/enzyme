@@ -1,14 +1,20 @@
 # API Module
 
-> **Purpose:** Enterprise-grade HTTP client infrastructure with type-safe requests, React Query integration, and comprehensive error handling.
+> **Purpose:** Enterprise-grade HTTP client infrastructure with type-safe requests, React Query integration, and
+> comprehensive error handling.
 
 ## Overview
 
-The API module provides a complete solution for managing HTTP communications in React applications. Built on top of modern web standards, it offers a robust client with automatic retries, request deduplication, response normalization, and seamless React integration through hooks.
+The API module provides a complete solution for managing HTTP communications in React applications. Built on top of
+modern web standards, it offers a robust client with automatic retries, request deduplication, response normalization,
+and seamless React integration through hooks.
 
-This module bridges the gap between raw fetch API and application needs by providing type-safe request building, intelligent caching, mock server capabilities for development, and advanced features like API versioning, rate limiting, and metrics collection.
+This module bridges the gap between raw fetch API and application needs by providing type-safe request building,
+intelligent caching, mock server capabilities for development, and advanced features like API versioning, rate limiting,
+and metrics collection.
 
-Whether you're building a simple CRUD application or a complex enterprise system with multiple API versions, this module provides the tools and patterns to handle it elegantly.
+Whether you're building a simple CRUD application or a complex enterprise system with multiple API versions, this module
+provides the tools and patterns to handle it elegantly.
 
 ## Key Features
 
@@ -56,9 +62,11 @@ function UserList() {
 ## Exports
 
 ### Components
+
 - `ApiClientProvider` - Context provider for API client configuration
 
 ### Hooks
+
 - `useApiClient` - Access API client instance from context
 - `useApiRequest` - Fetch data with React Query (GET requests)
 - `useApiMutation` - Mutate data with React Query (POST/PUT/PATCH/DELETE)
@@ -75,11 +83,13 @@ function UserList() {
 - `useLazyQuery` - Manually triggered queries
 
 ### Classes
+
 - `ApiClient` - Core HTTP client class
 - `RequestBuilder` - Fluent API for building requests
 - `MockServer` - Development mock server
 
 ### Utilities
+
 - `createApiClient()` - Factory for creating client instances
 - `createRequest()` - Initialize request builder
 - `get()` / `post()` / `put()` / `patch()` / `del()` - Request builder shortcuts
@@ -91,6 +101,7 @@ function UserList() {
 - `createMockServer()` - Factory for mock server
 
 ### Advanced Features
+
 - `APIGateway` - Centralized gateway with middleware
 - `RequestOrchestrator` - Batch, chain, and waterfall requests
 - `ResponseNormalizer` - Transform responses to standard formats
@@ -100,6 +111,7 @@ function UserList() {
 - `APIMetricsCollector` - Collect performance metrics
 
 ### Types
+
 - `ApiResponse<T>` - Standard response wrapper
 - `ApiError` - Normalized error object
 - `RequestConfig` - Request configuration options
@@ -137,6 +149,7 @@ HTTP Transport (fetch API)
 ## Common Patterns
 
 ### Pattern 1: Basic CRUD Operations
+
 ```tsx
 import { useApiRequest, usePost, usePut, useDelete } from '@/lib/api';
 
@@ -181,6 +194,7 @@ function UserManagement() {
 ```
 
 ### Pattern 2: Request Builder with Complex Parameters
+
 ```tsx
 import { get, apiClient } from '@/lib/api';
 
@@ -206,6 +220,7 @@ const results = await apiClient.execute(request);
 ```
 
 ### Pattern 3: Optimistic Updates
+
 ```tsx
 import { useApiMutation, createOptimisticUpdate } from '@/lib/api';
 
@@ -227,6 +242,7 @@ function TodoList() {
 ```
 
 ### Pattern 4: Pagination
+
 ```tsx
 import { useGetList } from '@/lib/api';
 
@@ -256,6 +272,7 @@ function UserList() {
 ```
 
 ### Pattern 5: Mock Development Server
+
 ```tsx
 import { mockServer, mockHandlers, mockData } from '@/lib/api';
 
@@ -278,6 +295,7 @@ if (import.meta.env.DEV) {
 ## Configuration
 
 ### API Client Configuration
+
 ```tsx
 import { createApiClient } from '@/lib/api';
 
@@ -316,6 +334,7 @@ const client = createApiClient({
 ```
 
 ### Provider Setup
+
 ```tsx
 import { ApiClientProvider } from '@/lib/api';
 
@@ -331,6 +350,7 @@ function App() {
 ## Testing
 
 ### Testing with Mock Server
+
 ```tsx
 import { mockServer, mockHandlers } from '@/lib/api';
 import { render, screen, waitFor } from '@testing-library/react';
@@ -372,7 +392,9 @@ describe('UserList', () => {
 ## Troubleshooting
 
 ### Issue: 401 Unauthorized Errors
+
 **Solution:** Ensure token provider is configured and returns valid tokens:
+
 ```tsx
 createApiClient({
   tokenProvider: async () => {
@@ -383,7 +405,9 @@ createApiClient({
 ```
 
 ### Issue: CORS Errors in Development
+
 **Solution:** Configure proxy in vite.config.ts:
+
 ```tsx
 export default defineConfig({
   server: {
@@ -395,7 +419,9 @@ export default defineConfig({
 ```
 
 ### Issue: Request Timeout
+
 **Solution:** Increase timeout for slow endpoints:
+
 ```tsx
 const data = await apiClient.get('/slow-endpoint', {
   timeout: 60000, // 60 seconds
@@ -403,7 +429,9 @@ const data = await apiClient.get('/slow-endpoint', {
 ```
 
 ### Issue: Stale Data After Mutation
+
 **Solution:** Invalidate queries after mutations:
+
 ```tsx
 const mutation = useApiMutation({
   onSuccess: () => {

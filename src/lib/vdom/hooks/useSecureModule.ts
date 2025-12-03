@@ -8,12 +8,7 @@
  * @version 1.0.0
  */
 
-import {
-  useState,
-  useCallback,
-  useMemo,
-  useEffect,
-} from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   type UseSecureModuleReturn,
   type SecurityViolation,
@@ -65,9 +60,9 @@ export function useSecureModule(): UseSecureModuleReturn {
   const securityContext = context.security;
 
   // Local violations state for tracking
-  const [violations, setViolations] = useState<SecurityViolation[]>(
-    () => [...securityContext.violations]
-  );
+  const [violations, setViolations] = useState<SecurityViolation[]>(() => [
+    ...securityContext.violations,
+  ]);
 
   // Sync with context violations using queueMicrotask to avoid synchronous setState
   useEffect(() => {
@@ -77,20 +72,17 @@ export function useSecureModule(): UseSecureModuleReturn {
   }, [securityContext.violations]);
 
   // Report a new violation
-  const reportViolation = useCallback(
-    (violation: Omit<SecurityViolation, 'timestamp'>) => {
-      const fullViolation: SecurityViolation = {
-        ...violation,
-        timestamp: Date.now(),
-      };
+  const reportViolation = useCallback((violation: Omit<SecurityViolation, 'timestamp'>) => {
+    const fullViolation: SecurityViolation = {
+      ...violation,
+      timestamp: Date.now(),
+    };
 
-      setViolations((prev) => [...prev, fullViolation]);
+    setViolations((prev) => [...prev, fullViolation]);
 
-      // Log in development
-      devWarn('[Security Violation]', fullViolation);
-    },
-    []
-  );
+    // Log in development
+    devWarn('[Security Violation]', fullViolation);
+  }, []);
 
   // Memoize return value
   return useMemo<UseSecureModuleReturn>(
@@ -263,10 +255,7 @@ export function useSecureUrl(url: string): boolean {
 export function useSecureStyleProps(): { nonce?: string } {
   const { nonce } = useSecureModule();
 
-  return useMemo(
-    () => (nonce ? { nonce } : {}),
-    [nonce]
-  );
+  return useMemo(() => (nonce ? { nonce } : {}), [nonce]);
 }
 
 /**
@@ -276,10 +265,7 @@ export function useSecureStyleProps(): { nonce?: string } {
 export function useSecureScriptProps(): { nonce?: string } {
   const { nonce } = useSecureModule();
 
-  return useMemo(
-    () => (nonce ? { nonce } : {}),
-    [nonce]
-  );
+  return useMemo(() => (nonce ? { nonce } : {}), [nonce]);
 }
 
 /**
@@ -319,10 +305,7 @@ export function useIsEventAllowed(eventName: string): boolean {
  */
 export function useSecureMessaging(): {
   sendSecure: <T>(eventName: string, payload: T) => boolean;
-  onSecureMessage: <T>(
-    eventName: string,
-    handler: (payload: T) => void
-  ) => () => void;
+  onSecureMessage: <T>(eventName: string, handler: (payload: T) => void) => () => void;
 } {
   const { isEventAllowed, sanitize, reportViolation } = useSecureModule();
   const context = useModuleContext();
@@ -345,9 +328,7 @@ export function useSecureMessaging(): {
         safePayload = sanitize(payload) as unknown as T;
       } else if (typeof payload === 'object' && payload !== null) {
         // Deep sanitize object strings
-        safePayload = JSON.parse(
-          sanitize(JSON.stringify(payload))
-        ) as T;
+        safePayload = JSON.parse(sanitize(JSON.stringify(payload))) as T;
       }
 
       // Emit through context
@@ -377,11 +358,11 @@ export function useSecureMessaging(): {
     [isEventAllowed, context]
   );
 
-return useMemo(
-  () => ({
-    sendSecure,
-    onSecureMessage,
-  }),
-  [sendSecure, onSecureMessage]
-);
+  return useMemo(
+    () => ({
+      sendSecure,
+      onSecureMessage,
+    }),
+    [sendSecure, onSecureMessage]
+  );
 }

@@ -180,7 +180,6 @@ export function required(message = 'This field is required'): FieldRule {
  */
 export function minLength(length: number, message?: string): FieldRule<string> {
   return (value) => {
-    if (typeof value !== 'string') return undefined;
     if (value.length < length) {
       return message ?? `Must be at least ${length} characters`;
     }
@@ -193,7 +192,6 @@ export function minLength(length: number, message?: string): FieldRule<string> {
  */
 export function maxLength(length: number, message?: string): FieldRule<string> {
   return (value) => {
-    if (typeof value !== 'string') return undefined;
     if (value.length > length) {
       return message ?? `Must be at most ${length} characters`;
     }
@@ -206,7 +204,6 @@ export function maxLength(length: number, message?: string): FieldRule<string> {
  */
 export function min(minValue: number, message?: string): FieldRule<number> {
   return (value) => {
-    if (typeof value !== 'number') return undefined;
     if (value < minValue) {
       return message !== undefined && message !== '' ? message : `Must be at least ${minValue}`;
     }
@@ -219,7 +216,6 @@ export function min(minValue: number, message?: string): FieldRule<number> {
  */
 export function max(maxValue: number, message?: string): FieldRule<number> {
   return (value) => {
-    if (typeof value !== 'number') return undefined;
     if (value > maxValue) {
       return message !== undefined && message !== '' ? message : `Must be at most ${maxValue}`;
     }
@@ -232,7 +228,7 @@ export function max(maxValue: number, message?: string): FieldRule<number> {
  */
 export function pattern(regex: RegExp, message = 'Invalid format'): FieldRule<string> {
   return (value) => {
-    if (typeof value !== 'string' || value === '') return undefined;
+    if (value === '') return undefined;
     if (!regex.test(value)) {
       return message;
     }
@@ -252,7 +248,7 @@ export function email(message = 'Invalid email address'): FieldRule<string> {
  */
 export function url(message = 'Invalid URL'): FieldRule<string> {
   return (value) => {
-    if (typeof value !== 'string' || value === '') return undefined;
+    if (value === '') return undefined;
     try {
       new URL(value);
       return undefined;
@@ -349,9 +345,7 @@ export function when<T>(
 /**
  * Normalize field configuration
  */
-function normalizeFieldConfig<T>(
-  config: FieldRule<T>[] | FieldConfig<T>
-): FieldConfig<T> {
+function normalizeFieldConfig<T>(config: FieldRule<T>[] | FieldConfig<T>): FieldConfig<T> {
   if (Array.isArray(config)) {
     return { rules: config };
   }
@@ -427,11 +421,7 @@ export function createFormValidator<T extends Record<string, unknown>>(
 
       return { valid, errors };
 
-      async function validateField(
-        field: keyof T,
-        value: unknown,
-        data: T
-      ): Promise<FieldError[]> {
+      async function validateField(field: keyof T, value: unknown, data: T): Promise<FieldError[]> {
         const fieldConfig = fieldConfigs.get(field);
         if (!fieldConfig) return [];
 
@@ -465,7 +455,7 @@ export function createFormValidator<T extends Record<string, unknown>>(
     hasAsyncRules: (field) => {
       const fieldConfig = fieldConfigs.get(field);
       if (!fieldConfig) return false;
-      return fieldConfig.rules.some((rule) => isAsyncRule(rule as FieldRule<unknown>));
+      return fieldConfig.rules.some((rule) => isAsyncRule(rule as FieldRule));
     },
   };
 }
@@ -517,7 +507,9 @@ export function useFormValidation<T extends Record<string, unknown>>(
   validateAll: () => Promise<boolean>;
   getValues: () => T;
   handleBlur: (field: keyof T) => void;
-  handleSubmit: (onSubmit: (values: T) => void | Promise<void>) => (e?: React.FormEvent) => Promise<void>;
+  handleSubmit: (
+    onSubmit: (values: T) => void | Promise<void>
+  ) => (e?: React.FormEvent) => Promise<void>;
   registerField: (field: keyof T) => {
     value: T[keyof T];
     onChange: (value: unknown) => void;
@@ -648,7 +640,7 @@ export function useFormValidation<T extends Record<string, unknown>>(
             value: prevState?.value ?? null,
             errors: fieldErrors,
             validating: false,
-            valid: (fieldErrors).length === 0,
+            valid: fieldErrors.length === 0,
             touched: prevState?.touched ?? false,
             dirty: prevState?.dirty ?? false,
           };
@@ -667,10 +659,9 @@ export function useFormValidation<T extends Record<string, unknown>>(
     (trigger: 'change' | 'blur' | 'submit'): boolean => {
       if (mode === 'all') return true;
       if (mode === `on${trigger.charAt(0).toUpperCase()}${trigger.slice(1)}`) return true;
-      if (isSubmitted && revalidateMode === `on${trigger.charAt(0).toUpperCase()}${trigger.slice(1)}`) {
-        return true;
-      }
-      return false;
+      return (
+        isSubmitted && revalidateMode === `on${trigger.charAt(0).toUpperCase()}${trigger.slice(1)}`
+      );
     },
     [mode, revalidateMode, isSubmitted]
   );
@@ -794,11 +785,8 @@ export function useFormValidation<T extends Record<string, unknown>>(
 
   // Compute derived state
   const isValid = useMemo(() => {
-    return Object.values(fieldStates).every((state) => (state).valid);
+    return Object.values(fieldStates).every((state) => state.valid);
   }, [fieldStates]);
-
-
-
 
   // Get all errors (as ValidationError[])
   const getAllErrors = useCallback((): Record<string, ValidationError[]> => {
@@ -810,19 +798,24 @@ export function useFormValidation<T extends Record<string, unknown>>(
     return errors;
   }, [fieldStates]);
 
-
   return {
     // State
     values: getValues(),
     errors: getAllErrors(),
-    touched: Object.keys(fieldStates).reduce((acc, key) => {
-      acc[key] = fieldStates[key as keyof T]?.touched ?? false;
-      return acc;
-    }, {} as Record<string, boolean>),
-    dirty: Object.keys(fieldStates).reduce((acc, key) => {
-      acc[key] = fieldStates[key as keyof T]?.dirty ?? false;
-      return acc;
-    }, {} as Record<string, boolean>),
+    touched: Object.keys(fieldStates).reduce(
+      (acc, key) => {
+        acc[key] = fieldStates[key as keyof T]?.touched ?? false;
+        return acc;
+      },
+      {} as Record<string, boolean>
+    ),
+    dirty: Object.keys(fieldStates).reduce(
+      (acc, key) => {
+        acc[key] = fieldStates[key as keyof T]?.dirty ?? false;
+        return acc;
+      },
+      {} as Record<string, boolean>
+    ),
     isValid,
     isValidating,
     isSubmitting: false,
@@ -957,21 +950,24 @@ export function useField<T>(
     [rules, name]
   );
 
-  const setValue = useCallback((newValue: T | undefined) => {
-    setValueState(newValue);
-    if (!touched) {
-      setTouched(true);
-    }
-
-    if (validateOnChange) {
-      if (debounceTimer.current !== undefined) {
-        clearTimeout(debounceTimer.current);
+  const setValue = useCallback(
+    (newValue: T | undefined) => {
+      setValueState(newValue);
+      if (!touched) {
+        setTouched(true);
       }
-      debounceTimer.current = setTimeout(() => {
-        void validate(newValue);
-      }, debounceMs);
-    }
-  }, [touched, validateOnChange, debounceMs, validate]);
+
+      if (validateOnChange) {
+        if (debounceTimer.current !== undefined) {
+          clearTimeout(debounceTimer.current);
+        }
+        debounceTimer.current = setTimeout(() => {
+          void validate(newValue);
+        }, debounceMs);
+      }
+    },
+    [touched, validateOnChange, debounceMs, validate]
+  );
 
   const handleBlur = useCallback(() => {
     setTouched(true);
@@ -980,11 +976,14 @@ export function useField<T>(
     }
   }, [validateOnBlur, validate, value]);
 
-  const reset = useCallback((newValue?: T) => {
-    setValueState(newValue ?? defaultValue);
-    setErrors([]);
-    setTouched(false);
-  }, [defaultValue]);
+  const reset = useCallback(
+    (newValue?: T) => {
+      setValueState(newValue ?? defaultValue);
+      setErrors([]);
+      setTouched(false);
+    },
+    [defaultValue]
+  );
 
   useEffect(() => {
     return () => {

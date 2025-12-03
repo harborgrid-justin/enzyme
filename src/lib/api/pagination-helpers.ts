@@ -57,7 +57,7 @@ const DEFAULT_PAGINATION_CONFIG: PaginationConfig = {
  * ```
  */
 export function extractPagination<T>(
-  response: ApiResponse<unknown>,
+  response: ApiResponse,
   config: PaginationConfig = {}
 ): PaginatedResponse<T> {
   const opts = { ...DEFAULT_PAGINATION_CONFIG, ...config };
@@ -67,7 +67,14 @@ export function extractPagination<T>(
   let items: T[] = [];
   if (Array.isArray(data)) {
     items = data as T[];
-  } else if (typeof data === 'object' && data !== null && opts.itemsField !== null && opts.itemsField !== undefined && opts.itemsField !== '' && opts.itemsField in data) {
+  } else if (
+    typeof data === 'object' &&
+    data !== null &&
+    opts.itemsField !== null &&
+    opts.itemsField !== undefined &&
+    opts.itemsField !== '' &&
+    opts.itemsField in data
+  ) {
     items = (data[opts.itemsField] as T[]) ?? [];
   }
 
@@ -79,15 +86,29 @@ export function extractPagination<T>(
   const prevCursor = getNestedValue<string>(data, opts.prevCursorField);
 
   // Try headers if not found in body
-  const headerTotal = (opts.totalHeader !== null && opts.totalHeader !== undefined && opts.totalHeader !== '') ? response.headers[opts.totalHeader] : undefined;
-  const finalTotal = total ?? ((headerTotal !== null && headerTotal !== undefined && headerTotal !== '') ? parseInt(headerTotal, 10) : items.length);
+  const headerTotal =
+    opts.totalHeader !== null && opts.totalHeader !== undefined && opts.totalHeader !== ''
+      ? response.headers[opts.totalHeader]
+      : undefined;
+  const finalTotal =
+    total ??
+    (headerTotal !== null && headerTotal !== undefined && headerTotal !== ''
+      ? parseInt(headerTotal, 10)
+      : items.length);
 
   // Parse Link header for cursor info
-  const linkHeader = (opts.linkHeader !== null && opts.linkHeader !== undefined && opts.linkHeader !== '') ? response.headers[opts.linkHeader] : undefined;
-  const links = (linkHeader !== null && linkHeader !== undefined && linkHeader !== '') ? parseLinkHeader(linkHeader) : {};
+  const linkHeader =
+    opts.linkHeader !== null && opts.linkHeader !== undefined && opts.linkHeader !== ''
+      ? response.headers[opts.linkHeader]
+      : undefined;
+  const links =
+    linkHeader !== null && linkHeader !== undefined && linkHeader !== ''
+      ? parseLinkHeader(linkHeader)
+      : {};
 
   const totalPages = Math.ceil(finalTotal / pageSize);
-  const hasMore = (nextCursor !== null && nextCursor !== undefined && nextCursor !== '') ? true : page < totalPages;
+  const hasMore =
+    nextCursor !== null && nextCursor !== undefined && nextCursor !== '' ? true : page < totalPages;
 
   return {
     items,
@@ -107,7 +128,14 @@ export function extractPagination<T>(
  * Get nested value from object using dot notation
  */
 function getNestedValue<T>(obj: unknown, path?: string): T | undefined {
-  if (path === null || path === undefined || path === '' || obj === null || obj === undefined || typeof obj !== 'object') {
+  if (
+    path === null ||
+    path === undefined ||
+    path === '' ||
+    obj === null ||
+    obj === undefined ||
+    typeof obj !== 'object'
+  ) {
     return undefined;
   }
 

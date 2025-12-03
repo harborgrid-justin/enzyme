@@ -33,11 +33,7 @@
 import type { ApiResponse, ApiError } from './types';
 
 // Re-export extracted utilities
-export {
-  normalizeError,
-  isApiError,
-  type ErrorNormalizationConfig,
-} from './error-normalizer';
+export { normalizeError, isApiError, type ErrorNormalizationConfig } from './error-normalizer';
 
 export {
   extractCacheHints,
@@ -99,10 +95,7 @@ export interface ResponseParserConfig<T> {
  * });
  * ```
  */
-export function parseResponse<T>(
-  response: ApiResponse<unknown>,
-  config: ResponseParserConfig<T> = {}
-): T {
+export function parseResponse<T>(response: ApiResponse, config: ResponseParserConfig<T> = {}): T {
   let data = response.data as T;
 
   // Handle empty responses
@@ -152,7 +145,7 @@ export function parseResponse<T>(
  */
 export function createResponseParser<T>(
   config: ResponseParserConfig<T>
-): (response: ApiResponse<unknown>) => T {
+): (response: ApiResponse) => T {
   return (response) => parseResponse<T>(response, config);
 }
 
@@ -200,7 +193,9 @@ export function createTransformPipeline<T, U = T>(
   fn?: ResponseTransformer<T, U>
 ): {
   pipe: <V>(nextFn: ResponseTransformer<U, V>) => {
-    pipe: <W>(nextFn: ResponseTransformer<V, W>) => ReturnType<typeof createTransformPipeline<T, W>>;
+    pipe: <W>(
+      nextFn: ResponseTransformer<V, W>
+    ) => ReturnType<typeof createTransformPipeline<T, W>>;
     execute: (data: T) => V;
   };
   execute: (data: T) => U;

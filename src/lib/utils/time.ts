@@ -26,16 +26,16 @@ export function parseDate(input: string | number | Date): Date {
   if (input instanceof Date) {
     return input;
   }
-  
+
   if (typeof input === 'number') {
     return new Date(input);
   }
-  
+
   const parsed = new Date(input);
   if (isNaN(parsed.getTime())) {
     throw new Error(`Invalid date: ${input}`);
   }
-  
+
   return parsed;
 }
 
@@ -49,14 +49,14 @@ export function formatDate(
 ): string {
   const d = parseDate(date);
   const opts = { ...defaultFormatOptions, ...options };
-  
+
   const formats: Record<string, Intl.DateTimeFormatOptions> = {
     short: { month: 'numeric', day: 'numeric', year: '2-digit' },
     medium: { month: 'short', day: 'numeric', year: 'numeric' },
     long: { month: 'long', day: 'numeric', year: 'numeric' },
     full: { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' },
   };
-  
+
   return new Intl.DateTimeFormat(opts.locale, {
     ...formats[pattern],
     timeZone: opts.timeZone,
@@ -73,13 +73,13 @@ export function formatTime(
 ): string {
   const d = parseDate(date);
   const opts = { ...defaultFormatOptions, ...options };
-  
+
   const formats: Record<string, Intl.DateTimeFormatOptions> = {
     short: { hour: 'numeric', minute: '2-digit' },
     medium: { hour: 'numeric', minute: '2-digit', second: '2-digit' },
     long: { hour: 'numeric', minute: '2-digit', second: '2-digit', timeZoneName: 'short' },
   };
-  
+
   return new Intl.DateTimeFormat(opts.locale, {
     ...formats[pattern],
     timeZone: opts.timeZone,
@@ -101,14 +101,11 @@ export function formatDateTime(
 /**
  * Format relative time
  */
-export function formatRelative(
-  date: string | number | Date,
-  options?: FormatOptions
-): string {
+export function formatRelative(date: string | number | Date, options?: FormatOptions): string {
   const d = parseDate(date);
   const now = new Date();
   const opts = { ...defaultFormatOptions, ...options };
-  
+
   const diffMs = now.getTime() - d.getTime();
   const diffSec = Math.floor(diffMs / 1000);
   const diffMin = Math.floor(diffSec / 60);
@@ -117,9 +114,9 @@ export function formatRelative(
   const diffWeek = Math.floor(diffDay / 7);
   const diffMonth = Math.floor(diffDay / 30);
   const diffYear = Math.floor(diffDay / 365);
-  
+
   const rtf = new Intl.RelativeTimeFormat(opts.locale, { numeric: 'auto' });
-  
+
   if (Math.abs(diffSec) < 60) {
     return rtf.format(-Math.sign(diffMs) * Math.abs(diffSec), 'second');
   }
@@ -138,35 +135,33 @@ export function formatRelative(
   if (Math.abs(diffMonth) < 12) {
     return rtf.format(-diffMonth, 'month');
   }
-  
+
   return rtf.format(-diffYear, 'year');
 }
 
 /**
  * Format duration
  */
-export function formatDuration(
-  ms: number,
-  options?: { verbose?: boolean }
-): string {
+export function formatDuration(ms: number, options?: { verbose?: boolean }): string {
   const verbose = options?.verbose ?? false;
-  
+
   const seconds = Math.floor(ms / 1000);
   const minutes = Math.floor(seconds / 60);
   const hours = Math.floor(minutes / 60);
   const days = Math.floor(hours / 24);
-  
+
   if (verbose) {
     const parts: string[] = [];
-    
+
     if (days > 0) parts.push(`${days} day${days !== 1 ? 's' : ''}`);
     if (hours % 24 > 0) parts.push(`${hours % 24} hour${hours % 24 !== 1 ? 's' : ''}`);
     if (minutes % 60 > 0) parts.push(`${minutes % 60} minute${minutes % 60 !== 1 ? 's' : ''}`);
-    if (seconds % 60 > 0 && days === 0) parts.push(`${seconds % 60} second${seconds % 60 !== 1 ? 's' : ''}`);
-    
+    if (seconds % 60 > 0 && days === 0)
+      parts.push(`${seconds % 60} second${seconds % 60 !== 1 ? 's' : ''}`);
+
     return parts.join(', ') || '0 seconds';
   }
-  
+
   if (days > 0) {
     return `${days}d ${hours % 24}h`;
   }
@@ -176,7 +171,7 @@ export function formatDuration(
   if (minutes > 0) {
     return `${minutes}m ${seconds % 60}s`;
   }
-  
+
   return `${seconds}s`;
 }
 
@@ -186,7 +181,7 @@ export function formatDuration(
 export function isToday(date: string | number | Date): boolean {
   const d = parseDate(date);
   const today = new Date();
-  
+
   return (
     d.getDate() === today.getDate() &&
     d.getMonth() === today.getMonth() &&
@@ -201,7 +196,7 @@ export function isYesterday(date: string | number | Date): boolean {
   const d = parseDate(date);
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
-  
+
   return (
     d.getDate() === yesterday.getDate() &&
     d.getMonth() === yesterday.getMonth() &&
@@ -216,7 +211,7 @@ export function isWithinDays(date: string | number | Date, days: number): boolea
   const d = parseDate(date);
   const threshold = new Date();
   threshold.setDate(threshold.getDate() - days);
-  
+
   return d >= threshold;
 }
 
@@ -247,7 +242,7 @@ export function addTime(
   unit: 'seconds' | 'minutes' | 'hours' | 'days' | 'weeks' | 'months' | 'years'
 ): Date {
   const d = parseDate(date);
-  
+
   switch (unit) {
     case 'seconds':
       d.setSeconds(d.getSeconds() + amount);
@@ -271,7 +266,7 @@ export function addTime(
       d.setFullYear(d.getFullYear() + amount);
       break;
   }
-  
+
   return d;
 }
 
@@ -286,7 +281,7 @@ export function dateDiff(
   const d1 = parseDate(date1);
   const d2 = parseDate(date2);
   const diffMs = d2.getTime() - d1.getTime();
-  
+
   switch (unit) {
     case 'seconds':
       return Math.floor(diffMs / 1000);
@@ -299,10 +294,7 @@ export function dateDiff(
     case 'weeks':
       return Math.floor(diffMs / (1000 * 60 * 60 * 24 * 7));
     case 'months':
-      return (
-        (d2.getFullYear() - d1.getFullYear()) * 12 +
-        (d2.getMonth() - d1.getMonth())
-      );
+      return (d2.getFullYear() - d1.getFullYear()) * 12 + (d2.getMonth() - d1.getMonth());
     case 'years':
       return d2.getFullYear() - d1.getFullYear();
   }

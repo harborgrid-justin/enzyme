@@ -358,8 +358,7 @@ export class RenderBatchManager<T = unknown> {
     }
 
     this.stats.averageRenderTime =
-      this.stats.renderTimes.reduce((a, b) => a + b, 0) /
-      this.stats.renderTimes.length;
+      this.stats.renderTimes.reduce((a, b) => a + b, 0) / this.stats.renderTimes.length;
   }
 }
 
@@ -375,12 +374,7 @@ export function shallowEqual<T extends object>(objA: T, objB: T): boolean {
     return true;
   }
 
-  if (
-    typeof objA !== 'object' ||
-    objA === null ||
-    typeof objB !== 'object' ||
-    objB === null
-  ) {
+  if (typeof objA !== 'object' || objA === null || typeof objB !== 'object' || objB === null) {
     return false;
   }
 
@@ -411,12 +405,7 @@ export function deepEqual<T>(objA: T, objB: T): boolean {
     return true;
   }
 
-  if (
-    typeof objA !== 'object' ||
-    objA === null ||
-    typeof objB !== 'object' ||
-    objB === null
-  ) {
+  if (typeof objA !== 'object' || objA === null || typeof objB !== 'object' || objB === null) {
     return false;
   }
 
@@ -437,10 +426,7 @@ export function deepEqual<T>(objA: T, objB: T): boolean {
   for (const key of keysA) {
     if (
       !Object.prototype.hasOwnProperty.call(objB, key) ||
-      !deepEqual(
-        (objA as Record<string, unknown>)[key],
-        (objB as Record<string, unknown>)[key]
-      )
+      !deepEqual((objA as Record<string, unknown>)[key], (objB as Record<string, unknown>)[key])
     ) {
       return false;
     }
@@ -461,10 +447,10 @@ export function createSelector<TInput, TOutput>(
   let isInitialized = false;
 
   return (input: TInput): TOutput => {
-    if (isInitialized === false || !Object.is(input, lastInput)) {
+    if (!isInitialized || !Object.is(input, lastInput)) {
       const newOutput = selector(input);
 
-      if (isInitialized === false || lastOutput === undefined || !equalityFn(lastOutput, newOutput)) {
+      if (!isInitialized || lastOutput === undefined || !equalityFn(lastOutput, newOutput)) {
         lastOutput = newOutput;
       }
 
@@ -557,10 +543,7 @@ export function calculateVirtualListRange(
 
   const visibleCount = Math.ceil(containerHeight / itemHeight);
   const startIndex = Math.max(0, Math.floor(scrollTop / itemHeight) - overscan);
-  const endIndex = Math.min(
-    itemCount - 1,
-    startIndex + visibleCount + overscan * 2
-  );
+  const endIndex = Math.min(itemCount - 1, startIndex + visibleCount + overscan * 2);
   const offsetTop = startIndex * itemHeight;
 
   return {
@@ -634,20 +617,14 @@ const renderTracking = new Map<string, ComponentRenderInfo>();
 /**
  * Configure render tracking
  */
-export function configureRenderTracking(
-  config: Partial<RenderTrackingConfig>
-): void {
+export function configureRenderTracking(config: Partial<RenderTrackingConfig>): void {
   Object.assign(renderTrackingConfig, config);
 }
 
 /**
  * Track a component render
  */
-export function trackRender(
-  componentName: string,
-  renderTime: number,
-  reason?: string
-): void {
+export function trackRender(componentName: string, renderTime: number, reason?: string): void {
   if (!renderTrackingConfig.enabled) {
     return;
   }

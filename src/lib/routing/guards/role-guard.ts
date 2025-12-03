@@ -44,8 +44,8 @@ import {
  * Role matching strategy
  */
 export type RoleMatchStrategy =
-  | 'any'   // User must have at least one of the required roles
-  | 'all'   // User must have all required roles
+  | 'any' // User must have at least one of the required roles
+  | 'all' // User must have all required roles
   | 'none'; // User must not have any of the specified roles
 
 /**
@@ -163,6 +163,27 @@ export class RoleGuard extends BaseRouteGuard {
   }
 
   /**
+   * Get required roles
+   */
+  getRequiredRoles(): readonly string[] {
+    return this.roleConfig.requiredRoles;
+  }
+
+  /**
+   * Get match strategy
+   */
+  getMatchStrategy(): RoleMatchStrategy {
+    return this.roleConfig.matchStrategy ?? 'any';
+  }
+
+  /**
+   * Check roles without full guard execution
+   */
+  checkRoles(userRoles: readonly string[]): RoleCheckResult {
+    return this.performRoleCheck(userRoles);
+  }
+
+  /**
    * Expand roles with hierarchy (include parent roles)
    */
   private expandRolesWithHierarchy(
@@ -201,9 +222,11 @@ export class RoleGuard extends BaseRouteGuard {
 
     // Check if user is authenticated
     if (userRoles.length === 0 && context.user?.isAuthenticated === false) {
-      return Promise.resolve(GuardResult.redirect(this.roleConfig.unauthorizedPath ?? '/unauthorized', {
-        state: { reason: 'Not authenticated' },
-      }));
+      return Promise.resolve(
+        GuardResult.redirect(this.roleConfig.unauthorizedPath ?? '/unauthorized', {
+          state: { reason: 'Not authenticated' },
+        })
+      );
     }
 
     // Check role access
@@ -232,7 +255,7 @@ export class RoleGuard extends BaseRouteGuard {
    */
   private performRoleCheck(userRoles: readonly string[]): RoleCheckResult {
     const strategy = this.roleConfig.matchStrategy ?? 'any';
-    const {requiredRoles} = this.roleConfig;
+    const { requiredRoles } = this.roleConfig;
 
     // Use custom check if provided
     if (this.roleConfig.checkRoles) {
@@ -241,8 +264,8 @@ export class RoleGuard extends BaseRouteGuard {
         hasAccess,
         userRoles,
         requiredRoles,
-        missingRoles: hasAccess ? [] : requiredRoles.filter(r => !userRoles.includes(r)),
-        matchedRoles: requiredRoles.filter(r => userRoles.includes(r)),
+        missingRoles: hasAccess ? [] : requiredRoles.filter((r) => !userRoles.includes(r)),
+        matchedRoles: requiredRoles.filter((r) => userRoles.includes(r)),
         strategy,
       };
     }
@@ -331,7 +354,8 @@ export class RoleGuard extends BaseRouteGuard {
     checkResult: RoleCheckResult
   ): GuardResultObject {
     const unauthorizedPath = this.roleConfig.unauthorizedPath ?? '/unauthorized';
-    const message = this.roleConfig.unauthorizedMessage ??
+    const message =
+      this.roleConfig.unauthorizedMessage ??
       'You do not have the required role to access this page';
 
     return GuardResult.redirect(unauthorizedPath, {
@@ -342,27 +366,6 @@ export class RoleGuard extends BaseRouteGuard {
         strategy: checkResult.strategy,
       },
     });
-  }
-
-  /**
-   * Get required roles
-   */
-  getRequiredRoles(): readonly string[] {
-    return this.roleConfig.requiredRoles;
-  }
-
-  /**
-   * Get match strategy
-   */
-  getMatchStrategy(): RoleMatchStrategy {
-    return this.roleConfig.matchStrategy ?? 'any';
-  }
-
-  /**
-   * Check roles without full guard execution
-   */
-  checkRoles(userRoles: readonly string[]): RoleCheckResult {
-    return this.performRoleCheck(userRoles);
   }
 }
 
@@ -521,7 +524,7 @@ export function hasAnyRole(
   roles: readonly string[],
   hierarchy?: Record<string, readonly string[]>
 ): boolean {
-  return roles.some(role => hasRole(userRoles, role, hierarchy));
+  return roles.some((role) => hasRole(userRoles, role, hierarchy));
 }
 
 /**
@@ -537,7 +540,7 @@ export function hasAllRoles(
   roles: readonly string[],
   hierarchy?: Record<string, readonly string[]>
 ): boolean {
-  return roles.every(role => hasRole(userRoles, role, hierarchy));
+  return roles.every((role) => hasRole(userRoles, role, hierarchy));
 }
 
 /**
@@ -553,7 +556,7 @@ export function getMissingRoles(
   requiredRoles: readonly string[],
   hierarchy?: Record<string, readonly string[]>
 ): string[] {
-  return requiredRoles.filter(role => !hasRole(userRoles, role, hierarchy));
+  return requiredRoles.filter((role) => !hasRole(userRoles, role, hierarchy));
 }
 
 // =============================================================================

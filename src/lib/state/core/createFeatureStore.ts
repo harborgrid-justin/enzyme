@@ -167,7 +167,12 @@ export interface CreateFeatureStoreConfig<TState> {
  * ```
  */
 export function createFeatureStore<TState extends object>(
-  initializer: StateCreator<TState, [['zustand/immer', never], ['zustand/devtools', never]], [], TState>,
+  initializer: StateCreator<
+    TState,
+    [['zustand/immer', never], ['zustand/devtools', never]],
+    [],
+    TState
+  >,
   config: CreateFeatureStoreConfig<TState>
 ): EnhancedStore<TState> {
   const {
@@ -188,11 +193,19 @@ export function createFeatureStore<TState extends object>(
     store = create<TState>()(
       immer(
         devtools(
-          persist(initializer as StateCreator<TState, [['zustand/immer', never], ['zustand/devtools', never], ['zustand/persist', unknown]], [], TState>, {
-            name: storageKey,
-            partialize: persistConfig.partialize as (state: TState) => Partial<TState>,
-            version: persistConfig.version ?? 1,
-          }),
+          persist(
+            initializer as StateCreator<
+              TState,
+              [['zustand/immer', never], ['zustand/devtools', never], ['zustand/persist', unknown]],
+              [],
+              TState
+            >,
+            {
+              name: storageKey,
+              partialize: persistConfig.partialize as (state: TState) => Partial<TState>,
+              version: persistConfig.version ?? 1,
+            }
+          ),
           {
             name: devtoolsName,
             enabled: enableDevtools,
@@ -268,7 +281,12 @@ export interface LazyFeatureStore<TState extends object> {
  * ```
  */
 export function createLazyFeatureStore<TState extends object>(
-  initializer: StateCreator<TState, [['zustand/immer', never], ['zustand/devtools', never]], [], TState>,
+  initializer: StateCreator<
+    TState,
+    [['zustand/immer', never], ['zustand/devtools', never]],
+    [],
+    TState
+  >,
   config: CreateFeatureStoreConfig<TState>
 ): LazyFeatureStore<TState> {
   let store: EnhancedStore<TState> | null = null;
@@ -337,7 +355,11 @@ export function createFeatureStoreHooks<TState extends object>(
       actionKeys.length === cachedActionKeys.length &&
       actionKeys.every((key, i) => {
         const currentCachedActions = cachedActions;
-        return key === cachedActionKeys[i] && currentCachedActions != null && actions[key] === currentCachedActions[key];
+        return (
+          key === cachedActionKeys[i] &&
+          currentCachedActions != null &&
+          actions[key] === currentCachedActions[key]
+        );
       })
     ) {
       return cachedActions;

@@ -69,7 +69,7 @@ import {
  */
 export function useLayoutAncestry(): UseLayoutAncestryReturn {
   const context = useDOMContextValue();
-  const {ancestors} = context;
+  const { ancestors } = context;
 
   /**
    * Finds the closest ancestor of a specific layout type.
@@ -138,10 +138,7 @@ export function useLayoutAncestry(): UseLayoutAncestryReturn {
  */
 export function useFlexAncestor(): LayoutAncestor | undefined {
   const { findAncestor } = useLayoutAncestry();
-  return useMemo(
-    () => findAncestor('flex') ?? findAncestor('inline-flex'),
-    [findAncestor]
-  );
+  return useMemo(() => findAncestor('flex') ?? findAncestor('inline-flex'), [findAncestor]);
 }
 
 /**
@@ -164,10 +161,7 @@ export function useFlexAncestor(): LayoutAncestor | undefined {
  */
 export function useGridAncestor(): LayoutAncestor | undefined {
   const { findAncestor } = useLayoutAncestry();
-  return useMemo(
-    () => findAncestor('grid') ?? findAncestor('inline-grid'),
-    [findAncestor]
-  );
+  return useMemo(() => findAncestor('grid') ?? findAncestor('inline-grid'), [findAncestor]);
 }
 
 /**
@@ -246,10 +240,7 @@ export function useContainingBlockAncestor(): LayoutAncestor | undefined {
  */
 export function useIsInFlex(): boolean {
   const { isInLayout } = useLayoutAncestry();
-  return useMemo(
-    () => isInLayout('flex') || isInLayout('inline-flex'),
-    [isInLayout]
-  );
+  return useMemo(() => isInLayout('flex') || isInLayout('inline-flex'), [isInLayout]);
 }
 
 /**
@@ -259,10 +250,7 @@ export function useIsInFlex(): boolean {
  */
 export function useIsInGrid(): boolean {
   const { isInLayout } = useLayoutAncestry();
-  return useMemo(
-    () => isInLayout('grid') || isInLayout('inline-grid'),
-    [isInLayout]
-  );
+  return useMemo(() => isInLayout('grid') || isInLayout('inline-grid'), [isInLayout]);
 }
 
 /**

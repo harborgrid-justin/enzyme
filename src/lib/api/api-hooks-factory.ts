@@ -126,8 +126,10 @@ export interface MutationHookConfig<TResponse, TVariables, TError = ApiError, TC
 /**
  * Infinite query hook configuration
  */
-export interface InfiniteQueryHookConfig<TResponse, TError = ApiError>
-  extends Omit<QueryHookConfig<TResponse, TError>, 'select'> {
+export interface InfiniteQueryHookConfig<TResponse, TError = ApiError> extends Omit<
+  QueryHookConfig<TResponse, TError>,
+  'select'
+> {
   /** Get next page parameter from response */
   getNextPageParam?: (lastPage: TResponse, pages: TResponse[]) => unknown | undefined;
   /** Get previous page parameter from response */
@@ -163,7 +165,10 @@ export interface MutationRequestParams<TBody = unknown> {
 /**
  * Generated hook type for queries
  */
-export type GeneratedQueryHook<TResponse, TParams extends QueryRequestParams = QueryRequestParams> = (
+export type GeneratedQueryHook<
+  TResponse,
+  TParams extends QueryRequestParams = QueryRequestParams,
+> = (
   params?: TParams,
   config?: QueryHookConfig<TResponse>
 ) => ReturnType<typeof useQuery<TResponse, ApiError>>;
@@ -183,10 +188,7 @@ export type GeneratedMutationHook<
  */
 export type ApiHooks<TContract extends Record<string, ApiEndpoint>> = {
   [K in keyof TContract as `use${Capitalize<string & K>}`]: TContract[K]['method'] extends 'GET'
-    ? GeneratedQueryHook<
-        TContract[K] extends ApiEndpoint<unknown, infer R> ? R : unknown,
-        QueryRequestParams
-      >
+    ? GeneratedQueryHook<TContract[K] extends ApiEndpoint<unknown, infer R> ? R : unknown>
     : GeneratedMutationHook<
         TContract[K] extends ApiEndpoint<unknown, infer R> ? R : unknown,
         MutationRequestParams<TContract[K] extends ApiEndpoint<infer Req> ? Req : unknown>
@@ -381,7 +383,10 @@ function createQueryHook<TResponse>(
       refetchInterval: hookConfig?.refetchInterval,
       retry: hookConfig?.retry,
       select: hookConfig?.select,
-      placeholderData: hookConfig?.placeholderData as UseQueryOptions<TResponse, ApiError>['placeholderData'],
+      placeholderData: hookConfig?.placeholderData as UseQueryOptions<
+        TResponse,
+        ApiError
+      >['placeholderData'],
       initialData: hookConfig?.initialData,
     });
   };
@@ -633,9 +638,7 @@ export function createOptimisticMutation<TData, TVariables>(
       const previousData = queryClient.getQueryData<TData>(config.queryKey);
 
       // Optimistically update
-      queryClient.setQueryData<TData>(config.queryKey, (old) =>
-        config.updater(old, variables)
-      );
+      queryClient.setQueryData<TData>(config.queryKey, (old) => config.updater(old, variables));
 
       return { previousData };
     },
@@ -895,10 +898,7 @@ export function createPrefetch<TResponse>(config: {
 /**
  * Substitute path parameters in URL
  */
-function substitutePathParams(
-  path: string,
-  params?: Record<string, string | number>
-): string {
+function substitutePathParams(path: string, params?: Record<string, string | number>): string {
   if (!params) return path;
 
   let url = path;
@@ -925,18 +925,14 @@ export function toHookName(name: string): string {
 /**
  * Extract pagination from response
  */
-export function extractPaginationFromResponse<T>(
-  response: PaginatedResponse<T>
-): PaginationMeta {
+export function extractPaginationFromResponse<T>(response: PaginatedResponse<T>): PaginationMeta {
   return response.pagination;
 }
 
 /**
  * Merge infinite query pages
  */
-export function mergeInfinitePages<T>(
-  pages: PaginatedResponse<T>[]
-): T[] {
+export function mergeInfinitePages<T>(pages: PaginatedResponse<T>[]): T[] {
   return pages.flatMap((page) => page.items);
 }
 
@@ -956,9 +952,7 @@ export function useStableQueryKey(key: QueryKey): QueryKey {
 /**
  * Hook to track mutation loading state across multiple mutations
  */
-export function useMutationLoadingState(
-  ...mutations: Array<{ isPending: boolean }>
-): boolean {
+export function useMutationLoadingState(...mutations: Array<{ isPending: boolean }>): boolean {
   return mutations.some((m) => m.isPending);
 }
 

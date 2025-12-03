@@ -146,7 +146,7 @@ export class IntelligentPrefetchEngine {
   private hoverHistory: Map<string, number> = new Map();
   private prefetchedUrls: Set<string> = new Set();
   private currentBudgetUsed = 0;
-  private sessionStartTime: number;
+  private readonly sessionStartTime: number;
   private pageViewCount = 0;
   private listeners: Set<(prediction: PredictionResult) => void> = new Set();
 
@@ -190,7 +190,7 @@ export class IntelligentPrefetchEngine {
    * Get prefetch predictions for current page
    */
   predict(currentUrl: string, availableUrls: string[]): PredictionResult {
-    if (this.config.enabled !== true || !this.shouldPrefetch()) {
+    if (!this.config.enabled || !this.shouldPrefetch()) {
       return this.emptyPrediction();
     }
 
@@ -265,8 +265,7 @@ export class IntelligentPrefetchEngine {
    */
   getBehaviorMetrics(): BehaviorMetrics {
     const sessionDuration = Date.now() - this.sessionStartTime;
-    const avgTimeOnPage =
-      this.pageViewCount > 0 ? sessionDuration / this.pageViewCount : 0;
+    const avgTimeOnPage = this.pageViewCount > 0 ? sessionDuration / this.pageViewCount : 0;
 
     return {
       sessionDuration,
@@ -477,10 +476,10 @@ export class IntelligentPrefetchEngine {
 
   private shouldPrefetch(): boolean {
     // Check network conditions
-    if (this.config.networkAware === true) {
+    if (this.config.networkAware) {
       const networkInfo = this.getNetworkInfo();
 
-      if (this.config.respectDataSaver === true && networkInfo?.saveData === true) {
+      if (this.config.respectDataSaver && networkInfo?.saveData === true) {
         this.log('Skipping prefetch: Data saver enabled');
         return false;
       }
@@ -490,7 +489,9 @@ export class IntelligentPrefetchEngine {
         const minQuality = NETWORK_QUALITY_SCORES[this.config.minNetworkQuality] ?? 0;
 
         if (currentQuality < minQuality) {
-          this.log(`Skipping prefetch: Network quality ${networkInfo.effectiveType} below threshold`);
+          this.log(
+            `Skipping prefetch: Network quality ${networkInfo.effectiveType} below threshold`
+          );
           return false;
         }
       }
@@ -518,14 +519,14 @@ export class IntelligentPrefetchEngine {
     const maxForConfidence = 50;
 
     if (historySize < minForConfidence) {
-      return historySize / minForConfidence * 0.5;
+      return (historySize / minForConfidence) * 0.5;
     }
 
     if (historySize >= maxForConfidence) {
       return 1;
     }
 
-    return 0.5 + (historySize - minForConfidence) / (maxForConfidence - minForConfidence) * 0.5;
+    return 0.5 + ((historySize - minForConfidence) / (maxForConfidence - minForConfidence)) * 0.5;
   }
 
   private inferResourceType(url: string): 'route' | 'data' | 'asset' {
@@ -533,9 +534,7 @@ export class IntelligentPrefetchEngine {
       return 'data';
     }
 
-    if (
-      url.match(/\.(js|css|png|jpg|jpeg|gif|svg|woff|woff2|ico)(\?|$)/)
-    ) {
+    if (url.match(/\.(js|css|png|jpg|jpeg|gif|svg|woff|woff2|ico)(\?|$)/)) {
       return 'asset';
     }
 
@@ -579,9 +578,9 @@ export class IntelligentPrefetchEngine {
     const sessionMinutes = (Date.now() - this.sessionStartTime) / 60000;
     if (sessionMinutes < 1) return 0;
 
-    return this.navigationHistory.filter(
-      (n) => n.interactionType === 'click'
-    ).length / sessionMinutes;
+    return (
+      this.navigationHistory.filter((n) => n.interactionType === 'click').length / sessionMinutes
+    );
   }
 
   private getNetworkInfo(): NetworkInformation | null {
@@ -620,10 +619,7 @@ export class IntelligentPrefetchEngine {
       if (stored !== null) {
         const data = JSON.parse(stored) as { transitions?: Record<string, Record<string, number>> };
         this.transitionProbabilities = new Map(
-          Object.entries(data.transitions ?? {}).map(([k, v]) => [
-            k,
-            new Map(Object.entries(v)),
-          ])
+          Object.entries(data.transitions ?? {}).map(([k, v]) => [k, new Map(Object.entries(v))])
         );
       }
     } catch {

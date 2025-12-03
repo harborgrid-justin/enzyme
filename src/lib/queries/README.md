@@ -4,7 +4,8 @@
 
 ## Overview
 
-The queries module provides React Query integration utilities, query key factories, and common query patterns for data fetching.
+The queries module provides React Query integration utilities, query key factories, and common query patterns for data
+fetching.
 
 ## Quick Start
 
@@ -34,12 +35,12 @@ function useUser(id: string) {
 
 ## Exports
 
-| Export | Type | Description |
-|--------|------|-------------|
-| `createQueryKeyFactory` | Function | Type-safe query key factory |
-| `commonQueryOptions` | Object | Preset query configurations |
-| `useQueryWithRetry` | Hook | Query with retry configuration |
-| `useInvalidateQueries` | Hook | Query invalidation helper |
+| Export                  | Type     | Description                    |
+|-------------------------|----------|--------------------------------|
+| `createQueryKeyFactory` | Function | Type-safe query key factory    |
+| `commonQueryOptions`    | Object   | Preset query configurations    |
+| `useQueryWithRetry`     | Hook     | Query with retry configuration |
+| `useInvalidateQueries`  | Hook     | Query invalidation helper      |
 
 ## Query Key Patterns
 

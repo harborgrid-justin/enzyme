@@ -10,17 +10,9 @@
  * - Request cancellation
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import {
-  createMockFetch,
-  createDeferred,
-  delay,
-} from '../utils/test-utils';
-import type {
-  RequestInterceptor,
-  ResponseInterceptor,
-  ErrorInterceptor,
-} from '@/lib/api/types';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { createDeferred, createMockFetch, delay } from '../utils/test-utils';
+import type { ErrorInterceptor, RequestInterceptor, ResponseInterceptor } from '@/lib/api/types';
 
 // ============================================================================
 // Mock Setup
@@ -60,8 +52,7 @@ vi.mock('@/config', () => ({
     },
   },
   calculateBackoffWithJitter: vi.fn((attempt: number, base: number, max: number) => {
-    const delay = Math.min(base * Math.pow(2, attempt), max);
-    return delay;
+    return Math.min(base * Math.pow(2, attempt), max);
   }),
 }));
 
@@ -96,7 +87,11 @@ describe('ApiClient', () => {
     vi.resetModules();
 
     // Import fresh module
-    const { ApiClient: ApiClientImport, createApiClient: createApiClientImport, createApiError: createApiErrorImport } = await import('@/lib/api/api-client');
+    const {
+      ApiClient: ApiClientImport,
+      createApiClient: createApiClientImport,
+      createApiError: createApiErrorImport,
+    } = await import('@/lib/api/api-client');
     ApiClient = ApiClientImport;
     createApiClient = createApiClientImport;
     createApiError = createApiErrorImport;
@@ -273,10 +268,7 @@ describe('ApiClient', () => {
       await client.get('/users', { params: { ids: [1, 2, 3] } });
 
       // Assert
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('ids=1'),
-        expect.any(Object)
-      );
+      expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('ids=1'), expect.any(Object));
     });
 
     it('should substitute path parameters', async () => {
@@ -311,10 +303,7 @@ describe('ApiClient', () => {
       await client.get('/users');
 
       // Assert
-      expect(mockFetch).toHaveBeenCalledWith(
-        'https://api.test.com/users',
-        expect.any(Object)
-      );
+      expect(mockFetch).toHaveBeenCalledWith('https://api.test.com/users', expect.any(Object));
     });
 
     it('should skip null/undefined query params', async () => {
@@ -418,7 +407,9 @@ describe('ApiClient', () => {
       });
       mockFetch.mockResponse({});
 
-      const interceptor = vi.fn((config: Record<string, unknown>) => config) as unknown as RequestInterceptor;
+      const interceptor = vi.fn(
+        (config: Record<string, unknown>) => config
+      ) as unknown as RequestInterceptor;
       const remove = client.addRequestInterceptor(interceptor);
 
       // Act - call once with interceptor
@@ -525,22 +516,22 @@ describe('ApiClient', () => {
         status: 422,
         statusText: 'Unprocessable Entity',
         headers: new Headers(),
-        json: async () => Promise.resolve({
-          message: 'Validation failed',
-          errors: [{ field: 'email', message: 'Invalid email' }],
-        }),
-        text: async () => Promise.resolve(
-          JSON.stringify({
+        json: async () =>
+          Promise.resolve({
             message: 'Validation failed',
             errors: [{ field: 'email', message: 'Invalid email' }],
-          })
-        ),
+          }),
+        text: async () =>
+          Promise.resolve(
+            JSON.stringify({
+              message: 'Validation failed',
+              errors: [{ field: 'email', message: 'Invalid email' }],
+            })
+          ),
       });
 
       // Act & Assert
-      await expect(
-        client.post('/users', { email: 'invalid' })
-      ).rejects.toMatchObject({
+      await expect(client.post('/users', { email: 'invalid' })).rejects.toMatchObject({
         status: 422,
         category: 'validation',
       });
@@ -603,22 +594,24 @@ describe('ApiClient', () => {
         status: 400,
         statusText: 'Bad Request',
         headers: new Headers(),
-        json: async () => Promise.resolve({
-          message: 'Validation failed',
-          errors: [
-            { field: 'email', message: 'Invalid email format' },
-            { field: 'password', message: 'Password too short' },
-          ],
-        }),
-        text: async () => Promise.resolve(
-          JSON.stringify({
+        json: async () =>
+          Promise.resolve({
             message: 'Validation failed',
             errors: [
               { field: 'email', message: 'Invalid email format' },
               { field: 'password', message: 'Password too short' },
             ],
-          })
-        ),
+          }),
+        text: async () =>
+          Promise.resolve(
+            JSON.stringify({
+              message: 'Validation failed',
+              errors: [
+                { field: 'email', message: 'Invalid email format' },
+                { field: 'password', message: 'Password too short' },
+              ],
+            })
+          ),
       });
 
       // Act & Assert
@@ -815,9 +808,9 @@ describe('ApiClient', () => {
       });
 
       // Act & Assert
-      await expect(
-        client.get('/users', { meta: { skipRetry: true } })
-      ).rejects.toMatchObject({ status: 503 });
+      await expect(client.get('/users', { meta: { skipRetry: true } })).rejects.toMatchObject({
+        status: 503,
+      });
       expect(mockFetch).toHaveBeenCalledTimes(1);
     });
   });
@@ -858,11 +851,7 @@ describe('ApiClient', () => {
         text: async () => Promise.resolve(JSON.stringify({ users: [] })),
       });
 
-      const [result1, result2, result3] = await Promise.all([
-        promise1,
-        promise2,
-        promise3,
-      ]);
+      const [result1, result2, result3] = await Promise.all([promise1, promise2, promise3]);
 
       // Assert - only one fetch call should be made
       expect(mockFetch).toHaveBeenCalledTimes(1);
@@ -1062,7 +1051,9 @@ describe('ApiClient', () => {
       await client.get('/protected');
 
       // Assert
-      const mockCalls: Array<[string, { headers: Headers }]> = mockFetch.mock.calls as Array<[string, { headers: Headers }]>;
+      const mockCalls: Array<[string, { headers: Headers }]> = mockFetch.mock.calls as Array<
+        [string, { headers: Headers }]
+      >;
       const [, { headers }] = mockCalls[0]!;
       expect(headers.get('Authorization')).toBe('Bearer test-token');
     });
@@ -1080,7 +1071,9 @@ describe('ApiClient', () => {
       await client.get('/public', { meta: { skipAuth: true } });
 
       // Assert
-      const mockCalls: Array<[string, { headers: Headers }]> = mockFetch.mock.calls as Array<[string, { headers: Headers }]>;
+      const mockCalls: Array<[string, { headers: Headers }]> = mockFetch.mock.calls as Array<
+        [string, { headers: Headers }]
+      >;
       const [, { headers }] = mockCalls[0]!;
       expect(headers.get('Authorization')).toBeNull();
     });
@@ -1107,7 +1100,9 @@ describe('ApiClient', () => {
 
       // Assert
       expect(customProvider.getAccessToken).toHaveBeenCalled();
-      const mockCalls: Array<[string, { headers: Headers }]> = mockFetch.mock.calls as Array<[string, { headers: Headers }]>;
+      const mockCalls: Array<[string, { headers: Headers }]> = mockFetch.mock.calls as Array<
+        [string, { headers: Headers }]
+      >;
       const [, { headers }] = mockCalls[0]!;
       expect(headers.get('Authorization')).toBe('Bearer custom-token');
     });

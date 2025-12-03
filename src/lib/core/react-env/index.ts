@@ -46,7 +46,13 @@ export interface ReactEnvironmentStatus {
  */
 export interface ReactEnvironmentIssue {
   /** Issue type */
-  type: 'multiple_instances' | 'version_mismatch' | 'missing_react' | 'missing_react_dom' | 'hooks_error' | 'jsx_runtime_error';
+  type:
+    | 'multiple_instances'
+    | 'version_mismatch'
+    | 'missing_react'
+    | 'missing_react_dom'
+    | 'hooks_error'
+    | 'jsx_runtime_error';
   /** Severity level */
   severity: 'error' | 'warning' | 'info';
   /** Human-readable message */
@@ -222,9 +228,11 @@ export function validateReactHooks(): boolean {
     // This is a minimal check - if useState is callable, hooks should work
     // The actual validation happens at runtime when components render
     const reactObj = React as unknown as ReactWithHooks;
-    return typeof reactObj.useState === 'function' &&
-           typeof reactObj.useEffect === 'function' &&
-           typeof reactObj.useContext === 'function';
+    return (
+      typeof reactObj.useState === 'function' &&
+      typeof reactObj.useEffect === 'function' &&
+      typeof reactObj.useContext === 'function'
+    );
   } catch {
     return false;
   }
@@ -276,9 +284,7 @@ export function validateReactDOM(): boolean {
 /**
  * Performs a comprehensive React environment check.
  */
-export function checkReactEnvironment(
-  config: ReactEnvironmentConfig = {}
-): ReactEnvironmentStatus {
+export function checkReactEnvironment(config: ReactEnvironmentConfig = {}): ReactEnvironmentStatus {
   const {
     minVersion = MIN_SUPPORTED_VERSION,
     maxVersion = MAX_SUPPORTED_VERSION,
@@ -320,7 +326,8 @@ export function checkReactEnvironment(
       type: 'multiple_instances',
       severity: 'error',
       message: 'Multiple React instances detected. This causes blank pages and hook errors.',
-      resolution: 'Ensure only one version of React is installed. Check your package.json for duplicate react dependencies and use npm dedupe.',
+      resolution:
+        'Ensure only one version of React is installed. Check your package.json for duplicate react dependencies and use npm dedupe.',
     });
   }
 
@@ -341,7 +348,8 @@ export function checkReactEnvironment(
     issues.push({
       type: 'hooks_error',
       severity: 'error',
-      message: 'React hooks are not functioning correctly. This usually indicates multiple React instances.',
+      message:
+        'React hooks are not functioning correctly. This usually indicates multiple React instances.',
       resolution: 'Run npm ls react to check for duplicate React installations.',
     });
   }
@@ -368,18 +376,18 @@ export function checkReactEnvironment(
 
   // Log warnings
   if (logWarnings && issues.length > 0) {
-    const errorIssues = issues.filter(i => i.severity === 'error');
-    const warningIssues = issues.filter(i => i.severity === 'warning');
+    const errorIssues = issues.filter((i) => i.severity === 'error');
+    const warningIssues = issues.filter((i) => i.severity === 'warning');
 
     if (errorIssues.length > 0) {
       console.error(
-        `[Enzyme] React environment errors detected:\n${errorIssues.map(i => `  - ${i.message}\n    Resolution: ${i.resolution ?? 'N/A'}`).join('\n')}`
+        `[Enzyme] React environment errors detected:\n${errorIssues.map((i) => `  - ${i.message}\n    Resolution: ${i.resolution ?? 'N/A'}`).join('\n')}`
       );
     }
 
     if (warningIssues.length > 0) {
       console.warn(
-        `[Enzyme] React environment warnings:\n${warningIssues.map(i => `  - ${i.message}\n    Resolution: ${i.resolution ?? 'N/A'}`).join('\n')}`
+        `[Enzyme] React environment warnings:\n${warningIssues.map((i) => `  - ${i.message}\n    Resolution: ${i.resolution ?? 'N/A'}`).join('\n')}`
       );
     }
   }
@@ -423,7 +431,7 @@ export function isReactEnvironmentHealthy(): boolean {
     status.isReactAvailable &&
     status.isReactDOMAvailable &&
     !status.hasMultipleInstances &&
-    status.issues.filter(i => i.severity === 'error').length === 0
+    status.issues.filter((i) => i.severity === 'error').length === 0
   );
 }
 
@@ -441,7 +449,9 @@ export function safeCreatePortal(
   try {
     // Import createPortal from react-dom (statically imported at module level)
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { createPortal } = require('react-dom') as { createPortal?: typeof import('react-dom').createPortal };
+    const { createPortal } = require('react-dom') as {
+      createPortal?: typeof import('react-dom').createPortal;
+    };
     if (typeof createPortal === 'function') {
       return createPortal(children, container);
     }
@@ -464,7 +474,7 @@ export function withReactEnvironmentGuard<P extends object>(
 
     React.useEffect(() => {
       const status = checkReactEnvironment({ logWarnings: true });
-      setIsHealthy(status.issues.filter(i => i.severity === 'error').length === 0);
+      setIsHealthy(status.issues.filter((i) => i.severity === 'error').length === 0);
     }, []);
 
     // During initial check, render nothing to avoid flash
@@ -489,7 +499,11 @@ export function withReactEnvironmentGuard<P extends object>(
           },
         },
         React.createElement('strong', null, 'React Environment Error'),
-        React.createElement('p', null, 'Multiple React instances detected. Please check your dependencies.'),
+        React.createElement(
+          'p',
+          null,
+          'Multiple React instances detected. Please check your dependencies.'
+        ),
         React.createElement('code', null, 'npm ls react')
       );
     }
@@ -515,11 +529,7 @@ if (typeof window !== 'undefined') {
 }
 
 // Export all utilities
-export {
-  parseVersion,
-  compareVersions,
-  isVersionInRange,
-};
+export { parseVersion, compareVersions, isVersionInRange };
 
 // Export React Environment Provider
 export {

@@ -103,10 +103,7 @@ function getCacheKey(entityType: string, id: string, depth: number): string {
 /**
  * Check if field should be included
  */
-function shouldIncludeField(
-  field: string,
-  options: Required<DenormalizeOptions>
-): boolean {
+function shouldIncludeField(field: string, options: Required<DenormalizeOptions>): boolean {
   if (options.excludeFields.includes(field)) {
     return false;
   }
@@ -119,11 +116,7 @@ function shouldIncludeField(
 /**
  * Denormalize a value with schema
  */
-function denormalizeValue(
-  value: unknown,
-  schema: Schema,
-  context: DenormalizeContext
-): unknown {
+function denormalizeValue(value: unknown, schema: Schema, context: DenormalizeContext): unknown {
   if (value === null || value === undefined) {
     return value;
   }
@@ -312,7 +305,7 @@ function denormalizeUnion(
  * Denormalize data from normalized state
  *
  * @param input - ID(s) or normalized reference
- * @param schema - Schema defining the structure
+ * @param inputSchema
  * @param entities - Normalized entities
  * @param options - Denormalization options
  * @returns Denormalized data
@@ -402,9 +395,9 @@ export function denormalizeMany<T extends Entity>(
 /**
  * Create a memoized denormalizer for a specific schema
  *
- * @param schema - Schema to denormalize with
- * @param options - Default options
- * @returns Memoized denormalize function
+ * @param defaultOptions
+ * @param inputSchema
+ * @param defaultOptions
  */
 export function createDenormalizer<T = unknown>(
   inputSchema: Schema,
@@ -436,7 +429,7 @@ export function createDenormalizer<T = unknown>(
  * Denormalize with field selection (GraphQL-like)
  *
  * @param input - ID(s) or normalized reference
- * @param schema - Schema defining the structure
+ * @param inputSchema
  * @param entities - Normalized entities
  * @param fields - Fields to include
  * @returns Denormalized data with selected fields
@@ -456,7 +449,7 @@ export function denormalizeSelect<T = unknown>(
  * Shallow denormalize (only first level)
  *
  * @param input - ID(s) or normalized reference
- * @param schema - Schema defining the structure
+ * @param inputSchema
  * @param entities - Normalized entities
  * @returns Shallowly denormalized data
  */
@@ -474,7 +467,7 @@ export function denormalizeShallow<T = unknown>(
  * Check if entities contain all required data for denormalization
  *
  * @param input - ID(s) to check
- * @param schema - Schema to check against
+ * @param inputSchema
  * @param entities - Normalized entities
  * @returns Whether all required entities exist
  */
@@ -497,9 +490,7 @@ export function canDenormalize(
 
       case 'array': {
         const arraySchema = schema;
-        return (value as unknown[]).every((item) =>
-          checkValue(item, arraySchema.schema)
-        );
+        return (value as unknown[]).every((item) => checkValue(item, arraySchema.schema));
       }
 
       case 'object': {

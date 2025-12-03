@@ -1,0 +1,286 @@
+
+> @missionfabric-js/enzyme@1.1.0 lint
+> eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0 --cache --ignore-pattern 'cli/' --ignore-pattern 'demo/' --ignore-pattern 'scripts/'
+F:\temp\enzyme\cli\src\analyze\index.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\analyze\index.ts
+F:\temp\enzyme\cli\src\commands\add.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\commands\add.ts
+F:\temp\enzyme\cli\src\commands\analyze.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\commands\analyze.ts
+F:\temp\enzyme\cli\src\commands\config.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\commands\config.ts
+F:\temp\enzyme\cli\src\commands\docs.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\commands\docs.ts
+F:\temp\enzyme\cli\src\commands\doctor.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\commands\doctor.ts
+F:\temp\enzyme\cli\src\commands\generate.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\commands\generate.ts
+F:\temp\enzyme\cli\src\commands\migrate.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\commands\migrate.ts
+F:\temp\enzyme\cli\src\commands\new.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\commands\new.ts
+F:\temp\enzyme\cli\src\commands\remove.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\commands\remove.ts
+F:\temp\enzyme\cli\src\commands\upgrade.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\commands\upgrade.ts
+F:\temp\enzyme\cli\src\config\manager.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\config\manager.ts
+F:\temp\enzyme\cli\src\config\schema.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\config\schema.ts
+F:\temp\enzyme\cli\src\generators\base.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\generators\base.ts
+F:\temp\enzyme\cli\src\generators\component\index.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\generators\component\index.ts
+F:\temp\enzyme\cli\src\generators\docs\api-docs.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\generators\docs\api-docs.ts
+F:\temp\enzyme\cli\src\generators\docs\component-docs.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\generators\docs\component-docs.ts
+F:\temp\enzyme\cli\src\generators\docs\hooks-docs.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\generators\docs\hooks-docs.ts
+F:\temp\enzyme\cli\src\generators\docs\index.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\generators\docs\index.ts
+F:\temp\enzyme\cli\src\generators\docs\interactive.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\generators\docs\interactive.ts
+F:\temp\enzyme\cli\src\generators\docs\parser.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\generators\docs\parser.ts
+F:\temp\enzyme\cli\src\generators\docs\route-docs.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\generators\docs\route-docs.ts
+F:\temp\enzyme\cli\src\generators\docs\server.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\generators\docs\server.ts
+F:\temp\enzyme\cli\src\generators\docs\types.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\generators\docs\types.ts
+F:\temp\enzyme\cli\src\generators\docs\utils.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\generators\docs\utils.ts
+F:\temp\enzyme\cli\src\generators\hook\index.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\generators\hook\index.ts
+F:\temp\enzyme\cli\src\generators\index.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\generators\index.ts
+F:\temp\enzyme\cli\src\generators\module\index.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\generators\module\index.ts
+F:\temp\enzyme\cli\src\generators\page\index.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\generators\page\index.ts
+F:\temp\enzyme\cli\src\generators\project\index.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\generators\project\index.ts
+F:\temp\enzyme\cli\src\generators\project\templates\app-tsx.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\generators\project\templates\app-tsx.ts
+F:\temp\enzyme\cli\src\generators\project\templates\config.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\generators\project\templates\config.ts
+F:\temp\enzyme\cli\src\generators\project\templates\env-example.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\generators\project\templates\env-example.ts
+F:\temp\enzyme\cli\src\generators\project\templates\eslint-config.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\generators\project\templates\eslint-config.ts
+F:\temp\enzyme\cli\src\generators\project\templates\main-tsx.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\generators\project\templates\main-tsx.ts
+F:\temp\enzyme\cli\src\generators\project\templates\package-json.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\generators\project\templates\package-json.ts
+F:\temp\enzyme\cli\src\generators\project\templates\prettier-config.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\generators\project\templates\prettier-config.ts
+F:\temp\enzyme\cli\src\generators\project\templates\providers.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\generators\project\templates\providers.ts
+F:\temp\enzyme\cli\src\generators\project\templates\readme.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\generators\project\templates\readme.ts
+F:\temp\enzyme\cli\src\generators\project\templates\routes.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\generators\project\templates\routes.ts
+F:\temp\enzyme\cli\src\generators\project\templates\tailwind-config.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\generators\project\templates\tailwind-config.ts
+F:\temp\enzyme\cli\src\generators\project\templates\tsconfig.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\generators\project\templates\tsconfig.ts
+F:\temp\enzyme\cli\src\generators\project\templates\vite-config.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\generators\project\templates\vite-config.ts
+F:\temp\enzyme\cli\src\generators\project\utils.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\generators\project\utils.ts
+F:\temp\enzyme\cli\src\generators\route\index.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\generators\route\index.ts
+F:\temp\enzyme\cli\src\generators\service\index.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\generators\service\index.ts
+F:\temp\enzyme\cli\src\generators\slice\index.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\generators\slice\index.ts
+F:\temp\enzyme\cli\src\generators\types.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\generators\types.ts
+F:\temp\enzyme\cli\src\generators\utils.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\generators\utils.ts
+F:\temp\enzyme\cli\src\index.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\index.ts
+F:\temp\enzyme\cli\src\migrate\index.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\migrate\index.ts
+F:\temp\enzyme\cli\src\plugins\built-in\git.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\plugins\built-in\git.ts
+F:\temp\enzyme\cli\src\plugins\built-in\index.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\plugins\built-in\index.ts
+F:\temp\enzyme\cli\src\plugins\built-in\templates.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\plugins\built-in\templates.ts
+F:\temp\enzyme\cli\src\plugins\built-in\validation.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\plugins\built-in\validation.ts
+F:\temp\enzyme\cli\src\plugins\loader.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\plugins\loader.ts
+F:\temp\enzyme\cli\src\prompts\index.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\prompts\index.ts
+F:\temp\enzyme\cli\src\types.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\types.ts
+F:\temp\enzyme\cli\src\types\index.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\types\index.ts
+F:\temp\enzyme\cli\src\utils\fs.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\utils\fs.ts
+F:\temp\enzyme\cli\src\utils\logger.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\utils\logger.ts
+F:\temp\enzyme\cli\src\utils\path.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\utils\path.ts
+F:\temp\enzyme\cli\src\utils\prompts.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\utils\prompts.ts
+F:\temp\enzyme\cli\src\utils\template.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\utils\template.ts
+F:\temp\enzyme\cli\src\validation\index.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): cli\src\validation\index.ts
+F:\temp\enzyme\src\lib\api\advanced\request-orchestrator.ts
+  194:13  error  Expected an error object to be thrown                                                       @typescript-eslint/only-throw-error
+  299:11  error  Prefer using an optional chain expression instead, as it's more concise and easier to read  @typescript-eslint/prefer-optional-chain
+F:\temp\enzyme\src\lib\auth\active-directory\ad-provider.tsx
+  550:54  error  Async arrow function has no 'await' expression  @typescript-eslint/require-await
+F:\temp\enzyme\src\lib\core\react-env\ReactEnvironmentProvider.tsx
+   75:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+  307:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+F:\temp\enzyme\src\lib\core\react-env\index.ts
+  487:11  warning  Unexpected value in conditional. A boolean expression is required  @typescript-eslint/strict-boolean-expressions
+F:\temp\enzyme\src\lib\data\integrity\consistency-monitor.ts
+  360:5   error  Prefer using nullish coalescing operator (`??=`) instead of an assignment expression, as it is simpler to read  @typescript-eslint/prefer-nullish-coalescing
+  511:11  error  Unsafe call of a(n) `error` type typed value                                                                    @typescript-eslint/no-unsafe-call
+  511:48  error  Unexpected any. Specify a different type                                                                        @typescript-eslint/no-explicit-any
+F:\temp\enzyme\src\lib\feature\feature-flag-integration.ts
+  199:12  warning  Unexpected nullable boolean value in conditional. Please handle the nullish case explicitly  @typescript-eslint/strict-boolean-expressions
+  217:14  warning  Unexpected nullable boolean value in conditional. Please handle the nullish case explicitly  @typescript-eslint/strict-boolean-expressions
+F:\temp\enzyme\src\lib\flags\analytics\flag-exposure-tracker.ts
+  434:11  error    Prefer using nullish coalescing operator (`??=`) instead of an assignment expression, as it is simpler to read  @typescript-eslint/prefer-nullish-coalescing
+  495:13  warning  Unexpected any value in conditional. An explicit comparison or type conversion is required                      @typescript-eslint/strict-boolean-expressions
+F:\temp\enzyme\src\lib\hooks\useKeyboardShortcuts.tsx
+  242:14  warning  Unexpected nullable boolean value in conditional. Please handle the nullish case explicitly  @typescript-eslint/strict-boolean-expressions
+  281:54  warning  Unexpected nullable boolean value in conditional. Please handle the nullish case explicitly  @typescript-eslint/strict-boolean-expressions
+F:\temp\enzyme\src\lib\hooks\usePrefetchRoute.ts
+  108:11  error    Unused eslint-disable directive (no problems were reported from 'no-console')
+  110:13  warning  Unexpected console statement. Only these console methods are allowed: warn, error, info, group, groupEnd  no-console
+F:\temp\enzyme\src\lib\layouts\context-aware\PortalBridge.tsx
+  327:42  warning  Missing return type on function  @typescript-eslint/explicit-function-return-type
+F:\temp\enzyme\src\lib\layouts\context-aware\ScrollAwareContainer.tsx
+  361:31  warning  Unexpected nullable boolean value in conditional. Please handle the nullish case explicitly  @typescript-eslint/strict-boolean-expressions
+  367:31  warning  Unexpected nullable boolean value in conditional. Please handle the nullish case explicitly  @typescript-eslint/strict-boolean-expressions
+  373:31  warning  Unexpected nullable boolean value in conditional. Please handle the nullish case explicitly  @typescript-eslint/strict-boolean-expressions
+F:\temp\enzyme\src\lib\monitoring\GlobalErrorBoundary.tsx
+  87:10  warning  Unexpected nullable boolean value in conditional. Please handle the nullish case explicitly  @typescript-eslint/strict-boolean-expressions
+F:\temp\enzyme\src\lib\monitoring\ProviderErrorBoundary.tsx
+  132:10  warning  Unexpected nullable boolean value in conditional. Please handle the nullish case explicitly                                     @typescript-eslint/strict-boolean-expressions
+  132:25  warning  Unexpected nullable string value in conditional. Please handle the nullish/empty cases explicitly                               @typescript-eslint/strict-boolean-expressions
+  350:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+F:\temp\enzyme\src\lib\monitoring\withErrorBoundary.tsx
+  79:10  warning  Unexpected nullable boolean value in conditional. Please handle the nullish case explicitly  @typescript-eslint/strict-boolean-expressions
+F:\temp\enzyme\src\lib\realtime\realtime-circuit-breaker.ts
+  260:41  error  Promise returned in function argument where a void return was expected  @typescript-eslint/no-misused-promises
+  351:11  error  Expected the Promise rejection reason to be an Error                    @typescript-eslint/prefer-promise-reject-errors
+F:\temp\enzyme\src\lib\routing\loaders\reports-loader.ts
+  24:35  error  'value' will use Object's default stringification format ('[object Object]') when stringified  @typescript-eslint/no-base-to-string
+F:\temp\enzyme\src\lib\security\SecurityProvider.tsx
+  315:6   warning  React Hook  if (!con has a missing dependency: 'handleViolation'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  378:69  error    Async arrow function has no 'await' expression                                                                      @typescript-eslint/require-await
+F:\temp\enzyme\src\lib\security\hooks\useSecureStorage.ts
+  148:22  error  Unexpected `await` of a non-Promise (non-"Thenable") value  @typescript-eslint/await-thenable
+F:\temp\enzyme\src\lib\security\secure-storage.ts
+  508:9   error  Unexpected `await` of a non-Promise (non-"Thenable") value  @typescript-eslint/await-thenable
+  527:20  error  Unexpected `await` of a non-Promise (non-"Thenable") value  @typescript-eslint/await-thenable
+F:\temp\enzyme\src\lib\state\core\createSelectors.ts
+  183:24  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  226:24  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+F:\temp\enzyme\src\lib\state\hooks\useStore.ts
+  579:9   warning  Unexpected nullable boolean value in conditional. Please handle the nullish case explicitly  @typescript-eslint/strict-boolean-expressions
+  588:11  warning  Unexpected nullable boolean value in conditional. Please handle the nullish case explicitly  @typescript-eslint/strict-boolean-expressions
+F:\temp\enzyme\src\lib\streaming\streaming-engine.ts
+   455:13  error  Expected an error object to be thrown  @typescript-eslint/only-throw-error
+   547:13  error  Expected an error object to be thrown  @typescript-eslint/only-throw-error
+   554:13  error  Expected an error object to be thrown  @typescript-eslint/only-throw-error
+   588:13  error  Expected an error object to be thrown  @typescript-eslint/only-throw-error
+   595:13  error  Expected an error object to be thrown  @typescript-eslint/only-throw-error
+   622:13  error  Expected an error object to be thrown  @typescript-eslint/only-throw-error
+   631:13  error  Expected an error object to be thrown  @typescript-eslint/only-throw-error
+  1003:15  error  Expected an error object to be thrown  @typescript-eslint/only-throw-error
+  1019:11  error  Expected an error object to be thrown  @typescript-eslint/only-throw-error
+F:\temp\enzyme\src\lib\ui\data\VirtualizedDataTable.tsx
+  244:8   warning  Unexpected value in conditional. A boolean expression is required                                                               @typescript-eslint/strict-boolean-expressions
+  249:18  error    React Hook "ct.Ref" is called conditionally. React Hooks must be called in the exact same order in every component render       react-hooks/rules-of-hooks
+  253:3   error    React Hook " row when" is called conditionally. React Hooks must be called in the exact same order in every component render    react-hooks/rules-of-hooks
+  260:28  error    React Hook " hover " is called conditionally. React Hooks must be called in the exact same order in every component render      react-hooks/rules-of-hooks
+  270:23  error    React Hook "/ Handle ro" is called conditionally. React Hooks must be called in the exact same order in every component render  react-hooks/rules-of-hooks
+  275:23  error    React Hook "
+  // Handl" is called conditionally. React Hooks must be called in the exact same order in every component render  react-hooks/rules-of-hooks
+  280:25  error    React Hook " keyboard e" is called conditionally. React Hooks must be called in the exact same order in every component render  react-hooks/rules-of-hooks
+  537:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+F:\temp\enzyme\src\lib\utils\safe-operations.ts
+  249:40  error  Async arrow function has no 'await' expression  @typescript-eslint/require-await
+  514:7   error  Unsafe assignment of an `any` value             @typescript-eslint/no-unsafe-assignment
+F:\temp\enzyme\src\lib\vdom\module-circuit-breaker.ts
+  189:24  warning  Unexpected nullable number value in conditional. Please handle the nullish/zero/NaN cases explicitly            @typescript-eslint/strict-boolean-expressions
+  190:24  warning  Unexpected nullable number value in conditional. Please handle the nullish/zero/NaN cases explicitly            @typescript-eslint/strict-boolean-expressions
+  276:3   error    Prefer using nullish coalescing operator (`??=`) instead of an assignment expression, as it is simpler to read  @typescript-eslint/prefer-nullish-coalescing
+✖ 125 problems (98 errors, 27 warnings)
+  1 error and 0 warnings potentially fixable with the `--fix` option.

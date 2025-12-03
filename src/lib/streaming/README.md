@@ -4,7 +4,8 @@
 
 ## Overview
 
-The streaming module provides React components and hooks for handling streaming data sources with proper backpressure, chunked responses, and progressive rendering.
+The streaming module provides React components and hooks for handling streaming data sources with proper backpressure,
+chunked responses, and progressive rendering.
 
 ## Quick Start
 
@@ -36,14 +37,14 @@ function StreamingContent() {
 
 ## Exports
 
-| Export | Type | Description |
-|--------|------|-------------|
-| `StreamProvider` | Component | Context provider for streaming system |
-| `StreamBoundary` | Component | Boundary for streaming content |
-| `useStream` | Hook | Control and monitor streams |
-| `useStreamStatus` | Hook | Stream status monitoring |
-| `useStreamPriority` | Hook | Priority management |
-| `useDeferredStream` | Hook | Deferred stream loading |
+| Export              | Type      | Description                           |
+|---------------------|-----------|---------------------------------------|
+| `StreamProvider`    | Component | Context provider for streaming system |
+| `StreamBoundary`    | Component | Boundary for streaming content        |
+| `useStream`         | Hook      | Control and monitor streams           |
+| `useStreamStatus`   | Hook      | Stream status monitoring              |
+| `useStreamPriority` | Hook      | Priority management                   |
+| `useDeferredStream` | Hook      | Deferred stream loading               |
 
 ## See Also
 

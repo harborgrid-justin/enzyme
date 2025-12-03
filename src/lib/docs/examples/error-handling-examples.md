@@ -18,6 +18,7 @@
 ## Error Boundaries
 
 ### Example 1: Basic Error Boundary
+
 **Use Case:** Catch React rendering errors
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -75,11 +76,13 @@ function App() {
 **Explanation:** Error boundaries catch errors in component tree and display fallback UI.
 
 **See Also:**
+
 - [React Error Boundaries](https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary)
 
 ---
 
 ### Example 2: Error Boundary with Reset
+
 **Use Case:** Allow users to recover from errors
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -143,6 +146,7 @@ function App() {
 ---
 
 ### Example 3: Nested Error Boundaries
+
 **Use Case:** Isolate errors to specific features
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -185,6 +189,7 @@ function SidebarErrorFallback() {
 ## Error Recovery
 
 ### Example 4: Automatic Retry
+
 **Use Case:** Retry failed operations automatically
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -217,6 +222,7 @@ function DataComponent() {
 ---
 
 ### Example 5: Manual Retry Button
+
 **Use Case:** Let users manually retry failed operations
 **Difficulty:** ⭐ Basic
 
@@ -250,6 +256,7 @@ function DataComponentWithRetry() {
 ---
 
 ### Example 6: Graceful Degradation
+
 **Use Case:** Provide reduced functionality when errors occur
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -308,6 +315,7 @@ function UserProfile({ userId }: { userId: string }) {
 ## Fallback UI
 
 ### Example 7: Custom Error Pages
+
 **Use Case:** Branded error experiences
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -357,6 +365,7 @@ function ServerError() {
 ---
 
 ### Example 8: Contextual Error Messages
+
 **Use Case:** Show relevant error info based on context
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -424,6 +433,7 @@ function ContextualError({ error, context }: { error: Error; context: ErrorConte
 ## Retry Mechanisms
 
 ### Example 9: Exponential Backoff
+
 **Use Case:** Smart retry strategy
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -476,6 +486,7 @@ const data = await fetchWithRetry(() => fetch('/api/data').then((r) => r.json())
 ---
 
 ### Example 10: Circuit Breaker Pattern
+
 **Use Case:** Prevent cascading failures
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -488,7 +499,8 @@ class CircuitBreaker {
   constructor(
     private threshold: number = 5,
     private timeout: number = 60000
-  ) {}
+  ) {
+  }
 
   async execute<T>(fn: () => Promise<T>): Promise<T> {
     if (this.state === 'open') {
@@ -548,6 +560,7 @@ function DataComponent() {
 ## Error Logging
 
 ### Example 11: Error Tracking Service
+
 **Use Case:** Send errors to monitoring service
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -606,6 +619,7 @@ async function submitForm(data: FormData) {
 ---
 
 ### Example 12: Custom Error Logger
+
 **Use Case:** Log errors with context
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -658,6 +672,7 @@ function handleError(error: Error) {
 ## User Notifications
 
 ### Example 13: Toast Notifications for Errors
+
 **Use Case:** Non-intrusive error notifications
 **Difficulty:** ⭐ Basic
 
@@ -700,6 +715,7 @@ function DataComponent() {
 ---
 
 ### Example 14: Error Banner
+
 **Use Case:** Persistent error display
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -750,6 +766,7 @@ function App() {
 ---
 
 ### Example 15: Inline Error Messages
+
 **Use Case:** Field-level validation errors
 **Difficulty:** ⭐ Basic
 
@@ -786,6 +803,7 @@ function LoginForm() {
 ---
 
 ### Example 16: Empty State vs Error State
+
 **Use Case:** Distinguish between no data and errors
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -837,6 +855,7 @@ function DataList() {
 ---
 
 ### Example 17: Error Modal Dialog
+
 **Use Case:** Critical errors requiring acknowledgment
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -881,6 +900,7 @@ function ErrorDialog({ error, onClose }: { error: Error; onClose: () => void }) 
 ---
 
 ### Example 18: Error with Support Link
+
 **Use Case:** Guide users to help resources
 **Difficulty:** ⭐ Basic
 
@@ -918,6 +938,7 @@ function ErrorWithSupport({ error }: { error: Error }) {
 ---
 
 ### Example 19: Network Error Handling
+
 **Use Case:** Detect and handle network issues
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -969,6 +990,7 @@ function NetworkAwareComponent() {
 ---
 
 ### Example 20: Error Aggregation
+
 **Use Case:** Handle multiple simultaneous errors
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -1040,6 +1062,7 @@ function App() {
 ## Best Practices
 
 ### Error Handling Strategy
+
 - ✅ **DO** catch errors at appropriate boundaries
 - ✅ **DO** provide clear, actionable error messages
 - ✅ **DO** log errors for debugging
@@ -1048,6 +1071,7 @@ function App() {
 - ❌ **DON'T** show technical stack traces to users
 
 ### User Experience
+
 - ✅ **DO** provide recovery options
 - ✅ **DO** maintain context during errors
 - ✅ **DO** use appropriate notification levels
@@ -1056,6 +1080,7 @@ function App() {
 - ❌ **DON'T** show generic "error occurred" messages
 
 ### Recovery
+
 - ✅ **DO** implement graceful degradation
 - ✅ **DO** preserve user data during errors
 - ✅ **DO** provide clear next steps
@@ -1068,6 +1093,7 @@ function App() {
 ## Anti-Patterns
 
 ### ❌ Silent Failures
+
 ```tsx
 // BAD
 try {
@@ -1087,6 +1113,7 @@ try {
 ```
 
 ### ❌ Generic Error Messages
+
 ```tsx
 // BAD
 <p>An error occurred</p>
@@ -1096,6 +1123,7 @@ try {
 ```
 
 ### ❌ Throwing from Error Boundaries
+
 ```tsx
 // BAD
 componentDidCatch(error: Error) {
@@ -1114,6 +1142,7 @@ componentDidCatch(error: Error) {
 ## See Also
 
 - [Error Handling Guide](../ERROR-HANDLING.md) - Complete error handling documentation
-- [React Error Boundaries](https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary) - Official docs
+- [React Error Boundaries](https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary) -
+  Official docs
 - [Sentry Documentation](https://docs.sentry.io/) - Error tracking service
 - [Documentation Index](../INDEX.md) - All documentation resources

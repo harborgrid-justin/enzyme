@@ -14,18 +14,18 @@
 import { z } from 'zod';
 
 import type {
+  EndpointChangeEvent,
+  EndpointChangeListener,
   EndpointDefinition,
   EndpointHealth,
   EndpointHealthStatus,
-  EndpointChangeEvent,
-  EndpointChangeListener,
-  Unsubscribe,
+  HttpMethod,
   IEndpointRegistry,
   Milliseconds,
-  HttpMethod,
+  Unsubscribe,
 } from '../types';
 
-import { DEFAULT_TIMEOUT, DEFAULT_MAX_RETRY_ATTEMPTS } from '../constants';
+import { DEFAULT_MAX_RETRY_ATTEMPTS, DEFAULT_TIMEOUT } from '../constants';
 
 // =============================================================================
 // Zod Schemas for JSON Validation
@@ -39,51 +39,62 @@ const HttpMethodSchema = z.enum(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD'
 /**
  * Zod schema for cache strategy validation
  */
-const CacheStrategySchema = z.enum(['no-cache', 'cache-first', 'network-first', 'stale-while-revalidate']);
+const CacheStrategySchema = z.enum([
+  'no-cache',
+  'cache-first',
+  'network-first',
+  'stale-while-revalidate',
+]);
 
 /**
  * Zod schema for endpoint cache configuration
  */
-const EndpointCacheConfigSchema = z.object({
-  strategy: CacheStrategySchema,
-  ttl: z.number().positive(),
-  tags: z.array(z.string()).optional(),
-  varyByUser: z.boolean().optional(),
-}).strict();
+const EndpointCacheConfigSchema = z
+  .object({
+    strategy: CacheStrategySchema,
+    ttl: z.number().positive(),
+    tags: z.array(z.string()).optional(),
+    varyByUser: z.boolean().optional(),
+  })
+  .strict();
 
 /**
  * Zod schema for endpoint rate limit configuration
  */
-const EndpointRateLimitSchema = z.object({
-  requests: z.number().positive().int(),
-  window: z.number().positive(),
-  scope: z.enum(['user', 'global']),
-}).strict();
+const EndpointRateLimitSchema = z
+  .object({
+    requests: z.number().positive().int(),
+    window: z.number().positive(),
+    scope: z.enum(['user', 'global']),
+  })
+  .strict();
 
 /**
  * Zod schema for endpoint definition validation.
  * Validates imported JSON before processing.
  */
-const EndpointDefinitionSchema = z.object({
-  name: z.string().min(1),
-  path: z.string().min(1),
-  method: HttpMethodSchema,
-  description: z.string().optional(),
-  version: z.string().optional(),
-  auth: z.boolean(),
-  timeout: z.number().positive().optional(),
-  retries: z.number().int().min(0).optional(),
-  cache: EndpointCacheConfigSchema.optional(),
-  rateLimit: EndpointRateLimitSchema.optional(),
-  tags: z.array(z.string()).optional(),
-  baseUrl: z.string().url().optional(),
-  headers: z.record(z.string(), z.string()).optional(),
-  requestSchema: z.unknown().optional(),
-  responseSchema: z.unknown().optional(),
-  deprecated: z.boolean().optional(),
-  deprecationMessage: z.string().optional(),
-  replacedBy: z.string().optional(),
-}).strict();
+const EndpointDefinitionSchema = z
+  .object({
+    name: z.string().min(1),
+    path: z.string().min(1),
+    method: HttpMethodSchema,
+    description: z.string().optional(),
+    version: z.string().optional(),
+    auth: z.boolean(),
+    timeout: z.number().positive().optional(),
+    retries: z.number().int().min(0).optional(),
+    cache: EndpointCacheConfigSchema.optional(),
+    rateLimit: EndpointRateLimitSchema.optional(),
+    tags: z.array(z.string()).optional(),
+    baseUrl: z.string().url().optional(),
+    headers: z.record(z.string(), z.string()).optional(),
+    requestSchema: z.unknown().optional(),
+    responseSchema: z.unknown().optional(),
+    deprecated: z.boolean().optional(),
+    deprecationMessage: z.string().optional(),
+    replacedBy: z.string().optional(),
+  })
+  .strict();
 
 /**
  * Zod schema for endpoint health status
@@ -93,22 +104,38 @@ const EndpointHealthStatusSchema = z.enum(['healthy', 'degraded', 'unhealthy', '
 /**
  * Zod schema for endpoint health validation
  */
-const EndpointHealthSchema = z.object({
-  status: EndpointHealthStatusSchema,
-  lastSuccess: z.string().datetime().optional().transform(val => (val !== undefined && val !== null && val !== '') ? new Date(val) : undefined),
-  lastFailure: z.string().datetime().optional().transform(val => (val !== undefined && val !== null && val !== '') ? new Date(val) : undefined),
-  failureCount: z.number().int().min(0),
-  avgResponseTime: z.number().positive().optional(),
-  errorMessage: z.string().optional(),
-}).strict();
+const EndpointHealthSchema = z
+  .object({
+    status: EndpointHealthStatusSchema,
+    lastSuccess: z
+      .string()
+      .datetime()
+      .optional()
+      .transform((val) =>
+        val !== undefined && val !== null && val !== '' ? new Date(val) : undefined
+      ),
+    lastFailure: z
+      .string()
+      .datetime()
+      .optional()
+      .transform((val) =>
+        val !== undefined && val !== null && val !== '' ? new Date(val) : undefined
+      ),
+    failureCount: z.number().int().min(0),
+    avgResponseTime: z.number().positive().optional(),
+    errorMessage: z.string().optional(),
+  })
+  .strict();
 
 /**
  * Zod schema for the complete JSON import structure
  */
-const EndpointRegistryImportSchema = z.object({
-  endpoints: z.array(EndpointDefinitionSchema),
-  health: z.record(z.string(), EndpointHealthSchema).optional(),
-}).strict();
+const EndpointRegistryImportSchema = z
+  .object({
+    endpoints: z.array(EndpointDefinitionSchema),
+    health: z.record(z.string(), EndpointHealthSchema).optional(),
+  })
+  .strict();
 
 // =============================================================================
 // Default Endpoint Configuration
@@ -119,9 +146,9 @@ const DEFAULT_ENDPOINT_HEALTH: EndpointHealth = {
   failureCount: 0,
 };
 
-const UNHEALTHY_THRESHOLD = 5;        // Failures before marking unhealthy
-const DEGRADED_THRESHOLD = 2;         // Failures before marking degraded
-const HEALTH_RECOVERY_THRESHOLD = 3;  // Successes to recover from unhealthy
+const UNHEALTHY_THRESHOLD = 5; // Failures before marking unhealthy
+const DEGRADED_THRESHOLD = 2; // Failures before marking degraded
+const HEALTH_RECOVERY_THRESHOLD = 3; // Successes to recover from unhealthy
 
 // =============================================================================
 // EndpointRegistry Implementation
@@ -236,7 +263,9 @@ export class EndpointRegistry implements IEndpointRegistry {
       console.warn(
         `[EndpointRegistry] Endpoint "${definition.name}" is deprecated.`,
         definition.deprecationMessage ?? '',
-        (definition.replacedBy != null && definition.replacedBy !== '') ? `Use "${definition.replacedBy}" instead.` : ''
+        definition.replacedBy != null && definition.replacedBy !== ''
+          ? `Use "${definition.replacedBy}" instead.`
+          : ''
       );
     }
   }
@@ -303,9 +332,7 @@ export class EndpointRegistry implements IEndpointRegistry {
    */
   getByPath(pathPattern: string): readonly EndpointDefinition[] {
     const regex = new RegExp(pathPattern.replace(/:[^/]+/g, '[^/]+'));
-    return Array.from(this.endpoints.values()).filter((endpoint) =>
-      regex.test(endpoint.path)
-    );
+    return Array.from(this.endpoints.values()).filter((endpoint) => regex.test(endpoint.path));
   }
 
   /**
@@ -509,21 +536,6 @@ export class EndpointRegistry implements IEndpointRegistry {
   }
 
   /**
-   * Calculate average response time for an endpoint.
-   */
-  private calculateAvgResponseTime(name: string): Milliseconds | undefined {
-    const times = this.responseTimes.get(name);
-    if (!times || times.length === 0) {
-      return undefined;
-    }
-    return Math.round(times.reduce((a, b) => a + b, 0) / times.length) as Milliseconds;
-  }
-
-  // ===========================================================================
-  // URL Building
-  // ===========================================================================
-
-  /**
    * Build a full URL for an endpoint.
    */
   buildUrl(name: string, params?: Record<string, string | number>): string {
@@ -543,10 +555,13 @@ export class EndpointRegistry implements IEndpointRegistry {
 
     // Use endpoint-specific base URL or global base URL
     const base = endpoint.baseUrl ?? this.baseUrl;
-    const fullUrl = base ? `${base}${url.startsWith('/') ? url : `/${url}`}` : url;
 
-    return fullUrl;
+    return base ? `${base}${url.startsWith('/') ? url : `/${url}`}` : url;
   }
+
+  // ===========================================================================
+  // URL Building
+  // ===========================================================================
 
   /**
    * Build a URL with query parameters.
@@ -573,10 +588,6 @@ export class EndpointRegistry implements IEndpointRegistry {
     return queryString ? `${url}?${queryString}` : url;
   }
 
-  // ===========================================================================
-  // Subscriptions
-  // ===========================================================================
-
   /**
    * Subscribe to endpoint changes.
    */
@@ -587,18 +598,8 @@ export class EndpointRegistry implements IEndpointRegistry {
     };
   }
 
-  private emitEvent(event: EndpointChangeEvent): void {
-    for (const listener of this.listeners) {
-      try {
-        listener(event);
-      } catch (error) {
-        console.error('[EndpointRegistry] Error in change listener:', error);
-      }
-    }
-  }
-
   // ===========================================================================
-  // Serialization
+  // Subscriptions
   // ===========================================================================
 
   /**
@@ -644,7 +645,7 @@ export class EndpointRegistry implements IEndpointRegistry {
     }
 
     // Step 3: Process validated data
-    const {data} = validationResult;
+    const { data } = validationResult;
 
     this.registerBatch(data.endpoints as EndpointDefinition[]);
 
@@ -656,7 +657,7 @@ export class EndpointRegistry implements IEndpointRegistry {
   }
 
   // ===========================================================================
-  // Statistics
+  // Serialization
   // ===========================================================================
 
   /**
@@ -697,6 +698,31 @@ export class EndpointRegistry implements IEndpointRegistry {
       avgResponseTime: count > 0 ? (Math.round(totalTime / count) as Milliseconds) : undefined,
     };
   }
+
+  /**
+   * Calculate average response time for an endpoint.
+   */
+  private calculateAvgResponseTime(name: string): Milliseconds | undefined {
+    const times = this.responseTimes.get(name);
+    if (!times || times.length === 0) {
+      return undefined;
+    }
+    return Math.round(times.reduce((a, b) => a + b, 0) / times.length) as Milliseconds;
+  }
+
+  // ===========================================================================
+  // Statistics
+  // ===========================================================================
+
+  private emitEvent(event: EndpointChangeEvent): void {
+    for (const listener of this.listeners) {
+      try {
+        listener(event);
+      } catch (error) {
+        console.error('[EndpointRegistry] Error in change listener:', error);
+      }
+    }
+  }
 }
 
 // =============================================================================
@@ -733,9 +759,7 @@ export function buildEndpointUrl(
   query?: Record<string, string | number | boolean>
 ): string {
   const registry = getEndpointRegistry();
-  return query
-    ? registry.buildUrlWithQuery(name, params, query)
-    : registry.buildUrl(name, params);
+  return query ? registry.buildUrlWithQuery(name, params, query) : registry.buildUrl(name, params);
 }
 
 /**

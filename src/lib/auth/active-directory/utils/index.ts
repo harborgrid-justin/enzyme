@@ -133,7 +133,9 @@ export function validateGroupMapping(config: ADGroupMappingConfig): string[] {
     }
 
     if (identifiers.has(mapping.groupIdentifier)) {
-      errors.push(`Mapping at index ${index}: duplicate groupIdentifier '${mapping.groupIdentifier}'`);
+      errors.push(
+        `Mapping at index ${index}: duplicate groupIdentifier '${mapping.groupIdentifier}'`
+      );
     }
     identifiers.add(mapping.groupIdentifier);
   }

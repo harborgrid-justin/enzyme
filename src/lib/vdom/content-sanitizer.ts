@@ -312,6 +312,29 @@ export class ContentSanitizer {
   }
 
   /**
+   * Sanitizes plain text (escape HTML).
+   * @param text - Text to sanitize
+   * @returns Escaped text
+   */
+  sanitizeText(text: string): string {
+    return escapeHtml(text);
+  }
+
+  /**
+   * Validates content against dangerous patterns.
+   * @param content - Content to validate
+   * @returns Whether content is safe
+   */
+  validate(content: string): boolean {
+    for (const pattern of DANGEROUS_PATTERNS) {
+      if (pattern.test(content)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
    * Sanitizes HTML using DOM parsing.
    * @param html - HTML to sanitize
    * @returns Sanitized HTML
@@ -380,7 +403,7 @@ export class ContentSanitizer {
    * Sanitizes CSS style content using allowlist approach.
    */
   private sanitizeStyle(style: string): string {
-    if (!style || typeof style !== 'string') {
+    if (!style) {
       return '';
     }
 
@@ -440,33 +463,8 @@ export class ContentSanitizer {
       return true;
     }
 
-    if (/-o-link/i.test(lowerValue)) {
-      return true;
-    }
+    return /-o-link/i.test(lowerValue);
 
-    return false;
-  }
 
-  /**
-   * Sanitizes plain text (escape HTML).
-   * @param text - Text to sanitize
-   * @returns Escaped text
-   */
-  sanitizeText(text: string): string {
-    return escapeHtml(text);
-  }
-
-  /**
-   * Validates content against dangerous patterns.
-   * @param content - Content to validate
-   * @returns Whether content is safe
-   */
-  validate(content: string): boolean {
-    for (const pattern of DANGEROUS_PATTERNS) {
-      if (pattern.test(content)) {
-        return false;
-      }
-    }
-    return true;
   }
 }

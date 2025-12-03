@@ -144,7 +144,7 @@ const DEFAULT_CONFIG: DataPrefetchConfig = {
  * Manages data prefetching with caching
  */
 export class DataPrefetchManager {
-  private config: DataPrefetchConfig;
+  private readonly config: DataPrefetchConfig;
   private cache: Map<string, CacheEntry> = new Map();
   private pendingRequests: Map<string, PendingRequest> = new Map();
   private listeners: Map<string, Set<(data: unknown) => void>> = new Map();
@@ -190,11 +190,7 @@ export class DataPrefetchManager {
         }
 
         // Return stale data and revalidate in background
-        if (
-          this.config.staleWhileRevalidate &&
-          cached.staleAt > now &&
-          !cached.isRevalidating
-        ) {
+        if (this.config.staleWhileRevalidate && cached.staleAt > now && !cached.isRevalidating) {
           this.log(`Cache hit (stale): ${cacheKey}`);
           void this.revalidate(url, cacheKey, options);
           return {
@@ -452,10 +448,7 @@ export class DataPrefetchManager {
     }
   }
 
-  private async fetchWithRetry<T>(
-    url: string,
-    options: PrefetchRequestOptions
-  ): Promise<T> {
+  private async fetchWithRetry<T>(url: string, options: PrefetchRequestOptions): Promise<T> {
     const { retry } = this.config;
     let lastError: Error | null = null;
 
@@ -524,12 +517,7 @@ export class DataPrefetchManager {
     }
   }
 
-  private setCache(
-    cacheKey: string,
-    data: unknown,
-    ttl: number,
-    tags?: string[]
-  ): void {
+  private setCache(cacheKey: string, data: unknown, ttl: number, tags?: string[]): void {
     const now = Date.now();
 
     // Evict if at capacity
@@ -581,10 +569,7 @@ export class DataPrefetchManager {
     return parts.join(':');
   }
 
-  private generateGraphQLCacheKey(
-    endpoint: string,
-    options: GraphQLPrefetchOptions
-  ): string {
+  private generateGraphQLCacheKey(endpoint: string, options: GraphQLPrefetchOptions): string {
     const parts = [
       endpoint,
       options.operationName ?? 'anonymous',
@@ -621,9 +606,7 @@ let managerInstance: DataPrefetchManager | null = null;
 /**
  * Get or create the global data prefetch manager
  */
-export function getDataPrefetchManager(
-  config?: Partial<DataPrefetchConfig>
-): DataPrefetchManager {
+export function getDataPrefetchManager(config?: Partial<DataPrefetchConfig>): DataPrefetchManager {
   managerInstance ??= new DataPrefetchManager(config);
   return managerInstance;
 }

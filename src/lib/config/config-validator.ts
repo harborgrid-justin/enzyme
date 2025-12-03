@@ -64,8 +64,8 @@ export interface ValidatorOptions {
  * Configuration validator with schema support.
  */
 export class ConfigValidator {
-  private schema: ConfigSchema;
-  private customValidators: Record<string, CustomValidator>;
+  private readonly schema: ConfigSchema;
+  private readonly customValidators: Record<string, CustomValidator>;
   private options: ValidatorOptions;
 
   constructor(schema: ConfigSchema, options: ValidatorOptions = {}) {
@@ -113,6 +113,13 @@ export class ConfigValidator {
     }
 
     return errors;
+  }
+
+  /**
+   * Register a custom validator.
+   */
+  registerValidator(name: string, validator: CustomValidator): void {
+    this.customValidators[name] = validator;
   }
 
   private validateObject(
@@ -409,13 +416,6 @@ export class ConfigValidator {
     value: unknown
   ): ValidationError {
     return { path, message, rule, value };
-  }
-
-  /**
-   * Register a custom validator.
-   */
-  registerValidator(name: string, validator: CustomValidator): void {
-    this.customValidators[name] = validator;
   }
 }
 

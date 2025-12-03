@@ -72,12 +72,7 @@ export type HydrationTrigger =
  * - pending -> hydrating -> error
  * - pending -> skipped (SSR-only component)
  */
-export type HydrationState =
-  | 'pending'
-  | 'hydrating'
-  | 'hydrated'
-  | 'error'
-  | 'skipped';
+export type HydrationState = 'pending' | 'hydrating' | 'hydrated' | 'error' | 'skipped';
 
 /**
  * Detailed hydration status with timing information.
@@ -199,10 +194,10 @@ export interface HydrationBudget {
  * Default hydration budget optimized for 60fps.
  */
 export const DEFAULT_HYDRATION_BUDGET: HydrationBudget = {
-  frameTimeLimit: 50,      // 50ms per frame leaves room for other work
-  maxTasksPerFrame: 10,    // Process up to 10 small components per frame
-  minIdleTime: 100,        // Require 100ms idle for background hydration
-  yieldToMain: true,       // Always yield to user input
+  frameTimeLimit: 50, // 50ms per frame leaves room for other work
+  maxTasksPerFrame: 10, // Process up to 10 small components per frame
+  minIdleTime: 100, // Require 100ms idle for background hydration
+  yieldToMain: true, // Always yield to user input
 } as const;
 
 /**
@@ -224,7 +219,7 @@ export interface VisibilityConfig {
  */
 export const DEFAULT_VISIBILITY_CONFIG: VisibilityConfig = {
   root: null,
-  rootMargin: '100px 0px',  // Hydrate slightly before entering viewport
+  rootMargin: '100px 0px', // Hydrate slightly before entering viewport
   threshold: 0,
   triggerOnce: true,
 } as const;
@@ -257,10 +252,10 @@ export interface HydrationSchedulerConfig {
  * Strategy for handling user interactions during hydration.
  */
 export type InteractionStrategy =
-  | 'replay'           // Buffer and replay interactions after hydration
+  | 'replay' // Buffer and replay interactions after hydration
   | 'immediate-hydrate' // Immediately hydrate on any interaction
-  | 'block'            // Block interaction until hydrated (not recommended)
-  | 'passthrough';     // Allow interaction to propagate (may cause issues)
+  | 'block' // Block interaction until hydrated (not recommended)
+  | 'passthrough'; // Allow interaction to propagate (may cause issues)
 
 /**
  * Default scheduler configuration.
@@ -605,9 +600,7 @@ export type PartialHydrationConfig = Partial<{
 /**
  * Deep merge configuration with defaults.
  */
-export function mergeWithDefaults(
-  partial: PartialHydrationConfig = {}
-): HydrationSchedulerConfig {
+export function mergeWithDefaults(partial: PartialHydrationConfig = {}): HydrationSchedulerConfig {
   return {
     budget: {
       ...DEFAULT_HYDRATION_BUDGET,
@@ -618,7 +611,8 @@ export function mergeWithDefaults(
       ...partial.visibility,
     },
     debug: partial.debug ?? DEFAULT_SCHEDULER_CONFIG.debug,
-    interactionStrategy: partial.interactionStrategy ?? DEFAULT_SCHEDULER_CONFIG.interactionStrategy,
+    interactionStrategy:
+      partial.interactionStrategy ?? DEFAULT_SCHEDULER_CONFIG.interactionStrategy,
     useIdleCallback: partial.useIdleCallback ?? DEFAULT_SCHEDULER_CONFIG.useIdleCallback,
     maxQueueSize: partial.maxQueueSize ?? DEFAULT_SCHEDULER_CONFIG.maxQueueSize,
     taskTimeout: partial.taskTimeout ?? DEFAULT_SCHEDULER_CONFIG.taskTimeout,
@@ -631,10 +625,7 @@ export function mergeWithDefaults(
  * Type guard to check if a value is a valid hydration priority.
  */
 export function isHydrationPriority(value: unknown): value is HydrationPriority {
-  return (
-    typeof value === 'string' &&
-    ['critical', 'high', 'normal', 'low', 'idle'].includes(value)
-  );
+  return typeof value === 'string' && ['critical', 'high', 'normal', 'low', 'idle'].includes(value);
 }
 
 /**

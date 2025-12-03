@@ -1,6 +1,7 @@
 # Harbor React Examples
 
-> **Comprehensive code examples** for the Harbor React Library. Each example demonstrates real-world usage patterns with complete, runnable code.
+> **Comprehensive code examples** for the Harbor React Library. Each example demonstrates real-world usage patterns with
+> complete, runnable code.
 
 ---
 
@@ -35,13 +36,13 @@ Before using these examples, ensure you have:
 
 ## Examples Overview
 
-| Example File | Topics Covered | Complexity | Examples Count |
-|--------------|----------------|------------|----------------|
-| [auth-examples.md](./auth-examples.md) | Authentication, SSO, MFA, Session Management | Beginner to Advanced | 25+ |
-| [routing-examples.md](./routing-examples.md) | Type-safe routing, Guards, Prefetching, Dynamic routes | Beginner to Intermediate | 25+ |
-| [rbac-examples.md](./rbac-examples.md) | Role-based access, Permissions, Hierarchies | Intermediate | 20+ |
-| [state-examples.md](./state-examples.md) | Zustand, React Query, Multi-tab sync, Persistence | Beginner to Advanced | 30+ |
-| [performance-examples.md](./performance-examples.md) | Optimization, Caching, Lazy loading, Monitoring | Intermediate to Advanced | 20+ |
+| Example File                                         | Topics Covered                                         | Complexity               | Examples Count |
+|------------------------------------------------------|--------------------------------------------------------|--------------------------|----------------|
+| [auth-examples.md](./auth-examples.md)               | Authentication, SSO, MFA, Session Management           | Beginner to Advanced     | 25+            |
+| [routing-examples.md](./routing-examples.md)         | Type-safe routing, Guards, Prefetching, Dynamic routes | Beginner to Intermediate | 25+            |
+| [rbac-examples.md](./rbac-examples.md)               | Role-based access, Permissions, Hierarchies            | Intermediate             | 20+            |
+| [state-examples.md](./state-examples.md)             | Zustand, React Query, Multi-tab sync, Persistence      | Beginner to Advanced     | 30+            |
+| [performance-examples.md](./performance-examples.md) | Optimization, Caching, Lazy loading, Monitoring        | Intermediate to Advanced | 20+            |
 
 **Total Examples: 120+**
 
@@ -112,22 +113,22 @@ Each example includes:
 **25+ Examples covering:**
 
 - **Basic Authentication**
-  - Simple login/logout
-  - Registration flows
-  - Password reset
-  - Email verification
+    - Simple login/logout
+    - Registration flows
+    - Password reset
+    - Email verification
 
 - **Advanced Auth**
-  - SSO with SAML/OIDC
-  - Multi-factor authentication (TOTP, WebAuthn)
-  - Active Directory integration
-  - Session management
+    - SSO with SAML/OIDC
+    - Multi-factor authentication (TOTP, WebAuthn)
+    - Active Directory integration
+    - Session management
 
 - **Security**
-  - Token refresh strategies
-  - Secure token storage
-  - CSRF protection
-  - Rate limiting
+    - Token refresh strategies
+    - Secure token storage
+    - CSRF protection
+    - Rate limiting
 
 **Complexity**: Beginner to Advanced
 **Use Cases**: Login pages, SSO integration, enterprise auth
@@ -139,22 +140,22 @@ Each example includes:
 **25+ Examples covering:**
 
 - **Basic Routing**
-  - Type-safe route definitions
-  - Dynamic parameters
-  - Query parameters
-  - Nested routes
+    - Type-safe route definitions
+    - Dynamic parameters
+    - Query parameters
+    - Nested routes
 
 - **Route Guards**
-  - Authentication guards
-  - Role-based guards
-  - Custom guards
-  - Redirect strategies
+    - Authentication guards
+    - Role-based guards
+    - Custom guards
+    - Redirect strategies
 
 - **Advanced Routing**
-  - Predictive prefetching
-  - Code splitting
-  - Route-based data loading
-  - 404 handling
+    - Predictive prefetching
+    - Code splitting
+    - Route-based data loading
+    - 404 handling
 
 **Complexity**: Beginner to Intermediate
 **Use Cases**: Navigation, protected routes, performance optimization
@@ -166,22 +167,22 @@ Each example includes:
 **20+ Examples covering:**
 
 - **Basic RBAC**
-  - Role definitions
-  - Permission checks
-  - Component guards
-  - Hook-based checks
+    - Role definitions
+    - Permission checks
+    - Component guards
+    - Hook-based checks
 
 - **Advanced RBAC**
-  - Role hierarchies
-  - Dynamic permissions
-  - Context-aware permissions
-  - Permission caching
+    - Role hierarchies
+    - Dynamic permissions
+    - Context-aware permissions
+    - Permission caching
 
 - **UI Patterns**
-  - Conditional rendering
-  - Disabled states
-  - Hidden actions
-  - Fallback content
+    - Conditional rendering
+    - Disabled states
+    - Hidden actions
+    - Fallback content
 
 **Complexity**: Intermediate
 **Use Cases**: Multi-tenant apps, admin panels, permission systems
@@ -193,22 +194,22 @@ Each example includes:
 **30+ Examples covering:**
 
 - **Client State (Zustand)**
-  - Store setup
-  - Selectors
-  - Actions
-  - Persistence
+    - Store setup
+    - Selectors
+    - Actions
+    - Persistence
 
 - **Server State (React Query)**
-  - Data fetching
-  - Mutations
-  - Cache management
-  - Optimistic updates
+    - Data fetching
+    - Mutations
+    - Cache management
+    - Optimistic updates
 
 - **Advanced Patterns**
-  - Multi-tab synchronization
-  - State persistence
-  - Derived state
-  - State machines
+    - Multi-tab synchronization
+    - State persistence
+    - Derived state
+    - State machines
 
 **Complexity**: Beginner to Advanced
 **Use Cases**: App state, API data, cross-tab sync, offline support
@@ -220,22 +221,22 @@ Each example includes:
 **20+ Examples covering:**
 
 - **Optimization Techniques**
-  - React.memo and useMemo
-  - Code splitting
-  - Lazy loading
-  - Bundle optimization
+    - React.memo and useMemo
+    - Code splitting
+    - Lazy loading
+    - Bundle optimization
 
 - **Caching Strategies**
-  - HTTP caching
-  - React Query cache
-  - Service workers
-  - Cache invalidation
+    - HTTP caching
+    - React Query cache
+    - Service workers
+    - Cache invalidation
 
 - **Monitoring**
-  - Core Web Vitals
-  - Performance Observatory
-  - Custom metrics
-  - Error tracking
+    - Core Web Vitals
+    - Performance Observatory
+    - Custom metrics
+    - Error tracking
 
 **Complexity**: Intermediate to Advanced
 **Use Cases**: Large apps, performance optimization, monitoring
@@ -247,16 +248,19 @@ Each example includes:
 ### By Difficulty Level
 
 **Beginner**
+
 - Basic login/logout ([auth-examples.md](./auth-examples.md))
 - Simple routing ([routing-examples.md](./routing-examples.md))
 - Basic state management ([state-examples.md](./state-examples.md))
 
 **Intermediate**
+
 - Route guards ([routing-examples.md](./routing-examples.md))
 - RBAC implementation ([rbac-examples.md](./rbac-examples.md))
 - React Query patterns ([state-examples.md](./state-examples.md))
 
 **Advanced**
+
 - SSO integration ([auth-examples.md](./auth-examples.md))
 - Multi-tab sync ([state-examples.md](./state-examples.md))
 - Performance optimization ([performance-examples.md](./performance-examples.md))
@@ -354,17 +358,20 @@ export function MyExample() {
 ## Related Documentation
 
 ### Core Guides
+
 - [Documentation Index](../INDEX.md) - All library documentation
 - [Architecture Overview](../../docs/ARCHITECTURE.md) - System design patterns
 - [Getting Started](../../docs/GETTING_STARTED.md) - Initial setup guide
 
 ### Reference Docs
+
 - [Authentication Guide](../AUTHENTICATION.md) - Auth system reference
 - [Routing Guide](../ROUTING.md) - Routing system reference
 - [RBAC Guide](../RBAC.md) - Role-based access control
 - [Performance Guide](../PERFORMANCE.md) - Performance patterns
 
 ### Integration Guides
+
 - [Auth, Security & State](../../docs/integration/AUTH_SECURITY_STATE.md)
 - [Routing, State & Guards](../../docs/integration/ROUTING_STATE_GUARDS.md)
 - [Realtime, Queries & Services](../../docs/integration/REALTIME_QUERIES_SERVICES.md)

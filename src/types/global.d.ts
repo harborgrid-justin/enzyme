@@ -31,7 +31,7 @@ declare global {
       featureFlags: Record<string, boolean>;
       version: string;
     };
-    
+
     /** Debug utilities (development only) */
     __DEBUG__?: {
       store: unknown;

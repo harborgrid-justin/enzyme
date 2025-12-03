@@ -91,7 +91,13 @@ export type FlagKey = (typeof flagKeys)[keyof typeof flagKeys];
  */
 export const flagCategories = {
   UI: ['dark-mode', 'new-dashboard'] as const,
-  AUTH: ['mfa-enabled', 'email-verification', 'social-login', 'user-profile-editing', 'admin-panel'] as const,
+  AUTH: [
+    'mfa-enabled',
+    'email-verification',
+    'social-login',
+    'user-profile-editing',
+    'admin-panel',
+  ] as const,
   DATA: ['real-time-updates', 'analytics-v2', 'api-rate-limit-display'] as const,
   REPORTS: ['export-reports', 'reports-enabled'] as const,
   SEARCH: ['advanced-filters', 'advanced-search'] as const,

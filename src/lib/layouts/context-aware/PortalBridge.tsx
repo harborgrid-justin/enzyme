@@ -17,22 +17,12 @@
  * @version 1.1.0
  */
 
-import React, {
-  useRef,
-  useEffect,
-  useState,
-  useCallback,
-  useContext,
-} from 'react';
+import React, { useRef, useEffect, useState, useCallback, useContext } from 'react';
 import { PortalBridgeContext } from '../../contexts/PortalBridgeContext';
 import { createPortal } from 'react-dom';
 import { isReactEnvironmentHealthy, checkReactEnvironment } from '../../core/react-env';
 
-import type {
-  PortalContext,
-  PortalBridgeProps,
-  DOMContextSnapshot,
-} from './types';
+import type { PortalContext, PortalBridgeProps, DOMContextSnapshot } from './types';
 import { Z_INDEX_LAYERS } from './types';
 import {
   getPortalContextManager,
@@ -150,8 +140,8 @@ export function PortalBridge({
         if (!healthy) {
           const envStatus = checkReactEnvironment({ logWarnings: true });
           const errorMsg = envStatus.issues
-            .filter(i => i.severity === 'error')
-            .map(i => i.message)
+            .filter((i) => i.severity === 'error')
+            .map((i) => i.message)
             .join('; ');
           const err = new Error(`React environment unhealthy: ${errorMsg}`);
           setPortalError(err);
@@ -331,9 +321,7 @@ export function PortalBridge({
 
   // Determine if we should render fallback content
   const shouldRenderFallback =
-    portalError !== null ||
-    reactEnvHealthy === false ||
-    (isSSR && fallbackToInline);
+    portalError !== null || reactEnvHealthy === false || (isSSR && fallbackToInline);
 
   // Render fallback content inline if portal fails
   const renderFallbackContent = async () => {
@@ -342,12 +330,7 @@ export function PortalBridge({
     }
     if (fallbackToInline) {
       return (
-        <div
-          className={className}
-          style={style}
-          data-testid={testId}
-          data-portal-fallback="true"
-        >
+        <div className={className} style={style} data-testid={testId} data-portal-fallback="true">
           {children}
         </div>
       );
@@ -359,40 +342,36 @@ export function PortalBridge({
   return (
     <>
       {/* Source marker for context capture */}
-      <div
-        ref={sourceRef}
-        data-portal-source="true"
-        style={{ display: 'contents' }}
-      />
+      <div ref={sourceRef} data-portal-source="true" style={{ display: 'contents' }} />
 
       {/* Fallback rendering when portal cannot be created */}
       {shouldRenderFallback && renderFallbackContent()}
 
       {/* Portal content - only render if environment is healthy and portal is ready */}
       {!shouldRenderFallback && isReady && portalContainer != null && portalContext != null && (
-        <PortalBridgeContext.Provider value={{
-          registerPortal: (_id: string, _container: HTMLElement) => {
-            // Implementation for registering portal
-            console.warn('Portal registration not implemented');
-          },
-          unregisterPortal: (_id: string) => {
-            // Implementation for unregistering portal
-            console.warn('Portal unregistration not implemented');
-          },
-          getPortalContainer: (_id: string) => {
-            // Implementation for getting portal container
-            console.warn('Portal container retrieval not implemented');
-            return null;
-          },
-          renderInPortal: (_id: string, _content: React.ReactNode) => {
-            // Implementation for rendering in portal
-            console.warn('Portal rendering not implemented');
-          },
-        }}>
+        <PortalBridgeContext.Provider
+          value={{
+            registerPortal: (_id: string, _container: HTMLElement) => {
+              // Implementation for registering portal
+              console.warn('Portal registration not implemented');
+            },
+            unregisterPortal: (_id: string) => {
+              // Implementation for unregistering portal
+              console.warn('Portal unregistration not implemented');
+            },
+            getPortalContainer: (_id: string) => {
+              // Implementation for getting portal container
+              console.warn('Portal container retrieval not implemented');
+              return null;
+            },
+            renderInPortal: (_id: string, _content: React.ReactNode) => {
+              // Implementation for rendering in portal
+              console.warn('Portal rendering not implemented');
+            },
+          }}
+        >
           {createPortal(
-            <PortalContent sourceContext={portalContext.sourceContext}>
-              {children}
-            </PortalContent>,
+            <PortalContent sourceContext={portalContext.sourceContext}>{children}</PortalContent>,
             portalContainer
           )}
         </PortalBridgeContext.Provider>
@@ -400,10 +379,7 @@ export function PortalBridge({
 
       {/* Inline fallback when portal is not ready but environment is healthy */}
       {!shouldRenderFallback && !isReady && fallbackToInline && (
-        <div
-          data-portal-pending="true"
-          style={{ display: 'contents' }}
-        >
+        <div data-portal-pending="true" style={{ display: 'contents' }}>
           {children}
         </div>
       )}
@@ -428,10 +404,7 @@ interface PortalContentProps {
  */
 function PortalContent({ children, sourceContext }: PortalContentProps): React.JSX.Element {
   return (
-    <div
-      data-portal-content="true"
-      data-source-context-time={sourceContext.timestamp}
-    >
+    <div data-portal-content="true" data-source-context-time={sourceContext.timestamp}>
       {children}
     </div>
   );
@@ -563,7 +536,7 @@ export function PopoverPortal({
 
   return (
     <PortalBridge layer="popover" {...props}>
-    {children}
-  </PortalBridge>
-);
+      {children}
+    </PortalBridge>
+  );
 }

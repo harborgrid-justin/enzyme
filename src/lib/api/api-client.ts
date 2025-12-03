@@ -53,30 +53,21 @@ import type {
   ApiError,
   ApiResponse,
   ErrorCategory,
+  ErrorInterceptor,
   ErrorSeverity,
+  QueryParams,
   RequestConfig,
   RequestInterceptor,
-  ResponseInterceptor,
-  ErrorInterceptor,
-  RetryConfig,
-  ResponseTiming,
   RequestMeta,
+  ResponseInterceptor,
+  ResponseTiming,
+  RetryConfig,
   ServerErrorResponse,
-  QueryParams,
   TokenProvider,
 } from './types';
-import { API_CONFIG, TIMING, calculateBackoffWithJitter } from '@/config';
-import {
-  type SecureStorage,
-  createSecureLocalStorage,
-  isSecureStorageAvailable,
-} from '@/lib/security/secure-storage';
-import {
-  RateLimiter,
-  RateLimitError,
-  RATE_LIMIT_PRESETS,
-  type RateLimitConfig,
-} from './advanced/rate-limiter';
+import { API_CONFIG, calculateBackoffWithJitter, TIMING } from '@/config';
+import { createSecureLocalStorage, isSecureStorageAvailable, type SecureStorage, } from '@/lib/security/secure-storage';
+import { RATE_LIMIT_PRESETS, type RateLimitConfig, RateLimiter, RateLimitError, } from './advanced/rate-limiter';
 
 // =============================================================================
 // DEFAULT CONFIGURATION
@@ -364,7 +355,7 @@ const defaultTokenProvider: TokenProvider = {
  */
 function createTokenRefreshFn(tokenProvider: TokenProvider): () => Promise<string> {
   return async function tokenRefresh(): Promise<string> {
-    const refreshToken = await Promise.resolve(tokenProvider.getRefreshToken());
+    const refreshToken = await tokenProvider.getRefreshToken();
     if (refreshToken == null || refreshToken === '') {
       throw new Error('No refresh token available');
     }
@@ -380,9 +371,9 @@ function createTokenRefreshFn(tokenProvider: TokenProvider): () => Promise<strin
     }
 
     const data = await response.json() as { accessToken: string; refreshToken?: string };
-    await Promise.resolve(tokenProvider.setAccessToken(data.accessToken));
+    await tokenProvider.setAccessToken(data.accessToken);
     if (data.refreshToken != null && data.refreshToken !== '') {
-      await Promise.resolve(tokenProvider.setRefreshToken(data.refreshToken));
+      await tokenProvider.setRefreshToken(data.refreshToken);
     }
 
     return data.accessToken;
@@ -487,7 +478,7 @@ function parseServerError(response: ServerErrorResponse, _status: number): Parti
     ({ message } = response);
   } else if (typeof response.error === 'string') {
     message = response.error;
-  } else if (response.error != null && typeof response.error.message === 'string') {
+  } else if (response.error != null) {
     const { message: errorMessage, code: errorCode } = response.error;
     message = errorMessage;
     code = errorCode;
@@ -516,9 +507,9 @@ function parseServerError(response: ServerErrorResponse, _status: number): Parti
  */
 export class ApiClient {
   private config: Required<ApiClientConfig>;
-  private requestInterceptors: RequestInterceptor[] = [];
-  private responseInterceptors: ResponseInterceptor[] = [];
-  private errorInterceptors: ErrorInterceptor[] = [];
+  private readonly requestInterceptors: RequestInterceptor[] = [];
+  private readonly responseInterceptors: ResponseInterceptor[] = [];
+  private readonly errorInterceptors: ErrorInterceptor[] = [];
   private tokenRefreshFn: () => Promise<string>;
   private tokenProvider: TokenProvider;
   private abortControllers = new Map<string, AbortController>();
@@ -644,16 +635,18 @@ export class ApiClient {
       startTime: Date.now(),
     };
 
-    let processedConfig: RequestConfig<unknown> & { meta: RequestMeta } = { ...config, meta };
+    let processedConfig: RequestConfig & { meta: RequestMeta } = { ...config, meta };
 
     // Run request interceptors
-    processedConfig = await this.runRequestInterceptors(processedConfig) as typeof processedConfig;
+    processedConfig = (await this.runRequestInterceptors(
+      processedConfig
+    )) as typeof processedConfig;
 
     // Build URL for rate limiting key
     const url = this.buildUrl(processedConfig);
 
     // Apply rate limiting if enabled
-    if ((this.rateLimiter != null && this.rateLimiter !== undefined) && !(config.meta?.skipRateLimit === true)) {
+    if (this.rateLimiter != null && !(config.meta?.skipRateLimit === true)) {
       try {
         return await this.rateLimiter.execute(url, async () => {
           return this.executeRequestWithDedup<TResponse>(processedConfig, requestId);
@@ -677,39 +670,6 @@ export class ApiClient {
   }
 
   /**
-   * Execute request with deduplication logic
-   */
-  private async executeRequestWithDedup<TResponse>(
-    config: RequestConfig,
-    requestId: string
-  ): Promise<ApiResponse<TResponse>> {
-    // Check for deduplication
-    if (this.config.deduplicate === true && config.method === 'GET' && !(config.meta?.skipAuth === true)) {
-      const cacheKey = generateRequestKey(config);
-      const inflight = inflightRequests.get(cacheKey);
-      if (inflight) {
-        return inflight as Promise<ApiResponse<TResponse>>;
-      }
-
-      const promise = this.executeRequest<TResponse>(config, requestId);
-      inflightRequests.set(cacheKey, promise as Promise<ApiResponse>);
-
-      try {
-        const result = await promise;
-        return result;
-      } finally {
-        inflightRequests.delete(cacheKey);
-      }
-    }
-
-    return this.executeRequest<TResponse>(config, requestId);
-  }
-
-  // ===========================================================================
-  // INTERCEPTOR MANAGEMENT
-  // ===========================================================================
-
-  /**
    * Add a request interceptor
    */
   addRequestInterceptor(interceptor: RequestInterceptor): () => void {
@@ -721,6 +681,10 @@ export class ApiClient {
       }
     };
   }
+
+  // ===========================================================================
+  // INTERCEPTOR MANAGEMENT
+  // ===========================================================================
 
   /**
    * Add a response interceptor
@@ -748,16 +712,16 @@ export class ApiClient {
     };
   }
 
-  // ===========================================================================
-  // TOKEN REFRESH
-  // ===========================================================================
-
   /**
    * Set custom token refresh function
    */
   setTokenRefresh(fn: () => Promise<string>): void {
     this.tokenRefreshFn = fn;
   }
+
+  // ===========================================================================
+  // TOKEN REFRESH
+  // ===========================================================================
 
   /**
    * Get the current token provider
@@ -774,6 +738,112 @@ export class ApiClient {
   setTokenProvider(provider: TokenProvider): void {
     this.tokenProvider = provider;
     this.tokenRefreshFn = createTokenRefreshFn(provider);
+  }
+
+  /**
+   * Get the rate limiter instance.
+   * Returns null if rate limiting is not enabled.
+   */
+  getRateLimiter(): RateLimiter | null {
+    return this.rateLimiter;
+  }
+
+  /**
+   * Enable or update rate limiting.
+   *
+   * @param config - Rate limit configuration or preset name
+   *
+   * @example
+   * ```typescript
+   * // Use a preset
+   * client.setRateLimit('standard');
+   *
+   * // Use custom config
+   * client.setRateLimit({
+   *   maxRequests: 100,
+   *   windowMs: 60000,
+   *   strategy: 'queue',
+   * });
+   * ```
+   */
+  setRateLimit(config: RateLimitConfig | keyof typeof RATE_LIMIT_PRESETS): void {
+    const rateLimitConfig: RateLimitConfig =
+      typeof config === 'string' ? RATE_LIMIT_PRESETS[config] : config;
+    this.rateLimiter = new RateLimiter(rateLimitConfig);
+  }
+
+  // ===========================================================================
+  // RATE LIMITING
+  // ===========================================================================
+
+  /**
+   * Disable rate limiting.
+   */
+  disableRateLimit(): void {
+    this.rateLimiter = null;
+  }
+
+  /**
+   * Check if a request would be rate limited.
+   *
+   * @param endpoint - Endpoint URL to check
+   * @returns Whether the request would be limited
+   */
+  wouldBeRateLimited(endpoint: string): boolean {
+    return this.rateLimiter?.wouldBeLimited(endpoint) ?? false;
+  }
+
+  /**
+   * Cancel a specific request by ID
+   */
+  cancelRequest(requestId: string): void {
+    const controller = this.abortControllers.get(requestId);
+    if (controller) {
+      controller.abort();
+      this.abortControllers.delete(requestId);
+    }
+  }
+
+  /**
+   * Cancel all pending requests
+   */
+  cancelAllRequests(): void {
+    for (const controller of this.abortControllers.values()) {
+      controller.abort();
+    }
+    this.abortControllers.clear();
+  }
+
+  // ===========================================================================
+  // REQUEST CANCELLATION
+  // ===========================================================================
+
+  /**
+   * Execute request with deduplication logic
+   */
+  private async executeRequestWithDedup<TResponse>(
+    config: RequestConfig,
+    requestId: string
+  ): Promise<ApiResponse<TResponse>> {
+    // Check for deduplication
+    if (this.config.deduplicate && config.method === 'GET' && !(config.meta?.skipAuth === true)) {
+      const cacheKey = generateRequestKey(config);
+      const inflight = inflightRequests.get(cacheKey);
+      if (inflight) {
+        return inflight as Promise<ApiResponse<TResponse>>;
+      }
+
+      const promise = this.executeRequest<TResponse>(config, requestId);
+      inflightRequests.set(cacheKey, promise as Promise<ApiResponse>);
+
+      try {
+        return await promise;
+      } finally {
+        inflightRequests.delete(cacheKey);
+      }
+    }
+
+    return this.executeRequest<TResponse>(config, requestId);
   }
 
   /**
@@ -809,86 +879,6 @@ export class ApiClient {
       tokenRefreshState.isRefreshing = false;
       tokenRefreshState.refreshPromise = null;
     }
-  }
-
-  // ===========================================================================
-  // RATE LIMITING
-  // ===========================================================================
-
-  /**
-   * Get the rate limiter instance.
-   * Returns null if rate limiting is not enabled.
-   */
-  getRateLimiter(): RateLimiter | null {
-    return this.rateLimiter;
-  }
-
-  /**
-   * Enable or update rate limiting.
-   *
-   * @param config - Rate limit configuration or preset name
-   *
-   * @example
-   * ```typescript
-   * // Use a preset
-   * client.setRateLimit('standard');
-   *
-   * // Use custom config
-   * client.setRateLimit({
-   *   maxRequests: 100,
-   *   windowMs: 60000,
-   *   strategy: 'queue',
-   * });
-   * ```
-   */
-  setRateLimit(config: RateLimitConfig | keyof typeof RATE_LIMIT_PRESETS): void {
-    const rateLimitConfig: RateLimitConfig =
-      typeof config === 'string'
-        ? RATE_LIMIT_PRESETS[config]
-        : config;
-    this.rateLimiter = new RateLimiter(rateLimitConfig);
-  }
-
-  /**
-   * Disable rate limiting.
-   */
-  disableRateLimit(): void {
-    this.rateLimiter = null;
-  }
-
-  /**
-   * Check if a request would be rate limited.
-   *
-   * @param endpoint - Endpoint URL to check
-   * @returns Whether the request would be limited
-   */
-  wouldBeRateLimited(endpoint: string): boolean {
-    return this.rateLimiter?.wouldBeLimited(endpoint) ?? false;
-  }
-
-  // ===========================================================================
-  // REQUEST CANCELLATION
-  // ===========================================================================
-
-  /**
-   * Cancel a specific request by ID
-   */
-  cancelRequest(requestId: string): void {
-    const controller = this.abortControllers.get(requestId);
-    if (controller) {
-      controller.abort();
-      this.abortControllers.delete(requestId);
-    }
-  }
-
-  /**
-   * Cancel all pending requests
-   */
-  cancelAllRequests(): void {
-    for (const controller of this.abortControllers.values()) {
-      controller.abort();
-    }
-    this.abortControllers.clear();
   }
 
   // ===========================================================================
@@ -937,7 +927,8 @@ export class ApiClient {
       }
 
       // Set up timeout
-      const timeout = config.timeout != null && config.timeout !== 0 ? config.timeout : this.config.timeout;
+      const timeout =
+        config.timeout != null && config.timeout !== 0 ? config.timeout : this.config.timeout;
       const timeoutId = setTimeout(() => abortController.abort(), timeout);
 
       try {
@@ -984,7 +975,11 @@ export class ApiClient {
           }
 
           // Handle 401 with token refresh
-          if (response.status === 401 && this.config.autoRefreshToken === true && config.meta?.skipAuth !== true) {
+          if (
+            response.status === 401 &&
+            this.config.autoRefreshToken &&
+            config.meta?.skipAuth !== true
+          ) {
             try {
               await this.refreshToken();
               // Retry the request with new token
@@ -1000,9 +995,8 @@ export class ApiClient {
             attempt < retryConfig.maxAttempts - 1 &&
             config.meta?.skipRetry !== true
           ) {
-            const shouldRetry = retryConfig.shouldRetry != null
-              ? retryConfig.shouldRetry(apiError, attempt)
-              : true;
+            const shouldRetry =
+              retryConfig.shouldRetry != null ? retryConfig.shouldRetry(apiError, attempt) : true;
 
             if (shouldRetry === true) {
               retryConfig.onRetry?.(apiError, attempt);
@@ -1114,7 +1108,7 @@ export class ApiClient {
    * Build the full URL with path params and query string
    */
   private buildUrl(config: RequestConfig): string {
-    let {url} = config;
+    let { url } = config;
 
     // Substitute path parameters
     if (config.pathParams) {
@@ -1189,7 +1183,7 @@ export class ApiClient {
 
     // Add authorization header using token provider
     if (config.meta?.skipAuth !== true) {
-      const token = await Promise.resolve(this.tokenProvider.getAccessToken());
+      const token = await this.tokenProvider.getAccessToken();
       if (token != null && token !== '') {
         headers.set('Authorization', `Bearer ${token}`);
       }
@@ -1351,9 +1345,7 @@ export class ApiClient {
   /**
    * Run response interceptors in sequence
    */
-  private async runResponseInterceptors<T>(
-    response: ApiResponse<T>
-  ): Promise<ApiResponse<T>> {
+  private async runResponseInterceptors<T>(response: ApiResponse<T>): Promise<ApiResponse<T>> {
     let result = response;
     for (const interceptor of this.responseInterceptors) {
       result = await interceptor(result);

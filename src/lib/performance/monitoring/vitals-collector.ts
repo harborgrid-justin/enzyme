@@ -227,13 +227,10 @@ export class EnhancedVitalsCollector {
   /**
    * Track a custom metric
    */
-  trackCustomMetric(
-    name: string,
-    value: number,
-    thresholds?: MetricThresholds
-  ): void {
+  trackCustomMetric(name: string, value: number, thresholds?: MetricThresholds): void {
     const effectiveThresholds = thresholds ?? this.thresholds.custom;
-    const rating = effectiveThresholds !== undefined ? this.calculateRating(value, effectiveThresholds) : 'good';
+    const rating =
+      effectiveThresholds !== undefined ? this.calculateRating(value, effectiveThresholds) : 'good';
 
     const metric: CollectedMetric = {
       name,
@@ -302,10 +299,10 @@ export class EnhancedVitalsCollector {
   calculateScore(): number {
     const weights: Record<MetricName, number> = {
       LCP: 0.25,
-      INP: 0.30,
+      INP: 0.3,
       CLS: 0.25,
-      FCP: 0.10,
-      TTFB: 0.10,
+      FCP: 0.1,
+      TTFB: 0.1,
       FID: 0,
       FMP: 0,
       TTI: 0,
@@ -415,9 +412,11 @@ export class EnhancedVitalsCollector {
   private observeFID(): void {
     try {
       const observer = new PerformanceObserver((list) => {
-        const entries = list.getEntries() as Array<PerformanceEventTiming & {
-          target?: Element;
-        }>;
+        const entries = list.getEntries() as Array<
+          PerformanceEventTiming & {
+            target?: Element;
+          }
+        >;
 
         for (const entry of entries) {
           const value = entry.processingStart - entry.startTime;
@@ -459,11 +458,13 @@ export class EnhancedVitalsCollector {
       let previousEndTime = 0;
 
       const observer = new PerformanceObserver((list) => {
-        for (const entry of list.getEntries() as Array<PerformanceEntry & {
-          hadRecentInput?: boolean;
-          value?: number;
-          sources?: Array<{ node?: Element }>;
-        }>) {
+        for (const entry of list.getEntries() as Array<
+          PerformanceEntry & {
+            hadRecentInput?: boolean;
+            value?: number;
+            sources?: Array<{ node?: Element }>;
+          }
+        >) {
           // Ignore entries with recent input
           if (entry.hadRecentInput === true) continue;
 
@@ -498,9 +499,7 @@ export class EnhancedVitalsCollector {
 
             const attribution = this.config.attribution
               ? {
-                  largestShiftTarget: this.getElementSelector(
-                    largestShift.sources?.[0]?.node
-                  ),
+                  largestShiftTarget: this.getElementSelector(largestShift.sources?.[0]?.node),
                   largestShiftTime: largestShift.startTime,
                 }
               : null;
@@ -508,7 +507,10 @@ export class EnhancedVitalsCollector {
             this.recordMetric({
               name: 'CLS',
               value: clsValue,
-              rating: this.thresholds.CLS !== undefined ? this.calculateRating(clsValue, this.thresholds.CLS) : 'good',
+              rating:
+                this.thresholds.CLS !== undefined
+                  ? this.calculateRating(clsValue, this.thresholds.CLS)
+                  : 'good',
               delta: entry.value ?? 0,
               id: this.generateId(),
               navigationType: this.getNavigationType(),
@@ -545,9 +547,7 @@ export class EnhancedVitalsCollector {
             interactionEntries.push(entry);
 
             // Calculate INP (98th percentile of interactions)
-            const sortedDurations = interactionEntries
-              .map((e) => e.duration)
-              .sort((a, b) => b - a);
+            const sortedDurations = interactionEntries.map((e) => e.duration).sort((a, b) => b - a);
 
             const idx = Math.ceil(sortedDurations.length * 0.02) - 1;
             const inp = sortedDurations[Math.max(0, idx)] ?? 0;
@@ -695,9 +695,8 @@ export class EnhancedVitalsCollector {
 
     const tag = element.tagName.toLowerCase();
     const id = element.id ? `#${element.id}` : '';
-    const classes = element.classList.length > 0
-      ? `.${Array.from(element.classList).join('.')}`
-      : '';
+    const classes =
+      element.classList.length > 0 ? `.${Array.from(element.classList).join('.')}` : '';
 
     return `${tag}${id}${classes}`;
   }
@@ -750,10 +749,7 @@ export class EnhancedVitalsCollector {
       };
 
       if (typeof navigator.sendBeacon === 'function') {
-        navigator.sendBeacon(
-          this.config.reportEndpoint,
-          JSON.stringify(payload)
-        );
+        navigator.sendBeacon(this.config.reportEndpoint, JSON.stringify(payload));
       } else {
         // Raw fetch is intentional - uses keepalive for page unload reliability
         await fetch(this.config.reportEndpoint, {

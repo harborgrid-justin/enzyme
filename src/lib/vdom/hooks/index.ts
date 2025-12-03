@@ -79,5 +79,3 @@ export {
   useIsEventAllowed,
   useSecureMessaging,
 } from './useSecureModule';
-
-

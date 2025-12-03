@@ -3,11 +3,7 @@
  * @description Sends errors to external monitoring services (Sentry/Datadog/etc.)
  */
 
-import type {
-  AppError,
-  ErrorContext,
-  ErrorReport,
-} from './errorTypes';
+import type { AppError, ErrorContext, ErrorReport } from './errorTypes';
 import { normalizeError } from './errorTypes';
 import { isDebugModeEnabled, isDevelopmentEnv } from '../flags/debug-mode';
 
@@ -31,7 +27,12 @@ export interface ErrorReporterConfig {
  */
 const defaultConfig: ErrorReporterConfig = {
   enabled: !isDevelopmentEnv(),
-  environment: (process.env['NODE_ENV'] !== undefined && process.env['NODE_ENV'] !== null && process.env['NODE_ENV'] !== '') ? process.env['NODE_ENV'] : 'development',
+  environment:
+    process.env['NODE_ENV'] !== undefined &&
+    process.env['NODE_ENV'] !== null &&
+    process.env['NODE_ENV'] !== ''
+      ? process.env['NODE_ENV']
+      : 'development',
   version: '1.0.0',
   sampleRate: 1.0,
   ignoredErrors: [
@@ -132,9 +133,7 @@ export function resetErrorReporter(): void {
 function isWithinRateLimit(): boolean {
   const now = Date.now();
   // Clean up old timestamps
-  errorTimestamps = errorTimestamps.filter(
-    (timestamp) => now - timestamp < RATE_LIMIT_WINDOW_MS
-  );
+  errorTimestamps = errorTimestamps.filter((timestamp) => now - timestamp < RATE_LIMIT_WINDOW_MS);
   return errorTimestamps.length < MAX_ERRORS_PER_WINDOW;
 }
 
@@ -173,25 +172,22 @@ export function clearErrorContext(): void {
 /**
  * Report an error
  */
-export function reportError(
-  error: unknown,
-  context?: Partial<ErrorContext>
-): void {
+export function reportError(error: unknown, context?: Partial<ErrorContext>): void {
   const appError = normalizeError(error);
-  
+
   // Check if error should be ignored
   if (shouldIgnoreError(appError)) {
     return;
   }
-  
+
   const report = createErrorReport(appError, context);
-  
+
   // Apply beforeSend hook
   const finalReport = config.beforeSend ? config.beforeSend(report) : report;
   if (!finalReport) {
     return;
   }
-  
+
   // Apply sample rate
   if (config.sampleRate != null && config.sampleRate > 0 && Math.random() > config.sampleRate) {
     return;
@@ -217,7 +213,7 @@ export function reportError(
       console.warn('[Error Reporter] Error queue full, dropping error');
     }
   }
-  
+
   // Log when debug mode is enabled
   if (isDebugModeEnabled()) {
     console.error('[Error Reporter]', appError.message, appError);
@@ -227,10 +223,7 @@ export function reportError(
 /**
  * Report a warning (lower severity)
  */
-export function reportWarning(
-  message: string,
-  context?: Partial<ErrorContext>
-): void {
+export function reportWarning(message: string, context?: Partial<ErrorContext>): void {
   const appError: AppError = {
     id: `warn_${Date.now()}`,
     message,
@@ -238,7 +231,7 @@ export function reportWarning(
     severity: 'low',
     timestamp: new Date().toISOString(),
   };
-  
+
   const report = createErrorReport(appError, context);
 
   if (isDebugModeEnabled()) {
@@ -253,14 +246,11 @@ export function reportWarning(
 /**
  * Report an info event
  */
-export function reportInfo(
-  message: string,
-  metadata?: Record<string, unknown>
-): void {
+export function reportInfo(message: string, metadata?: Record<string, unknown>): void {
   if (isDebugModeEnabled()) {
     console.info('[Info]', message, metadata);
   }
-  
+
   // Send as breadcrumb in production
   addBreadcrumb('info', message, metadata);
 }
@@ -268,11 +258,7 @@ export function reportInfo(
 /**
  * Add a breadcrumb for error context
  */
-export function addBreadcrumb(
-  type: string,
-  message: string,
-  data?: Record<string, unknown>
-): void {
+export function addBreadcrumb(type: string, message: string, data?: Record<string, unknown>): void {
   // In production, this would add to Sentry/Datadog breadcrumbs
   // Log to console when debug mode is enabled
   if (isDebugModeEnabled()) {
@@ -284,12 +270,9 @@ export function addBreadcrumb(
 /**
  * Create error report from app error
  */
-function createErrorReport(
-  appError: AppError,
-  context?: Partial<ErrorContext>
-): ErrorReport {
+function createErrorReport(appError: AppError, context?: Partial<ErrorContext>): ErrorReport {
   const route = typeof window !== 'undefined' ? window.location.pathname : undefined;
-  
+
   return {
     ...appError,
     context: {
@@ -361,7 +344,7 @@ function handleUnhandledRejection(event: PromiseRejectionEvent): void {
  */
 function shouldIgnoreError(error: AppError): boolean {
   if (!config.ignoredErrors) return false;
-  
+
   return config.ignoredErrors.some((pattern) => {
     if (typeof pattern === 'string') {
       return error.message.includes(pattern);

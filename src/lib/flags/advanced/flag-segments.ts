@@ -104,7 +104,7 @@ export interface ComposedSegment {
  */
 export class SegmentMatcher {
   private cache = new Map<string, { result: boolean; expiresAt: number }>();
-  private cacheTtl: number;
+  private readonly cacheTtl: number;
 
   constructor(options: { cacheTtl?: number } = {}) {
     this.cacheTtl = options.cacheTtl ?? 60000; // 1 minute default
@@ -121,10 +121,7 @@ export class SegmentMatcher {
   /**
    * Check if a context matches a segment with detailed results.
    */
-  matchWithDetails(
-    segment: Segment,
-    context: EvaluationContext
-  ): SegmentMatchResult {
+  matchWithDetails(segment: Segment, context: EvaluationContext): SegmentMatchResult {
     const startTime = performance.now();
     const userId = context.user?.id;
 
@@ -169,11 +166,7 @@ export class SegmentMatcher {
 
     // Evaluate rules
     const matchedConditions: string[] = [];
-    const matched = this.evaluateConditionGroup(
-      segment.rules,
-      context,
-      matchedConditions
-    );
+    const matched = this.evaluateConditionGroup(segment.rules, context, matchedConditions);
 
     this.cacheResult(cacheKey, matched);
 
@@ -207,26 +200,38 @@ export class SegmentMatcher {
   /**
    * Check if a context matches all of the given segments.
    */
-  matchesAll(
-    segments: readonly Segment[],
-    context: EvaluationContext
-  ): boolean {
+  matchesAll(segments: readonly Segment[], context: EvaluationContext): boolean {
     return segments.every((segment) => this.matches(segment, context));
   }
 
   /**
    * Get all segments that match a context.
    */
-  getMatchingSegments(
-    segments: readonly Segment[],
-    context: EvaluationContext
-  ): Segment[] {
+  getMatchingSegments(segments: readonly Segment[], context: EvaluationContext): Segment[] {
     return segments.filter((segment) => this.matches(segment, context));
   }
 
   // ==========================================================================
   // Condition Evaluation
   // ==========================================================================
+
+  /**
+   * Clear the segment cache.
+   */
+  clearCache(): void {
+    this.cache.clear();
+  }
+
+  /**
+   * Clear cache for a specific segment.
+   */
+  clearSegmentCache(segmentId: SegmentId): void {
+    for (const key of this.cache.keys()) {
+      if (key.startsWith(`${segmentId}:`)) {
+        this.cache.delete(key);
+      }
+    }
+  }
 
   private evaluateConditionGroup(
     group: ConditionGroup,
@@ -250,17 +255,9 @@ export class SegmentMatcher {
     matchedConditions: string[]
   ): boolean {
     if ('operator' in conditionOrGroup && 'conditions' in conditionOrGroup) {
-      return this.evaluateConditionGroup(
-        conditionOrGroup,
-        context,
-        matchedConditions
-      );
+      return this.evaluateConditionGroup(conditionOrGroup, context, matchedConditions);
     } else {
-      return this.evaluateCondition(
-        conditionOrGroup,
-        context,
-        matchedConditions
-      );
+      return this.evaluateCondition(conditionOrGroup, context, matchedConditions);
     }
   }
 
@@ -288,10 +285,11 @@ export class SegmentMatcher {
     return matched;
   }
 
-  private resolveAttributePath(
-    path: string,
-    context: EvaluationContext
-  ): JsonValue | undefined {
+  // ==========================================================================
+  // Cache Management
+  // ==========================================================================
+
+  private resolveAttributePath(path: string, context: EvaluationContext): JsonValue | undefined {
     const parts = path.split('.');
     let current: unknown = context;
 
@@ -314,8 +312,7 @@ export class SegmentMatcher {
     expected: JsonValue | readonly JsonValue[],
     caseSensitive: boolean
   ): boolean {
-    const normalize = (v: unknown): string =>
-      caseSensitive ? String(v) : String(v).toLowerCase();
+    const normalize = (v: unknown): string => (caseSensitive ? String(v) : String(v).toLowerCase());
 
     switch (operator) {
       case 'equals':
@@ -333,9 +330,7 @@ export class SegmentMatcher {
         }
         if (Array.isArray(actual)) {
           return actual.some((item) =>
-            caseSensitive
-              ? item === expected
-              : normalize(item) === normalize(expected)
+            caseSensitive ? item === expected : normalize(item) === normalize(expected)
           );
         }
         return false;
@@ -370,9 +365,7 @@ export class SegmentMatcher {
       case 'in':
         if (!Array.isArray(expected)) return false;
         return expected.some((item) =>
-          caseSensitive
-            ? actual === item
-            : normalize(actual) === normalize(item)
+          caseSensitive ? actual === item : normalize(actual) === normalize(item)
         );
 
       case 'notIn':
@@ -401,10 +394,6 @@ export class SegmentMatcher {
     }
   }
 
-  // ==========================================================================
-  // Cache Management
-  // ==========================================================================
-
   private getCacheKey(segmentId: SegmentId, context: EvaluationContext): string {
     const userId = context.user?.id ?? 'anonymous';
     return `${segmentId}:${userId}`;
@@ -415,24 +404,6 @@ export class SegmentMatcher {
       result,
       expiresAt: Date.now() + this.cacheTtl,
     });
-  }
-
-  /**
-   * Clear the segment cache.
-   */
-  clearCache(): void {
-    this.cache.clear();
-  }
-
-  /**
-   * Clear cache for a specific segment.
-   */
-  clearSegmentCache(segmentId: SegmentId): void {
-    for (const key of this.cache.keys()) {
-      if (key.startsWith(`${segmentId}:`)) {
-        this.cache.delete(key);
-      }
-    }
   }
 }
 
@@ -550,10 +521,7 @@ export class SegmentBuilder {
    * Add users to explicitly include.
    */
   include(...userIds: UserId[]): this {
-    this.segment.includedUsers = [
-      ...(this.segment.includedUsers ?? []),
-      ...userIds,
-    ];
+    this.segment.includedUsers = [...(this.segment.includedUsers ?? []), ...userIds];
     return this;
   }
 
@@ -561,10 +529,7 @@ export class SegmentBuilder {
    * Add users to explicitly exclude.
    */
   exclude(...userIds: UserId[]): this {
-    this.segment.excludedUsers = [
-      ...(this.segment.excludedUsers ?? []),
-      ...userIds,
-    ];
+    this.segment.excludedUsers = [...(this.segment.excludedUsers ?? []), ...userIds];
     return this;
   }
 
@@ -630,10 +595,7 @@ export const SegmentFactories = {
   /**
    * Create an internal users segment (employees).
    */
-  internal(
-    id: string = 'internal',
-    emailDomain: string = '@company.com'
-  ): Segment {
+  internal(id: string = 'internal', emailDomain: string = '@company.com'): Segment {
     return createSegment()
       .id(id)
       .name('Internal Users')
@@ -754,11 +716,16 @@ export function composeSegments(
     case 'difference': {
       if (segmentList.length < 2) return false;
       const [first, ...rest] = segmentList;
-      const firstSegment = first ?? { id: 'dummy', name: 'dummy', rules: { operator: 'and', conditions: [] }, createdAt: new Date(), updatedAt: new Date() } as Segment;
-      return (
-        matcher.matches(firstSegment, context) &&
-        !matcher.matchesAny(rest, context).matched
-      );
+      const firstSegment =
+        first ??
+        ({
+          id: 'dummy',
+          name: 'dummy',
+          rules: { operator: 'and', conditions: [] },
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        } as Segment);
+      return matcher.matches(firstSegment, context) && !matcher.matchesAny(rest, context).matched;
     }
 
     default:

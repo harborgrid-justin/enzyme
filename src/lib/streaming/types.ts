@@ -982,13 +982,17 @@ export type { DeepPartial } from '../shared/type-utils';
 /**
  * Extract event payload type.
  */
-export type StreamEventPayload<T extends StreamEventType> =
-  T extends StreamEventType.Chunk ? StreamChunk :
-  T extends StreamEventType.Error ? StreamError :
-  T extends StreamEventType.StateChange ? { from: StreamState; to: StreamState } :
-  T extends StreamEventType.Backpressure ? { pressure: number } :
-  T extends StreamEventType.Retry ? { attempt: number; maxAttempts: number } :
-  unknown;
+export type StreamEventPayload<T extends StreamEventType> = T extends StreamEventType.Chunk
+  ? StreamChunk
+  : T extends StreamEventType.Error
+    ? StreamError
+    : T extends StreamEventType.StateChange
+      ? { from: StreamState; to: StreamState }
+      : T extends StreamEventType.Backpressure
+        ? { pressure: number }
+        : T extends StreamEventType.Retry
+          ? { attempt: number; maxAttempts: number }
+          : unknown;
 
 /**
  * Type guard for StreamError.

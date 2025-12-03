@@ -15,14 +15,7 @@
  * @version 1.0.0
  */
 
-import {
-  useState,
-  useEffect,
-  useMemo,
-  useCallback,
-  useRef,
-  type DependencyList,
-} from 'react';
+import { type DependencyList, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 // ============================================================================
 // Types
@@ -119,13 +112,14 @@ const DEFAULT_OPTIONS: CompositionOptions = {
 /**
  * Extracts the data type from a hook definition.
  */
-type HookDataType<T> = T extends HookDef<infer R>
-  ? R extends AsyncHookResult<infer D>
-    ? D
-    : T extends { selector: (r: R) => infer S }
-      ? S
-      : R
-  : never;
+type HookDataType<T> =
+  T extends HookDef<infer R>
+    ? R extends AsyncHookResult<infer D>
+      ? D
+      : T extends { selector: (r: R) => infer S }
+        ? S
+        : R
+    : never;
 
 /**
  * Maps hook definitions to their data types.
@@ -200,7 +194,6 @@ export function useComposedHooks<T extends Record<string, HookDef<unknown>>>(
 
       // Execute hook
       try {
-         
         const result = def?.hook();
         results[key as string] = def?.selector ? def.selector(result) : result;
       } catch (e) {
@@ -355,7 +348,6 @@ export function useSelectiveHooks<T extends Record<string, HookDef<unknown>>>(
       }
 
       try {
-         
         const result = def?.hook();
         const value = def?.selector ? def.selector(result) : result;
 
@@ -380,7 +372,8 @@ export function useSelectiveHooks<T extends Record<string, HookDef<unknown>>>(
   }, keys);
 
   // Create proxy to track access
-  const proxy = useMemo(() => {
+
+  return useMemo(() => {
     return new Proxy(results as ComposedData<T> & { __meta: { accessedKeys: Set<keyof T> } }, {
       get(target, prop) {
         if (prop === '__meta') {
@@ -393,8 +386,6 @@ export function useSelectiveHooks<T extends Record<string, HookDef<unknown>>>(
       },
     });
   }, [results]);
-
-  return proxy;
 }
 
 // ============================================================================
@@ -463,10 +454,7 @@ export function useConditionalHook<T>(
  * }
  * ```
  */
-export function useMemoizedComposition<T>(
-  factory: () => T,
-  deps: DependencyList
-): T {
+export function useMemoizedComposition<T>(factory: () => T, deps: DependencyList): T {
   // Use useMemo to properly handle dependencies during render
   // eslint-disable-next-line react-hooks/exhaustive-deps
   return useMemo(factory, deps);
@@ -506,7 +494,9 @@ export function useMemoizedComposition<T>(
 export function useParallelHooks<T extends Record<string, () => unknown>>(
   hooks: T
 ): {
-  data: { [K in keyof T]: ReturnType<T[K]> extends AsyncHookResult<infer D> ? D : ReturnType<T[K]> };
+  data: {
+    [K in keyof T]: ReturnType<T[K]> extends AsyncHookResult<infer D> ? D : ReturnType<T[K]>;
+  };
   isLoading: boolean;
   errors: { [K in keyof T]: Error | null };
 } {
@@ -520,7 +510,6 @@ export function useParallelHooks<T extends Record<string, () => unknown>>(
 
     for (const key of keys) {
       try {
-         
         const hookFn = hooks[key];
         const result = hookFn ? hookFn() : undefined;
 
@@ -549,7 +538,9 @@ export function useParallelHooks<T extends Record<string, () => unknown>>(
   }, keys);
 
   return results as {
-    data: { [K in keyof T]: ReturnType<T[K]> extends AsyncHookResult<infer D> ? D : ReturnType<T[K]> };
+    data: {
+      [K in keyof T]: ReturnType<T[K]> extends AsyncHookResult<infer D> ? D : ReturnType<T[K]>;
+    };
     isLoading: boolean;
     errors: { [K in keyof T]: Error | null };
   };
@@ -578,16 +569,17 @@ export function useParallelHooks<T extends Record<string, () => unknown>>(
  * }
  * ```
  */
-export function useHookSequence<T>(
-  steps: Array<(prevResult: unknown) => unknown>
-): { result: T; steps: unknown[]; isComplete: boolean } {
+export function useHookSequence<T>(steps: Array<(prevResult: unknown) => unknown>): {
+  result: T;
+  steps: unknown[];
+  isComplete: boolean;
+} {
   const results: unknown[] = [];
   let isComplete = true;
   let prevResult: unknown = undefined;
 
   for (const step of steps) {
     try {
-       
       const result = step(prevResult);
 
       // Handle async results
@@ -599,7 +591,7 @@ export function useHookSequence<T>(
         const asyncResult = result as AsyncHookResult<unknown>;
         results.push(asyncResult.data);
         prevResult = asyncResult.data;
-        if (asyncResult.isLoading === true || asyncResult.data == null) {
+        if (asyncResult.isLoading || asyncResult.data == null) {
           isComplete = false;
           break;
         }
@@ -627,10 +619,7 @@ export function useHookSequence<T>(
 /**
  * Creates a hook definition with type inference.
  */
-export function defineHook<T>(
-  hook: () => T,
-  options?: Omit<HookDef<T>, 'hook'>
-): HookDef<T> {
+export function defineHook<T>(hook: () => T, options?: Omit<HookDef<T>, 'hook'>): HookDef<T> {
   return { hook, ...options };
 }
 

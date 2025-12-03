@@ -363,24 +363,6 @@ export class HttpClient {
   }
   
   /**
-   * Build URL with query parameters
-   */
-  private buildUrl(url: string, params?: HttpRequestConfig['params']): string {
-    const baseUrl = url.startsWith('http') ? '' : this.config.baseUrl;
-    const fullUrl = new URL(url, baseUrl);
-    
-    if (params !== undefined) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined) {
-          fullUrl.searchParams.append(key, String(value));
-        }
-      });
-    }
-    
-    return fullUrl.toString();
-  }
-  
-  /**
    * Execute request
    */
   async request<T = unknown>(config: HttpRequestConfig): Promise<HttpResponse<T>> {
@@ -389,7 +371,7 @@ export class HttpClient {
     for (const interceptor of this.requestInterceptors) {
       processedConfig = await interceptor(processedConfig);
     }
-    
+
     const {
       url,
       method = 'GET',
@@ -399,16 +381,16 @@ export class HttpClient {
       signal,
       responseType = 'json',
     } = processedConfig;
-    
+
     // Create abort controller for timeout
     const controller = new AbortController();
     const timeoutId = timeout !== undefined && timeout > 0
       ? setTimeout(() => controller.abort(), timeout)
       : null;
-    
+
     try {
       const fetchUrl = this.buildUrl(url, processedConfig.params);
-      
+
       const response = await fetch(fetchUrl, {
         method,
         headers: {
@@ -418,7 +400,7 @@ export class HttpClient {
         body: body !== undefined ? JSON.stringify(body) : undefined,
         signal: signal ?? controller.signal,
       });
-      
+
       // Parse response
       let data: T;
       switch (responseType) {
@@ -434,26 +416,26 @@ export class HttpClient {
         default:
           data = (await response.json()) as T;
       }
-      
+
       // Handle error responses
       if (!response.ok) {
-        const error = new HttpError(
+
+
+        // Apply error interceptors
+        let processedError = new HttpError(
           `Request failed with status ${response.status}`,
           response.status,
           response.statusText,
           data,
           processedConfig
         );
-        
-        // Apply error interceptors
-        let processedError = error;
         for (const interceptor of this.errorInterceptors) {
           processedError = await interceptor(processedError);
         }
-        
+
         throw processedError;
       }
-      
+
       // Build response
       let httpResponse: HttpResponse<T> = {
         data,
@@ -462,33 +444,33 @@ export class HttpClient {
         headers: response.headers,
         config: processedConfig,
       };
-      
+
       // Apply response interceptors
       for (const interceptor of this.responseInterceptors) {
         httpResponse = (await interceptor(httpResponse)) as HttpResponse<T>;
       }
-      
+
       return httpResponse;
     } catch (error) {
       if (error instanceof HttpError) {
         throw error;
       }
-      
+
       // Handle network errors
-      const networkError = new HttpError(
+
+
+      // Apply error interceptors
+      let processedError = new HttpError(
         error instanceof Error ? error.message : 'Network error',
         0,
         'Network Error',
         null,
         processedConfig
       );
-      
-      // Apply error interceptors
-      let processedError = networkError;
       for (const interceptor of this.errorInterceptors) {
         processedError = await interceptor(processedError);
       }
-      
+
       throw processedError;
     } finally {
       if (timeoutId !== null) {
@@ -548,6 +530,24 @@ export class HttpClient {
     config?: Omit<HttpRequestConfig, 'url' | 'method'>
   ): Promise<HttpResponse<T>> {
     return this.request<T>({ ...config, url, method: 'DELETE' });
+  }
+  
+  /**
+   * Build URL with query parameters
+   */
+  private buildUrl(url: string, params?: HttpRequestConfig['params']): string {
+    const baseUrl = url.startsWith('http') ? '' : this.config.baseUrl;
+    const fullUrl = new URL(url, baseUrl);
+
+    if (params !== undefined) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined) {
+          fullUrl.searchParams.append(key, String(value));
+        }
+      });
+    }
+
+    return fullUrl.toString();
   }
 }
 

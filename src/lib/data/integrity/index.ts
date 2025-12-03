@@ -47,10 +47,9 @@ export {
   type ConsistencyMonitor,
 
   // Factory
-  createConsistencyMonitor,
-
   // React Hooks
   useConsistencyMonitor,
   useDriftDetection,
   useIntegrityValidation,
 } from './consistency-monitor';
+export { default as createConsistencyMonitor } from './consistency-monitor';

@@ -239,73 +239,6 @@ export class FlagAnalytics {
     });
   }
 
-  private updateMetrics(event: EvaluationEvent): void {
-    const metrics = this.getOrCreateMetrics(event.flagKey);
-
-    metrics.evaluationCount++;
-    metrics.lastSeen = event.timestamp;
-
-    // Update variant counts
-     
-    const currentCount = metrics.variantCounts.get(event.variantId) ?? 0;
-    metrics.variantCounts.set(event.variantId, currentCount + 1);
-
-    // Track unique users
-    if (event.userId != null && event.userId !== '') {
-       
-      metrics.uniqueUsers.add(event.userId);
-    }
-
-    // Track unique sessions
-    if (event.sessionId != null && event.sessionId !== '') {
-       
-      metrics.uniqueSessions.add(event.sessionId);
-    }
-
-    // Track duration
-    if (event.durationMs !== undefined) {
-      metrics.totalDuration += event.durationMs;
-    }
-
-    // Track cache hits
-    if (event.cached === true) {
-      metrics.cacheHits++;
-    }
-  }
-
-  private getOrCreateMetrics(flagKey: string): {
-    evaluationCount: number;
-    variantCounts: Map<VariantId, number>;
-    uniqueUsers: Set<string>;
-    uniqueSessions: Set<string>;
-    totalDuration: number;
-    cacheHits: number;
-    errorCount: number;
-    firstSeen: Date;
-    lastSeen: Date;
-  } {
-    let metrics = this.flagMetrics.get(flagKey);
-    if (metrics == null) {
-      metrics = {
-        evaluationCount: 0,
-        variantCounts: new Map(),
-        uniqueUsers: new Set(),
-        uniqueSessions: new Set(),
-        totalDuration: 0,
-        cacheHits: 0,
-        errorCount: 0,
-        firstSeen: new Date(),
-        lastSeen: new Date(),
-      };
-      this.flagMetrics.set(flagKey, metrics);
-    }
-    return metrics;
-  }
-
-  // ==========================================================================
-  // Flushing
-  // ==========================================================================
-
   /**
    * Flush pending events.
    */
@@ -327,59 +260,6 @@ export class FlagAnalytics {
       this.config.onError(error instanceof Error ? error : new Error(String(error)));
     }
   }
-
-  /**
-   * Default flush handler that sends events to the configured endpoint.
-   *
-   * Note: This method intentionally uses raw fetch() rather than apiClient because:
-   * 1. Analytics should be independent of the main API client to avoid circular dependencies
-   * 2. Analytics endpoints may be on a different domain/service
-   * 3. This should work even if the main API client fails
-   *
-   * @see {@link @/lib/api/api-client} for the main API client
-   */
-  private async defaultFlush(events: EvaluationEvent[]): Promise<void> {
-    if (!this.config.endpoint) {
-      return;
-    }
-
-    // Raw fetch is intentional - analytics should be independent of apiClient
-    const response = await fetch(this.config.endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(this.config.apiKey
-          ? { Authorization: `Bearer ${this.config.apiKey}` }
-          : {}),
-      },
-      body: JSON.stringify({ events }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Analytics flush failed: ${response.status}`);
-    }
-  }
-
-  private startFlushTimer(): void {
-    if (this.flushTimer) {
-      return;
-    }
-
-    this.flushTimer = setInterval(() => {
-      void this.flush();
-    }, this.config.flushInterval);
-  }
-
-  private stopFlushTimer(): void {
-    if (this.flushTimer) {
-      clearInterval(this.flushTimer);
-      this.flushTimer = null;
-    }
-  }
-
-  // ==========================================================================
-  // Metrics and Reporting
-  // ==========================================================================
 
   /**
    * Get metrics for a specific flag.
@@ -409,6 +289,10 @@ export class FlagAnalytics {
       lastSeen: metrics.lastSeen,
     };
   }
+
+  // ==========================================================================
+  // Flushing
+  // ==========================================================================
 
   /**
    * Get all flag metrics.
@@ -466,10 +350,6 @@ export class FlagAnalytics {
     };
   }
 
-  // ==========================================================================
-  // Subscriptions
-  // ==========================================================================
-
   /**
    * Subscribe to flush events.
    */
@@ -480,20 +360,6 @@ export class FlagAnalytics {
     };
   }
 
-  private notifyListeners(events: EvaluationEvent[]): void {
-    for (const listener of this.listeners) {
-      try {
-        listener(events);
-      } catch (error) {
-        this.log('Error in listener:', error);
-      }
-    }
-  }
-
-  // ==========================================================================
-  // Lifecycle
-  // ==========================================================================
-
   /**
    * Reset all metrics and events.
    */
@@ -503,6 +369,10 @@ export class FlagAnalytics {
     this.periodStart = new Date();
     this.log('Analytics reset');
   }
+
+  // ==========================================================================
+  // Metrics and Reporting
+  // ==========================================================================
 
   /**
    * Shutdown the analytics collector.
@@ -523,6 +393,136 @@ export class FlagAnalytics {
       this.startFlushTimer();
     } else {
       this.stopFlushTimer();
+    }
+  }
+
+  private updateMetrics(event: EvaluationEvent): void {
+    const metrics = this.getOrCreateMetrics(event.flagKey);
+
+    metrics.evaluationCount++;
+    metrics.lastSeen = event.timestamp;
+
+    // Update variant counts
+
+    const currentCount = metrics.variantCounts.get(event.variantId) ?? 0;
+    metrics.variantCounts.set(event.variantId, currentCount + 1);
+
+    // Track unique users
+    if (event.userId != null && event.userId !== '') {
+
+      metrics.uniqueUsers.add(event.userId);
+    }
+
+    // Track unique sessions
+    if (event.sessionId != null && event.sessionId !== '') {
+
+      metrics.uniqueSessions.add(event.sessionId);
+    }
+
+    // Track duration
+    if (event.durationMs !== undefined) {
+      metrics.totalDuration += event.durationMs;
+    }
+
+    // Track cache hits
+    if (event.cached === true) {
+      metrics.cacheHits++;
+    }
+  }
+
+  // ==========================================================================
+  // Subscriptions
+  // ==========================================================================
+
+  private getOrCreateMetrics(flagKey: string): {
+    evaluationCount: number;
+    variantCounts: Map<VariantId, number>;
+    uniqueUsers: Set<string>;
+    uniqueSessions: Set<string>;
+    totalDuration: number;
+    cacheHits: number;
+    errorCount: number;
+    firstSeen: Date;
+    lastSeen: Date;
+  } {
+    let metrics = this.flagMetrics.get(flagKey);
+    if (metrics == null) {
+      metrics = {
+        evaluationCount: 0,
+        variantCounts: new Map(),
+        uniqueUsers: new Set(),
+        uniqueSessions: new Set(),
+        totalDuration: 0,
+        cacheHits: 0,
+        errorCount: 0,
+        firstSeen: new Date(),
+        lastSeen: new Date(),
+      };
+      this.flagMetrics.set(flagKey, metrics);
+    }
+    return metrics;
+  }
+
+  /**
+   * Default flush handler that sends events to the configured endpoint.
+   *
+   * Note: This method intentionally uses raw fetch() rather than apiClient because:
+   * 1. Analytics should be independent of the main API client to avoid circular dependencies
+   * 2. Analytics endpoints may be on a different domain/service
+   * 3. This should work even if the main API client fails
+   *
+   * @see {@link @/lib/api/api-client} for the main API client
+   */
+  private async defaultFlush(events: EvaluationEvent[]): Promise<void> {
+    if (!this.config.endpoint) {
+      return;
+    }
+
+    // Raw fetch is intentional - analytics should be independent of apiClient
+    const response = await fetch(this.config.endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(this.config.apiKey
+          ? { Authorization: `Bearer ${this.config.apiKey}` }
+          : {}),
+      },
+      body: JSON.stringify({ events }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Analytics flush failed: ${response.status}`);
+    }
+  }
+
+  // ==========================================================================
+  // Lifecycle
+  // ==========================================================================
+
+  private startFlushTimer(): void {
+    if (this.flushTimer) {
+      return;
+    }
+
+    this.flushTimer = setInterval(() => {
+      void this.flush();
+    }, this.config.flushInterval);
+  }
+
+  private stopFlushTimer(): void {
+    if (this.flushTimer) {
+      clearInterval(this.flushTimer);
+      this.flushTimer = null;
+    }
+  }
+
+  private notifyListeners(events: EvaluationEvent[]): void {
+    for (const listener of this.listeners) {
+      try {
+        listener(events);
+      } catch (error) {
+        this.log('Error in listener:', error);
+      }
     }
   }
 

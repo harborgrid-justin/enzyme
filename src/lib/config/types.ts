@@ -22,10 +22,7 @@ export type ConfigPrimitive = string | number | boolean | null;
 /**
  * Configuration value that can be any JSON-compatible type.
  */
-export type ConfigValue =
-  | ConfigPrimitive
-  | ConfigValue[]
-  | { [key: string]: ConfigValue };
+export type ConfigValue = ConfigPrimitive | ConfigValue[] | { [key: string]: ConfigValue };
 
 /**
  * Configuration record.
@@ -134,12 +131,7 @@ export interface ValidationResult {
 /**
  * Configuration source types.
  */
-export type ConfigSourceType =
-  | 'default'
-  | 'file'
-  | 'environment'
-  | 'remote'
-  | 'runtime';
+export type ConfigSourceType = 'default' | 'file' | 'environment' | 'remote' | 'runtime';
 
 /**
  * Configuration source priority (lower = higher priority).
@@ -167,9 +159,7 @@ export type Environment = 'development' | 'staging' | 'production' | 'test';
 /**
  * Deep partial type
  */
-export type DeepPartial<T> = T extends object
-  ? { [P in keyof T]?: DeepPartial<T[P]> }
-  : T;
+export type DeepPartial<T> = T extends object ? { [P in keyof T]?: DeepPartial<T[P]> } : T;
 
 /**
  * Environment-specific configuration overrides.

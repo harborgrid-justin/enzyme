@@ -208,10 +208,10 @@ const DEFAULT_CONFIG: RegressionDetectorConfig = {
   filterAnomalies: true,
   anomalyThreshold: 3.0,
   severityThresholds: {
-    minor: 0.10,     // 10%
-    moderate: 0.25,  // 25%
-    severe: 0.50,    // 50%
-    critical: 1.0,   // 100%
+    minor: 0.1, // 10%
+    moderate: 0.25, // 25%
+    severe: 0.5, // 50%
+    critical: 1.0, // 100%
   },
   debug: false,
 };
@@ -234,7 +234,7 @@ function calculateMean(values: number[]): number {
 function calculateStandardDeviation(values: number[], mean?: number): number {
   if (values.length < 2) return 0;
   const m = mean ?? calculateMean(values);
-  const squaredDiffs = values.map(v => Math.pow(v - m, 2));
+  const squaredDiffs = values.map((v) => Math.pow(v - m, 2));
   return Math.sqrt(squaredDiffs.reduce((sum, v) => sum + v, 0) / (values.length - 1));
 }
 
@@ -302,7 +302,7 @@ function calculateLinearRegressionSlope(values: number[]): { slope: number; rSqu
     ssResidual += Math.pow((values[i] ?? 0) - predicted, 2);
   }
 
-  const rSquared = ssTotal !== 0 ? 1 - (ssResidual / ssTotal) : 0;
+  const rSquared = ssTotal !== 0 ? 1 - ssResidual / ssTotal : 0;
 
   return { slope, rSquared: Math.max(0, Math.min(1, rSquared)) };
 }
@@ -408,7 +408,7 @@ export class RegressionDetector {
     }
 
     const recentSamples = samples.slice(-this.config.trendWindowSize);
-    const values = recentSamples.map(s => s.value);
+    const values = recentSamples.map((s) => s.value);
     const { slope, rSquared } = calculateLinearRegressionSlope(values);
 
     const mean = calculateMean(values);
@@ -479,7 +479,7 @@ export class RegressionDetector {
    */
   getRegressionHistory(limit?: number): RegressionEvent[] {
     const history = [...this.regressionHistory].reverse();
-    return (limit !== null && limit !== undefined) ? history.slice(0, limit) : history;
+    return limit !== null && limit !== undefined ? history.slice(0, limit) : history;
   }
 
   /**
@@ -487,7 +487,7 @@ export class RegressionDetector {
    */
   getSummary(): DetectorSummary {
     const recentCutoff = Date.now() - 24 * 60 * 60 * 1000; // 24 hours
-    const recentRegressions = this.regressionHistory.filter(r => r.timestamp > recentCutoff);
+    const recentRegressions = this.regressionHistory.filter((r) => r.timestamp > recentCutoff);
 
     const regressingMetrics: string[] = [];
     for (const [metric, count] of this.consecutiveCounts) {
@@ -594,7 +594,7 @@ export class RegressionDetector {
     if (samples.length < this.config.minBaselineSamples) return;
 
     // Calculate new baseline
-    const values = samples.map(s => s.value);
+    const values = samples.map((s) => s.value);
     const mean = calculateMean(values);
     const standardDeviation = calculateStandardDeviation(values, mean);
     const median = calculateMedian(values);
@@ -618,7 +618,9 @@ export class RegressionDetector {
     };
 
     this.baselines.set(metric, baseline);
-    this.log(`Baseline updated for ${metric}: mean=${mean.toFixed(2)}, stdDev=${standardDeviation.toFixed(2)}`);
+    this.log(
+      `Baseline updated for ${metric}: mean=${mean.toFixed(2)}, stdDev=${standardDeviation.toFixed(2)}`
+    );
   }
 
   private checkRegression(

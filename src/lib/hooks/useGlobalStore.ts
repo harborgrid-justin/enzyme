@@ -4,7 +4,7 @@
  */
 
 import { useCallback, useMemo, useRef } from 'react';
-import { useStore, type StoreState } from '../state/store';
+import { type StoreState, useStore } from '../state/store';
 
 /**
  * Selector function type
@@ -24,9 +24,9 @@ export function useGlobalStore<T>(selector: Selector<T>): T {
  * Note: Uses a combined selector to comply with Rules of Hooks.
  * Hooks must not be called inside loops, conditions, or nested functions.
  */
-export function useGlobalStoreMultiple<T extends Record<string, unknown>>(
-  selectors: { [K in keyof T]: Selector<T[K]> }
-): T {
+export function useGlobalStoreMultiple<T extends Record<string, unknown>>(selectors: {
+  [K in keyof T]: Selector<T[K]>;
+}): T {
   // Use a version counter for stable useMemo dependency tracking
   // This avoids the problematic ternary dependency pattern
   const versionRef = useRef(0);
@@ -35,10 +35,12 @@ export function useGlobalStoreMultiple<T extends Record<string, unknown>>(
 
   // Check if selectors have actually changed (shallow comparison of values)
   const currentKeys = Object.keys(selectors);
-  const keysChanged = currentKeys.length !== keysRef.current.length ||
+  const keysChanged =
+    currentKeys.length !== keysRef.current.length ||
     currentKeys.some((key, i) => key !== keysRef.current[i]);
-  const selectorsChanged = keysChanged ||
-    currentKeys.some(key => selectors[key as keyof T] !== selectorsRef.current[key as keyof T]);
+  const selectorsChanged =
+    keysChanged ||
+    currentKeys.some((key) => selectors[key as keyof T] !== selectorsRef.current[key as keyof T]);
 
   if (selectorsChanged) {
     selectorsRef.current = selectors;
@@ -71,7 +73,7 @@ export function useGlobalStoreMultiple<T extends Record<string, unknown>>(
       // Shallow compare the results
       const keys = Object.keys(newResult) as (keyof T)[];
       const prevResult = resultRef.current;
-      const hasChanged = keys.some(key => !Object.is(newResult[key], prevResult[key]));
+      const hasChanged = keys.some((key) => !Object.is(newResult[key], prevResult[key]));
       if (!hasChanged) {
         return resultRef.current;
       }
@@ -97,7 +99,10 @@ export function useGlobalStoreComputed<T>(
   const memoizedSelector = useCallback(compute, deps);
 
   // Use a custom equality function that caches and compares results
-  const resultRef = useRef<{ value: T; initialized: boolean }>({ value: undefined as T, initialized: false });
+  const resultRef = useRef<{ value: T; initialized: boolean }>({
+    value: undefined as T,
+    initialized: false,
+  });
 
   return useStore((state) => {
     const newValue = memoizedSelector(state);
@@ -124,12 +129,12 @@ export function useGlobalStoreComputed<T>(
  * Hook for store actions
  */
 export function useGlobalStoreActions(): Record<string, unknown> {
-  const actions = useStore((_state) => ({
+
+
+  return useStore((_state) => ({
     // Add your store actions here based on your actual store implementation
     // Example: reset: state.reset,
   }));
-
-  return actions;
 }
 
 /**
@@ -143,8 +148,8 @@ interface HydratableState {
  * Hook for checking if store is hydrated (useful for SSR)
  */
 export function useStoreHydrated(): boolean {
-  const hydrated = useStore((state) => (state as StoreState & HydratableState)._hydrated ?? true);
-  return hydrated;
+
+  return useStore((state) => (state as StoreState & HydratableState)._hydrated ?? true);
 }
 
 /**

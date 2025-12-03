@@ -22,6 +22,7 @@
 ## Basic Store Setup
 
 ### Example 1: Simple Store
+
 **Use Case:** Basic counter store with actions
 **Difficulty:** ⭐ Basic
 
@@ -57,15 +58,18 @@ function Counter() {
 }
 ```
 
-**Explanation:** Creates a simple Zustand store with state and actions. State updates are immutable and trigger re-renders.
+**Explanation:** Creates a simple Zustand store with state and actions. State updates are immutable and trigger
+re-renders.
 
 **See Also:**
+
 - [Example 2](#example-2-store-with-computed-properties)
 - [Zustand Documentation](https://github.com/pmndrs/zustand)
 
 ---
 
 ### Example 2: Store with Computed Properties
+
 **Use Case:** Derived state without manual updates
 **Difficulty:** ⭐ Basic
 
@@ -105,11 +109,13 @@ export const useTodoStore = create<TodoState>((set, get) => ({
 }));
 ```
 
-**Explanation:** Use `get()` to access current state for computed properties. These are functions that calculate values on-demand.
+**Explanation:** Use `get()` to access current state for computed properties. These are functions that calculate values
+on-demand.
 
 ---
 
 ### Example 3: Multiple Independent Stores
+
 **Use Case:** Separate stores for different concerns
 **Difficulty:** ⭐ Basic
 
@@ -151,6 +157,7 @@ function Header() {
 ## Store Slices
 
 ### Example 4: Slice Pattern
+
 **Use Case:** Modular store architecture for large apps
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -205,11 +212,13 @@ export const useAppStore = create<UserSlice & CartSlice>()((...a) => ({
 **Explanation:** Slices allow modular state management. Each slice is independently maintainable and testable.
 
 **See Also:**
+
 - [Example 5](#example-5-slice-with-cross-slice-actions)
 
 ---
 
 ### Example 5: Slice with Cross-Slice Actions
+
 **Use Case:** Actions that use state/actions from multiple slices
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -249,6 +258,7 @@ export const createOrderSlice: StateCreator<
 ---
 
 ### Example 6: Typed Slice Helpers
+
 **Use Case:** Type-safe slice creation with helpers
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -303,6 +313,7 @@ export const useStore = create<AuthSlice & DataSlice>()(
 ## Selectors and Performance
 
 ### Example 7: Granular Selectors
+
 **Use Case:** Prevent unnecessary re-renders
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -335,6 +346,7 @@ function BetterComponent() {
 ---
 
 ### Example 8: Shallow Equality Selectors
+
 **Use Case:** Select multiple values efficiently
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -387,6 +399,7 @@ function TodoControls() {
 ---
 
 ### Example 9: Computed Selectors
+
 **Use Case:** Memoized derived state
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -433,6 +446,7 @@ function ProductList() {
 ---
 
 ### Example 10: Selector Factory Pattern
+
 **Use Case:** Reusable parameterized selectors
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -473,6 +487,7 @@ function CompletedTodos() {
 ## Middleware
 
 ### Example 11: Logger Middleware
+
 **Use Case:** Debug state changes in development
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -515,6 +530,7 @@ export const useStore = create<State>()(
 ---
 
 ### Example 12: Immer Middleware
+
 **Use Case:** Mutable-style updates with immutability
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -575,6 +591,7 @@ export const useStore = create<State>()(
 ## DevTools Integration
 
 ### Example 13: Basic DevTools
+
 **Use Case:** Debug state with Redux DevTools
 **Difficulty:** ⭐ Basic
 
@@ -596,11 +613,13 @@ export const useStore = create<State>()(
 **Explanation:** DevTools middleware enables Redux DevTools integration with action names for debugging.
 
 **See Also:**
+
 - [Redux DevTools Extension](https://github.com/reduxjs/redux-devtools)
 
 ---
 
 ### Example 14: DevTools with Action Types
+
 **Use Case:** Better DevTools debugging with typed actions
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -665,6 +684,7 @@ export const useTodoStore = create<TodoState>()(
 ## Persistence
 
 ### Example 15: Local Storage Persistence
+
 **Use Case:** Persist state across browser sessions
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -698,6 +718,7 @@ export const useStore = create<State>()(
 ---
 
 ### Example 16: Partial Persistence
+
 **Use Case:** Only persist specific state properties
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -734,6 +755,7 @@ export const useStore = create<State>()(
 ---
 
 ### Example 17: Session Storage Persistence
+
 **Use Case:** Persist state only for the session (tab)
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -760,6 +782,7 @@ export const useFormStore = create<FormState>()(
 ---
 
 ### Example 18: Custom Storage with Encryption
+
 **Use Case:** Secure sensitive persisted data
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -818,6 +841,7 @@ export const useSecureStore = create<State>()(
 ## Async Actions
 
 ### Example 19: Basic Async Actions
+
 **Use Case:** Fetch data and update store
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -875,6 +899,7 @@ function UserList() {
 ---
 
 ### Example 20: Optimistic Updates
+
 **Use Case:** Update UI immediately, rollback on error
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -916,6 +941,7 @@ export const useTodoStore = create<TodoState>((set, get) => ({
 ---
 
 ### Example 21: Request Deduplication
+
 **Use Case:** Prevent duplicate simultaneous requests
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -968,6 +994,7 @@ export const useDataStore = create<DataState>((set) => ({
 ## State Normalization
 
 ### Example 22: Normalized Entity Store
+
 **Use Case:** Efficient lookup and update of entities
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -1042,6 +1069,7 @@ export const useUser = (id: string) =>
 ---
 
 ### Example 23: Entity Adapter Pattern
+
 **Use Case:** Reusable entity management
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -1122,6 +1150,7 @@ export const useStore = create<State>((set) => ({
 ## Computed Values
 
 ### Example 24: Memoized Selectors with Reselect
+
 **Use Case:** Expensive computed values
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -1177,6 +1206,7 @@ function ProductList() {
 ---
 
 ### Example 25: Computed Properties with Getters
+
 **Use Case:** Derived state without storing duplicates
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -1237,6 +1267,7 @@ function CartSummary() {
 ## Advanced Patterns
 
 ### Example 26: Store Reset
+
 **Use Case:** Reset store to initial state
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -1284,6 +1315,7 @@ function LogoutButton() {
 ---
 
 ### Example 27: Subscriptions Outside React
+
 **Use Case:** Listen to store changes outside components
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -1323,6 +1355,7 @@ unsubscribe();
 ---
 
 ### Example 28: Time Travel / Undo-Redo
+
 **Use Case:** Implement undo/redo functionality
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -1440,6 +1473,7 @@ function TodoApp() {
 ---
 
 ### Example 29: Transient Updates (No Re-render)
+
 **Use Case:** Update state without triggering React re-renders
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -1488,6 +1522,7 @@ function MouseDisplay() {
 ---
 
 ### Example 30: Store Context Pattern
+
 **Use Case:** Multiple store instances for testing or isolation
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -1554,13 +1589,15 @@ function Counter() {
 }
 ```
 
-**Explanation:** Store context pattern enables multiple isolated store instances, useful for testing or multi-tenant apps.
+**Explanation:** Store context pattern enables multiple isolated store instances, useful for testing or multi-tenant
+apps.
 
 ---
 
 ## Best Practices
 
 ### State Organization
+
 - ✅ **DO** separate stores by domain/feature
 - ✅ **DO** use slices for large stores
 - ✅ **DO** normalize nested data structures
@@ -1569,6 +1606,7 @@ function Counter() {
 - ❌ **DON'T** mix unrelated concerns in one store
 
 ### Performance
+
 - ✅ **DO** use granular selectors
 - ✅ **DO** use `shallow` for multiple values
 - ✅ **DO** memoize expensive computations
@@ -1577,6 +1615,7 @@ function Counter() {
 - ❌ **DON'T** create new objects/arrays in selectors
 
 ### TypeScript
+
 - ✅ **DO** define explicit store interfaces
 - ✅ **DO** type your selectors
 - ✅ **DO** use const assertions for action types
@@ -1584,6 +1623,7 @@ function Counter() {
 - ❌ **DON'T** skip type definitions for middleware
 
 ### Async Operations
+
 - ✅ **DO** track loading and error states
 - ✅ **DO** handle errors gracefully
 - ✅ **DO** consider optimistic updates for better UX
@@ -1592,6 +1632,7 @@ function Counter() {
 - ❌ **DON'T** leave async operations without error handling
 
 ### Persistence
+
 - ✅ **DO** use `partialize` for sensitive data
 - ✅ **DO** version your persisted state
 - ✅ **DO** encrypt sensitive data
@@ -1603,6 +1644,7 @@ function Counter() {
 ## Anti-Patterns
 
 ### ❌ Mutating State Directly
+
 ```tsx
 // BAD
 const useStore = create((set, get) => ({
@@ -1622,6 +1664,7 @@ const useStore = create((set) => ({
 ```
 
 ### ❌ Storing Derived State
+
 ```tsx
 // BAD
 const useStore = create((set) => ({
@@ -1642,6 +1685,7 @@ const useStore = create((set, get) => ({
 ```
 
 ### ❌ Overusing Global State
+
 ```tsx
 // BAD - Everything in global store
 const useStore = create((set) => ({
@@ -1659,6 +1703,7 @@ function Modal() {
 ```
 
 ### ❌ Circular Dependencies
+
 ```tsx
 // BAD - Slices referencing each other in creation
 const createUserSlice = (set, get) => ({

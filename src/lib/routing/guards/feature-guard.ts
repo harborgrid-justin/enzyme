@@ -179,6 +179,42 @@ export class FeatureGuard extends BaseRouteGuard {
   }
 
   /**
+   * Get required flags
+   */
+  getRequiredFlags(): readonly string[] {
+    return this.featureConfig.requiredFlags;
+  }
+
+  /**
+   * Get match strategy
+   */
+  getMatchStrategy(): FeatureFlagMatchStrategy {
+    return this.featureConfig.matchStrategy ?? 'all';
+  }
+
+  /**
+   * Check a single flag without full guard execution
+   */
+  async checkFlag(flagKey: string, context: GuardContext): Promise<boolean> {
+    const { value } = await this.getFlagValue(flagKey, context);
+    return this.isFlagEnabled(flagKey, value, context);
+  }
+
+  /**
+   * Clear flag cache
+   */
+  clearCache(): void {
+    this.flagCache.clear();
+  }
+
+  /**
+   * Invalidate specific flag in cache
+   */
+  invalidateFlag(flagKey: string): void {
+    this.flagCache.delete(flagKey);
+  }
+
+  /**
    * Check if required features are enabled
    */
   private async checkFeatureAccess(context: GuardContext): Promise<GuardResultObject> {
@@ -302,11 +338,8 @@ export class FeatureGuard extends BaseRouteGuard {
       return value.toLowerCase() === 'true' || value === '1' || value === 'enabled';
     }
 
-    if (typeof value === 'number') {
-      return value > 0;
-    }
+    return value > 0;
 
-    return Boolean(value);
   }
 
   /**
@@ -327,42 +360,6 @@ export class FeatureGuard extends BaseRouteGuard {
         strategy: checkResult.strategy,
       },
     });
-  }
-
-  /**
-   * Get required flags
-   */
-  getRequiredFlags(): readonly string[] {
-    return this.featureConfig.requiredFlags;
-  }
-
-  /**
-   * Get match strategy
-   */
-  getMatchStrategy(): FeatureFlagMatchStrategy {
-    return this.featureConfig.matchStrategy ?? 'all';
-  }
-
-  /**
-   * Check a single flag without full guard execution
-   */
-  async checkFlag(flagKey: string, context: GuardContext): Promise<boolean> {
-    const { value } = await this.getFlagValue(flagKey, context);
-    return this.isFlagEnabled(flagKey, value, context);
-  }
-
-  /**
-   * Clear flag cache
-   */
-  clearCache(): void {
-    this.flagCache.clear();
-  }
-
-  /**
-   * Invalidate specific flag in cache
-   */
-  invalidateFlag(flagKey: string): void {
-    this.flagCache.delete(flagKey);
   }
 }
 

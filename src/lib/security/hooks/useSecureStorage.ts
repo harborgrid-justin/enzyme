@@ -9,12 +9,7 @@
  * @version 1.0.0
  */
 
-import {
-  useState,
-  useEffect,
-  useCallback,
-  useRef,
-} from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type { SecureStorageSetOptions, UseSecureStorageResult } from '../types';
 import { getSecureStorage, type SecureStorage } from '../secure-storage';
 
@@ -72,17 +67,10 @@ export function useSecureStorage<T>(
   key: string,
   options: UseSecureStorageOptions = {}
 ): UseSecureStorageResult<T> {
-  const {
-    storage,
-    initialValue,
-    syncAcrossTabs = false,
-    refreshInterval,
-  } = options;
+  const { storage, initialValue, syncAcrossTabs = false, refreshInterval } = options;
 
   // State
-  const [value, setValueState] = useState<T | null>(
-    (initialValue as T | undefined) ?? null
-  );
+  const [value, setValueState] = useState<T | null>((initialValue as T | undefined) ?? null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -191,7 +179,7 @@ export function useSecureStorage<T>(
 
   // Set up refresh interval
   useEffect(() => {
-    if ((refreshInterval != null && refreshInterval > 0)) {
+    if (refreshInterval != null && refreshInterval > 0) {
       refreshIntervalRef.current = setInterval(() => {
         void loadValue();
       }, refreshInterval);
@@ -208,7 +196,7 @@ export function useSecureStorage<T>(
 
   // Sync across tabs via storage events
   useEffect(() => {
-    if (syncAcrossTabs !== true || typeof window === 'undefined') {
+    if (!syncAcrossTabs || typeof window === 'undefined') {
       return;
     }
 

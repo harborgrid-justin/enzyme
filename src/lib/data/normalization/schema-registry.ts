@@ -35,16 +35,16 @@
  */
 
 import {
-  EntitySchema,
   ArraySchema,
-  ObjectSchema,
-  UnionSchema,
-  ValueSchema,
-  type Schema,
   type Entity,
-  type NormalizedEntities,
+  EntitySchema,
   type NormalizationResult,
   normalize as baseNormalize,
+  type NormalizedEntities,
+  ObjectSchema,
+  type Schema,
+  UnionSchema,
+  ValueSchema,
 } from './normalizer';
 import { denormalize as baseDenormalize, type DenormalizeOptions } from './denormalizer';
 
@@ -257,19 +257,19 @@ export function createSchemaRegistry(config: SchemaRegistryConfig = {}): SchemaR
     }
 
     // Already a schema
-    if (relation instanceof EntitySchema ||
-        relation instanceof ArraySchema ||
-        relation instanceof ObjectSchema ||
-        relation instanceof UnionSchema ||
-        relation instanceof ValueSchema) {
+    if (
+      relation instanceof EntitySchema ||
+      relation instanceof ArraySchema ||
+      relation instanceof ObjectSchema ||
+      relation instanceof UnionSchema ||
+      relation instanceof ValueSchema
+    ) {
       return relation;
     }
 
     // Relation definition
     const def = relation;
-    const baseSchema = typeof def.schema === 'string'
-      ? getOrCreateSchema(def.schema)
-      : def.schema;
+    const baseSchema = typeof def.schema === 'string' ? getOrCreateSchema(def.schema) : def.schema;
 
     switch (def.type) {
       case 'array':
@@ -336,15 +336,14 @@ export function createSchemaRegistry(config: SchemaRegistryConfig = {}): SchemaR
     }
 
     // Create entity schema
-    const schema = new EntitySchema(name, {
+
+    return new EntitySchema(name, {
       idAttribute: definition.idAttribute ?? options.defaultIdAttribute,
       relations: relations as Record<string, EntitySchema | ArraySchema | UnionSchema>,
       processStrategy: definition.processStrategy,
       mergeStrategy: definition.mergeStrategy,
       excludeFields: definition.excludeFields,
     });
-
-    return schema;
   }
 
   /**
@@ -395,7 +394,8 @@ export function createSchemaRegistry(config: SchemaRegistryConfig = {}): SchemaR
       name,
       definition,
       schema: null,
-      version: definition.version !== undefined && definition.version !== 0 ? definition.version : 1,
+      version:
+        definition.version !== undefined && definition.version !== 0 ? definition.version : 1,
       createdAt: existing?.createdAt ?? now,
       updatedAt: now,
     });
@@ -513,7 +513,7 @@ export function createSchemaRegistry(config: SchemaRegistryConfig = {}): SchemaR
     const usedSchemas = new Set<string>();
 
     for (const [name, registered] of registeredSchemas) {
-      const {definition} = registered;
+      const { definition } = registered;
 
       // Check relations
       if (definition.relations) {
@@ -617,7 +617,12 @@ export function createSchemaRegistry(config: SchemaRegistryConfig = {}): SchemaR
         if (typeof relation.schema === 'string') {
           deps.add(relation.schema);
         }
-        if ('schema' in relation && relation.schema !== undefined && relation.schema !== null && relation.schema !== '') {
+        if (
+          'schema' in relation &&
+          relation.schema !== undefined &&
+          relation.schema !== null &&
+          relation.schema !== ''
+        ) {
           const schemas = typeof relation.schema === 'object' ? Object.values(relation.schema) : [];
           schemas.forEach((s) => {
             if (typeof s === 'string') deps.add(s);
@@ -748,7 +753,7 @@ export function createSchemaRegistry(config: SchemaRegistryConfig = {}): SchemaR
 
     // Apply migrations
     let migratedEntity = { ...entity };
-    const {migrate} = registered.definition;
+    const { migrate } = registered.definition;
 
     if (migrate) {
       for (let v = fromVersion; v < currentVersion; v++) {
@@ -852,8 +857,8 @@ export function denormalizeWithRegistry<T = unknown>(
  * Fluent schema builder
  */
 export class SchemaBuilder {
-  private name: string;
-  private definition: SchemaDefinition;
+  private readonly name: string;
+  private readonly definition: SchemaDefinition;
   private registry: SchemaRegistry;
 
   constructor(name: string, registry?: SchemaRegistry) {

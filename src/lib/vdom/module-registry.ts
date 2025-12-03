@@ -110,6 +110,13 @@ export class ModuleRegistry {
   // ==========================================================================
 
   /**
+   * Gets the count of registered modules.
+   */
+  get size(): number {
+    return this.modules.size;
+  }
+
+  /**
    * Registers a module with the registry.
    * @param config - Module configuration
    * @param options - Registration options
@@ -206,6 +213,10 @@ export class ModuleRegistry {
     return entry ?? null;
   }
 
+  // ==========================================================================
+  // Component Loading
+  // ==========================================================================
+
   /**
    * Gets module configuration.
    * @param moduleId - Module ID
@@ -214,10 +225,6 @@ export class ModuleRegistry {
   getConfig(moduleId: ModuleId): ModuleBoundaryConfig | null {
     return this.get(moduleId)?.config ?? null;
   }
-
-  // ==========================================================================
-  // Component Loading
-  // ==========================================================================
 
   /**
    * Gets or loads a module's component.
@@ -283,41 +290,16 @@ export class ModuleRegistry {
     await this.getComponent(moduleId);
   }
 
+  // ==========================================================================
+  // Dependency Resolution
+  // ==========================================================================
+
   /**
    * Preloads multiple modules.
    * @param moduleIds - Module IDs to preload
    */
   async preloadMany(moduleIds: ModuleId[]): Promise<void> {
     await Promise.all(moduleIds.map(async (id) => await this.preload(id)));
-  }
-
-  // ==========================================================================
-  // Dependency Resolution
-  // ==========================================================================
-
-  /**
-   * Updates the dependency graph for a module.
-   * @param config - Module configuration
-   */
-  private updateDependencyGraph(config: ModuleBoundaryConfig): void {
-    const dependencies = new Set<ModuleId>();
-
-    if (config.dependencies) {
-      for (const dep of config.dependencies) {
-        dependencies.add(dep.moduleId);
-
-        // Update reverse graph
-        if (!this.reverseDependencyGraph.has(dep.moduleId)) {
-          this.reverseDependencyGraph.set(dep.moduleId, new Set());
-        }
-        const reverseSet = this.reverseDependencyGraph.get(dep.moduleId);
-        if (reverseSet) {
-          reverseSet.add(config.id);
-        }
-      }
-    }
-
-    this.dependencyGraph.set(config.id, dependencies);
   }
 
   /**
@@ -379,7 +361,7 @@ export class ModuleRegistry {
             continue;
           }
 
-          if (visit(depId, depth + 1) === false) {
+          if (!visit(depId, depth + 1)) {
             // If required dependency failed, propagate failure
             if (depConfig?.required === true) {
               failed.push({
@@ -527,17 +509,6 @@ export class ModuleRegistry {
   }
 
   /**
-   * Gets the count of registered modules.
-   */
-  get size(): number {
-    return this.modules.size;
-  }
-
-  // ==========================================================================
-  // Utilities
-  // ==========================================================================
-
-  /**
    * Clears all registered modules.
    */
   clear(): void {
@@ -548,6 +519,10 @@ export class ModuleRegistry {
     this.moduleVersions.clear();
     this.hmrHandlers.clear();
   }
+
+  // ==========================================================================
+  // Utilities
+  // ==========================================================================
 
   /**
    * Exports registry state for debugging.
@@ -575,6 +550,31 @@ export class ModuleRegistry {
     }
 
     return { modules, dependencyGraph };
+  }
+
+  /**
+   * Updates the dependency graph for a module.
+   * @param config - Module configuration
+   */
+  private updateDependencyGraph(config: ModuleBoundaryConfig): void {
+    const dependencies = new Set<ModuleId>();
+
+    if (config.dependencies) {
+      for (const dep of config.dependencies) {
+        dependencies.add(dep.moduleId);
+
+        // Update reverse graph
+        if (!this.reverseDependencyGraph.has(dep.moduleId)) {
+          this.reverseDependencyGraph.set(dep.moduleId, new Set());
+        }
+        const reverseSet = this.reverseDependencyGraph.get(dep.moduleId);
+        if (reverseSet) {
+          reverseSet.add(config.id);
+        }
+      }
+    }
+
+    this.dependencyGraph.set(config.id, dependencies);
   }
 }
 

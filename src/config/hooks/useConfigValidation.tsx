@@ -6,11 +6,7 @@
  */
 
 import { useCallback, useEffect, useState, useMemo, useRef } from 'react';
-import type {
-  ConfigNamespace,
-  ConfigValidationError,
-  ConfigValidationWarning,
-} from '../types';
+import type { ConfigNamespace, ConfigValidationError, ConfigValidationWarning } from '../types';
 import { useConfigContext, type ConfigValidationStatus } from '../ConfigProvider';
 
 // =============================================================================
@@ -236,9 +232,7 @@ export interface UseNamespaceValidationResult {
  * }
  * ```
  */
-export function useNamespaceValidation(
-  namespace: ConfigNamespace
-): UseNamespaceValidationResult {
+export function useNamespaceValidation(namespace: ConfigNamespace): UseNamespaceValidationResult {
   const { isNamespaceValid, getNamespaceErrors, getNamespaceWarnings, refresh } =
     useConfigValidation();
 

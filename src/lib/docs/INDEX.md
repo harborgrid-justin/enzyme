@@ -29,21 +29,21 @@ Welcome to the Harbor React Library documentation hub. This index provides navig
 
 ### Library Overview
 
-| Document | Description |
-|----------|-------------|
-| [README](../README.md) | Library introduction, installation, and quick start guide |
-| [API Reference](./API.md) | Complete API documentation for all exports |
+| Document                          | Description                                                   |
+|-----------------------------------|---------------------------------------------------------------|
+| [README](../README.md)            | Library introduction, installation, and quick start guide     |
+| [API Reference](./API.md)         | Complete API documentation for all exports                    |
 | [Architecture](./ARCHITECTURE.md) | System architecture, design patterns, and module organization |
-| [Changelog](../CHANGELOG.md) | Version history and release notes |
+| [Changelog](../CHANGELOG.md)      | Version history and release notes                             |
 
 ### Configuration & Setup
 
-| Document | Description |
-|----------|-------------|
-| [Configuration](./CONFIGURATION.md) | Configuration management, environment variables, and settings |
-| [Migration Guide](./MIGRATION.md) | Upgrading between versions and migration patterns |
-| [Library Migration Guide](../MIGRATION_GUIDE.md) | v3 to v4 migration with submodule imports |
-| [Library Defaults](../core/config/library-defaults.ts) | Centralized default configuration values |
+| Document                                               | Description                                                   |
+|--------------------------------------------------------|---------------------------------------------------------------|
+| [Configuration](./CONFIGURATION.md)                    | Configuration management, environment variables, and settings |
+| [Migration Guide](./MIGRATION.md)                      | Upgrading between versions and migration patterns             |
+| [Library Migration Guide](../MIGRATION_GUIDE.md)       | v3 to v4 migration with submodule imports                     |
+| [Library Defaults](../core/config/library-defaults.ts) | Centralized default configuration values                      |
 
 ---
 
@@ -51,36 +51,36 @@ Welcome to the Harbor React Library documentation hub. This index provides navig
 
 ### Authentication & Authorization
 
-| Document | Description |
-|----------|-------------|
+| Document                              | Description                                            |
+|---------------------------------------|--------------------------------------------------------|
 | [Authentication](./AUTHENTICATION.md) | JWT token management, auth flows, and session handling |
-| [RBAC](./RBAC.md) | Role-Based Access Control implementation and patterns |
+| [RBAC](./RBAC.md)                     | Role-Based Access Control implementation and patterns  |
 
 ### Routing & Navigation
 
-| Document | Description |
-|----------|-------------|
+| Document                | Description                                       |
+|-------------------------|---------------------------------------------------|
 | [Routing](./ROUTING.md) | Advanced routing patterns, guards, and navigation |
 
 ### Performance & Optimization
 
-| Document | Description |
-|----------|-------------|
+| Document                        | Description                                                   |
+|---------------------------------|---------------------------------------------------------------|
 | [Performance](./PERFORMANCE.md) | Web Vitals monitoring, optimization strategies, and profiling |
 
 ### Feature Management
 
-| Document | Description |
-|----------|-------------|
+| Document                            | Description                                            |
+|-------------------------------------|--------------------------------------------------------|
 | [Feature Flags](./FEATURE-FLAGS.md) | Feature flag system, A/B testing, and gradual rollouts |
 
 ### Module Documentation
 
-| Document | Description |
-|----------|-------------|
+| Document                                      | Description                                               |
+|-----------------------------------------------|-----------------------------------------------------------|
 | [Coordination](./module-docs/COORDINATION.md) | Event buses, dependency injection, provider orchestration |
-| [Data Layer](./module-docs/DATA_LAYER.md) | Data validation, sync, normalization, integrity |
-| [Theming](./module-docs/THEMING.md) | Theme management, design tokens, color palettes |
+| [Data Layer](./module-docs/DATA_LAYER.md)     | Data validation, sync, normalization, integrity           |
+| [Theming](./module-docs/THEMING.md)           | Theme management, design tokens, color palettes           |
 
 ---
 
@@ -88,12 +88,12 @@ Welcome to the Harbor React Library documentation hub. This index provides navig
 
 Comprehensive code examples for common use cases:
 
-| Example Collection | Description |
-|--------------------|-------------|
-| [Authentication Examples](./examples/auth-examples.md) | 25+ authentication and session management examples |
-| [RBAC Examples](./examples/rbac-examples.md) | 25+ role-based access control examples |
-| [Routing Examples](./examples/routing-examples.md) | 25+ routing and navigation examples |
-| [Performance Examples](./examples/performance-examples.md) | 25+ performance optimization examples |
+| Example Collection                                         | Description                                        |
+|------------------------------------------------------------|----------------------------------------------------|
+| [Authentication Examples](./examples/auth-examples.md)     | 25+ authentication and session management examples |
+| [RBAC Examples](./examples/rbac-examples.md)               | 25+ role-based access control examples             |
+| [Routing Examples](./examples/routing-examples.md)         | 25+ routing and navigation examples                |
+| [Performance Examples](./examples/performance-examples.md) | 25+ performance optimization examples              |
 
 ---
 
@@ -101,11 +101,11 @@ Comprehensive code examples for common use cases:
 
 Reusable utilities for common React patterns:
 
-| Document | Description |
-|----------|-------------|
-| [Shared Hook Utilities](../hooks/shared/README.md) | Mounted state tracking, latest refs, network utilities, buffering |
-| [Quick Reference](../hooks/shared/QUICK_REFERENCE.md) | Quick lookup for shared utility APIs |
-| [Migration Checklist](../hooks/shared/MIGRATION_CHECKLIST.md) | Guide for migrating to shared utilities |
+| Document                                                      | Description                                                       |
+|---------------------------------------------------------------|-------------------------------------------------------------------|
+| [Shared Hook Utilities](../hooks/shared/README.md)            | Mounted state tracking, latest refs, network utilities, buffering |
+| [Quick Reference](../hooks/shared/QUICK_REFERENCE.md)         | Quick lookup for shared utility APIs                              |
+| [Migration Checklist](../hooks/shared/MIGRATION_CHECKLIST.md) | Guide for migrating to shared utilities                           |
 
 ### Shared Utility Categories
 
@@ -118,10 +118,10 @@ Reusable utilities for common React patterns:
 
 ## Contributing
 
-| Document | Description |
-|----------|-------------|
+| Document                                 | Description                                   |
+|------------------------------------------|-----------------------------------------------|
 | [Contributing Guide](../CONTRIBUTING.md) | How to contribute to the Harbor React Library |
-| [Changelog](../CHANGELOG.md) | Version history for tracking changes |
+| [Changelog](../CHANGELOG.md)             | Version history for tracking changes          |
 
 ---
 
@@ -161,10 +161,10 @@ lib/
 
 The library has undergone comprehensive PhD-level engineering audits:
 
-| Audit | Date | Agents | Issues Found | Issues Fixed | Status |
-|-------|------|--------|--------------|--------------|--------|
-| [Murder Board V2](./MURDER_BOARD_AUDIT_V2.md) | 2025-11-28 | 10 | 150+ | Critical Fixed | ✅ COMPLETE |
-| [Murder Board V1](./MURDER_BOARD_AUDIT.md) | 2025-11-27 | 10 | 90+ | 90+ | ✅ COMPLETE |
+| Audit                                         | Date       | Agents | Issues Found | Issues Fixed   | Status     |
+|-----------------------------------------------|------------|--------|--------------|----------------|------------|
+| [Murder Board V2](./MURDER_BOARD_AUDIT_V2.md) | 2025-11-28 | 10     | 150+         | Critical Fixed | ✅ COMPLETE |
+| [Murder Board V1](./MURDER_BOARD_AUDIT.md)    | 2025-11-27 | 10     | 90+          | 90+            | ✅ COMPLETE |
 
 ### Audit Domains Covered
 
@@ -192,6 +192,7 @@ The library has undergone comprehensive PhD-level engineering audits:
 ## Best Practices
 
 ### Environment Checks
+
 ```typescript
 // Use centralized helpers
 import { isDev, isProd } from '@/lib/core/config/env-helper';
@@ -201,6 +202,7 @@ if (isDev()) { /* dev-only code */ }
 ```
 
 ### State Management
+
 ```typescript
 // Use functional form for Immer
 store.setState((state) => {
@@ -209,6 +211,7 @@ store.setState((state) => {
 ```
 
 ### Performance
+
 - Use `React.memo()` for pure components
 - Extract inline styles to `useMemo()`
 - Use `useCallback()` for event handlers

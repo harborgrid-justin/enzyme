@@ -128,12 +128,7 @@ export type {
 // Flag Engine
 // ============================================================================
 
-export {
-  FlagEngine,
-  getFlagEngine,
-  initFlagEngine,
-  resetFlagEngine,
-} from './flag-engine';
+export { FlagEngine, getFlagEngine, initFlagEngine, resetFlagEngine } from './flag-engine';
 
 // ============================================================================
 // Targeting Rules
@@ -164,10 +159,7 @@ export {
   generateRolloutSchedule,
 } from './percentage-rollout';
 
-export type {
-  RolloutResult,
-  HashFunction,
-} from './percentage-rollout';
+export type { RolloutResult, HashFunction } from './percentage-rollout';
 
 // ============================================================================
 // Segments

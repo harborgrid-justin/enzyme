@@ -30,23 +30,23 @@
  * ```
  */
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type {
-  NormalizedEntities,
   Entity,
   EntitySchema,
-  Schema,
   NormalizationResult,
+  NormalizedEntities,
+  Schema,
 } from '../normalization/normalizer';
 import {
-  normalizeAndMerge,
-  getEntity as getEntityFromState,
-  getEntities as getEntitiesFromState,
-  getAllEntities,
-  updateEntity as updateEntityInState,
-  removeEntity as removeEntityFromState,
-  mergeEntities,
   ArraySchema,
+  getAllEntities,
+  getEntities as getEntitiesFromState,
+  getEntity as getEntityFromState,
+  mergeEntities,
+  normalizeAndMerge,
+  removeEntity as removeEntityFromState,
+  updateEntity as updateEntityInState,
 } from '../normalization/normalizer';
 import {
   denormalize,
@@ -88,7 +88,9 @@ export interface NormalizedDataState {
 /**
  * Validation function type
  */
-export type ValidationFunction<T = unknown> = (data: T) => boolean | { valid: boolean; errors?: string[] };
+export type ValidationFunction<T = unknown> = (
+  data: T
+) => boolean | { valid: boolean; errors?: string[] };
 
 /**
  * Validation error thrown when data fails validation
@@ -138,11 +140,19 @@ export interface UseNormalizedDataReturn {
   /** Get denormalized entity */
   getDenormalized: <T>(entityType: string, entityId: string, schema: EntitySchema) => T | null;
   /** Get multiple denormalized entities */
-  getDenormalizedMany: <T extends Entity>(entityType: string, ids: string[], schema: EntitySchema) => T[];
+  getDenormalizedMany: <T extends Entity>(
+    entityType: string,
+    ids: string[],
+    schema: EntitySchema
+  ) => T[];
   /** Normalize and add data */
   addData: <T>(data: unknown, schema: Schema) => NormalizationResult<T>;
   /** Update entity */
-  updateEntity: <T extends Entity>(entityType: string, entityId: string, updates: Partial<T>) => void;
+  updateEntity: <T extends Entity>(
+    entityType: string,
+    entityId: string,
+    updates: Partial<T>
+  ) => void;
   /** Remove entity */
   removeEntity: (entityType: string, entityId: string) => void;
   /** Merge entities */
@@ -218,7 +228,7 @@ export function useNormalizedData(
 
   // Subscribe to store changes
   useEffect(() => {
-    const unsubscribe = store.subscribe(() => {
+    return store.subscribe(() => {
       const entities = storeRef.current.getEntities();
       setState({
         entities,
@@ -229,8 +239,6 @@ export function useNormalizedData(
         isLoading: false,
       });
     });
-
-    return unsubscribe;
   }, [store]);
 
   // Get entity
@@ -467,7 +475,7 @@ export function useAllEntities<T extends Entity>(
  *
  * @param entities - Normalized entities
  * @param selector - Selector function
- * @param deps - Additional dependencies
+ * @param _deps
  * @returns Selected value
  */
 export function useEntitySelector<T>(
@@ -504,10 +512,9 @@ export function useNormalizedCrud<T extends Entity>(
   const [entities, setEntities] = useState<NormalizedEntities>(store.getEntities());
 
   useEffect(() => {
-    const unsubscribe = store.subscribe(() => {
+    return store.subscribe(() => {
       setEntities(store.getEntities());
     });
-    return unsubscribe;
   }, [store]);
 
   const items = useMemo(() => {
@@ -523,7 +530,10 @@ export function useNormalizedCrud<T extends Entity>(
 
   const create = useCallback(
     (data: Omit<T, 'id'> & { id?: string }): T => {
-      const id = (data.id != null && data.id !== '') ? data.id : `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const id =
+        data.id != null && data.id !== ''
+          ? data.id
+          : `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const entity = { ...data, id } as T;
       const result = normalizeAndMerge(entity, schema, entities);
       store.setEntities(result.entities);
@@ -585,9 +595,7 @@ export function useNormalizedCrud<T extends Entity>(
 /**
  * Create a simple normalized store
  */
-export function createNormalizedStore(
-  initialEntities: NormalizedEntities = {}
-): NormalizedStore {
+export function createNormalizedStore(initialEntities: NormalizedEntities = {}): NormalizedStore {
   let entities = initialEntities;
   const listeners = new Set<() => void>();
 
@@ -598,10 +606,10 @@ export function createNormalizedStore(
       listeners.forEach((listener) => listener());
     },
     subscribe: (listener) => {
-    listeners.add(listener);
-    return () => {
-      listeners.delete(listener);
-    };
-  },
-};
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
+    },
+  };
 }

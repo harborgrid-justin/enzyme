@@ -1,14 +1,19 @@
 # Auth Module
 
-> **Purpose:** Enterprise authentication and authorization system with Active Directory integration, RBAC, SSO, and comprehensive security features.
+> **Purpose:** Enterprise authentication and authorization system with Active Directory integration, RBAC, SSO, and
+> comprehensive security features.
 
 ## Overview
 
-The Auth module provides a complete identity and access management solution for React applications. It handles everything from basic authentication flows to complex enterprise requirements like Active Directory integration, Single Sign-On (SSO), Multi-Factor Authentication (MFA), and Role-Based Access Control (RBAC).
+The Auth module provides a complete identity and access management solution for React applications. It handles
+everything from basic authentication flows to complex enterprise requirements like Active Directory integration, Single
+Sign-On (SSO), Multi-Factor Authentication (MFA), and Role-Based Access Control (RBAC).
 
-Built with security and scalability in mind, this module supports multiple authentication providers (Azure AD, ADFS, B2C, on-premises AD), fine-grained permission systems, and seamless integration with routing guards and API security.
+Built with security and scalability in mind, this module supports multiple authentication providers (Azure AD, ADFS,
+B2C, on-premises AD), fine-grained permission systems, and seamless integration with routing guards and API security.
 
-Whether you're building a simple login system or implementing enterprise-grade access control with complex role hierarchies and conditional permissions, this module provides the patterns and tools needed.
+Whether you're building a simple login system or implementing enterprise-grade access control with complex role
+hierarchies and conditional permissions, this module provides the patterns and tools needed.
 
 ## Key Features
 
@@ -79,6 +84,7 @@ function AdminPage() {
 ## Exports
 
 ### Components
+
 - `AuthProvider` - Core authentication context provider
 - `RequireAuth` - Route guard requiring authentication
 - `RequireRole` - Route guard requiring specific role
@@ -88,6 +94,7 @@ function AdminPage() {
 - `RBACProvider` - Role-based access control provider
 
 ### Hooks
+
 - `useAuth` - Access authentication state and methods
 - `useHasRole` - Check if user has specific role
 - `useHasPermission` - Check if user has specific permission
@@ -101,16 +108,18 @@ function AdminPage() {
 - `useAccessChecks` - Batch permission checks
 
 ### Services
+
 - `authService` - Core authentication service
-  - `login()` - Authenticate user
-  - `logout()` - End user session
-  - `register()` - Register new user
-  - `refreshToken()` - Refresh access token
-  - `resetPassword()` - Initiate password reset
-  - `verifyEmail()` - Verify email address
-  - `enableMFA()` - Enable multi-factor authentication
+    - `login()` - Authenticate user
+    - `logout()` - End user session
+    - `register()` - Register new user
+    - `refreshToken()` - Refresh access token
+    - `resetPassword()` - Initiate password reset
+    - `verifyEmail()` - Verify email address
+    - `enableMFA()` - Enable multi-factor authentication
 
 ### Active Directory
+
 - `ADClient` - Active Directory client
 - `ADTokenHandler` - Token acquisition and refresh
 - `SSOManager` - Single Sign-On orchestration
@@ -119,6 +128,7 @@ function AdminPage() {
 - `ADAttributeMapper` - Extract user attributes from tokens
 
 ### RBAC Engine
+
 - `RBACEngine` - Core permission evaluation engine
 - `PermissionMatrixBuilder` - Build permission matrices
 - `RoleHierarchyManager` - Manage role inheritance
@@ -126,6 +136,7 @@ function AdminPage() {
 - `PolicyEvaluator` - Evaluate authorization policies
 
 ### Utilities
+
 - `routeMetadata` - Define route authentication requirements
 - `getRouteAuthConfig()` - Get auth config for route
 - `canAccessRoute()` - Check if user can access route
@@ -135,6 +146,7 @@ function AdminPage() {
 - `mergeGroupMappings()` - Combine group mappings
 
 ### Types
+
 - `User` - User object structure
 - `Role` - Role definition
 - `Permission` - Permission string or structured
@@ -179,6 +191,7 @@ The Auth module is organized into three main layers:
 ## Common Patterns
 
 ### Pattern 1: Basic Authentication
+
 ```tsx
 import { AuthProvider, useAuth, RequireAuth } from '@/lib/auth';
 
@@ -222,6 +235,7 @@ function Dashboard() {
 ```
 
 ### Pattern 2: Active Directory Integration
+
 ```tsx
 import { ADProvider, useActiveDirectory } from '@/lib/auth/active-directory';
 
@@ -266,6 +280,7 @@ function UserProfile() {
 ```
 
 ### Pattern 3: Role-Based Access Control
+
 ```tsx
 import { RBACProvider, useRBAC, RequireRole } from '@/lib/auth';
 
@@ -317,6 +332,7 @@ function AdminPanel() {
 ```
 
 ### Pattern 4: Permission Matrix
+
 ```tsx
 import {
   RBACProvider,
@@ -352,6 +368,7 @@ function App() {
 ```
 
 ### Pattern 5: Conditional Permissions with Policies
+
 ```tsx
 import { RBACProvider, PolicyEvaluator } from '@/lib/auth';
 
@@ -393,6 +410,7 @@ function PostActions({ post }) {
 ## Configuration
 
 ### Basic Auth Configuration
+
 ```tsx
 import { AuthProvider } from '@/lib/auth';
 
@@ -424,6 +442,7 @@ import { AuthProvider } from '@/lib/auth';
 ```
 
 ### Active Directory Configuration
+
 ```tsx
 import { ADProvider } from '@/lib/auth/active-directory';
 
@@ -457,6 +476,7 @@ import { ADProvider } from '@/lib/auth/active-directory';
 ## Testing
 
 ### Testing with Mock Auth
+
 ```tsx
 import { AuthProvider } from '@/lib/auth';
 import { render, screen } from '@testing-library/react';
@@ -503,27 +523,35 @@ describe('Dashboard', () => {
 ## Troubleshooting
 
 ### Issue: Token Expires Too Quickly
+
 **Solution:** Configure auto-refresh to renew tokens before expiry:
+
 ```tsx
 <AuthProvider config={{ autoRefresh: true, refreshBeforeExpiry: 300 }}>
 ```
 
 ### Issue: AD Login Popup Blocked
+
 **Solution:** Use redirect flow instead of popup:
+
 ```tsx
 const { loginWithRedirect } = useActiveDirectory();
 <button onClick={loginWithRedirect}>Sign in</button>
 ```
 
 ### Issue: Permission Check Always Returns False
+
 **Solution:** Ensure user roles are loaded and RBAC is configured:
+
 ```tsx
 const { can, isReady } = useRBAC();
 if (!isReady) return <Loading />;
 ```
 
 ### Issue: Session Lost on Page Refresh
+
 **Solution:** Enable auth persistence:
+
 ```tsx
 <AuthProvider config={{ persistAuth: true }}>
 ```

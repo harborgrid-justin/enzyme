@@ -19,27 +19,20 @@
  */
 
 import { HydrationPriorityQueue, type PriorityQueueStats } from './priority-queue';
-import {
-  type InteractionReplayManager,
-  getInteractionReplayManager,
-} from './interaction-replay';
+import { getInteractionReplayManager, type InteractionReplayManager, } from './interaction-replay';
 import type {
-  HydrationTask,
-  HydrationPriority,
-  HydrationStatus,
-  HydrationSchedulerConfig,
   HydrationBoundaryId,
-  HydrationMetric,
-  HydrationMetricsSnapshot,
   HydrationEvent,
   HydrationEventListener,
   HydrationEventType,
+  HydrationMetric,
+  HydrationMetricsSnapshot,
+  HydrationPriority,
+  HydrationSchedulerConfig,
+  HydrationStatus,
+  HydrationTask,
 } from './types';
-import {
-  DEFAULT_SCHEDULER_CONFIG,
-  createInitialHydrationStatus,
-  PRIORITY_WEIGHTS,
-} from './types';
+import { createInitialHydrationStatus, DEFAULT_SCHEDULER_CONFIG, PRIORITY_WEIGHTS, } from './types';
 
 // ============================================================================
 // Types
@@ -91,13 +84,13 @@ function requestIdle(
   }
 
   // Fallback using setTimeout with simulated deadline
-  const timeoutId = window.setTimeout(() => {
+
+  return window.setTimeout(() => {
     callback({
       didTimeout: false,
       timeRemaining: () => 50,
     });
   }, options?.timeout ?? 100);
-  return timeoutId;
 }
 
 /**

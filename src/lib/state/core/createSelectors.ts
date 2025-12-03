@@ -265,9 +265,9 @@ export function createBoundedParameterizedSelector<TState, TParam, TResult>(
  * const { name, email, avatar } = useStore(selectUserProfile, shallow);
  * ```
  */
-export function combineSelectors<TState, TResult extends Record<string, unknown>>(
-  selectors: { [K in keyof TResult]: Selector<TState, TResult[K]> }
-): Selector<TState, TResult> {
+export function combineSelectors<TState, TResult extends Record<string, unknown>>(selectors: {
+  [K in keyof TResult]: Selector<TState, TResult[K]>;
+}): Selector<TState, TResult> {
   const keys = Object.keys(selectors) as (keyof TResult)[];
   let cache: TResult | null = null;
 

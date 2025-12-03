@@ -10,11 +10,7 @@
  */
 
 import { useContext, useCallback, useMemo } from 'react';
-import type {
-  SecurityContextValue,
-  SecurityViolation,
-  SecurityConfiguration,
-} from '../types';
+import type { SecurityContextValue, SecurityViolation, SecurityConfiguration } from '../types';
 import { SecurityContext } from '../../contexts/SecurityContext';
 
 /**
@@ -58,7 +54,7 @@ export function useSecurityContext(): SecurityContextValue {
   if (!context) {
     throw new Error(
       'useSecurityContext must be used within a SecurityProvider. ' +
-      'Ensure your component is wrapped with <SecurityProvider>.'
+        'Ensure your component is wrapped with <SecurityProvider>.'
     );
   }
 
@@ -375,18 +371,15 @@ export function useSecureHandler(): <T extends (...args: unknown[]) => unknown>(
           if (reportOnError) {
             reportViolation({
               type: 'other',
-              details:
-                error instanceof Error
-                  ? error.message
-                  : 'Unknown error in secure handler',
+              details: error instanceof Error ? error.message : 'Unknown error in secure handler',
               severity: 'medium',
               blocked: true,
             });
+          }
+          throw error;
         }
-        throw error;
-      }
-    }) as T;
-  },
-  [csrfToken, reportViolation]
-);
+      }) as T;
+    },
+    [csrfToken, reportViolation]
+  );
 }

@@ -27,10 +27,7 @@ import React, {
 } from 'react';
 import { ScrollContainerContext } from '../../contexts/ScrollContainerContext';
 
-import type {
-  ScrollContainer,
-  ScrollAwareContainerProps,
-} from './types';
+import type { ScrollContainer, ScrollAwareContainerProps } from './types';
 import {
   type ScrollTracker,
   ScrollContainerRegistry,
@@ -297,7 +294,7 @@ export const ScrollAwareContainer = forwardRef<HTMLDivElement, ExtendedScrollAwa
      * Renders virtualized content.
      */
     const renderVirtualized = useCallback(async () => {
-      if (virtualize !== true || itemHeight == null || itemHeight === 0 || scrollState == null) {
+      if (!virtualize || itemHeight == null || itemHeight === 0 || scrollState == null) {
         return children;
       }
 
@@ -347,36 +344,42 @@ export const ScrollAwareContainer = forwardRef<HTMLDivElement, ExtendedScrollAwa
     }, [virtualize, itemHeight, scrollState, children, overscan, scrollSnap]);
 
     return (
-      <ScrollContainerContext.Provider value={scrollState ? {
-        element: scrollState.element as HTMLElement,
-        position: {
-          x: scrollState.scrollPosition.x,
-          y: scrollState.scrollPosition.y,
-        },
-        isScrolling: scrollState.isScrolling,
-        scrollTo: (x: number, y: number, smooth?: boolean) => {
-          scrollState.element.scrollTo({
-            left: x,
-            top: y,
-            behavior: smooth ? 'smooth' : 'auto',
-          });
-        },
-        scrollToTop: (smooth?: boolean) => {
-          scrollState.element.scrollTo({
-            top: 0,
-            behavior: smooth ? 'smooth' : 'auto',
-          });
-        },
-        scrollToBottom: (smooth?: boolean) => {
-          scrollState.element.scrollTo({
-            top: scrollState.element.scrollHeight,
-            behavior: smooth ? 'smooth' : 'auto',
-          });
-        },
-        scrollToElement: (element: HTMLElement, options?: ScrollIntoViewOptions) => {
-          element.scrollIntoView({ behavior: 'smooth', ...options });
-        },
-      } : null}>
+      <ScrollContainerContext.Provider
+        value={
+          scrollState
+            ? {
+                element: scrollState.element as HTMLElement,
+                position: {
+                  x: scrollState.scrollPosition.x,
+                  y: scrollState.scrollPosition.y,
+                },
+                isScrolling: scrollState.isScrolling,
+                scrollTo: (x: number, y: number, smooth?: boolean) => {
+                  scrollState.element.scrollTo({
+                    left: x,
+                    top: y,
+                    behavior: smooth ? 'smooth' : 'auto',
+                  });
+                },
+                scrollToTop: (smooth?: boolean) => {
+                  scrollState.element.scrollTo({
+                    top: 0,
+                    behavior: smooth ? 'smooth' : 'auto',
+                  });
+                },
+                scrollToBottom: (smooth?: boolean) => {
+                  scrollState.element.scrollTo({
+                    top: scrollState.element.scrollHeight,
+                    behavior: smooth ? 'smooth' : 'auto',
+                  });
+                },
+                scrollToElement: (element: HTMLElement, options?: ScrollIntoViewOptions) => {
+                  element.scrollIntoView({ behavior: 'smooth', ...options });
+                },
+              }
+            : null
+        }
+      >
         <div
           ref={setRefs}
           className={computedClassName}
@@ -539,7 +542,7 @@ export function useScrollControl(): {
     scrollToTop,
     scrollToBottom,
     isScrolling: scrollState?.isScrolling ?? false,
-  scrollDirection: scrollState?.scrollDirection ?? 'none',
-  scrollProgress: scrollState?.scrollProgress ?? { x: 0, y: 0 },
-};
+    scrollDirection: scrollState?.scrollDirection ?? 'none',
+    scrollProgress: scrollState?.scrollProgress ?? { x: 0, y: 0 },
+  };
 }

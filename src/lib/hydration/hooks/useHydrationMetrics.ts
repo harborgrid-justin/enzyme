@@ -42,7 +42,7 @@
  * ```
  */
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useOptionalHydrationContext } from '../HydrationProvider';
 import { getHydrationScheduler } from '../hydration-scheduler';
@@ -322,7 +322,7 @@ export function useHydrationMetrics(
     try {
       const scheduler = getHydrationScheduler();
 
-      const unsubscribe = scheduler.on('hydration:complete', (event) => {
+      return scheduler.on('hydration:complete', (event) => {
         // Update duration history
         const payload = event.payload as { duration: number } | undefined;
         if (payload?.duration !== null && payload?.duration !== undefined) {
@@ -336,8 +336,6 @@ export function useHydrationMetrics(
         // Refresh metrics
         fetchMetrics();
       });
-
-      return unsubscribe;
     } catch {
       // Scheduler not available
       return;
@@ -365,26 +363,22 @@ export function useHydrationMetrics(
   // Computed Values
   // ==========================================================================
 
-  const computedMetrics = useMemo<UseHydrationMetricsReturn>(() => {
-    const hydrationProgress =
-      metrics.totalBoundaries > 0
-        ? (metrics.hydratedCount / metrics.totalBoundaries) * 100
-        : 0;
 
-    const estimatedTimeRemaining = estimateTimeRemaining(
-      metrics.pendingCount,
-      hydrationRate
-    );
+
+
+  return useMemo<UseHydrationMetricsReturn>(() => {
+    const hydrationProgress =
+      metrics.totalBoundaries > 0 ? (metrics.hydratedCount / metrics.totalBoundaries) * 100 : 0;
+
+    const estimatedTimeRemaining = estimateTimeRemaining(metrics.pendingCount, hydrationRate);
 
     const isFullyHydrated =
-      metrics.totalBoundaries > 0 &&
-      metrics.hydratedCount === metrics.totalBoundaries;
+      metrics.totalBoundaries > 0 && metrics.hydratedCount === metrics.totalBoundaries;
 
     const isAboveFoldHydrated = metrics.timeToAboveFoldHydration !== null;
 
     // Calculate replay success rate (assuming all replays succeed for now)
-    const replaySuccessRate =
-      metrics.totalReplayedInteractions > 0 ? 1.0 : 0;
+    const replaySuccessRate = metrics.totalReplayedInteractions > 0 ? 1.0 : 0;
 
     return {
       ...metrics,
@@ -398,8 +392,6 @@ export function useHydrationMetrics(
       refresh: fetchMetrics,
     };
   }, [metrics, durationHistory, hydrationRate, fetchMetrics]);
-
-  return computedMetrics;
 }
 
 /**

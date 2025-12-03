@@ -150,15 +150,9 @@ import {
   type IntelligentPrefetchConfig,
 } from './intelligent-prefetch';
 import { getPrefetchQueue, type PrefetchQueueConfig } from './prefetch-queue';
-import {
-  getRoutePrefetchManager,
-  type RoutePrefetchConfig,
-} from './route-prefetch';
+import { getRoutePrefetchManager, type RoutePrefetchConfig } from './route-prefetch';
 import { getDataPrefetchManager, type DataPrefetchConfig } from './data-prefetch';
-import {
-  getAssetPrefetchManager,
-  type AssetPrefetchConfig,
-} from './asset-prefetch';
+import { getAssetPrefetchManager, type AssetPrefetchConfig } from './asset-prefetch';
 
 /**
  * Unified prefetch configuration

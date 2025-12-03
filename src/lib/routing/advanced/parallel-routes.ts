@@ -242,57 +242,6 @@ export class ParallelRoutes {
   }
 
   /**
-   * Match a single slot against a path
-   */
-  private matchSlot(slot: ParallelRouteSlot, path: string): SlotMatch | null {
-    // Parallel slots (starting with @) match against slot-specific paths
-    if (slot.path.startsWith(SLOT_PREFIX)) {
-      // Check if path includes the slot indicator
-      const slotPath = slot.path.slice(1); // Remove @
-      if (path.includes(`/${SLOT_PREFIX}${slotPath}`)) {
-        return {
-          slot,
-          params: {},
-          path: slot.path,
-          score: this.calculateMatchScore(slot.path, path),
-        };
-      }
-      return null;
-    }
-
-    // Regular path matching with parameter extraction
-    const params = this.extractParams(slot.path, path);
-    if (params !== null) {
-      return {
-        slot,
-        params,
-        path,
-        score: this.calculateMatchScore(slot.path, path),
-      };
-    }
-
-    return null;
-  }
-
-  /**
-   * Extract parameters from a path given a pattern
-   *
-   * Delegates to core path utilities.
-   */
-  private extractParams(pattern: string, path: string): Record<string, string> | null {
-    return coreParsePathParams(pattern, path);
-  }
-
-  /**
-   * Calculate match score for sorting
-   *
-   * Delegates to core pattern specificity calculation.
-   */
-  private calculateMatchScore(pattern: string, _path: string): number {
-    return coreGetPatternSpecificity(pattern);
-  }
-
-  /**
    * Update slot state
    */
   updateSlotState(name: string, update: Partial<SlotRenderState>): void {
@@ -350,8 +299,61 @@ export class ParallelRoutes {
   /**
    * Get layout component
    */
-  getLayout(): ComponentType<{ children: ReactNode; slots: Record<string, ReactNode> }> | undefined {
+  getLayout():
+    | ComponentType<{ children: ReactNode; slots: Record<string, ReactNode> }>
+    | undefined {
     return this.config.layout;
+  }
+
+  /**
+   * Match a single slot against a path
+   */
+  private matchSlot(slot: ParallelRouteSlot, path: string): SlotMatch | null {
+    // Parallel slots (starting with @) match against slot-specific paths
+    if (slot.path.startsWith(SLOT_PREFIX)) {
+      // Check if path includes the slot indicator
+      const slotPath = slot.path.slice(1); // Remove @
+      if (path.includes(`/${SLOT_PREFIX}${slotPath}`)) {
+        return {
+          slot,
+          params: {},
+          path: slot.path,
+          score: this.calculateMatchScore(slot.path, path),
+        };
+      }
+      return null;
+    }
+
+    // Regular path matching with parameter extraction
+    const params = this.extractParams(slot.path, path);
+    if (params !== null) {
+      return {
+        slot,
+        params,
+        path,
+        score: this.calculateMatchScore(slot.path, path),
+      };
+    }
+
+    return null;
+  }
+
+  /**
+   * Extract parameters from a path given a pattern
+   *
+   * Delegates to core path utilities.
+   */
+  private extractParams(pattern: string, path: string): Record<string, string> | null {
+    return coreParsePathParams(pattern, path);
+  }
+
+  /**
+   * Calculate match score for sorting
+   *
+   * Delegates to core pattern specificity calculation.
+   */
+  private calculateMatchScore(pattern: string, _path: string): number {
+    return coreGetPatternSpecificity(pattern);
   }
 }
 

@@ -4,7 +4,8 @@
 
 ## Overview
 
-The UX module provides loading indicators, skeleton screens, smart defaults based on device/network conditions, and optimistic update patterns.
+The UX module provides loading indicators, skeleton screens, smart defaults based on device/network conditions, and
+optimistic update patterns.
 
 ## Quick Start
 
@@ -35,13 +36,13 @@ function UserProfile() {
 
 ## Exports
 
-| Export | Type | Description |
-|--------|------|-------------|
-| `LoadingSpinner` | Component | Animated loading indicator |
-| `SkeletonFactory` | Component | Generate skeleton screens |
-| `useSmartDefaults` | Hook | Device/network aware defaults |
-| `useOptimisticUpdate` | Hook | Optimistic mutation handling |
-| `useLoadingState` | Hook | Unified loading state |
+| Export                | Type      | Description                   |
+|-----------------------|-----------|-------------------------------|
+| `LoadingSpinner`      | Component | Animated loading indicator    |
+| `SkeletonFactory`     | Component | Generate skeleton screens     |
+| `useSmartDefaults`    | Hook      | Device/network aware defaults |
+| `useOptimisticUpdate` | Hook      | Optimistic mutation handling  |
+| `useLoadingState`     | Hook      | Unified loading state         |
 
 ## See Also
 

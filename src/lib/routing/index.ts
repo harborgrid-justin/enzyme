@@ -127,15 +127,10 @@ export type { RoutePath, RouteParams, RouteQuery } from './routes';
 // =============================================================================
 // Linking Components & Navigation Hooks
 // =============================================================================
-export {
-  AppLink,
-  AppNavLink,
-  appRoutes,
-} from './linking';
+export { AppLink, AppNavLink, appRoutes } from './linking';
 
-export type {
-  // AppLink types can be inferred from the component props
-} from './linking';
+export type {} from // AppLink types can be inferred from the component props
+'./linking';
 
 // =============================================================================
 // Legacy Linking (for backward compatibility)
@@ -191,22 +186,14 @@ export type {
   ExtendedRouteObject,
 } from './types';
 
-export {
-  scanRouteFiles,
-  scanRouteFilesCached,
-  clearRouteCache,
-  invalidateCache,
-} from './scanner';
+export { scanRouteFiles, scanRouteFilesCached, clearRouteCache, invalidateCache } from './scanner';
 
 // =============================================================================
 // Conflict Detection
 // =============================================================================
 export type { ConflictDetectionResult } from './conflict-detector';
 
-export {
-  detectRouteConflicts,
-  sortRoutesBySpecificity,
-} from './conflict-detector';
+export { detectRouteConflicts, sortRoutesBySpecificity } from './conflict-detector';
 
 // =============================================================================
 // Route Builder
@@ -296,10 +283,7 @@ export {
 // =============================================================================
 // Advanced Conflict Detection
 // =============================================================================
-export {
-  detectAllConflicts,
-  generateFixSuggestions,
-} from './conflict-detector';
+export { detectAllConflicts, generateFixSuggestions } from './conflict-detector';
 
 // =============================================================================
 // Advanced Type Utilities

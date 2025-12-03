@@ -160,8 +160,7 @@ export class MemoryMonitor {
       return null;
     }
 
-    const usagePercent =
-      (memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100;
+    const usagePercent = (memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100;
 
     return {
       usedJSHeapSize: memory.usedJSHeapSize,
@@ -348,10 +347,7 @@ export class ObjectPool<T> {
   }
 
   private shrink(): void {
-    const targetSize = Math.max(
-      this.config.minSize,
-      Math.ceil(this.activeCount * 1.5)
-    );
+    const targetSize = Math.max(this.config.minSize, Math.ceil(this.activeCount * 1.5));
 
     while (this.pool.length > targetSize) {
       this.pool.pop();

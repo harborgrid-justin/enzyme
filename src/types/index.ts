@@ -249,9 +249,7 @@ export type Prettify<T> = {
  * // { name?: string; profile?: { bio?: string; avatar?: string } }
  * ```
  */
-export type DeepPartial<T> = T extends object
-  ? { [P in keyof T]?: DeepPartial<T[P]> }
-  : T;
+export type DeepPartial<T> = T extends object ? { [P in keyof T]?: DeepPartial<T[P]> } : T;
 
 /**
  * Deep required type - makes all properties required recursively
@@ -260,9 +258,7 @@ export type DeepPartial<T> = T extends object
  *
  * @template T - The type to make deeply required
  */
-export type DeepRequired<T> = T extends object
-  ? { [P in keyof T]-?: DeepRequired<T[P]> }
-  : T;
+export type DeepRequired<T> = T extends object ? { [P in keyof T]-?: DeepRequired<T[P]> } : T;
 
 /**
  * Deep readonly type - makes all properties readonly recursively
@@ -294,9 +290,7 @@ export type DeepReadonly<T> = T extends object
  * // { id?: string; name: string; email: string }
  * ```
  */
-export type PartialBy<T, K extends keyof T> = Prettify<
-  Omit<T, K> & Partial<Pick<T, K>>
->;
+export type PartialBy<T, K extends keyof T> = Prettify<Omit<T, K> & Partial<Pick<T, K>>>;
 
 /**
  * Make specific keys required while keeping others as-is
@@ -311,9 +305,7 @@ export type PartialBy<T, K extends keyof T> = Prettify<
  * // { host: string; port?: number }
  * ```
  */
-export type RequiredBy<T, K extends keyof T> = Prettify<
-  Omit<T, K> & Required<Pick<T, K>>
->;
+export type RequiredBy<T, K extends keyof T> = Prettify<Omit<T, K> & Required<Pick<T, K>>>;
 
 /**
  * Extract the value type from a Record type
@@ -415,9 +407,7 @@ export type Mutable<T> = {
  *
  * @template T - The type to make mutable
  */
-export type DeepMutable<T> = T extends object
-  ? { -readonly [P in keyof T]: DeepMutable<T[P]> }
-  : T;
+export type DeepMutable<T> = T extends object ? { -readonly [P in keyof T]: DeepMutable<T[P]> } : T;
 
 // =============================================================================
 // FUNCTION TYPES
@@ -481,9 +471,7 @@ export type Callback<T, E = Error> = (error: E | null, result?: T) => void;
  * ```
  */
 export type Equals<T, U> =
-  (<G>() => G extends T ? 1 : 2) extends (<G>() => G extends U ? 1 : 2)
-    ? true
-    : false;
+  (<G>() => G extends T ? 1 : 2) extends <G>() => G extends U ? 1 : 2 ? true : false;
 
 /**
  * Conditional type that resolves based on whether T is assignable to U
@@ -507,11 +495,7 @@ export type IsNever<T> = [T] extends [never] ? true : false;
  *
  * @template T - The type to check
  */
-export type IsUnknown<T> = unknown extends T
-  ? IsNever<T> extends true
-    ? false
-    : true
-  : false;
+export type IsUnknown<T> = unknown extends T ? (IsNever<T> extends true ? false : true) : false;
 
 /**
  * Check if a type is any
@@ -625,10 +609,9 @@ export type UncapitalizeString<S extends string> = Uncapitalize<S>;
  * type Parts = Split<'a/b/c', '/'>; // ['a', 'b', 'c']
  * ```
  */
-export type Split<S extends string, D extends string> =
-  S extends `${infer Head}${D}${infer Tail}`
-    ? [Head, ...Split<Tail, D>]
-    : [S];
+export type Split<S extends string, D extends string> = S extends `${infer Head}${D}${infer Tail}`
+  ? [Head, ...Split<Tail, D>]
+  : [S];
 
 /**
  * Join string literal types with a delimiter
@@ -641,14 +624,13 @@ export type Split<S extends string, D extends string> =
  * type Joined = Join<['a', 'b', 'c'], '-'>; // 'a-b-c'
  * ```
  */
-export type Join<T extends readonly string[], D extends string> =
-  T extends readonly []
-    ? ''
-    : T extends readonly [infer F extends string]
-      ? F
-      : T extends readonly [infer F extends string, ...infer R extends string[]]
-        ? `${F}${D}${Join<R, D>}`
-        : never;
+export type Join<T extends readonly string[], D extends string> = T extends readonly []
+  ? ''
+  : T extends readonly [infer F extends string]
+    ? F
+    : T extends readonly [infer F extends string, ...infer R extends string[]]
+      ? `${F}${D}${Join<R, D>}`
+      : never;
 
 // =============================================================================
 // TUPLE TYPES
@@ -659,21 +641,27 @@ export type Join<T extends readonly string[], D extends string> =
  *
  * @template T - A tuple type
  */
-export type Head<T extends readonly unknown[]> = T extends readonly [infer H, ...unknown[]] ? H : never;
+export type Head<T extends readonly unknown[]> = T extends readonly [infer H, ...unknown[]]
+  ? H
+  : never;
 
 /**
  * Get all elements except the first from a tuple
  *
  * @template T - A tuple type
  */
-export type Tail<T extends readonly unknown[]> = T extends readonly [unknown, ...infer R] ? R : never;
+export type Tail<T extends readonly unknown[]> = T extends readonly [unknown, ...infer R]
+  ? R
+  : never;
 
 /**
  * Get the last element type of a tuple
  *
  * @template T - A tuple type
  */
-export type Last<T extends readonly unknown[]> = T extends readonly [...unknown[], infer L] ? L : never;
+export type Last<T extends readonly unknown[]> = T extends readonly [...unknown[], infer L]
+  ? L
+  : never;
 
 /**
  * Get the length of a tuple type
@@ -741,8 +729,9 @@ export interface StyleProps {
 /**
  * Common HTML element props
  */
-export type HTMLProps<E extends HTMLElement = HTMLElement> =
-  React.HTMLAttributes<E> & ClassNameProps & StyleProps;
+export type HTMLProps<E extends HTMLElement = HTMLElement> = React.HTMLAttributes<E> &
+  ClassNameProps &
+  StyleProps;
 
 /**
  * Polymorphic component props - supports "as" prop for element type
@@ -756,10 +745,11 @@ export type HTMLProps<E extends HTMLElement = HTMLElement> =
  * // Supports: <Button as="a" href="..." variant="primary" />
  * ```
  */
-export type PolymorphicProps<
-  E extends React.ElementType,
-  P extends object = object,
-> = Omit<P & React.ComponentPropsWithRef<E>, keyof P | 'as'> & PolymorphicAs<E>;
+export type PolymorphicProps<E extends React.ElementType, P extends object = object> = Omit<
+  P & React.ComponentPropsWithRef<E>,
+  keyof P | 'as'
+> &
+  PolymorphicAs<E>;
 
 type PolymorphicAs<E extends React.ElementType> = {
   readonly as?: E;
@@ -848,9 +838,7 @@ export type Promisify<T> = Promise<T>;
  * @template T - An object with methods
  */
 export type AsyncMethods<T> = {
-  [K in keyof T]: T[K] extends (...args: infer A) => infer R
-    ? (...args: A) => Promise<R>
-    : T[K];
+  [K in keyof T]: T[K] extends (...args: infer A) => infer R ? (...args: A) => Promise<R> : T[K];
 };
 
 // =============================================================================

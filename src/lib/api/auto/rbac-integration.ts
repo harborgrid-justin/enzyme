@@ -566,6 +566,85 @@ export class RBACIntegration {
   }
 
   /**
+   * Clear permission cache
+   */
+  clearCache(): void {
+    this.cache.clear();
+  }
+
+  /**
+   * Clear cache for specific user
+   */
+  clearUserCache(userId: string): void {
+    for (const key of this.cache.keys()) {
+      if (key.endsWith(`:${userId}`)) {
+        this.cache.delete(key);
+      }
+    }
+  }
+
+  /**
+   * Clear cache for specific endpoint
+   */
+  clearEndpointCache(endpointId: string): void {
+    for (const key of this.cache.keys()) {
+      if (key.startsWith(`${endpointId}:`)) {
+        this.cache.delete(key);
+      }
+    }
+  }
+
+  // =========================================================================
+  // Helper Methods
+  // =========================================================================
+
+  /**
+   * Get cache statistics
+   */
+  getCacheStats(): { size: number; hitRate: number } {
+    return {
+      size: this.cache.size,
+      hitRate: 0, // Would need to track hits/misses
+    };
+  }
+
+  /**
+   * Get recent audit events
+   */
+  getAuditEvents(limit: number = 100): RBACAuditEvent[] {
+    return this.auditBuffer.slice(-limit);
+  }
+
+  /**
+   * Get audit events for specific user
+   */
+  getUserAuditEvents(userId: string, limit: number = 100): RBACAuditEvent[] {
+    return this.auditBuffer
+      .filter((e) => e.userId === userId)
+      .slice(-limit);
+  }
+
+  /**
+   * Get audit events for specific endpoint
+   */
+  getEndpointAuditEvents(endpointId: string, limit: number = 100): RBACAuditEvent[] {
+    return this.auditBuffer
+      .filter((e) => e.endpointId === endpointId)
+      .slice(-limit);
+  }
+
+  /**
+   * Clear audit buffer
+   */
+  clearAuditBuffer(): void {
+    this.auditBuffer = [];
+  }
+
+  // =========================================================================
+  // Cache Management
+  // =========================================================================
+
+  /**
    * Check role requirements
    */
   private async checkRoles(
@@ -680,10 +759,6 @@ export class RBACIntegration {
     );
   }
 
-  // =========================================================================
-  // Helper Methods
-  // =========================================================================
-
   /**
    * Check if user is super admin
    */
@@ -691,6 +766,10 @@ export class RBACIntegration {
     const superRoles = this.config.superAdminRoles ?? [];
     return user.roles.some((role) => superRoles.includes(role));
   }
+
+  // =========================================================================
+  // Audit Log Access
+  // =========================================================================
 
   /**
    * Create RBAC check result
@@ -767,85 +846,6 @@ export class RBACIntegration {
       this.auditBuffer = this.auditBuffer.slice(-500);
     }
   }
-
-  // =========================================================================
-  // Cache Management
-  // =========================================================================
-
-  /**
-   * Clear permission cache
-   */
-  clearCache(): void {
-    this.cache.clear();
-  }
-
-  /**
-   * Clear cache for specific user
-   */
-  clearUserCache(userId: string): void {
-    for (const key of this.cache.keys()) {
-      if (key.endsWith(`:${userId}`)) {
-        this.cache.delete(key);
-      }
-    }
-  }
-
-  /**
-   * Clear cache for specific endpoint
-   */
-  clearEndpointCache(endpointId: string): void {
-    for (const key of this.cache.keys()) {
-      if (key.startsWith(`${endpointId}:`)) {
-        this.cache.delete(key);
-      }
-    }
-  }
-
-  /**
-   * Get cache statistics
-   */
-  getCacheStats(): { size: number; hitRate: number } {
-    return {
-      size: this.cache.size,
-      hitRate: 0, // Would need to track hits/misses
-    };
-  }
-
-  // =========================================================================
-  // Audit Log Access
-  // =========================================================================
-
-  /**
-   * Get recent audit events
-   */
-  getAuditEvents(limit: number = 100): RBACAuditEvent[] {
-    return this.auditBuffer.slice(-limit);
-  }
-
-  /**
-   * Get audit events for specific user
-   */
-  getUserAuditEvents(userId: string, limit: number = 100): RBACAuditEvent[] {
-    return this.auditBuffer
-      .filter((e) => e.userId === userId)
-      .slice(-limit);
-  }
-
-  /**
-   * Get audit events for specific endpoint
-   */
-  getEndpointAuditEvents(endpointId: string, limit: number = 100): RBACAuditEvent[] {
-    return this.auditBuffer
-      .filter((e) => e.endpointId === endpointId)
-      .slice(-limit);
-  }
-
-  /**
-   * Clear audit buffer
-   */
-  clearAuditBuffer(): void {
-    this.auditBuffer = [];
-  }
 }
 
 // =============================================================================
@@ -882,11 +882,9 @@ export function createSimplePermissionChecker(
 
     // Check resource wildcard (e.g., users:* matches users:read)
     const [resource] = permission.split(':');
-    if (resource !== undefined && resource !== null && resource !== '' && userPerms.includes(`${resource}:*`)) {
-      return true;
-    }
+    return !!(resource !== undefined && resource !== null && resource !== '' && userPerms.includes(`${resource}:*`));
 
-    return false;
+
   };
 }
 
@@ -1058,11 +1056,9 @@ export function permissionMatches(
   }
 
   // Action wildcard (e.g., *:read matches users:read)
-  if (userParts[0] === '*' && userParts[1] === reqParts[1]) {
-    return true;
-  }
+  return userParts[0] === '*' && userParts[1] === reqParts[1];
 
-  return false;
+
 }
 
 /**

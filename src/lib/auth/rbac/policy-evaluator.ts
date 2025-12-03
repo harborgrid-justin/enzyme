@@ -95,8 +95,8 @@ interface PolicyEvaluationResult {
 export class PolicyEvaluator {
   private policies: Map<string, Policy>;
   private policySets: Map<string, PolicySet>;
-  private defaultCombiningAlgorithm: PolicySet['combiningAlgorithm'];
-  private debug: boolean;
+  private readonly defaultCombiningAlgorithm: PolicySet['combiningAlgorithm'];
+  private readonly debug: boolean;
 
   constructor(options?: {
     defaultCombiningAlgorithm?: PolicySet['combiningAlgorithm'];
@@ -222,15 +222,12 @@ export class PolicyEvaluator {
     }
 
     // Evaluate each policy
-    const policyResults = applicablePolicies.map(policy =>
+    const policyResults = applicablePolicies.map((policy) =>
       this.evaluatePolicy(policy, request, evaluationContext)
     );
 
     // Combine results
-    const combinedResult = this.combineResults(
-      policyResults,
-      this.defaultCombiningAlgorithm
-    );
+    const combinedResult = this.combineResults(policyResults, this.defaultCombiningAlgorithm);
 
     combinedResult.evaluationTime = Date.now() - startTime;
 
@@ -277,8 +274,8 @@ export class PolicyEvaluator {
 
     // Evaluate policies in the set
     const policyResults = policySet.policies
-      .filter(p => p.enabled)
-      .map(policy => this.evaluatePolicy(policy, request, evaluationContext));
+      .filter((p) => p.enabled)
+      .map((policy) => this.evaluatePolicy(policy, request, evaluationContext));
 
     return this.combineResults(policyResults, policySet.combiningAlgorithm);
   }
@@ -342,11 +339,7 @@ export class PolicyEvaluator {
 
     // Evaluate conditions
     if ((policy.conditions?.length ?? 0) > 0) {
-      const conditionsMatch = this.evaluateConditions(
-        policy.conditions ?? [],
-        request,
-        context
-      );
+      const conditionsMatch = this.evaluateConditions(policy.conditions ?? [], request, context);
       if (!conditionsMatch) {
         return {
           policyId: policy.id,
@@ -368,19 +361,16 @@ export class PolicyEvaluator {
   /**
    * Evaluate subject matching.
    */
-  private evaluateSubjects(
-    subjects: PolicySubject[],
-    request: AccessRequest
-  ): boolean {
-    return subjects.some(subject => {
+  private evaluateSubjects(subjects: PolicySubject[], request: AccessRequest): boolean {
+    return subjects.some((subject) => {
       switch (subject.type) {
         case 'user':
           return this.matchIdentifier(subject, request.subject.id);
 
         case 'role':
-          return request.subject.roles?.some(role =>
-            this.matchIdentifier(subject, role)
-          ) ?? false;
+          return (
+            request.subject.roles?.some((role) => this.matchIdentifier(subject, role)) ?? false
+          );
 
         case 'group':
           // Would need group info in request
@@ -400,19 +390,26 @@ export class PolicyEvaluator {
   /**
    * Evaluate resource matching.
    */
-  private evaluateResources(
-    resources: PolicyResource[],
-    request: AccessRequest
-  ): boolean {
-    return resources.some(resource => {
+  private evaluateResources(resources: PolicyResource[], request: AccessRequest): boolean {
+    return resources.some((resource) => {
       // Check resource type
       if (resource.type !== '*' && resource.type !== request.resource.type) {
         return false;
       }
 
       // Check resource identifier
-      if (resource.identifier !== null && resource.identifier !== undefined && resource.identifier !== '' && resource.identifier !== '*') {
-        if (request.resource.id !== null && request.resource.id !== undefined && request.resource.id !== '' && !this.matchWildcard(resource.identifier, request.resource.id)) {
+      if (
+        resource.identifier !== null &&
+        resource.identifier !== undefined &&
+        resource.identifier !== '' &&
+        resource.identifier !== '*'
+      ) {
+        if (
+          request.resource.id !== null &&
+          request.resource.id !== undefined &&
+          request.resource.id !== '' &&
+          !this.matchWildcard(resource.identifier, request.resource.id)
+        ) {
           return false;
         }
       }
@@ -434,7 +431,7 @@ export class PolicyEvaluator {
    * Evaluate action matching.
    */
   private evaluateActions(actions: string[], request: AccessRequest): boolean {
-    return actions.some(action => action === '*' || action === request.action);
+    return actions.some((action) => action === '*' || action === request.action);
   }
 
   /**
@@ -445,9 +442,7 @@ export class PolicyEvaluator {
     request: AccessRequest,
     context: EvaluationContext
   ): boolean {
-    return conditions.every(condition =>
-      this.evaluateCondition(condition, request, context)
-    );
+    return conditions.every((condition) => this.evaluateCondition(condition, request, context));
   }
 
   /**
@@ -485,11 +480,8 @@ export class PolicyEvaluator {
   /**
    * Evaluate time-based condition.
    */
-  private evaluateTimeCondition(
-    condition: PolicyCondition,
-    context: EvaluationContext
-  ): boolean {
-    const {now} = context;
+  private evaluateTimeCondition(condition: PolicyCondition, context: EvaluationContext): boolean {
+    const { now } = context;
 
     switch (condition.operator) {
       case 'between': {
@@ -556,10 +548,7 @@ export class PolicyEvaluator {
   /**
    * Evaluate location-based condition.
    */
-  private evaluateLocationCondition(
-    condition: PolicyCondition,
-    request: AccessRequest
-  ): boolean {
+  private evaluateLocationCondition(condition: PolicyCondition, request: AccessRequest): boolean {
     const location = request.context?.location;
 
     if (!location) {
@@ -587,16 +576,12 @@ export class PolicyEvaluator {
   /**
    * Evaluate attribute-based condition.
    */
-  private evaluateAttributeCondition(
-    condition: PolicyCondition,
-    request: AccessRequest
-  ): boolean {
-    const {key} = condition;
+  private evaluateAttributeCondition(condition: PolicyCondition, request: AccessRequest): boolean {
+    const { key } = condition;
     if (key === null || key === undefined || key === '') return true;
 
     // Check subject attributes first, then resource attributes
-    const value =
-      request.subject.attributes?.[key] ?? request.resource.attributes?.[key];
+    const value = request.subject.attributes?.[key] ?? request.resource.attributes?.[key];
 
     return this.compareValue(condition.operator, value, condition.value);
   }
@@ -609,11 +594,10 @@ export class PolicyEvaluator {
     request: AccessRequest,
     context: EvaluationContext
   ): boolean {
-    const {key} = condition;
+    const { key } = condition;
     if (key === null || key === undefined || key === '') return true;
 
-    const value =
-      request.context?.attributes?.[key] ?? context.attributes?.[key];
+    const value = request.context?.attributes?.[key] ?? context.attributes?.[key];
 
     return this.compareValue(condition.operator, value, condition.value);
   }
@@ -634,11 +618,7 @@ export class PolicyEvaluator {
   /**
    * Compare values using operator.
    */
-  private compareValue(
-    operator: string,
-    actual: unknown,
-    expected: unknown
-  ): boolean {
+  private compareValue(operator: string, actual: unknown, expected: unknown): boolean {
     switch (operator) {
       case 'equals':
         return actual === expected;
@@ -689,8 +669,8 @@ export class PolicyEvaluator {
     results: PolicyEvaluationResult[],
     algorithm: PolicySet['combiningAlgorithm']
   ): EvaluationResult {
-    const applicableResults = results.filter(r => r.result !== 'not-applicable');
-    const matchingPolicies = applicableResults.map(r => r.policyId);
+    const applicableResults = results.filter((r) => r.result !== 'not-applicable');
+    const matchingPolicies = applicableResults.map((r) => r.policyId);
 
     if (applicableResults.length === 0) {
       return {
@@ -730,8 +710,8 @@ export class PolicyEvaluator {
     results: PolicyEvaluationResult[],
     matchingPolicies: string[]
   ): EvaluationResult {
-    const hasDeny = results.some(r => r.result === 'deny');
-    const hasAllow = results.some(r => r.result === 'allow');
+    const hasDeny = results.some((r) => r.result === 'deny');
+    const hasAllow = results.some((r) => r.result === 'allow');
 
     if (hasDeny) {
       return {
@@ -769,8 +749,8 @@ export class PolicyEvaluator {
     results: PolicyEvaluationResult[],
     matchingPolicies: string[]
   ): EvaluationResult {
-    const hasAllow = results.some(r => r.result === 'allow');
-    const hasDeny = results.some(r => r.result === 'deny');
+    const hasAllow = results.some((r) => r.result === 'allow');
+    const hasDeny = results.some((r) => r.result === 'deny');
 
     if (hasAllow) {
       return {
@@ -895,10 +875,7 @@ export class PolicyEvaluator {
   /**
    * Check if request matches policy set target.
    */
-  private matchesTarget(
-    targets: PolicyResource[],
-    request: AccessRequest
-  ): boolean {
+  private matchesTarget(targets: PolicyResource[], request: AccessRequest): boolean {
     return this.evaluateResources(targets, request);
   }
 
@@ -923,9 +900,7 @@ export class PolicyEvaluator {
    * Match string with wildcard pattern.
    */
   private matchWildcard(pattern: string, value: string): boolean {
-    const regex = new RegExp(
-      `^${  pattern.replace(/\*/g, '.*').replace(/\?/g, '.')  }$`
-    );
+    const regex = new RegExp(`^${pattern.replace(/\*/g, '.*').replace(/\?/g, '.')}$`);
     return regex.test(value);
   }
 

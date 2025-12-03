@@ -39,6 +39,8 @@ export interface ConfigurableFeaturesContextValue {
 /**
  * Configurable features context - extracted for Fast Refresh compliance
  */
-export const ConfigurableFeaturesContext = createContext<ConfigurableFeaturesContextValue | null>(null);
+export const ConfigurableFeaturesContext = createContext<ConfigurableFeaturesContextValue | null>(
+  null
+);
 
 ConfigurableFeaturesContext.displayName = 'ConfigurableFeaturesContext';

@@ -239,7 +239,7 @@ export class HierarchicalErrorBoundary extends Component<
   static override contextType = HierarchicalErrorBoundaryContext;
   declare context: ErrorBoundaryContextValue | null;
 
-  private boundaryId: string;
+  private readonly boundaryId: string;
   private retryTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   constructor(props: HierarchicalErrorBoundaryProps) {
@@ -309,6 +309,72 @@ export class HierarchicalErrorBoundary extends Component<
     if (this.retryTimeoutId) {
       clearTimeout(this.retryTimeoutId);
     }
+  }
+
+  override render(): ReactNode {
+    const { children, level, fallback, allowedActions, degradedComponent } = this.props;
+    const { hasError, error, isRecovering, retryCount, isDegraded } = this.state;
+    const config = LEVEL_CONFIG[level];
+
+    const contextValue: ErrorBoundaryContextValue = {
+      level,
+      boundaryId: this.boundaryId,
+      parentBoundaryId: this.context?.boundaryId ?? null,
+      escalateError: this.escalateError,
+      resetBoundary: this.resetBoundary,
+      hasError,
+      error,
+    };
+
+    // Show degraded component if in degraded mode
+    if (isDegraded && (degradedComponent !== undefined)) {
+      return (
+        <HierarchicalErrorBoundaryContext.Provider value={contextValue}>
+          {degradedComponent}
+        </HierarchicalErrorBoundaryContext.Provider>
+      );
+    }
+
+    if (hasError && (error !== null)) {
+      const actions = allowedActions ?? config.defaultActions;
+      const fallbackProps: ErrorFallbackProps = {
+        error,
+        level,
+        boundaryId: this.boundaryId,
+        allowedActions: actions,
+        onAction: this.handleAction,
+        isRecovering,
+        retryCount,
+      };
+
+      if (typeof fallback === 'function') {
+        return (
+          <HierarchicalErrorBoundaryContext.Provider value={contextValue}>
+            {fallback(fallbackProps)}
+          </HierarchicalErrorBoundaryContext.Provider>
+        );
+      }
+
+      if (fallback !== undefined) {
+        return (
+          <HierarchicalErrorBoundaryContext.Provider value={contextValue}>
+            {fallback}
+          </HierarchicalErrorBoundaryContext.Provider>
+        );
+      }
+
+      return (
+        <HierarchicalErrorBoundaryContext.Provider value={contextValue}>
+          <DefaultHierarchicalFallback {...fallbackProps} />
+        </HierarchicalErrorBoundaryContext.Provider>
+      );
+    }
+
+    return (
+      <HierarchicalErrorBoundaryContext.Provider value={contextValue}>
+        {children}
+      </HierarchicalErrorBoundaryContext.Provider>
+    );
   }
 
   private isRetryableError(error: AppError): boolean {
@@ -406,72 +472,6 @@ export class HierarchicalErrorBoundary extends Component<
   private resetBoundary = (): void => {
     void this.handleAction('reset');
   };
-
-  override render(): ReactNode {
-    const { children, level, fallback, allowedActions, degradedComponent } = this.props;
-    const { hasError, error, isRecovering, retryCount, isDegraded } = this.state;
-    const config = LEVEL_CONFIG[level];
-
-    const contextValue: ErrorBoundaryContextValue = {
-      level,
-      boundaryId: this.boundaryId,
-      parentBoundaryId: this.context?.boundaryId ?? null,
-      escalateError: this.escalateError,
-      resetBoundary: this.resetBoundary,
-      hasError,
-      error,
-    };
-
-    // Show degraded component if in degraded mode
-    if ((isDegraded === true) && (degradedComponent !== undefined)) {
-      return (
-        <HierarchicalErrorBoundaryContext.Provider value={contextValue}>
-          {degradedComponent}
-        </HierarchicalErrorBoundaryContext.Provider>
-      );
-    }
-
-    if ((hasError === true) && (error !== null)) {
-      const actions = allowedActions ?? config.defaultActions;
-      const fallbackProps: ErrorFallbackProps = {
-        error,
-        level,
-        boundaryId: this.boundaryId,
-        allowedActions: actions,
-        onAction: this.handleAction,
-        isRecovering,
-        retryCount,
-      };
-
-      if (typeof fallback === 'function') {
-        return (
-          <HierarchicalErrorBoundaryContext.Provider value={contextValue}>
-            {fallback(fallbackProps)}
-          </HierarchicalErrorBoundaryContext.Provider>
-        );
-      }
-
-      if (fallback !== undefined) {
-        return (
-          <HierarchicalErrorBoundaryContext.Provider value={contextValue}>
-            {fallback}
-          </HierarchicalErrorBoundaryContext.Provider>
-        );
-      }
-
-      return (
-        <HierarchicalErrorBoundaryContext.Provider value={contextValue}>
-          <DefaultHierarchicalFallback {...fallbackProps} />
-        </HierarchicalErrorBoundaryContext.Provider>
-      );
-    }
-
-    return (
-      <HierarchicalErrorBoundaryContext.Provider value={contextValue}>
-        {children}
-      </HierarchicalErrorBoundaryContext.Provider>
-    );
-  }
 }
 
 // ============================================================================

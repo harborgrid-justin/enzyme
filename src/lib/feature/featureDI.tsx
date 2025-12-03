@@ -5,13 +5,7 @@
  * @description Enables loose coupling between features via service contracts
  */
 
-import React, {
-  useContext,
-  useMemo,
-  useEffect,
-  createContext,
-  type ReactNode,
-} from 'react';
+import React, { createContext, type ReactNode, useContext, useEffect, useMemo } from 'react';
 
 // ============================================================================
 // Types
@@ -100,7 +94,7 @@ export class FeatureDIContainer {
    */
   resolve<T>(contract: ServiceContract<T>): T {
     // Check for singleton first
-    if (this.singletons.has(contract.id) === true) {
+    if (this.singletons.has(contract.id)) {
       return this.singletons.get(contract.id) as T;
     }
 
@@ -111,9 +105,7 @@ export class FeatureDIContainer {
       if (contract.defaultValue !== undefined) {
         return contract.defaultValue;
       }
-      throw new Error(
-        `Service not registered: ${contract.name} (${String(contract.id)})`
-      );
+      throw new Error(`Service not registered: ${contract.name} (${String(contract.id)})`);
     }
 
     // Get or create instance
@@ -177,9 +169,7 @@ export class FeatureDIContainer {
    * Get all services with a specific tag
    */
   getByTag(tag: string): ServiceRegistration[] {
-    return Array.from(this.services.values()).filter((reg) =>
-      reg.tags.includes(tag)
-    );
+    return Array.from(this.services.values()).filter((reg) => reg.tags.includes(tag));
   }
 
   /**
@@ -240,10 +230,7 @@ export function registerService<T>(
 /**
  * Create a typed service contract
  */
-export function createServiceContract<T>(
-  name: string,
-  defaultValue?: T
-): ServiceContract<T> {
+export function createServiceContract<T>(name: string, defaultValue?: T): ServiceContract<T> {
   return {
     id: Symbol.for(`feature-service:${name}`),
     name,
@@ -308,9 +295,7 @@ export function useServicesByTag<T>(tag: string): T[] {
   const container = useDIContainer();
   return useMemo(() => {
     const registrations = container.getByTag(tag);
-    return registrations.map(
-      (reg) => container.resolve(reg.contract) as T
-    );
+    return registrations.map((reg) => container.resolve(reg.contract) as T);
   }, [container, tag]);
 }
 
@@ -328,15 +313,12 @@ export interface AnalyticsService {
   reset(): void;
 }
 
-export const AnalyticsContract = createServiceContract<AnalyticsService>(
-  'analytics',
-  {
-    track: () => {},
-    identify: () => {},
-    page: () => {},
-    reset: () => {},
-  }
-);
+export const AnalyticsContract = createServiceContract<AnalyticsService>('analytics', {
+  track: () => {},
+  identify: () => {},
+  page: () => {},
+  reset: () => {},
+});
 
 /**
  * Notification service contract
@@ -355,16 +337,13 @@ interface NotificationOptions {
   action?: { label: string; onClick: () => void };
 }
 
-export const NotificationContract = createServiceContract<NotificationService>(
-  'notification',
-  {
-    success: (msg) => console.info('[Success]', msg),
-    error: (msg) => console.error('[Error]', msg),
-    warning: (msg) => console.warn('[Warning]', msg),
-    info: (msg) => console.info('[Info]', msg),
-    dismiss: () => {},
-  }
-);
+export const NotificationContract = createServiceContract<NotificationService>('notification', {
+  success: (msg) => console.info('[Success]', msg),
+  error: (msg) => console.error('[Error]', msg),
+  warning: (msg) => console.warn('[Warning]', msg),
+  info: (msg) => console.info('[Info]', msg),
+  dismiss: () => {},
+});
 
 /**
  * Navigation service contract
@@ -377,9 +356,7 @@ export interface NavigationService {
   getCurrentPath(): string;
 }
 
-export const NavigationContract = createServiceContract<NavigationService>(
-  'navigation'
-);
+export const NavigationContract = createServiceContract<NavigationService>('navigation');
 
 /**
  * Storage service contract
@@ -391,28 +368,25 @@ export interface StorageService {
   clear(): void;
 }
 
-export const StorageContract = createServiceContract<StorageService>(
-  'storage',
-  {
-    get: <T,>(key: string): T | null => {
-      try {
-        const item = localStorage.getItem(key);
-        return item !== null ? (JSON.parse(item) as T) : null;
-      } catch {
-        return null;
-      }
-    },
-    set: (key, value) => {
-      localStorage.setItem(key, JSON.stringify(value));
-    },
-    remove: (key) => {
-      localStorage.removeItem(key);
-    },
-    clear: () => {
-      localStorage.clear();
-    },
-  }
-);
+export const StorageContract = createServiceContract<StorageService>('storage', {
+  get: <T,>(key: string): T | null => {
+    try {
+      const item = localStorage.getItem(key);
+      return item !== null ? (JSON.parse(item) as T) : null;
+    } catch {
+      return null;
+    }
+  },
+  set: (key, value) => {
+    localStorage.setItem(key, JSON.stringify(value));
+  },
+  remove: (key) => {
+    localStorage.removeItem(key);
+  },
+  clear: () => {
+    localStorage.clear();
+  },
+});
 
 // ============================================================================
 // Feature-to-Feature Communication
@@ -434,9 +408,7 @@ export interface FeatureEventBus {
   offAll(event?: string): void;
 }
 
-export const FeatureEventBusContract = createServiceContract<FeatureEventBus>(
-  'featureEventBus'
-);
+export const FeatureEventBusContract = createServiceContract<FeatureEventBus>('featureEventBus');
 
 /**
  * Simple event bus implementation
@@ -464,7 +436,7 @@ export class SimpleFeatureEventBus implements FeatureEventBus {
   }
 
   on<T>(event: string, handler: EventHandler<T>): () => void {
-    if (this.listeners.has(event) === false) {
+    if (!this.listeners.has(event)) {
       this.listeners.set(event, new Set());
     }
     const handlers = this.listeners.get(event);
@@ -477,7 +449,7 @@ export class SimpleFeatureEventBus implements FeatureEventBus {
   }
 
   once<T>(event: string, handler: EventHandler<T>): () => void {
-    if (this.onceListeners.has(event) === false) {
+    if (!this.onceListeners.has(event)) {
       this.onceListeners.set(event, new Set());
     }
     const handlers = this.onceListeners.get(event);
@@ -522,15 +494,12 @@ export function useFeatureEventBus(): FeatureEventBus {
  * Hook to subscribe to feature events
  * Automatically unsubscribes on unmount
  */
-export function useFeatureEvent<T>(
-  event: string,
-  handler: EventHandler<T>
-): void {
+export function useFeatureEvent<T>(event: string, handler: EventHandler<T>): void {
   const eventBus = useFeatureEventBus();
 
   useEffect(() => {
-    const unsubscribe = eventBus.on(event, handler);
-    return unsubscribe;
+
+    return eventBus.on(event, handler);
   }, [eventBus, event, handler]);
 }
 

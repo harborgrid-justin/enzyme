@@ -308,12 +308,9 @@ export function HydrationProvider({
     schedulerRef.current?.unregister(id);
   }, []);
 
-  const getBoundaryStatus = useCallback(
-    (id: HydrationBoundaryId): HydrationStatus | undefined => {
-      return schedulerRef.current?.getStatus(id);
-    },
-    []
-  );
+  const getBoundaryStatus = useCallback((id: HydrationBoundaryId): HydrationStatus | undefined => {
+    return schedulerRef.current?.getStatus(id);
+  }, []);
 
   const updatePriority = useCallback(
     (id: HydrationBoundaryId, priority: HydrationPriority): void => {
@@ -322,12 +319,9 @@ export function HydrationProvider({
     []
   );
 
-  const forceHydrate = useCallback(
-    async (id: HydrationBoundaryId): Promise<void> => {
-      await schedulerRef.current?.forceHydrate(id);
-    },
-    []
-  );
+  const forceHydrate = useCallback(async (id: HydrationBoundaryId): Promise<void> => {
+    await schedulerRef.current?.forceHydrate(id);
+  }, []);
 
   const forceHydrateAll = useCallback(async (): Promise<void> => {
     await schedulerRef.current?.forceHydrateAll();
@@ -398,11 +392,7 @@ export function HydrationProvider({
   // Render
   // ==========================================================================
 
-  return (
-    <HydrationContext.Provider value={contextValue}>
-      {children}
-    </HydrationContext.Provider>
-  );
+  return <HydrationContext.Provider value={contextValue}>{children}</HydrationContext.Provider>;
 }
 
 // ============================================================================
@@ -471,6 +461,3 @@ export function useOptionalHydrationContext(): HydrationContextValue | null {
 
 export { HydrationContext };
 export type { HydrationContextValue, HydrationProviderProps };
-
-
-

@@ -82,14 +82,7 @@ export type PathParams<Path extends string> = Path extends `${string}:${infer Pa
 /**
  * Query parameter value types
  */
-export type QueryParamValue =
-  | string
-  | number
-  | boolean
-  | null
-  | undefined
-  | string[]
-  | number[];
+export type QueryParamValue = string | number | boolean | null | undefined | string[] | number[];
 
 /**
  * Query parameters object
@@ -101,8 +94,8 @@ export type QueryParams = Record<string, QueryParamValue>;
  */
 export interface RequestHeaders {
   'Content-Type'?: ContentType;
-  'Accept'?: string;
-  'Authorization'?: string;
+  Accept?: string;
+  Authorization?: string;
   'X-Request-ID'?: string;
   'X-Correlation-ID'?: string;
   'X-Idempotency-Key'?: string;
@@ -214,7 +207,7 @@ export interface ResponseHeaders {
   'content-type'?: string;
   'content-length'?: string;
   'cache-control'?: string;
-  'etag'?: string;
+  etag?: string;
   'last-modified'?: string;
   'x-request-id'?: string;
   'x-ratelimit-limit'?: string;
@@ -507,42 +500,33 @@ export type ApiContract = Record<string, ApiEndpoint>;
 /**
  * Infer request type from endpoint definition
  */
-export type InferEndpointRequest<T extends ApiEndpoint> = T extends ApiEndpoint<infer R>
-  ? R
-  : never;
+export type InferEndpointRequest<T extends ApiEndpoint> =
+  T extends ApiEndpoint<infer R> ? R : never;
 
 /**
  * Infer response type from endpoint definition
  */
-export type InferEndpointResponse<T extends ApiEndpoint> = T extends ApiEndpoint<
-  unknown,
-  infer R
->
-  ? R
-  : never;
+export type InferEndpointResponse<T extends ApiEndpoint> =
+  T extends ApiEndpoint<unknown, infer R> ? R : never;
 
 /**
  * Infer path params from endpoint definition
  */
-export type InferEndpointPathParams<T extends ApiEndpoint> = T extends ApiEndpoint<
-  unknown,
-  unknown,
-  infer P
->
-  ? P
-  : Record<string, never>;
+export type InferEndpointPathParams<T extends ApiEndpoint> =
+  T extends ApiEndpoint<unknown, unknown, infer P> ? P : Record<string, never>;
 
 /**
  * Infer query params from endpoint definition
  */
-export type InferEndpointQueryParams<T extends ApiEndpoint> = T extends ApiEndpoint<
-  unknown,
-  Record<string, string | number>,
-  Record<string, string | number>,
-  infer Q
->
-  ? Q
-  : QueryParams;
+export type InferEndpointQueryParams<T extends ApiEndpoint> =
+  T extends ApiEndpoint<
+    unknown,
+    Record<string, string | number>,
+    Record<string, string | number>,
+    infer Q
+  >
+    ? Q
+    : QueryParams;
 
 // =============================================================================
 // CLIENT CONFIGURATION TYPES
@@ -636,15 +620,16 @@ export interface ApiClientConfig {
   /** Custom fetch implementation */
   fetch?: typeof fetch;
   /** Rate limiting configuration */
-  rateLimit?: import('./advanced/rate-limiter').RateLimitConfig | keyof typeof import('./advanced/rate-limiter').RATE_LIMIT_PRESETS | string;
+  rateLimit?:
+    | import('./advanced/rate-limiter').RateLimitConfig
+    | keyof typeof import('./advanced/rate-limiter').RATE_LIMIT_PRESETS
+    | string;
 }
 
 /**
  * Request interceptor function
  */
-export type RequestInterceptor = (
-  config: RequestConfig
-) => RequestConfig | Promise<RequestConfig>;
+export type RequestInterceptor = (config: RequestConfig) => RequestConfig | Promise<RequestConfig>;
 
 /**
  * Response interceptor function
@@ -656,9 +641,7 @@ export type ResponseInterceptor = <T>(
 /**
  * Error interceptor function
  */
-export type ErrorInterceptor = (
-  error: ApiError
-) => ApiError | Promise<ApiError> | never;
+export type ErrorInterceptor = (error: ApiError) => ApiError | Promise<ApiError> | never;
 
 // =============================================================================
 // HOOK TYPES
@@ -705,7 +688,12 @@ export interface UseApiRequestOptions<TData, TError = ApiError> {
 /**
  * Options for useApiMutation hook
  */
-export interface UseApiMutationOptions<TData, TError = ApiError, TVariables = unknown, TContext = unknown> {
+export interface UseApiMutationOptions<
+  TData,
+  TError = ApiError,
+  TVariables = unknown,
+  TContext = unknown,
+> {
   /** On mutate callback (for optimistic updates) */
   onMutate?: (variables: TVariables) => TContext | Promise<TContext>;
   /** On success callback */
@@ -901,11 +889,14 @@ export interface HealthCheckResult {
   /** Response latency in milliseconds */
   latency?: number;
   /** Detailed checks */
-  checks?: Record<string, {
-    status: HealthStatus;
-    message?: string;
-    latency?: number;
-  }>;
+  checks?: Record<
+    string,
+    {
+      status: HealthStatus;
+      message?: string;
+      latency?: number;
+    }
+  >;
   /** Error message if unhealthy */
   error?: string;
 }
@@ -1203,9 +1194,7 @@ export function isPaginatedResponse<TItem = unknown>(
  * }
  * ```
  */
-export function isApiResponse<TData = unknown>(
-  value: unknown
-): value is ApiResponse<TData> {
+export function isApiResponse<TData = unknown>(value: unknown): value is ApiResponse<TData> {
   if (typeof value !== 'object' || value === null) {
     return false;
   }

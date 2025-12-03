@@ -17,11 +17,14 @@ export async function usersLoader({ request, params }: LoaderFunctionArgs): Prom
     const page = parseInt(url.searchParams.get('page') ?? '1', 10);
     const pageSize = parseInt(url.searchParams.get('limit') ?? '10', 10);
     const search = url.searchParams.get('search') ?? undefined;
-    const role = url.searchParams.get('role') as 'admin' | 'manager' | 'user' | 'viewer' | undefined;
+    const role = url.searchParams.get('role') as
+      | 'admin'
+      | 'manager'
+      | 'user'
+      | 'viewer'
+      | undefined;
 
-    await queryClient.prefetchQuery(
-      usersListQueryOptions({ page, pageSize, search, role })
-    );
+    await queryClient.prefetchQuery(usersListQueryOptions({ page, pageSize, search, role }));
   }
 
   return null;

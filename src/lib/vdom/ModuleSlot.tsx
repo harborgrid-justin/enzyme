@@ -164,20 +164,26 @@ export const ModuleSlot: FC<ModuleSlotProps> = ({
   const dataAttributes: Record<string, string> = {
     'data-module-slot': name,
     ...(data
-      ? Object.fromEntries(
-          Object.entries(data).map(([key, value]) => [`data-${key}`, value])
-        )
+      ? Object.fromEntries(Object.entries(data).map(([key, value]) => [`data-${key}`, value]))
       : {}),
   };
 
   // Don't render wrapper if no content
-  if (content == null && (className === undefined || className === null) && (style === undefined || style === null)) {
+  if (
+    content == null &&
+    (className === undefined || className === null) &&
+    (style === undefined || style === null)
+  ) {
     return null;
   }
 
   return (
     <Wrapper className={className} style={style} {...dataAttributes}>
-      {(fallback !== null && fallback !== undefined) ? <Suspense fallback={fallback}>{content}</Suspense> : content}
+      {fallback !== null && fallback !== undefined ? (
+        <Suspense fallback={fallback}>{content}</Suspense>
+      ) : (
+        content
+      )}
     </Wrapper>
   );
 };
@@ -265,18 +271,24 @@ export const DynamicModuleSlot: FC<DynamicModuleSlotProps> = ({
 
   // Render based on state
   if (state.status === 'loading') {
-    return <Wrapper className={className} style={style}>{fallback}</Wrapper>;
+    return (
+      <Wrapper className={className} style={style}>
+        {fallback}
+      </Wrapper>
+    );
   }
 
   if (state.status === 'error' && state.error) {
     const errorContent =
       typeof errorFallback === 'function'
         ? errorFallback(state.error)
-        : errorFallback ?? (
-            <div role="alert">Failed to load module: {state.error.message}</div>
-          );
+        : (errorFallback ?? <div role="alert">Failed to load module: {state.error.message}</div>);
 
-    return <Wrapper className={className} style={style}>{errorContent}</Wrapper>;
+    return (
+      <Wrapper className={className} style={style}>
+        {errorContent}
+      </Wrapper>
+    );
   }
 
   if (state.Component) {
@@ -316,7 +328,10 @@ export interface LazyModuleSlotProps {
 }
 
 // Create a cache for lazy components to avoid recreating them
-const lazyComponentCache = new Map<() => Promise<{ default: ComponentType<unknown> }>, ReturnType<typeof lazy>>();
+const lazyComponentCache = new Map<
+  () => Promise<{ default: ComponentType<unknown> }>,
+  ReturnType<typeof lazy>
+>();
 
 /**
  * Slot that lazily loads a component using React.lazy().
@@ -391,11 +406,7 @@ export const ModuleOutlet: FC<ModuleOutletProps> = ({
   const outletContent = context?.getSlot(`outlet:${name}`);
 
   return (
-    <Wrapper
-      className={className}
-      style={style}
-      data-module-outlet={name}
-    >
+    <Wrapper className={className} style={style} data-module-outlet={name}>
       {outletContent ?? children}
     </Wrapper>
   );
@@ -447,13 +458,7 @@ export const ConditionalModuleSlot: FC<ConditionalModuleSlotProps> = ({
     return <>{otherwise}</>;
   }
 
-  return (
-    <DynamicModuleSlot
-      moduleId={moduleId}
-      moduleProps={moduleProps}
-      fallback={fallback}
-    />
-  );
+  return <DynamicModuleSlot moduleId={moduleId} moduleProps={moduleProps} fallback={fallback} />;
 };
 
 ConditionalModuleSlot.displayName = 'ConditionalModuleSlot';

@@ -115,26 +115,6 @@ export class ConfigRegistry {
   // ---------------------------------------------------------------------------
 
   /**
-   * Ensure a namespace exists in the registry
-   */
-  private ensureNamespace(namespace: ConfigNamespace): NamespaceData {
-    if (!this.namespaces.has(namespace)) {
-      this.namespaces.set(namespace, {
-        entries: new Map(),
-        listeners: new Map(),
-        wildcardListeners: new Set(),
-        migrations: [],
-        currentVersion: 1,
-      });
-    }
-    const ns = this.namespaces.get(namespace);
-    if (ns == null) {
-      throw new Error(`Failed to initialize namespace: ${String(namespace)}`);
-    }
-    return ns;
-  }
-
-  /**
    * Create a new namespace
    *
    * @param name - Namespace name
@@ -180,10 +160,6 @@ export class ConfigRegistry {
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // Configuration Access
-  // ---------------------------------------------------------------------------
-
   /**
    * Get a configuration value
    *
@@ -201,6 +177,10 @@ export class ConfigRegistry {
     const entry = data.entries.get(key);
     return entry?.value as T | undefined;
   }
+
+  // ---------------------------------------------------------------------------
+  // Configuration Access
+  // ---------------------------------------------------------------------------
 
   /**
    * Get a configuration value with a default fallback
@@ -280,10 +260,6 @@ export class ConfigRegistry {
     return data?.entries.has(key) ?? false;
   }
 
-  // ---------------------------------------------------------------------------
-  // Configuration Modification
-  // ---------------------------------------------------------------------------
-
   /**
    * Set a configuration value
    *
@@ -351,6 +327,10 @@ export class ConfigRegistry {
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // Configuration Modification
+  // ---------------------------------------------------------------------------
+
   /**
    * Set multiple configuration values at once
    */
@@ -413,10 +393,6 @@ export class ConfigRegistry {
     this.set(namespace, key, merged as ConfigValue, options);
   }
 
-  // ---------------------------------------------------------------------------
-  // Subscriptions
-  // ---------------------------------------------------------------------------
-
   /**
    * Subscribe to configuration changes
    *
@@ -450,6 +426,10 @@ export class ConfigRegistry {
     };
   }
 
+  // ---------------------------------------------------------------------------
+  // Subscriptions
+  // ---------------------------------------------------------------------------
+
   /**
    * Subscribe to all configuration changes across all namespaces
    */
@@ -457,68 +437,6 @@ export class ConfigRegistry {
     this.globalListeners.add(listener);
     return () => this.globalListeners.delete(listener);
   }
-
-  /**
-   * Notify listeners of a configuration change
-   */
-  private notifyListeners(
-    namespace: ConfigNamespace,
-    key: string,
-    previousValue: ConfigValue | undefined,
-    newValue: ConfigValue | undefined,
-    source: ConfigSource
-  ): void {
-    let eventType: 'set' | 'delete';
-    if (newValue === undefined) {
-      eventType = 'delete';
-    } else {
-      eventType = 'set';
-    }
-
-    const event: ConfigChangeEvent = {
-      type: eventType,
-      namespace,
-      key,
-      previousValue,
-      newValue,
-      source,
-      timestamp: new Date().toISOString(),
-    };
-
-    const data = this.namespaces.get(namespace);
-    if (data) {
-      // Key-specific listeners
-      data.listeners.get(key)?.forEach((listener) => {
-        try {
-          listener(event);
-        } catch (error) {
-          console.error(`Error in config listener for ${namespace}:${key}:`, error);
-        }
-      });
-
-      // Wildcard listeners
-      data.wildcardListeners.forEach((listener) => {
-        try {
-          listener(event);
-        } catch (error) {
-          console.error(`Error in wildcard config listener for ${namespace}:`, error);
-        }
-      });
-    }
-
-    // Global listeners
-    this.globalListeners.forEach((listener) => {
-      try {
-        listener(event);
-      } catch (error) {
-        console.error('Error in global config listener:', error);
-      }
-    });
-  }
-
-  // ---------------------------------------------------------------------------
-  // Versioning & Migrations
-  // ---------------------------------------------------------------------------
 
   /**
    * Register a migration for a namespace
@@ -591,6 +509,10 @@ export class ConfigRegistry {
     };
   }
 
+  // ---------------------------------------------------------------------------
+  // Versioning & Migrations
+  // ---------------------------------------------------------------------------
+
   /**
    * Get the current version for a namespace
    */
@@ -606,10 +528,6 @@ export class ConfigRegistry {
     const data = this.ensureNamespace(namespace);
     data.currentVersion = version;
   }
-
-  // ---------------------------------------------------------------------------
-  // Bulk Operations
-  // ---------------------------------------------------------------------------
 
   /**
    * Export all configuration from the registry
@@ -641,6 +559,10 @@ export class ConfigRegistry {
     });
   }
 
+  // ---------------------------------------------------------------------------
+  // Bulk Operations
+  // ---------------------------------------------------------------------------
+
   /**
    * Freeze the registry to prevent further modifications
    */
@@ -661,10 +583,6 @@ export class ConfigRegistry {
   public isFrozen(): boolean {
     return this.frozen;
   }
-
-  // ---------------------------------------------------------------------------
-  // Validation
-  // ---------------------------------------------------------------------------
 
   /**
    * Validate a namespace against its registered schemas
@@ -714,7 +632,7 @@ export class ConfigRegistry {
   }
 
   // ---------------------------------------------------------------------------
-  // Debugging
+  // Validation
   // ---------------------------------------------------------------------------
 
   /**
@@ -745,6 +663,88 @@ export class ConfigRegistry {
       listenerCount,
       frozen: this.frozen,
     };
+  }
+
+  /**
+   * Ensure a namespace exists in the registry
+   */
+  private ensureNamespace(namespace: ConfigNamespace): NamespaceData {
+    if (!this.namespaces.has(namespace)) {
+      this.namespaces.set(namespace, {
+        entries: new Map(),
+        listeners: new Map(),
+        wildcardListeners: new Set(),
+        migrations: [],
+        currentVersion: 1,
+      });
+    }
+    const ns = this.namespaces.get(namespace);
+    if (ns == null) {
+      throw new Error(`Failed to initialize namespace: ${String(namespace)}`);
+    }
+    return ns;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Debugging
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Notify listeners of a configuration change
+   */
+  private notifyListeners(
+    namespace: ConfigNamespace,
+    key: string,
+    previousValue: ConfigValue | undefined,
+    newValue: ConfigValue | undefined,
+    source: ConfigSource
+  ): void {
+    let eventType: 'set' | 'delete';
+    if (newValue === undefined) {
+      eventType = 'delete';
+    } else {
+      eventType = 'set';
+    }
+
+    const event: ConfigChangeEvent = {
+      type: eventType,
+      namespace,
+      key,
+      previousValue,
+      newValue,
+      source,
+      timestamp: new Date().toISOString(),
+    };
+
+    const data = this.namespaces.get(namespace);
+    if (data) {
+      // Key-specific listeners
+      data.listeners.get(key)?.forEach((listener) => {
+        try {
+          listener(event);
+        } catch (error) {
+          console.error(`Error in config listener for ${namespace}:${key}:`, error);
+        }
+      });
+
+      // Wildcard listeners
+      data.wildcardListeners.forEach((listener) => {
+        try {
+          listener(event);
+        } catch (error) {
+          console.error(`Error in wildcard config listener for ${namespace}:`, error);
+        }
+      });
+    }
+
+    // Global listeners
+    this.globalListeners.forEach((listener) => {
+      try {
+        listener(event);
+      } catch (error) {
+        console.error('Error in global config listener:', error);
+      }
+    });
   }
 }
 
@@ -861,15 +861,22 @@ export function createTypedNamespace<T extends ConfigRecord>(
  * Type-safe namespace accessor interface
  */
 export interface TypedNamespaceAccessor<T extends ConfigRecord> {
+  readonly namespace: ConfigNamespace;
+
   get<K extends keyof T & string>(key: K): T[K] | undefined;
+
   getOrDefault<K extends keyof T & string>(key: K, defaultValue: T[K]): T[K];
+
   set<K extends keyof T & string>(key: K, value: T[K], options?: ConfigSetOptions): void;
+
   has<K extends keyof T & string>(key: K): boolean;
+
   delete<K extends keyof T & string>(key: K): boolean;
+
   getAll(): DeepReadonly<Partial<T>>;
+
   subscribe<K extends keyof T & string>(
     key: K | '*',
     listener: ConfigChangeListener<T[K]>
   ): ConfigUnsubscribe;
-  readonly namespace: ConfigNamespace;
 }

@@ -500,155 +500,6 @@ export class PerformanceBudgetManager {
   }
 
   /**
-   * Evaluate metric status against threshold
-   */
-  private evaluateStatus(
-    value: number,
-    threshold: BudgetThreshold
-  ): 'ok' | 'warning' | 'critical' {
-    // For FPS, lower is worse (inverse threshold)
-    if (threshold.unit === 'fps') {
-      if (value < threshold.critical) return 'critical';
-      if (value < threshold.warning) return 'warning';
-      return 'ok';
-    }
-
-    // For other metrics, higher is worse
-    if (value >= threshold.critical) return 'critical';
-    if (value >= threshold.warning) return 'warning';
-    return 'ok';
-  }
-
-  /**
-   * Calculate percentage of budget used
-   */
-  private calculatePercentOfBudget(value: number, threshold: BudgetThreshold): number {
-    // Use warning threshold as 100% baseline
-    if (threshold.unit === 'fps') {
-      return (threshold.warning / value) * 100;
-    }
-    return (value / threshold.warning) * 100;
-  }
-
-  // ==========================================================================
-  // Violation Handling
-  // ==========================================================================
-
-  /**
-   * Handle a budget violation
-   */
-  private handleViolation(
-    budgetName: string,
-    value: number,
-    threshold: BudgetThreshold,
-    severity: ViolationSeverity
-  ): void {
-    // Increment consecutive violations
-    const consecutive = (this.consecutiveViolations.get(budgetName) ?? 0) + 1;
-    this.consecutiveViolations.set(budgetName, consecutive);
-
-    // Create violation record
-    const thresholdValue = severity === 'critical' ? threshold.critical : threshold.warning;
-    let overage: number;
-    let overagePercent: number;
-
-    if (threshold.unit === 'fps') {
-      overage = thresholdValue - value;
-      overagePercent = (overage / thresholdValue) * 100;
-    } else {
-      overage = value - thresholdValue;
-      overagePercent = (overage / thresholdValue) * 100;
-    }
-
-    const violation: BudgetViolationRecord = {
-      id: generateId(),
-      budgetName,
-      value,
-      threshold: thresholdValue,
-      severity,
-      overage,
-      overagePercent,
-      timestamp: Date.now(),
-      url: typeof window !== 'undefined' ? window.location.href : '',
-      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
-      sessionId: this.config.sessionId,
-    };
-
-    this.violations.push(violation);
-    this.trimViolations();
-
-    // Notify via callback
-    this.config.onViolation(violation);
-
-    // Check for automatic degradation
-    if (
-      this.config.enableAutoDegradation === true &&
-      threshold.enableDegradation === true &&
-      consecutive >= this.config.degradationThreshold
-    ) {
-      this.activateDegradation(budgetName, threshold);
-    }
-  }
-
-  /**
-   * Handle recovery from violation
-   */
-  private handleRecovery(budgetName: string): void {
-    this.consecutiveViolations.set(budgetName, 0);
-    this.config.onRecovery(budgetName);
-
-    // Check if we can deactivate degradation
-    this.checkDegradationRecovery();
-  }
-
-  // ==========================================================================
-  // Degradation Management
-  // ==========================================================================
-
-  /**
-   * Activate degradation for a budget
-   */
-  private activateDegradation(budgetName: string, threshold: BudgetThreshold): void {
-    const strategy = threshold.degradationStrategy ?? 'reduce-features';
-
-    // Update degradation state
-    const newState: DegradationState = {
-      isActive: true,
-      level: this.calculateDegradationLevel(),
-      activeStrategies: [...new Set([...this.degradationState.activeStrategies, strategy])],
-      reason: `Budget "${budgetName}" exceeded threshold ${this.config.degradationThreshold} times`,
-      activatedAt: this.degradationState.activatedAt ?? Date.now(),
-    };
-
-    this.degradationState = newState;
-    this.config.onDegradationChange(newState);
-    this.log(`Degradation activated: ${strategy} for ${budgetName}`);
-  }
-
-  /**
-   * Check if degradation can be deactivated
-   */
-  private checkDegradationRecovery(): void {
-    if (!this.degradationState.isActive) return;
-
-    // Check if all budgets are now ok
-    let allOk = true;
-    this.budgets.forEach((threshold, name) => {
-      const value = this.currentValues.get(name);
-      if (value !== undefined) {
-        const status = this.evaluateStatus(value, threshold);
-        if (status !== 'ok' && threshold.enableDegradation === true) {
-          allOk = false;
-        }
-      }
-    });
-
-    if (allOk) {
-      this.deactivateDegradation();
-    }
-  }
-
-  /**
    * Deactivate degradation
    */
   public deactivateDegradation(): void {
@@ -666,22 +517,15 @@ export class PerformanceBudgetManager {
   }
 
   /**
-   * Calculate degradation level based on active strategies
-   */
-  private calculateDegradationLevel(): 'none' | 'light' | 'moderate' | 'aggressive' {
-    const count = this.degradationState.activeStrategies.length;
-    if (count === 0) return 'none';
-    if (count <= 1) return 'light';
-    if (count <= 2) return 'moderate';
-    return 'aggressive';
-  }
-
-  /**
    * Get current degradation state
    */
   public getDegradationState(): DegradationState {
     return { ...this.degradationState };
   }
+
+  // ==========================================================================
+  // Violation Handling
+  // ==========================================================================
 
   /**
    * Check if a specific strategy is active
@@ -689,10 +533,6 @@ export class PerformanceBudgetManager {
   public isStrategyActive(strategy: DegradationStrategy): boolean {
     return this.degradationState.activeStrategies.includes(strategy);
   }
-
-  // ==========================================================================
-  // Trending & Analysis
-  // ==========================================================================
 
   /**
    * Get trend data for a budget
@@ -730,29 +570,9 @@ export class PerformanceBudgetManager {
     };
   }
 
-  /**
-   * Calculate trend direction
-   */
-  private calculateTrendDirection(
-    entries: BudgetMetricEntry[]
-  ): 'improving' | 'stable' | 'degrading' {
-    if (entries.length < 2) return 'stable';
-
-    // Compare recent entries to older entries
-    const midpoint = Math.floor(entries.length / 2);
-    const oldAvg = entries
-      .slice(0, midpoint)
-      .reduce((sum, e) => sum + e.value, 0) / midpoint;
-    const newAvg = entries
-      .slice(midpoint)
-      .reduce((sum, e) => sum + e.value, 0) / (entries.length - midpoint);
-
-    const changePercent = ((newAvg - oldAvg) / oldAvg) * 100;
-
-    if (changePercent < -5) return 'improving';
-    if (changePercent > 5) return 'degrading';
-    return 'stable';
-  }
+  // ==========================================================================
+  // Degradation Management
+  // ==========================================================================
 
   /**
    * Get all trends
@@ -764,10 +584,6 @@ export class PerformanceBudgetManager {
     });
     return trends;
   }
-
-  // ==========================================================================
-  // Status & Reporting
-  // ==========================================================================
 
   /**
    * Get status summary for a budget
@@ -842,6 +658,10 @@ export class PerformanceBudgetManager {
     return count > 0 ? Math.round(totalScore / count) : 100;
   }
 
+  // ==========================================================================
+  // Trending & Analysis
+  // ==========================================================================
+
   /**
    * Generate report
    */
@@ -898,9 +718,199 @@ export class PerformanceBudgetManager {
     return lines.join('\n');
   }
 
+  /**
+   * Clear all history
+   */
+  public clearHistory(): void {
+    this.history.forEach((_, key) => {
+      this.history.set(key, []);
+    });
+    this.violations.length = 0;
+    this.log('History cleared');
+  }
+
+  /**
+   * Evaluate metric status against threshold
+   */
+  private evaluateStatus(
+    value: number,
+    threshold: BudgetThreshold
+  ): 'ok' | 'warning' | 'critical' {
+    // For FPS, lower is worse (inverse threshold)
+    if (threshold.unit === 'fps') {
+      if (value < threshold.critical) return 'critical';
+      if (value < threshold.warning) return 'warning';
+      return 'ok';
+    }
+
+    // For other metrics, higher is worse
+    if (value >= threshold.critical) return 'critical';
+    if (value >= threshold.warning) return 'warning';
+    return 'ok';
+  }
+
+  // ==========================================================================
+  // Status & Reporting
+  // ==========================================================================
+
+  /**
+   * Calculate percentage of budget used
+   */
+  private calculatePercentOfBudget(value: number, threshold: BudgetThreshold): number {
+    // Use warning threshold as 100% baseline
+    if (threshold.unit === 'fps') {
+      return (threshold.warning / value) * 100;
+    }
+    return (value / threshold.warning) * 100;
+  }
+
+  /**
+   * Handle a budget violation
+   */
+  private handleViolation(
+    budgetName: string,
+    value: number,
+    threshold: BudgetThreshold,
+    severity: ViolationSeverity
+  ): void {
+    // Increment consecutive violations
+    const consecutive = (this.consecutiveViolations.get(budgetName) ?? 0) + 1;
+    this.consecutiveViolations.set(budgetName, consecutive);
+
+    // Create violation record
+    const thresholdValue = severity === 'critical' ? threshold.critical : threshold.warning;
+    let overage: number;
+    let overagePercent: number;
+
+    if (threshold.unit === 'fps') {
+      overage = thresholdValue - value;
+      overagePercent = (overage / thresholdValue) * 100;
+    } else {
+      overage = value - thresholdValue;
+      overagePercent = (overage / thresholdValue) * 100;
+    }
+
+    const violation: BudgetViolationRecord = {
+      id: generateId(),
+      budgetName,
+      value,
+      threshold: thresholdValue,
+      severity,
+      overage,
+      overagePercent,
+      timestamp: Date.now(),
+      url: typeof window !== 'undefined' ? window.location.href : '',
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+      sessionId: this.config.sessionId,
+    };
+
+    this.violations.push(violation);
+    this.trimViolations();
+
+    // Notify via callback
+    this.config.onViolation(violation);
+
+    // Check for automatic degradation
+    if (
+      this.config.enableAutoDegradation && threshold.enableDegradation === true &&
+      consecutive >= this.config.degradationThreshold
+    ) {
+      this.activateDegradation(budgetName, threshold);
+    }
+  }
+
+  /**
+   * Handle recovery from violation
+   */
+  private handleRecovery(budgetName: string): void {
+    this.consecutiveViolations.set(budgetName, 0);
+    this.config.onRecovery(budgetName);
+
+    // Check if we can deactivate degradation
+    this.checkDegradationRecovery();
+  }
+
+  /**
+   * Activate degradation for a budget
+   */
+  private activateDegradation(budgetName: string, threshold: BudgetThreshold): void {
+    const strategy = threshold.degradationStrategy ?? 'reduce-features';
+
+    // Update degradation state
+    const newState: DegradationState = {
+      isActive: true,
+      level: this.calculateDegradationLevel(),
+      activeStrategies: [...new Set([...this.degradationState.activeStrategies, strategy])],
+      reason: `Budget "${budgetName}" exceeded threshold ${this.config.degradationThreshold} times`,
+      activatedAt: this.degradationState.activatedAt ?? Date.now(),
+    };
+
+    this.degradationState = newState;
+    this.config.onDegradationChange(newState);
+    this.log(`Degradation activated: ${strategy} for ${budgetName}`);
+  }
+
+  /**
+   * Check if degradation can be deactivated
+   */
+  private checkDegradationRecovery(): void {
+    if (!this.degradationState.isActive) return;
+
+    // Check if all budgets are now ok
+    let allOk = true;
+    this.budgets.forEach((threshold, name) => {
+      const value = this.currentValues.get(name);
+      if (value !== undefined) {
+        const status = this.evaluateStatus(value, threshold);
+        if (status !== 'ok' && threshold.enableDegradation === true) {
+          allOk = false;
+        }
+      }
+    });
+
+    if (allOk) {
+      this.deactivateDegradation();
+    }
+  }
+
+  /**
+   * Calculate degradation level based on active strategies
+   */
+  private calculateDegradationLevel(): 'none' | 'light' | 'moderate' | 'aggressive' {
+    const count = this.degradationState.activeStrategies.length;
+    if (count === 0) return 'none';
+    if (count <= 1) return 'light';
+    if (count <= 2) return 'moderate';
+    return 'aggressive';
+  }
+
   // ==========================================================================
   // Utilities
   // ==========================================================================
+
+  /**
+   * Calculate trend direction
+   */
+  private calculateTrendDirection(
+    entries: BudgetMetricEntry[]
+  ): 'improving' | 'stable' | 'degrading' {
+    if (entries.length < 2) return 'stable';
+
+    // Compare recent entries to older entries
+    const midpoint = Math.floor(entries.length / 2);
+    const oldAvg = entries
+      .slice(0, midpoint)
+      .reduce((sum, e) => sum + e.value, 0) / midpoint;
+    const newAvg = entries
+      .slice(midpoint)
+      .reduce((sum, e) => sum + e.value, 0) / (entries.length - midpoint);
+
+    const changePercent = ((newAvg - oldAvg) / oldAvg) * 100;
+
+    if (changePercent < -5) return 'improving';
+    if (changePercent > 5) return 'degrading';
+    return 'stable';
+  }
 
   /**
    * Trim history to max entries
@@ -928,17 +938,6 @@ export class PerformanceBudgetManager {
     if (this.violations.length > 1000) {
       this.violations.splice(0, this.violations.length - 1000);
     }
-  }
-
-  /**
-   * Clear all history
-   */
-  public clearHistory(): void {
-    this.history.forEach((_, key) => {
-      this.history.set(key, []);
-    });
-    this.violations.length = 0;
-    this.log('History cleared');
   }
 
   /**

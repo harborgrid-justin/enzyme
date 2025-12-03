@@ -194,27 +194,6 @@ export class CatchAllRoute {
   }
 
   /**
-   * Compile the route pattern into regex
-   */
-  private compilePattern(config: CatchAllRouteConfig): CatchAllPattern {
-    const basePath = config.basePath.replace(/\/$/, '');
-    const escapedBase = basePath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-    // Base regex matches just the base path
-    const baseRegex = new RegExp(`^${escapedBase}/?$`);
-
-    // Full regex matches base path plus any number of segments
-    const segmentPattern = config.optional ? '(/[^/]+)*' : '(/[^/]+)+';
-    const fullRegex = new RegExp(`^${escapedBase}${segmentPattern}$`);
-
-    return {
-      baseRegex,
-      fullRegex,
-      staticPrefixLength: basePath.split('/').filter(Boolean).length,
-    };
-  }
-
-  /**
    * Check if a path matches this catch-all route
    *
    * @param path - URL path to check
@@ -395,6 +374,27 @@ export class CatchAllRoute {
    */
   getComponent(): ComponentType<unknown> {
     return this.config.component as ComponentType<unknown>;
+  }
+
+  /**
+   * Compile the route pattern into regex
+   */
+  private compilePattern(config: CatchAllRouteConfig): CatchAllPattern {
+    const basePath = config.basePath.replace(/\/$/, '');
+    const escapedBase = basePath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    // Base regex matches just the base path
+    const baseRegex = new RegExp(`^${escapedBase}/?$`);
+
+    // Full regex matches base path plus any number of segments
+    const segmentPattern = config.optional ? '(/[^/]+)*' : '(/[^/]+)+';
+    const fullRegex = new RegExp(`^${escapedBase}${segmentPattern}$`);
+
+    return {
+      baseRegex,
+      fullRegex,
+      staticPrefixLength: basePath.split('/').filter(Boolean).length,
+    };
   }
 }
 

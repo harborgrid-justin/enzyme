@@ -7,7 +7,7 @@
  * @module api/advanced/request-orchestrator
  */
 
-import type { GatewayResponse, GatewayRequest } from './api-gateway';
+import type { GatewayRequest, GatewayResponse } from './api-gateway';
 
 // =============================================================================
 // Types
@@ -135,7 +135,7 @@ export interface WaterfallContext {
  * ```
  */
 export class RequestOrchestrator {
-  private executor: <T>(request: GatewayRequest) => Promise<GatewayResponse<T>>;
+  private readonly executor: <T>(request: GatewayRequest) => Promise<GatewayResponse<T>>;
 
   /**
    * Create a new orchestrator.
@@ -191,7 +191,10 @@ export class RequestOrchestrator {
 
     if (errors.length > 0 && stopOnError) {
       const [firstError] = errors;
-      throw firstError instanceof Error ? firstError : new Error(String(firstError));
+      if (firstError instanceof Error) {
+        throw firstError;
+      }
+      throw new Error(String(firstError));
     }
 
     return results;
@@ -296,7 +299,7 @@ export class RequestOrchestrator {
 
     for (const step of steps) {
       // Check skip condition
-      if (step.skip !== undefined && step.skip(currentInput, context) === true) {
+      if ((step.skip?.(currentInput, context)) === true) {
         continue;
       }
 
@@ -358,10 +361,8 @@ export class RequestOrchestrator {
         })
         .filter(req => {
           // Check condition
-          if (req.condition !== undefined && !req.condition(results)) {
-            return false;
-          }
-          return true;
+          return !(req.condition !== undefined && !req.condition(results));
+
         })
         .sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
 
@@ -388,8 +389,8 @@ export class RequestOrchestrator {
         } catch (error) {
           if (req.onError) {
             try {
-              const recovered = await req.onError(error as Error, results);
-              results[req.id] = recovered;
+
+              results[req.id] = await req.onError(error as Error, results);
               durations[req.id] = Date.now() - reqStartTime;
               executionOrder.push(req.id);
             } catch (recoveryError) {
@@ -413,6 +414,154 @@ export class RequestOrchestrator {
       durations,
     };
   }
+
+  /**
+   * Execute with fallback options.
+   *
+   * @param primary - Primary request
+   * @param fallbacks - Fallback requests in order of preference
+   * @returns First successful result
+   */
+  async withFallback<T = unknown>(
+    primary: GatewayRequest,
+    fallbacks: GatewayRequest[]
+  ): Promise<GatewayResponse<T>> {
+    const allRequests = [primary, ...fallbacks];
+
+    for (let i = 0; i < allRequests.length; i++) {
+      try {
+        const request = allRequests[i];
+        if (request === undefined) {
+          throw new Error('Request not found');
+        }
+        return await this.executor<T>(request);
+      } catch (error) {
+        if (i === allRequests.length - 1) {
+          throw error;
+        }
+      }
+    }
+
+    throw new Error('All requests failed');
+  }
+
+  // ===========================================================================
+  // Retry & Fallback Patterns
+  // ===========================================================================
+
+  /**
+   * Execute with retry and exponential backoff.
+   *
+   * @param request - Request to execute
+   * @param maxRetries - Maximum retry attempts
+   * @param baseDelay - Base delay in milliseconds
+   * @returns Response
+   */
+  async withRetry<T = unknown>(
+    request: GatewayRequest,
+    maxRetries = 3,
+    baseDelay = 1000
+  ): Promise<GatewayResponse<T>> {
+    let lastError: Error | null = null;
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        return await this.executor<T>(request);
+      } catch (error) {
+        lastError = error as Error;
+
+        if (attempt < maxRetries) {
+          const delay = baseDelay * Math.pow(2, attempt);
+          await this.delay(delay);
+        }
+      }
+    }
+
+    throw lastError ?? new Error('Request failed after retries');
+  }
+
+  /**
+   * Execute with timeout.
+   *
+   * @param request - Request to execute
+   * @param timeout - Timeout in milliseconds
+   * @returns Response
+   */
+  async withTimeout<T = unknown>(
+    request: GatewayRequest,
+    timeout: number
+  ): Promise<GatewayResponse<T>> {
+    return Promise.race([
+      this.executor<T>(request),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Request timeout')), timeout)
+      ),
+    ]);
+  }
+
+  /**
+   * Aggregate paginated results.
+   *
+   * @param baseRequest - Base request
+   * @param options - Pagination options
+   * @returns All aggregated results
+   */
+  async paginate<T = unknown>(
+    baseRequest: GatewayRequest,
+    options: {
+      /** Page parameter name */
+      pageParam?: string;
+      /** Limit parameter name */
+      limitParam?: string;
+      /** Items per page */
+      pageSize?: number;
+      /** Maximum pages to fetch */
+      maxPages?: number;
+      /** Extract items from response */
+      getItems?: (data: unknown) => T[];
+      /** Check if more pages exist */
+      hasMore?: (data: unknown, page: number) => boolean;
+    } = {}
+  ): Promise<T[]> {
+    const {
+      pageParam = 'page',
+      limitParam = 'limit',
+      pageSize = 100,
+      maxPages = 100,
+      getItems = (data: unknown) => (data as { items: T[] }).items ?? (data as T[]),
+      hasMore = (data: unknown) => getItems(data).length >= pageSize,
+    } = options;
+
+    const allItems: T[] = [];
+    let page = 1;
+
+    while (page <= maxPages) {
+      const request: GatewayRequest = {
+        ...baseRequest,
+        params: {
+          ...baseRequest.params,
+          [pageParam]: page,
+          [limitParam]: pageSize,
+        },
+      };
+
+      const response = await this.executor(request);
+      const items = getItems(response.data);
+      allItems.push(...items);
+
+      if (!hasMore(response.data, page)) {
+        break;
+      }
+
+      page++;
+    }
+
+    return allItems;
+  }
+
+  // ===========================================================================
+  // Aggregation Patterns
+  // ===========================================================================
 
   /**
    * Build dependency graph and determine execution levels.
@@ -478,154 +627,6 @@ export class RequestOrchestrator {
     }
 
     return { levels, requestMap };
-  }
-
-  // ===========================================================================
-  // Retry & Fallback Patterns
-  // ===========================================================================
-
-  /**
-   * Execute with fallback options.
-   *
-   * @param primary - Primary request
-   * @param fallbacks - Fallback requests in order of preference
-   * @returns First successful result
-   */
-  async withFallback<T = unknown>(
-    primary: GatewayRequest,
-    fallbacks: GatewayRequest[]
-  ): Promise<GatewayResponse<T>> {
-    const allRequests = [primary, ...fallbacks];
-
-    for (let i = 0; i < allRequests.length; i++) {
-      try {
-        const request = allRequests[i];
-        if (request === undefined) {
-          throw new Error('Request not found');
-        }
-        return await this.executor<T>(request);
-      } catch (error) {
-        if (i === allRequests.length - 1) {
-          throw error;
-        }
-      }
-    }
-
-    throw new Error('All requests failed');
-  }
-
-  /**
-   * Execute with retry and exponential backoff.
-   *
-   * @param request - Request to execute
-   * @param maxRetries - Maximum retry attempts
-   * @param baseDelay - Base delay in milliseconds
-   * @returns Response
-   */
-  async withRetry<T = unknown>(
-    request: GatewayRequest,
-    maxRetries = 3,
-    baseDelay = 1000
-  ): Promise<GatewayResponse<T>> {
-    let lastError: Error | null = null;
-
-    for (let attempt = 0; attempt <= maxRetries; attempt++) {
-      try {
-        return await this.executor<T>(request);
-      } catch (error) {
-        lastError = error as Error;
-
-        if (attempt < maxRetries) {
-          const delay = baseDelay * Math.pow(2, attempt);
-          await this.delay(delay);
-        }
-      }
-    }
-
-    throw lastError ?? new Error('Request failed after retries');
-  }
-
-  /**
-   * Execute with timeout.
-   *
-   * @param request - Request to execute
-   * @param timeout - Timeout in milliseconds
-   * @returns Response
-   */
-  async withTimeout<T = unknown>(
-    request: GatewayRequest,
-    timeout: number
-  ): Promise<GatewayResponse<T>> {
-    return Promise.race([
-      this.executor<T>(request),
-      new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Request timeout')), timeout)
-      ),
-    ]);
-  }
-
-  // ===========================================================================
-  // Aggregation Patterns
-  // ===========================================================================
-
-  /**
-   * Aggregate paginated results.
-   *
-   * @param baseRequest - Base request
-   * @param options - Pagination options
-   * @returns All aggregated results
-   */
-  async paginate<T = unknown>(
-    baseRequest: GatewayRequest,
-    options: {
-      /** Page parameter name */
-      pageParam?: string;
-      /** Limit parameter name */
-      limitParam?: string;
-      /** Items per page */
-      pageSize?: number;
-      /** Maximum pages to fetch */
-      maxPages?: number;
-      /** Extract items from response */
-      getItems?: (data: unknown) => T[];
-      /** Check if more pages exist */
-      hasMore?: (data: unknown, page: number) => boolean;
-    } = {}
-  ): Promise<T[]> {
-    const {
-      pageParam = 'page',
-      limitParam = 'limit',
-      pageSize = 100,
-      maxPages = 100,
-      getItems = (data: unknown) => (data as { items: T[] }).items ?? (data as T[]),
-      hasMore = (data: unknown) => getItems(data).length >= pageSize,
-    } = options;
-
-    const allItems: T[] = [];
-    let page = 1;
-
-    while (page <= maxPages) {
-      const request: GatewayRequest = {
-        ...baseRequest,
-        params: {
-          ...baseRequest.params,
-          [pageParam]: page,
-          [limitParam]: pageSize,
-        },
-      };
-
-      const response = await this.executor(request);
-      const items = getItems(response.data);
-      allItems.push(...items);
-
-      if (!hasMore(response.data, page)) {
-        break;
-      }
-
-      page++;
-    }
-
-    return allItems;
   }
 
   // ===========================================================================

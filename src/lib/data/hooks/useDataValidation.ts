@@ -149,12 +149,7 @@ export function useDataValidation<T>(
   schema: Schema<T>,
   options: UseDataValidationOptions<T> = {}
 ): UseDataValidationReturn<T> {
-  const {
-    initialData,
-    transformBeforeValidation,
-    onValid,
-    onInvalid,
-  } = options;
+  const { initialData, transformBeforeValidation, onValid, onInvalid } = options;
 
   // State
   const [state, setState] = useState<ValidationState<T>>({
@@ -192,60 +187,66 @@ export function useDataValidation<T>(
   }, []);
 
   // Validate data
-  const validate = useCallback((data: T): ValidationResult<T> => {
-    const dataToValidate = transformBeforeValidation ? transformBeforeValidation(data) : data;
-    const result = schemaRef.current.safeParse(dataToValidate);
+  const validate = useCallback(
+    (data: T): ValidationResult<T> => {
+      const dataToValidate = transformBeforeValidation ? transformBeforeValidation(data) : data;
+      const result = schemaRef.current.safeParse(dataToValidate);
 
-    const fieldErrors = result.success ? {} : extractFieldErrors(result.issues);
+      const fieldErrors = result.success ? {} : extractFieldErrors(result.issues);
 
-    setState((prev) => ({
-      ...prev,
-      isDirty: true,
-      isValidating: false,
-      isValid: result.success,
-      lastValidatedData: data,
-      errors: result.success ? [] : result.issues,
-      fieldErrors,
-      lastValidatedAt: Date.now(),
-    }));
+      setState((prev) => ({
+        ...prev,
+        isDirty: true,
+        isValidating: false,
+        isValid: result.success,
+        lastValidatedData: data,
+        errors: result.success ? [] : result.issues,
+        fieldErrors,
+        lastValidatedAt: Date.now(),
+      }));
 
-    if (result.success) {
-      onValid?.(result.data);
-    } else {
-      onInvalid?.(result.issues);
-    }
+      if (result.success) {
+        onValid?.(result.data);
+      } else {
+        onInvalid?.(result.issues);
+      }
 
-    return result;
-  }, [transformBeforeValidation, extractFieldErrors, onValid, onInvalid]);
+      return result;
+    },
+    [transformBeforeValidation, extractFieldErrors, onValid, onInvalid]
+  );
 
   // Validate asynchronously
-  const validateAsync = useCallback(async (data: T): Promise<ValidationResult<T>> => {
-    setState((prev) => ({ ...prev, isValidating: true }));
+  const validateAsync = useCallback(
+    async (data: T): Promise<ValidationResult<T>> => {
+      setState((prev) => ({ ...prev, isValidating: true }));
 
-    const dataToValidate = transformBeforeValidation ? transformBeforeValidation(data) : data;
-    const result = await schemaRef.current.safeParseAsync(dataToValidate);
+      const dataToValidate = transformBeforeValidation ? transformBeforeValidation(data) : data;
+      const result = await schemaRef.current.safeParseAsync(dataToValidate);
 
-    const fieldErrors = result.success ? {} : extractFieldErrors(result.issues);
+      const fieldErrors = result.success ? {} : extractFieldErrors(result.issues);
 
-    setState((prev) => ({
-      ...prev,
-      isDirty: true,
-      isValidating: false,
-      isValid: result.success,
-      lastValidatedData: data,
-      errors: result.success ? [] : result.issues,
-      fieldErrors,
-      lastValidatedAt: Date.now(),
-    }));
+      setState((prev) => ({
+        ...prev,
+        isDirty: true,
+        isValidating: false,
+        isValid: result.success,
+        lastValidatedData: data,
+        errors: result.success ? [] : result.issues,
+        fieldErrors,
+        lastValidatedAt: Date.now(),
+      }));
 
-    if (result.success) {
-      onValid?.(result.data);
-    } else {
-      onInvalid?.(result.issues);
-    }
+      if (result.success) {
+        onValid?.(result.data);
+      } else {
+        onInvalid?.(result.issues);
+      }
 
-    return result;
-  }, [transformBeforeValidation, extractFieldErrors, onValid, onInvalid]);
+      return result;
+    },
+    [transformBeforeValidation, extractFieldErrors, onValid, onInvalid]
+  );
 
   // Validate single field
   const validateField = useCallback((field: string, value: unknown): ValidationResult<unknown> => {
@@ -267,7 +268,8 @@ export function useDataValidation<T>(
 
     // Filter to only errors for this field
     const fieldIssues = result.issues.filter(
-      (issue: { path: (string | number)[]; message: string }) => issue.path[0] === field || issue.path.join('.') === field
+      (issue: { path: (string | number)[]; message: string }) =>
+        issue.path[0] === field || issue.path.join('.') === field
     );
 
     if (fieldIssues.length === 0) {
@@ -508,10 +510,10 @@ export function useAsyncValidation<T>(
   useEffect(() => {
     void validate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [...deps, validate]);
+  }, [...deps, validate]);
 
-return {
-  ...state,
-  validate,
-};
+  return {
+    ...state,
+    validate,
+  };
 }

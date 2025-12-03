@@ -163,12 +163,14 @@ export function ReactEnvironmentProvider({
         reactVersion: null,
         hasMultipleInstances: false,
         isVersionCompatible: false,
-        issues: [{
-          type: 'hooks_error',
-          severity: 'error',
-          message: `Environment check failed: ${err instanceof Error ? err.message : 'Unknown error'}`,
-          resolution: 'Check that React is properly installed and configured.',
-        }],
+        issues: [
+          {
+            type: 'hooks_error',
+            severity: 'error',
+            message: `Environment check failed: ${err instanceof Error ? err.message : 'Unknown error'}`,
+            resolution: 'Check that React is properly installed and configured.',
+          },
+        ],
         checkedAt: Date.now(),
       };
       setStatus(errorStatus);
@@ -205,15 +207,18 @@ export function ReactEnvironmentProvider({
 
   const isHealthy = useMemo(() => {
     if (status === null) return true; // Assume healthy while pending
-    return status.issues.filter(i => i.severity === 'error').length === 0;
+    return status.issues.filter((i) => i.severity === 'error').length === 0;
   }, [status]);
 
-  const contextValue = useMemo<ReactEnvironmentContextValue>(() => ({
-    status,
-    isHealthy,
-    isPending,
-    recheck: checkEnvironment,
-  }), [status, isHealthy, isPending, checkEnvironment]);
+  const contextValue = useMemo<ReactEnvironmentContextValue>(
+    () => ({
+      status,
+      isHealthy,
+      isPending,
+      recheck: checkEnvironment,
+    }),
+    [status, isHealthy, isPending, checkEnvironment]
+  );
 
   // Render fallback if unhealthy and blocking is enabled
   if (!isHealthy && blockOnUnhealthy) {
@@ -239,11 +244,10 @@ export function ReactEnvironmentProvider({
             fontFamily: 'system-ui, -apple-system, sans-serif',
           }}
         >
-          <h2 style={{ margin: '0 0 10px 0', fontSize: '18px' }}>
-            React Environment Error
-          </h2>
+          <h2 style={{ margin: '0 0 10px 0', fontSize: '18px' }}>React Environment Error</h2>
           <p style={{ margin: '0 0 10px 0' }}>
-            Issues were detected with your React configuration that may cause blank pages or unexpected behavior.
+            Issues were detected with your React configuration that may cause blank pages or
+            unexpected behavior.
           </p>
           {status?.issues.map((issue, index) => (
             <div
@@ -264,7 +268,9 @@ export function ReactEnvironmentProvider({
             </div>
           ))}
           <p style={{ margin: '10px 0 0 0', fontSize: '14px' }}>
-            <strong>Common fix:</strong> Run <code style={{ backgroundColor: '#f4f4f4', padding: '2px 4px' }}>npm ls react</code> to check for duplicate React installations.
+            <strong>Common fix:</strong> Run{' '}
+            <code style={{ backgroundColor: '#f4f4f4', padding: '2px 4px' }}>npm ls react</code> to
+            check for duplicate React installations.
           </p>
         </div>
       </ReactEnvironmentContext.Provider>

@@ -74,7 +74,7 @@ function DefaultErrorFallback({
         >
           Something went wrong
         </h1>
-        
+
         <p
           style={{
             color: '#6b7280',
@@ -84,7 +84,7 @@ function DefaultErrorFallback({
           {getUserFriendlyMessage(error)}
         </p>
 
-        {(showDetails === true && error.stack != null && error.stack.length > 0) && (
+        {showDetails && error.stack != null && error.stack.length > 0 && (
           <pre
             style={{
               textAlign: 'left',
@@ -100,7 +100,7 @@ function DefaultErrorFallback({
             {error.stack}
           </pre>
         )}
-        
+
         <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
           <button
             onClick={onReset}
@@ -116,7 +116,7 @@ function DefaultErrorFallback({
           >
             Try Again
           </button>
-          
+
           <button
             onClick={() => window.location.reload()}
             style={{
@@ -132,7 +132,7 @@ function DefaultErrorFallback({
             Reload Page
           </button>
         </div>
-        
+
         <p
           style={{
             fontSize: '0.75rem',
@@ -158,15 +158,15 @@ export class GlobalErrorBoundary extends Component<
     super(props);
     this.state = { hasError: false, error: null };
   }
-  
+
   static getDerivedStateFromError(error: Error): GlobalErrorBoundaryState {
     const appError = normalizeError(error);
     return { hasError: true, error: appError };
   }
-  
+
   override componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     const appError = normalizeError(error);
-    
+
     // Report to error monitoring
     ErrorReporter.reportError(error, {
       component: errorInfo.componentStack?.split('\n')[1]?.trim(),
@@ -174,19 +174,19 @@ export class GlobalErrorBoundary extends Component<
         componentStack: errorInfo.componentStack,
       },
     });
-    
+
     // Call custom error handler
     this.props.onError?.(appError, errorInfo);
   }
-  
+
   handleReset = (): void => {
     this.setState({ hasError: false, error: null });
   };
-  
+
   override render(): ReactNode {
     const { hasError, error } = this.state;
     const { children, fallback, showDetails } = this.props;
-    
+
     if (hasError && error) {
       if (typeof fallback === 'function') {
         return fallback(error, this.handleReset);
@@ -195,16 +195,12 @@ export class GlobalErrorBoundary extends Component<
       if (fallback != null) {
         return fallback;
       }
-      
+
       return (
-        <DefaultErrorFallback
-          error={error}
-          onReset={this.handleReset}
-          showDetails={showDetails}
-        />
+        <DefaultErrorFallback error={error} onReset={this.handleReset} showDetails={showDetails} />
       );
     }
-    
+
     return children;
   }
 }

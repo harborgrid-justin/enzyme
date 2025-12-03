@@ -4,11 +4,15 @@
 
 ## Overview
 
-The UI module provides a collection of production-ready React components that handle common UI patterns across your application. These components are designed to be composable, accessible, themeable, and performant out of the box.
+The UI module provides a collection of production-ready React components that handle common UI patterns across your
+application. These components are designed to be composable, accessible, themeable, and performant out of the box.
 
-Built with consistency and developer experience in mind, each component follows established design patterns, includes comprehensive TypeScript types, and integrates seamlessly with the theme system for dark mode support and custom branding.
+Built with consistency and developer experience in mind, each component follows established design patterns, includes
+comprehensive TypeScript types, and integrates seamlessly with the theme system for dark mode support and custom
+branding.
 
-Whether you're building a dashboard, admin panel, or customer-facing application, this module provides the building blocks for creating professional user interfaces without reinventing the wheel.
+Whether you're building a dashboard, admin panel, or customer-facing application, this module provides the building
+blocks for creating professional user interfaces without reinventing the wheel.
 
 ## Key Features
 
@@ -78,15 +82,18 @@ function Dashboard() {
 ## Exports
 
 ### Layout Components
+
 - `Page` - Root page wrapper with consistent structure
 - `Sidebar` - Collapsible navigation sidebar
 - `TopNav` - Top navigation bar with user menu
 
 ### Navigation Components
+
 - `MainNav` - Primary navigation menu
 - `Breadcrumbs` - Breadcrumb navigation trail
 
 ### Feedback Components
+
 - `Spinner` - Loading spinner with variants
 - `SpinnerWithText` - Spinner with loading message
 - `LoadingOverlay` - Full-page loading overlay
@@ -94,10 +101,12 @@ function Dashboard() {
 - `useToast` - Hook for showing toast notifications
 
 ### Data Components
+
 - `DataTable` - Sortable, paginated data table
 - `VirtualizedDataTable` - Virtualized table for large datasets
 
 ### Types
+
 - `PageProps` - Page component props
 - `SidebarProps` - Sidebar configuration
 - `SidebarItem` - Sidebar menu item
@@ -139,6 +148,7 @@ The UI module is organized by component type:
 ## Common Patterns
 
 ### Pattern 1: Application Layout
+
 ```tsx
 import { Page, TopNav, Sidebar } from '@/lib/ui';
 
@@ -178,6 +188,7 @@ function AppLayout({ children }) {
 ```
 
 ### Pattern 2: Data Tables
+
 ```tsx
 import { DataTable } from '@/lib/ui';
 
@@ -239,6 +250,7 @@ function UserList() {
 ```
 
 ### Pattern 3: Toast Notifications
+
 ```tsx
 import { ToastProvider, useToast } from '@/lib/ui';
 
@@ -270,6 +282,7 @@ function SaveButton() {
 ```
 
 ### Pattern 4: Loading States
+
 ```tsx
 import { Spinner, LoadingOverlay } from '@/lib/ui';
 
@@ -305,6 +318,7 @@ function PageLoading() {
 ```
 
 ### Pattern 5: Breadcrumb Navigation
+
 ```tsx
 import { Breadcrumbs } from '@/lib/ui';
 
@@ -326,6 +340,7 @@ function UserProfile({ user }) {
 ```
 
 ### Pattern 6: Virtualized Tables (Large Datasets)
+
 ```tsx
 import { VirtualizedDataTable } from '@/lib/ui';
 
@@ -347,6 +362,7 @@ function LargeDataset() {
 ## Configuration
 
 ### Theme Customization
+
 ```tsx
 // Components use CSS variables from theme module
 import { ThemeProvider } from '@/lib/theme';
@@ -371,6 +387,7 @@ import { ThemeProvider } from '@/lib/theme';
 ```
 
 ### Component Defaults
+
 ```tsx
 // Configure default props
 import { DataTable } from '@/lib/ui';
@@ -388,6 +405,7 @@ const DefaultDataTable = (props) => (
 ## Testing
 
 ### Testing UI Components
+
 ```tsx
 import { render, screen, fireEvent } from '@testing-library/react';
 import { DataTable } from '@/lib/ui';
@@ -445,7 +463,9 @@ describe('DataTable', () => {
 ## Troubleshooting
 
 ### Issue: Styles Not Applied
+
 **Solution:** Ensure ThemeProvider wraps your app:
+
 ```tsx
 <ThemeProvider>
   <App />
@@ -453,7 +473,9 @@ describe('DataTable', () => {
 ```
 
 ### Issue: Toast Not Showing
+
 **Solution:** Ensure ToastProvider is rendered:
+
 ```tsx
 <ToastProvider>
   <App />
@@ -461,13 +483,17 @@ describe('DataTable', () => {
 ```
 
 ### Issue: Table Performance with Large Data
+
 **Solution:** Use VirtualizedDataTable:
+
 ```tsx
 <VirtualizedDataTable data={largeDataset} columns={columns} />
 ```
 
 ### Issue: Sidebar Overlapping Content
+
 **Solution:** Add proper layout structure:
+
 ```tsx
 <div className="layout" style={{ display: 'flex' }}>
   <Sidebar />

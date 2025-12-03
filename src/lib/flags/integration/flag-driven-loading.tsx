@@ -231,14 +231,15 @@ async function loadModuleWithRetry<T>(
     try {
       const loadPromise = loader();
 
-      const result = timeout != null && timeout !== 0
-        ? await Promise.race([
-            loadPromise,
-            new Promise<never>((_, reject) =>
-              setTimeout(() => reject(new Error('Module load timeout')), timeout)
-            ),
-          ])
-        : await loadPromise;
+      const result =
+        timeout != null && timeout !== 0
+          ? await Promise.race([
+              loadPromise,
+              new Promise<never>((_, reject) =>
+                setTimeout(() => reject(new Error('Module load timeout')), timeout)
+              ),
+            ])
+          : await loadPromise;
 
       // Handle both { default: T } and T
       if (result != null && typeof result === 'object' && 'default' in result) {
@@ -280,9 +281,7 @@ function createCacheKey(flagKey: string, isEnabled: boolean): string {
  * });
  * ```
  */
-export function useFeatureFlaggedModule<T>(
-  config: FlaggedModuleConfig<T>
-): ModuleLoadResult<T> {
+export function useFeatureFlaggedModule<T>(config: FlaggedModuleConfig<T>): ModuleLoadResult<T> {
   const {
     flagKey,
     enabledModule,
@@ -330,7 +329,8 @@ export function useFeatureFlaggedModule<T>(
     // Determine which module to load
     const loader = flagEnabled
       ? enabledModule
-      : fallbackModule ?? (defaultValue !== undefined ? (async () => Promise.resolve(defaultValue)) : null);
+      : (fallbackModule ??
+        (defaultValue !== undefined ? async () => Promise.resolve(defaultValue) : null));
 
     if (!loader) {
       setModule(null);
@@ -357,16 +357,7 @@ export function useFeatureFlaggedModule<T>(
     } finally {
       setIsLoading(false);
     }
-  }, [
-    flagKey,
-    flagEnabled,
-    enabledModule,
-    fallbackModule,
-    defaultValue,
-    timeout,
-    retry,
-    cache,
-  ]);
+  }, [flagKey, flagEnabled, enabledModule, fallbackModule, defaultValue, timeout, retry, cache]);
 
   // Load on mount and flag change
   useEffect(() => {
@@ -385,14 +376,19 @@ export function useFeatureFlaggedModule<T>(
 
     // Preload in idle time
     if ('requestIdleCallback' in window) {
-      const id = (window as Window & { requestIdleCallback: (cb: () => void) => number }).requestIdleCallback(() => {
-        void loadModuleWithRetry(preloadLoader, { attempts: 1, delay: 0 }).then((mod) => {
-          setCachedModule(preloadCacheKey, mod, !flagEnabled);
-        }).catch(() => {
-          // Silently fail preload
-        });
+      const id = (
+        window as Window & { requestIdleCallback: (cb: () => void) => number }
+      ).requestIdleCallback(() => {
+        void loadModuleWithRetry(preloadLoader, { attempts: 1, delay: 0 })
+          .then((mod) => {
+            setCachedModule(preloadCacheKey, mod, !flagEnabled);
+          })
+          .catch(() => {
+            // Silently fail preload
+          });
       });
-      return () => (window as Window & { cancelIdleCallback: (id: number) => void }).cancelIdleCallback(id);
+      return () =>
+        (window as Window & { cancelIdleCallback: (id: number) => void }).cancelIdleCallback(id);
     }
 
     return undefined;
@@ -431,12 +427,13 @@ export function useFlaggedLazyComponent<P = Record<string, unknown>>(
     if (!loader) return null;
 
     // Normalize loader to always return { default: T } for React.lazy
-    const normalizedLoader = async (): Promise<{ default: ComponentType<P> }> => loader().then((mod) => {
-      if (mod !== null && mod !== undefined && typeof mod === 'object' && 'default' in mod) {
-        return mod as { default: ComponentType<P> };
-      }
-      return { default: mod };
-    });
+    const normalizedLoader = async (): Promise<{ default: ComponentType<P> }> =>
+      loader().then((mod) => {
+        if (mod !== null && mod !== undefined && typeof mod === 'object' && 'default' in mod) {
+          return mod as { default: ComponentType<P> };
+        }
+        return { default: mod };
+      });
 
     return lazy(normalizedLoader);
   }, [flagEnabled, enabledModule, fallbackModule]);
@@ -532,7 +529,9 @@ export function SuspenseFlaggedLoader<P extends Record<string, unknown> = Record
 /**
  * Create a flagged component that auto-loads based on flag state
  */
-export function createFlaggedComponent<P extends Record<string, unknown> = Record<string, unknown>>(config: {
+export function createFlaggedComponent<
+  P extends Record<string, unknown> = Record<string, unknown>,
+>(config: {
   flagKey: string;
   enabledComponent: ComponentLoader<P>;
   fallbackComponent?: ComponentType<P>;
@@ -563,7 +562,7 @@ export function createFlaggedComponent<P extends Record<string, unknown> = Recor
  * Create multiple flagged components from a configuration object
  */
 export function createFlaggedComponents<
-  TComponents extends Record<string, ComponentLoader>
+  TComponents extends Record<string, ComponentLoader>,
 >(config: {
   components: TComponents;
   fallbacks?: Partial<Record<keyof TComponents, ComponentType>>;
@@ -578,7 +577,9 @@ export function createFlaggedComponents<
     result[key] = createFlaggedComponent({
       flagKey: key,
       enabledComponent: loader,
-      fallbackComponent: config.fallbacks?.[key as keyof typeof config.fallbacks] as unknown as ComponentType<unknown> | undefined,
+      fallbackComponent: config.fallbacks?.[key as keyof typeof config.fallbacks] as unknown as
+        | ComponentType<unknown>
+        | undefined,
       loadingFallback: config.loadingFallback,
       getFlag: config.getFlag,
     });
@@ -617,7 +618,9 @@ export function preloadModule(config: ModulePreloadConfig): () => void {
     if (priority === 'idle' && 'requestIdleCallback' in window) {
       setTimeout(() => {
         if (cancelled) return;
-        (window as Window & { requestIdleCallback: (cb: () => void) => number }).requestIdleCallback(() => {
+        (
+          window as Window & { requestIdleCallback: (cb: () => void) => number }
+        ).requestIdleCallback(() => {
           void doPreload();
         });
       }, delay);
@@ -692,7 +695,12 @@ export function createFlaggedRouteLoaders<T>(
       const loader = flagEnabled ? route.enabledModule : route.fallbackModule;
 
       const result = await loader();
-      if (result !== null && result !== undefined && typeof result === 'object' && 'default' in result) {
+      if (
+        result !== null &&
+        result !== undefined &&
+        typeof result === 'object' &&
+        'default' in result
+      ) {
         return (result as { default: T }).default;
       }
       return result as T;
@@ -701,6 +709,3 @@ export function createFlaggedRouteLoaders<T>(
 
   return loaders;
 }
-
-
-

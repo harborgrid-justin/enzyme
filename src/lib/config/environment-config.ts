@@ -41,12 +41,17 @@ export function detectEnvironment(): Environment {
   }
 
   // Check process.env (Node.js, CRA)
-  if (typeof process !== 'undefined' && process.env?.NODE_ENV !== undefined && process.env.NODE_ENV !== '') {
+  if (
+    typeof process !== 'undefined' &&
+    process.env?.NODE_ENV !== undefined &&
+    process.env.NODE_ENV !== ''
+  ) {
     return normalizeEnvironment(process.env.NODE_ENV);
   }
 
   // Check window.__ENV__ (runtime injection)
-  const windowEnv = typeof window !== 'undefined' ? (window as { __ENV__?: string }).__ENV__ : undefined;
+  const windowEnv =
+    typeof window !== 'undefined' ? (window as { __ENV__?: string }).__ENV__ : undefined;
   if (windowEnv != null && windowEnv !== '') {
     return normalizeEnvironment(windowEnv);
   }
@@ -157,10 +162,7 @@ export class EnvironmentConfigManager<T extends ConfigRecord = ConfigRecord> {
   /**
    * Resolve configuration with environment overrides.
    */
-  resolve(
-    baseConfig: T,
-    envOverrides: EnvironmentConfigType<T>
-  ): T {
+  resolve(baseConfig: T, envOverrides: EnvironmentConfigType<T>): T {
     const overrides = envOverrides[this.environment] as T | undefined;
 
     if (!overrides) {
@@ -180,9 +182,7 @@ export class EnvironmentConfigManager<T extends ConfigRecord = ConfigRecord> {
   /**
    * Create environment-aware configuration factory.
    */
-  createFactory<C extends ConfigRecord>(
-    factory: (env: Environment) => C
-  ): () => C {
+  createFactory<C extends ConfigRecord>(factory: (env: Environment) => C): () => C {
     return () => factory(this.environment);
   }
 }
@@ -236,9 +236,7 @@ export const environmentDefaults: Record<Environment, Partial<ConfigRecord>> = {
 /**
  * Get environment defaults.
  */
-export function getEnvironmentDefaults(
-  env?: Environment
-): Partial<ConfigRecord> {
+export function getEnvironmentDefaults(env?: Environment): Partial<ConfigRecord> {
   return environmentDefaults[env ?? detectEnvironment()];
 }
 
@@ -249,10 +247,7 @@ export function getEnvironmentDefaults(
 /**
  * Get an environment variable with type coercion.
  */
-export function getEnvVar(
-  name: string,
-  defaultValue?: string
-): string | undefined {
+export function getEnvVar(name: string, defaultValue?: string): string | undefined {
   // Try import.meta.env (Vite)
   const importMetaEnv = import.meta?.env;
   if (importMetaEnv !== undefined && importMetaEnv !== null) {
@@ -287,10 +282,7 @@ export function requireEnvVar(name: string): string {
 /**
  * Get an environment variable as a number.
  */
-export function getEnvVarAsNumber(
-  name: string,
-  defaultValue: number
-): number {
+export function getEnvVarAsNumber(name: string, defaultValue: number): number {
   const value = getEnvVar(name);
   if (value === undefined) {
     return defaultValue;
@@ -302,10 +294,7 @@ export function getEnvVarAsNumber(
 /**
  * Get an environment variable as a boolean.
  */
-export function getEnvVarAsBoolean(
-  name: string,
-  defaultValue: boolean
-): boolean {
+export function getEnvVarAsBoolean(name: string, defaultValue: boolean): boolean {
   const value = getEnvVar(name);
   if (value === undefined) {
     return defaultValue;
@@ -316,10 +305,7 @@ export function getEnvVarAsBoolean(
 /**
  * Get an environment variable as JSON.
  */
-export function getEnvVarAsJson<T>(
-  name: string,
-  defaultValue: T
-): T {
+export function getEnvVarAsJson<T>(name: string, defaultValue: T): T {
   const value = getEnvVar(name);
   if (value === undefined) {
     return defaultValue;
@@ -343,7 +329,10 @@ export function getEnvVarAsArray(
   if (value === undefined) {
     return defaultValue;
   }
-  return value.split(separator).map((s) => s.trim()).filter(Boolean);
+  return value
+    .split(separator)
+    .map((s) => s.trim())
+    .filter(Boolean);
 }
 
 // ============================================================================

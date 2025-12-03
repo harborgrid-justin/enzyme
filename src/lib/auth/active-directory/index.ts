@@ -109,12 +109,7 @@ export type { ConfigValidationResult } from './ad-config';
 // AD Client
 // =============================================================================
 
-export {
-  ADClient,
-  createADClient,
-  GraphAPIClientError,
-  GRAPH_ENDPOINTS,
-} from './ad-client';
+export { ADClient, createADClient, GraphAPIClientError, GRAPH_ENDPOINTS } from './ad-client';
 
 // =============================================================================
 // Group Mapping
@@ -155,25 +150,14 @@ export type {
 // Token Handler
 // =============================================================================
 
-export {
-  ADTokenHandler,
-  createTokenHandler,
-} from './ad-token-handler';
-export type {
-  TokenHandlerOptions,
-  AcquisitionOptions,
-} from './ad-token-handler';
+export { ADTokenHandler, createTokenHandler } from './ad-token-handler';
+export type { TokenHandlerOptions, AcquisitionOptions } from './ad-token-handler';
 
 // =============================================================================
 // SSO Support
 // =============================================================================
 
-export {
-  SSOManager,
-  createSSOManager,
-  CrossDomainSSO,
-  createCrossDomainSSO,
-} from './ad-sso';
+export { SSOManager, createSSOManager, CrossDomainSSO, createCrossDomainSSO } from './ad-sso';
 export type {
   SSOEventType,
   SSOBroadcastMessage,

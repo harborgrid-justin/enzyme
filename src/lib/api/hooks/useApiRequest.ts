@@ -31,12 +31,7 @@ import {
   type QueryFunction,
 } from '@tanstack/react-query';
 import { useApiClient } from './useApiClient';
-import type {
-  ApiError,
-  RequestConfig,
-  QueryParams,
-  UseApiRequestOptions,
-} from '../types';
+import type { ApiError, RequestConfig, QueryParams, UseApiRequestOptions } from '../types';
 import { TIMING } from '@/config';
 
 // =============================================================================
@@ -70,8 +65,7 @@ export type ApiRequestOptions<TResponse> = ApiRequestConfig<TResponse> &
 /**
  * Return type for useApiRequest
  */
-export interface UseApiRequestResult<TData>
-  extends Omit<UseQueryResult<TData, ApiError>, 'data'> {
+export interface UseApiRequestResult<TData> extends Omit<UseQueryResult<TData, ApiError>, 'data'> {
   /** Response data (undefined while loading) */
   data: TData | undefined;
   /** Whether data exists */
@@ -188,14 +182,15 @@ export function useApiRequest<TResponse = unknown>(
 
   // Build result
   return useMemo(
-    () => ({
-      ...queryResult,
-      data: queryResult.data,
-      hasData: queryResult.data !== undefined,
-      invalidate,
-      setData,
-      getCachedData,
-    } as UseApiRequestResult<TResponse>),
+    () =>
+      ({
+        ...queryResult,
+        data: queryResult.data,
+        hasData: queryResult.data !== undefined,
+        invalidate,
+        setData,
+        getCachedData,
+      }) as UseApiRequestResult<TResponse>,
     [queryResult, invalidate, setData, getCachedData]
   );
 }
@@ -240,7 +235,7 @@ export function useGetById<TResponse = unknown>(
   return useApiRequest<TResponse>({
     url: `${baseUrl}/${id ?? ''}`,
     queryKey: [baseUrl.replace(/^\//, ''), id],
-    enabled: (id !== undefined && id !== null && id !== '') && (options?.enabled ?? true),
+    enabled: id !== undefined && id !== null && id !== '' && (options?.enabled ?? true),
     ...options,
   });
 }
@@ -337,9 +332,9 @@ export interface ParallelRequestResult<TData> {
  * }
  * ```
  */
-export function useParallelRequests<TResponses extends unknown[]>(
-  requests: { [K in keyof TResponses]: ApiRequestOptions<TResponses[K]> }
-): { [K in keyof TResponses]: ParallelRequestResult<TResponses[K]> } {
+export function useParallelRequests<TResponses extends unknown[]>(requests: {
+  [K in keyof TResponses]: ApiRequestOptions<TResponses[K]>;
+}): { [K in keyof TResponses]: ParallelRequestResult<TResponses[K]> } {
   const { client } = useApiClient();
 
   // Build query configurations for useQueries
@@ -416,8 +411,10 @@ export function useParallelRequests<TResponses extends unknown[]>(
 
       // Subscribe to query changes
       const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
-        if (event.query.queryKey === config.queryKey ||
-            JSON.stringify(event.query.queryKey) === JSON.stringify(config.queryKey)) {
+        if (
+          event.query.queryKey === config.queryKey ||
+          JSON.stringify(event.query.queryKey) === JSON.stringify(config.queryKey)
+        ) {
           const state = queryClient.getQueryState<unknown, ApiError>(config.queryKey);
           if (state !== undefined && state !== null) {
             setResults((prev) => {
@@ -442,7 +439,7 @@ export function useParallelRequests<TResponses extends unknown[]>(
 
     // Initial fetch for all queries
     queryConfigs.forEach((config) => {
-      if (config.enabled !== false) {
+      if (config.enabled) {
         queryClient.fetchQuery(config).catch(() => {
           // Errors handled by observer
         });
@@ -496,7 +493,8 @@ export function useDependentRequest<TFirst, TSecond>(
   const secondResult = useApiRequest<TSecond>({
     url: secondOptions?.url ?? '',
     queryKey: secondOptions?.queryKey ?? ['__disabled__'],
-    enabled: (secondOptions !== undefined && secondOptions !== null) && (firstRequest.enabled ?? true),
+    enabled:
+      secondOptions !== undefined && secondOptions !== null && (firstRequest.enabled ?? true),
     ...secondOptions,
   });
 
@@ -537,17 +535,20 @@ export function usePolling<TResponse = unknown>(
 } {
   const [shouldStop, setShouldStop] = useState(false);
 
-  const refetchIntervalFn = useCallback((query: { state: { data?: TResponse } }) => {
-    if (shouldStop) return false;
+  const refetchIntervalFn = useCallback(
+    (query: { state: { data?: TResponse } }) => {
+      if (shouldStop) return false;
 
-    const {data} = query.state;
-    if (data !== undefined && data !== null && options.stopCondition?.(data) === true) {
-      setShouldStop(true);
-      return false;
-    }
+      const { data } = query.state;
+      if (data !== undefined && data !== null && options.stopCondition?.(data) === true) {
+        setShouldStop(true);
+        return false;
+      }
 
-    return options.interval;
-  }, [options, shouldStop]);
+      return options.interval;
+    },
+    [options, shouldStop]
+  );
 
   const result = useApiRequest<TResponse>({
     ...options,
@@ -597,11 +598,7 @@ export function usePrefetch<TResponse = unknown>(): (
   const queryClient = useQueryClient();
 
   return useCallback(
-    async (
-      url: string,
-      queryKey: QueryKey,
-      options?: Partial<ApiRequestOptions<TResponse>>
-    ) => {
+    async (url: string, queryKey: QueryKey, options?: Partial<ApiRequestOptions<TResponse>>) => {
       await queryClient.prefetchQuery({
         queryKey,
         queryFn: async () => {
@@ -656,7 +653,7 @@ export function useLazyQuery<TResponse = unknown>(
     async (overrides?: Partial<ApiRequestOptions<TResponse>>) => {
       const mergedOptions = { ...options, ...overrides };
 
-      let {url} = mergedOptions;
+      let { url } = mergedOptions;
       if (mergedOptions.pathParams) {
         for (const [key, value] of Object.entries(mergedOptions.pathParams)) {
           url = url.replace(`:${key}`, encodeURIComponent(String(value)));

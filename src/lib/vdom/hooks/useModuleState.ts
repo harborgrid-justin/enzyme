@@ -8,13 +8,7 @@
  * @version 1.0.0
  */
 
-import {
-  useState,
-  useCallback,
-  useMemo,
-  useEffect,
-  useRef,
-} from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { type UseModuleStateReturn } from '../types';
 import { useModuleContext } from '../ModuleBoundary';
 
@@ -338,9 +332,7 @@ export function useArrayModuleState<T>(
 
   const update = useCallback(
     (predicate: (item: T) => boolean, updater: (item: T) => T) => {
-      setState((prev) =>
-        prev.map((item) => (predicate(item) ? updater(item) : item))
-      );
+      setState((prev) => prev.map((item) => (predicate(item) ? updater(item) : item)));
     },
     [setState]
   );
@@ -379,10 +371,7 @@ export function useRecordModuleState<K extends string, V>(
 } {
   const { state, setState, resetState } = useModuleState(key, { initialValue });
 
-  const get = useCallback(
-    (recordKey: K): V | undefined => state[recordKey],
-    [state]
-  );
+  const get = useCallback((recordKey: K): V | undefined => state[recordKey], [state]);
 
   const set = useCallback(
     (recordKey: K, value: V) => {
@@ -402,21 +391,18 @@ export function useRecordModuleState<K extends string, V>(
     [setState]
   );
 
-  const has = useCallback(
-    (recordKey: K): boolean => recordKey in state,
-    [state]
-  );
+  const has = useCallback((recordKey: K): boolean => recordKey in state, [state]);
 
   return useMemo(
     () => ({
       record: state,
       get,
       set,
-    remove,
-    has,
-    clear: resetState,
-    setRecord: setState,
-  }),
-  [state, get, set, remove, has, resetState, setState]
-);
+      remove,
+      has,
+      clear: resetState,
+      setRecord: setState,
+    }),
+    [state, get, set, remove, has, resetState, setState]
+  );
 }

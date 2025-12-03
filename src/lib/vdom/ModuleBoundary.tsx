@@ -41,15 +41,9 @@ import {
   DEFAULT_HYDRATION_CONFIG,
 } from './types';
 import type { VirtualModuleManager } from './virtual-module';
-import {
-  createVirtualModule,
-  createValidatedModuleId,
-} from './virtual-module';
+import { createVirtualModule, createValidatedModuleId } from './virtual-module';
 import { createSecuritySandbox, type SecuritySandbox } from './security-sandbox';
-import {
-  useModuleSystem,
-  ModuleHierarchyProvider,
-} from './ModuleProviderExports';
+import { useModuleSystem, ModuleHierarchyProvider } from './ModuleProviderExports';
 
 // ============================================================================
 // Types
@@ -174,9 +168,7 @@ class ModuleErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySta
           }}
         >
           <h3 style={{ margin: '0 0 8px', color: '#dc2626' }}>Module Error</h3>
-          <p style={{ margin: 0, color: '#7f1d1d' }}>
-            {this.state.error.message}
-          </p>
+          <p style={{ margin: 0, color: '#7f1d1d' }}>{this.state.error.message}</p>
           <button
             onClick={this.reset}
             style={{
@@ -206,9 +198,7 @@ class ModuleErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySta
 /**
  * Internal module boundary implementation.
  */
-const ModuleBoundaryInner: FC<
-  ModuleBoundaryProps & { moduleId: ModuleId }
-> = ({
+const ModuleBoundaryInner: FC<ModuleBoundaryProps & { moduleId: ModuleId }> = ({
   moduleId,
   name,
   version,
@@ -313,16 +303,13 @@ const ModuleBoundaryInner: FC<
   );
 
   // Create security context
-  const securityContext = useMemo<SecurityContext>(
-    () => {
-      const security = securityRef.current;
-      if (!security) {
-        throw new Error('Security not initialized');
-      }
-      return security.createContext();
-    },
-    []
-  );
+  const securityContext = useMemo<SecurityContext>(() => {
+    const security = securityRef.current;
+    if (!security) {
+      throw new Error('Security not initialized');
+    }
+    return security.createContext();
+  }, []);
 
   // Get parent context
   const parentContext = useContext(ModuleContext);
@@ -463,16 +450,13 @@ const ModuleBoundaryInner: FC<
   }, [state.hydrationState, onHydrated]);
 
   // Lifecycle event subscription
-  const subscribe = useCallback(
-    (event: ModuleLifecycleEvent, handler: () => void) => {
-      const manager = managerRef.current;
-      if (!manager) {
-        return () => {};
-      }
-      return manager.subscribe(event, handler);
-    },
-    []
-  );
+  const subscribe = useCallback((event: ModuleLifecycleEvent, handler: () => void) => {
+    const manager = managerRef.current;
+    if (!manager) {
+      return () => {};
+    }
+    return manager.subscribe(event, handler);
+  }, []);
 
   // Create context value
   const contextValue = useMemo<ModuleContextValue>(
@@ -604,10 +588,7 @@ const ModuleBoundaryInner: FC<
 
           dispatch({ type: 'SET_VISIBILITY', isVisible });
 
-          if (
-            isVisible &&
-            state.hydrationState === HydrationState.DEHYDRATED
-          ) {
+          if (isVisible && state.hydrationState === HydrationState.DEHYDRATED) {
             void hydrate();
           }
         }
@@ -665,11 +646,7 @@ const ModuleBoundaryInner: FC<
   return (
     <ModuleContext.Provider value={contextValue}>
       <ModuleHierarchyProvider moduleId={moduleId}>
-        <ModuleErrorBoundary
-          fallback={fallback}
-          onError={handleError}
-          onReset={handleReset}
-        >
+        <ModuleErrorBoundary fallback={fallback} onError={handleError} onReset={handleReset}>
           <div
             ref={containerRef}
             data-module-id={moduleId}
@@ -708,10 +685,7 @@ const ModuleBoundaryInner: FC<
  */
 export const ModuleBoundary: FC<ModuleBoundaryProps> = (props) => {
   // Validate and create module ID
-  const moduleId = useMemo(
-    () => createValidatedModuleId(props.id),
-    [props.id]
-  );
+  const moduleId = useMemo(() => createValidatedModuleId(props.id), [props.id]);
 
   return <ModuleBoundaryInner {...props} moduleId={moduleId} />;
 };

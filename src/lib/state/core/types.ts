@@ -17,7 +17,7 @@ export type StoreMiddleware = [
   ['zustand/immer', never],
   ['zustand/devtools', never],
   ['zustand/subscribeWithSelector', never],
-  ['zustand/persist', unknown]
+  ['zustand/persist', unknown],
 ];
 
 /**
@@ -27,7 +27,7 @@ export type SliceCreator<
   TSlice,
   TStore = TSlice,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  TMiddleware extends any[] = []
+  TMiddleware extends any[] = [],
 > = StateCreator<TStore, TMiddleware, [], TSlice>;
 
 // ============================================================================
@@ -86,7 +86,7 @@ export interface SliceWithActions<TState, TActions> {
  */
 export interface SliceDefinition<
   TState extends object,
-  TActions extends Record<string, (...args: unknown[]) => void>
+  TActions extends Record<string, (...args: unknown[]) => void>,
 > {
   name: string;
   initialState: TState;
@@ -221,10 +221,7 @@ export interface PersistConfig<TState> {
 /**
  * Migration function type
  */
-export type MigrationFn<TState> = (
-  persistedState: unknown,
-  version: number
-) => Partial<TState>;
+export type MigrationFn<TState> = (persistedState: unknown, version: number) => Partial<TState>;
 
 // ============================================================================
 // DevTools Types

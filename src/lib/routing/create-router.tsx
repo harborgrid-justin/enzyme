@@ -117,9 +117,7 @@ function DefaultError(): ReactNode {
       >
         {errorStatus === 404 ? 'Page Not Found' : 'Something went wrong'}
       </h1>
-      <p style={{ color: '#6b7280', marginBottom: '1.5rem', maxWidth: '400px' }}>
-        {errorMessage}
-      </p>
+      <p style={{ color: '#6b7280', marginBottom: '1.5rem', maxWidth: '400px' }}>{errorMessage}</p>
       <div style={{ display: 'flex', gap: '0.75rem' }}>
         <button
           onClick={() => window.history.back()}
@@ -267,7 +265,8 @@ function setupPrefetching(
     if (!link) return;
 
     const href = link.getAttribute('href');
-    if (href == null || href === '' || href.startsWith('http') || href.startsWith('mailto:')) return;
+    if (href == null || href === '' || href.startsWith('http') || href.startsWith('mailto:'))
+      return;
 
     // Check if already prefetched
     if (prefetchState.prefetched.has(href)) return;
@@ -478,7 +477,7 @@ function buildPreloadMap(
     preloadMap[key] = route.importFn;
 
     if (route.children) {
-      const childMap = buildPreloadMap(route.children, `${fullPath  }/`);
+      const childMap = buildPreloadMap(route.children, `${fullPath}/`);
       Object.assign(preloadMap, childMap);
     }
   }
@@ -490,12 +489,14 @@ function buildPreloadMap(
  * Generate a preload key from a path
  */
 function generatePreloadKey(path: string): string {
-  return path
-    .replace(/^\//, '')
-    .replace(/\//g, '_')
-    .replace(/:/g, 'BY_')
-    .replace(/\?/g, '_OPT')
-    .toUpperCase() || 'INDEX';
+  return (
+    path
+      .replace(/^\//, '')
+      .replace(/\//g, '_')
+      .replace(/:/g, 'BY_')
+      .replace(/\?/g, '_OPT')
+      .toUpperCase() || 'INDEX'
+  );
 }
 
 // =============================================================================
@@ -512,10 +513,7 @@ export function createSimpleRouter(
   routeTree: RouteObject[],
   options: Omit<CreateRouterOptions, 'includeFeatures'> = {}
 ): ReturnType<typeof createBrowserRouter> {
-  const {
-    errorElement = <DefaultError />,
-    basename,
-  } = options;
+  const { errorElement = <DefaultError />, basename } = options;
 
   // Wrap routes with error element
   const wrappedRoutes = routeTree.map((route) => ({
@@ -530,10 +528,4 @@ export function createSimpleRouter(
 // Exports
 // =============================================================================
 
-export {
-  DefaultLoading,
-  DefaultError,
-  DefaultNotFound,
-  withSuspense,
-  setupPrefetching,
-};
+export { DefaultLoading, DefaultError, DefaultNotFound, withSuspense, setupPrefetching };

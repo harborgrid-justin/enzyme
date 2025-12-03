@@ -1,7 +1,7 @@
 /**
  * @file Fast Refresh Constants
  * @description Extracted constants to make modules Fast Refresh compliant.
- * 
+ *
  * Fast Refresh requirements:
  * - Contexts must be in separate files from components
  * - Default export functions must be PascalCase (components)

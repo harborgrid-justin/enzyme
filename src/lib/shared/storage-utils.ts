@@ -76,13 +76,6 @@ export class StorageWrapper {
   }
 
   /**
-   * Get prefixed storage key.
-   */
-  private getKey(key: string): string {
-    return this.config.prefix ? `${this.config.prefix}:${key}` : key;
-  }
-
-  /**
    * Set a value in storage.
    */
   set<T>(key: string, value: T, options: StorageSetOptions = {}): boolean {
@@ -133,18 +126,6 @@ export class StorageWrapper {
     } catch {
       return defaultValue;
     }
-  }
-
-  /**
-   * Check if item is a StorageItem wrapper.
-   */
-  private isStorageItem(value: unknown): value is StorageItem<unknown> {
-    return (
-      isObject(value) &&
-      'value' in value &&
-      'timestamp' in value &&
-      isNumber(value.timestamp)
-    );
   }
 
   /**
@@ -274,6 +255,25 @@ export class StorageWrapper {
     }
 
     return { itemCount, totalSize, expiredCount };
+  }
+
+  /**
+   * Get prefixed storage key.
+   */
+  private getKey(key: string): string {
+    return this.config.prefix ? `${this.config.prefix}:${key}` : key;
+  }
+
+  /**
+   * Check if item is a StorageItem wrapper.
+   */
+  private isStorageItem(value: unknown): value is StorageItem<unknown> {
+    return (
+      isObject(value) &&
+      'value' in value &&
+      'timestamp' in value &&
+      isNumber(value.timestamp)
+    );
   }
 }
 

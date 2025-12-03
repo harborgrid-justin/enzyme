@@ -28,12 +28,7 @@
  * ```
  */
 
-import {
-  type NetworkTierConfig,
-  getNetworkTier,
-  formatDuration,
-  formatBytes,
-} from '../../config/performance.config';
+import { formatBytes, formatDuration, getNetworkTier, type NetworkTierConfig, } from '../../config/performance.config';
 
 // ============================================================================
 // Types
@@ -347,167 +342,6 @@ export class NetworkPerformanceAnalyzer {
   }
 
   /**
-   * Start resource timing observer
-   */
-  private startResourceObserver(): void {
-    if (typeof PerformanceObserver === 'undefined') return;
-
-    try {
-      this.resourceObserver = new PerformanceObserver((list) => {
-        const entries = list.getEntries() as PerformanceResourceTiming[];
-        entries.forEach((entry) => {
-          const timing = this.processResourceEntry(entry);
-          if (timing !== null) {
-            this.requestHistory.push(timing);
-            this.trimHistory();
-
-            if (timing.ttfb > this.config.slowThreshold) {
-              this.config.onSlowRequest(timing);
-              this.log(`Slow request: ${timing.url} (TTFB: ${formatDuration(timing.ttfb)})`);
-            }
-          }
-        });
-      });
-
-      this.resourceObserver.observe({ entryTypes: ['resource'] });
-    } catch (error) {
-      this.log('Failed to start resource observer:', error);
-    }
-  }
-
-  /**
-   * Stop resource observer
-   */
-  private stopResourceObserver(): void {
-    if (this.resourceObserver !== null) {
-      this.resourceObserver.disconnect();
-      this.resourceObserver = null;
-    }
-  }
-
-  /**
-   * Start bandwidth measurement
-   */
-  private startBandwidthMeasurement(): void {
-    this.bandwidthIntervalId = setInterval(() => {
-      const measurement = this.measureBandwidth();
-      if (measurement !== null) {
-        this.bandwidthHistory.push(measurement);
-        if (this.bandwidthHistory.length > 100) {
-          this.bandwidthHistory.shift();
-        }
-      }
-    }, this.config.bandwidthInterval);
-  }
-
-  /**
-   * Stop bandwidth measurement
-   */
-  private stopBandwidthMeasurement(): void {
-    if (this.bandwidthIntervalId !== null) {
-      clearInterval(this.bandwidthIntervalId);
-      this.bandwidthIntervalId = null;
-    }
-  }
-
-  /**
-   * Start connection change listener
-   */
-  private startConnectionListener(): void {
-    const connection = getNavigatorConnection();
-    if (connection?.addEventListener === undefined || connection?.addEventListener === null) return;
-
-    this.connectionChangeHandler = () => {
-      const quality = this.getQuality();
-      if (this.hasQualityChanged(quality)) {
-        this.config.onQualityChange(quality);
-        this.lastQuality = quality;
-        this.log('Network quality changed:', quality.effectiveType);
-      }
-    };
-
-    connection.addEventListener('change', this.connectionChangeHandler);
-  }
-
-  /**
-   * Stop connection listener
-   */
-  private stopConnectionListener(): void {
-    if (this.connectionChangeHandler === null) return;
-
-    const connection = getNavigatorConnection();
-    if (connection?.removeEventListener !== undefined && connection?.removeEventListener !== null) {
-      connection.removeEventListener('change', this.connectionChangeHandler);
-    }
-    this.connectionChangeHandler = null;
-  }
-
-  /**
-   * Check if network quality has changed significantly
-   */
-  private hasQualityChanged(newQuality: NetworkQuality): boolean {
-    if (this.lastQuality === null) return true;
-    return newQuality.effectiveType !== this.lastQuality.effectiveType ||
-           Math.abs(newQuality.score - this.lastQuality.score) > 10;
-  }
-
-  // ==========================================================================
-  // Request Analysis
-  // ==========================================================================
-
-  /**
-   * Process a resource timing entry
-   */
-  private processResourceEntry(entry: PerformanceResourceTiming): RequestTiming | null {
-    // Skip entries with no timing data
-    if (entry.duration === 0) return null;
-
-    const dnsLookup = entry.domainLookupEnd - entry.domainLookupStart;
-    const tcpConnect = entry.connectEnd - entry.connectStart;
-    const tlsNegotiation = entry.secureConnectionStart > 0
-      ? entry.connectEnd - entry.secureConnectionStart
-      : 0;
-    const ttfb = entry.responseStart - entry.requestStart;
-    const downloadTime = entry.responseEnd - entry.responseStart;
-
-    // Calculate effective bandwidth
-    const effectiveBandwidth = downloadTime > 0
-      ? (entry.transferSize / downloadTime) * 1000
-      : 0;
-
-    // Extract server timing
-    const serverTiming: ServerTimingEntry[] = [];
-    if ('serverTiming' in entry && Array.isArray(entry.serverTiming)) {
-      entry.serverTiming.forEach((st: { name: string; duration: number; description: string }) => {
-        serverTiming.push({
-          name: st.name,
-          duration: st.duration,
-          description: st.description,
-        });
-      });
-    }
-
-    return {
-      name: entry.name.split('/').pop() ?? entry.name,
-      url: entry.name,
-      startTime: entry.startTime,
-      duration: entry.duration,
-      dnsLookup: Math.max(0, dnsLookup),
-      tcpConnect: Math.max(0, tcpConnect),
-      tlsNegotiation: Math.max(0, tlsNegotiation),
-      ttfb: Math.max(0, ttfb),
-      downloadTime: Math.max(0, downloadTime),
-      transferSize: entry.transferSize,
-      encodedBodySize: entry.encodedBodySize,
-      decodedBodySize: entry.decodedBodySize,
-      initiatorType: entry.initiatorType,
-      effectiveBandwidth,
-      serverTiming,
-      timestamp: Date.now(),
-    };
-  }
-
-  /**
    * Analyze a specific request by URL
    */
   public analyzeRequest(url: string): RequestTiming | null {
@@ -530,10 +364,6 @@ export class NetworkPerformanceAnalyzer {
       .map((e) => this.processResourceEntry(e))
       .filter((t): t is RequestTiming => t !== null);
   }
-
-  // ==========================================================================
-  // Network Quality
-  // ==========================================================================
 
   /**
    * Get current network quality
@@ -596,10 +426,6 @@ export class NetworkPerformanceAnalyzer {
     };
   }
 
-  // ==========================================================================
-  // Bandwidth Measurement
-  // ==========================================================================
-
   /**
    * Measure current bandwidth from recent requests
    */
@@ -638,27 +464,6 @@ export class NetworkPerformanceAnalyzer {
   }
 
   /**
-   * Calculate bandwidth trend
-   */
-  private calculateBandwidthTrend(): 'improving' | 'stable' | 'degrading' {
-    if (this.bandwidthHistory.length < 2) return 'stable';
-
-    const recent = this.bandwidthHistory.slice(-5);
-    const older = this.bandwidthHistory.slice(-10, -5);
-
-    if (older.length === 0) return 'stable';
-
-    const recentAvg = recent.reduce((s, m) => s + m.bandwidth, 0) / recent.length;
-    const olderAvg = older.reduce((s, m) => s + m.bandwidth, 0) / older.length;
-
-    const change = ((recentAvg - olderAvg) / olderAvg) * 100;
-
-    if (change > 10) return 'improving';
-    if (change < -10) return 'degrading';
-    return 'stable';
-  }
-
-  /**
    * Get estimated bandwidth
    */
   public getEstimatedBandwidth(): number {
@@ -669,12 +474,8 @@ export class NetworkPerformanceAnalyzer {
 
     // Fall back to Network Information API
     const connection = getNavigatorConnection();
-    return (connection?.downlink ?? 10) * 1024 * 1024 / 8; // Convert Mbps to bytes/sec
+    return ((connection?.downlink ?? 10) * 1024 * 1024) / 8; // Convert Mbps to bytes/sec
   }
-
-  // ==========================================================================
-  // Priority Recommendations
-  // ==========================================================================
 
   /**
    * Get priority recommendation for a resource
@@ -689,9 +490,9 @@ export class NetworkPerformanceAnalyzer {
     } = {}
   ): PriorityRecommendation {
     const quality = this.getQuality();
-    const basePriority = RESOURCE_PRIORITIES[resourceType] ?? 'normal';
 
-    let recommendedPriority: RequestPriority = basePriority;
+
+    let recommendedPriority: RequestPriority = RESOURCE_PRIORITIES[resourceType] ?? 'normal';
     let fetchPriority: 'high' | 'low' | 'auto' = 'auto';
     let shouldPreload = false;
     let shouldPreconnect = false;
@@ -729,7 +530,7 @@ export class NetworkPerformanceAnalyzer {
       const urlObj = new URL(url);
       const {origin} = urlObj;
       const isCrossOrigin = origin !== window.location.origin;
-      if (isCrossOrigin === true && (recommendedPriority === 'highest' || recommendedPriority === 'high')) {
+      if (isCrossOrigin && (recommendedPriority === 'highest' || recommendedPriority === 'high')) {
         shouldPreconnect = true;
       }
     } catch {
@@ -749,7 +550,7 @@ export class NetworkPerformanceAnalyzer {
   }
 
   // ==========================================================================
-  // Statistics
+  // Request Analysis
   // ==========================================================================
 
   /**
@@ -819,6 +620,10 @@ export class NetworkPerformanceAnalyzer {
     return this.requestHistory.filter((r) => r.ttfb > this.config.slowThreshold);
   }
 
+  // ==========================================================================
+  // Network Quality
+  // ==========================================================================
+
   /**
    * Clear history
    */
@@ -827,10 +632,6 @@ export class NetworkPerformanceAnalyzer {
     this.bandwidthHistory.length = 0;
     this.log('History cleared');
   }
-
-  // ==========================================================================
-  // Reporting
-  // ==========================================================================
 
   /**
    * Generate network performance report
@@ -890,6 +691,200 @@ export class NetworkPerformanceAnalyzer {
     lines.push('='.repeat(60));
 
     return lines.join('\n');
+  }
+
+  // ==========================================================================
+  // Bandwidth Measurement
+  // ==========================================================================
+
+  /**
+   * Start resource timing observer
+   */
+  private startResourceObserver(): void {
+    if (typeof PerformanceObserver === 'undefined') return;
+
+    try {
+      this.resourceObserver = new PerformanceObserver((list) => {
+        const entries = list.getEntries() as PerformanceResourceTiming[];
+        entries.forEach((entry) => {
+          const timing = this.processResourceEntry(entry);
+          if (timing !== null) {
+            this.requestHistory.push(timing);
+            this.trimHistory();
+
+            if (timing.ttfb > this.config.slowThreshold) {
+              this.config.onSlowRequest(timing);
+              this.log(`Slow request: ${timing.url} (TTFB: ${formatDuration(timing.ttfb)})`);
+            }
+          }
+        });
+      });
+
+      this.resourceObserver.observe({ entryTypes: ['resource'] });
+    } catch (error) {
+      this.log('Failed to start resource observer:', error);
+    }
+  }
+
+  /**
+   * Stop resource observer
+   */
+  private stopResourceObserver(): void {
+    if (this.resourceObserver !== null) {
+      this.resourceObserver.disconnect();
+      this.resourceObserver = null;
+    }
+  }
+
+  /**
+   * Start bandwidth measurement
+   */
+  private startBandwidthMeasurement(): void {
+    this.bandwidthIntervalId = setInterval(() => {
+      const measurement = this.measureBandwidth();
+      if (measurement !== null) {
+        this.bandwidthHistory.push(measurement);
+        if (this.bandwidthHistory.length > 100) {
+          this.bandwidthHistory.shift();
+        }
+      }
+    }, this.config.bandwidthInterval);
+  }
+
+  // ==========================================================================
+  // Priority Recommendations
+  // ==========================================================================
+
+  /**
+   * Stop bandwidth measurement
+   */
+  private stopBandwidthMeasurement(): void {
+    if (this.bandwidthIntervalId !== null) {
+      clearInterval(this.bandwidthIntervalId);
+      this.bandwidthIntervalId = null;
+    }
+  }
+
+  // ==========================================================================
+  // Statistics
+  // ==========================================================================
+
+  /**
+   * Start connection change listener
+   */
+  private startConnectionListener(): void {
+    const connection = getNavigatorConnection();
+    if (connection?.addEventListener === undefined || connection?.addEventListener === null) return;
+
+    this.connectionChangeHandler = () => {
+      const quality = this.getQuality();
+      if (this.hasQualityChanged(quality)) {
+        this.config.onQualityChange(quality);
+        this.lastQuality = quality;
+        this.log('Network quality changed:', quality.effectiveType);
+      }
+    };
+
+    connection.addEventListener('change', this.connectionChangeHandler);
+  }
+
+  /**
+   * Stop connection listener
+   */
+  private stopConnectionListener(): void {
+    if (this.connectionChangeHandler === null) return;
+
+    const connection = getNavigatorConnection();
+    if (connection?.removeEventListener !== undefined && connection?.removeEventListener !== null) {
+      connection.removeEventListener('change', this.connectionChangeHandler);
+    }
+    this.connectionChangeHandler = null;
+  }
+
+  /**
+   * Check if network quality has changed significantly
+   */
+  private hasQualityChanged(newQuality: NetworkQuality): boolean {
+    if (this.lastQuality === null) return true;
+    return newQuality.effectiveType !== this.lastQuality.effectiveType ||
+           Math.abs(newQuality.score - this.lastQuality.score) > 10;
+  }
+
+  /**
+   * Process a resource timing entry
+   */
+  private processResourceEntry(entry: PerformanceResourceTiming): RequestTiming | null {
+    // Skip entries with no timing data
+    if (entry.duration === 0) return null;
+
+    const dnsLookup = entry.domainLookupEnd - entry.domainLookupStart;
+    const tcpConnect = entry.connectEnd - entry.connectStart;
+    const tlsNegotiation = entry.secureConnectionStart > 0
+      ? entry.connectEnd - entry.secureConnectionStart
+      : 0;
+    const ttfb = entry.responseStart - entry.requestStart;
+    const downloadTime = entry.responseEnd - entry.responseStart;
+
+    // Calculate effective bandwidth
+    const effectiveBandwidth = downloadTime > 0
+      ? (entry.transferSize / downloadTime) * 1000
+      : 0;
+
+    // Extract server timing
+    const serverTiming: ServerTimingEntry[] = [];
+    if ('serverTiming' in entry && Array.isArray(entry.serverTiming)) {
+      entry.serverTiming.forEach((st: { name: string; duration: number; description: string }) => {
+        serverTiming.push({
+          name: st.name,
+          duration: st.duration,
+          description: st.description,
+        });
+      });
+    }
+
+    return {
+      name: entry.name.split('/').pop() ?? entry.name,
+      url: entry.name,
+      startTime: entry.startTime,
+      duration: entry.duration,
+      dnsLookup: Math.max(0, dnsLookup),
+      tcpConnect: Math.max(0, tcpConnect),
+      tlsNegotiation: Math.max(0, tlsNegotiation),
+      ttfb: Math.max(0, ttfb),
+      downloadTime: Math.max(0, downloadTime),
+      transferSize: entry.transferSize,
+      encodedBodySize: entry.encodedBodySize,
+      decodedBodySize: entry.decodedBodySize,
+      initiatorType: entry.initiatorType,
+      effectiveBandwidth,
+      serverTiming,
+      timestamp: Date.now(),
+    };
+  }
+
+  // ==========================================================================
+  // Reporting
+  // ==========================================================================
+
+  /**
+   * Calculate bandwidth trend
+   */
+  private calculateBandwidthTrend(): 'improving' | 'stable' | 'degrading' {
+    if (this.bandwidthHistory.length < 2) return 'stable';
+
+    const recent = this.bandwidthHistory.slice(-5);
+    const older = this.bandwidthHistory.slice(-10, -5);
+
+    if (older.length === 0) return 'stable';
+
+    const recentAvg = recent.reduce((s, m) => s + m.bandwidth, 0) / recent.length;
+    const olderAvg = older.reduce((s, m) => s + m.bandwidth, 0) / older.length;
+
+    const change = ((recentAvg - olderAvg) / olderAvg) * 100;
+
+    if (change > 10) return 'improving';
+    if (change < -10) return 'degrading';
+    return 'stable';
   }
 
   // ==========================================================================

@@ -156,7 +156,7 @@ export function canAccessRoute(
   user: { roles: Role[]; permissions: Permission[] } | null
 ): boolean {
   // Route doesn't require auth
-  if (routeConfig.requireAuth !== true) return true;
+  if (!routeConfig.requireAuth) return true;
 
   // No user, can't access protected routes
   if (user === undefined || user === null) return false;
@@ -165,26 +165,30 @@ export function canAccessRoute(
   if (routeConfig.minRole !== undefined && routeConfig.minRole !== null) {
     const roleHierarchy: Role[] = ['guest', 'user', 'manager', 'admin'];
     const minRoleIndex = roleHierarchy.indexOf(routeConfig.minRole);
-    const hasMinRole = user.roles.some(
-      (role) => roleHierarchy.indexOf(role) >= minRoleIndex
-    );
+    const hasMinRole = user.roles.some((role) => roleHierarchy.indexOf(role) >= minRoleIndex);
     if (!hasMinRole) return false;
   }
 
   // Check allowed roles
-  if (routeConfig.allowedRoles !== undefined && routeConfig.allowedRoles !== null && routeConfig.allowedRoles.length > 0) {
-    const hasAllowedRole = routeConfig.allowedRoles.some((role) =>
-      user.roles.includes(role)
-    );
-    if (hasAllowedRole !== true) return false;
+  if (
+    routeConfig.allowedRoles !== undefined &&
+    routeConfig.allowedRoles !== null &&
+    routeConfig.allowedRoles.length > 0
+  ) {
+    const hasAllowedRole = routeConfig.allowedRoles.some((role) => user.roles.includes(role));
+    if (!hasAllowedRole) return false;
   }
 
   // Check required permissions
-  if (routeConfig.requiredPermissions !== undefined && routeConfig.requiredPermissions !== null && routeConfig.requiredPermissions.length > 0) {
+  if (
+    routeConfig.requiredPermissions !== undefined &&
+    routeConfig.requiredPermissions !== null &&
+    routeConfig.requiredPermissions.length > 0
+  ) {
     const hasAllPermissions = routeConfig.requiredPermissions.every((perm) =>
       user.permissions.includes(perm)
     );
-    if (hasAllPermissions !== true) return false;
+    if (!hasAllPermissions) return false;
   }
 
   return true;

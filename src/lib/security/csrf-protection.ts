@@ -15,19 +15,8 @@
  */
 
 import type React from 'react';
-import type {
-  CSRFToken,
-  CSRFConfig,
-  CSRFValidationResult,
-  CSRFRequestInterceptor,
-  ValidatedCSRFToken,
-} from './types';
-import {
-  csrfConfig,
-  isCSRFExcludedPath,
-  requiresCSRFProtection,
-  isAllowedOrigin,
-} from '@/config/security.config';
+import type { CSRFConfig, CSRFRequestInterceptor, CSRFToken, CSRFValidationResult, ValidatedCSRFToken, } from './types';
+import { csrfConfig, isAllowedOrigin, isCSRFExcludedPath, requiresCSRFProtection, } from '@/config/security.config';
 
 // ============================================================================
 // Constants
@@ -302,66 +291,6 @@ class CSRFProtectionClass {
   }
 
   /**
-   * Check if a token is valid (not expired)
-   */
-  private isTokenValid(token: CSRFToken): boolean {
-    const age = Date.now() - token.createdAt;
-    return age < token.ttl;
-  }
-
-  /**
-   * Load token from cookie (for double-submit pattern)
-   */
-  private loadTokenFromCookie(): CSRFToken | null {
-    if (this.config.mode !== 'double-submit-cookie') {
-      return null;
-    }
-
-    const cookieValue = getCookie(this.config.cookieName);
-    if (cookieValue == null || cookieValue === '') {
-      return null;
-    }
-
-    try {
-      // Cookie contains token:timestamp format
-      const [token, timestampStr] = cookieValue.split(':');
-      const timestamp = parseInt(timestampStr ?? '0', 10);
-
-      if ((token == null || token === '') || isNaN(timestamp)) {
-        return null;
-      }
-
-      return {
-        token,
-        createdAt: timestamp,
-        ttl: this.config.tokenTtl,
-        used: false,
-      };
-    } catch {
-      return null;
-    }
-  }
-
-  /**
-   * Set token cookie for double-submit pattern
-   */
-  private setTokenCookie(token: CSRFToken): void {
-    const cookieValue = `${token.token}:${token.createdAt}`;
-    const maxAge = Math.floor(token.ttl / 1000);
-
-    setCookie(this.config.cookieName, cookieValue, {
-      maxAge,
-      secure: this.config.secureCookies,
-      sameSite: this.config.sameSite,
-      path: '/',
-    });
-  }
-
-  // ==========================================================================
-  // Token Validation
-  // ==========================================================================
-
-  /**
    * Validate a CSRF token from a request
    */
   validateToken(requestToken: string): CSRFValidationResult {
@@ -500,7 +429,7 @@ class CSRFProtectionClass {
   }
 
   // ==========================================================================
-  // Request Interception
+  // Token Validation
   // ==========================================================================
 
   /**
@@ -578,10 +507,6 @@ class CSRFProtectionClass {
     };
   }
 
-  // ==========================================================================
-  // Form Helpers
-  // ==========================================================================
-
   /**
    * Get hidden input props for forms
    */
@@ -596,6 +521,10 @@ class CSRFProtectionClass {
       value: this.getTokenSync(),
     };
   }
+
+  // ==========================================================================
+  // Request Interception
+  // ==========================================================================
 
   /**
    * Get headers object with CSRF token
@@ -617,7 +546,7 @@ class CSRFProtectionClass {
   }
 
   // ==========================================================================
-  // Configuration
+  // Form Helpers
   // ==========================================================================
 
   /**
@@ -644,6 +573,10 @@ class CSRFProtectionClass {
     return this.initialized;
   }
 
+  // ==========================================================================
+  // Configuration
+  // ==========================================================================
+
   /**
    * Get header name for CSRF token
    */
@@ -656,6 +589,62 @@ class CSRFProtectionClass {
    */
   getFieldName(): string {
     return this.config.fieldName;
+  }
+
+  /**
+   * Check if a token is valid (not expired)
+   */
+  private isTokenValid(token: CSRFToken): boolean {
+    const age = Date.now() - token.createdAt;
+    return age < token.ttl;
+  }
+
+  /**
+   * Load token from cookie (for double-submit pattern)
+   */
+  private loadTokenFromCookie(): CSRFToken | null {
+    if (this.config.mode !== 'double-submit-cookie') {
+      return null;
+    }
+
+    const cookieValue = getCookie(this.config.cookieName);
+    if (cookieValue == null || cookieValue === '') {
+      return null;
+    }
+
+    try {
+      // Cookie contains token:timestamp format
+      const [token, timestampStr] = cookieValue.split(':');
+      const timestamp = parseInt(timestampStr ?? '0', 10);
+
+      if ((token == null || token === '') || isNaN(timestamp)) {
+        return null;
+      }
+
+      return {
+        token,
+        createdAt: timestamp,
+        ttl: this.config.tokenTtl,
+        used: false,
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Set token cookie for double-submit pattern
+   */
+  private setTokenCookie(token: CSRFToken): void {
+    const cookieValue = `${token.token}:${token.createdAt}`;
+    const maxAge = Math.floor(token.ttl / 1000);
+
+    setCookie(this.config.cookieName, cookieValue, {
+      maxAge,
+      secure: this.config.secureCookies,
+      sameSite: this.config.sameSite,
+      path: '/',
+    });
   }
 }
 
@@ -699,8 +688,8 @@ export async function createSecureRequestInit(
 
   // Add CSRF token for protected methods
   if (requiresCSRFProtection(method)) {
-    const token = CSRFProtection.getToken();
-    headers[csrfConfig.headerName] = token;
+
+    headers[csrfConfig.headerName] = CSRFProtection.getToken();
   }
 
   return Promise.resolve({

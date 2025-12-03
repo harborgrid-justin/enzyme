@@ -39,19 +39,17 @@ export type ExtractOptionalParams<TPath extends string> =
  * @example
  * RouteParams<'/users/:id/posts/:postId?'> = { id: string; postId?: string }
  */
-export type RouteParams<TPath extends string> =
-  ExtractRequiredParams<TPath> & ExtractOptionalParams<TPath>;
+export type RouteParams<TPath extends string> = ExtractRequiredParams<TPath> &
+  ExtractOptionalParams<TPath>;
 
 /**
  * Check if a path has any parameters
  */
-export type HasParams<TPath extends string> =
-  keyof RouteParams<TPath> extends never ? false : true;
+export type HasParams<TPath extends string> = keyof RouteParams<TPath> extends never ? false : true;
 
 /**
  * Get the params type for a given path, with proper handling for parameterless routes
  */
-export type ParamsFor<TPath extends string> =
-  keyof RouteParams<TPath> extends never
-    ? undefined
-    : RouteParams<TPath>;
+export type ParamsFor<TPath extends string> = keyof RouteParams<TPath> extends never
+  ? undefined
+  : RouteParams<TPath>;

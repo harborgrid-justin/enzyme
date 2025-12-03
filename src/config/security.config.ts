@@ -40,7 +40,7 @@ const developmentCSPPolicy: CSPPolicy = {
   'font-src': ["'self'", 'data:'],
   'connect-src': [
     "'self'",
-    'ws://localhost:*',  // WebSocket for HMR
+    'ws://localhost:*', // WebSocket for HMR
     'wss://localhost:*',
     'http://localhost:*',
     'https://localhost:*',
@@ -147,11 +147,7 @@ export const csrfConfig: CSRFConfig = {
   fieldName: '_csrf',
   tokenTtl: 1000 * 60 * 60 * 24, // 24 hours
   rotateAfterUse: false, // Can cause issues with concurrent requests
-  excludePaths: [
-    '/api/health',
-    '/api/public/*',
-    '/api/webhooks/*',
-  ],
+  excludePaths: ['/api/health', '/api/public/*', '/api/webhooks/*'],
   protectedMethods: ['POST', 'PUT', 'PATCH', 'DELETE'],
   validateOrigin: true,
   allowedOrigins: env.isProd
@@ -359,12 +355,7 @@ export const ALLOWED_HTML_ATTRIBUTES: Record<string, readonly string[]> = {
 /**
  * Allowed URL schemes for href/src attributes
  */
-export const ALLOWED_URL_SCHEMES = [
-  'http',
-  'https',
-  'mailto',
-  'tel',
-] as const;
+export const ALLOWED_URL_SCHEMES = ['http', 'https', 'mailto', 'tel'] as const;
 
 // ============================================================================
 // Security Validation Utilities
@@ -376,9 +367,7 @@ export const ALLOWED_URL_SCHEMES = [
 export function isAllowedUrlScheme(url: string): boolean {
   try {
     const parsed = new URL(url, window.location.origin);
-    return ALLOWED_URL_SCHEMES.some((scheme) =>
-      parsed.protocol === `${scheme}:`
-    );
+    return ALLOWED_URL_SCHEMES.some((scheme) => parsed.protocol === `${scheme}:`);
   } catch {
     // Relative URLs are allowed
     return !url.includes(':') || url.startsWith('/');
@@ -391,9 +380,7 @@ export function isAllowedUrlScheme(url: string): boolean {
 export function isAllowedOrigin(origin: string): boolean {
   return csrfConfig.allowedOrigins.some((allowed) => {
     if (allowed.includes('*')) {
-      const pattern = new RegExp(
-        `^${  allowed.replace(/\*/g, '.*')  }$`
-      );
+      const pattern = new RegExp(`^${allowed.replace(/\*/g, '.*')}$`);
       return pattern.test(origin);
     }
     return allowed === origin;
@@ -423,13 +410,7 @@ export function requiresCSRFProtection(method: string): boolean {
 // Exports
 // ============================================================================
 
-export type {
-  CSPPolicy,
-  CSPManagerConfig,
-  CSRFConfig,
-  SecureStorageConfig,
-  SecurityConfiguration,
-};
+export type { CSPPolicy, CSPManagerConfig, CSRFConfig, SecureStorageConfig, SecurityConfiguration };
 
 /**
  * Get security configuration summary for diagnostics

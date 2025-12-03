@@ -28,15 +28,15 @@
  * ```
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  type ConnectionType,
+  type EffectiveConnectionType,
   getNetworkAnalyzer,
   type NetworkPerformanceAnalyzer,
   type NetworkQuality,
-  type RequestTiming,
   type NetworkStats,
-  type EffectiveConnectionType,
-  type ConnectionType,
+  type RequestTiming,
 } from '../network-performance';
 import { type NetworkTierConfig } from '../../../config/performance.config';
 
@@ -366,8 +366,8 @@ export function useRequestPerformance(url: string): {
     const timeoutId = setTimeout(() => {
       clearInterval(intervalId);
       setIsLoading(false);
-      const currentTiming = timing;
-      if (currentTiming === null) {
+
+      if (timing === null) {
         setError(new Error('Request timing not found'));
       }
     }, 10000);

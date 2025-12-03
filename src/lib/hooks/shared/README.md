@@ -1,6 +1,7 @@
 # Shared Hook Utilities
 
-This directory contains reusable utility hooks and functions that are used across multiple custom hooks in the application. These utilities provide foundational patterns for common React development needs.
+This directory contains reusable utility hooks and functions that are used across multiple custom hooks in the
+application. These utilities provide foundational patterns for common React development needs.
 
 ## Table of Contents
 
@@ -16,11 +17,13 @@ This directory contains reusable utility hooks and functions that are used acros
 
 ### `useIsMounted()`
 
-Tracks whether a component is currently mounted. Essential for preventing memory leaks and "Can't perform a React state update on an unmounted component" warnings.
+Tracks whether a component is currently mounted. Essential for preventing memory leaks and "Can't perform a React state
+update on an unmounted component" warnings.
 
 **Returns:** `() => boolean` - Function that returns true if component is mounted
 
 **Example:**
+
 ```tsx
 import { useIsMounted } from '@/lib/hooks/shared';
 
@@ -47,6 +50,7 @@ Provides both a check function and a guard wrapper for mounted state.
 **Returns:** `{ isMounted: () => boolean, ifMounted: <T>(fn: () => T) => T | undefined }`
 
 **Example:**
+
 ```tsx
 import { useMountedState } from '@/lib/hooks/shared';
 
@@ -71,6 +75,7 @@ function AsyncComponent() {
 ```
 
 **Use Cases:**
+
 - Async operations (data fetching, timers)
 - Event handlers with delayed callbacks
 - WebSocket/SSE message handlers
@@ -82,14 +87,17 @@ function AsyncComponent() {
 
 ### `useLatestRef<T>(value: T)`
 
-Maintains a ref that always points to the latest value. Useful for accessing latest props/state in callbacks without recreating the callback.
+Maintains a ref that always points to the latest value. Useful for accessing latest props/state in callbacks without
+recreating the callback.
 
 **Parameters:**
+
 - `value: T` - The value to keep updated in the ref
 
 **Returns:** `MutableRefObject<T>` - Ref object containing the latest value
 
 **Example:**
+
 ```tsx
 import { useLatestRef } from '@/lib/hooks/shared';
 
@@ -114,6 +122,7 @@ function SearchInput({ onSearch }: { onSearch: (query: string) => void }) {
 Creates a stable callback reference that always uses latest values without recreating.
 
 **Example:**
+
 ```tsx
 import { useLatestCallback } from '@/lib/hooks/shared';
 
@@ -136,6 +145,7 @@ function Counter({ onIncrement }: { onIncrement: (n: number) => void }) {
 Provides refs for multiple values at once.
 
 **Example:**
+
 ```tsx
 import { useLatestRefs } from '@/lib/hooks/shared';
 
@@ -158,6 +168,7 @@ function Component({ userId, onSave }) {
 ```
 
 **Use Cases:**
+
 - Debounced/throttled callbacks
 - Event handlers in loops
 - Effect cleanup functions
@@ -168,13 +179,15 @@ function Component({ userId, onSave }) {
 
 ## Network Utilities
 
-Shared utilities for network information and quality detection. These functions work in both browser and SSR environments.
+Shared utilities for network information and quality detection. These functions work in both browser and SSR
+environments.
 
 ### `getNetworkInfo()`
 
 Gets current network information from the browser's Network Information API.
 
 **Returns:** `NetworkInformation`
+
 ```typescript
 interface NetworkInformation {
   effectiveType?: '4g' | '3g' | '2g' | 'slow-2g' | 'unknown';
@@ -185,6 +198,7 @@ interface NetworkInformation {
 ```
 
 **Example:**
+
 ```tsx
 import { getNetworkInfo } from '@/lib/hooks/shared';
 
@@ -213,12 +227,14 @@ function NetworkIndicator() {
 Checks if current connection meets minimum quality requirement.
 
 **Parameters:**
+
 - `current: ConnectionType` - Current connection type
 - `minimum: ConnectionType` - Minimum required connection type
 
 **Returns:** `boolean`
 
 **Example:**
+
 ```tsx
 import { getNetworkInfo, meetsMinimumQuality } from '@/lib/hooks/shared';
 
@@ -237,6 +253,7 @@ function VideoPlayer() {
 Determines if prefetching should proceed based on network conditions.
 
 **Parameters:**
+
 ```typescript
 {
   respectDataSaver?: boolean;      // Default: true
@@ -247,6 +264,7 @@ Determines if prefetching should proceed based on network conditions.
 **Returns:** `boolean`
 
 **Example:**
+
 ```tsx
 import { shouldAllowPrefetch } from '@/lib/hooks/shared';
 
@@ -270,11 +288,13 @@ function RouteLink({ to, children }) {
 Sets up an event listener for network quality changes.
 
 **Parameters:**
+
 - `callback: (info: NetworkInformation) => void` - Called when network changes
 
 **Returns:** `() => void` - Cleanup function
 
 **Example:**
+
 ```tsx
 import { monitorNetworkQuality } from '@/lib/hooks/shared';
 
@@ -300,6 +320,7 @@ function NetworkMonitor() {
 Checks if the connection is considered slow.
 
 **Parameters:**
+
 ```typescript
 {
   maxDownlink?: number;  // Default: 1.5 Mbps
@@ -310,6 +331,7 @@ Checks if the connection is considered slow.
 **Returns:** `boolean`
 
 **Example:**
+
 ```tsx
 import { isSlowConnection } from '@/lib/hooks/shared';
 
@@ -337,6 +359,7 @@ Gets a human-readable label for connection quality.
 **Returns:** `'Excellent' | 'Good' | 'Fair' | 'Poor' | 'Unknown'`
 
 **Example:**
+
 ```tsx
 import { getNetworkInfo, getConnectionQualityLabel } from '@/lib/hooks/shared';
 
@@ -359,6 +382,7 @@ Hooks for accumulating items and flushing based on size or time constraints.
 Generic buffering hook for accumulating items and flushing based on size or time.
 
 **Parameters:**
+
 ```typescript
 {
   maxSize?: number;          // Default: 10
@@ -370,6 +394,7 @@ Generic buffering hook for accumulating items and flushing based on size or time
 ```
 
 **Returns:**
+
 ```typescript
 {
   add: (item: T) => void;
@@ -382,6 +407,7 @@ Generic buffering hook for accumulating items and flushing based on size or time
 ```
 
 **Example:**
+
 ```tsx
 import { useBuffer } from '@/lib/hooks/shared';
 
@@ -419,6 +445,7 @@ function AnalyticsTracker() {
 Flushes buffer at regular intervals regardless of size. Useful for time-series data.
 
 **Example:**
+
 ```tsx
 import { useTimeWindowBuffer } from '@/lib/hooks/shared';
 
@@ -452,6 +479,7 @@ function MetricsCollector() {
 Flushes only when buffer reaches max size (no time-based flushing).
 
 **Example:**
+
 ```tsx
 import { useBatchBuffer } from '@/lib/hooks/shared';
 
@@ -481,6 +509,7 @@ function BulkUploader() {
 ```
 
 **Use Cases:**
+
 - Analytics event batching
 - Performance metrics collection
 - Log aggregation
@@ -494,6 +523,7 @@ function BulkUploader() {
 ### When to Use Each Utility
 
 **useIsMounted / useMountedState:**
+
 - ✅ Async operations (fetch, timers, animations)
 - ✅ Event handlers with async callbacks
 - ✅ WebSocket/SSE message handlers
@@ -501,6 +531,7 @@ function BulkUploader() {
 - ❌ Already using React Query/SWR (handles this internally)
 
 **useLatestRef / useLatestCallback:**
+
 - ✅ Debounced/throttled callbacks
 - ✅ Event handlers in loops
 - ✅ Effect cleanup functions
@@ -509,6 +540,7 @@ function BulkUploader() {
 - ❌ Values needed in JSX (use state instead)
 
 **Network Utilities:**
+
 - ✅ Adaptive loading (images, videos, data)
 - ✅ Prefetch logic
 - ✅ Progressive enhancement
@@ -516,6 +548,7 @@ function BulkUploader() {
 - ❌ SSR (check for browser environment first)
 
 **Buffer Hooks:**
+
 - ✅ Analytics/telemetry
 - ✅ Batch API calls
 - ✅ Debouncing multiple rapid updates
@@ -526,25 +559,25 @@ function BulkUploader() {
 ### Performance Considerations
 
 1. **Mounted State Tracking:**
-   - Minimal overhead (single ref + effect)
-   - Safe to use in most components
-   - Consider cleanup order in complex components
+    - Minimal overhead (single ref + effect)
+    - Safe to use in most components
+    - Consider cleanup order in complex components
 
 2. **Latest Refs:**
-   - Very lightweight (ref updates don't trigger renders)
-   - Prefer over recreating callbacks in deps
-   - Don't overuse - sometimes recreating is clearer
+    - Very lightweight (ref updates don't trigger renders)
+    - Prefer over recreating callbacks in deps
+    - Don't overuse - sometimes recreating is clearer
 
 3. **Network Utilities:**
-   - API check is fast but not free
-   - Cache results when possible
-   - Provide fallbacks for unsupported browsers
+    - API check is fast but not free
+    - Cache results when possible
+    - Provide fallbacks for unsupported browsers
 
 4. **Buffers:**
-   - Memory grows with buffer size
-   - Choose appropriate flush intervals
-   - Consider max buffer size limits
-   - Clean up on unmount (automatic)
+    - Memory grows with buffer size
+    - Choose appropriate flush intervals
+    - Consider max buffer size limits
+    - Clean up on unmount (automatic)
 
 ### Testing
 
@@ -592,6 +625,7 @@ describe('useBuffer', () => {
 If you have existing code using manual implementations, here's how to migrate:
 
 ### Before:
+
 ```tsx
 function Component() {
   const isMountedRef = useRef(false);
@@ -611,6 +645,7 @@ function Component() {
 ```
 
 ### After:
+
 ```tsx
 import { useIsMounted } from '@/lib/hooks/shared';
 
@@ -643,17 +678,20 @@ When adding new shared utilities:
 ## Related Documentation
 
 ### Main Documentation
+
 - [Documentation Index](../../docs/INDEX.md) - All documentation resources
 - [README](../../README.md) - Library overview and getting started
 - [Architecture Guide](../../docs/ARCHITECTURE.md) - System architecture
 - [Performance Guide](../../docs/PERFORMANCE.md) - Performance monitoring
 
 ### Hook References
+
 - [Custom Hooks Documentation](../README.md)
 - [Error Recovery Patterns](../useErrorRecovery.ts)
 - [Resource Cleanup Patterns](../useResourceCleanup.ts)
 - [Network-Aware Features](../useNetworkStatus.ts)
 
 ### Related Utilities
+
 - [Quick Reference](./QUICK_REFERENCE.md) - API quick lookup
 - [Migration Checklist](./MIGRATION_CHECKLIST.md) - Migration guide

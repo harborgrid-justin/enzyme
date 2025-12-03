@@ -102,7 +102,9 @@ export interface UseApiHealthResult {
 // CONSTANTS
 // =============================================================================
 
-const DEFAULT_CONFIG: Required<Omit<UseApiHealthConfig, 'onStatusChange' | 'onCheck' | 'healthCheckFn'>> = {
+const DEFAULT_CONFIG: Required<
+  Omit<UseApiHealthConfig, 'onStatusChange' | 'onCheck' | 'healthCheckFn'>
+> = {
   endpoint: API_CONFIG.ENDPOINTS.HEALTH.CHECK,
   interval: TIMING.BACKGROUND.POLL.STANDARD,
   timeout: API_CONFIG.TIMEOUT.HEALTH,
@@ -227,7 +229,10 @@ export function useApiHealth(config?: UseApiHealthConfig): UseApiHealthResult {
         status: 'healthy',
         timestamp: endTime,
         latency: checkLatency,
-        checks: response.data.checks as Record<string, { status: HealthStatus; message?: string; latency?: number }>,
+        checks: response.data.checks as Record<
+          string,
+          { status: HealthStatus; message?: string; latency?: number }
+        >,
       };
 
       // Check for degraded status based on latency threshold
@@ -309,8 +314,8 @@ export function useApiHealth(config?: UseApiHealthConfig): UseApiHealthResult {
 
       return result;
     }
-  // Dependencies reduced: consecutiveSuccesses/Failures now use refs for immediate reads
-  // status is still needed for degraded fallback logic
+    // Dependencies reduced: consecutiveSuccesses/Failures now use refs for immediate reads
+    // status is still needed for degraded fallback logic
   }, [client, mergedConfig, config, status, calculateAverageLatency]);
 
   // Use useLatestRef to avoid interval thrashing when performHealthCheck changes
@@ -594,7 +599,11 @@ export function useMultiApiHealth(
       void check();
 
       // Set up interval - wrap to avoid no-misused-promises
-      intervals.push(setInterval(() => { void check(); }, interval));
+      intervals.push(
+        setInterval(() => {
+          void check();
+        }, interval)
+      );
     }
 
     return () => {

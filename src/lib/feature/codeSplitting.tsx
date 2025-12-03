@@ -116,9 +116,7 @@ export function createResilientLazyComponent<T extends ComponentType<unknown>>(
         onError?.(lastError, attempt);
 
         if (attempt < maxRetries) {
-          await new Promise((resolve) =>
-            setTimeout(resolve, retryDelay * Math.pow(2, attempt))
-          );
+          await new Promise((resolve) => setTimeout(resolve, retryDelay * Math.pow(2, attempt)));
         }
       }
     }
@@ -186,10 +184,7 @@ export class FeatureChunkManager {
         this.errors.delete(featureId);
       })
       .catch((error) => {
-        this.errors.set(
-          featureId,
-          error instanceof Error ? error : new Error(String(error))
-        );
+        this.errors.set(featureId, error instanceof Error ? error : new Error(String(error)));
         this.loadingFeatures.delete(featureId);
         throw error;
       });
@@ -260,7 +255,9 @@ export class FeatureChunkManager {
    */
   preloadOnIdle(featureIds: string[]): void {
     if ('requestIdleCallback' in window) {
-      (window as Window & { requestIdleCallback: (cb: IdleRequestCallback) => number }).requestIdleCallback(
+      (
+        window as Window & { requestIdleCallback: (cb: IdleRequestCallback) => number }
+      ).requestIdleCallback(
         () => {
           void this.preloadAll(featureIds);
         },
@@ -336,10 +333,7 @@ export function useFeatureChunkStatus(featureId: string): FeatureChunkInfo {
     // Update status when chunk manager changes
     const interval = setInterval(() => {
       const newInfo = featureChunkManager.getChunkInfo(featureId);
-      if (
-        newInfo.isLoaded !== info.isLoaded ||
-        newInfo.isLoading !== info.isLoading
-      ) {
+      if (newInfo.isLoaded !== info.isLoaded || newInfo.isLoading !== info.isLoading) {
         setInfo(newInfo);
       }
     }, 100);
@@ -401,10 +395,7 @@ export function withFeatureSuspense<P extends object>(
   WrappedComponent: ComponentType<P>,
   options: FeatureSuspenseProps & { featureId: string }
 ): ComponentType<P> {
-  const {
-    fallback = <div>Loading...</div>,
-    featureId,
-  } = options;
+  const { fallback = <div>Loading...</div>, featureId } = options;
 
   function FeatureWithSuspense(props: P): React.JSX.Element {
     return (
@@ -451,7 +442,7 @@ export function generateSplitRoutes(
 
   return features.map((feature) => {
     const { config, component: Component } = feature;
-    const {preload} = (Component as unknown as { preload?: () => Promise<void> });
+    const { preload } = Component as unknown as { preload?: () => Promise<void> };
 
     // Register loader with chunk manager
     if (preload) {

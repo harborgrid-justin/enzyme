@@ -28,6 +28,7 @@
 ### Keep Components Small and Focused
 
 ✅ **DO**: Single Responsibility Principle
+
 ```typescript
 // Good: Focused component with single responsibility
 interface UserAvatarProps {
@@ -40,15 +41,22 @@ export function UserAvatar({ userId, size = 'md', showStatus }: UserAvatarProps)
   const user = useUser(userId);
 
   return (
-    <div className={`avatar avatar-${size}`}>
-      <img src={user.avatarUrl} alt={user.name} />
-      {showStatus && <StatusIndicator status={user.status} />}
-    </div>
-  );
-}
+    <div className = {`avatar avatar-${size}`
+}>
+  <img src = { user.avatarUrl }
+  alt = { user.name }
+  />
+  {
+    showStatus && <StatusIndicator status = { user.status }
+    />}
+    < /div>
+  )
+    ;
+  }
 ```
 
 ❌ **DON'T**: God components with multiple responsibilities
+
 ```typescript
 // Bad: Too many responsibilities
 function UserProfile() {
@@ -66,6 +74,7 @@ function UserProfile() {
 ### Use Composition Over Prop Drilling
 
 ✅ **DO**: Component composition
+
 ```typescript
 // Good: Composition pattern
 export function Card({ children }: { children: React.ReactNode }) {
@@ -92,6 +101,7 @@ export function CardBody({ children }: { children: React.ReactNode }) {
 ```
 
 ❌ **DON'T**: Deep prop drilling
+
 ```typescript
 // Bad: Props passed through many levels
 <Layout headerTitle={title} headerSubtitle={subtitle} headerActions={actions}>
@@ -106,6 +116,7 @@ export function CardBody({ children }: { children: React.ReactNode }) {
 ### Prefer Named Exports
 
 ✅ **DO**: Named exports for discoverability
+
 ```typescript
 // components/Button.tsx
 export function Button({ children, ...props }: ButtonProps) {
@@ -122,6 +133,7 @@ export function SecondaryButton(props: ButtonProps) {
 ```
 
 ❌ **DON'T**: Default exports (harder to refactor)
+
 ```typescript
 // Bad: Default export
 export default function Button() {
@@ -134,6 +146,7 @@ export default function Button() {
 ### Extract Complex Logic to Hooks
 
 ✅ **DO**: Custom hooks for business logic
+
 ```typescript
 // Good: Extract complex logic
 function useUserProfile(userId: string) {
@@ -163,6 +176,7 @@ function UserProfileCard({ userId }: { userId: string }) {
 ```
 
 ❌ **DON'T**: Complex logic in components
+
 ```typescript
 // Bad: Too much logic in component
 function UserProfileCard({ userId }: { userId: string }) {
@@ -185,6 +199,7 @@ function UserProfileCard({ userId }: { userId: string }) {
 ### Use Memo for Expensive Computations
 
 ✅ **DO**: Memoize expensive calculations
+
 ```typescript
 function DataTable({ data }: { data: DataItem[] }) {
   // Good: Memoize expensive computation
@@ -201,6 +216,7 @@ function DataTable({ data }: { data: DataItem[] }) {
 ```
 
 ❌ **DON'T**: Recalculate on every render
+
 ```typescript
 function DataTable({ data }: { data: DataItem[] }) {
   // Bad: Recalculates on every render
@@ -214,6 +230,7 @@ function DataTable({ data }: { data: DataItem[] }) {
 ### Use Callback for Event Handlers
 
 ✅ **DO**: Memoize callbacks
+
 ```typescript
 function Form({ onSubmit }: { onSubmit: (data: FormData) => void }) {
   const [value, setValue] = useState('');
@@ -239,6 +256,7 @@ function Form({ onSubmit }: { onSubmit: (data: FormData) => void }) {
 ### Avoid Inline Object/Array Props
 
 ✅ **DO**: Stable references
+
 ```typescript
 // Good: Stable reference
 const styles = { padding: 16, margin: 8 };
@@ -249,6 +267,7 @@ function Component() {
 ```
 
 ❌ **DON'T**: New objects on every render
+
 ```typescript
 // Bad: New object every render
 function Component() {
@@ -263,6 +282,7 @@ function Component() {
 ### Follow Rules of Hooks
 
 ✅ **DO**: Call hooks at top level
+
 ```typescript
 function useData(id: string) {
   // Good: All hooks at top level
@@ -279,6 +299,7 @@ function useData(id: string) {
 ```
 
 ❌ **DON'T**: Conditional hooks
+
 ```typescript
 function useData(id: string, shouldFetch: boolean) {
   // Bad: Conditional hook
@@ -293,6 +314,7 @@ function useData(id: string, shouldFetch: boolean) {
 ### Create Custom Hooks for Reusable Logic
 
 ✅ **DO**: Extract reusable logic
+
 ```typescript
 // Good: Reusable hook
 function useLocalStorage<T>(key: string, initialValue: T) {
@@ -322,6 +344,7 @@ function useLocalStorage<T>(key: string, initialValue: T) {
 ### Use useCallback for Function Dependencies
 
 ✅ **DO**: Stable function references
+
 ```typescript
 function SearchComponent() {
   const [query, setQuery] = useState('');
@@ -346,6 +369,7 @@ function SearchComponent() {
 ### Use useRef for Values That Don't Trigger Renders
 
 ✅ **DO**: useRef for non-render values
+
 ```typescript
 function Timer() {
   const [count, setCount] = useState(0);
@@ -371,6 +395,7 @@ function Timer() {
 ### Use Latest Ref Pattern
 
 ✅ **DO**: Use useLatestRef for callbacks
+
 ```typescript
 import { useLatestRef } from '@/lib/hooks/shared';
 
@@ -394,6 +419,7 @@ function Component({ onEvent }: { onEvent: () => void }) {
 ### Use Mounted State for Async Operations
 
 ✅ **DO**: Check if mounted before setting state
+
 ```typescript
 import { useIsMounted } from '@/lib/hooks/shared';
 
@@ -421,6 +447,7 @@ function Component() {
 ### Use Functional Updates with Immer
 
 ✅ **DO**: Functional setState for Immer compatibility
+
 ```typescript
 // Good: Functional update
 useStore.setState((state) => {
@@ -430,6 +457,7 @@ useStore.setState((state) => {
 ```
 
 ❌ **DON'T**: Direct object updates
+
 ```typescript
 // Bad: Breaks Immer middleware
 useStore.setState({
@@ -441,6 +469,7 @@ useStore.setState({
 ### Use Selectors for Performance
 
 ✅ **DO**: Granular selectors
+
 ```typescript
 // Good: Component only re-renders when user changes
 function UserDisplay({ userId }: { userId: string }) {
@@ -450,6 +479,7 @@ function UserDisplay({ userId }: { userId: string }) {
 ```
 
 ❌ **DON'T**: Select entire store
+
 ```typescript
 // Bad: Re-renders on any store change
 function UserDisplay({ userId }: { userId: string }) {
@@ -462,6 +492,7 @@ function UserDisplay({ userId }: { userId: string }) {
 ### Use Shallow Comparison for Objects
 
 ✅ **DO**: Shallow equality for object selectors
+
 ```typescript
 import { shallow } from 'zustand/shallow';
 
@@ -479,6 +510,7 @@ function Component() {
 ### Don't Store Derived State
 
 ✅ **DO**: Compute derived values
+
 ```typescript
 // Good: Derive values in selectors
 const useFilteredItems = () => {
@@ -491,6 +523,7 @@ const useFilteredItems = () => {
 ```
 
 ❌ **DON'T**: Store derived state
+
 ```typescript
 // Bad: Redundant state that can be derived
 interface State {
@@ -503,6 +536,7 @@ interface State {
 ### Use Slices for Large Stores
 
 ✅ **DO**: Organize store into slices
+
 ```typescript
 // slices/userSlice.ts
 export interface UserSlice {
@@ -530,6 +564,7 @@ export const createUserSlice: StateCreator<UserSlice> = (set) => ({
 ### Use Feature Stores for Large Features
 
 ✅ **DO**: Separate stores for large features
+
 ```typescript
 // features/reports/store.ts
 interface ReportsState {
@@ -570,6 +605,7 @@ registerFeatureStore('reports', useReportsStore);
 ### Use React.memo for Pure Components
 
 ✅ **DO**: Memoize pure components
+
 ```typescript
 // Good: Prevents re-renders when props haven't changed
 export const ExpensiveComponent = React.memo(function ExpensiveComponent({
@@ -584,6 +620,7 @@ export const ExpensiveComponent = React.memo(function ExpensiveComponent({
 ### Code Split Large Features
 
 ✅ **DO**: Lazy load routes and features
+
 ```typescript
 // Good: Code splitting
 const ReportsPage = lazy(() => import('./pages/ReportsPage'));
@@ -604,6 +641,7 @@ function App() {
 ### Virtualize Long Lists
 
 ✅ **DO**: Use virtualization for long lists
+
 ```typescript
 import { useVirtualizer } from '@tanstack/react-virtual';
 
@@ -617,32 +655,61 @@ function LongList({ items }: { items: Item[] }) {
   });
 
   return (
-    <div ref={parentRef} style={{ height: 400, overflow: 'auto' }}>
-      <div style={{ height: virtualizer.getTotalSize() }}>
-        {virtualizer.getVirtualItems().map((virtualItem) => (
-          <div
-            key={virtualItem.key}
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: virtualItem.size,
-              transform: `translateY(${virtualItem.start}px)`,
-            }}
-          >
-            {items[virtualItem.index].name}
-          </div>
-        ))}
-      </div>
+    <div ref = { parentRef }
+  style = {
+  {
+    height: 400, overflow
+  :
+    'auto'
+  }
+}>
+  <div style = {
+  {
+    height: virtualizer.getTotalSize()
+  }
+}>
+  {
+    virtualizer.getVirtualItems().map((virtualItem) => (
+      <div
+        key = { virtualItem.key }
+    style = {
+    {
+      position: 'absolute',
+        top
+    :
+      0,
+        left
+    :
+      0,
+        width
+    :
+      '100%',
+        height
+    :
+      virtualItem.size,
+        transform
+    :
+      `translateY(${virtualItem.start}px)`,
+    }
+  }
+  >
+    {
+      items[virtualItem.index].name
+    }
     </div>
-  );
+  ))
+  }
+  </div>
+  < /div>
+)
+  ;
 }
 ```
 
 ### Debounce Expensive Operations
 
 ✅ **DO**: Debounce search and filters
+
 ```typescript
 import { useDeferredValue, useMemo } from 'react';
 
@@ -661,6 +728,7 @@ function SearchResults({ query }: { query: string }) {
 ### Optimize Images
 
 ✅ **DO**: Use next-gen formats and lazy loading
+
 ```typescript
 function OptimizedImage({ src, alt }: ImageProps) {
   return (
@@ -681,6 +749,7 @@ function OptimizedImage({ src, alt }: ImageProps) {
 ### Use Web Workers for Heavy Computation
 
 ✅ **DO**: Offload heavy work to workers
+
 ```typescript
 // worker.ts
 self.onmessage = (e: MessageEvent) => {
@@ -715,6 +784,7 @@ function DataProcessor() {
 ### Always Use Environment Helpers
 
 ✅ **DO**: Use centralized environment helpers
+
 ```typescript
 import { isDev, isProd, getEnvVar } from '@/lib/core/config/env-helper';
 
@@ -727,6 +797,7 @@ const apiUrl = getEnvVar('API_URL');
 ```
 
 ❌ **DON'T**: Direct environment access
+
 ```typescript
 // Bad: Direct access
 if (process.env.NODE_ENV === 'development') {
@@ -737,6 +808,7 @@ if (process.env.NODE_ENV === 'development') {
 ### Never Store Sensitive Data in State
 
 ✅ **DO**: Exclude sensitive data from persistence
+
 ```typescript
 // store.ts
 const persistedState = (state: StoreState): Partial<StoreState> => ({
@@ -755,6 +827,7 @@ const persistedState = (state: StoreState): Partial<StoreState> => ({
 ### Use CSRF Protection for Mutations
 
 ✅ **DO**: CSRF tokens on all mutations
+
 ```typescript
 import { apiClient } from '@/lib/api';
 
@@ -767,6 +840,7 @@ async function updateUser(userId: string, data: UserUpdate) {
 ### Sanitize User Input
 
 ✅ **DO**: Sanitize and validate input
+
 ```typescript
 import DOMPurify from 'dompurify';
 
@@ -784,6 +858,7 @@ function UserContent({ html }: { html: string }) {
 ```
 
 ❌ **DON'T**: Render unsanitized content
+
 ```typescript
 // Bad: XSS vulnerability
 function UserContent({ html }: { html: string }) {
@@ -794,6 +869,7 @@ function UserContent({ html }: { html: string }) {
 ### Use Content Security Policy
 
 ✅ **DO**: Configure CSP headers
+
 ```typescript
 // security.config.ts
 export const cspConfig = {
@@ -814,6 +890,7 @@ export const cspConfig = {
 ### Implement Rate Limiting
 
 ✅ **DO**: Rate limit API calls
+
 ```typescript
 import { RateLimiter } from '@/lib/api/advanced/rate-limiter';
 
@@ -835,6 +912,7 @@ export async function apiCall(endpoint: string) {
 ### Write Tests First (TDD)
 
 ✅ **DO**: Test-driven development
+
 ```typescript
 // Good: Write test first
 describe('useCounter', () => {
@@ -860,6 +938,7 @@ function useCounter() {
 ### Test Behavior, Not Implementation
 
 ✅ **DO**: Test user-facing behavior
+
 ```typescript
 // Good: Test what the user sees
 test('submits form with valid data', async () => {
@@ -874,6 +953,7 @@ test('submits form with valid data', async () => {
 ```
 
 ❌ **DON'T**: Test implementation details
+
 ```typescript
 // Bad: Testing internal state
 test('sets isSubmitting to true', () => {
@@ -890,6 +970,7 @@ test('sets isSubmitting to true', () => {
 ### Mock External Dependencies
 
 ✅ **DO**: Mock API calls and external services
+
 ```typescript
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
@@ -918,6 +999,7 @@ test('displays users', async () => {
 ### Test Error States
 
 ✅ **DO**: Test error handling
+
 ```typescript
 test('displays error message on failure', async () => {
   server.use(
@@ -938,6 +1020,7 @@ test('displays error message on failure', async () => {
 ### Use Testing Library Queries Correctly
 
 ✅ **DO**: Follow query priority
+
 ```typescript
 // Priority order:
 // 1. getByRole (most accessible)
@@ -963,6 +1046,7 @@ const custom = screen.getByTestId('custom-element');
 ### Use Strict Mode
 
 ✅ **DO**: Enable strict TypeScript
+
 ```json
 // tsconfig.json
 {
@@ -978,6 +1062,7 @@ const custom = screen.getByTestId('custom-element');
 ### Define Precise Types
 
 ✅ **DO**: Specific types over any
+
 ```typescript
 // Good: Precise types
 interface User {
@@ -994,6 +1079,7 @@ function getUser(id: string): Promise<User> {
 ```
 
 ❌ **DON'T**: Use any
+
 ```typescript
 // Bad: Loses type safety
 function getUser(id: string): Promise<any> {
@@ -1004,6 +1090,7 @@ function getUser(id: string): Promise<any> {
 ### Use Type Guards
 
 ✅ **DO**: Type guards for runtime checks
+
 ```typescript
 // Good: Type guard
 function isUser(value: unknown): value is User {
@@ -1028,6 +1115,7 @@ function processData(data: unknown) {
 ### Use Discriminated Unions
 
 ✅ **DO**: Discriminated unions for state
+
 ```typescript
 // Good: Type-safe state machine
 type RequestState<T> =
@@ -1053,12 +1141,14 @@ function DataDisplay({ state }: { state: RequestState<User> }) {
 ### Avoid Type Assertions
 
 ✅ **DO**: Proper typing
+
 ```typescript
 // Good: Let TypeScript infer
 const users = data.filter((item): item is User => isUser(item));
 ```
 
 ❌ **DON'T**: Force types with assertions
+
 ```typescript
 // Bad: Bypasses type checking
 const users = data as User[];
@@ -1067,6 +1157,7 @@ const users = data as User[];
 ### Use Utility Types
 
 ✅ **DO**: Leverage built-in utilities
+
 ```typescript
 // Good: Utility types
 interface User {
@@ -1096,6 +1187,7 @@ type ImmutableUser = Readonly<User>;
 ### Use Error Boundaries
 
 ✅ **DO**: Catch rendering errors
+
 ```typescript
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
@@ -1125,6 +1217,7 @@ class ErrorBoundary extends React.Component<
 ### Handle Async Errors
 
 ✅ **DO**: Try-catch for async operations
+
 ```typescript
 async function loadUserData(userId: string) {
   try {
@@ -1140,6 +1233,7 @@ async function loadUserData(userId: string) {
 ### Provide User-Friendly Errors
 
 ✅ **DO**: Translate errors for users
+
 ```typescript
 function getErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
@@ -1162,6 +1256,7 @@ function getErrorMessage(error: unknown): string {
 ### Use Result Types
 
 ✅ **DO**: Result type pattern
+
 ```typescript
 type Result<T, E = Error> =
   | { success: true; value: T }
@@ -1192,6 +1287,7 @@ if (result.success) {
 ### Use Semantic HTML
 
 ✅ **DO**: Semantic elements
+
 ```typescript
 // Good: Semantic HTML
 function Article({ title, content }: ArticleProps) {
@@ -1212,6 +1308,7 @@ function Article({ title, content }: ArticleProps) {
 ```
 
 ❌ **DON'T**: Generic divs for everything
+
 ```typescript
 // Bad: Div soup
 function Article({ title, content }: ArticleProps) {
@@ -1231,6 +1328,7 @@ function Article({ title, content }: ArticleProps) {
 ### Provide ARIA Labels
 
 ✅ **DO**: Descriptive labels
+
 ```typescript
 function SearchBar() {
   return (
@@ -1253,6 +1351,7 @@ function SearchBar() {
 ### Manage Focus
 
 ✅ **DO**: Focus management
+
 ```typescript
 function Modal({ isOpen, onClose, children }: ModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
@@ -1290,6 +1389,7 @@ function Modal({ isOpen, onClose, children }: ModalProps) {
 ### Support Keyboard Navigation
 
 ✅ **DO**: Keyboard accessible
+
 ```typescript
 function Dropdown({ items, onSelect }: DropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -1328,6 +1428,7 @@ function Dropdown({ items, onSelect }: DropdownProps) {
 ### Provide Text Alternatives
 
 ✅ **DO**: Alt text for images
+
 ```typescript
 function Avatar({ user }: { user: User }) {
   return (
@@ -1347,6 +1448,7 @@ function Avatar({ user }: { user: User }) {
 ### Use Consistent Naming
 
 ✅ **DO**: Consistent conventions
+
 ```typescript
 // Good: Consistent naming
 export interface ApiClient {
@@ -1361,6 +1463,7 @@ export interface ApiClient {
 ### Return Consistent Response Types
 
 ✅ **DO**: Consistent response format
+
 ```typescript
 interface ApiResponse<T> {
   data: T;
@@ -1386,6 +1489,7 @@ interface ApiError {
 ### Use Proper HTTP Methods
 
 ✅ **DO**: RESTful conventions
+
 ```typescript
 // Good: Proper HTTP methods
 const api = {
@@ -1409,6 +1513,7 @@ const api = {
 ### Version Your APIs
 
 ✅ **DO**: API versioning
+
 ```typescript
 // Good: Versioned API
 const API_V1 = '/api/v1';
@@ -1434,6 +1539,7 @@ export const apiClient = {
 ### Follow Feature-Based Structure
 
 ✅ **DO**: Organize by feature
+
 ```
 src/
 ├── features/
@@ -1458,6 +1564,7 @@ src/
 ### Use Barrel Exports
 
 ✅ **DO**: Index files for clean imports
+
 ```typescript
 // components/index.ts
 export { Button } from './Button';
@@ -1472,6 +1579,7 @@ import { Button, Input, Modal } from '@/components';
 ### Separate Business Logic from UI
 
 ✅ **DO**: Decouple logic
+
 ```typescript
 // Good: Separated concerns
 
@@ -1508,6 +1616,7 @@ export function UserProfile({ userId }: { userId: string }) {
 ### Use Absolute Imports
 
 ✅ **DO**: Path aliases
+
 ```typescript
 // tsconfig.json
 {
@@ -1528,6 +1637,7 @@ import { useAuth } from '@/hooks/useAuth';
 ```
 
 ❌ **DON'T**: Relative imports
+
 ```typescript
 // Bad: Relative imports
 import { Button } from '../../../components/Button';
@@ -1541,6 +1651,7 @@ import { useAuth } from '../../hooks/useAuth';
 ### Write Clear JSDoc Comments
 
 ✅ **DO**: Comprehensive documentation
+
 ```typescript
 /**
  * Fetches user data from the API with caching support
@@ -1560,15 +1671,17 @@ import { useAuth } from '../../hooks/useAuth';
  * const user = await fetchUser('123');
  * console.log(user.name);
  * ```
- *
- * @see {@link User} for the return type structure
- */
-export async function fetchUser(
+
+*
+* @see {@link User} for the return type structure
+  */
+  export async function fetchUser(
   userId: string,
   options: FetchUserOptions = {}
-): Promise<User> {
+  ): Promise<User> {
   // Implementation
-}
+  }
+
 ```
 
 ### Document Complex Logic
@@ -1588,21 +1701,25 @@ const debouncedSearch = useMemo(
 ### Maintain a Changelog
 
 ✅ **DO**: Document changes
+
 ```markdown
 # Changelog
 
 ## [2.0.0] - 2024-01-15
 
 ### Breaking Changes
+
 - Removed deprecated `useOldAuth` hook
 - Changed API response format for `/users` endpoint
 
 ### Added
+
 - New `useAuth` hook with improved error handling
 - Support for OAuth2 authentication
 - Rate limiting for API calls
 
 ### Fixed
+
 - Memory leak in `useWebSocket` hook
 - Race condition in form submission
 ```
@@ -1610,6 +1727,7 @@ const debouncedSearch = useMemo(
 ### Write README Files
 
 ✅ **DO**: README for each major module
+
 ```markdown
 # Authentication Module
 
@@ -1643,6 +1761,7 @@ See [API.md](./API.md) for detailed API documentation.
 ### Write Meaningful Commit Messages
 
 ✅ **DO**: Descriptive commits
+
 ```bash
 # Good: Clear, actionable message
 git commit -m "feat(auth): add password reset functionality
@@ -1656,6 +1775,7 @@ Closes #123"
 ```
 
 ❌ **DON'T**: Vague messages
+
 ```bash
 # Bad: Unclear what changed
 git commit -m "fix stuff"
@@ -1666,6 +1786,7 @@ git commit -m "wip"
 ### Use Conventional Commits
 
 ✅ **DO**: Conventional commit format
+
 ```bash
 # Format: <type>(<scope>): <subject>
 
@@ -1689,6 +1810,7 @@ git commit -m "perf(list): virtualize long lists for better performance"
 ### Keep Commits Atomic
 
 ✅ **DO**: One logical change per commit
+
 ```bash
 # Good: Separate commits
 git commit -m "feat(api): add user endpoint"
@@ -1697,6 +1819,7 @@ git commit -m "docs(api): document user endpoint"
 ```
 
 ❌ **DON'T**: Multiple unrelated changes
+
 ```bash
 # Bad: Too many changes
 git commit -m "add user endpoint, fix login bug, update docs, refactor store"
@@ -1705,6 +1828,7 @@ git commit -m "add user endpoint, fix login bug, update docs, refactor store"
 ### Use Feature Branches
 
 ✅ **DO**: Branch naming conventions
+
 ```bash
 # Format: <type>/<ticket>-<description>
 
@@ -1718,6 +1842,7 @@ git checkout -b docs/USER-101-api-guide
 ### Review Before Pushing
 
 ✅ **DO**: Pre-push checklist
+
 ```bash
 # 1. Review your changes
 git diff
@@ -1743,6 +1868,7 @@ git push origin feature/my-branch
 ## Review Checklist
 
 ### Code Quality
+
 - [ ] Code follows project style guide
 - [ ] No console.log or debugging code
 - [ ] No commented-out code
@@ -1752,6 +1878,7 @@ git push origin feature/my-branch
 - [ ] Complex logic is commented
 
 ### TypeScript
+
 - [ ] No `any` types
 - [ ] Proper type definitions
 - [ ] Type guards where needed
@@ -1759,6 +1886,7 @@ git push origin feature/my-branch
 - [ ] Interfaces over types where appropriate
 
 ### Performance
+
 - [ ] No unnecessary re-renders
 - [ ] Proper use of useMemo/useCallback
 - [ ] Lists are virtualized if long
@@ -1767,6 +1895,7 @@ git push origin feature/my-branch
 - [ ] Async operations are debounced/throttled
 
 ### Security
+
 - [ ] No sensitive data in client code
 - [ ] Input is validated and sanitized
 - [ ] CSRF protection for mutations
@@ -1775,6 +1904,7 @@ git push origin feature/my-branch
 - [ ] Proper authentication checks
 
 ### Accessibility
+
 - [ ] Semantic HTML elements
 - [ ] ARIA labels where needed
 - [ ] Keyboard navigation works
@@ -1783,6 +1913,7 @@ git push origin feature/my-branch
 - [ ] Screen reader tested
 
 ### Testing
+
 - [ ] Unit tests for business logic
 - [ ] Component tests for UI
 - [ ] Integration tests for flows
@@ -1792,6 +1923,7 @@ git push origin feature/my-branch
 - [ ] Coverage meets requirements
 
 ### Documentation
+
 - [ ] JSDoc comments for public APIs
 - [ ] README updated if needed
 - [ ] Complex logic explained
@@ -1805,11 +1937,13 @@ git push origin feature/my-branch
 ### useState vs useReducer
 
 **Use useState when:**
+
 - Simple state (primitives, simple objects)
 - Independent state updates
 - No complex state transitions
 
 **Use useReducer when:**
+
 - Complex state logic
 - Multiple related state values
 - State transitions follow patterns
@@ -1818,12 +1952,14 @@ git push origin feature/my-branch
 ### useEffect vs useLayoutEffect
 
 **Use useEffect when:**
+
 - Data fetching
 - Subscriptions
 - Most side effects
 - DOM measurements (non-critical)
 
 **Use useLayoutEffect when:**
+
 - DOM measurements needed before paint
 - Synchronous DOM updates
 - Preventing flash of unstyled content
@@ -1832,12 +1968,14 @@ git push origin feature/my-branch
 ### Props vs Context
 
 **Use Props when:**
+
 - Data used by immediate children
 - Explicit data flow preferred
 - Component reusability important
 - Performance critical
 
 **Use Context when:**
+
 - Global/shared state (theme, auth)
 - Deep component trees
 - Avoiding prop drilling
@@ -1846,12 +1984,14 @@ git push origin feature/my-branch
 ### Controlled vs Uncontrolled Components
 
 **Use Controlled when:**
+
 - Need to validate on every change
 - Need to modify input before display
 - Dynamic defaults
 - Multiple inputs interact
 
 **Use Uncontrolled when:**
+
 - Simple forms
 - Don't need instant validation
 - Performance critical
@@ -1860,12 +2000,14 @@ git push origin feature/my-branch
 ### Client State vs Server State
 
 **Use Client State (Zustand) for:**
+
 - UI state (modals, sidebar)
 - User preferences
 - Form state (temporary)
 - Client-only data
 
 **Use Server State (React Query) for:**
+
 - API data
 - Cached data
 - Background updates
@@ -1874,12 +2016,14 @@ git push origin feature/my-branch
 ### Memoization vs Not
 
 **Use React.memo when:**
+
 - Pure component
 - Expensive rendering
 - Re-renders frequently
 - Props change infrequently
 
 **Don't use React.memo when:**
+
 - Props change frequently
 - Component is already fast
 - Premature optimization
@@ -1888,12 +2032,14 @@ git push origin feature/my-branch
 ### Keys: Index vs ID
 
 **Use ID as key when:**
+
 - Items have unique IDs
 - List can be reordered
 - Items can be added/removed
 - Default choice
 
 **Use Index as key when:**
+
 - Static lists (never changes)
 - No unique IDs available
 - Items never reordered

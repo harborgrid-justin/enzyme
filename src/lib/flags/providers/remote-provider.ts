@@ -26,12 +26,7 @@
  * ```
  */
 
-import type {
-  FeatureFlag,
-  Segment,
-  SegmentId,
-  EvaluationContext,
-} from '../advanced/types';
+import type { FeatureFlag, Segment, SegmentId, EvaluationContext } from '../advanced/types';
 import type {
   FlagProvider,
   RemoteProviderConfig,
@@ -70,7 +65,7 @@ export class RemoteProvider implements FlagProvider {
   private segments = new Map<SegmentId, Segment>();
   private listeners = new Set<FlagChangeListener>();
   private ready = false;
-  private config: Required<Omit<RemoteProviderConfig, 'transform' | 'context'>> & {
+  private readonly config: Required<Omit<RemoteProviderConfig, 'transform' | 'context'>> & {
     transform?: RemoteProviderConfig['transform'];
     context?: RemoteProviderConfig['context'];
   };
@@ -234,6 +229,62 @@ export class RemoteProvider implements FlagProvider {
   // HTTP Operations
   // ==========================================================================
 
+  /**
+   * Check if the provider is ready.
+   */
+  isReady(): boolean {
+    return this.ready;
+  }
+
+  /**
+   * Check if the provider is healthy.
+   */
+  async isHealthy(): Promise<boolean> {
+    return Promise.resolve(this.health.healthy);
+  }
+
+  /**
+   * Get provider health status.
+   */
+  getHealth(): ProviderHealth {
+    return { ...this.health };
+  }
+
+  /**
+   * Get provider statistics.
+   */
+  getStats(): ProviderStats {
+    return { ...this.stats };
+  }
+
+  /**
+   * Subscribe to flag changes.
+   */
+  subscribe(listener: FlagChangeListener): () => void {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  /**
+   * Shutdown the provider.
+   */
+  async shutdown(): Promise<void> {
+    this.abortController?.abort();
+    this.ready = false;
+    this.listeners.clear();
+    this.log('Provider shutdown');
+    return Promise.resolve();
+  }
+
+  /**
+   * Update the context for subsequent requests.
+   */
+  setContext(context: EvaluationContext): void {
+    this.config.context = context;
+  }
+
   private async fetchFlags(): Promise<void> {
     const url = this.buildUrl('/flags');
     const data = await this.request<unknown>(url);
@@ -275,6 +326,10 @@ export class RemoteProvider implements FlagProvider {
     }
   }
 
+  // ==========================================================================
+  // Health Tracking
+  // ==========================================================================
+
   private async fetchSegments(): Promise<void> {
     const url = this.buildUrl('/segments');
     const data = await this.request<Segment[] | { segments: Segment[] }>(url);
@@ -294,10 +349,7 @@ export class RemoteProvider implements FlagProvider {
     for (let attempt = 0; attempt < (retry.maxAttempts ?? 3); attempt++) {
       try {
         this.abortController = new AbortController();
-        const timeoutId = setTimeout(
-          () => this.abortController?.abort(),
-          this.config.timeout
-        );
+        const timeoutId = setTimeout(() => this.abortController?.abort(), this.config.timeout);
 
         const response = await fetch(url, {
           ...options,
@@ -328,13 +380,17 @@ export class RemoteProvider implements FlagProvider {
             retry.maxDelay ?? 30000
           );
           this.log(`Retry ${attempt + 1}/${retry.maxAttempts} in ${delay}ms`);
-          this.sleep(delay);
+          await this.sleep(delay);
         }
       }
     }
 
     throw lastError ?? new Error('Request failed');
   }
+
+  // ==========================================================================
+  // Status and Health
+  // ==========================================================================
 
   private buildUrl(path: string): string {
     const base = this.config.endpoint.replace(/\/$/, '');
@@ -355,7 +411,11 @@ export class RemoteProvider implements FlagProvider {
       ...this.config.headers,
     };
 
-    if (this.config.apiKey !== null && this.config.apiKey !== undefined && this.config.apiKey !== '') {
+    if (
+      this.config.apiKey !== null &&
+      this.config.apiKey !== undefined &&
+      this.config.apiKey !== ''
+    ) {
       headers['Authorization'] = `Bearer ${this.config.apiKey}`;
     }
 
@@ -372,7 +432,11 @@ export class RemoteProvider implements FlagProvider {
     if (ctx?.application?.environment !== null && ctx?.application?.environment !== undefined) {
       params['environment'] = String(ctx.application.environment);
     }
-    if (ctx?.application?.version !== null && ctx?.application?.version !== undefined && ctx.application.version !== '') {
+    if (
+      ctx?.application?.version !== null &&
+      ctx?.application?.version !== undefined &&
+      ctx.application.version !== ''
+    ) {
       params['version'] = ctx.application.version;
     }
 
@@ -386,21 +450,19 @@ export class RemoteProvider implements FlagProvider {
         ...flag.lifecycle,
         createdAt: new Date(flag.lifecycle.createdAt),
         updatedAt: new Date(flag.lifecycle.updatedAt),
-        activatedAt: flag.lifecycle.activatedAt
-          ? new Date(flag.lifecycle.activatedAt)
-          : undefined,
+        activatedAt: flag.lifecycle.activatedAt ? new Date(flag.lifecycle.activatedAt) : undefined,
         deprecationDate: flag.lifecycle.deprecationDate
           ? new Date(flag.lifecycle.deprecationDate)
           : undefined,
-        removalDate: flag.lifecycle.removalDate
-          ? new Date(flag.lifecycle.removalDate)
-          : undefined,
-        reviewDate: flag.lifecycle.reviewDate
-          ? new Date(flag.lifecycle.reviewDate)
-          : undefined,
+        removalDate: flag.lifecycle.removalDate ? new Date(flag.lifecycle.removalDate) : undefined,
+        reviewDate: flag.lifecycle.reviewDate ? new Date(flag.lifecycle.reviewDate) : undefined,
       },
     };
   }
+
+  // ==========================================================================
+  // Subscription
+  // ==========================================================================
 
   private deserializeSegment(segment: Segment): Segment {
     return {
@@ -409,10 +471,6 @@ export class RemoteProvider implements FlagProvider {
     };
   }
 
-  // ==========================================================================
-  // Health Tracking
-  // ==========================================================================
-
   private recordSuccess(): void {
     this.health = {
       healthy: true,
@@ -420,6 +478,10 @@ export class RemoteProvider implements FlagProvider {
       consecutiveFailures: 0,
     };
   }
+
+  // ==========================================================================
+  // Shutdown
+  // ==========================================================================
 
   private recordFailure(message: string): void {
     this.health = {
@@ -433,50 +495,8 @@ export class RemoteProvider implements FlagProvider {
   }
 
   // ==========================================================================
-  // Status and Health
+  // Utilities
   // ==========================================================================
-
-  /**
-   * Check if the provider is ready.
-   */
-  isReady(): boolean {
-    return this.ready;
-  }
-
-  /**
-   * Check if the provider is healthy.
-   */
-  async isHealthy(): Promise<boolean> {
-    return Promise.resolve(this.health.healthy);
-  }
-
-  /**
-   * Get provider health status.
-   */
-  getHealth(): ProviderHealth {
-    return { ...this.health };
-  }
-
-  /**
-   * Get provider statistics.
-   */
-  getStats(): ProviderStats {
-    return { ...this.stats };
-  }
-
-  // ==========================================================================
-  // Subscription
-  // ==========================================================================
-
-  /**
-   * Subscribe to flag changes.
-   */
-  subscribe(listener: FlagChangeListener): () => void {
-    this.listeners.add(listener);
-    return () => {
-      this.listeners.delete(listener);
-    };
-  }
 
   private emitChange(event: FlagChangeEvent): void {
     for (const listener of this.listeners) {
@@ -487,25 +507,6 @@ export class RemoteProvider implements FlagProvider {
       }
     }
   }
-
-  // ==========================================================================
-  // Shutdown
-  // ==========================================================================
-
-  /**
-   * Shutdown the provider.
-   */
-  async shutdown(): Promise<void> {
-    this.abortController?.abort();
-    this.ready = false;
-    this.listeners.clear();
-    this.log('Provider shutdown');
-    return Promise.resolve();
-  }
-
-  // ==========================================================================
-  // Utilities
-  // ==========================================================================
 
   private updateStats(): void {
     this.stats = {
@@ -526,13 +527,6 @@ export class RemoteProvider implements FlagProvider {
       console.log(`[RemoteProvider] ${message}`, ...args);
     }
   }
-
-  /**
-   * Update the context for subsequent requests.
-   */
-  setContext(context: EvaluationContext): void {
-    this.config.context = context;
-  }
 }
 
 // ============================================================================
@@ -542,8 +536,6 @@ export class RemoteProvider implements FlagProvider {
 /**
  * Create a remote provider instance.
  */
-export function createRemoteProvider(
-  config: RemoteProviderConfig
-): RemoteProvider {
+export function createRemoteProvider(config: RemoteProviderConfig): RemoteProvider {
   return new RemoteProvider(config);
 }

@@ -156,9 +156,7 @@ async function deleteUser(id: string): Promise<void> {
 /**
  * Query options for users list
  */
-export function usersListQueryOptions(
-  filters?: UserFilters
-): UseQueryOptions<UsersResponse> {
+export function usersListQueryOptions(filters?: UserFilters): UseQueryOptions<UsersResponse> {
   return {
     queryKey: queryKeys.users.list(filters),
     queryFn: async () => fetchUsers(filters),
@@ -235,7 +233,9 @@ export function userProfileSuspenseQueryOptions(): UseSuspenseQueryOptions<User>
 /**
  * Hook to fetch users list with Suspense
  */
-export function useUsersSuspense(filters?: UserFilters): ReturnType<typeof useSuspenseQuery<UsersResponse>> {
+export function useUsersSuspense(
+  filters?: UserFilters
+): ReturnType<typeof useSuspenseQuery<UsersResponse>> {
   return useSuspenseQuery(usersListSuspenseQueryOptions(filters));
 }
 

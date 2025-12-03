@@ -239,7 +239,9 @@ export function getOptimalBatchSize(): number {
 /**
  * Get hydration priority configuration by preset name
  */
-export function getHydrationPreset(preset: HydrationPreset): (typeof HYDRATION_PRESETS)[HydrationPreset] {
+export function getHydrationPreset(
+  preset: HydrationPreset
+): (typeof HYDRATION_PRESETS)[HydrationPreset] {
   return HYDRATION_PRESETS[preset];
 }
 

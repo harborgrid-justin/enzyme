@@ -32,6 +32,7 @@ export interface PerformanceObservatoryContextValue {
 /**
  * Performance observatory context - extracted for Fast Refresh compliance
  */
-export const PerformanceObservatoryContext = createContext<PerformanceObservatoryContextValue | null>(null);
+export const PerformanceObservatoryContext =
+  createContext<PerformanceObservatoryContextValue | null>(null);
 
 PerformanceObservatoryContext.displayName = 'PerformanceObservatoryContext';

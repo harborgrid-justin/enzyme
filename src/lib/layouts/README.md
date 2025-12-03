@@ -4,7 +4,8 @@
 
 ## Overview
 
-The layouts module provides responsive layout primitives, adaptive containers, and layout templates that adjust based on viewport and device capabilities.
+The layouts module provides responsive layout primitives, adaptive containers, and layout templates that adjust based on
+viewport and device capabilities.
 
 ## Quick Start
 
@@ -42,12 +43,12 @@ function MainContent() {
 
 ## Exports
 
-| Export | Type | Description |
-|--------|------|-------------|
-| `AppLayout` | Component | Main application layout |
-| `SidebarLayout` | Component | Sidebar-based layout |
+| Export                | Type      | Description              |
+|-----------------------|-----------|--------------------------|
+| `AppLayout`           | Component | Main application layout  |
+| `SidebarLayout`       | Component | Sidebar-based layout     |
 | `ResponsiveContainer` | Component | Viewport-aware container |
-| `useLayoutContext` | Hook | Access layout state |
+| `useLayoutContext`    | Hook      | Access layout state      |
 
 ## See Also
 

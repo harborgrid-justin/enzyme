@@ -185,13 +185,14 @@ export interface ServiceLayerStatus {
  */
 class ServiceLayerFacade {
   private config: ServiceLayerConfig | null = null;
-  private _initialized = false;
   private metrics = {
     totalRequests: 0,
     successfulRequests: 0,
     totalResponseTime: 0,
   };
   private cleanupFunctions: Array<() => void> = [];
+
+  private _initialized = false;
 
   /**
    * Check if service layer is initialized
@@ -268,6 +269,114 @@ class ServiceLayerFacade {
       console.error('[ServiceLayer] Initialization failed', error);
       throw error;
     }
+  }
+
+  /**
+   * Get current service layer status
+   */
+  async getStatus(): Promise<ServiceLayerStatus> {
+    const serviceStatuses = serviceRegistry.getAllStatuses();
+    const queueStats = this.config?.enableOfflineQueue === true ? await offlineQueue.getStats() : { pending: 0 };
+
+    return {
+      initialized: this._initialized,
+      online: networkMonitor.isOnline(),
+      services: serviceStatuses.map((s) => ({
+        name: s.name,
+        health: s.health,
+        circuitState: s.circuitState,
+      })),
+      offlineQueue: {
+        enabled: this.config?.enableOfflineQueue === true,
+        pending: queueStats.pending,
+        processing: offlineQueue.isQueueProcessing(),
+      },
+      metrics: {
+        totalRequests: this.metrics.totalRequests,
+        successRate:
+          this.metrics.totalRequests > 0
+            ? this.metrics.successfulRequests / this.metrics.totalRequests
+            : 1,
+        avgResponseTime:
+          this.metrics.totalRequests > 0
+            ? this.metrics.totalResponseTime / this.metrics.totalRequests
+            : 0,
+      },
+    };
+  }
+
+  /**
+   * Get versioned API client
+   */
+  getVersionedApi(version?: ApiVersion): ReturnType<typeof createVersionedApi> {
+    if (!this.config) {
+      throw new Error('[ServiceLayer] Not initialized. Call initialize() first.');
+    }
+
+    return createVersionedApi({
+      baseUrl: this.config.apiBaseUrl,
+      currentVersion: version ?? this.config.apiVersion,
+      minimumVersion: this.config.minApiVersion,
+      strategy: this.config.versioningStrategy,
+    });
+  }
+
+  /**
+   * Reset metrics
+   */
+  resetMetrics(): void {
+    this.metrics = {
+      totalRequests: 0,
+      successfulRequests: 0,
+      totalResponseTime: 0,
+    };
+  }
+
+  /**
+   * Force process offline queue
+   */
+  async processOfflineQueue(): Promise<void> {
+    if (this.config?.enableOfflineQueue !== true) {
+      console.warn('[ServiceLayer] Offline queue is not enabled');
+      return;
+    }
+    await offlineQueue.forceProcess();
+  }
+
+  /**
+   * Reset all circuit breakers
+   */
+  resetCircuitBreakers(): void {
+    serviceRegistry.resetAll();
+  }
+
+  /**
+   * Dispose and cleanup
+   */
+  dispose(): void {
+    // Run all cleanup functions
+    for (const cleanup of this.cleanupFunctions) {
+      try {
+        cleanup();
+      } catch (error) {
+        console.error('[ServiceLayer] Cleanup error', error);
+      }
+    }
+    this.cleanupFunctions = [];
+
+    // Dispose services
+    serviceRegistry.dispose();
+    offlineQueue.dispose();
+    globalMutationQueue.destroy();
+    globalDeduplicator.clear();
+    enhancedInterceptorChain.clear();
+
+    // Reset state
+    this.config = null;
+    this._initialized = false;
+    this.resetMetrics();
+
+    console.info('[ServiceLayer] Disposed');
   }
 
   /**
@@ -451,114 +560,6 @@ class ServiceLayerFacade {
       });
     });
     this.cleanupFunctions.push(unsubFailed);
-  }
-
-  /**
-   * Get current service layer status
-   */
-  async getStatus(): Promise<ServiceLayerStatus> {
-    const serviceStatuses = serviceRegistry.getAllStatuses();
-    const queueStats = this.config?.enableOfflineQueue === true ? await offlineQueue.getStats() : { pending: 0 };
-
-    return {
-      initialized: this._initialized,
-      online: networkMonitor.isOnline(),
-      services: serviceStatuses.map((s) => ({
-        name: s.name,
-        health: s.health,
-        circuitState: s.circuitState,
-      })),
-      offlineQueue: {
-        enabled: this.config?.enableOfflineQueue === true,
-        pending: queueStats.pending,
-        processing: offlineQueue.isQueueProcessing(),
-      },
-      metrics: {
-        totalRequests: this.metrics.totalRequests,
-        successRate:
-          this.metrics.totalRequests > 0
-            ? this.metrics.successfulRequests / this.metrics.totalRequests
-            : 1,
-        avgResponseTime:
-          this.metrics.totalRequests > 0
-            ? this.metrics.totalResponseTime / this.metrics.totalRequests
-            : 0,
-      },
-    };
-  }
-
-  /**
-   * Get versioned API client
-   */
-  getVersionedApi(version?: ApiVersion): ReturnType<typeof createVersionedApi> {
-    if (!this.config) {
-      throw new Error('[ServiceLayer] Not initialized. Call initialize() first.');
-    }
-
-    return createVersionedApi({
-      baseUrl: this.config.apiBaseUrl,
-      currentVersion: version ?? this.config.apiVersion,
-      minimumVersion: this.config.minApiVersion,
-      strategy: this.config.versioningStrategy,
-    });
-  }
-
-  /**
-   * Reset metrics
-   */
-  resetMetrics(): void {
-    this.metrics = {
-      totalRequests: 0,
-      successfulRequests: 0,
-      totalResponseTime: 0,
-    };
-  }
-
-  /**
-   * Force process offline queue
-   */
-  async processOfflineQueue(): Promise<void> {
-    if (this.config?.enableOfflineQueue !== true) {
-      console.warn('[ServiceLayer] Offline queue is not enabled');
-      return;
-    }
-    await offlineQueue.forceProcess();
-  }
-
-  /**
-   * Reset all circuit breakers
-   */
-  resetCircuitBreakers(): void {
-    serviceRegistry.resetAll();
-  }
-
-  /**
-   * Dispose and cleanup
-   */
-  dispose(): void {
-    // Run all cleanup functions
-    for (const cleanup of this.cleanupFunctions) {
-      try {
-        cleanup();
-      } catch (error) {
-        console.error('[ServiceLayer] Cleanup error', error);
-      }
-    }
-    this.cleanupFunctions = [];
-
-    // Dispose services
-    serviceRegistry.dispose();
-    offlineQueue.dispose();
-    globalMutationQueue.destroy();
-    globalDeduplicator.clear();
-    enhancedInterceptorChain.clear();
-
-    // Reset state
-    this.config = null;
-    this._initialized = false;
-    this.resetMetrics();
-
-    console.info('[ServiceLayer] Disposed');
   }
 }
 

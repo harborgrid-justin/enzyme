@@ -897,33 +897,6 @@ export class UnifiedEventEmitter<Events extends Record<string, unknown>>
   }
 
   /**
-   * Apply middleware chain.
-   */
-  private async applyMiddleware<K extends keyof Events>(
-    middlewares: EventMiddleware<Events[K]>[],
-    data: Events[K]
-  ): Promise<Events[K]> {
-    let currentData = data;
-
-    const executeMiddleware = async (index: number, data: Events[K]): Promise<void> => {
-      if (index >= middlewares.length) {
-        currentData = data;
-        return;
-      }
-
-      const middleware = middlewares[index];
-      if (middleware) {
-        await middleware(data, async (nextData) =>
-          executeMiddleware(index + 1, nextData)
-        );
-      }
-    };
-
-    await executeMiddleware(0, data);
-    return currentData;
-  }
-
-  /**
    * Pipe events from another emitter.
    */
   pipe<K extends keyof Events>(
@@ -950,10 +923,6 @@ export class UnifiedEventEmitter<Events extends Record<string, unknown>>
   getContext(): string | undefined {
     return this.contextSource;
   }
-
-  // ===========================================================================
-  // Request-Response Pattern
-  // ===========================================================================
 
   /**
    * Request-response pattern: send request and wait for response.
@@ -1007,7 +976,7 @@ export class UnifiedEventEmitter<Events extends Record<string, unknown>>
   }
 
   // ===========================================================================
-  // Persistence and Replay
+  // Request-Response Pattern
   // ===========================================================================
 
   /**
@@ -1020,6 +989,10 @@ export class UnifiedEventEmitter<Events extends Record<string, unknown>>
     }
     return [...this.eventHistory];
   }
+
+  // ===========================================================================
+  // Persistence and Replay
+  // ===========================================================================
 
   /**
    * Replay events from history.
@@ -1044,41 +1017,6 @@ export class UnifiedEventEmitter<Events extends Record<string, unknown>>
     this.eventHistory.length = 0;
   }
 
-  // ===========================================================================
-  // Dead Letter Queue
-  // ===========================================================================
-
-  /**
-   * Add message to dead letter queue.
-   */
-  private addDeadLetter(
-    event: string,
-    data: unknown,
-    metadata: EventMetadata,
-    reason: string
-  ): void {
-    this.deadLetters.push({
-      event,
-      data,
-      metadata,
-      reason,
-      timestamp: Date.now(),
-      retryCount: 0,
-    });
-
-    if (this.config.enableStatistics) {
-      this.stats.deadLettersCount++;
-    }
-
-    // Trim if exceeding limit
-    if (this.deadLetters.length > this.config.maxDeadLetters) {
-      this.deadLetters.shift();
-      if (this.config.enableStatistics) {
-        this.stats.deadLettersCount--;
-      }
-    }
-  }
-
   /**
    * Get dead letters.
    */
@@ -1089,6 +1027,10 @@ export class UnifiedEventEmitter<Events extends Record<string, unknown>>
     }
     return [...this.deadLetters];
   }
+
+  // ===========================================================================
+  // Dead Letter Queue
+  // ===========================================================================
 
   /**
    * Retry a dead letter.
@@ -1126,10 +1068,6 @@ export class UnifiedEventEmitter<Events extends Record<string, unknown>>
     }
   }
 
-  // ===========================================================================
-  // Statistics
-  // ===========================================================================
-
   /**
    * Get statistics.
    */
@@ -1161,20 +1099,8 @@ export class UnifiedEventEmitter<Events extends Record<string, unknown>>
   }
 
   // ===========================================================================
-  // Cleanup
+  // Statistics
   // ===========================================================================
-
-  /**
-   * Clean up deduplication cache.
-   */
-  private cleanupDeduplicationCache(): void {
-    const now = Date.now();
-    for (const [hash, entry] of this.deduplicationCache) {
-      if (entry.expiresAt <= now) {
-        this.deduplicationCache.delete(hash);
-      }
-    }
-  }
 
   /**
    * Clear all data and reset emitter.
@@ -1213,6 +1139,80 @@ export class UnifiedEventEmitter<Events extends Record<string, unknown>>
     if (this.cleanupInterval) {
       clearInterval(this.cleanupInterval);
       this.cleanupInterval = null;
+    }
+  }
+
+  // ===========================================================================
+  // Cleanup
+  // ===========================================================================
+
+  /**
+   * Apply middleware chain.
+   */
+  private async applyMiddleware<K extends keyof Events>(
+    middlewares: EventMiddleware<Events[K]>[],
+    data: Events[K]
+  ): Promise<Events[K]> {
+    let currentData = data;
+
+    const executeMiddleware = async (index: number, data: Events[K]): Promise<void> => {
+      if (index >= middlewares.length) {
+        currentData = data;
+        return;
+      }
+
+      const middleware = middlewares[index];
+      if (middleware) {
+        await middleware(data, async (nextData) =>
+          executeMiddleware(index + 1, nextData)
+        );
+      }
+    };
+
+    await executeMiddleware(0, data);
+    return currentData;
+  }
+
+  /**
+   * Add message to dead letter queue.
+   */
+  private addDeadLetter(
+    event: string,
+    data: unknown,
+    metadata: EventMetadata,
+    reason: string
+  ): void {
+    this.deadLetters.push({
+      event,
+      data,
+      metadata,
+      reason,
+      timestamp: Date.now(),
+      retryCount: 0,
+    });
+
+    if (this.config.enableStatistics) {
+      this.stats.deadLettersCount++;
+    }
+
+    // Trim if exceeding limit
+    if (this.deadLetters.length > this.config.maxDeadLetters) {
+      this.deadLetters.shift();
+      if (this.config.enableStatistics) {
+        this.stats.deadLettersCount--;
+      }
+    }
+  }
+
+  /**
+   * Clean up deduplication cache.
+   */
+  private cleanupDeduplicationCache(): void {
+    const now = Date.now();
+    for (const [hash, entry] of this.deduplicationCache) {
+      if (entry.expiresAt <= now) {
+        this.deduplicationCache.delete(hash);
+      }
     }
   }
 }
@@ -1499,7 +1499,7 @@ export function withEvents<
   Base: T
 ): T & Constructor<{ events: UnifiedEventEmitter<Events> }> {
   // Create a mixin class that adds event emitter functionality
-  const MixinClass = class extends (Base as Constructor<object>) {
+  const MixinClass = class extends (Base as Constructor) {
     events = createEventEmitter<Events>();
   };
 

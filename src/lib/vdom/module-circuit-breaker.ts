@@ -111,24 +111,6 @@ export class ModuleCircuitBreaker {
   }
 
   /**
-   * Handle circuit state changes
-   */
-  private handleStateChange(from: CircuitState, to: CircuitState): void {
-    if (to === 'open') {
-      this.circuitOpenCount++;
-      console.warn('[ModuleCircuitBreaker] Circuit opened - module loading disabled');
-      console.warn(`[ModuleCircuitBreaker] Failed modules: ${Array.from(this.failedModules).join(', ')}`);
-      this.config.onCircuitOpen?.();
-    } else if (from === 'open' && (to === 'half-open' || to === 'closed')) {
-      console.info('[ModuleCircuitBreaker] Circuit recovering - attempting module loads');
-    } else if (to === 'closed' && from !== 'closed') {
-      this.failedModules.clear();
-      console.info('[ModuleCircuitBreaker] Circuit recovered - module loading enabled');
-      this.config.onCircuitRecovery?.();
-    }
-  }
-
-  /**
    * Get current circuit state
    */
   getState(): CircuitState {
@@ -196,30 +178,6 @@ export class ModuleCircuitBreaker {
   }
 
   /**
-   * Record a successful module load
-   */
-  private recordSuccess(moduleId?: ModuleId): void {
-    this.totalSuccesses++;
-    this.lastSuccessTime = Date.now();
-
-    if (moduleId) {
-      this.failedModules.delete(moduleId);
-    }
-  }
-
-  /**
-   * Record a failed module load
-   */
-  private recordFailure(moduleId?: ModuleId): void {
-    this.totalFailures++;
-    this.lastFailureTime = Date.now();
-
-    if (moduleId) {
-      this.failedModules.add(moduleId);
-    }
-  }
-
-  /**
    * Get loading metrics
    */
   getMetrics(): ModuleLoadingMetrics {
@@ -242,6 +200,48 @@ export class ModuleCircuitBreaker {
     this.breaker.reset();
     this.failedModules.clear();
     console.info('[ModuleCircuitBreaker] Circuit manually reset');
+  }
+
+  /**
+   * Handle circuit state changes
+   */
+  private handleStateChange(from: CircuitState, to: CircuitState): void {
+    if (to === 'open') {
+      this.circuitOpenCount++;
+      console.warn('[ModuleCircuitBreaker] Circuit opened - module loading disabled');
+      console.warn(`[ModuleCircuitBreaker] Failed modules: ${Array.from(this.failedModules).join(', ')}`);
+      this.config.onCircuitOpen?.();
+    } else if (from === 'open' && (to === 'half-open' || to === 'closed')) {
+      console.info('[ModuleCircuitBreaker] Circuit recovering - attempting module loads');
+    } else if (to === 'closed' && from !== 'closed') {
+      this.failedModules.clear();
+      console.info('[ModuleCircuitBreaker] Circuit recovered - module loading enabled');
+      this.config.onCircuitRecovery?.();
+    }
+  }
+
+  /**
+   * Record a successful module load
+   */
+  private recordSuccess(moduleId?: ModuleId): void {
+    this.totalSuccesses++;
+    this.lastSuccessTime = Date.now();
+
+    if (moduleId) {
+      this.failedModules.delete(moduleId);
+    }
+  }
+
+  /**
+   * Record a failed module load
+   */
+  private recordFailure(moduleId?: ModuleId): void {
+    this.totalFailures++;
+    this.lastFailureTime = Date.now();
+
+    if (moduleId) {
+      this.failedModules.add(moduleId);
+    }
   }
 }
 
@@ -273,9 +273,7 @@ let globalModuleCircuitBreaker: ModuleCircuitBreaker | null = null;
 export function getModuleCircuitBreaker(
   config?: ModuleCircuitBreakerConfig
 ): ModuleCircuitBreaker {
-  if (globalModuleCircuitBreaker === null) {
-    globalModuleCircuitBreaker = new ModuleCircuitBreaker(config);
-  }
+  globalModuleCircuitBreaker ??= new ModuleCircuitBreaker(config);
   return globalModuleCircuitBreaker;
 }
 

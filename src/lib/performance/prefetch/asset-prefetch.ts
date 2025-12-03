@@ -12,11 +12,7 @@
  * - Network-aware asset loading
  */
 
-import {
-  getPrefetchQueue,
-  type PrefetchQueue,
-  type PrefetchPriority,
-} from './prefetch-queue';
+import { getPrefetchQueue, type PrefetchQueue, type PrefetchPriority } from './prefetch-queue';
 
 // ============================================================================
 // Types
@@ -242,9 +238,10 @@ export class AssetPrefetchManager {
    * Prefetch an image with responsive support
    */
   async prefetchImage(image: ResponsiveImage): Promise<AssetPrefetchResult> {
-    const url = this.config.responsiveImages && image.srcset
-      ? this.selectResponsiveSource(image.srcset)
-      : image.src;
+    const url =
+      this.config.responsiveImages && image.srcset
+        ? this.selectResponsiveSource(image.srcset)
+        : image.src;
 
     return this.prefetch({
       url,
@@ -266,9 +263,10 @@ export class AssetPrefetchManager {
         };
       }
 
-      const url = this.config.responsiveImages && img.srcset
-        ? this.selectResponsiveSource(img.srcset)
-        : img.src;
+      const url =
+        this.config.responsiveImages && img.srcset
+          ? this.selectResponsiveSource(img.srcset)
+          : img.src;
 
       return {
         url,
@@ -391,11 +389,15 @@ export class AssetPrefetchManager {
   /**
    * Preload a critical asset
    */
-  preload(url: string, as: string, options: {
-    crossOrigin?: 'anonymous' | 'use-credentials';
-    type?: string;
-    media?: string;
-  } = {}): HTMLLinkElement {
+  preload(
+    url: string,
+    as: string,
+    options: {
+      crossOrigin?: 'anonymous' | 'use-credentials';
+      type?: string;
+      media?: string;
+    } = {}
+  ): HTMLLinkElement {
     return this.createPreloadLink(url, as, options);
   }
 
@@ -584,7 +586,7 @@ export class AssetPrefetchManager {
   }
 
   private shouldPrefetch(): boolean {
-    if (this.config.networkAware !== true) {
+    if (!this.config.networkAware) {
       return true;
     }
 
@@ -664,7 +666,10 @@ export function resetAssetPrefetchManager(): void {
 /**
  * Prefetch an image
  */
-export async function prefetchImage(url: string, priority?: PrefetchPriority): Promise<AssetPrefetchResult> {
+export async function prefetchImage(
+  url: string,
+  priority?: PrefetchPriority
+): Promise<AssetPrefetchResult> {
   return getAssetPrefetchManager().prefetch({
     url,
     type: 'image',

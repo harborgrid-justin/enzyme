@@ -11,10 +11,7 @@
 // HOOK EXPORTS
 // =============================================================================
 
-export {
-  useAdaptiveLayout,
-  type UseAdaptiveLayoutOptions,
-} from './useAdaptiveLayout';
+export { useAdaptiveLayout, type UseAdaptiveLayoutOptions } from './useAdaptiveLayout';
 
 export {
   useLayoutMode,
@@ -23,11 +20,7 @@ export {
   type UseLayoutModeOptions,
 } from './useLayoutMode';
 
-export {
-  useLayoutMorph,
-  useMorphElement,
-  type UseLayoutMorphOptions,
-} from './useLayoutMorph';
+export { useLayoutMorph, useMorphElement, type UseLayoutMorphOptions } from './useLayoutMorph';
 
 export {
   useContentDensity,

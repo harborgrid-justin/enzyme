@@ -69,7 +69,8 @@ describe('useGlobalStore hooks', () => {
     globalSelectors = globalSelectorsImport;
     useIsSidebarOpen = useIsSidebarOpenImport;
 
-    const { useStore: useStoreImport, getStoreState: getStoreStateImport } = await import('@/lib/state/store');
+    const { useStore: useStoreImport, getStoreState: getStoreStateImport } =
+      await import('@/lib/state/store');
     useStore = useStoreImport;
     getStoreState = getStoreStateImport;
   });
@@ -85,9 +86,7 @@ describe('useGlobalStore hooks', () => {
   describe('useGlobalStore', () => {
     it('should select and return state slice', () => {
       // Act
-      const { result } = renderHook(() =>
-        useGlobalStore((state) => state.sidebarOpen)
-      );
+      const { result } = renderHook(() => useGlobalStore((state) => state.sidebarOpen));
 
       // Assert
       expect(typeof result.current).toBe('boolean');
@@ -95,9 +94,7 @@ describe('useGlobalStore hooks', () => {
 
     it('should update when selected state changes', async () => {
       // Arrange
-      const { result } = renderHook(() =>
-        useGlobalStore((state) => state.sidebarOpen)
-      );
+      const { result } = renderHook(() => useGlobalStore((state) => state.sidebarOpen));
       const initialValue = result.current;
 
       // Act - toggle sidebar
@@ -147,9 +144,7 @@ describe('useGlobalStore hooks', () => {
       });
 
       // Act
-      const { result } = renderHook(() =>
-        useGlobalStore((state) => state.sessionId)
-      );
+      const { result } = renderHook(() => useGlobalStore((state) => state.sessionId));
 
       // Assert
       expect(result.current).toBe('test-session');
@@ -181,9 +176,7 @@ describe('useGlobalStore hooks', () => {
 
     it('should return new reference when state changes', () => {
       // Arrange
-      const { result } = renderHook(() =>
-        useGlobalStore((state) => state.sidebarOpen)
-      );
+      const { result } = renderHook(() => useGlobalStore((state) => state.sidebarOpen));
       const initialValue = result.current;
 
       // Act
@@ -292,10 +285,7 @@ describe('useGlobalStore hooks', () => {
     it('should update computed value when dependencies change', async () => {
       // Arrange
       const { result } = renderHook(() =>
-        useGlobalStoreComputed(
-          (state) => state.locale.toUpperCase(),
-          []
-        )
+        useGlobalStoreComputed((state) => state.locale.toUpperCase(), [])
       );
 
       // Act
@@ -315,10 +305,9 @@ describe('useGlobalStore hooks', () => {
     it('should memoize compute function based on deps', () => {
       // Arrange
       const computeFn = vi.fn((state: { locale: string }) => state.locale);
-      const { rerender } = renderHook(
-        ({ dep }) => useGlobalStoreComputed(computeFn, [dep]),
-        { initialProps: { dep: 1 } }
-      );
+      const { rerender } = renderHook(({ dep }) => useGlobalStoreComputed(computeFn, [dep]), {
+        initialProps: { dep: 1 },
+      });
 
       const callCount = computeFn.mock.calls.length;
 
@@ -333,10 +322,9 @@ describe('useGlobalStore hooks', () => {
     it('should recompute when deps change', () => {
       // Arrange
       const computeFn = vi.fn((state: { locale: string }) => state.locale);
-      const { rerender } = renderHook(
-        ({ dep }) => useGlobalStoreComputed(computeFn, [dep]),
-        { initialProps: { dep: 1 } }
-      );
+      const { rerender } = renderHook(({ dep }) => useGlobalStoreComputed(computeFn, [dep]), {
+        initialProps: { dep: 1 },
+      });
 
       const callCountBefore = computeFn.mock.calls.length;
 
@@ -403,9 +391,7 @@ describe('useGlobalStore hooks', () => {
   describe('cleanup on unmount', () => {
     it('should not update after unmount', () => {
       // Arrange
-      const { result, unmount } = renderHook(() =>
-        useGlobalStore((state) => state.sidebarOpen)
-      );
+      const { result, unmount } = renderHook(() => useGlobalStore((state) => state.sidebarOpen));
       const valueBeforeUnmount = result.current;
 
       // Act - unmount
@@ -425,9 +411,7 @@ describe('useGlobalStore hooks', () => {
 
     it('should clean up subscriptions on unmount', () => {
       // Arrange
-      const { unmount } = renderHook(() =>
-        useGlobalStore((state) => state.sidebarOpen)
-      );
+      const { unmount } = renderHook(() => useGlobalStore((state) => state.sidebarOpen));
 
       // Act & Assert - should not throw
       expect(() => unmount()).not.toThrow();
@@ -625,9 +609,7 @@ describe('useGlobalStore hooks', () => {
   describe('edge cases', () => {
     it('should handle rapid state changes', async () => {
       // Arrange
-      const { result } = renderHook(() =>
-        useGlobalStore((state) => state.sidebarOpen)
-      );
+      const { result } = renderHook(() => useGlobalStore((state) => state.sidebarOpen));
 
       // Act - rapid toggles
       for (let i = 0; i < 10; i++) {

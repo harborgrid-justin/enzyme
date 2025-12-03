@@ -153,12 +153,7 @@ export class PortalContextManager {
     sourceElement: Element,
     options: PortalContextOptions = {}
   ): PortalContext {
-    const {
-      target,
-      layer = 'modal',
-      bridgeEvents = true,
-      parentPortal = null,
-    } = options;
+    const { target, layer = 'modal', bridgeEvents = true, parentPortal = null } = options;
 
     // Resolve portal root
     const portalRoot = this.resolvePortalRoot(target);
@@ -201,7 +196,7 @@ export class PortalContextManager {
     // Notify lifecycle callbacks
     this.notifyLifecycle(portalId, portalContext);
 
-    if (this.config.debug === true) {
+    if (this.config.debug) {
       // eslint-disable-next-line no-console -- debug logging
       console.debug('[PortalContextManager] Created portal:', portalId, portalContext);
     }
@@ -232,7 +227,7 @@ export class PortalContextManager {
     this.lifecycleCallbacks.delete(portalId);
     this.eventHandlers.delete(portalId);
 
-    if (this.config.debug === true) {
+    if (this.config.debug) {
       // eslint-disable-next-line no-console -- debug logging
       console.debug('[PortalContextManager] Destroyed portal:', portalId);
     }
@@ -272,7 +267,7 @@ export class PortalContextManager {
 
     while (current !== null) {
       const portalId = current.getAttribute(PORTAL_CONTEXT_ATTR);
-      if ((portalId !== null) && (portalId !== '')) {
+      if (portalId !== null && portalId !== '') {
         return this.portalContexts.get(portalId) ?? null;
       }
       current = current.parentElement;
@@ -495,7 +490,8 @@ export class PortalContextManager {
     };
 
     // Store the handler reference for cleanup
-    (portalRoot as Element & { __portalBridgeHandler?: (e: Event) => void }).__portalBridgeHandler = bridgeHandler;
+    (portalRoot as Element & { __portalBridgeHandler?: (e: Event) => void }).__portalBridgeHandler =
+      bridgeHandler;
 
     eventsTobridge.forEach((eventType) => {
       portalRoot.addEventListener(eventType, bridgeHandler, { capture: true });
@@ -511,7 +507,9 @@ export class PortalContextManager {
       return;
     }
 
-    const portalRoot = context.portalRoot as Element & { __portalBridgeHandler?: (e: Event) => void };
+    const portalRoot = context.portalRoot as Element & {
+      __portalBridgeHandler?: (e: Event) => void;
+    };
     const handler = portalRoot.__portalBridgeHandler;
 
     if (handler) {

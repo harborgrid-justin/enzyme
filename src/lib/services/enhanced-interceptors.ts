@@ -66,7 +66,10 @@ export interface ContextualRequestInterceptor {
   /** Whether interceptor is enabled */
   enabled?: boolean;
   /** Intercept function */
-  intercept: (config: HttpRequestConfig, context: InterceptorContext) => HttpRequestConfig | Promise<HttpRequestConfig>;
+  intercept: (
+    config: HttpRequestConfig,
+    context: InterceptorContext
+  ) => HttpRequestConfig | Promise<HttpRequestConfig>;
   /** Error callback */
   onError?: (error: Error, context: InterceptorContext) => void;
 }
@@ -169,7 +172,10 @@ export class InterceptorChain {
   /**
    * Create new interceptor context
    */
-  createContext(config: HttpRequestConfig, parentContext?: Partial<InterceptorContext>): InterceptorContext {
+  createContext(
+    config: HttpRequestConfig,
+    parentContext?: Partial<InterceptorContext>
+  ): InterceptorContext {
     const context: InterceptorContext = {
       traceId: parentContext?.traceId ?? crypto.randomUUID(),
       spanId: crypto.randomUUID(),
@@ -223,7 +229,10 @@ export class InterceptorChain {
       if (interceptor.enabled === false) continue;
 
       try {
-        processedResponse = (await interceptor.intercept(processedResponse, context)) as HttpResponse<T>;
+        processedResponse = (await interceptor.intercept(
+          processedResponse,
+          context
+        )) as HttpResponse<T>;
       } catch (error) {
         interceptor.onError?.(error as Error, context);
         throw error;
@@ -245,23 +254,16 @@ export class InterceptorChain {
     for (const interceptor of this.errorInterceptors) {
       if (interceptor.enabled === false) continue;
 
-      if (processedError instanceof HttpError) {
-        // Check if interceptor can handle this error
-        if (interceptor.canHandle && !interceptor.canHandle(processedError)) {
-          continue;
-        }
+      // Check if interceptor can handle this error
+      if (interceptor.canHandle && processedError instanceof HttpError && !interceptor.canHandle(processedError)) {
+        continue;
+      }
+      try {
+        processedError = await interceptor.intercept(processedError instanceof HttpError ? processedError : error, context);
 
-        try {
-          processedError = await interceptor.intercept(processedError, context);
-
-          // If we got a response back, the error was recovered
-          if (!(processedError instanceof HttpError)) {
-            return processedError;
-          }
-        } catch {
-          // Interceptor threw, continue with original error
-          continue;
-        }
+        // If we got a response back, the error was recovered
+      } catch {
+        // Interceptor threw, continue with original error
       }
     }
 
@@ -365,9 +367,7 @@ export class CircuitBreakerError extends Error {
 /**
  * Create circuit breaker interceptor
  */
-export function createCircuitBreakerInterceptor(
-  config: CircuitBreakerConfig = {}
-): {
+export function createCircuitBreakerInterceptor(config: CircuitBreakerConfig = {}): {
   request: ContextualRequestInterceptor;
   error: ContextualErrorInterceptor;
   response: ContextualResponseInterceptor;
@@ -623,10 +623,14 @@ export function createTracingInterceptors(config: TracingConfig = {}): {
           [headers.traceId!]: context.traceId,
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           [headers.spanId!]: context.spanId,
-          ...(context.parentSpanId !== null && context.parentSpanId !== undefined && context.parentSpanId !== '' ? {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            [headers.parentSpanId!]: context.parentSpanId
-          } : {}),
+          ...(context.parentSpanId !== null &&
+          context.parentSpanId !== undefined &&
+          context.parentSpanId !== ''
+            ? {
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                [headers.parentSpanId!]: context.parentSpanId,
+              }
+            : {}),
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           [headers.sampled!]: '1',
         },
@@ -751,7 +755,11 @@ export interface TimingData {
  * Create timing interceptor
  */
 export function createTimingInterceptor(config: TimingConfig = {}): ContextualResponseInterceptor {
-  const { slowThreshold = DEFAULT_SLOW_REQUEST_THRESHOLD * 3, onTiming, logSlowRequests = true } = config;
+  const {
+    slowThreshold = DEFAULT_SLOW_REQUEST_THRESHOLD * 3,
+    onTiming,
+    logSlowRequests = true,
+  } = config;
 
   return {
     name: 'timing',
@@ -907,7 +915,9 @@ export function createEnhancedInterceptorChain(config?: {
 
   // Add tracing
   if (config?.tracing !== false) {
-    const tracing = createTracingInterceptors(typeof config?.tracing === 'object' ? config.tracing : {});
+    const tracing = createTracingInterceptors(
+      typeof config?.tracing === 'object' ? config.tracing : {}
+    );
     chain.addRequestInterceptor(tracing.request);
     chain.addResponseInterceptor(tracing.response);
     chain.addErrorInterceptor(tracing.error);
@@ -920,7 +930,9 @@ export function createEnhancedInterceptorChain(config?: {
 
   // Add circuit breaker
   if (config?.circuitBreaker !== false) {
-    const breaker = createCircuitBreakerInterceptor(typeof config?.circuitBreaker === 'object' ? config.circuitBreaker : {});
+    const breaker = createCircuitBreakerInterceptor(
+      typeof config?.circuitBreaker === 'object' ? config.circuitBreaker : {}
+    );
     chain.addRequestInterceptor(breaker.request);
     chain.addResponseInterceptor(breaker.response);
     chain.addErrorInterceptor(breaker.error);
@@ -928,7 +940,9 @@ export function createEnhancedInterceptorChain(config?: {
 
   // Add timing
   if (config?.timing !== false) {
-    chain.addResponseInterceptor(createTimingInterceptor(typeof config?.timing === 'object' ? config.timing : {}));
+    chain.addResponseInterceptor(
+      createTimingInterceptor(typeof config?.timing === 'object' ? config.timing : {})
+    );
   }
 
   return chain;

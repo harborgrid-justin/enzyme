@@ -22,9 +22,9 @@
 
 import type {
   CapturedInteraction,
-  ReplayableInteractionType,
-  InteractionReplayConfig,
   HydrationBoundaryId,
+  InteractionReplayConfig,
+  ReplayableInteractionType,
 } from './types';
 import { DEFAULT_REPLAY_CONFIG } from './types';
 
@@ -83,7 +83,7 @@ function generateSelector(element: Element): string {
 
     // Add nth-child for disambiguation
     const parent = current.parentElement;
-    if (parent && current != null) {
+    if (parent) {
       const currentTagName = current.tagName;
       const siblings = Array.from(parent.children).filter(
         (child) => child.tagName === currentTagName
@@ -144,13 +144,13 @@ function extractPointerPosition(
  * Creates event init options from a captured interaction.
  */
 function createEventInit(interaction: CapturedInteraction): EventInit {
-  const init: EventInit = {
+
+
+  return {
     bubbles: true,
     cancelable: true,
     ...interaction.eventInit,
   };
-
-  return init;
 }
 
 /**
@@ -223,6 +223,13 @@ class InteractionBuffer {
   }
 
   /**
+   * Returns the number of interactions in the buffer.
+   */
+  get size(): number {
+    return this.buffer.length;
+  }
+
+  /**
    * Adds an interaction to the buffer.
    */
   push(interaction: CapturedInteraction): void {
@@ -244,13 +251,6 @@ class InteractionBuffer {
     const interactions = [...this.buffer];
     this.buffer.length = 0;
     return interactions;
-  }
-
-  /**
-   * Returns the number of interactions in the buffer.
-   */
-  get size(): number {
-    return this.buffer.length;
   }
 
   /**
@@ -407,6 +407,126 @@ export class InteractionReplayManager {
   }
 
   /**
+   * Replays all captured interactions for a boundary.
+   *
+   * @param boundaryId - ID of the hydration boundary
+   * @returns Number of interactions replayed
+   */
+  async replayInteractions(boundaryId: HydrationBoundaryId): Promise<number> {
+    // Stop capturing first
+    this.stopCapture(boundaryId);
+
+    // Get and clear buffer
+    const buffer = this.buffers.get(boundaryId);
+    if (!buffer || buffer.isEmpty()) {
+      this.buffers.delete(boundaryId);
+      return 0;
+    }
+
+    const interactions = buffer.drain();
+    this.buffers.delete(boundaryId);
+
+    this.log(`Replaying ${interactions.length} interactions for boundary: ${boundaryId}`);
+
+    // Replay each interaction with delay
+    let replayed = 0;
+
+    for (const interaction of interactions) {
+      const success = this.replayInteraction(interaction);
+      if (success) {
+        replayed++;
+      }
+
+      // Small delay between replays to allow DOM updates
+      if (this.config.replayDelay > 0) {
+        await new Promise((resolve) => setTimeout(resolve, this.config.replayDelay));
+      }
+    }
+
+    this.log(`Replayed ${replayed}/${interactions.length} interactions for boundary: ${boundaryId}`);
+
+    return replayed;
+  }
+
+  /**
+   * Returns the number of captured interactions for a boundary.
+   *
+   * @param boundaryId - ID of the hydration boundary
+   * @returns Number of captured interactions
+   */
+  getCapturedCount(boundaryId: HydrationBoundaryId): number {
+    const buffer = this.buffers.get(boundaryId);
+    return buffer?.size ?? 0;
+  }
+
+  // ==========================================================================
+  // Replay API
+  // ==========================================================================
+
+  /**
+   * Returns all captured interactions for a boundary without removing them.
+   *
+   * @param boundaryId - ID of the hydration boundary
+   * @returns Array of captured interactions
+   */
+  peekCaptured(boundaryId: HydrationBoundaryId): readonly CapturedInteraction[] {
+    const buffer = this.buffers.get(boundaryId);
+    return buffer?.peek() ?? [];
+  }
+
+  /**
+   * Checks if a boundary has any captured interactions.
+   *
+   * @param boundaryId - ID of the hydration boundary
+   * @returns true if there are captured interactions
+   */
+  hasCaptured(boundaryId: HydrationBoundaryId): boolean {
+    const buffer = this.buffers.get(boundaryId);
+    return buffer ? !buffer.isEmpty() : false;
+  }
+
+  // ==========================================================================
+  // Query API
+  // ==========================================================================
+
+  /**
+   * Checks if a boundary is currently capturing interactions.
+   *
+   * @param boundaryId - ID of the hydration boundary
+   * @returns true if capture is active
+   */
+  isCapturing(boundaryId: HydrationBoundaryId): boolean {
+    return this.listeners.has(boundaryId);
+  }
+
+  /**
+   * Clears all captured interactions for a boundary without replaying.
+   *
+   * @param boundaryId - ID of the hydration boundary
+   */
+  clearCaptured(boundaryId: HydrationBoundaryId): void {
+    this.stopCapture(boundaryId);
+    this.buffers.delete(boundaryId);
+  }
+
+  /**
+   * Cleans up all resources.
+   * Call this when unmounting the hydration system.
+   */
+  dispose(): void {
+    // Stop all captures
+    for (const boundaryId of this.listeners.keys()) {
+      this.stopCapture(boundaryId);
+    }
+
+    // Clear all buffers
+    this.buffers.clear();
+    this.containers.clear();
+
+    this.log('InteractionReplayManager disposed');
+  }
+
+  /**
    * Creates a capture listener for a specific event type.
    */
   private createCaptureListener(
@@ -437,6 +557,10 @@ export class InteractionReplayManager {
       }
     };
   }
+
+  // ==========================================================================
+  // Cleanup API
+  // ==========================================================================
 
   /**
    * Captures details of an interaction.
@@ -485,52 +609,6 @@ export class InteractionReplayManager {
     return interaction;
   }
 
-  // ==========================================================================
-  // Replay API
-  // ==========================================================================
-
-  /**
-   * Replays all captured interactions for a boundary.
-   *
-   * @param boundaryId - ID of the hydration boundary
-   * @returns Number of interactions replayed
-   */
-  async replayInteractions(boundaryId: HydrationBoundaryId): Promise<number> {
-    // Stop capturing first
-    this.stopCapture(boundaryId);
-
-    // Get and clear buffer
-    const buffer = this.buffers.get(boundaryId);
-    if (!buffer || buffer.isEmpty()) {
-      this.buffers.delete(boundaryId);
-      return 0;
-    }
-
-    const interactions = buffer.drain();
-    this.buffers.delete(boundaryId);
-
-    this.log(`Replaying ${interactions.length} interactions for boundary: ${boundaryId}`);
-
-    // Replay each interaction with delay
-    let replayed = 0;
-
-    for (const interaction of interactions) {
-      const success = this.replayInteraction(interaction);
-      if (success) {
-        replayed++;
-      }
-
-      // Small delay between replays to allow DOM updates
-      if (this.config.replayDelay > 0) {
-        await new Promise((resolve) => setTimeout(resolve, this.config.replayDelay));
-      }
-    }
-
-    this.log(`Replayed ${replayed}/${interactions.length} interactions for boundary: ${boundaryId}`);
-
-    return replayed;
-  }
-
   /**
    * Replays a single interaction.
    */
@@ -571,84 +649,6 @@ export class InteractionReplayManager {
       this.log(`Failed to replay interaction: ${String(error)}`, 'error');
       return false;
     }
-  }
-
-  // ==========================================================================
-  // Query API
-  // ==========================================================================
-
-  /**
-   * Returns the number of captured interactions for a boundary.
-   *
-   * @param boundaryId - ID of the hydration boundary
-   * @returns Number of captured interactions
-   */
-  getCapturedCount(boundaryId: HydrationBoundaryId): number {
-    const buffer = this.buffers.get(boundaryId);
-    return buffer?.size ?? 0;
-  }
-
-  /**
-   * Returns all captured interactions for a boundary without removing them.
-   *
-   * @param boundaryId - ID of the hydration boundary
-   * @returns Array of captured interactions
-   */
-  peekCaptured(boundaryId: HydrationBoundaryId): readonly CapturedInteraction[] {
-    const buffer = this.buffers.get(boundaryId);
-    return buffer?.peek() ?? [];
-  }
-
-  /**
-   * Checks if a boundary has any captured interactions.
-   *
-   * @param boundaryId - ID of the hydration boundary
-   * @returns true if there are captured interactions
-   */
-  hasCaptured(boundaryId: HydrationBoundaryId): boolean {
-    const buffer = this.buffers.get(boundaryId);
-    return buffer ? !buffer.isEmpty() : false;
-  }
-
-  /**
-   * Checks if a boundary is currently capturing interactions.
-   *
-   * @param boundaryId - ID of the hydration boundary
-   * @returns true if capture is active
-   */
-  isCapturing(boundaryId: HydrationBoundaryId): boolean {
-    return this.listeners.has(boundaryId);
-  }
-
-  // ==========================================================================
-  // Cleanup API
-  // ==========================================================================
-
-  /**
-   * Clears all captured interactions for a boundary without replaying.
-   *
-   * @param boundaryId - ID of the hydration boundary
-   */
-  clearCaptured(boundaryId: HydrationBoundaryId): void {
-    this.stopCapture(boundaryId);
-    this.buffers.delete(boundaryId);
-  }
-
-  /**
-   * Cleans up all resources.
-   * Call this when unmounting the hydration system.
-   */
-  dispose(): void {
-    // Stop all captures
-    for (const boundaryId of this.listeners.keys()) {
-      this.stopCapture(boundaryId);
-    }
-
-    // Clear all buffers
-    this.buffers.clear();
-    this.containers.clear();
-
-    this.log('InteractionReplayManager disposed');
   }
 
   // ==========================================================================

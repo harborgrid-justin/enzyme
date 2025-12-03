@@ -9,15 +9,15 @@
 
 import type {
   ADConfig,
-  ADProviderType,
-  AzureADConfig,
-  AzureADB2CConfig,
   ADFSConfig,
-  OnPremisesADConfig,
   ADGroupMappingConfig,
+  ADProviderType,
+  AzureADB2CConfig,
+  AzureADConfig,
+  OnPremisesADConfig,
   SSOConfig,
 } from './types';
-import type { Role } from '../types';
+import type { Role } from '@/lib';
 
 // =============================================================================
 // Default Configurations
@@ -37,10 +37,7 @@ export const DEFAULT_AZURE_AD_SCOPES = [
 /**
  * Graph API scopes for group membership resolution.
  */
-export const GRAPH_GROUP_SCOPES = [
-  'GroupMember.Read.All',
-  'Directory.Read.All',
-] as const;
+export const GRAPH_GROUP_SCOPES = ['GroupMember.Read.All', 'Directory.Read.All'] as const;
 
 /**
  * Default Azure AD configuration.
@@ -159,10 +156,11 @@ export function createAzureB2CConfig(
     ...config.policies,
   } as AzureADB2CConfig['policies'];
 
-  const authority = config.authority ??
+  const authority =
+    config.authority ??
     `https://${config.b2cTenantName}.b2clogin.com/${config.b2cTenantName}.onmicrosoft.com/${policies.signUpSignIn}`;
 
-  const result: AzureADB2CConfig = {
+  return {
     ...DEFAULT_AZURE_B2C_CONFIG,
     ...config,
     policies,
@@ -170,7 +168,6 @@ export function createAzureB2CConfig(
     knownAuthorities: config.knownAuthorities ?? [`${config.b2cTenantName}.b2clogin.com`],
     scopes: config.scopes ?? DEFAULT_AZURE_B2C_CONFIG.scopes ?? [],
   };
-  return result;
 }
 
 /**
@@ -196,7 +193,8 @@ export function createADFSConfig(
  * @returns Complete on-premises configuration
  */
 export function createOnPremisesConfig(
-  config: Partial<OnPremisesADConfig> & Pick<OnPremisesADConfig, 'ldapUrl' | 'baseDn' | 'bindDn' | 'bindPassword'>
+  config: Partial<OnPremisesADConfig> &
+    Pick<OnPremisesADConfig, 'ldapUrl' | 'baseDn' | 'bindDn' | 'bindPassword'>
 ): OnPremisesADConfig {
   return {
     ...DEFAULT_ON_PREMISES_CONFIG,
@@ -218,12 +216,14 @@ export function createADConfig<T extends ADProviderType>(
   providerConfig: T extends 'azure-ad'
     ? Partial<AzureADConfig> & Pick<AzureADConfig, 'tenantId' | 'clientId' | 'redirectUri'>
     : T extends 'azure-ad-b2c'
-    ? Partial<AzureADB2CConfig> & Pick<AzureADB2CConfig, 'tenantId' | 'clientId' | 'redirectUri' | 'b2cTenantName'>
-    : T extends 'adfs'
-    ? Partial<ADFSConfig> & Pick<ADFSConfig, 'serverUrl' | 'clientId' | 'redirectUri'>
-    : T extends 'on-premises'
-    ? Partial<OnPremisesADConfig> & Pick<OnPremisesADConfig, 'ldapUrl' | 'baseDn' | 'bindDn' | 'bindPassword'>
-    : Record<string, unknown>,
+      ? Partial<AzureADB2CConfig> &
+          Pick<AzureADB2CConfig, 'tenantId' | 'clientId' | 'redirectUri' | 'b2cTenantName'>
+      : T extends 'adfs'
+        ? Partial<ADFSConfig> & Pick<ADFSConfig, 'serverUrl' | 'clientId' | 'redirectUri'>
+        : T extends 'on-premises'
+          ? Partial<OnPremisesADConfig> &
+              Pick<OnPremisesADConfig, 'ldapUrl' | 'baseDn' | 'bindDn' | 'bindPassword'>
+          : Record<string, unknown>,
   options?: Partial<Omit<ADConfig, 'providerType' | 'azure' | 'azureB2C' | 'adfs' | 'onPremises'>>
 ): ADConfig {
   const baseConfig: ADConfig = {
@@ -235,7 +235,8 @@ export function createADConfig<T extends ADProviderType>(
   switch (providerType) {
     case 'azure-ad':
       baseConfig.azure = createAzureADConfig(
-        providerConfig as Partial<AzureADConfig> & Pick<AzureADConfig, 'tenantId' | 'clientId' | 'redirectUri'>
+        providerConfig as Partial<AzureADConfig> &
+          Pick<AzureADConfig, 'tenantId' | 'clientId' | 'redirectUri'>
       );
       break;
     case 'azure-ad-b2c':
@@ -246,7 +247,8 @@ export function createADConfig<T extends ADProviderType>(
       break;
     case 'adfs':
       baseConfig.adfs = createADFSConfig(
-        providerConfig as Partial<ADFSConfig> & Pick<ADFSConfig, 'serverUrl' | 'clientId' | 'redirectUri'>
+        providerConfig as Partial<ADFSConfig> &
+          Pick<ADFSConfig, 'serverUrl' | 'clientId' | 'redirectUri'>
       );
       break;
     case 'on-premises':
@@ -498,7 +500,9 @@ function isValidUrl(url: string): boolean {
  * @param config - The AD configuration
  * @returns The active provider configuration or null
  */
-export function getActiveProviderConfig(config: ADConfig):
+export function getActiveProviderConfig(
+  config: ADConfig
+):
   | AzureADConfig
   | AzureADB2CConfig
   | ADFSConfig
@@ -566,14 +570,11 @@ export function getConfiguredScopes(config: ADConfig): string[] {
  * @param includeGroupScopes - Whether to include group-related scopes
  * @returns Merged scopes array
  */
-export function mergeWithGraphScopes(
-  baseScopes: string[],
-  includeGroupScopes = false
-): string[] {
+export function mergeWithGraphScopes(baseScopes: string[], includeGroupScopes = false): string[] {
   const scopes = new Set(baseScopes);
 
   if (includeGroupScopes) {
-    GRAPH_GROUP_SCOPES.forEach(scope => scopes.add(scope));
+    GRAPH_GROUP_SCOPES.forEach((scope) => scopes.add(scope));
   }
 
   return Array.from(scopes);

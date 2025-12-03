@@ -134,10 +134,7 @@ export interface SyncSource<T = unknown> {
   /** Delete multiple entities */
   deleteMany: (entityType: string, ids: string[]) => Promise<void>;
   /** Subscribe to changes (if supported) */
-  subscribe?: (
-    entityType: string,
-    callback: (event: SyncEvent<T>) => void
-  ) => () => void;
+  subscribe?: (entityType: string, callback: (event: SyncEvent<T>) => void) => () => void;
   /** Get last modified timestamp */
   getLastModified?: (entityType: string, id: string) => Promise<number | null>;
   /** Check if entity exists */
@@ -222,9 +219,17 @@ export interface SyncOperation {
  */
 export interface SyncEngine {
   /** Sync a single entity */
-  sync: <T = unknown>(entityType: string, id: string, options?: SyncOptions) => Promise<SyncResult<T>>;
+  sync: <T = unknown>(
+    entityType: string,
+    id: string,
+    options?: SyncOptions
+  ) => Promise<SyncResult<T>>;
   /** Sync multiple entities */
-  syncMany: <T = unknown>(entityType: string, ids: string[], options?: SyncOptions) => Promise<SyncResult<T>[]>;
+  syncMany: <T = unknown>(
+    entityType: string,
+    ids: string[],
+    options?: SyncOptions
+  ) => Promise<SyncResult<T>[]>;
   /** Sync all entities of a type */
   syncAll: <T = unknown>(entityType: string, options?: SyncOptions) => Promise<SyncResult<T>>;
   /** Create entity */
@@ -336,9 +341,7 @@ export function createSyncEngine(config: SyncEngineConfig): SyncEngine {
   const sortedSources = [...sources].sort((a, b) => a.priority - b.priority);
 
   // Logger
-  const log = debug
-    ? (...args: unknown[]) => console.info('[SyncEngine]', ...args)
-    : () => {};
+  const log = debug ? (...args: unknown[]) => console.info('[SyncEngine]', ...args) : () => {};
 
   // Emit event to subscribers
   function emit(event: SyncEvent): void {
@@ -378,11 +381,7 @@ export function createSyncEngine(config: SyncEngineConfig): SyncEngine {
   }
 
   // Update metadata immutably
-  function updateMetadata(
-    entityType: string,
-    id: string,
-    updates: Partial<SyncMetadata>
-  ): void {
+  function updateMetadata(entityType: string, id: string, updates: Partial<SyncMetadata>): void {
     const key = getMetadataKey(entityType, id);
     const meta = metadata.get(key);
     if (meta) {
@@ -492,10 +491,7 @@ export function createSyncEngine(config: SyncEngineConfig): SyncEngine {
   }
 
   // Resolve conflict
-  function resolveConflict<T>(
-    entityType: string,
-    conflict: SyncConflict<T>
-  ): T {
+  function resolveConflict<T>(entityType: string, conflict: SyncConflict<T>): T {
     const entityConfig = getEntityConfig(entityType);
     const strategy = entityConfig.conflictStrategy ?? conflictStrategy;
 
@@ -596,7 +592,13 @@ export function createSyncEngine(config: SyncEngineConfig): SyncEngine {
       let finalData = remoteData;
       const conflicts: SyncConflict[] = [];
 
-      if (localData !== undefined && localData !== null && remoteData !== undefined && remoteData !== null && meta.localModifiedAt > meta.lastSyncedAt) {
+      if (
+        localData !== undefined &&
+        localData !== null &&
+        remoteData !== undefined &&
+        remoteData !== null &&
+        meta.localModifiedAt > meta.lastSyncedAt
+      ) {
         // Potential conflict
         if (options.skipConflictResolution !== true) {
           const conflict: SyncConflict = {
@@ -646,7 +648,10 @@ export function createSyncEngine(config: SyncEngineConfig): SyncEngine {
       updateMetadata(entityType, id, {
         status: 'synced',
         lastSyncedAt: Date.now(),
-        remoteModifiedAt: remoteModifiedAt !== null && remoteModifiedAt !== undefined && remoteModifiedAt !== 0 ? remoteModifiedAt : Date.now(),
+        remoteModifiedAt:
+          remoteModifiedAt !== null && remoteModifiedAt !== undefined && remoteModifiedAt !== 0
+            ? remoteModifiedAt
+            : Date.now(),
         retryCount: 0,
       });
 
@@ -679,7 +684,8 @@ export function createSyncEngine(config: SyncEngineConfig): SyncEngine {
       updateMetadata(entityType, id, {
         status: 'error',
         error: errorMessage,
-        retryCount: (currentRetryCount !== undefined && currentRetryCount !== 0 ? currentRetryCount : 0) + 1,
+        retryCount:
+          (currentRetryCount !== undefined && currentRetryCount !== 0 ? currentRetryCount : 0) + 1,
       });
 
       // Emit error event
@@ -689,7 +695,8 @@ export function createSyncEngine(config: SyncEngineConfig): SyncEngine {
         entityId: id,
         error: error instanceof Error ? error : new Error(errorMessage),
         timestamp: Date.now(),
-        sourceId: options.sourceId !== undefined && options.sourceId !== '' ? options.sourceId : 'unknown',
+        sourceId:
+          options.sourceId !== undefined && options.sourceId !== '' ? options.sourceId : 'unknown',
       });
 
       log('Sync error:', entityType, id, errorMessage);
@@ -908,7 +915,10 @@ export function createSyncEngine(config: SyncEngineConfig): SyncEngine {
   async function createEntity<T>(entityType: string, data: Partial<T>): Promise<T> {
     // Placeholder implementation
     const dataWithId = data as Record<string, unknown>;
-    const id = (typeof dataWithId.id === 'string' && dataWithId.id !== '') ? dataWithId.id : crypto.randomUUID();
+    const id =
+      typeof dataWithId.id === 'string' && dataWithId.id !== ''
+        ? dataWithId.id
+        : crypto.randomUUID();
     const [source] = sortedSources; // Use primary source
     if (source !== undefined) {
       await source.set(entityType, id, data);
@@ -947,9 +957,20 @@ export function createSyncEngine(config: SyncEngineConfig): SyncEngine {
   }
 
   return {
-    sync: syncEntity as <T = unknown>(entityType: string, id: string, options?: SyncOptions) => Promise<SyncResult<T>>,
-    syncMany: syncManyEntities as <T = unknown>(entityType: string, ids: string[], options?: SyncOptions) => Promise<SyncResult<T>[]>,
-    syncAll: syncAllEntities as <T = unknown>(entityType: string, options?: SyncOptions) => Promise<SyncResult<T>>,
+    sync: syncEntity as <T = unknown>(
+      entityType: string,
+      id: string,
+      options?: SyncOptions
+    ) => Promise<SyncResult<T>>,
+    syncMany: syncManyEntities as <T = unknown>(
+      entityType: string,
+      ids: string[],
+      options?: SyncOptions
+    ) => Promise<SyncResult<T>[]>,
+    syncAll: syncAllEntities as <T = unknown>(
+      entityType: string,
+      options?: SyncOptions
+    ) => Promise<SyncResult<T>>,
     create: createEntity,
     update: updateEntity,
     delete: deleteEntity,
@@ -1030,7 +1051,7 @@ export function createApiSource(
         signal: AbortSignal.timeout(timeout),
       });
       if (!response.ok) return null;
-      return response.json() as Promise<unknown>;
+      return (await response.json()) as Promise<unknown>;
     },
 
     getMany: async (entityType, ids) => {
@@ -1040,7 +1061,7 @@ export function createApiSource(
         signal: AbortSignal.timeout(timeout),
       });
       if (response.ok) {
-        const data = await response.json() as unknown[];
+        const data = (await response.json()) as unknown[];
         for (const item of data) {
           const itemWithId = item as { id?: string };
           if (itemWithId.id !== undefined && itemWithId.id !== '') {
@@ -1053,9 +1074,12 @@ export function createApiSource(
 
     getAll: async (entityType, options) => {
       const params = new URLSearchParams();
-      if (options?.limit !== undefined && options.limit !== 0) params.set('limit', String(options.limit));
-      if (options?.offset !== undefined && options.offset !== 0) params.set('offset', String(options.offset));
-      if (options?.modifiedSince !== undefined && options.modifiedSince !== 0) params.set('since', String(options.modifiedSince));
+      if (options?.limit !== undefined && options.limit !== 0)
+        params.set('limit', String(options.limit));
+      if (options?.offset !== undefined && options.offset !== 0)
+        params.set('offset', String(options.offset));
+      if (options?.modifiedSince !== undefined && options.modifiedSince !== 0)
+        params.set('since', String(options.modifiedSince));
 
       const url = `${baseUrl}/${entityType}${params.toString() ? `?${params}` : ''}`;
       const response = await fetch(url, {
@@ -1063,7 +1087,7 @@ export function createApiSource(
         signal: AbortSignal.timeout(timeout),
       });
       if (!response.ok) return [];
-      return response.json() as Promise<unknown[]>;
+      return (await response.json()) as Promise<unknown[]>;
     },
 
     set: async (entityType, id, data) => {
@@ -1113,7 +1137,9 @@ export function createLocalStorageSource(
   const { priority = 2 } = options;
 
   function getKey(entityType: string, id?: string): string {
-    return id !== undefined && id !== '' ? `${prefix}:${entityType}:${id}` : `${prefix}:${entityType}`;
+    return id !== undefined && id !== ''
+      ? `${prefix}:${entityType}:${id}`
+      : `${prefix}:${entityType}`;
   }
 
   function getAllKeys(entityType: string): string[] {
@@ -1146,7 +1172,7 @@ export function createLocalStorageSource(
     get: async (entityType, id) => {
       await Promise.resolve();
       const data = localStorage.getItem(getKey(entityType, id));
-      return data !== null && data !== '' ? JSON.parse(data) as unknown : null;
+      return data !== null && data !== '' ? (JSON.parse(data) as unknown) : null;
     },
 
     getMany: async (entityType, ids) => {
@@ -1203,9 +1229,7 @@ export function createLocalStorageSource(
 /**
  * Create a memory sync source (for testing)
  */
-export function createMemorySource(
-  options: { priority?: SourcePriority } = {}
-): SyncSource {
+export function createMemorySource(options: { priority?: SourcePriority } = {}): SyncSource {
   const { priority = 10 } = options;
   const store = new Map<string, Map<string, unknown>>();
 

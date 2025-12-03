@@ -230,7 +230,7 @@ export function getLatestVersion(versions: ApiVersion[]): ApiVersion | undefined
  * Versioned API client with full version management
  */
 export class VersionedApiClient {
-  private config: VersionedApiClientConfig;
+  private readonly config: VersionedApiClientConfig;
   private currentVersion: ApiVersion;
   private deprecationWarned: Set<ApiVersion> = new Set();
 
@@ -309,61 +309,6 @@ export class VersionedApiClient {
 
     this.currentVersion = version;
     return result;
-  }
-
-  /**
-   * Build versioned URL
-   */
-  private buildUrl(path: string): string {
-    const { strategy, baseUrl } = this.config;
-    const transformer = this.config.versionConfig.transformers.get(this.currentVersion);
-
-    // Apply endpoint mapping if available
-    const mappedPath = transformer?.mapEndpoint?.(path) ?? path;
-
-    switch (strategy) {
-      case VersioningStrategy.URL_PATH:
-        return `${baseUrl}/${this.currentVersion}${mappedPath}`;
-
-      case VersioningStrategy.QUERY_PARAM: {
-        const separator = mappedPath.includes('?') ? '&' : '?';
-        return `${baseUrl}${mappedPath}${separator}version=${this.currentVersion}`;
-      }
-
-      default:
-        return `${baseUrl}${mappedPath}`;
-    }
-  }
-
-  /**
-   * Build versioned headers
-   */
-  private buildHeaders(): Record<string, string> {
-    const { strategy, headerName = 'X-API-Version', mediaTypeTemplate = 'application/vnd.api.{version}+json' } =
-      this.config;
-
-    const versionNumber = this.currentVersion.slice(1); // Remove 'v' prefix
-
-    switch (strategy) {
-      case VersioningStrategy.ACCEPT_HEADER:
-        return {
-          Accept: `application/vnd.api+json; version=${versionNumber}`,
-        };
-
-      case VersioningStrategy.CUSTOM_HEADER:
-        return {
-          [headerName]: this.currentVersion,
-        };
-
-      case VersioningStrategy.MEDIA_TYPE:
-        return {
-          Accept: mediaTypeTemplate.replace('{version}', this.currentVersion),
-          'Content-Type': mediaTypeTemplate.replace('{version}', this.currentVersion),
-        };
-
-      default:
-        return {};
-    }
   }
 
   /**
@@ -478,6 +423,61 @@ export class VersionedApiClient {
     const client = new VersionedApiClient(this.config);
     client.setVersion(version);
     return client;
+  }
+
+  /**
+   * Build versioned URL
+   */
+  private buildUrl(path: string): string {
+    const { strategy, baseUrl } = this.config;
+    const transformer = this.config.versionConfig.transformers.get(this.currentVersion);
+
+    // Apply endpoint mapping if available
+    const mappedPath = transformer?.mapEndpoint?.(path) ?? path;
+
+    switch (strategy) {
+      case VersioningStrategy.URL_PATH:
+        return `${baseUrl}/${this.currentVersion}${mappedPath}`;
+
+      case VersioningStrategy.QUERY_PARAM: {
+        const separator = mappedPath.includes('?') ? '&' : '?';
+        return `${baseUrl}${mappedPath}${separator}version=${this.currentVersion}`;
+      }
+
+      default:
+        return `${baseUrl}${mappedPath}`;
+    }
+  }
+
+  /**
+   * Build versioned headers
+   */
+  private buildHeaders(): Record<string, string> {
+    const { strategy, headerName = 'X-API-Version', mediaTypeTemplate = 'application/vnd.api.{version}+json' } =
+      this.config;
+
+    const versionNumber = this.currentVersion.slice(1); // Remove 'v' prefix
+
+    switch (strategy) {
+      case VersioningStrategy.ACCEPT_HEADER:
+        return {
+          Accept: `application/vnd.api+json; version=${versionNumber}`,
+        };
+
+      case VersioningStrategy.CUSTOM_HEADER:
+        return {
+          [headerName]: this.currentVersion,
+        };
+
+      case VersioningStrategy.MEDIA_TYPE:
+        return {
+          Accept: mediaTypeTemplate.replace('{version}', this.currentVersion),
+          'Content-Type': mediaTypeTemplate.replace('{version}', this.currentVersion),
+        };
+
+      default:
+        return {};
+    }
   }
 }
 

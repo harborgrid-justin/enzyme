@@ -311,12 +311,7 @@ export interface RuleSchedule {
 /**
  * Rollout strategies for gradual feature release.
  */
-export type RolloutStrategy =
-  | 'percentage'
-  | 'scheduled'
-  | 'ring'
-  | 'canary'
-  | 'experiment';
+export type RolloutStrategy = 'percentage' | 'scheduled' | 'ring' | 'canary' | 'experiment';
 
 /**
  * Percentage-based rollout configuration.
@@ -558,12 +553,7 @@ export interface FlagDependency {
 /**
  * Feature flag lifecycle states.
  */
-export type FlagLifecycleState =
-  | 'draft'
-  | 'active'
-  | 'paused'
-  | 'deprecated'
-  | 'archived';
+export type FlagLifecycleState = 'draft' | 'active' | 'paused' | 'deprecated' | 'archived';
 
 /**
  * Flag lifecycle metadata.
@@ -747,10 +737,7 @@ export interface FlagChangeEvent {
 /**
  * Union of all flag events.
  */
-export type FlagEvent =
-  | FlagEvaluationEvent
-  | FlagExposureEvent
-  | FlagChangeEvent;
+export type FlagEvent = FlagEvaluationEvent | FlagExposureEvent | FlagChangeEvent;
 
 // ============================================================================
 // Configuration Types

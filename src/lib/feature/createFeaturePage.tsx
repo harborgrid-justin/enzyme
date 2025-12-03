@@ -11,11 +11,7 @@ import { useAuth } from '../auth/useAuth';
 import { useFeatureFlag } from '../flags/useFeatureFlag';
 import { QueryErrorBoundary } from '../monitoring/QueryErrorBoundary';
 import { Spinner } from '../ui/feedback/Spinner';
-import type {
-  CreateFeatureOptions,
-  FeatureConfig,
-  FeatureViewModel,
-} from './types';
+import type { CreateFeatureOptions, FeatureConfig, FeatureViewModel } from './types';
 import { hasFeatureAccess } from './types';
 
 // ============================================================================
@@ -133,13 +129,7 @@ DefaultLoading.displayName = 'DefaultLoading';
 /**
  * Default error component - memoized
  */
-const DefaultError = memo(({
-  error,
-  retry,
-}: {
-  error: Error;
-  retry: () => void;
-}) => {
+const DefaultError = memo(({ error, retry }: { error: Error; retry: () => void }) => {
   return (
     <div style={errorContainerStyle}>
       <h2 style={errorTitleStyle}>Failed to load</h2>
@@ -159,12 +149,7 @@ DefaultError.displayName = 'DefaultError';
 const AccessDenied = memo(({ reason }: { reason: string }) => {
   return (
     <div style={statusContainerStyle}>
-      <svg
-        style={warningIconStyle}
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
+      <svg style={warningIconStyle} fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -186,12 +171,7 @@ AccessDenied.displayName = 'AccessDenied';
 const FeatureNotAvailable = memo(({ featureName }: { featureName: string }) => {
   return (
     <div style={statusContainerStyle}>
-      <svg
-        style={grayIconStyle}
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
+      <svg style={grayIconStyle} fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -200,9 +180,7 @@ const FeatureNotAvailable = memo(({ featureName }: { featureName: string }) => {
         />
       </svg>
       <h2 style={statusTitleStyle}>Feature Not Available</h2>
-      <p style={statusDescriptionStyle}>
-        {featureName} is currently not available.
-      </p>
+      <p style={statusDescriptionStyle}>{featureName} is currently not available.</p>
     </div>
   );
 });
@@ -212,75 +190,78 @@ FeatureNotAvailable.displayName = 'FeatureNotAvailable';
 /**
  * Page header component - memoized
  */
-const PageHeader = memo(({
-  config,
-  activeTab,
-  onTabChange,
-}: {
-  config: FeatureConfig;
-  activeTab?: string;
-  onTabChange?: (tab: string) => void;
-}) => {
-  const { metadata, tabs, showTitle = true } = config;
+const PageHeader = memo(
+  ({
+    config,
+    activeTab,
+    onTabChange,
+  }: {
+    config: FeatureConfig;
+    activeTab?: string;
+    onTabChange?: (tab: string) => void;
+  }) => {
+    const { metadata, tabs, showTitle = true } = config;
 
-  // Memoize title style based on tabs presence
-  const titleStyle = useMemo<CSSProperties>(() => ({
-    fontSize: '1.5rem',
-    fontWeight: '600',
-    marginBottom: (tabs?.length ?? 0) > 0 ? '1rem' : 0,
-  }), [tabs?.length]);
+    // Memoize title style based on tabs presence
+    const titleStyle = useMemo<CSSProperties>(
+      () => ({
+        fontSize: '1.5rem',
+        fontWeight: '600',
+        marginBottom: (tabs?.length ?? 0) > 0 ? '1rem' : 0,
+      }),
+      [tabs?.length]
+    );
 
-  // Memoize tab button style generator
-  const getTabButtonStyle = useCallback((tab: { id: string; disabled?: boolean }): CSSProperties => ({
-    padding: '0.75rem 1rem',
-    border: 'none',
-    background: 'none',
-    cursor: (tab.disabled ?? false) === true ? 'not-allowed' : 'pointer',
-    opacity: (tab.disabled ?? false) === true ? 0.5 : 1,
-    borderBottom: activeTab === tab.id ? '2px solid #3b82f6' : '2px solid transparent',
-    color: activeTab === tab.id ? '#3b82f6' : '#6b7280',
-    fontWeight: activeTab === tab.id ? '500' : '400',
-  }), [activeTab]);
+    // Memoize tab button style generator
+    const getTabButtonStyle = useCallback(
+      (tab: { id: string; disabled?: boolean }): CSSProperties => ({
+        padding: '0.75rem 1rem',
+        border: 'none',
+        background: 'none',
+        cursor: (tab.disabled ?? false) ? 'not-allowed' : 'pointer',
+        opacity: (tab.disabled ?? false) ? 0.5 : 1,
+        borderBottom: activeTab === tab.id ? '2px solid #3b82f6' : '2px solid transparent',
+        color: activeTab === tab.id ? '#3b82f6' : '#6b7280',
+        fontWeight: activeTab === tab.id ? '500' : '400',
+      }),
+      [activeTab]
+    );
 
-  // Stable tab click handler using data-* attributes
-  const handleTabClick = useCallback((event: React.MouseEvent<HTMLButtonElement>): void => {
-    const {tabId} = event.currentTarget.dataset;
-    if (tabId !== undefined && onTabChange !== undefined) {
-      onTabChange(tabId);
-    }
-  }, [onTabChange]);
+    // Stable tab click handler using data-* attributes
+    const handleTabClick = useCallback(
+      (event: React.MouseEvent<HTMLButtonElement>): void => {
+        const { tabId } = event.currentTarget.dataset;
+        if (tabId !== undefined && onTabChange !== undefined) {
+          onTabChange(tabId);
+        }
+      },
+      [onTabChange]
+    );
 
-  return (
-    <div style={pageHeaderContainerStyle}>
-      {showTitle && (
-        <h1 style={titleStyle}>
-          {metadata.name}
-        </h1>
-      )}
+    return (
+      <div style={pageHeaderContainerStyle}>
+        {showTitle && <h1 style={titleStyle}>{metadata.name}</h1>}
 
-      {tabs !== undefined && tabs.length > 0 && (
-        <div style={tabContainerStyle}>
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              data-tab-id={tab.id}
-              onClick={handleTabClick}
-              disabled={tab.disabled}
-              style={getTabButtonStyle(tab)}
-            >
-              {tab.label}
-              {tab.badge !== undefined && (
-                <span style={tabBadgeStyle}>
-                  {tab.badge}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-});
+        {tabs !== undefined && tabs.length > 0 && (
+          <div style={tabContainerStyle}>
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                data-tab-id={tab.id}
+                onClick={handleTabClick}
+                disabled={tab.disabled}
+                style={getTabButtonStyle(tab)}
+              >
+                {tab.label}
+                {tab.badge !== undefined && <span style={tabBadgeStyle}>{tab.badge}</span>}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+);
 
 PageHeader.displayName = 'PageHeader';
 
@@ -293,10 +274,8 @@ PageHeader.displayName = 'PageHeader';
  */
 export function createFeaturePage<
   TData = unknown,
-  TViewModel extends FeatureViewModel<TData> = FeatureViewModel<TData>
->(
-  options: CreateFeatureOptions<TData, TViewModel>
-): React.FC {
+  TViewModel extends FeatureViewModel<TData> = FeatureViewModel<TData>,
+>(options: CreateFeatureOptions<TData, TViewModel>): React.FC {
   const {
     config,
     useViewModel,
@@ -311,7 +290,7 @@ export function createFeaturePage<
   function FeatureContent(): React.ReactElement {
     const viewModel = useViewModel();
 
-    if (viewModel.isLoading === true && viewModel.data === undefined) {
+    if (viewModel.isLoading && viewModel.data === undefined) {
       return <Loading />;
     }
 
@@ -337,7 +316,7 @@ export function createFeaturePage<
     // Collect all enabled flags for access check
     const enabledFlags = useMemo(() => {
       const flags: string[] = [];
-      if (config.access.featureFlag !== undefined && featureFlagEnabled === true) {
+      if (config.access.featureFlag !== undefined && featureFlagEnabled) {
         flags.push(config.access.featureFlag);
       }
       // In a real app, you'd check all required flags here
@@ -350,20 +329,18 @@ export function createFeaturePage<
     }, [roles, enabledFlags]);
 
     // Check feature flag
-    if (config.access.featureFlag !== undefined && featureFlagEnabled === false) {
+    if (config.access.featureFlag !== undefined && !featureFlagEnabled) {
       return <FeatureNotAvailable featureName={config.metadata.name} />;
     }
 
     // Check authentication
-    if ((config.access.requireAuth ?? false) === true && isAuthenticated === false) {
+    if ((config.access.requireAuth ?? false) && !isAuthenticated) {
       return <AccessDenied reason="Please log in to access this feature." />;
     }
 
     // Check role-based access
-    if (hasAccess === false) {
-      return (
-        <AccessDenied reason="You don't have permission to access this feature." />
-      );
+    if (!hasAccess) {
+      return <AccessDenied reason="You don't have permission to access this feature." />;
     }
 
     return (
@@ -394,7 +371,7 @@ export function createFeaturePage<
  */
 export function createLazyFeaturePage<
   TData = unknown,
-  TViewModel extends FeatureViewModel<TData> = FeatureViewModel<TData>
+  TViewModel extends FeatureViewModel<TData> = FeatureViewModel<TData>,
 >(
   optionsFactory: () => Promise<{ default: CreateFeatureOptions<TData, TViewModel> }>
 ): React.LazyExoticComponent<React.FC> {

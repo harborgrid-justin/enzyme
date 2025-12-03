@@ -145,7 +145,7 @@ const DEFAULT_SERIALIZATION_OPTIONS: QuerySerializationOptions = {
  * ```
  */
 export class RequestBuilder<TResponse = unknown, TBody = unknown> {
-  private state: BuilderState<TBody>;
+  private readonly state: BuilderState<TBody>;
   private serializationOptions: QuerySerializationOptions;
 
   constructor() {
@@ -995,26 +995,11 @@ export class RequestBuilder<TResponse = unknown, TBody = unknown> {
   }
 
   /**
-   * Build URL with path parameter substitution
-   */
-  private buildUrl(): string {
-    const { url: initialUrl, pathParams } = this.state;
-    let url = initialUrl;
-
-    // Substitute path parameters
-    for (const [key, value] of Object.entries(pathParams)) {
-      url = url.replace(`:${key}`, encodeURIComponent(String(value)));
-    }
-
-    return url;
-  }
-
-  /**
    * Clone the builder with current state
    */
   clone(): RequestBuilder<TResponse, TBody> {
     const cloned = new RequestBuilder<TResponse, TBody>();
-    cloned.state = JSON.parse(JSON.stringify(this.state)) as BuilderState<TBody>;
+    Object.assign(cloned.state, JSON.parse(JSON.stringify(this.state)) as BuilderState<TBody>);
     cloned.serializationOptions = { ...this.serializationOptions };
 
     // Clone FormData if present
@@ -1028,6 +1013,21 @@ export class RequestBuilder<TResponse = unknown, TBody = unknown> {
     }
 
     return cloned;
+  }
+
+  /**
+   * Build URL with path parameter substitution
+   */
+  private buildUrl(): string {
+    const { url: initialUrl, pathParams } = this.state;
+    let url = initialUrl;
+
+    // Substitute path parameters
+    for (const [key, value] of Object.entries(pathParams)) {
+      url = url.replace(`:${key}`, encodeURIComponent(String(value)));
+    }
+
+    return url;
   }
 }
 

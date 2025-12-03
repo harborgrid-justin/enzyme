@@ -8,7 +8,13 @@ import { createContext, type ReactNode } from 'react';
 /**
  * Configuration value
  */
-export type ConfigurableValue = string | number | boolean | null | ConfigurableValue[] | { [key: string]: ConfigurableValue };
+export type ConfigurableValue =
+  | string
+  | number
+  | boolean
+  | null
+  | ConfigurableValue[]
+  | { [key: string]: ConfigurableValue };
 
 /**
  * Flag configuration

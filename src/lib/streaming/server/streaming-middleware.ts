@@ -87,7 +87,11 @@ export function generateNonce(): string {
 
   // Fallback for older environments
   const array = new Uint8Array(16);
-  if (typeof crypto !== 'undefined' && crypto !== null && typeof crypto.getRandomValues === 'function') {
+  if (
+    typeof crypto !== 'undefined' &&
+    crypto !== null &&
+    typeof crypto.getRandomValues === 'function'
+  ) {
     crypto.getRandomValues(array);
   } else {
     // Last resort fallback
@@ -282,12 +286,9 @@ export function serializeStreamState(
  * @param nonce - CSP nonce
  * @returns HTML script tag string
  */
-export function createHydrationScript(
-  states: SerializedStreamState[],
-  nonce?: string
-): string {
+export function createHydrationScript(states: SerializedStreamState[], nonce?: string): string {
   const data = JSON.stringify(states);
-  const nonceAttr = (nonce != null && nonce !== '') ? ` nonce="${nonce}"` : '';
+  const nonceAttr = nonce != null && nonce !== '' ? ` nonce="${nonce}"` : '';
 
   return `<script${nonceAttr}>
     window.__STREAM_STATE__ = window.__STREAM_STATE__ || [];
@@ -301,9 +302,7 @@ export function createHydrationScript(
  * @param data - Serialized state data
  * @returns Parsed stream state or null if invalid
  */
-export function deserializeStreamState(
-  data: unknown
-): SerializedStreamState | null {
+export function deserializeStreamState(data: unknown): SerializedStreamState | null {
   if (data == null || typeof data !== 'object') return null;
 
   const state = data as Partial<SerializedStreamState>;
@@ -319,9 +318,7 @@ export function deserializeStreamState(
   // Verify checksum
   const computedChecksum = calculateChecksum(state.content);
   if (computedChecksum !== state.checksum) {
-    console.warn(
-      `[StreamHydration] Checksum mismatch for boundary "${state.boundaryId}"`
-    );
+    console.warn(`[StreamHydration] Checksum mismatch for boundary "${state.boundaryId}"`);
     return null;
   }
 
@@ -419,7 +416,7 @@ export function wrapBoundaryContent(
   nonce?: string,
   config?: Partial<StreamConfig>
 ): string {
-  const nonceAttr = (nonce != null && nonce !== '') ? ` nonce="${nonce}"` : '';
+  const nonceAttr = nonce != null && nonce !== '' ? ` nonce="${nonce}"` : '';
   const priority = config?.priority ?? StreamPriority.Normal;
 
   return `
@@ -492,9 +489,7 @@ export interface FlushScheduleEntry {
   flushAfterMs: number;
 }
 
-export function createFlushSchedule(
-  boundaries: Map<string, StreamConfig>
-): FlushScheduleEntry[] {
+export function createFlushSchedule(boundaries: Map<string, StreamConfig>): FlushScheduleEntry[] {
   const schedule: FlushScheduleEntry[] = [];
 
   for (const [boundaryId, config] of boundaries) {
@@ -721,7 +716,7 @@ export function createShellHtml(options: ShellOptions = {}): {
     rootId = 'root',
   } = options;
 
-  const nonceAttr = (nonce != null && nonce !== '') ? ` nonce="${nonce}"` : '';
+  const nonceAttr = nonce != null && nonce !== '' ? ` nonce="${nonce}"` : '';
 
   // Build meta tags
   const metaTags = meta
@@ -775,7 +770,4 @@ export function createShellHtml(options: ShellOptions = {}): {
 // Exports
 // ============================================================================
 
-export {
-  DEFAULT_MIDDLEWARE_OPTIONS,
-  STREAMING_HEADERS,
-};
+export { DEFAULT_MIDDLEWARE_OPTIONS, STREAMING_HEADERS };

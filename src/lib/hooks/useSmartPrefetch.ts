@@ -120,11 +120,9 @@ export function shouldAllowPrefetch(
   }
 
   // Check minimum connection quality
-  if (!meetsMinimumQuality(networkInfo.effectiveType ?? 'unknown', minConnectionQuality)) {
-    return false;
-  }
+  return meetsMinimumQuality(networkInfo.effectiveType ?? 'unknown', minConnectionQuality);
 
-  return true;
+
 }
 
 // ============================================================================
@@ -145,21 +143,6 @@ export class SmartPrefetchManager {
       maxConcurrent: options.maxConcurrent ?? 3,
       minConnectionQuality: options.minConnectionQuality ?? '2g',
     };
-  }
-
-  /**
-   * Check if prefetching should happen based on network and concurrency
-   */
-  private shouldPrefetch(): boolean {
-    // Don't prefetch if too many active requests
-    if (this.activePrefetches >= this.options.maxConcurrent) {
-      return false;
-    }
-
-    return shouldAllowPrefetch({
-      respectDataSaver: this.options.respectDataSaver,
-      minConnectionQuality: this.options.minConnectionQuality,
-    });
   }
 
   /**
@@ -247,6 +230,21 @@ export class SmartPrefetchManager {
       activeCount: this.activePrefetches,
       maxConcurrent: this.options.maxConcurrent,
     };
+  }
+
+  /**
+   * Check if prefetching should happen based on network and concurrency
+   */
+  private shouldPrefetch(): boolean {
+    // Don't prefetch if too many active requests
+    if (this.activePrefetches >= this.options.maxConcurrent) {
+      return false;
+    }
+
+    return shouldAllowPrefetch({
+      respectDataSaver: this.options.respectDataSaver,
+      minConnectionQuality: this.options.minConnectionQuality,
+    });
   }
 }
 

@@ -362,7 +362,7 @@ export class AutoScanner {
    */
   async scan(forceRefresh = false): Promise<ScanResult> {
     // Check cache first
-    if (forceRefresh !== true && this.config.cache === true && this.cache) {
+    if (!forceRefresh && this.config.cache === true && this.cache) {
       const configHash = hashConfig(this.config);
       if (this.cache.configHash === configHash && Date.now() < this.cache.expiresAt) {
         return { ...this.cache.result, fromCache: true };
@@ -394,6 +394,56 @@ export class AutoScanner {
       this.isScanning = false;
       this.pendingScan = null;
     }
+  }
+
+  /**
+   * Clear the scan cache
+   */
+  clearCache(): void {
+    this.cache = null;
+  }
+
+  /**
+   * Check if a file matches the scanner configuration
+   *
+   * @param filePath - File path to check
+   * @returns True if file would be included in scan
+   */
+  matchesFile(filePath: string): boolean {
+    const path = filePath.replace(/\\/g, '/');
+
+    // Check extension
+    const ext = `.${  path.split('.').pop()}`;
+    if (!this.config.extensions.includes(ext)) {
+      return false;
+    }
+
+    // Check ignore patterns
+    if (matchesPatterns(path, this.config.ignore)) {
+      return false;
+    }
+
+    // Check include patterns
+    if (this.config.include && this.config.include.length > 0) {
+      if (!matchesPatterns(path, this.config.include)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  /**
+   * Get files by type from last scan (requires prior scan)
+   *
+   * @param type - File type to filter by
+   * @returns Files of the specified type, or empty array if no scan performed
+   */
+  getFilesByType(type: RouteFileType): readonly DiscoveredFile[] {
+    if (!this.cache) {
+      return [];
+    }
+    return this.cache.result.files.filter(f => f.fileType === type);
   }
 
   /**
@@ -484,7 +534,7 @@ export class AutoScanner {
         }
 
         for (const entry of entries) {
-          const entryName = typeof entry.name === 'string' ? entry.name : String(entry.name);
+          const entryName = entry.name;
           const entryPath = path.join(dir, entryName);
           const relativePath = path.relative(root, entryPath);
 
@@ -581,56 +631,6 @@ export class AutoScanner {
       fromCache: false,
       scannedAt: Date.now(),
     };
-  }
-
-  /**
-   * Clear the scan cache
-   */
-  clearCache(): void {
-    this.cache = null;
-  }
-
-  /**
-   * Check if a file matches the scanner configuration
-   *
-   * @param filePath - File path to check
-   * @returns True if file would be included in scan
-   */
-  matchesFile(filePath: string): boolean {
-    const path = filePath.replace(/\\/g, '/');
-
-    // Check extension
-    const ext = `.${  path.split('.').pop()}`;
-    if (!this.config.extensions.includes(ext)) {
-      return false;
-    }
-
-    // Check ignore patterns
-    if (matchesPatterns(path, this.config.ignore)) {
-      return false;
-    }
-
-    // Check include patterns
-    if (this.config.include && this.config.include.length > 0) {
-      if (!matchesPatterns(path, this.config.include)) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  /**
-   * Get files by type from last scan (requires prior scan)
-   *
-   * @param type - File type to filter by
-   * @returns Files of the specified type, or empty array if no scan performed
-   */
-  getFilesByType(type: RouteFileType): readonly DiscoveredFile[] {
-    if (!this.cache) {
-      return [];
-    }
-    return this.cache.result.files.filter(f => f.fileType === type);
   }
 }
 

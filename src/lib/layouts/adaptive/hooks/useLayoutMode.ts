@@ -64,11 +64,7 @@ export interface UseLayoutModeOptions {
  * ```
  */
 export function useLayoutMode(options: UseLayoutModeOptions = {}): UseLayoutModeReturn {
-  const {
-    initialMode = 'grid',
-    onChange,
-    initiallyLocked = false,
-  } = options;
+  const { initialMode = 'grid', onChange, initiallyLocked = false } = options;
 
   // State
   const [mode, setModeState] = useState<LayoutMode>(initialMode);
@@ -79,16 +75,19 @@ export function useLayoutMode(options: UseLayoutModeOptions = {}): UseLayoutMode
   const previousModeRef = useRef<LayoutMode | null>(null);
 
   // Set mode
-  const setMode = useCallback((newMode: LayoutMode) => {
-    const prevMode = mode;
+  const setMode = useCallback(
+    (newMode: LayoutMode) => {
+      const prevMode = mode;
 
-    if (newMode !== prevMode) {
-      previousModeRef.current = prevMode;
-      setPreviousMode(prevMode);
-      setModeState(newMode);
-      onChange?.(newMode, prevMode);
-    }
-  }, [mode, onChange]);
+      if (newMode !== prevMode) {
+        previousModeRef.current = prevMode;
+        setPreviousMode(prevMode);
+        setModeState(newMode);
+        onChange?.(newMode, prevMode);
+      }
+    },
+    [mode, onChange]
+  );
 
   // Lock mode
   const lockMode = useCallback(() => {

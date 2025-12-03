@@ -1,14 +1,20 @@
 # Feature Flags Module
 
-> **Purpose:** Comprehensive feature flag system with targeting rules, A/B testing, gradual rollouts, and real-time updates.
+> **Purpose:** Comprehensive feature flag system with targeting rules, A/B testing, gradual rollouts, and real-time
+> updates.
 
 ## Overview
 
-The Feature Flags module provides a production-ready feature flagging system that enables safe deployment of new features, A/B testing, gradual rollouts, and runtime configuration. It supports multiple backend providers, sophisticated targeting rules, variant testing, and comprehensive analytics.
+The Feature Flags module provides a production-ready feature flagging system that enables safe deployment of new
+features, A/B testing, gradual rollouts, and runtime configuration. It supports multiple backend providers,
+sophisticated targeting rules, variant testing, and comprehensive analytics.
 
-This module goes beyond simple boolean flags by offering percentage-based rollouts, user segmentation, dependency management between flags, lifecycle tracking, and real-time updates via WebSocket. It seamlessly integrates with all other modules to provide flag-driven configuration across your entire application.
+This module goes beyond simple boolean flags by offering percentage-based rollouts, user segmentation, dependency
+management between flags, lifecycle tracking, and real-time updates via WebSocket. It seamlessly integrates with all
+other modules to provide flag-driven configuration across your entire application.
 
-Perfect for teams practicing continuous delivery, this module allows you to decouple deployment from release, test features in production with specific user segments, and quickly roll back problematic changes without redeploying.
+Perfect for teams practicing continuous delivery, this module allows you to decouple deployment from release, test
+features in production with specific user segments, and quickly roll back problematic changes without redeploying.
 
 ## Key Features
 
@@ -72,6 +78,7 @@ function Features() {
 ## Exports
 
 ### Components
+
 - `FeatureFlagProvider` - Context provider for flag system
 - `FlagGate` - Conditional rendering based on single flag
 - `FlagGateAll` - Render only if all flags are enabled
@@ -79,20 +86,24 @@ function Features() {
 - `FlagConfigurable` - Render prop component for flag-based config
 
 ### Hooks
+
 - `useFeatureFlag` - Check if flag is enabled
 - `useFeatureFlags` - Get multiple flags at once
 - `useFeatureFlagsStatus` - Get loading/error state
 - `useFeatureFlaggedModule` - Load modules conditionally based on flags
 
 ### HOCs
+
 - `withFeatureFlag` - HOC to wrap component with flag check
 - `withoutFeatureFlag` - HOC to hide component if flag is enabled
 
 ### Flag Engine
+
 - `FlagEngine` - Advanced evaluation engine with targeting
 - `createFlagEngine()` - Factory for engine instances
 
 ### Providers
+
 - `LocalProvider` - In-memory flag storage
 - `RemoteProvider` - Fetch flags from API
 - `CachedProvider` - Cache remote flags locally
@@ -101,17 +112,20 @@ function Features() {
 - `CompositeProvider` - Chain multiple providers
 
 ### Targeting & Rollouts
+
 - `TargetingRuleEngine` - Evaluate targeting rules
 - `PercentageRollout` - Gradual rollout manager
 - `UserSegmenter` - User segmentation logic
 - `FlagVariants` - A/B/n test variants
 
 ### Analytics
+
 - `FlagExposureTracker` - Track flag exposures
 - `FlagImpactAnalyzer` - Analyze flag impact on metrics
 - `FlagAnalytics` - Complete analytics suite
 
 ### Integration
+
 - `apiFlags` - API-specific feature flags
 - `routingFlags` - Routing-specific flags
 - `uiFlags` - UI component flags
@@ -120,12 +134,14 @@ function Features() {
 - `FlagDrivenLoading` - Code splitting with flags
 
 ### Utilities
+
 - `flagKeys` - Type-safe flag key registry
 - `flagCategories` - Organize flags by category
 - `isDebugModeEnabled()` - Check debug mode status
 - `isFlagEnabled()` - Imperative flag check (outside React)
 
 ### Types
+
 - `FlagKey` - Type-safe flag key literal
 - `FlagValue` - Flag value (boolean | string | number | object)
 - `FlagConfig` - Flag configuration object
@@ -166,6 +182,7 @@ The flags module uses a provider chain architecture:
 ## Common Patterns
 
 ### Pattern 1: Basic Feature Toggle
+
 ```tsx
 import { useFeatureFlag, FlagGate } from '@/lib/flags';
 
@@ -193,6 +210,7 @@ function Sidebar() {
 ```
 
 ### Pattern 2: Gradual Rollout with Percentage
+
 ```tsx
 import { FeatureFlagProvider, createProviderChain } from '@/lib/flags';
 
@@ -224,6 +242,7 @@ function App() {
 ```
 
 ### Pattern 3: User Targeting
+
 ```tsx
 import { FlagEngine } from '@/lib/flags';
 
@@ -260,6 +279,7 @@ const canSeeBeta = engine.evaluate('beta-features', {
 ```
 
 ### Pattern 4: A/B Testing with Variants
+
 ```tsx
 import { useFeatureFlag } from '@/lib/flags';
 
@@ -291,6 +311,7 @@ const flags = {
 ```
 
 ### Pattern 5: Flag-Driven Code Splitting
+
 ```tsx
 import { FlagConfigurable, useFeatureFlaggedModule } from '@/lib/flags';
 
@@ -324,6 +345,7 @@ function Dashboard() {
 ```
 
 ### Pattern 6: Real-Time Flag Updates
+
 ```tsx
 import { WebSocketProvider, FeatureFlagProvider } from '@/lib/flags';
 
@@ -349,6 +371,7 @@ function App() {
 ## Configuration
 
 ### Provider Configuration
+
 ```tsx
 import {
   FeatureFlagProvider,
@@ -382,6 +405,7 @@ const provider = createCachedProvider({
 ```
 
 ### Flag Definitions
+
 ```tsx
 const flags = {
   // Boolean flag
@@ -430,6 +454,7 @@ const flags = {
 ## Testing
 
 ### Testing with Mock Flags
+
 ```tsx
 import { render, screen } from '@testing-library/react';
 import { FeatureFlagProvider } from '@/lib/flags';
@@ -477,7 +502,9 @@ describe('Dashboard', () => {
 ## Troubleshooting
 
 ### Issue: Flag Value Not Updating
+
 **Solution:** Ensure provider supports updates (WebSocket or Polling):
+
 ```tsx
 const provider = new PollingProvider({
   endpoint: '/api/flags',
@@ -486,7 +513,9 @@ const provider = new PollingProvider({
 ```
 
 ### Issue: Flag Evaluation Slow
+
 **Solution:** Use cached provider to reduce network calls:
+
 ```tsx
 const provider = createCachedProvider({
   remote: remoteProvider,
@@ -495,7 +524,9 @@ const provider = createCachedProvider({
 ```
 
 ### Issue: Inconsistent Rollout Results
+
 **Solution:** Ensure sticky strategy with consistent user ID:
+
 ```tsx
 <FeatureFlagProvider
   user={{ id: currentUser.id }} // Consistent user ID
@@ -504,7 +535,9 @@ const provider = createCachedProvider({
 ```
 
 ### Issue: Flag Not Found Error
+
 **Solution:** Provide fallback values:
+
 ```tsx
 const isEnabled = useFeatureFlag('my-flag', { fallback: false });
 ```

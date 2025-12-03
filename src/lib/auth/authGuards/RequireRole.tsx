@@ -39,37 +39,33 @@ interface RequireRoleProps {
  * </RequireRole>
  * ```
  */
-export const RequireRole = memo(({
-  children,
-  role,
-  roles,
-  redirectTo = routes.dashboard,
-  fallback
-}: RequireRoleProps) => {
-  const { isAuthenticated, isLoading, hasRole, hasAnyRole } = useAuth();
+export const RequireRole = memo(
+  ({ children, role, roles, redirectTo = routes.dashboard, fallback }: RequireRoleProps) => {
+    const { isAuthenticated, isLoading, hasRole, hasAnyRole } = useAuth();
 
-  if (isLoading) {
-    return <AuthGuardLoading ariaLabel="Verifying role authorization..." />;
+    if (isLoading) {
+      return <AuthGuardLoading ariaLabel="Verifying role authorization..." />;
+    }
+
+    if (!isAuthenticated) {
+      return <Navigate to={routes.login} replace />;
+    }
+
+    // Check single role - cast to any since Role and UserRole have compatible values
+    if (role !== undefined && role !== null && !hasRole(role)) {
+      if (fallback !== undefined && fallback !== null) return <>{fallback}</>;
+      return <Navigate to={redirectTo} replace />;
+    }
+
+    // Check multiple roles
+    if (roles !== undefined && roles !== null && !hasAnyRole(roles)) {
+      if (fallback !== undefined && fallback !== null) return <>{fallback}</>;
+      return <Navigate to={redirectTo} replace />;
+    }
+
+    return <>{children}</>;
   }
-
-  if (!isAuthenticated) {
-    return <Navigate to={routes.login} replace />;
-  }
-
-  // Check single role - cast to any since Role and UserRole have compatible values
-  if (role !== undefined && role !== null && !hasRole(role)) {
-    if (fallback !== undefined && fallback !== null) return <>{fallback}</>;
-    return <Navigate to={redirectTo} replace />;
-  }
-
-  // Check multiple roles
-  if (roles !== undefined && roles !== null && !hasAnyRole(roles)) {
-    if (fallback !== undefined && fallback !== null) return <>{fallback}</>;
-    return <Navigate to={redirectTo} replace />;
-  }
-
-  return <>{children}</>;
-});
+);
 
 /**
  * HOC version of RequireRole

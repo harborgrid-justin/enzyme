@@ -4,7 +4,7 @@ import React, {
   useEffect,
   useCallback,
   useMemo,
-  type ReactNode
+  type ReactNode,
 } from 'react';
 import { FeatureFlagContext } from '../contexts/FeatureFlagContext';
 import { env } from '../../config/env';
@@ -31,7 +31,7 @@ interface FeatureFlagProviderProps {
  */
 export function FeatureFlagProvider({
   children,
-  initialFlags
+  initialFlags,
 }: FeatureFlagProviderProps): React.JSX.Element {
   const [flags, setFlags] = useState<Record<string, boolean>>(() => {
     const initial = {
@@ -65,7 +65,7 @@ export function FeatureFlagProvider({
       // Fetch from remote feature flag service
       const response = await fetch(`${env.apiBaseUrl}/feature-flags`);
       if (response.ok) {
-        const remoteFlags = await response.json() as Record<string, boolean>;
+        const remoteFlags = (await response.json()) as Record<string, boolean>;
         setFlags((current) => ({
           ...current,
           ...remoteFlags,
@@ -106,19 +106,18 @@ export function FeatureFlagProvider({
   }, []);
 
   // PERFORMANCE: Memoize context value to prevent unnecessary re-renders
-  const value: FeatureFlagContextValue = useMemo(() => ({
-    flags,
-    isLoading,
-    isEnabled,
-    setFlag,
-    refreshFlags,
-  }), [flags, isLoading, isEnabled, setFlag, refreshFlags]);
-
-  return (
-    <FeatureFlagContext.Provider value={value}>
-      {children}
-    </FeatureFlagContext.Provider>
+  const value: FeatureFlagContextValue = useMemo(
+    () => ({
+      flags,
+      isLoading,
+      isEnabled,
+      setFlag,
+      refreshFlags,
+    }),
+    [flags, isLoading, isEnabled, setFlag, refreshFlags]
   );
+
+  return <FeatureFlagContext.Provider value={value}>{children}</FeatureFlagContext.Provider>;
 }
 
 /**

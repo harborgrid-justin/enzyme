@@ -145,8 +145,7 @@ function getConnection(): NavigatorNetworkInfo | undefined {
  * ```
  */
 export function getNetworkInfo(): NetworkInfo {
-  const online =
-    typeof navigator !== 'undefined' ? navigator.onLine : true;
+  const online = typeof navigator !== 'undefined' ? navigator.onLine : true;
   const connection = getConnection();
 
   const type = (connection?.type as ConnectionType) ?? 'unknown';
@@ -325,11 +324,7 @@ export function shouldAllowPrefetch(
     requireOnline?: boolean;
   } = {}
 ): boolean {
-  const {
-    minQuality = '2g',
-    respectDataSaver = true,
-    requireOnline = true,
-  } = options;
+  const { minQuality = '2g', respectDataSaver = true, requireOnline = true } = options;
 
   const network = getNetworkInfo();
 
@@ -394,10 +389,7 @@ export function getRecommendedImageQuality(): 'high' | 'medium' | 'low' {
  * @param timeoutMs - Timeout in milliseconds
  * @returns True if ping succeeded
  */
-export async function pingEndpoint(
-  url: string,
-  timeoutMs = 5000
-): Promise<boolean> {
+export async function pingEndpoint(url: string, timeoutMs = 5000): Promise<boolean> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -424,10 +416,7 @@ export async function pingEndpoint(
  * @param samples - Number of samples to average
  * @returns Average RTT in milliseconds, or null if failed
  */
-export async function measureRtt(
-  url: string,
-  samples = 3
-): Promise<number | null> {
+export async function measureRtt(url: string, samples = 3): Promise<number | null> {
   const times: number[] = [];
 
   for (let i = 0; i < samples; i++) {

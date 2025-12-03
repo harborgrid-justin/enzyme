@@ -52,13 +52,7 @@ export const AppLink = forwardRef<HTMLAnchorElement, AppLinkProps>(
     };
 
     return (
-      <Link
-        ref={ref}
-        to={path}
-        onMouseEnter={handleMouseEnter}
-        onFocus={handleFocus}
-        {...props}
-      />
+      <Link ref={ref} to={path} onMouseEnter={handleMouseEnter} onFocus={handleFocus} {...props} />
     );
   }
 );
@@ -91,10 +85,11 @@ export const AppNavLink = forwardRef<HTMLAnchorElement, AppNavLinkProps>(
         ref={ref}
         to={path}
         className={({ isActive }) => {
-          const baseClass = typeof className === 'function'
-            ? className({ isActive, isPending: false, isTransitioning: false })
-            : className;
-          return isActive ? `${baseClass ?? ''} ${activeClassName}`.trim() : baseClass ?? '';
+          const baseClass =
+            typeof className === 'function'
+              ? className({ isActive, isPending: false, isTransitioning: false })
+              : className;
+          return isActive ? `${baseClass ?? ''} ${activeClassName}`.trim() : (baseClass ?? '');
         }}
         {...props}
       />

@@ -332,37 +332,6 @@ export class DiscoveryEngine {
   }
 
   /**
-   * Emit an event
-   */
-  private emit(type: DiscoveryEventType, data: unknown): void {
-    const event: DiscoveryEvent = {
-      type,
-      timestamp: Date.now(),
-      data,
-    };
-
-    const listeners = this.listeners.get(type);
-    if (listeners) {
-      for (const listener of listeners) {
-        try {
-          listener(event);
-        } catch (error) {
-          console.error('Discovery event listener error:', error);
-        }
-      }
-    }
-  }
-
-  /**
-   * Update state and emit state change event
-   */
-  private setState(newState: DiscoveryState): void {
-    const oldState = this.state;
-    this.state = newState;
-    this.emit('state-change', { oldState, newState });
-  }
-
-  /**
    * Run the discovery process
    *
    * @param forceRefresh - Skip cache and perform fresh discovery
@@ -469,6 +438,59 @@ export class DiscoveryEngine {
       await this.config.handlers?.onError?.(error as Error);
       throw error;
     }
+  }
+
+  /**
+   * Clear scanner cache
+   */
+  clearCache(): void {
+    this.scanner.clearCache();
+    this.lastResult = null;
+  }
+
+  /**
+   * Get scanner instance for advanced usage
+   */
+  getScanner(): AutoScanner {
+    return this.scanner;
+  }
+
+  /**
+   * Get transformer instance for advanced usage
+   */
+  getTransformer(): RouteTransformer {
+    return this.transformer;
+  }
+
+  /**
+   * Emit an event
+   */
+  private emit(type: DiscoveryEventType, data: unknown): void {
+    const event: DiscoveryEvent = {
+      type,
+      timestamp: Date.now(),
+      data,
+    };
+
+    const listeners = this.listeners.get(type);
+    if (listeners) {
+      for (const listener of listeners) {
+        try {
+          listener(event);
+        } catch (error) {
+          console.error('Discovery event listener error:', error);
+        }
+      }
+    }
+  }
+
+  /**
+   * Update state and emit state change event
+   */
+  private setState(newState: DiscoveryState): void {
+    const oldState = this.state;
+    this.state = newState;
+    this.emit('state-change', { oldState, newState });
   }
 
   /**
@@ -697,28 +719,6 @@ export type RouteParamsFor<T extends RoutePath> = T extends keyof RouteParams
       typeDefinitions,
       manifest,
     };
-  }
-
-  /**
-   * Clear scanner cache
-   */
-  clearCache(): void {
-    this.scanner.clearCache();
-    this.lastResult = null;
-  }
-
-  /**
-   * Get scanner instance for advanced usage
-   */
-  getScanner(): AutoScanner {
-    return this.scanner;
-  }
-
-  /**
-   * Get transformer instance for advanced usage
-   */
-  getTransformer(): RouteTransformer {
-    return this.transformer;
   }
 }
 

@@ -14,7 +14,7 @@ export {
 } from '../shared/event-utils';
 
 // Re-export types
-export type { 
+export type {
   EventListenerOptions,
   Unsubscribe,
   EventMiddleware,

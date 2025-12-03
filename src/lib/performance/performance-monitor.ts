@@ -353,6 +353,221 @@ export class PerformanceMonitor {
   // ==========================================================================
 
   /**
+   * Get current memory pressure level
+   */
+  public getMemoryPressure(): 'normal' | 'warning' | 'critical' {
+    const snapshot = this.captureMemorySnapshot();
+    return snapshot?.pressure ?? 'normal';
+  }
+
+  /**
+   * Get current FPS
+   */
+  public getCurrentFps(): number {
+    if (this.frameTimings.length === 0) return 60;
+    const recent = this.frameTimings.slice(-10);
+    const avgFps = recent.reduce((sum, f) => sum + f.fps, 0) / recent.length;
+    return Math.round(avgFps);
+  }
+
+  /**
+   * Check a custom budget
+   */
+  public checkBudget(
+    budgetType: string,
+    metricName: string,
+    actualValue: number,
+    budgetValue: number,
+    severity: 'warning' | 'critical' = 'warning'
+  ): boolean {
+    const isViolated = actualValue > budgetValue;
+
+    if (isViolated) {
+      this.recordBudgetViolation({
+        budgetType,
+        metricName,
+        actualValue,
+        budgetValue,
+        severity,
+      });
+    }
+
+    return !isViolated;
+  }
+
+  // ==========================================================================
+  // Memory Monitoring
+  // ==========================================================================
+
+  /**
+   * Check Core Web Vital against threshold
+   */
+  public checkVitalBudget(metric: string, value: number): 'good' | 'needs-improvement' | 'poor' {
+    // Validate metric is a known vital threshold
+    if (!isVitalMetricName(metric)) {
+      this.log(`Unknown vital metric: ${String(metric)}`);
+      return 'poor';
+    }
+
+    const rating = meetsVitalThreshold(metric as import('./vitals').VitalMetricName, value);
+    const vitalThreshold = VITAL_THRESHOLDS[metric as import('./vitals').VitalMetricName];
+    const budgetValue = vitalThreshold?.good ?? 0;
+
+    if (rating === 'poor') {
+      this.recordBudgetViolation({
+        budgetType: 'vital',
+        metricName: metric,
+        actualValue: value,
+        budgetValue,
+        severity: 'critical',
+      });
+    } else if (rating === 'needs-improvement') {
+      this.recordBudgetViolation({
+        budgetType: 'vital',
+        metricName: metric,
+        actualValue: value,
+        budgetValue,
+        severity: 'warning',
+      });
+    }
+
+    this.emit('vitalUpdate', { metric, value, rating });
+    return rating;
+  }
+
+  /**
+   * Subscribe to performance events
+   */
+  public on<T = unknown>(
+    type: PerformanceEventType,
+    callback: PerformanceEventCallback<T>
+  ): () => void {
+    const id = generateId();
+    const subscription: EventSubscription = {
+      id,
+      type,
+      callback: callback as PerformanceEventCallback,
+    };
+
+    this.subscriptions.set(id, subscription);
+
+    // Return unsubscribe function
+    return () => {
+      this.subscriptions.delete(id);
+    };
+  }
+
+  /**
+   * Get aggregated performance metrics
+   */
+  public getMetrics(): PerformanceMetrics {
+    const totalLongTaskTime = this.longTasks.reduce((sum, t) => sum + t.duration, 0);
+    const criticalLongTaskCount = this.longTasks.filter((t) => t.isCritical).length;
+
+    return {
+      longTasks: [...this.longTasks],
+      totalLongTaskTime,
+      longTaskCount: this.longTasks.length,
+      criticalLongTaskCount,
+      frameDrops: this.droppedFrames,
+      averageFps: this.getCurrentFps(),
+      memorySnapshots: [...this.memorySnapshots],
+      currentMemoryPressure: this.getMemoryPressure(),
+      budgetViolations: [...this.budgetViolations],
+      slowResources: [...this.slowResources],
+      timestamp: Date.now(),
+    };
+  }
+
+  /**
+   * Get long tasks
+   */
+  public getLongTasks(): LongTaskEntry[] {
+    return [...this.longTasks];
+  }
+
+  // ==========================================================================
+  // Frame Rate Monitoring
+  // ==========================================================================
+
+  /**
+   * Get budget violations
+   */
+  public getBudgetViolations(): BudgetViolation[] {
+    return [...this.budgetViolations];
+  }
+
+  /**
+   * Get slow resources
+   */
+  public getSlowResources(): SlowResourceEntry[] {
+    return [...this.slowResources];
+  }
+
+  /**
+   * Get memory snapshots
+   */
+  public getMemorySnapshots(): MemorySnapshot[] {
+    return [...this.memorySnapshots];
+  }
+
+  /**
+   * Check if monitoring is running
+   */
+  public isMonitoring(): boolean {
+    return this.isRunning;
+  }
+
+  // ==========================================================================
+  // Resource Monitoring
+  // ==========================================================================
+
+  /**
+   * Generate performance report
+   */
+  public generateReport(): string {
+    const metrics = this.getMetrics();
+
+    const lines = [
+      '='.repeat(60),
+      'PERFORMANCE MONITOR REPORT',
+      '='.repeat(60),
+      '',
+      `Generated: ${new Date().toISOString()}`,
+      `URL: ${typeof window !== 'undefined' ? window.location.href : 'N/A'}`,
+      '',
+      '--- Long Tasks ---',
+      `Total Count: ${metrics.longTaskCount}`,
+      `Critical Count: ${metrics.criticalLongTaskCount}`,
+      `Total Blocking Time: ${formatDuration(metrics.totalLongTaskTime)}`,
+      '',
+      '--- Frame Rate ---',
+      `Average FPS: ${metrics.averageFps}`,
+      `Dropped Frames: ${metrics.frameDrops}`,
+      '',
+      '--- Memory ---',
+      `Current Pressure: ${metrics.currentMemoryPressure}`,
+      `Snapshots: ${metrics.memorySnapshots.length}`,
+      '',
+      '--- Budget Violations ---',
+      `Total Violations: ${metrics.budgetViolations.length}`,
+      ...metrics.budgetViolations.slice(-5).map(
+        (v) => `  - ${v.metricName}: ${v.actualValue} (budget: ${v.budgetValue})`
+      ),
+      '',
+      '--- Slow Resources ---',
+      `Total: ${metrics.slowResources.length}`,
+      ...metrics.slowResources.slice(-5).map(
+        (r) => `  - ${r.name.split('/').pop()}: ${formatDuration(r.duration)}`
+      ),
+      '',
+      '='.repeat(60),
+    ];
+
+    return lines.join('\n');
+  }
+
+  /**
    * Start long task monitoring
    */
   private startLongTaskMonitoring(): void {
@@ -392,6 +607,10 @@ export class PerformanceMonitor {
       this.log('Failed to start long task monitoring:', error);
     }
   }
+
+  // ==========================================================================
+  // Budget Enforcement
+  // ==========================================================================
 
   /**
    * Stop long task monitoring
@@ -451,10 +670,6 @@ export class PerformanceMonitor {
     };
   }
 
-  // ==========================================================================
-  // Memory Monitoring
-  // ==========================================================================
-
   /**
    * Start memory monitoring
    */
@@ -488,6 +703,10 @@ export class PerformanceMonitor {
 
     this.log('Memory monitoring started');
   }
+
+  // ==========================================================================
+  // Event System
+  // ==========================================================================
 
   /**
    * Stop memory monitoring
@@ -525,16 +744,8 @@ export class PerformanceMonitor {
     };
   }
 
-  /**
-   * Get current memory pressure level
-   */
-  public getMemoryPressure(): 'normal' | 'warning' | 'critical' {
-    const snapshot = this.captureMemorySnapshot();
-    return snapshot?.pressure ?? 'normal';
-  }
-
   // ==========================================================================
-  // Frame Rate Monitoring
+  // Metrics Access
   // ==========================================================================
 
   /**
@@ -601,20 +812,6 @@ export class PerformanceMonitor {
   };
 
   /**
-   * Get current FPS
-   */
-  public getCurrentFps(): number {
-    if (this.frameTimings.length === 0) return 60;
-    const recent = this.frameTimings.slice(-10);
-    const avgFps = recent.reduce((sum, f) => sum + f.fps, 0) / recent.length;
-    return Math.round(avgFps);
-  }
-
-  // ==========================================================================
-  // Resource Monitoring
-  // ==========================================================================
-
-  /**
    * Start resource monitoring
    */
   private startResourceMonitoring(): void {
@@ -661,10 +858,6 @@ export class PerformanceMonitor {
     }
   }
 
-  // ==========================================================================
-  // Budget Enforcement
-  // ==========================================================================
-
   /**
    * Record a budget violation
    */
@@ -683,92 +876,9 @@ export class PerformanceMonitor {
     this.emit('budgetViolation', entry);
   }
 
-  /**
-   * Check a custom budget
-   */
-  public checkBudget(
-    budgetType: string,
-    metricName: string,
-    actualValue: number,
-    budgetValue: number,
-    severity: 'warning' | 'critical' = 'warning'
-  ): boolean {
-    const isViolated = actualValue > budgetValue;
-
-    if (isViolated) {
-      this.recordBudgetViolation({
-        budgetType,
-        metricName,
-        actualValue,
-        budgetValue,
-        severity,
-      });
-    }
-
-    return !isViolated;
-  }
-
-  /**
-   * Check Core Web Vital against threshold
-   */
-  public checkVitalBudget(metric: string, value: number): 'good' | 'needs-improvement' | 'poor' {
-    // Validate metric is a known vital threshold
-    if (!isVitalMetricName(metric)) {
-      this.log(`Unknown vital metric: ${String(metric)}`);
-      return 'poor';
-    }
-
-    const rating = meetsVitalThreshold(metric as import('./vitals').VitalMetricName, value);
-    const vitalThreshold = VITAL_THRESHOLDS[metric as import('./vitals').VitalMetricName];
-    const budgetValue = vitalThreshold?.good ?? 0;
-
-    if (rating === 'poor') {
-      this.recordBudgetViolation({
-        budgetType: 'vital',
-        metricName: metric,
-        actualValue: value,
-        budgetValue,
-        severity: 'critical',
-      });
-    } else if (rating === 'needs-improvement') {
-      this.recordBudgetViolation({
-        budgetType: 'vital',
-        metricName: metric,
-        actualValue: value,
-        budgetValue,
-        severity: 'warning',
-      });
-    }
-
-    this.emit('vitalUpdate', { metric, value, rating });
-    return rating;
-  }
-
   // ==========================================================================
-  // Event System
+  // Utilities
   // ==========================================================================
-
-  /**
-   * Subscribe to performance events
-   */
-  public on<T = unknown>(
-    type: PerformanceEventType,
-    callback: PerformanceEventCallback<T>
-  ): () => void {
-    const id = generateId();
-    const subscription: EventSubscription = {
-      id,
-      type,
-      callback: callback as PerformanceEventCallback,
-    };
-
-    this.subscriptions.set(id, subscription);
-
-    // Return unsubscribe function
-    return () => {
-      this.subscriptions.delete(id);
-    };
-  }
 
   /**
    * Emit performance event
@@ -784,71 +894,6 @@ export class PerformanceMonitor {
       }
     });
   }
-
-  // ==========================================================================
-  // Metrics Access
-  // ==========================================================================
-
-  /**
-   * Get aggregated performance metrics
-   */
-  public getMetrics(): PerformanceMetrics {
-    const totalLongTaskTime = this.longTasks.reduce((sum, t) => sum + t.duration, 0);
-    const criticalLongTaskCount = this.longTasks.filter((t) => t.isCritical).length;
-
-    return {
-      longTasks: [...this.longTasks],
-      totalLongTaskTime,
-      longTaskCount: this.longTasks.length,
-      criticalLongTaskCount,
-      frameDrops: this.droppedFrames,
-      averageFps: this.getCurrentFps(),
-      memorySnapshots: [...this.memorySnapshots],
-      currentMemoryPressure: this.getMemoryPressure(),
-      budgetViolations: [...this.budgetViolations],
-      slowResources: [...this.slowResources],
-      timestamp: Date.now(),
-    };
-  }
-
-  /**
-   * Get long tasks
-   */
-  public getLongTasks(): LongTaskEntry[] {
-    return [...this.longTasks];
-  }
-
-  /**
-   * Get budget violations
-   */
-  public getBudgetViolations(): BudgetViolation[] {
-    return [...this.budgetViolations];
-  }
-
-  /**
-   * Get slow resources
-   */
-  public getSlowResources(): SlowResourceEntry[] {
-    return [...this.slowResources];
-  }
-
-  /**
-   * Get memory snapshots
-   */
-  public getMemorySnapshots(): MemorySnapshot[] {
-    return [...this.memorySnapshots];
-  }
-
-  /**
-   * Check if monitoring is running
-   */
-  public isMonitoring(): boolean {
-    return this.isRunning;
-  }
-
-  // ==========================================================================
-  // Utilities
-  // ==========================================================================
 
   /**
    * Trim buffer to max size
@@ -866,51 +911,6 @@ export class PerformanceMonitor {
     if (this.options.debug) {
       console.info(`[PerformanceMonitor] ${message}`, ...args);
     }
-  }
-
-  /**
-   * Generate performance report
-   */
-  public generateReport(): string {
-    const metrics = this.getMetrics();
-
-    const lines = [
-      '='.repeat(60),
-      'PERFORMANCE MONITOR REPORT',
-      '='.repeat(60),
-      '',
-      `Generated: ${new Date().toISOString()}`,
-      `URL: ${typeof window !== 'undefined' ? window.location.href : 'N/A'}`,
-      '',
-      '--- Long Tasks ---',
-      `Total Count: ${metrics.longTaskCount}`,
-      `Critical Count: ${metrics.criticalLongTaskCount}`,
-      `Total Blocking Time: ${formatDuration(metrics.totalLongTaskTime)}`,
-      '',
-      '--- Frame Rate ---',
-      `Average FPS: ${metrics.averageFps}`,
-      `Dropped Frames: ${metrics.frameDrops}`,
-      '',
-      '--- Memory ---',
-      `Current Pressure: ${metrics.currentMemoryPressure}`,
-      `Snapshots: ${metrics.memorySnapshots.length}`,
-      '',
-      '--- Budget Violations ---',
-      `Total Violations: ${metrics.budgetViolations.length}`,
-      ...metrics.budgetViolations.slice(-5).map(
-        (v) => `  - ${v.metricName}: ${v.actualValue} (budget: ${v.budgetValue})`
-      ),
-      '',
-      '--- Slow Resources ---',
-      `Total: ${metrics.slowResources.length}`,
-      ...metrics.slowResources.slice(-5).map(
-        (r) => `  - ${r.name.split('/').pop()}: ${formatDuration(r.duration)}`
-      ),
-      '',
-      '='.repeat(60),
-    ];
-
-    return lines.join('\n');
   }
 }
 

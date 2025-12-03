@@ -24,22 +24,22 @@ const LOG_LEVEL_PRIORITY: Record<LogLevel, number> = {
 export interface LoggerConfig {
   /** Minimum log level */
   level: LogLevel;
-  
+
   /** Enable console output */
   console: boolean;
-  
+
   /** Enable remote logging */
   remote: boolean;
-  
+
   /** Remote logging endpoint */
   remoteEndpoint?: string;
-  
+
   /** Include timestamp */
   timestamp: boolean;
-  
+
   /** Include caller info */
   caller: boolean;
-  
+
   /** Custom log handler */
   handler?: (entry: LogEntry) => void;
 }
@@ -99,23 +99,23 @@ function shouldLog(level: LogLevel): boolean {
 function getCallerInfo(): string {
   const error = new Error();
   const stack = error.stack?.split('\n');
-  
+
   if (stack !== undefined && stack.length > 4) {
     const [callerLine] = stack.slice(4);
     if (callerLine !== undefined && callerLine !== '') {
       const match = callerLine.match(/at\s+(.+)\s+\((.+):(\d+):(\d+)\)/);
-    
+
       if (match) {
         return `${match[1]} (${match[2]}:${match[3]})`;
       }
-    
+
       const simpleMatch = callerLine.match(/at\s+(.+):(\d+):(\d+)/);
       if (simpleMatch) {
         return `${simpleMatch[1]}:${simpleMatch[2]}`;
       }
     }
   }
-  
+
   return 'unknown';
 }
 
@@ -124,23 +124,23 @@ function getCallerInfo(): string {
  */
 function formatForConsole(entry: LogEntry): string {
   const parts: string[] = [];
-  
+
   if (currentConfig.timestamp) {
     parts.push(`[${entry.timestamp.toISOString()}]`);
   }
-  
+
   parts.push(`[${entry.level.toUpperCase()}]`);
-  
+
   if (entry.tags !== undefined && entry.tags.length > 0) {
     parts.push(`[${entry.tags.join(', ')}]`);
   }
-  
+
   parts.push(entry.message);
-  
+
   if (currentConfig.caller && entry.caller !== undefined && entry.caller !== '') {
     parts.push(`@ ${entry.caller}`);
   }
-  
+
   return parts.join(' ');
 }
 
@@ -156,7 +156,7 @@ function formatForConsole(entry: LogEntry): string {
  */
 async function sendToRemote(entry: LogEntry): Promise<void> {
   const endpoint = currentConfig.remoteEndpoint;
-  if (currentConfig.remote !== true || endpoint === undefined || endpoint === '') {
+  if (!currentConfig.remote || endpoint === undefined || endpoint === '') {
     return;
   }
 
@@ -184,7 +184,7 @@ function log(
   if (!shouldLog(level)) {
     return;
   }
-  
+
   const entry: LogEntry = {
     level,
     message,
@@ -193,7 +193,7 @@ function log(
     tags,
   };
 
-  if (currentConfig.caller === true) {
+  if (currentConfig.caller) {
     entry.caller = getCallerInfo();
   }
 
@@ -204,7 +204,7 @@ function log(
   }
 
   // Console output
-  if (currentConfig.console === true) {
+  if (currentConfig.console) {
     const formatted = formatForConsole(entry);
 
     if (context !== undefined && Object.keys(context).length > 0) {
@@ -225,7 +225,7 @@ function log(
       }
     }
   }
-  
+
   // Remote logging
   if (currentConfig.remote) {
     void sendToRemote(entry);
@@ -238,20 +238,22 @@ function log(
 export const logger = {
   debug: (message: string, context?: Record<string, unknown>, tags?: string[]): void =>
     log('debug', message, context, tags),
-  
+
   info: (message: string, context?: Record<string, unknown>, tags?: string[]): void =>
     log('info', message, context, tags),
-  
+
   warn: (message: string, context?: Record<string, unknown>, tags?: string[]): void =>
     log('warn', message, context, tags),
-  
+
   error: (message: string, context?: Record<string, unknown>, tags?: string[]): void =>
     log('error', message, context, tags),
-  
+
   /**
    * Create a logger with preset tags
    */
-  withTags: (...tags: string[]): {
+  withTags: (
+    ...tags: string[]
+  ): {
     debug: (message: string, context?: Record<string, unknown>) => void;
     info: (message: string, context?: Record<string, unknown>) => void;
     warn: (message: string, context?: Record<string, unknown>) => void;
@@ -266,11 +268,13 @@ export const logger = {
     error: (message: string, context?: Record<string, unknown>): void =>
       log('error', message, context, tags),
   }),
-  
+
   /**
    * Create a logger with preset context
    */
-  withContext: (baseContext: Record<string, unknown>): {
+  withContext: (
+    baseContext: Record<string, unknown>
+  ): {
     debug: (message: string, context?: Record<string, unknown>) => void;
     info: (message: string, context?: Record<string, unknown>) => void;
     warn: (message: string, context?: Record<string, unknown>) => void;
@@ -292,7 +296,7 @@ export const logger = {
  */
 export function logPerformance(label: string): () => void {
   const start = performance.now();
-  
+
   return () => {
     const duration = performance.now() - start;
     logger.debug(`[Perf] ${label}: ${duration.toFixed(2)}ms`);
@@ -302,10 +306,7 @@ export function logPerformance(label: string): () => void {
 /**
  * Measure async function performance
  */
-export async function measureAsync<T>(
-  label: string,
-  fn: () => Promise<T>
-): Promise<T> {
+export async function measureAsync<T>(label: string, fn: () => Promise<T>): Promise<T> {
   const end = logPerformance(label);
   try {
     return await fn();

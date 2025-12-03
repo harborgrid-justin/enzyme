@@ -48,15 +48,9 @@ export function useConfig<T extends ConfigRecord = ConfigRecord>(): T {
 /**
  * Hook to get a specific configuration value.
  */
-export function useConfigValue<T = ConfigValue>(
-  path: string,
-  defaultValue?: T
-): T {
+export function useConfigValue<T = ConfigValue>(path: string, defaultValue?: T): T {
   const { get } = useConfigContext();
-  return useMemo(
-    () => get<T>(path, defaultValue),
-    [get, path, defaultValue]
-  );
+  return useMemo(() => get<T>(path, defaultValue), [get, path, defaultValue]);
 }
 
 /**
@@ -120,10 +114,7 @@ export function useConfigState<T = ConfigValue>(
 ): [T, (value: T) => void] {
   const { get, set } = useConfigContext();
 
-  const value = useMemo(
-    () => get<T>(path, defaultValue),
-    [get, path, defaultValue]
-  );
+  const value = useMemo(() => get<T>(path, defaultValue), [get, path, defaultValue]);
 
   const setValue = useCallback(
     (newValue: T) => {
@@ -166,10 +157,7 @@ export function useConfigChange(
 /**
  * Hook to watch a config value and re-render on change.
  */
-export function useWatchConfig<T = ConfigValue>(
-  path: string,
-  defaultValue?: T
-): T {
+export function useWatchConfig<T = ConfigValue>(path: string, defaultValue?: T): T {
   const { get, subscribe } = useConfigContext();
   const [value, setValue] = useState<T>(() => get<T>(path, defaultValue));
 
@@ -211,10 +199,7 @@ export function useFeatureConfig(featureName: string): boolean {
 /**
  * Hook to get feature-specific configuration.
  */
-export function useFeatureSettings<T = ConfigRecord>(
-  featureName: string,
-  defaultSettings?: T
-): T {
+export function useFeatureSettings<T = ConfigRecord>(featureName: string, defaultSettings?: T): T {
   return useConfigValue<T>(`features.${featureName}.settings`, defaultSettings as T);
 }
 
@@ -262,10 +247,7 @@ export function useConfigSelector<T extends Record<string, ConfigValue>>(
 /**
  * Hook to create a derived config value.
  */
-export function useConfigDerived<T>(
-  paths: string[],
-  derive: (...values: ConfigValue[]) => T
-): T {
+export function useConfigDerived<T>(paths: string[], derive: (...values: ConfigValue[]) => T): T {
   const { get } = useConfigContext();
 
   return useMemo(() => {
@@ -281,9 +263,7 @@ export function useConfigDerived<T>(
 /**
  * Create a typed config hook for a specific section.
  */
-export function createTypedConfigHook<T extends ConfigRecord>(
-  basePath: string
-): () => T {
+export function createTypedConfigHook<T extends ConfigRecord>(basePath: string): () => T {
   return function useTypedConfig(): T {
     const { get } = useConfigContext();
     return get<T>(basePath, {} as T);
@@ -293,10 +273,7 @@ export function createTypedConfigHook<T extends ConfigRecord>(
 /**
  * Create a typed config value hook for a specific section.
  */
-export function createTypedValueHook<T>(
-  path: string,
-  defaultValue: T
-): () => T {
+export function createTypedValueHook<T>(path: string, defaultValue: T): () => T {
   return function useTypedValue(): T {
     return useConfigValue<T>(path, defaultValue);
   };

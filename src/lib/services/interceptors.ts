@@ -3,7 +3,15 @@
  * @description Common HTTP interceptors for auth, logging, and error handling
  */
 
-import { httpClient, type RequestInterceptor, type ResponseInterceptor, type ErrorInterceptor, type RecoveryErrorInterceptor, type HttpError, type HttpResponse } from './http';
+import {
+  type ErrorInterceptor,
+  httpClient,
+  type HttpError,
+  type HttpResponse,
+  type RecoveryErrorInterceptor,
+  type RequestInterceptor,
+  type ResponseInterceptor,
+} from './http';
 
 /**
  * Auth token getter function
@@ -27,9 +35,9 @@ export function createAuthInterceptor(
     if (config.skipAuth === true) {
       return config;
     }
-    
+
     const token = await getToken();
-    
+
     if (token !== null && token !== undefined) {
       return {
         ...config,
@@ -39,7 +47,7 @@ export function createAuthInterceptor(
         },
       };
     }
-    
+
     return config;
   };
 }
@@ -50,7 +58,11 @@ export function createAuthInterceptor(
 export function createRequestLoggerInterceptor(
   logger?: (message: string, data?: unknown) => void
 ): RequestInterceptor {
-  const log = logger ?? ((_msg: string, _data?: unknown): void => { /* noop by default */ });
+  const log =
+    logger ??
+    ((_msg: string, _data?: unknown): void => {
+      /* noop by default */
+    });
   return (config) => {
     log(`[HTTP] ${config.method ?? 'GET'} ${config.url}`, {
       params: config.params,
@@ -66,12 +78,15 @@ export function createRequestLoggerInterceptor(
 export function createResponseLoggerInterceptor(
   logger?: (message: string, data?: unknown) => void
 ): ResponseInterceptor {
-  const log = logger ?? ((_msg: string, _data?: unknown): void => { /* noop by default */ });
+  const log =
+    logger ??
+    ((_msg: string, _data?: unknown): void => {
+      /* noop by default */
+    });
   return (response) => {
-    log(
-      `[HTTP] ${response.status} ${response.config.method ?? 'GET'} ${response.config.url}`,
-      { data: response.data }
-    );
+    log(`[HTTP] ${response.status} ${response.config.method ?? 'GET'} ${response.config.url}`, {
+      data: response.data,
+    });
     return response;
   };
 }
@@ -83,14 +98,11 @@ export function createErrorLoggerInterceptor(
   logger: (message: string, error?: unknown) => void = console.error
 ): ErrorInterceptor {
   return (error) => {
-    logger(
-      `[HTTP Error] ${error.status} ${error.config.method ?? 'GET'} ${error.config.url}`,
-      {
-        status: error.status,
-        data: error.data,
-        message: error.message,
-      }
-    );
+    logger(`[HTTP Error] ${error.status} ${error.config.method ?? 'GET'} ${error.config.url}`, {
+      status: error.status,
+      data: error.data,
+      message: error.message,
+    });
     return error;
   };
 }
@@ -118,9 +130,7 @@ export function createRetryInterceptor(
       retryCount.set(requestKey, currentRetry + 1);
 
       // Wait before retry
-      await new Promise((resolve) =>
-        setTimeout(resolve, retryDelay * Math.pow(2, currentRetry))
-      );
+      await new Promise((resolve) => setTimeout(resolve, retryDelay * Math.pow(2, currentRetry)));
 
       // Retry the request
       try {
@@ -168,14 +178,14 @@ export function createTokenRefreshInterceptor(
         const newToken = await refreshPromise;
         if (newToken !== null && newToken !== '') {
           // Retry with new token - recovery succeeded
-          const response = await httpClient.request({
+
+          return await httpClient.request({
             ...error.config,
             headers: {
               ...error.config.headers,
               Authorization: `Bearer ${newToken}`,
             },
           });
-          return response;
         }
       } catch {
         // Refresh failed, propagate original error
@@ -194,14 +204,14 @@ export function createTokenRefreshInterceptor(
 
       if (newToken !== null && newToken !== '') {
         // Retry with new token - recovery succeeded
-        const response = await httpClient.request({
+
+        return await httpClient.request({
           ...error.config,
           headers: {
             ...error.config.headers,
             Authorization: `Bearer ${newToken}`,
           },
         });
-        return response;
       }
 
       // Refresh returned no token
@@ -225,7 +235,7 @@ export function createCsrfInterceptor(
 ): RequestInterceptor {
   return (config) => {
     const method = config.method ?? 'GET';
-    
+
     // Only add CSRF token for state-changing requests
     if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
       const token = getCsrfToken();
@@ -239,7 +249,7 @@ export function createCsrfInterceptor(
         };
       }
     }
-    
+
     return config;
   };
 }
@@ -269,11 +279,12 @@ export function createRequestIdInterceptor(
 /**
  * Create timing interceptor
  */
-export function createTimingInterceptor(
-  onTiming: (url: string, duration: number) => void
-): { request: RequestInterceptor; response: ResponseInterceptor } {
+export function createTimingInterceptor(onTiming: (url: string, duration: number) => void): {
+  request: RequestInterceptor;
+  response: ResponseInterceptor;
+} {
   const timings = new Map<string, number>();
-  
+
   return {
     request: (config) => {
       const key = `${config.method ?? 'GET'}_${config.url}_${Date.now()}`;

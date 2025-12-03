@@ -4,11 +4,16 @@
 
 ## Overview
 
-The Theme module provides a comprehensive theming solution for React applications with support for multiple color schemes (light, dark, system), design tokens for consistent spacing and typography, and seamless integration with CSS variables for runtime theme switching.
+The Theme module provides a comprehensive theming solution for React applications with support for multiple color
+schemes (light, dark, system), design tokens for consistent spacing and typography, and seamless integration with CSS
+variables for runtime theme switching.
 
-Built on modern CSS custom properties, this module allows you to define your design system once and apply it consistently across your entire application. It includes pre-built light and dark palettes, automatic system preference detection, persistent theme selection, and TypeScript support for type-safe theme access.
+Built on modern CSS custom properties, this module allows you to define your design system once and apply it
+consistently across your entire application. It includes pre-built light and dark palettes, automatic system preference
+detection, persistent theme selection, and TypeScript support for type-safe theme access.
 
-Perfect for applications requiring dark mode, custom branding, or white-label solutions, this module provides the foundation for a consistent, accessible, and maintainable design system.
+Perfect for applications requiring dark mode, custom branding, or white-label solutions, this module provides the
+foundation for a consistent, accessible, and maintainable design system.
 
 ## Key Features
 
@@ -73,27 +78,32 @@ function StyledComponent() {
 ## Exports
 
 ### Components
+
 - `ThemeProvider` - Context provider for theme system
 
 ### Hooks
+
 - `useThemeContext` - Access theme state and methods
 
 ### Palettes
+
 - `lightPalette` - Light theme color palette
 - `darkPalette` - Dark theme color palette
 
 ### Tokens
+
 - `tokens` - Design token object
-  - `spacing` - Spacing scale (xs, sm, md, lg, xl, xxl)
-  - `radius` - Border radius values
-  - `fontSize` - Font size scale
-  - `fontWeight` - Font weight values
-  - `lineHeight` - Line height values
-  - `shadow` - Box shadow presets
-  - `breakpoint` - Responsive breakpoints
-  - `zIndex` - Z-index scale
+    - `spacing` - Spacing scale (xs, sm, md, lg, xl, xxl)
+    - `radius` - Border radius values
+    - `fontSize` - Font size scale
+    - `fontWeight` - Font weight values
+    - `lineHeight` - Line height values
+    - `shadow` - Box shadow presets
+    - `breakpoint` - Responsive breakpoints
+    - `zIndex` - Z-index scale
 
 ### Types
+
 - `ThemeMode` - Theme mode ('light' | 'dark' | 'system')
 - `ResolvedTheme` - Actual theme ('light' | 'dark')
 - `ThemeConfig` - Theme configuration
@@ -135,6 +145,7 @@ The theme module uses CSS custom properties for runtime theming:
 ## Common Patterns
 
 ### Pattern 1: Theme Toggle Button
+
 ```tsx
 import { useThemeContext } from '@/lib/theme';
 
@@ -154,6 +165,7 @@ function ThemeToggle() {
 ```
 
 ### Pattern 2: Using Design Tokens
+
 ```tsx
 import { tokens } from '@/lib/theme';
 
@@ -175,6 +187,7 @@ function Card({ children }) {
 ```
 
 ### Pattern 3: Custom Theme Palette
+
 ```tsx
 import { ThemeProvider } from '@/lib/theme';
 
@@ -221,6 +234,7 @@ function App() {
 ```
 
 ### Pattern 4: System Theme with Override
+
 ```tsx
 import { ThemeProvider } from '@/lib/theme';
 
@@ -271,6 +285,7 @@ function Settings() {
 ```
 
 ### Pattern 5: Theme-Aware Components
+
 ```tsx
 import { useThemeContext } from '@/lib/theme';
 
@@ -300,6 +315,7 @@ function AdaptiveImage() {
 ```
 
 ### Pattern 6: Responsive Design with Tokens
+
 ```tsx
 import { tokens } from '@/lib/theme';
 
@@ -329,6 +345,7 @@ function ResponsiveGrid() {
 ## Configuration
 
 ### Theme Provider Configuration
+
 ```tsx
 import { ThemeProvider } from '@/lib/theme';
 
@@ -366,6 +383,7 @@ import { ThemeProvider } from '@/lib/theme';
 ```
 
 ### CSS Variables Reference
+
 ```css
 /* Background colors */
 --color-bg-primary
@@ -427,6 +445,7 @@ import { ThemeProvider } from '@/lib/theme';
 ## Testing
 
 ### Testing Theme Context
+
 ```tsx
 import { render, screen } from '@testing-library/react';
 import { ThemeProvider } from '@/lib/theme';
@@ -463,13 +482,17 @@ describe('ThemedComponent', () => {
 ## Troubleshooting
 
 ### Issue: Theme Not Persisting
+
 **Solution:** Ensure storageKey is set:
+
 ```tsx
 <ThemeProvider storageKey="my-app-theme">
 ```
 
 ### Issue: Flash of Wrong Theme on Load
+
 **Solution:** Add script to HTML head:
+
 ```html
 <script>
   try {
@@ -482,7 +505,9 @@ describe('ThemedComponent', () => {
 ```
 
 ### Issue: CSS Variables Not Working
+
 **Solution:** Ensure ThemeProvider is at root:
+
 ```tsx
 <ThemeProvider>
   <App />
@@ -490,7 +515,9 @@ describe('ThemedComponent', () => {
 ```
 
 ### Issue: System Theme Not Detected
+
 **Solution:** Check browser support for prefers-color-scheme:
+
 ```tsx
 const supportsSystemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches !== undefined;
 ```

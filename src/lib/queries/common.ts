@@ -23,7 +23,11 @@ export interface PrefetchOptions {
  * Hook to prefetch queries on demand
  */
 export function usePrefetch(): {
-  prefetch: <T>(queryKey: QueryKey, queryFn: () => Promise<T>, options?: PrefetchOptions) => Promise<void>;
+  prefetch: <T>(
+    queryKey: QueryKey,
+    queryFn: () => Promise<T>,
+    options?: PrefetchOptions
+  ) => Promise<void>;
 } {
   const queryClient = useQueryClient();
 
@@ -34,7 +38,7 @@ export function usePrefetch(): {
       options?: PrefetchOptions
     ): Promise<void> => {
       const { staleTime = 5 * 60 * 1000, force = false } = options ?? {};
-      
+
       if (force) {
         await queryClient.fetchQuery({
           queryKey,
@@ -51,7 +55,7 @@ export function usePrefetch(): {
     },
     [queryClient]
   );
-  
+
   return { prefetch };
 }
 
@@ -186,24 +190,20 @@ export function mergePaginatedData<T extends { id: string }>(
   incoming: T[]
 ): T[] {
   if (!existing) return incoming;
-  
+
   const existingMap = new Map(existing.map((item) => [item.id, item]));
-  
+
   incoming.forEach((item) => {
     existingMap.set(item.id, item);
   });
-  
+
   return Array.from(existingMap.values());
 }
 
 /**
  * Infinite query page merger
  */
-export function mergeInfinitePages<T>(
-  pages: T[][],
-  newPage: T[],
-  pageIndex: number
-): T[][] {
+export function mergeInfinitePages<T>(pages: T[][], newPage: T[], pageIndex: number): T[][] {
   const result = [...pages];
   result[pageIndex] = newPage;
   return result;
@@ -262,15 +262,10 @@ export function useBatchQueryUpdates(): {
 
   const batchUpdate = useCallback(
     (updates: Array<{ queryKey: QueryKey; data: unknown }>) => {
-      queryClient.setQueriesData(
-        { predicate: () => true },
-        (oldData: unknown) => {
-          const update = updates.find(
-            (u) => JSON.stringify(u.queryKey) === JSON.stringify(oldData)
-          );
-          return update ? update.data : oldData;
-        }
-      );
+      queryClient.setQueriesData({ predicate: () => true }, (oldData: unknown) => {
+        const update = updates.find((u) => JSON.stringify(u.queryKey) === JSON.stringify(oldData));
+        return update ? update.data : oldData;
+      });
     },
     [queryClient]
   );

@@ -7,11 +7,7 @@
  * @module auth/rbac/role-hierarchy
  */
 
-import type {
-  RoleDefinition,
-  RoleHierarchy,
-  Permission,
-} from './types';
+import type { RoleDefinition, RoleHierarchy, Permission } from './types';
 
 // =============================================================================
 // Role Hierarchy Manager
@@ -247,8 +243,8 @@ export class RoleHierarchyManager {
    */
   getRootRoles(): string[] {
     return Array.from(this.hierarchyMap.values())
-      .filter(h => h.parents.length === 0)
-      .map(h => h.roleId);
+      .filter((h) => h.parents.length === 0)
+      .map((h) => h.roleId);
   }
 
   /**
@@ -258,8 +254,8 @@ export class RoleHierarchyManager {
    */
   getLeafRoles(): string[] {
     return Array.from(this.hierarchyMap.values())
-      .filter(h => h.children.length === 0)
-      .map(h => h.roleId);
+      .filter((h) => h.children.length === 0)
+      .map((h) => h.roleId);
   }
 
   // ===========================================================================
@@ -299,7 +295,7 @@ export class RoleHierarchyManager {
 
     for (const roleId of roleIds) {
       const rolePerms = this.getEffectivePermissions(roleId);
-      rolePerms.forEach(p => permissions.add(p));
+      rolePerms.forEach((p) => permissions.add(p));
     }
 
     return permissions;
@@ -427,9 +423,7 @@ export class RoleHierarchyManager {
       if (role.inherits) {
         for (const parentId of role.inherits) {
           if (!this.roles.has(parentId)) {
-            errors.push(
-              `Role '${role.id}' references missing parent '${parentId}'`
-            );
+            errors.push(`Role '${role.id}' references missing parent '${parentId}'`);
           }
         }
       }
@@ -503,8 +497,7 @@ export class RoleHierarchyManager {
       if (hierarchy.parents.length === 0) {
         hierarchy.level = 0;
       } else {
-        hierarchy.level =
-          Math.max(...hierarchy.parents.map(p => calculateLevel(p))) + 1;
+        hierarchy.level = Math.max(...hierarchy.parents.map((p) => calculateLevel(p))) + 1;
       }
 
       calculated.add(roleId);
@@ -519,11 +512,7 @@ export class RoleHierarchyManager {
   /**
    * Recursively collect ancestor roles.
    */
-  private collectAncestors(
-    roleId: string,
-    ancestors: Set<string>,
-    visited: Set<string>
-  ): void {
+  private collectAncestors(roleId: string, ancestors: Set<string>, visited: Set<string>): void {
     if (visited.has(roleId)) return;
     visited.add(roleId);
 
@@ -539,11 +528,7 @@ export class RoleHierarchyManager {
   /**
    * Recursively collect descendant roles.
    */
-  private collectDescendants(
-    roleId: string,
-    descendants: Set<string>,
-    visited: Set<string>
-  ): void {
+  private collectDescendants(roleId: string, descendants: Set<string>, visited: Set<string>): void {
     if (visited.has(roleId)) return;
     visited.add(roleId);
 
@@ -586,11 +571,7 @@ export class RoleHierarchyManager {
   /**
    * Check for circular inheritance.
    */
-  private hasCycle(
-    roleId: string,
-    visited: Set<string>,
-    path: string[]
-  ): boolean {
+  private hasCycle(roleId: string, visited: Set<string>, path: string[]): boolean {
     if (path.includes(roleId)) {
       path.push(roleId);
       return true;
@@ -635,9 +616,7 @@ export class RoleHierarchyManager {
  * @param roles - Initial role definitions
  * @returns Configured RoleHierarchyManager
  */
-export function createRoleHierarchy(
-  roles?: RoleDefinition[]
-): RoleHierarchyManager {
+export function createRoleHierarchy(roles?: RoleDefinition[]): RoleHierarchyManager {
   const manager = new RoleHierarchyManager();
 
   if (roles) {
@@ -712,12 +691,7 @@ export const HEALTHCARE_ROLE_HIERARCHY: RoleDefinition[] = [
   {
     id: 'physician',
     name: 'Physician',
-    permissions: [
-      'patients:*',
-      'prescriptions:*',
-      'orders:*',
-      'diagnoses:*',
-    ],
+    permissions: ['patients:*', 'prescriptions:*', 'orders:*', 'diagnoses:*'],
     inherits: ['clinical_staff'],
     priority: 100,
   },
@@ -731,54 +705,32 @@ export const HEALTHCARE_ROLE_HIERARCHY: RoleDefinition[] = [
   {
     id: 'nurse',
     name: 'Nurse',
-    permissions: [
-      'patients:read',
-      'vitals:*',
-      'medications:administer',
-      'notes:nursing',
-    ],
+    permissions: ['patients:read', 'vitals:*', 'medications:administer', 'notes:nursing'],
     inherits: ['clinical_staff'],
     priority: 60,
   },
   {
     id: 'clinical_staff',
     name: 'Clinical Staff',
-    permissions: [
-      'patients:read',
-      'schedules:view',
-      'messages:*',
-    ],
+    permissions: ['patients:read', 'schedules:view', 'messages:*'],
     priority: 40,
   },
   {
     id: 'front_desk',
     name: 'Front Desk',
-    permissions: [
-      'appointments:*',
-      'patients:register',
-      'insurance:verify',
-    ],
+    permissions: ['appointments:*', 'patients:register', 'insurance:verify'],
     priority: 30,
   },
   {
     id: 'billing',
     name: 'Billing Staff',
-    permissions: [
-      'billing:*',
-      'insurance:*',
-      'payments:*',
-    ],
+    permissions: ['billing:*', 'insurance:*', 'payments:*'],
     priority: 30,
   },
   {
     id: 'patient',
     name: 'Patient',
-    permissions: [
-      'appointments:own:*',
-      'records:own:read',
-      'messages:own:*',
-      'portal:access',
-    ],
+    permissions: ['appointments:own:*', 'records:own:read', 'messages:own:*', 'portal:access'],
     priority: 10,
   },
 ];

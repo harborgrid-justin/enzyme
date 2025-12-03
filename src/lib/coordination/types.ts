@@ -461,7 +461,8 @@ export interface LifecycleEvents {
  * All known coordination events.
  */
 export interface KnownEvents
-  extends AuthEvents,
+  extends
+    AuthEvents,
     NetworkEvents,
     StateEvents,
     SystemEvents,

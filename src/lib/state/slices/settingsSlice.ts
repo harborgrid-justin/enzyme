@@ -109,13 +109,36 @@ export interface SettingsActions {
   /** Update multiple settings at once */
   updateSettings: (settings: Partial<SettingsState>) => void;
   /** Update display-related settings as a batch */
-  updateDisplaySettings: (settings: Partial<Pick<SettingsState, 'locale' | 'timezone' | 'dateFormat' | 'timeFormat' | 'numberFormat' | 'theme'>>) => void;
+  updateDisplaySettings: (
+    settings: Partial<
+      Pick<
+        SettingsState,
+        'locale' | 'timezone' | 'dateFormat' | 'timeFormat' | 'numberFormat' | 'theme'
+      >
+    >
+  ) => void;
   /** Update accessibility settings as a batch */
-  updateAccessibilitySettings: (settings: Partial<Pick<SettingsState, 'reducedMotion' | 'highContrast' | 'fontSize' | 'keyboardShortcutsEnabled'>>) => void;
+  updateAccessibilitySettings: (
+    settings: Partial<
+      Pick<
+        SettingsState,
+        'reducedMotion' | 'highContrast' | 'fontSize' | 'keyboardShortcutsEnabled'
+      >
+    >
+  ) => void;
   /** Update notification settings as a batch */
-  updateNotificationSettings: (settings: Partial<Pick<SettingsState, 'notificationsEnabled' | 'soundEnabled' | 'desktopNotifications' | 'emailNotifications'>>) => void;
+  updateNotificationSettings: (
+    settings: Partial<
+      Pick<
+        SettingsState,
+        'notificationsEnabled' | 'soundEnabled' | 'desktopNotifications' | 'emailNotifications'
+      >
+    >
+  ) => void;
   /** Update privacy settings as a batch */
-  updatePrivacySettings: (settings: Partial<Pick<SettingsState, 'analyticsEnabled' | 'crashReportingEnabled'>>) => void;
+  updatePrivacySettings: (
+    settings: Partial<Pick<SettingsState, 'analyticsEnabled' | 'crashReportingEnabled'>>
+  ) => void;
 
   // Feature Flag Actions
   /** Set a single feature flag */
@@ -266,7 +289,10 @@ const defaultNotificationSettings = {
  * - settings/updateDisplaySettings
  * - settings/setFeatureFlag
  */
-export const settingsSlice = createSlice<SettingsState, SettingsActions & Record<string, (...args: never[]) => unknown>>({
+export const settingsSlice = createSlice<
+  SettingsState,
+  SettingsActions & Record<string, (...args: never[]) => unknown>
+>({
   name: 'settings',
   initialState: defaultSettings,
   actions: (set, get) => ({
@@ -505,4 +531,9 @@ export type SettingsSlice = SettingsState & SettingsActions;
 // Default Settings Export (for external use)
 // ============================================================================
 
-export { defaultSettings, defaultDisplaySettings, defaultAccessibilitySettings, defaultNotificationSettings };
+export {
+  defaultSettings,
+  defaultDisplaySettings,
+  defaultAccessibilitySettings,
+  defaultNotificationSettings,
+};

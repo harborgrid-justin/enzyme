@@ -4,7 +4,7 @@
  */
 
 import { createContext } from 'react';
-import type { ContextBridgeDefinition } from '../coordination/types';
+import type { ContextBridgeDefinition } from '@/lib/coordination';
 
 /**
  * Context bridge implementation

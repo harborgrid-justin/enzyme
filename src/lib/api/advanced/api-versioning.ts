@@ -262,7 +262,7 @@ export class VersionManager {
    * @returns Version info or undefined
    */
   getVersionInfo(version: string): APIVersion | undefined {
-    return this.config.supportedVersions.find(v => v.version === version);
+    return this.config.supportedVersions.find((v) => v.version === version);
   }
 
   /**
@@ -309,39 +309,15 @@ export class VersionManager {
    * Get all supported versions.
    */
   getSupportedVersions(): APIVersion[] {
-    return this.config.supportedVersions.filter(v => v.status !== 'unsupported');
+    return this.config.supportedVersions.filter((v) => v.status !== 'unsupported');
   }
 
   /**
    * Get deprecated versions.
    */
   getDeprecatedVersions(): APIVersion[] {
-    return this.config.supportedVersions.filter(v => v.status === 'deprecated');
+    return this.config.supportedVersions.filter((v) => v.status === 'deprecated');
   }
-
-  /**
-   * Check version status and trigger callbacks.
-   */
-  private checkVersion(version: string): void {
-    const info = this.getVersionInfo(version);
-
-    if (!info) {
-      this.config.onUnsupportedVersion?.(version);
-      return;
-    }
-
-    if (info.status === 'deprecated') {
-      this.config.onDeprecatedVersion?.(version, info);
-    }
-
-    if (info.status === 'unsupported') {
-      this.config.onUnsupportedVersion?.(version);
-    }
-  }
-
-  // ===========================================================================
-  // Version Comparison
-  // ===========================================================================
 
   /**
    * Compare two versions.
@@ -375,6 +351,10 @@ export class VersionManager {
     return 0;
   }
 
+  // ===========================================================================
+  // Version Comparison
+  // ===========================================================================
+
   /**
    * Check if version is newer than another.
    */
@@ -399,10 +379,6 @@ export class VersionManager {
     return sorted[0]?.version ?? this.config.currentVersion;
   }
 
-  // ===========================================================================
-  // Response Migration
-  // ===========================================================================
-
   /**
    * Register a response migration.
    *
@@ -414,6 +390,10 @@ export class VersionManager {
     existing.push(migration as ResponseMigration);
     this.migrations.set(key, existing);
   }
+
+  // ===========================================================================
+  // Response Migration
+  // ===========================================================================
 
   /**
    * Migrate response data from one version to another.
@@ -461,30 +441,6 @@ export class VersionManager {
   }
 
   /**
-   * Find migration path between versions.
-   */
-  private findMigrationPath(from: string, to: string): string[] {
-    const versions = this.config.supportedVersions.map(v => v.version);
-    const fromIndex = versions.indexOf(from);
-    const toIndex = versions.indexOf(to);
-
-    if (fromIndex === -1 || toIndex === -1) {
-      return [];
-    }
-
-    // Return path in order
-    if (fromIndex < toIndex) {
-      return versions.slice(fromIndex, toIndex + 1);
-    } else {
-      return versions.slice(toIndex, fromIndex + 1).reverse();
-    }
-  }
-
-  // ===========================================================================
-  // Sunset Checking
-  // ===========================================================================
-
-  /**
    * Get days until version sunset.
    *
    * @param version - Version to check
@@ -500,9 +456,8 @@ export class VersionManager {
     const sunsetDate = new Date(info.sunsetAt);
     const today = new Date();
     const diffTime = sunsetDate.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    return diffDays;
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   }
 
   /**
@@ -513,6 +468,10 @@ export class VersionManager {
     return days >= 0 && days <= 0;
   }
 
+  // ===========================================================================
+  // Sunset Checking
+  // ===========================================================================
+
   /**
    * Get versions approaching sunset.
    *
@@ -520,23 +479,17 @@ export class VersionManager {
    * @returns Versions within threshold
    */
   getVersionsApproachingSunset(daysThreshold = 30): APIVersion[] {
-    return this.config.supportedVersions.filter(v => {
+    return this.config.supportedVersions.filter((v) => {
       const days = this.getDaysUntilSunset(v.version);
       return days >= 0 && days <= daysThreshold;
     });
   }
 
-  // ===========================================================================
-  // Configuration Updates
-  // ===========================================================================
-
   /**
    * Add a new version.
    */
   addVersion(version: APIVersion): void {
-    const existing = this.config.supportedVersions.findIndex(
-      v => v.version === version.version
-    );
+    const existing = this.config.supportedVersions.findIndex((v) => v.version === version.version);
 
     if (existing >= 0) {
       this.config.supportedVersions[existing] = version;
@@ -558,6 +511,10 @@ export class VersionManager {
     }
   }
 
+  // ===========================================================================
+  // Configuration Updates
+  // ===========================================================================
+
   /**
    * Set current version.
    */
@@ -567,9 +524,7 @@ export class VersionManager {
     }
 
     // Update old current to supported
-    const oldCurrent = this.config.supportedVersions.find(
-      v => v.status === 'current'
-    );
+    const oldCurrent = this.config.supportedVersions.find((v) => v.status === 'current');
     if (oldCurrent) {
       oldCurrent.status = 'supported';
     }
@@ -581,6 +536,46 @@ export class VersionManager {
     }
 
     this.config.currentVersion = version;
+  }
+
+  /**
+   * Check version status and trigger callbacks.
+   */
+  private checkVersion(version: string): void {
+    const info = this.getVersionInfo(version);
+
+    if (!info) {
+      this.config.onUnsupportedVersion?.(version);
+      return;
+    }
+
+    if (info.status === 'deprecated') {
+      this.config.onDeprecatedVersion?.(version, info);
+    }
+
+    if (info.status === 'unsupported') {
+      this.config.onUnsupportedVersion?.(version);
+    }
+  }
+
+  /**
+   * Find migration path between versions.
+   */
+  private findMigrationPath(from: string, to: string): string[] {
+    const versions = this.config.supportedVersions.map((v) => v.version);
+    const fromIndex = versions.indexOf(from);
+    const toIndex = versions.indexOf(to);
+
+    if (fromIndex === -1 || toIndex === -1) {
+      return [];
+    }
+
+    // Return path in order
+    if (fromIndex < toIndex) {
+      return versions.slice(fromIndex, toIndex + 1);
+    } else {
+      return versions.slice(toIndex, fromIndex + 1).reverse();
+    }
   }
 }
 

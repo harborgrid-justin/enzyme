@@ -458,9 +458,7 @@ export function initializeConfig(): void {
 
   // Log successful initialization in development
   if (env.isDev) {
-    console.info(
-      `[Config] Initialized successfully (${result.environment} v${result.version})`
-    );
+    console.info(`[Config] Initialized successfully (${result.environment} v${result.version})`);
   }
 }
 
@@ -502,9 +500,8 @@ export function getConfigSummary(): Record<string, unknown> {
       performanceMonitoring: env.enablePerformanceMonitoring,
     },
     storage: {
-      estimatedSize: typeof window !== 'undefined'
-        ? formatStorageSize(estimateStorageSize())
-        : 'N/A (SSR)',
+      estimatedSize:
+        typeof window !== 'undefined' ? formatStorageSize(estimateStorageSize()) : 'N/A (SSR)',
     },
   };
 }
@@ -610,10 +607,10 @@ if (import.meta.env.DEV) {
 }
 /**
  * Estimate the total size of localStorage in bytes
- * 
+ *
  * Iterates through all localStorage keys and calculates the approximate
  * size of stored data. Used for storage quota monitoring.
- * 
+ *
  * @returns Total estimated size in bytes
  */
 function estimateStorageSize(): number {

@@ -226,25 +226,34 @@ function GenericListInner<T extends ListItemBase>({
   );
 
   // Memoize container style
-  const containerStyle = useMemo<CSSProperties>(() => ({
-    display: 'flex',
-    flexDirection: 'column',
-    gap: typeof gap === 'number' ? `${gap}px` : gap,
-    ...style,
-  }), [gap, style]);
+  const containerStyle = useMemo<CSSProperties>(
+    () => ({
+      display: 'flex',
+      flexDirection: 'column',
+      gap: typeof gap === 'number' ? `${gap}px` : gap,
+      ...style,
+    }),
+    [gap, style]
+  );
 
   // Item wrapper style - memoized
-  const itemWrapperStyle = useMemo<CSSProperties>(() => ({
-    cursor: onSelect !== undefined ? 'pointer' : 'default',
-  }), [onSelect]);
+  const itemWrapperStyle = useMemo<CSSProperties>(
+    () => ({
+      cursor: onSelect !== undefined ? 'pointer' : 'default',
+    }),
+    [onSelect]
+  );
 
   // Stable click handler using data-* attributes
-  const handleItemClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
-    const {itemId} = event.currentTarget.dataset;
-    if (itemId != null && itemId.length > 0 && onSelect != null) {
-      onSelect(selectedId === itemId ? null : itemId);
-    }
-  }, [onSelect, selectedId]);
+  const handleItemClick = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      const { itemId } = event.currentTarget.dataset;
+      if (itemId != null && itemId.length > 0 && onSelect != null) {
+        onSelect(selectedId === itemId ? null : itemId);
+      }
+    },
+    [onSelect, selectedId]
+  );
 
   if (items.length === 0 && emptyState != null) {
     return <>{emptyState}</>;
@@ -347,60 +356,65 @@ export interface StatsCardProps {
 /**
  * Stats Card component - memoized for performance
  */
-export const StatsCard = memo(({
-  label,
-  value,
-  icon,
-  trend,
-  onClick,
-  className,
-  style,
-}: StatsCardProps): React.ReactElement => {
-  // Memoize container style based on props
-  const containerStyle = useMemo<CSSProperties>(() => ({
-    padding: '1rem',
-    backgroundColor: 'var(--color-bg-primary, #fff)',
-    borderRadius: 'var(--radius-md, 0.5rem)',
-    border: '1px solid var(--color-border-default, #e5e7eb)',
-    cursor: onClick !== undefined ? 'pointer' : 'default',
-    transition: 'box-shadow 0.2s, transform 0.2s',
-    ...style,
-  }), [onClick, style]);
+export const StatsCard = memo(
+  ({
+    label,
+    value,
+    icon,
+    trend,
+    onClick,
+    className,
+    style,
+  }: StatsCardProps): React.ReactElement => {
+    // Memoize container style based on props
+    const containerStyle = useMemo<CSSProperties>(
+      () => ({
+        padding: '1rem',
+        backgroundColor: 'var(--color-bg-primary, #fff)',
+        borderRadius: 'var(--radius-md, 0.5rem)',
+        border: '1px solid var(--color-border-default, #e5e7eb)',
+        cursor: onClick !== undefined ? 'pointer' : 'default',
+        transition: 'box-shadow 0.2s, transform 0.2s',
+        ...style,
+      }),
+      [onClick, style]
+    );
 
-  // Memoize trend style based on direction
-  const trendStyle = useMemo<CSSProperties | undefined>(() => {
-    if (trend === undefined) return undefined;
-    let color: string;
-    if (trend.direction === 'up') {
-      color = 'var(--color-success, #22c55e)';
-    } else if (trend.direction === 'down') {
-      color = 'var(--color-error, #ef4444)';
-    } else {
-      color = 'var(--color-text-muted, #6b7280)';
-    }
-    return {
-      fontSize: '0.75rem',
-      color,
-    };
-  }, [trend]);
+    // Memoize trend style based on direction
+    const trendStyle = useMemo<CSSProperties | undefined>(() => {
+      if (trend === undefined) return undefined;
+      let color: string;
+      if (trend.direction === 'up') {
+        color = 'var(--color-success, #22c55e)';
+      } else if (trend.direction === 'down') {
+        color = 'var(--color-error, #ef4444)';
+      } else {
+        color = 'var(--color-text-muted, #6b7280)';
+      }
+      return {
+        fontSize: '0.75rem',
+        color,
+      };
+    }, [trend]);
 
-  return (
-    <div onClick={onClick} className={className} style={containerStyle}>
-      <div style={statsCardHeaderStyle}>
-        <span style={statsCardLabelStyle}>{label}</span>
-        {icon}
+    return (
+      <div onClick={onClick} className={className} style={containerStyle}>
+        <div style={statsCardHeaderStyle}>
+          <span style={statsCardLabelStyle}>{label}</span>
+          {icon}
+        </div>
+        <p style={statsCardValueStyle}>{value}</p>
+        {trend !== undefined && (
+          <span style={trendStyle}>
+            {trend.direction === 'up' && '+'}
+            {trend.direction === 'down' && '-'}
+            {Math.abs(trend.value)}%
+          </span>
+        )}
       </div>
-      <p style={statsCardValueStyle}>{value}</p>
-      {trend !== undefined && (
-        <span style={trendStyle}>
-          {trend.direction === 'up' && '+'}
-          {trend.direction === 'down' && '-'}
-          {Math.abs(trend.value)}%
-        </span>
-      )}
-    </div>
-  );
-});
+    );
+  }
+);
 
 StatsCard.displayName = 'StatsCard';
 
@@ -450,73 +464,81 @@ const variantStyles: Record<string, CSSProperties> = {
 /**
  * Action Toolbar component - memoized for performance
  */
-export const ActionToolbar = memo(({
-  actions,
-  className,
-  style,
-  size = 'md',
-  direction = 'horizontal',
-}: ActionToolbarProps): React.ReactElement => {
-  const getButtonStyle = useCallback(
-    (variant: ActionConfig['variant'] = 'secondary', disabled?: boolean): CSSProperties => {
-      const base: CSSProperties = {
-        ...sizeStyles[size],
-        borderRadius: '0.375rem',
-        border: 'none',
-        cursor: (disabled ?? false) === true ? 'not-allowed' : 'pointer',
-        opacity: (disabled ?? false) === true ? 0.5 : 1,
+export const ActionToolbar = memo(
+  ({
+    actions,
+    className,
+    style,
+    size = 'md',
+    direction = 'horizontal',
+  }: ActionToolbarProps): React.ReactElement => {
+    const getButtonStyle = useCallback(
+      (variant: ActionConfig['variant'] = 'secondary', disabled?: boolean): CSSProperties => {
+        const base: CSSProperties = {
+          ...sizeStyles[size],
+          borderRadius: '0.375rem',
+          border: 'none',
+          cursor: (disabled ?? false) ? 'not-allowed' : 'pointer',
+          opacity: (disabled ?? false) ? 0.5 : 1,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          fontWeight: 500,
+          transition: 'background-color 0.2s',
+        };
+
+        return { ...base, ...variantStyles[variant] };
+      },
+      [size]
+    );
+
+    // Memoize container style
+    const containerStyle = useMemo<CSSProperties>(
+      () => ({
         display: 'flex',
-        alignItems: 'center',
+        flexDirection: direction === 'horizontal' ? 'row' : 'column',
         gap: '0.5rem',
-        fontWeight: 500,
-        transition: 'background-color 0.2s',
-      };
+        ...style,
+      }),
+      [direction, style]
+    );
 
-      return { ...base, ...variantStyles[variant] };
-    },
-    [size]
-  );
+    // Stable click handler using data-* attributes
+    const handleButtonClick = useCallback(
+      (event: React.MouseEvent<HTMLButtonElement>): void => {
+        const { actionId } = event.currentTarget.dataset;
+        if (actionId !== undefined) {
+          const action = actions.find((a) => a.id === actionId);
+          if (action !== undefined) {
+            action.onClick();
+          }
+        }
+      },
+      [actions]
+    );
 
-  // Memoize container style
-  const containerStyle = useMemo<CSSProperties>(() => ({
-    display: 'flex',
-    flexDirection: direction === 'horizontal' ? 'row' : 'column',
-    gap: '0.5rem',
-    ...style,
-  }), [direction, style]);
-
-  // Stable click handler using data-* attributes
-  const handleButtonClick = useCallback((event: React.MouseEvent<HTMLButtonElement>): void => {
-    const {actionId} = event.currentTarget.dataset;
-    if (actionId !== undefined) {
-      const action = actions.find((a) => a.id === actionId);
-      if (action !== undefined) {
-        action.onClick();
-      }
-    }
-  }, [actions]);
-
-  return (
-    <div className={className} style={containerStyle}>
-      {actions.map((action) => (
-        <button
-          key={action.id}
-          data-action-id={action.id}
-          onClick={handleButtonClick}
-          disabled={(action.disabled ?? false) === true || (action.loading ?? false) === true}
-          style={getButtonStyle(action.variant, action.disabled)}
-        >
-          {(action.loading ?? false) === true ? (
-            <span style={loadingIndicatorStyle}>...</span>
-          ) : (
-            action.icon
-          )}
-          {action.label}
-        </button>
-      ))}
-    </div>
-  );
-});
+    return (
+      <div className={className} style={containerStyle}>
+        {actions.map((action) => (
+          <button
+            key={action.id}
+            data-action-id={action.id}
+            onClick={handleButtonClick}
+            disabled={(action.disabled ?? false) || (action.loading ?? false)}
+            style={getButtonStyle(action.variant, action.disabled)}
+          >
+            {(action.loading ?? false) ? (
+              <span style={loadingIndicatorStyle}>...</span>
+            ) : (
+              action.icon
+            )}
+            {action.label}
+          </button>
+        ))}
+      </div>
+    );
+  }
+);
 
 ActionToolbar.displayName = 'ActionToolbar';
 
@@ -564,27 +586,26 @@ function FilterPanelInner<TFilters extends Record<string, unknown>>({
   );
 
   const activeFilterCount = useMemo((): number => {
-    return Object.values(filters).filter(
-      (v) => v !== undefined && v !== null && v !== ''
-    ).length;
+    return Object.values(filters).filter((v) => v !== undefined && v !== null && v !== '').length;
   }, [filters]);
 
   // Memoize panel container style
-  const panelContainerStyle = useMemo<CSSProperties>(() => ({
-    padding: '1rem',
-    backgroundColor: 'var(--color-bg-secondary, #f9fafb)',
-    borderRadius: 'var(--radius-md, 0.5rem)',
-    marginBottom: '1rem',
-    ...style,
-  }), [style]);
+  const panelContainerStyle = useMemo<CSSProperties>(
+    () => ({
+      padding: '1rem',
+      backgroundColor: 'var(--color-bg-secondary, #f9fafb)',
+      borderRadius: 'var(--radius-md, 0.5rem)',
+      marginBottom: '1rem',
+      ...style,
+    }),
+    [style]
+  );
 
   if (isOpen === false) {
     return onToggle !== undefined ? (
       <button onClick={onToggle} style={filterToggleButtonStyle}>
         {title}
-        {activeFilterCount > 0 && (
-          <span style={filterBadgeStyle}>{activeFilterCount}</span>
-        )}
+        {activeFilterCount > 0 && <span style={filterBadgeStyle}>{activeFilterCount}</span>}
       </button>
     ) : null;
   }
@@ -595,9 +616,7 @@ function FilterPanelInner<TFilters extends Record<string, unknown>>({
         <span style={filterTitleStyle}>
           {title}
           {activeFilterCount > 0 && (
-            <span style={filterActiveCountStyle}>
-              ({activeFilterCount} active)
-            </span>
+            <span style={filterActiveCountStyle}>({activeFilterCount} active)</span>
           )}
         </span>
         <div style={filterActionsStyle}>
@@ -647,166 +666,178 @@ export interface PaginationProps {
 /**
  * Pagination component - memoized for performance
  */
-export const Pagination = memo(({
-  currentPage,
-  totalPages,
-  pageSize,
-  totalItems,
-  onPageChange,
-  onPageSizeChange,
-  pageSizeOptions = [10, 20, 50, 100],
-  showPageSizeSelector = true,
-  showItemCount = true,
-  className,
-  style,
-}: PaginationProps): React.ReactElement => {
-  const startItem = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
-  const endItem = Math.min(currentPage * pageSize, totalItems);
+export const Pagination = memo(
+  ({
+    currentPage,
+    totalPages,
+    pageSize,
+    totalItems,
+    onPageChange,
+    onPageSizeChange,
+    pageSizeOptions = [10, 20, 50, 100],
+    showPageSizeSelector = true,
+    showItemCount = true,
+    className,
+    style,
+  }: PaginationProps): React.ReactElement => {
+    const startItem = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+    const endItem = Math.min(currentPage * pageSize, totalItems);
 
-  const pageNumbers = useMemo((): (number | 'ellipsis')[] => {
-    const pages: (number | 'ellipsis')[] = [];
-    const maxVisible = 5;
+    const pageNumbers = useMemo((): (number | 'ellipsis')[] => {
+      const pages: (number | 'ellipsis')[] = [];
+      const maxVisible = 5;
 
-    if (totalPages <= maxVisible) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i);
-    } else {
-      pages.push(1);
+      if (totalPages <= maxVisible) {
+        for (let i = 1; i <= totalPages; i++) pages.push(i);
+      } else {
+        pages.push(1);
 
-      if (currentPage > 3) pages.push('ellipsis');
+        if (currentPage > 3) pages.push('ellipsis');
 
-      const start = Math.max(2, currentPage - 1);
-      const end = Math.min(totalPages - 1, currentPage + 1);
+        const start = Math.max(2, currentPage - 1);
+        const end = Math.min(totalPages - 1, currentPage + 1);
 
-      for (let i = start; i <= end; i++) pages.push(i);
+        for (let i = start; i <= end; i++) pages.push(i);
 
-      if (currentPage < totalPages - 2) pages.push('ellipsis');
+        if (currentPage < totalPages - 2) pages.push('ellipsis');
 
-      pages.push(totalPages);
-    }
+        pages.push(totalPages);
+      }
 
-    return pages;
-  }, [currentPage, totalPages]);
+      return pages;
+    }, [currentPage, totalPages]);
 
-  // Memoize container style
-  const containerStyle = useMemo<CSSProperties>(() => ({
-    ...paginationContainerBaseStyle,
-    ...style,
-  }), [style]);
+    // Memoize container style
+    const containerStyle = useMemo<CSSProperties>(
+      () => ({
+        ...paginationContainerBaseStyle,
+        ...style,
+      }),
+      [style]
+    );
 
-  // Navigation button styles - memoized
-  const prevButtonStyle = useMemo<CSSProperties>(() => ({
-    padding: '0.25rem 0.75rem',
-    borderRadius: '0.25rem',
-    border: '1px solid #d1d5db',
-    cursor: currentPage <= 1 ? 'not-allowed' : 'pointer',
-    opacity: currentPage <= 1 ? 0.5 : 1,
-    backgroundColor: '#fff',
-  }), [currentPage]);
+    // Navigation button styles - memoized
+    const prevButtonStyle = useMemo<CSSProperties>(
+      () => ({
+        padding: '0.25rem 0.75rem',
+        borderRadius: '0.25rem',
+        border: '1px solid #d1d5db',
+        cursor: currentPage <= 1 ? 'not-allowed' : 'pointer',
+        opacity: currentPage <= 1 ? 0.5 : 1,
+        backgroundColor: '#fff',
+      }),
+      [currentPage]
+    );
 
-  const nextButtonStyle = useMemo<CSSProperties>(() => ({
-    padding: '0.25rem 0.75rem',
-    borderRadius: '0.25rem',
-    border: '1px solid #d1d5db',
-    cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer',
-    opacity: currentPage >= totalPages ? 0.5 : 1,
-    backgroundColor: '#fff',
-  }), [currentPage, totalPages]);
+    const nextButtonStyle = useMemo<CSSProperties>(
+      () => ({
+        padding: '0.25rem 0.75rem',
+        borderRadius: '0.25rem',
+        border: '1px solid #d1d5db',
+        cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer',
+        opacity: currentPage >= totalPages ? 0.5 : 1,
+        backgroundColor: '#fff',
+      }),
+      [currentPage, totalPages]
+    );
 
-  // Page button style generator - memoized
-  const getPageButtonStyle = useCallback((page: number): CSSProperties => ({
-    padding: '0.25rem 0.5rem',
-    borderRadius: '0.25rem',
-    border: '1px solid',
-    borderColor: page === currentPage ? '#3b82f6' : '#d1d5db',
-    backgroundColor: page === currentPage ? '#3b82f6' : '#fff',
-    color: page === currentPage ? '#fff' : '#374151',
-    cursor: 'pointer',
-    minWidth: '2rem',
-  }), [currentPage]);
+    // Page button style generator - memoized
+    const getPageButtonStyle = useCallback(
+      (page: number): CSSProperties => ({
+        padding: '0.25rem 0.5rem',
+        borderRadius: '0.25rem',
+        border: '1px solid',
+        borderColor: page === currentPage ? '#3b82f6' : '#d1d5db',
+        backgroundColor: page === currentPage ? '#3b82f6' : '#fff',
+        color: page === currentPage ? '#fff' : '#374151',
+        cursor: 'pointer',
+        minWidth: '2rem',
+      }),
+      [currentPage]
+    );
 
-  // Stable page change handlers
-  const handlePrevClick = useCallback(() => {
-    onPageChange(currentPage - 1);
-  }, [onPageChange, currentPage]);
+    // Stable page change handlers
+    const handlePrevClick = useCallback(() => {
+      onPageChange(currentPage - 1);
+    }, [onPageChange, currentPage]);
 
-  const handleNextClick = useCallback(() => {
-    onPageChange(currentPage + 1);
-  }, [onPageChange, currentPage]);
+    const handleNextClick = useCallback(() => {
+      onPageChange(currentPage + 1);
+    }, [onPageChange, currentPage]);
 
-  // Stable page number click handler using data-* attributes
-  const handlePageClick = useCallback((event: React.MouseEvent<HTMLButtonElement>): void => {
-    const {page} = event.currentTarget.dataset;
-    if (page !== undefined) {
-      onPageChange(Number(page));
-    }
-  }, [onPageChange]);
+    // Stable page number click handler using data-* attributes
+    const handlePageClick = useCallback(
+      (event: React.MouseEvent<HTMLButtonElement>): void => {
+        const { page } = event.currentTarget.dataset;
+        if (page !== undefined) {
+          onPageChange(Number(page));
+        }
+      },
+      [onPageChange]
+    );
 
-  // Stable page size change handler
-  const handlePageSizeChange = useCallback((event: React.ChangeEvent<HTMLSelectElement>) => {
-    onPageSizeChange?.(Number(event.target.value));
-  }, [onPageSizeChange]);
+    // Stable page size change handler
+    const handlePageSizeChange = useCallback(
+      (event: React.ChangeEvent<HTMLSelectElement>) => {
+        onPageSizeChange?.(Number(event.target.value));
+      },
+      [onPageSizeChange]
+    );
 
-  return (
-    <div className={className} style={containerStyle}>
-      {showItemCount === true && (
-        <span style={paginationInfoStyle}>
-          Showing {startItem}-{endItem} of {totalItems}
-        </span>
-      )}
-
-      <div style={paginationControlsStyle}>
-        {showPageSizeSelector === true && onPageSizeChange !== undefined && (
-          <select
-            value={pageSize}
-            onChange={handlePageSizeChange}
-            style={selectStyle}
-          >
-            {pageSizeOptions.map((size) => (
-              <option key={size} value={size}>
-                {size} per page
-              </option>
-            ))}
-          </select>
+    return (
+      <div className={className} style={containerStyle}>
+        {showItemCount === true && (
+          <span style={paginationInfoStyle}>
+            Showing {startItem}-{endItem} of {totalItems}
+          </span>
         )}
 
-        <button
-          onClick={handlePrevClick}
-          disabled={currentPage <= 1}
-          style={prevButtonStyle}
-        >
-          Previous
-        </button>
-
-        <div style={paginationButtonsContainerStyle}>
-          {pageNumbers.map((page, index) =>
-            page === 'ellipsis' ? (
-              <span key={`ellipsis-${index}`} style={ellipsisStyle}>
-                ...
-              </span>
-            ) : (
-              <button
-                key={page}
-                data-page={page}
-                onClick={handlePageClick}
-                style={getPageButtonStyle(page)}
-              >
-                {page}
-              </button>
-            )
+        <div style={paginationControlsStyle}>
+          {showPageSizeSelector === true && onPageSizeChange !== undefined && (
+            <select value={pageSize} onChange={handlePageSizeChange} style={selectStyle}>
+              {pageSizeOptions.map((size) => (
+                <option key={size} value={size}>
+                  {size} per page
+                </option>
+              ))}
+            </select>
           )}
-        </div>
 
-        <button
-          onClick={handleNextClick}
-          disabled={currentPage >= totalPages}
-          style={nextButtonStyle}
-        >
-          Next
-        </button>
+          <button onClick={handlePrevClick} disabled={currentPage <= 1} style={prevButtonStyle}>
+            Previous
+          </button>
+
+          <div style={paginationButtonsContainerStyle}>
+            {pageNumbers.map((page, index) =>
+              page === 'ellipsis' ? (
+                <span key={`ellipsis-${index}`} style={ellipsisStyle}>
+                  ...
+                </span>
+              ) : (
+                <button
+                  key={page}
+                  data-page={page}
+                  onClick={handlePageClick}
+                  style={getPageButtonStyle(page)}
+                >
+                  {page}
+                </button>
+              )
+            )}
+          </div>
+
+          <button
+            onClick={handleNextClick}
+            disabled={currentPage >= totalPages}
+            style={nextButtonStyle}
+          >
+            Next
+          </button>
+        </div>
       </div>
-    </div>
-  );
-});
+    );
+  }
+);
 
 Pagination.displayName = 'Pagination';
 
@@ -831,11 +862,7 @@ const DefaultLoadingState = memo((): React.ReactElement => {
 
 DefaultLoadingState.displayName = 'DefaultLoadingState';
 
-const DefaultEmptyState = memo(({
-  message,
-}: {
-  message: string;
-}): React.ReactElement => {
+const DefaultEmptyState = memo(({ message }: { message: string }): React.ReactElement => {
   return (
     <div style={emptyStateStyle}>
       <p>{message}</p>
@@ -875,51 +902,56 @@ export interface SearchInputProps {
 /**
  * Search Input component with debouncing - memoized for performance
  */
-export const SearchInput = memo(({
-  value,
-  onChange,
-  placeholder = 'Search...',
-  debounceMs = 300,
-  className,
-  style,
-}: SearchInputProps): React.ReactElement => {
-  const [localValue, setLocalValue] = useState(value);
+export const SearchInput = memo(
+  ({
+    value,
+    onChange,
+    placeholder = 'Search...',
+    debounceMs = 300,
+    className,
+    style,
+  }: SearchInputProps): React.ReactElement => {
+    const [localValue, setLocalValue] = useState(value);
 
-  // Memoize input style
-  const inputStyle = useMemo<CSSProperties>(() => ({
-    ...searchInputBaseStyle,
-    ...style,
-  }), [style]);
+    // Memoize input style
+    const inputStyle = useMemo<CSSProperties>(
+      () => ({
+        ...searchInputBaseStyle,
+        ...style,
+      }),
+      [style]
+    );
 
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      if (localValue !== value) {
-        onChange(localValue);
-      }
-    }, debounceMs);
+    React.useEffect(() => {
+      const timer = setTimeout(() => {
+        if (localValue !== value) {
+          onChange(localValue);
+        }
+      }, debounceMs);
 
-    return (): void => clearTimeout(timer);
-  }, [localValue, debounceMs, onChange, value]);
+      return (): void => clearTimeout(timer);
+    }, [localValue, debounceMs, onChange, value]);
 
-  React.useEffect(() => {
-    setLocalValue(value);
-  }, [value]);
+    React.useEffect(() => {
+      setLocalValue(value);
+    }, [value]);
 
-  // Stable change handler
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>): void => {
-    setLocalValue(e.target.value);
-  }, []);
+    // Stable change handler
+    const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>): void => {
+      setLocalValue(e.target.value);
+    }, []);
 
-  return (
-    <input
-      type="text"
-      value={localValue}
-      onChange={handleChange}
-      placeholder={placeholder}
-      className={className}
-      style={inputStyle}
-    />
-  );
-});
+    return (
+      <input
+        type="text"
+        value={localValue}
+        onChange={handleChange}
+        placeholder={placeholder}
+        className={className}
+        style={inputStyle}
+      />
+    );
+  }
+);
 
 SearchInput.displayName = 'SearchInput';

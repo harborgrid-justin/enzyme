@@ -109,12 +109,7 @@ export class ConfigLoader {
   /**
    * Add a static configuration source.
    */
-  addSource(
-    type: ConfigSourceType,
-    name: string,
-    data: ConfigRecord,
-    priority?: number
-  ): this {
+  addSource(type: ConfigSourceType, name: string, data: ConfigRecord, priority?: number): this {
     this.sources.push({
       type,
       name,
@@ -147,9 +142,7 @@ export class ConfigLoader {
     this.log('Loading configuration...');
 
     // Sort sources by priority (lower = higher priority)
-    const sortedSources = [...this.sources].sort(
-      (a, b) => b.priority - a.priority
-    );
+    const sortedSources = [...this.sources].sort((a, b) => b.priority - a.priority);
 
     // Merge in order (higher priority last so it overwrites)
     const merger = new ConfigMerger({ strategy: 'deep' });
@@ -333,7 +326,7 @@ export class ConfigLoader {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const data = await response.json() as ConfigRecord;
+      const data = (await response.json()) as ConfigRecord;
       this.log(`Loaded remote config: ${Object.keys(data as Record<string, unknown>).length} keys`);
       return data;
     } catch (error) {
@@ -353,11 +346,7 @@ export class ConfigLoader {
         config[key] = fieldSchema.default;
       }
 
-      if (
-        fieldSchema.properties &&
-        typeof config[key] === 'object' &&
-        config[key] !== null
-      ) {
+      if (fieldSchema.properties && typeof config[key] === 'object' && config[key] !== null) {
         this.applyDefaults(config[key] as ConfigRecord, fieldSchema.properties);
       }
     }
@@ -374,7 +363,11 @@ export class ConfigLoader {
     }
 
     // Try process.env (Node.js, CRA)
-    if (typeof process !== 'undefined' && process.env?.NODE_ENV != null && process.env.NODE_ENV !== '') {
+    if (
+      typeof process !== 'undefined' &&
+      process.env?.NODE_ENV != null &&
+      process.env.NODE_ENV !== ''
+    ) {
       return process.env.NODE_ENV as Environment;
     }
 
@@ -399,7 +392,7 @@ export class ConfigLoader {
   }
 
   private log(message: string, ...args: unknown[]): void {
-    if (this.options.debug === true) {
+    if (this.options.debug) {
       console.info(`[ConfigLoader] ${message}`, ...args);
     }
   }

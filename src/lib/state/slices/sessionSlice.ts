@@ -111,7 +111,10 @@ const initialSessionState: SessionState = {
  * - session/updateActivity
  * - session/endSession
  */
-export const sessionSlice = createSlice<SessionState, SessionActions & Record<string, (...args: never[]) => unknown>>({
+export const sessionSlice = createSlice<
+  SessionState,
+  SessionActions & Record<string, (...args: never[]) => unknown>
+>({
   name: 'session',
   initialState: initialSessionState,
   actions: (set, get) => ({
@@ -163,11 +166,7 @@ export const sessionSlice = createSlice<SessionState, SessionActions & Record<st
       }
 
       // Check activity timeout
-      if (state.lastActivity !== null && (now - state.lastActivity) > state.activityTimeoutMs) {
-        return true;
-      }
-
-      return false;
+      return state.lastActivity !== null && now - state.lastActivity > state.activityTimeoutMs;
     },
 
     extendSession: (additionalMs) => {

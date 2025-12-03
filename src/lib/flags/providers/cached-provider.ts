@@ -23,11 +23,7 @@
  * ```
  */
 
-import type {
-  FeatureFlag,
-  Segment,
-  SegmentId,
-} from '../advanced/types';
+import type { FeatureFlag, Segment, SegmentId } from '@/lib/flags';
 import type {
   FlagProvider,
   CachedProviderConfig,
@@ -78,7 +74,7 @@ export class CachedProvider implements FlagProvider {
   private cacheHits = 0;
   private cacheMisses = 0;
   private revalidating = false;
-  private storageKey: string;
+  private readonly storageKey: string;
 
   constructor(config: CachedProviderConfig) {
     this.name = config.name ?? `cached-${config.provider.name}`;
@@ -90,8 +86,7 @@ export class CachedProvider implements FlagProvider {
       debug: config.debug ?? false,
       provider: config.provider,
       ttl: config.ttl ?? DEFAULT_TTL,
-      staleWhileRevalidate:
-        config.staleWhileRevalidate ?? DEFAULT_STALE_WHILE_REVALIDATE,
+      staleWhileRevalidate: config.staleWhileRevalidate ?? DEFAULT_STALE_WHILE_REVALIDATE,
       maxSize: config.maxSize ?? DEFAULT_MAX_SIZE,
       storage: config.storage ?? 'memory',
     };
@@ -208,69 +203,6 @@ export class CachedProvider implements FlagProvider {
     return flag;
   }
 
-  private async fetchAndCacheFlags(now: number): Promise<FeatureFlag[]> {
-    const flags = await this.provider.getFlags();
-    const flagArray = [...flags];
-
-    this.flagsCache = {
-      value: flagArray,
-      timestamp: now,
-      expiresAt: now + this.config.ttl,
-      staleAt: now + this.config.staleWhileRevalidate,
-    };
-
-    // Update individual flag cache
-    for (const flag of flagArray) {
-      this.cacheFlag(flag.key, flag, now);
-    }
-
-    // Persist to storage
-    if (this.config.storage !== 'memory') {
-      this.saveToStorage();
-    }
-
-    return flagArray;
-  }
-
-  private cacheFlag(
-    key: string,
-    flag: FeatureFlag | null,
-    now: number
-  ): void {
-    // Enforce max size
-    if (this.flagCache.size >= this.config.maxSize) {
-      const oldest = this.findOldestEntry();
-      if (oldest != null && oldest !== '') {
-        this.flagCache.delete(oldest);
-      }
-    }
-
-    this.flagCache.set(key, {
-      value: flag,
-      timestamp: now,
-      expiresAt: now + this.config.ttl,
-      staleAt: now + this.config.staleWhileRevalidate,
-    });
-  }
-
-  private findOldestEntry(): string | null {
-    let oldest: string | null = null;
-    let oldestTime = Infinity;
-
-    for (const [key, entry] of this.flagCache) {
-      if (entry.timestamp < oldestTime) {
-        oldestTime = entry.timestamp;
-        oldest = key;
-      }
-    }
-
-    return oldest;
-  }
-
-  // ==========================================================================
-  // Segment Operations
-  // ==========================================================================
-
   /**
    * Get all segments with caching.
    */
@@ -326,121 +258,6 @@ export class CachedProvider implements FlagProvider {
     return this.provider.getSegment(id);
   }
 
-  // ==========================================================================
-  // Background Revalidation
-  // ==========================================================================
-
-  private async revalidateInBackground(
-    type: 'flags' | 'segments' | 'flag',
-    key?: string
-  ): Promise<void> {
-    if (this.revalidating) {
-      return;
-    }
-
-    this.revalidating = true;
-    this.log(`Background revalidation: ${type}${key !== null && key !== undefined ? ` (${key})` : ''}`);
-
-    try {
-      const now = Date.now();
-
-      switch (type) {
-        case 'flags':
-          await this.fetchAndCacheFlags(now);
-          break;
-        case 'segments':
-          if (this.provider.getSegments) {
-            const segments = await this.provider.getSegments();
-            this.segmentsCache = {
-              value: [...segments],
-              timestamp: now,
-              expiresAt: now + this.config.ttl,
-              staleAt: now + this.config.staleWhileRevalidate,
-            };
-          }
-          break;
-        case 'flag':
-          if (key !== null && key !== undefined) {
-            const flag = await this.provider.getFlag(key);
-            this.cacheFlag(key, flag, now);
-          }
-          break;
-      }
-
-      this.log('Background revalidation complete');
-    } catch (error) {
-      this.log('Background revalidation failed:', error);
-    } finally {
-      this.revalidating = false;
-    }
-  }
-
-  // ==========================================================================
-  // Storage Operations
-  // ==========================================================================
-
-  private getStorage(): Storage | null {
-    if (typeof window === 'undefined') {
-      return null;
-    }
-
-    switch (this.config.storage) {
-      case 'localStorage':
-        return window.localStorage;
-      case 'sessionStorage':
-        return window.sessionStorage;
-      default:
-        return null;
-    }
-  }
-
-  private loadFromStorage(): void {
-    const storage = this.getStorage();
-    if (!storage) {
-      return;
-    }
-
-    try {
-      const data = storage.getItem(this.storageKey);
-      if (data !== null && data !== '') {
-        const parsed = JSON.parse(data) as Record<string, unknown>;
-        if (parsed.flags !== null && parsed.flags !== undefined && typeof parsed.flags === 'object') {
-          const flags = parsed.flags as Record<string, unknown>;
-          this.flagsCache = {
-            ...flags,
-            timestamp: new Date(flags.timestamp as string | number | Date).getTime(),
-            expiresAt: new Date(flags.expiresAt as string | number | Date).getTime(),
-            staleAt: new Date(flags.staleAt as string | number | Date).getTime(),
-          } as CacheEntry<FeatureFlag[]>;
-        }
-        this.log('Loaded cache from storage');
-      }
-    } catch (error) {
-      this.log('Failed to load from storage:', error);
-    }
-  }
-
-  private saveToStorage(): void {
-    const storage = this.getStorage();
-    if (!storage) {
-      return;
-    }
-
-    try {
-      const data = {
-        flags: this.flagsCache,
-        segments: this.segmentsCache,
-      };
-      storage.setItem(this.storageKey, JSON.stringify(data));
-    } catch (error) {
-      this.log('Failed to save to storage:', error);
-    }
-  }
-
-  // ==========================================================================
-  // Cache Management
-  // ==========================================================================
-
   /**
    * Invalidate all cached data.
    */
@@ -450,6 +267,10 @@ export class CachedProvider implements FlagProvider {
     this.segmentsCache = null;
     this.log('Cache invalidated');
   }
+
+  // ==========================================================================
+  // Segment Operations
+  // ==========================================================================
 
   /**
    * Invalidate a specific flag.
@@ -470,23 +291,7 @@ export class CachedProvider implements FlagProvider {
   }
 
   // ==========================================================================
-  // Provider Change Handling
-  // ==========================================================================
-
-  private handleProviderChange(event: FlagChangeEvent): void {
-    // Invalidate affected cache entries
-    if (event.flagKey !== null && event.flagKey !== undefined) {
-      this.invalidateFlag(event.flagKey);
-    } else {
-      this.invalidate();
-    }
-
-    // Forward the event
-    this.emitChange(event);
-  }
-
-  // ==========================================================================
-  // Status and Health
+  // Background Revalidation
   // ==========================================================================
 
   /**
@@ -495,6 +300,10 @@ export class CachedProvider implements FlagProvider {
   isReady(): boolean {
     return this.ready && this.provider.isReady();
   }
+
+  // ==========================================================================
+  // Storage Operations
+  // ==========================================================================
 
   /**
    * Check if the provider is healthy.
@@ -536,14 +345,12 @@ export class CachedProvider implements FlagProvider {
       requestCount: this.cacheHits + this.cacheMisses,
       errorCount: 0,
       cacheHitRate: cacheStats.hitRate,
-      lastRefresh: this.flagsCache
-        ? new Date(this.flagsCache.timestamp)
-        : undefined,
+      lastRefresh: this.flagsCache ? new Date(this.flagsCache.timestamp) : undefined,
     };
   }
 
   // ==========================================================================
-  // Subscription
+  // Cache Management
   // ==========================================================================
 
   /**
@@ -556,20 +363,6 @@ export class CachedProvider implements FlagProvider {
     };
   }
 
-  private emitChange(event: FlagChangeEvent): void {
-    for (const listener of this.listeners) {
-      try {
-        listener(event);
-      } catch (error) {
-        this.log('Error in change listener:', error);
-      }
-    }
-  }
-
-  // ==========================================================================
-  // Shutdown
-  // ==========================================================================
-
   /**
    * Shutdown the provider.
    */
@@ -578,6 +371,208 @@ export class CachedProvider implements FlagProvider {
     this.ready = false;
     this.listeners.clear();
     this.log('Cached provider shutdown');
+  }
+
+  private async fetchAndCacheFlags(now: number): Promise<FeatureFlag[]> {
+    const flags = await this.provider.getFlags();
+    const flagArray = [...flags];
+
+    this.flagsCache = {
+      value: flagArray,
+      timestamp: now,
+      expiresAt: now + this.config.ttl,
+      staleAt: now + this.config.staleWhileRevalidate,
+    };
+
+    // Update individual flag cache
+    for (const flag of flagArray) {
+      this.cacheFlag(flag.key, flag, now);
+    }
+
+    // Persist to storage
+    if (this.config.storage !== 'memory') {
+      this.saveToStorage();
+    }
+
+    return flagArray;
+  }
+
+  // ==========================================================================
+  // Provider Change Handling
+  // ==========================================================================
+
+  private cacheFlag(key: string, flag: FeatureFlag | null, now: number): void {
+    // Enforce max size
+    if (this.flagCache.size >= this.config.maxSize) {
+      const oldest = this.findOldestEntry();
+      if (oldest != null && oldest !== '') {
+        this.flagCache.delete(oldest);
+      }
+    }
+
+    this.flagCache.set(key, {
+      value: flag,
+      timestamp: now,
+      expiresAt: now + this.config.ttl,
+      staleAt: now + this.config.staleWhileRevalidate,
+    });
+  }
+
+  // ==========================================================================
+  // Status and Health
+  // ==========================================================================
+
+  private findOldestEntry(): string | null {
+    let oldest: string | null = null;
+    let oldestTime = Infinity;
+
+    for (const [key, entry] of this.flagCache) {
+      if (entry.timestamp < oldestTime) {
+        oldestTime = entry.timestamp;
+        oldest = key;
+      }
+    }
+
+    return oldest;
+  }
+
+  private async revalidateInBackground(
+    type: 'flags' | 'segments' | 'flag',
+    key?: string
+  ): Promise<void> {
+    if (this.revalidating) {
+      return;
+    }
+
+    this.revalidating = true;
+    this.log(
+      `Background revalidation: ${type}${key !== null && key !== undefined ? ` (${key})` : ''}`
+    );
+
+    try {
+      const now = Date.now();
+
+      switch (type) {
+        case 'flags':
+          await this.fetchAndCacheFlags(now);
+          break;
+        case 'segments':
+          if (this.provider.getSegments) {
+            const segments = await this.provider.getSegments();
+            this.segmentsCache = {
+              value: [...segments],
+              timestamp: now,
+              expiresAt: now + this.config.ttl,
+              staleAt: now + this.config.staleWhileRevalidate,
+            };
+          }
+          break;
+        case 'flag':
+          if (key !== null && key !== undefined) {
+            const flag = await this.provider.getFlag(key);
+            this.cacheFlag(key, flag, now);
+          }
+          break;
+      }
+
+      this.log('Background revalidation complete');
+    } catch (error) {
+      this.log('Background revalidation failed:', error);
+    } finally {
+      this.revalidating = false;
+    }
+  }
+
+  private getStorage(): Storage | null {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+
+    switch (this.config.storage) {
+      case 'localStorage':
+        return window.localStorage;
+      case 'sessionStorage':
+        return window.sessionStorage;
+      default:
+        return null;
+    }
+  }
+
+  private loadFromStorage(): void {
+    const storage = this.getStorage();
+    if (!storage) {
+      return;
+    }
+
+    try {
+      const data = storage.getItem(this.storageKey);
+      if (data !== null && data !== '') {
+        const parsed = JSON.parse(data) as Record<string, unknown>;
+        if (
+          parsed.flags !== null &&
+          parsed.flags !== undefined &&
+          typeof parsed.flags === 'object'
+        ) {
+          const flags = parsed.flags as Record<string, unknown>;
+          this.flagsCache = {
+            ...flags,
+            timestamp: new Date(flags.timestamp as string | number | Date).getTime(),
+            expiresAt: new Date(flags.expiresAt as string | number | Date).getTime(),
+            staleAt: new Date(flags.staleAt as string | number | Date).getTime(),
+          } as CacheEntry<FeatureFlag[]>;
+        }
+        this.log('Loaded cache from storage');
+      }
+    } catch (error) {
+      this.log('Failed to load from storage:', error);
+    }
+  }
+
+  // ==========================================================================
+  // Subscription
+  // ==========================================================================
+
+  private saveToStorage(): void {
+    const storage = this.getStorage();
+    if (!storage) {
+      return;
+    }
+
+    try {
+      const data = {
+        flags: this.flagsCache,
+        segments: this.segmentsCache,
+      };
+      storage.setItem(this.storageKey, JSON.stringify(data));
+    } catch (error) {
+      this.log('Failed to save to storage:', error);
+    }
+  }
+
+  private handleProviderChange(event: FlagChangeEvent): void {
+    // Invalidate affected cache entries
+    if (event.flagKey !== null && event.flagKey !== undefined) {
+      this.invalidateFlag(event.flagKey);
+    } else {
+      this.invalidate();
+    }
+
+    // Forward the event
+    this.emitChange(event);
+  }
+
+  // ==========================================================================
+  // Shutdown
+  // ==========================================================================
+
+  private emitChange(event: FlagChangeEvent): void {
+    for (const listener of this.listeners) {
+      try {
+        listener(event);
+      } catch (error) {
+        this.log('Error in change listener:', error);
+      }
+    }
   }
 
   // ==========================================================================
@@ -599,8 +594,6 @@ export class CachedProvider implements FlagProvider {
 /**
  * Create a cached provider instance.
  */
-export function createCachedProvider(
-  config: CachedProviderConfig
-): CachedProvider {
+export function createCachedProvider(config: CachedProviderConfig): CachedProvider {
   return new CachedProvider(config);
 }

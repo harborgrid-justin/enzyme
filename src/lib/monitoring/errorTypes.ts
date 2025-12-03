@@ -85,14 +85,14 @@ export interface ValidationErrorDetails {
  */
 export function categorizeError(error: unknown): ErrorCategory {
   if (error === null || error === undefined) return 'unknown';
-  
+
   if (error instanceof TypeError) {
     return 'client';
   }
-  
+
   if (typeof error === 'object' && 'status' in error) {
-    const {status} = (error as { status: number });
-    
+    const { status } = error as { status: number };
+
     if (status === 401) return 'authentication';
     if (status === 403) return 'authorization';
     if (status === 422 || status === 400) return 'validation';
@@ -101,7 +101,7 @@ export function categorizeError(error: unknown): ErrorCategory {
     if (status >= 500) return 'server';
     if (status >= 400) return 'client';
   }
-  
+
   if (error instanceof Error) {
     const message = error.message.toLowerCase();
     if (message.includes('network') || message.includes('fetch')) {
@@ -111,7 +111,7 @@ export function categorizeError(error: unknown): ErrorCategory {
       return 'timeout';
     }
   }
-  
+
   return 'unknown';
 }
 
@@ -140,13 +140,10 @@ export function getSeverity(category: ErrorCategory): ErrorSeverity {
 /**
  * Create normalized error from any error type
  */
-export function normalizeError(
-  error: unknown,
-  context?: Partial<AppError>
-): AppError {
+export function normalizeError(error: unknown, context?: Partial<AppError>): AppError {
   const category = categorizeError(error);
   const severity = getSeverity(category);
-  
+
   let message = 'An unexpected error occurred';
   let stack: string | undefined;
 
@@ -161,7 +158,7 @@ export function normalizeError(
       message = String((error as { message: unknown }).message);
     }
   }
-  
+
   return {
     id: generateErrorId(),
     message,

@@ -4,7 +4,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useStore, type StoreSelector } from '../store';
+import { type StoreSelector, useStore } from '../store';
 
 // ============================================================================
 // Core Hooks
@@ -18,9 +18,7 @@ import { useStore, type StoreSelector } from '../store';
  * const count = useStoreState((state) => state.count);
  * ```
  */
-export function useStoreState<T>(
-  selector: StoreSelector<T>
-): T {
+export function useStoreState<T>(selector: StoreSelector<T>): T {
   return useStore(selector);
 }
 
@@ -37,9 +35,7 @@ export function useStoreState<T>(
  * }));
  * ```
  */
-export function useShallowState<T extends object>(
-  selector: StoreSelector<T>
-): T {
+export function useShallowState<T extends object>(selector: StoreSelector<T>): T {
   return useStore(selector as unknown as StoreSelector<never>);
 }
 
@@ -72,16 +68,14 @@ export function useUIState(): {
   globalLoading: boolean;
   loadingMessage: string | null;
 } {
-  return useStore(
-    (state) => ({
-      sidebarOpen: state.sidebarOpen,
-      sidebarCollapsed: state.sidebarCollapsed,
-      activeModal: state.activeModal,
-      modalData: state.modalData,
-      globalLoading: state.globalLoading,
-      loadingMessage: state.loadingMessage,
-    })
-  ) as {
+  return useStore((state) => ({
+    sidebarOpen: state.sidebarOpen,
+    sidebarCollapsed: state.sidebarCollapsed,
+    activeModal: state.activeModal,
+    modalData: state.modalData,
+    globalLoading: state.globalLoading,
+    loadingMessage: state.loadingMessage,
+  })) as {
     sidebarOpen: boolean;
     sidebarCollapsed: boolean;
     activeModal: string | null;
@@ -128,14 +122,12 @@ export function useSessionState(): {
   lastActivity: number | null;
   navigationHistory: string[];
 } {
-  return useStore(
-    (state) => ({
-      sessionId: state.sessionId,
-      isSessionActive: state.isSessionActive,
-      lastActivity: state.lastActivity,
-      navigationHistory: state.navigationHistory,
-    })
-  ) as {
+  return useStore((state) => ({
+    sessionId: state.sessionId,
+    isSessionActive: state.isSessionActive,
+    lastActivity: state.lastActivity,
+    navigationHistory: state.navigationHistory,
+  })) as {
     sessionId: string | null;
     isSessionActive: boolean;
     lastActivity: number | null;
@@ -184,21 +176,19 @@ export function useSettingsState(): {
   highContrast: boolean;
   fontSize: string;
 } {
-  return useStore(
-    (state) => ({
-      locale: state.locale,
-      timezone: state.timezone,
-      dateFormat: state.dateFormat,
-      timeFormat: state.timeFormat,
-      numberFormat: state.numberFormat,
-      notificationsEnabled: state.notificationsEnabled,
-      soundEnabled: state.soundEnabled,
-      desktopNotifications: state.desktopNotifications,
-      reducedMotion: state.reducedMotion,
-      highContrast: state.highContrast,
-      fontSize: state.fontSize,
-    })
-  ) as {
+  return useStore((state) => ({
+    locale: state.locale,
+    timezone: state.timezone,
+    dateFormat: state.dateFormat,
+    timeFormat: state.timeFormat,
+    numberFormat: state.numberFormat,
+    notificationsEnabled: state.notificationsEnabled,
+    soundEnabled: state.soundEnabled,
+    desktopNotifications: state.desktopNotifications,
+    reducedMotion: state.reducedMotion,
+    highContrast: state.highContrast,
+    fontSize: state.fontSize,
+  })) as {
     locale: string;
     timezone: string;
     dateFormat: string;
@@ -271,15 +261,13 @@ export function useSidebar(): {
   setOpen: (open: boolean) => void;
   setCollapsed: (collapsed: boolean) => void;
 } {
-  return useStore(
-    (state) => ({
-      isOpen: state.sidebarOpen,
-      isCollapsed: state.sidebarCollapsed,
-      toggle: state.toggleSidebar,
-      setOpen: state.setSidebarOpen,
-      setCollapsed: state.setSidebarCollapsed,
-    })
-  );
+  return useStore((state) => ({
+    isOpen: state.sidebarOpen,
+    isCollapsed: state.sidebarCollapsed,
+    toggle: state.toggleSidebar,
+    setOpen: state.setSidebarOpen,
+    setCollapsed: state.setSidebarCollapsed,
+  }));
 }
 
 /**
@@ -293,14 +281,12 @@ export function useModal<T extends Record<string, unknown> = Record<string, unkn
   open: (id: string, data?: Record<string, unknown>) => void;
   close: () => void;
 } {
-  const { activeModal, modalData, open, close } = useStore(
-    (state) => ({
-      activeModal: state.activeModal,
-      modalData: state.modalData,
-      open: state.openModal,
-      close: state.closeModal,
-    })
-  ) as {
+  const { activeModal, modalData, open, close } = useStore((state) => ({
+    activeModal: state.activeModal,
+    modalData: state.modalData,
+    open: state.openModal,
+    close: state.closeModal,
+  })) as {
     activeModal: string | null;
     modalData: Record<string, unknown> | null;
     open: (id: string, data?: Record<string, unknown>) => void;
@@ -333,13 +319,11 @@ export function useLoading(): {
   start: (loadingMessage?: string) => void;
   stop: () => void;
 } {
-  const { isLoading, message, setGlobalLoading } = useStore(
-    (state) => ({
-      isLoading: state.globalLoading,
-      message: state.loadingMessage,
-      setGlobalLoading: state.setGlobalLoading,
-    })
-  ) as {
+  const { isLoading, message, setGlobalLoading } = useStore((state) => ({
+    isLoading: state.globalLoading,
+    message: state.loadingMessage,
+    setGlobalLoading: state.setGlobalLoading,
+  })) as {
     isLoading: boolean;
     message: string | null;
     setGlobalLoading: (loading: boolean, message?: string) => void;
@@ -350,10 +334,7 @@ export function useLoading(): {
     [setGlobalLoading]
   );
 
-  const stop = useCallback(
-    () => setGlobalLoading(false),
-    [setGlobalLoading]
-  );
+  const stop = useCallback(() => setGlobalLoading(false), [setGlobalLoading]);
 
   return {
     isLoading,
@@ -373,15 +354,13 @@ export function useDisplaySettings(): {
   timeFormat: string;
   numberFormat: string;
 } {
-  return useStore(
-    (state) => ({
-      locale: state.locale,
-      timezone: state.timezone,
-      dateFormat: state.dateFormat,
-      timeFormat: state.timeFormat,
-      numberFormat: state.numberFormat,
-    })
-  ) as {
+  return useStore((state) => ({
+    locale: state.locale,
+    timezone: state.timezone,
+    dateFormat: state.dateFormat,
+    timeFormat: state.timeFormat,
+    numberFormat: state.numberFormat,
+  })) as {
     locale: string;
     timezone: string;
     dateFormat: string;
@@ -398,13 +377,11 @@ export function useAccessibilitySettings(): {
   highContrast: boolean;
   fontSize: string;
 } {
-  return useStore(
-    (state) => ({
-      reducedMotion: state.reducedMotion,
-      highContrast: state.highContrast,
-      fontSize: state.fontSize,
-    })
-  ) as {
+  return useStore((state) => ({
+    reducedMotion: state.reducedMotion,
+    highContrast: state.highContrast,
+    fontSize: state.fontSize,
+  })) as {
     reducedMotion: boolean;
     highContrast: boolean;
     fontSize: string;
@@ -419,13 +396,11 @@ export function useNotificationSettings(): {
   soundEnabled: boolean;
   desktopNotifications: boolean;
 } {
-  return useStore(
-    (state) => ({
-      notificationsEnabled: state.notificationsEnabled,
-      soundEnabled: state.soundEnabled,
-      desktopNotifications: state.desktopNotifications,
-    })
-  ) as {
+  return useStore((state) => ({
+    notificationsEnabled: state.notificationsEnabled,
+    soundEnabled: state.soundEnabled,
+    desktopNotifications: state.desktopNotifications,
+  })) as {
     notificationsEnabled: boolean;
     soundEnabled: boolean;
     desktopNotifications: boolean;
@@ -470,15 +445,13 @@ export function useStoreSubscription<T>(
       callbackRef.current(prevValue, prevValue);
     }
 
-    const unsubscribe = useStore.subscribe((state) => {
+    return useStore.subscribe((state) => {
       const newValue = selectorRef.current(state);
       if (!Object.is(newValue, prevValue)) {
         callbackRef.current(newValue, prevValue);
         prevValue = newValue;
       }
     });
-
-    return unsubscribe;
   }, [options?.fireImmediately]);
 }
 
@@ -493,10 +466,7 @@ export function useStoreSubscription<T>(
  * );
  * ```
  */
-export function useDebouncedState<T>(
-  selector: StoreSelector<T>,
-  delay: number = 300
-): T {
+export function useDebouncedState<T>(selector: StoreSelector<T>, delay: number = 300): T {
   const value = useStore(selector);
   const [debouncedValue, setDebouncedValue] = useState(value);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -606,7 +576,7 @@ export function useHydration(): {
 
   useEffect(() => {
     const state = useStore.getState();
-    if ((state as { _hasHydrated?: boolean })._hasHydrated === true) {
+    if ((state as { _hasHydrated?: boolean })._hasHydrated) {
       // Use queueMicrotask to avoid calling setState synchronously in effect
       queueMicrotask(() => {
         setHasHydrated(true);
@@ -614,13 +584,11 @@ export function useHydration(): {
       return;
     }
 
-    const unsubscribe = useStore.subscribe((state) => {
-      if ((state as { _hasHydrated?: boolean })._hasHydrated === true) {
+    return useStore.subscribe((state) => {
+      if ((state as { _hasHydrated?: boolean })._hasHydrated) {
         setHasHydrated(true);
       }
     });
-
-    return unsubscribe;
   }, []);
 
   return {

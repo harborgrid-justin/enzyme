@@ -59,10 +59,7 @@ interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
  * });
  * ```
  */
-export function customRender(
-  ui: ReactElement,
-  options: CustomRenderOptions = {}
-): RenderResult {
+export function customRender(ui: ReactElement, options: CustomRenderOptions = {}): RenderResult {
   const { authenticated, initialState, wrapper: CustomWrapper, ...renderOptions } = options;
 
   function Wrapper({ children }: PropsWithChildren): ReactElement {
@@ -174,7 +171,10 @@ export interface MockAuthTokens {
 /**
  * Create a mock API response
  */
-export function createMockApiResponse<T>(data: T, overrides: Partial<MockApiResponse<T>> = {}): MockApiResponse<T> {
+export function createMockApiResponse<T>(
+  data: T,
+  overrides: Partial<MockApiResponse<T>> = {}
+): MockApiResponse<T> {
   return {
     data,
     status: 200,
@@ -337,9 +337,7 @@ export interface Deferred<T> {
 /**
  * Create a spy that tracks calls and can be resolved/rejected
  */
-export function createAsyncSpy<T>(
-  defaultResponse?: T
-): AsyncSpy<T> {
+export function createAsyncSpy<T>(defaultResponse?: T): AsyncSpy<T> {
   const spy = vi.fn().mockImplementation(async () => Promise.resolve(defaultResponse));
 
   return Object.assign(spy, {
@@ -367,10 +365,7 @@ export interface AsyncSpy<T> extends Mock {
 /**
  * Create a mock event
  */
-export function createMockEvent<T extends Event>(
-  type: string,
-  props: Partial<T> = {}
-): T {
+export function createMockEvent<T extends Event>(type: string, props: Partial<T> = {}): T {
   const event = new Event(type, { bubbles: true, cancelable: true });
   return Object.assign(event, props) as T;
 }

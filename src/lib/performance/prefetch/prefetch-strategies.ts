@@ -162,7 +162,7 @@ export abstract class PrefetchStrategy {
   protected config: BaseStrategyConfig;
   protected targets: PrefetchTarget[] = [];
 
-  constructor(config: Partial<BaseStrategyConfig> = {}) {
+  protected constructor(config: Partial<BaseStrategyConfig> = {}) {
     this.config = { ...DEFAULT_BASE_CONFIG, ...config };
   }
 
@@ -511,15 +511,17 @@ export class IdlePrefetchStrategy extends PrefetchStrategy {
     const hasIdleCallback = 'requestIdleCallback' in window;
 
     if (hasIdleCallback) {
-      this.idleCallbackId = (window as Window & typeof globalThis & {
-        requestIdleCallback: (
-          callback: (deadline: IdleDeadline) => void,
-          options?: { timeout?: number }
-        ) => number;
-      }).requestIdleCallback(
-        (deadline) => this.handleIdleCallback(deadline),
-        { timeout: this.idleConfig.timeout }
-      );
+      this.idleCallbackId = (
+        window as Window &
+          typeof globalThis & {
+            requestIdleCallback: (
+              callback: (deadline: IdleDeadline) => void,
+              options?: { timeout?: number }
+            ) => number;
+          }
+      ).requestIdleCallback((deadline) => this.handleIdleCallback(deadline), {
+        timeout: this.idleConfig.timeout,
+      });
     } else {
       // Fallback to setTimeout
       this.idleCallbackId = window.setTimeout(() => {
@@ -534,9 +536,12 @@ export class IdlePrefetchStrategy extends PrefetchStrategy {
   cancel(): void {
     if (this.idleCallbackId !== null) {
       if ('cancelIdleCallback' in window) {
-        (window as Window & typeof globalThis & {
-          cancelIdleCallback: (handle: number) => void;
-        }).cancelIdleCallback(this.idleCallbackId);
+        (
+          window as Window &
+            typeof globalThis & {
+              cancelIdleCallback: (handle: number) => void;
+            }
+        ).cancelIdleCallback(this.idleCallbackId);
       } else {
         clearTimeout(this.idleCallbackId);
       }
@@ -552,10 +557,7 @@ export class IdlePrefetchStrategy extends PrefetchStrategy {
   }
 
   private handleIdleCallback(deadline: IdleDeadline): void {
-    while (
-      deadline.timeRemaining() >= this.idleConfig.minIdleTime &&
-      this.targets.length > 0
-    ) {
+    while (deadline.timeRemaining() >= this.idleConfig.minIdleTime && this.targets.length > 0) {
       const target = this.targets.find((t) => !this.prefetchedUrls.has(t.url));
       if (!target) break;
 
@@ -614,9 +616,7 @@ export class SequentialPrefetchStrategy extends PrefetchStrategy {
       return { shouldPrefetch: false, targets: [], reason: check.reason };
     }
 
-    const remaining = this.getOrderedTargets().filter(
-      (t) => !this.prefetchedUrls.has(t.url)
-    );
+    const remaining = this.getOrderedTargets().filter((t) => !this.prefetchedUrls.has(t.url));
 
     return {
       shouldPrefetch: remaining.length > 0,
@@ -718,8 +718,11 @@ export class ConditionalPrefetchStrategy extends PrefetchStrategy {
   private reevaluateTimer: ReturnType<typeof setInterval> | null = null;
   private onPrefetch: ((target: PrefetchTarget) => void) | null = null;
 
-
-  constructor(config: Partial<ConditionalStrategyConfig> & { condition: (context: StrategyContext) => boolean }) {
+  constructor(
+    config: Partial<ConditionalStrategyConfig> & {
+      condition: (context: StrategyContext) => boolean;
+    }
+  ) {
     super(config);
     this.conditionalConfig = {
       ...DEFAULT_BASE_CONFIG,
@@ -729,7 +732,6 @@ export class ConditionalPrefetchStrategy extends PrefetchStrategy {
   }
 
   execute(context: StrategyContext): StrategyResult {
-
     const baseCheck = this.shouldAllowPrefetch(context);
     if (!baseCheck.allowed) {
       return { shouldPrefetch: false, targets: [], reason: baseCheck.reason };
@@ -795,7 +797,7 @@ export class ConditionalPrefetchStrategy extends PrefetchStrategy {
  */
 export class StrategyComposer {
   private strategies: Map<string, PrefetchStrategy> = new Map();
-  private mode: 'any' | 'all' = 'any';
+  private readonly mode: 'any' | 'all' = 'any';
 
   constructor(mode: 'any' | 'all' = 'any') {
     this.mode = mode;
@@ -820,9 +822,7 @@ export class StrategyComposer {
    * Execute all strategies
    */
   execute(context: StrategyContext): StrategyResult {
-    const results = Array.from(this.strategies.values()).map((s) =>
-      s.execute(context)
-    );
+    const results = Array.from(this.strategies.values()).map((s) => s.execute(context));
 
     if (this.mode === 'all') {
       // All strategies must agree
@@ -832,9 +832,7 @@ export class StrategyComposer {
       return {
         shouldPrefetch: allShouldPrefetch,
         targets,
-        reason: allShouldPrefetch
-          ? 'All strategies agree'
-          : 'Not all strategies agree',
+        reason: allShouldPrefetch ? 'All strategies agree' : 'Not all strategies agree',
       };
     }
 
@@ -845,9 +843,7 @@ export class StrategyComposer {
     return {
       shouldPrefetch: anyShouldPrefetch,
       targets,
-      reason: anyShouldPrefetch
-        ? 'At least one strategy approved'
-        : 'No strategy approved',
+      reason: anyShouldPrefetch ? 'At least one strategy approved' : 'No strategy approved',
     };
   }
 
@@ -884,18 +880,14 @@ export function createViewportStrategy(
 /**
  * Create a hover-based prefetch strategy
  */
-export function createHoverStrategy(
-  config?: Partial<HoverStrategyConfig>
-): HoverPrefetchStrategy {
+export function createHoverStrategy(config?: Partial<HoverStrategyConfig>): HoverPrefetchStrategy {
   return new HoverPrefetchStrategy(config);
 }
 
 /**
  * Create an idle-based prefetch strategy
  */
-export function createIdleStrategy(
-  config?: Partial<IdleStrategyConfig>
-): IdlePrefetchStrategy {
+export function createIdleStrategy(config?: Partial<IdleStrategyConfig>): IdlePrefetchStrategy {
   return new IdlePrefetchStrategy(config);
 }
 

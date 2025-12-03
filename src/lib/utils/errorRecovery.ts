@@ -155,6 +155,13 @@ export class ErrorRecovery<T> {
   }
 
   /**
+   * Clear cache
+   */
+  clearCache(): void {
+    this.cache.clear();
+  }
+
+  /**
    * Try a specific recovery strategy
    */
   private async tryStrategy(
@@ -321,13 +328,6 @@ export class ErrorRecovery<T> {
       'server',
     ];
     return retryableCategories.includes(error.category);
-  }
-
-  /**
-   * Clear cache
-   */
-  clearCache(): void {
-    this.cache.clear();
   }
 }
 

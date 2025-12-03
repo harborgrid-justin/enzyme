@@ -1,14 +1,19 @@
 # State Module
 
-> **Purpose:** Production-grade state management built on Zustand with TypeScript safety, DevTools integration, and cross-tab synchronization.
+> **Purpose:** Production-grade state management built on Zustand with TypeScript safety, DevTools integration, and
+> cross-tab synchronization.
 
 ## Overview
 
-The State module provides a modern, lightweight alternative to Redux for React applications. Built on Zustand, it offers a simple yet powerful API for managing application state with minimal boilerplate.
+The State module provides a modern, lightweight alternative to Redux for React applications. Built on Zustand, it offers
+a simple yet powerful API for managing application state with minimal boilerplate.
 
-This module goes beyond basic Zustand by adding immutable updates via Immer, persistence with localStorage, automatic DevTools integration, type-safe selectors, and the ability to create feature-scoped stores that can be dynamically registered. It also includes cross-tab synchronization via BroadcastChannel for consistent state across browser tabs.
+This module goes beyond basic Zustand by adding immutable updates via Immer, persistence with localStorage, automatic
+DevTools integration, type-safe selectors, and the ability to create feature-scoped stores that can be dynamically
+registered. It also includes cross-tab synchronization via BroadcastChannel for consistent state across browser tabs.
 
-Perfect for applications that need predictable state management without the ceremony of Redux, while maintaining type safety and developer experience through comprehensive TypeScript support and Redux DevTools integration.
+Perfect for applications that need predictable state management without the ceremony of Redux, while maintaining type
+safety and developer experience through comprehensive TypeScript support and Redux DevTools integration.
 
 ## Key Features
 
@@ -71,6 +76,7 @@ const todoSlice = createSlice({
 ## Exports
 
 ### Core Store
+
 - `useStore` - Primary hook for accessing global state
 - `getStoreState()` - Get current state outside React
 - `subscribeToStore()` - Subscribe to state changes
@@ -78,6 +84,7 @@ const todoSlice = createSlice({
 - `clearPersistedStore()` - Clear localStorage persistence
 
 ### Feature Stores
+
 - `registerFeatureStore()` - Register a feature-scoped store
 - `unregisterFeatureStore()` - Unregister feature store
 - `getFeatureStore()` - Access feature store
@@ -85,11 +92,13 @@ const todoSlice = createSlice({
 - `resetAllFeatureStores()` - Reset all feature stores
 
 ### Slices (Built-in)
+
 - `sessionSlice` - User session data
 - `settingsSlice` - Application settings
 - `uiSlice` - UI state (modals, sidebars, etc.)
 
 ### Factories
+
 - `createStore()` - Create custom Zustand store
 - `createSlice()` - Create state slice with actions
 - `createSelectors()` - Create memoized selectors
@@ -98,6 +107,7 @@ const todoSlice = createSlice({
 - `combineSlices()` - Combine multiple slices
 
 ### Selectors
+
 - `createSelector()` - Create memoized selector
 - `createObjectSelector()` - Selector for object equality
 - `createArraySelector()` - Selector for array equality
@@ -107,10 +117,12 @@ const todoSlice = createSlice({
 - `omitSelector()` - Omit properties from state
 
 ### Synchronization
+
 - `createBroadcastSync()` - Create cross-tab sync
 - `useBroadcastSync` - Hook for sync management
 
 ### Types
+
 - `StoreState` - Global store state type
 - `StoreSelector<T>` - Selector function type
 - `SliceCreator` - Slice factory function type
@@ -149,6 +161,7 @@ The State module follows a slice-based architecture similar to Redux Toolkit:
 ## Common Patterns
 
 ### Pattern 1: Using Global Store
+
 ```tsx
 import { useStore } from '@/lib/state';
 
@@ -180,6 +193,7 @@ function Dashboard() {
 ```
 
 ### Pattern 2: Creating Custom Slices
+
 ```tsx
 import { createSlice } from '@/lib/state';
 
@@ -245,6 +259,7 @@ function ShoppingCart() {
 ```
 
 ### Pattern 3: Memoized Selectors
+
 ```tsx
 import { createSelector, useStore } from '@/lib/state';
 
@@ -278,6 +293,7 @@ function TodoList() {
 ```
 
 ### Pattern 4: Feature Stores
+
 ```tsx
 import { createFeatureStore, registerFeatureStore } from '@/lib/state';
 
@@ -323,6 +339,7 @@ function NotificationBell() {
 ```
 
 ### Pattern 5: Cross-Tab Synchronization
+
 ```tsx
 import { useBroadcastSync } from '@/lib/state';
 
@@ -345,6 +362,7 @@ function App() {
 ## Configuration
 
 ### Store Configuration
+
 ```tsx
 import { createAppStore } from '@/lib/state';
 
@@ -375,6 +393,7 @@ const store = createAppStore({
 ```
 
 ### Slice Configuration
+
 ```tsx
 import { createSlice } from '@/lib/state';
 
@@ -419,6 +438,7 @@ const mySlice = createSlice({
 ## Testing
 
 ### Testing Components with State
+
 ```tsx
 import { renderHook, act } from '@testing-library/react';
 import { useStore, resetStore } from '@/lib/state';
@@ -446,6 +466,7 @@ describe('Counter', () => {
 ```
 
 ### Testing Slices
+
 ```tsx
 import { createSlice } from '@/lib/state';
 
@@ -474,7 +495,9 @@ describe('todoSlice', () => {
 ## Troubleshooting
 
 ### Issue: Component Re-renders Too Often
+
 **Solution:** Make selectors more specific:
+
 ```tsx
 // Bad - selects entire object, re-renders on any change
 const state = useStore((state) => state.todos);
@@ -484,7 +507,9 @@ const items = useStore((state) => state.todos.items);
 ```
 
 ### Issue: State Not Persisting
+
 **Solution:** Ensure persistence is enabled and key is unique:
+
 ```tsx
 createAppStore({
   persist: {
@@ -495,7 +520,9 @@ createAppStore({
 ```
 
 ### Issue: DevTools Not Showing Actions
+
 **Solution:** Ensure actions are named in slice creator:
+
 ```tsx
 createSlice({
   name: 'mySlice', // This name appears in DevTools
@@ -506,7 +533,9 @@ createSlice({
 ```
 
 ### Issue: Cross-Tab Sync Not Working
+
 **Solution:** Ensure same channel name and browser supports BroadcastChannel:
+
 ```tsx
 // Check support
 if ('BroadcastChannel' in window) {

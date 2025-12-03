@@ -330,7 +330,8 @@ export class APIGateway {
 
     try {
       // Build middleware chain
-      const executeRequest = async (): Promise<GatewayResponse<T>> => this.executeRequest<T>(processedRequest, startTime);
+      const executeRequest = async (): Promise<GatewayResponse<T>> =>
+        this.executeRequest<T>(processedRequest, startTime);
       const chain = this.buildMiddlewareChain(processedRequest, executeRequest);
 
       // Execute request through middleware
@@ -356,6 +357,79 @@ export class APIGateway {
       }
 
       throw gatewayError;
+    }
+  }
+
+  /**
+   * Add middleware to the gateway.
+   */
+  use(middleware: GatewayMiddleware): this {
+    this.middleware.push(middleware);
+    return this;
+  }
+
+  /**
+   * Add a request interceptor.
+   */
+  addRequestInterceptor(interceptor: RequestInterceptor): () => void {
+    this.requestInterceptors.push(interceptor);
+    return () => {
+      const index = this.requestInterceptors.indexOf(interceptor);
+      if (index > -1) this.requestInterceptors.splice(index, 1);
+    };
+  }
+
+  // ===========================================================================
+  // Middleware & Interceptors
+  // ===========================================================================
+
+  /**
+   * Add a response interceptor.
+   */
+  addResponseInterceptor(interceptor: ResponseInterceptor): () => void {
+    this.responseInterceptors.push(interceptor);
+    return () => {
+      const index = this.responseInterceptors.indexOf(interceptor);
+      if (index > -1) this.responseInterceptors.splice(index, 1);
+    };
+  }
+
+  /**
+   * Add an error interceptor.
+   */
+  addErrorInterceptor(interceptor: ErrorInterceptor): () => void {
+    this.errorInterceptors.push(interceptor);
+    return () => {
+      const index = this.errorInterceptors.indexOf(interceptor);
+      if (index > -1) this.errorInterceptors.splice(index, 1);
+    };
+  }
+
+  /**
+   * Clear the cache.
+   */
+  clearCache(pattern?: string): void {
+    if (pattern == null || pattern === '') {
+      this.cache.clear();
+      return;
+    }
+
+    const regex = new RegExp(pattern);
+    for (const key of this.cache.keys()) {
+      if (regex.test(key)) {
+        this.cache.delete(key);
+      }
+    }
+  }
+
+  /**
+   * Log debug message.
+   * @internal Used for debug logging when config.debug is enabled
+   */
+  protected log(message: string, ...args: unknown[]): void {
+    if (this.config.debug === true) {
+      // eslint-disable-next-line no-console
+      console.log(`[APIGateway] ${message}`, ...args);
     }
   }
 
@@ -400,6 +474,10 @@ export class APIGateway {
     }
   }
 
+  // ===========================================================================
+  // URL & Header Building
+  // ===========================================================================
+
   /**
    * Fetch with retry logic.
    *
@@ -429,10 +507,7 @@ export class APIGateway {
           const error = await this.createErrorFromResponse(response, request);
 
           // Check if should retry
-          if (
-            attempt < retryConfig.maxRetries &&
-            this.shouldRetry(error, attempt, retryConfig)
-          ) {
+          if (attempt < retryConfig.maxRetries && this.shouldRetry(error, attempt, retryConfig)) {
             lastError = error;
             await this.delay(this.calculateDelay(attempt, retryConfig));
             continue;
@@ -473,51 +548,6 @@ export class APIGateway {
     throw lastError ?? this.createError('MAX_RETRIES', 'Max retries exceeded', request, false);
   }
 
-  // ===========================================================================
-  // Middleware & Interceptors
-  // ===========================================================================
-
-  /**
-   * Add middleware to the gateway.
-   */
-  use(middleware: GatewayMiddleware): this {
-    this.middleware.push(middleware);
-    return this;
-  }
-
-  /**
-   * Add a request interceptor.
-   */
-  addRequestInterceptor(interceptor: RequestInterceptor): () => void {
-    this.requestInterceptors.push(interceptor);
-    return () => {
-      const index = this.requestInterceptors.indexOf(interceptor);
-      if (index > -1) this.requestInterceptors.splice(index, 1);
-    };
-  }
-
-  /**
-   * Add a response interceptor.
-   */
-  addResponseInterceptor(interceptor: ResponseInterceptor): () => void {
-    this.responseInterceptors.push(interceptor);
-    return () => {
-      const index = this.responseInterceptors.indexOf(interceptor);
-      if (index > -1) this.responseInterceptors.splice(index, 1);
-    };
-  }
-
-  /**
-   * Add an error interceptor.
-   */
-  addErrorInterceptor(interceptor: ErrorInterceptor): () => void {
-    this.errorInterceptors.push(interceptor);
-    return () => {
-      const index = this.errorInterceptors.indexOf(interceptor);
-      if (index > -1) this.errorInterceptors.splice(index, 1);
-    };
-  }
-
   /**
    * Build middleware chain.
    */
@@ -527,16 +557,14 @@ export class APIGateway {
   ): () => Promise<GatewayResponse> {
     const middleware = [...this.middleware];
 
-    const chain = middleware.reduceRight<() => Promise<GatewayResponse>>(
+    return middleware.reduceRight<() => Promise<GatewayResponse>>(
       (next, mw) => async () => mw(request, next),
       execute
     );
-
-    return chain;
   }
 
   // ===========================================================================
-  // URL & Header Building
+  // Cache Management
   // ===========================================================================
 
   /**
@@ -585,10 +613,6 @@ export class APIGateway {
 
     return headers;
   }
-
-  // ===========================================================================
-  // Cache Management
-  // ===========================================================================
 
   /**
    * Get cached response.
@@ -639,38 +663,20 @@ export class APIGateway {
     }
   }
 
+  // ===========================================================================
+  // Helper Methods
+  // ===========================================================================
+
   /**
    * Get cache key for a request.
    */
   private getCacheKey(request: GatewayRequest): string {
     if (request.cache?.key != null && request.cache.key !== '') return request.cache.key;
 
-    const params = request.params != null
-      ? JSON.stringify(Object.entries(request.params).sort())
-      : '';
+    const params =
+      request.params != null ? JSON.stringify(Object.entries(request.params).sort()) : '';
     return `${request.method}:${request.path}:${params}`;
   }
-
-  /**
-   * Clear the cache.
-   */
-  clearCache(pattern?: string): void {
-    if (pattern == null || pattern === '') {
-      this.cache.clear();
-      return;
-    }
-
-    const regex = new RegExp(pattern);
-    for (const key of this.cache.keys()) {
-      if (regex.test(key)) {
-        this.cache.delete(key);
-      }
-    }
-  }
-
-  // ===========================================================================
-  // Helper Methods
-  // ===========================================================================
 
   /**
    * Parse response based on content type.
@@ -679,14 +685,14 @@ export class APIGateway {
     const contentType = response.headers.get('content-type') ?? '';
 
     if (contentType.includes('application/json')) {
-      return response.json() as Promise<T>;
+      return (await response.json()) as Promise<T>;
     }
 
     if (contentType.includes('text/')) {
-      return response.text() as unknown as T;
+      return (await response.text()) as unknown as T;
     }
 
-    return response.blob() as unknown as T;
+    return (await response.blob()) as unknown as T;
   }
 
   /**
@@ -723,15 +729,18 @@ export class APIGateway {
     let code = `HTTP_${response.status}`;
 
     try {
-      const body = await response.json() as { message?: string; error?: string; code?: string };
+      const body = (await response.json()) as { message?: string; error?: string; code?: string };
       message = body.message ?? body.error ?? message;
       code = body.code ?? code;
     } catch {
       // Use default message
     }
 
-    const retryable = (request.retry?.retryStatusCodes ?? DEFAULT_RETRY_CONFIG.retryStatusCodes ?? [])
-      .includes(response.status);
+    const retryable = (
+      request.retry?.retryStatusCodes ??
+      DEFAULT_RETRY_CONFIG.retryStatusCodes ??
+      []
+    ).includes(response.status);
 
     return this.createError(code, message, request, retryable, response.status);
   }
@@ -764,11 +773,7 @@ export class APIGateway {
   /**
    * Check if request should be retried.
    */
-  private shouldRetry(
-    error: GatewayError,
-    attempt: number,
-    config: RetryConfig
-  ): boolean {
+  private shouldRetry(error: GatewayError, attempt: number, config: RetryConfig): boolean {
     if (config.shouldRetry != null) {
       return config.shouldRetry(error, attempt);
     }
@@ -798,7 +803,7 @@ export class APIGateway {
    * Delay helper.
    */
   private async delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**
@@ -816,17 +821,6 @@ export class APIGateway {
     }
 
     return controller.signal;
-  }
-
-  /**
-   * Log debug message.
-   * @internal Used for debug logging when config.debug is enabled
-   */
-  protected log(message: string, ...args: unknown[]): void {
-    if (this.config.debug === true) {
-      // eslint-disable-next-line no-console
-      console.log(`[APIGateway] ${message}`, ...args);
-    }
   }
 }
 

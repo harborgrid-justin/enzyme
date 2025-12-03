@@ -67,11 +67,7 @@ export function useModule(): UseModuleReturn {
   const context = useModuleContext();
   const eventBus = useEventBus();
 
-  const {
-    moduleId,
-    config,
-    state,
-  } = context;
+  const { moduleId, config, state } = context;
 
   // Derived state - use destructuring
   const { lifecycleState, isVisible, error, metrics } = state;
@@ -96,20 +92,26 @@ export function useModule(): UseModuleReturn {
       const subscriptionId = `${moduleId}-${name}-${Date.now()}`;
       let isActive = true;
       // EventHandler from types.ts and ModuleEventHandler are compatible - both take ModuleEventMessage<T>
-      const unsubscribeFn = eventBus.subscribe<T>(name, handler as unknown as Parameters<typeof eventBus.subscribe<T>>[1], moduleId);
-      
+      const unsubscribeFn = eventBus.subscribe<T>(
+        name,
+        handler as unknown as Parameters<typeof eventBus.subscribe<T>>[1],
+        moduleId
+      );
+
       const unsubscribe = (): void => {
         if (isActive) {
           isActive = false;
           unsubscribeFn();
         }
       };
-      
+
       return {
         id: subscriptionId,
         eventName: name,
         unsubscribe,
-        get isActive() { return isActive; },
+        get isActive() {
+          return isActive;
+        },
       };
     },
     [eventBus, moduleId]
@@ -129,18 +131,7 @@ export function useModule(): UseModuleReturn {
       emit,
       on,
     }),
-    [
-      moduleId,
-      config,
-      lifecycleState,
-      isMounted,
-      isVisible,
-      hasError,
-      error,
-      metrics,
-      emit,
-      on,
-    ]
+    [moduleId, config, lifecycleState, isMounted, isVisible, hasError, error, metrics, emit, on]
   );
 }
 

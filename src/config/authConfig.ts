@@ -70,14 +70,8 @@ export const rolePermissions: Record<Role, Permission[]> = {
     permissions.VIEW_USERS,
     permissions.VIEW_SETTINGS,
   ],
-  user: [
-    permissions.VIEW_DASHBOARD,
-    permissions.VIEW_REPORTS,
-    permissions.VIEW_SETTINGS,
-  ],
-  guest: [
-    permissions.VIEW_DASHBOARD,
-  ],
+  user: [permissions.VIEW_DASHBOARD, permissions.VIEW_REPORTS, permissions.VIEW_SETTINGS],
+  guest: [permissions.VIEW_DASHBOARD],
 };
 
 /**
@@ -107,12 +101,12 @@ export function hasMinimumRole(currentRole: Role, requiredRole: Role): boolean {
 export function getAllPermissions(role: Role): Permission[] {
   const roleIndex = roleHierarchy.indexOf(role);
   const applicableRoles = roleHierarchy.slice(0, roleIndex + 1);
-  
+
   const allPermissions = new Set<Permission>();
   applicableRoles.forEach((r) => {
     rolePermissions[r]?.forEach((p) => allPermissions.add(p));
   });
-  
+
   return Array.from(allPermissions);
 }
 

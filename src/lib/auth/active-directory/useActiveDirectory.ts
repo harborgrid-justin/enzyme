@@ -163,26 +163,26 @@ export function useActiveDirectory(): UseActiveDirectoryReturn {
   // State Values
   // ===========================================================================
 
-  const {user} = context;
-  const {isAuthenticated} = context;
-  const {isAuthenticating} = context;
-  const {isRefreshing} = context;
-  const {error} = context;
-  const {provider} = context;
-  const {tokens} = context;
-  const {hasSsoSession} = context;
-  const {initialize} = context;
-  const {login} = context;
-  const {loginSilent} = context;
-  const {logout} = context;
-  const {acquireToken} = context;
-  const {refreshTokens} = context;
-  const {clearError} = context;
-  const {forceReauth} = context;
-  const {isInGroup} = context;
-  const {hasAttribute} = context;
-  const {getMappedRoles} = context;
-  const {getEffectivePermissions} = context;
+  const { user } = context;
+  const { isAuthenticated } = context;
+  const { isAuthenticating } = context;
+  const { isRefreshing } = context;
+  const { error } = context;
+  const { provider } = context;
+  const { tokens } = context;
+  const { hasSsoSession } = context;
+  const { initialize } = context;
+  const { login } = context;
+  const { loginSilent } = context;
+  const { logout } = context;
+  const { acquireToken } = context;
+  const { refreshTokens } = context;
+  const { clearError } = context;
+  const { forceReauth } = context;
+  const { isInGroup } = context;
+  const { hasAttribute } = context;
+  const { getMappedRoles } = context;
+  const { getEffectivePermissions } = context;
 
   // ===========================================================================
   // Group Helpers
@@ -193,7 +193,7 @@ export function useActiveDirectory(): UseActiveDirectoryReturn {
   const isInAnyGroup = useCallback(
     (groupIds: string[]) => {
       if (!user) return false;
-      return groupIds.some(id => isInGroup(id));
+      return groupIds.some((id) => isInGroup(id));
     },
     [user, isInGroup]
   );
@@ -201,7 +201,7 @@ export function useActiveDirectory(): UseActiveDirectoryReturn {
   const isInAllGroups = useCallback(
     (groupIds: string[]) => {
       if (!user) return false;
-      return groupIds.every(id => isInGroup(id));
+      return groupIds.every((id) => isInGroup(id));
     },
     [user, isInGroup]
   );
@@ -212,18 +212,15 @@ export function useActiveDirectory(): UseActiveDirectoryReturn {
 
   const roles = useMemo(() => getMappedRoles(), [getMappedRoles]);
 
-  const hasRole = useCallback(
-    (role: Role) => roles.includes(role),
-    [roles]
-  );
+  const hasRole = useCallback((role: Role) => roles.includes(role), [roles]);
 
   const hasAnyRole = useCallback(
-    (checkRoles: Role[]) => checkRoles.some(role => roles.includes(role)),
+    (checkRoles: Role[]) => checkRoles.some((role) => roles.includes(role)),
     [roles]
   );
 
   const hasAllRoles = useCallback(
-    (checkRoles: Role[]) => checkRoles.every(role => roles.includes(role)),
+    (checkRoles: Role[]) => checkRoles.every((role) => roles.includes(role)),
     [roles]
   );
 
@@ -231,10 +228,7 @@ export function useActiveDirectory(): UseActiveDirectoryReturn {
   // Permission Helpers
   // ===========================================================================
 
-  const permissions = useMemo(
-    () => getEffectivePermissions(),
-    [getEffectivePermissions]
-  );
+  const permissions = useMemo(() => getEffectivePermissions(), [getEffectivePermissions]);
 
   const hasPermission = useCallback(
     (permission: Permission) => {
@@ -252,14 +246,12 @@ export function useActiveDirectory(): UseActiveDirectoryReturn {
   );
 
   const hasAnyPermission = useCallback(
-    (checkPermissions: Permission[]) =>
-      checkPermissions.some(p => hasPermission(p)),
+    (checkPermissions: Permission[]) => checkPermissions.some((p) => hasPermission(p)),
     [hasPermission]
   );
 
   const hasAllPermissions = useCallback(
-    (checkPermissions: Permission[]) =>
-      checkPermissions.every(p => hasPermission(p)),
+    (checkPermissions: Permission[]) => checkPermissions.every((p) => hasPermission(p)),
     [hasPermission]
   );
 
@@ -284,14 +276,8 @@ export function useActiveDirectory(): UseActiveDirectoryReturn {
     () => user?.adAttributes.displayName ?? user?.displayName ?? null,
     [user]
   );
-  const department = useMemo(
-    () => user?.adAttributes.department ?? null,
-    [user]
-  );
-  const jobTitle = useMemo(
-    () => user?.adAttributes.jobTitle ?? null,
-    [user]
-  );
+  const department = useMemo(() => user?.adAttributes.department ?? null, [user]);
+  const jobTitle = useMemo(() => user?.adAttributes.jobTitle ?? null, [user]);
   const isGuest = useMemo(() => user?.isGuest ?? false, [user]);
 
   // ===========================================================================
@@ -441,8 +427,7 @@ export function useADPermissions(): {
   hasAnyPermission: (permissions: Permission[]) => boolean;
   hasAllPermissions: (permissions: Permission[]) => boolean;
 } {
-  const { permissions, hasPermission, hasAnyPermission, hasAllPermissions } =
-    useActiveDirectory();
+  const { permissions, hasPermission, hasAnyPermission, hasAllPermissions } = useActiveDirectory();
   return { permissions, hasPermission, hasAnyPermission, hasAllPermissions };
 }
 
@@ -477,16 +462,8 @@ export function useADAttributes(): {
   jobTitle: string | null;
   isGuest: boolean;
 } {
-  const {
-    user,
-    getAttribute,
-    hasAttribute,
-    upn,
-    displayName,
-    department,
-    jobTitle,
-    isGuest,
-  } = useActiveDirectory();
+  const { user, getAttribute, hasAttribute, upn, displayName, department, jobTitle, isGuest } =
+    useActiveDirectory();
 
   return {
     attributes: user?.adAttributes ?? null,

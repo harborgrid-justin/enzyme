@@ -56,9 +56,7 @@ export interface UseCSPNonceOptions {
  * }
  * ```
  */
-export function useCSPNonce(
-  options: UseCSPNonceOptions = {}
-): UseCSPNonceResult {
+export function useCSPNonce(options: UseCSPNonceOptions = {}): UseCSPNonceResult {
   const { regenerateInterval, autoInitialize = true } = options;
 
   // State for the current nonce
@@ -79,15 +77,17 @@ export function useCSPNonce(
     if (autoInitialize && !CSPManager.isInitialized()) {
       CSPManager.initialize();
       // Schedule nonce update for next render to avoid cascading renders
-      Promise.resolve().then(() => {
-        try {
-          setNonce(CSPManager.getCurrentNonce());
-        } catch {
-          // Keep the generated nonce
-        }
-      }).catch(() => {
-        // Ignore errors
-      });
+      Promise.resolve()
+        .then(() => {
+          try {
+            setNonce(CSPManager.getCurrentNonce());
+          } catch {
+            // Keep the generated nonce
+          }
+        })
+        .catch(() => {
+          // Ignore errors
+        });
     }
     return undefined;
   }, [autoInitialize]);
@@ -143,9 +143,7 @@ export function useCSPNonce(
  * }
  * ```
  */
-export function useNonceScript(
-  scriptContent: string
-): {
+export function useNonceScript(scriptContent: string): {
   nonce: string;
   dangerouslySetInnerHTML: { __html: string };
 } {
@@ -172,19 +170,17 @@ export function useNonceScript(
  * }
  * ```
  */
-export function useNonceStyle(
-  styleContent: string
-): {
+export function useNonceStyle(styleContent: string): {
   nonce: string;
   dangerouslySetInnerHTML: { __html: string };
 } {
   const { nonce } = useCSPNonce();
 
-return useMemo(
-  () => ({
-    nonce,
-    dangerouslySetInnerHTML: { __html: styleContent },
-  }),
-  [nonce, styleContent]
-);
+  return useMemo(
+    () => ({
+      nonce,
+      dangerouslySetInnerHTML: { __html: styleContent },
+    }),
+    [nonce, styleContent]
+  );
 }

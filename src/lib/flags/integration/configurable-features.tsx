@@ -259,90 +259,6 @@ class FeatureRegistryImpl implements FeatureRegistryInterface {
   private flags: Record<string, boolean> = {};
   private subscribers = new Set<(features: ConfigurableFeature[]) => void>();
 
-  private evaluateFeature(feature: FeatureDefinition): FeatureState {
-    // Check for active override
-    const activeOverrides = Array.from(this.overrides.values())
-      .filter((o) => o.featureId === feature.id)
-      .filter((o) => !o.expiresAt || o.expiresAt > new Date())
-      .sort((a, b) => b.priority - a.priority);
-
-    if (activeOverrides.length > 0 && activeOverrides[0]) {
-      return {
-        isEnabled: activeOverrides[0].enabled,
-        source: 'override',
-        override: activeOverrides[0],
-        evaluatedAt: Date.now(),
-      };
-    }
-
-    // Check dependencies
-    if (feature.dependencies) {
-      const unmetDependencies: string[] = [];
-
-      for (const dep of feature.dependencies) {
-        const depFeature = this.features.get(dep.featureId);
-        const depEnabled = depFeature ? this.isEnabled(dep.featureId) : false;
-
-        if (dep.type === 'requires' && !depEnabled) {
-          unmetDependencies.push(dep.featureId);
-        }
-
-        if (dep.type === 'conflicts' && depEnabled) {
-          return {
-            isEnabled: false,
-            source: 'dependency',
-            unmetDependencies: [dep.featureId],
-            evaluatedAt: Date.now(),
-          };
-        }
-      }
-
-      if (unmetDependencies.length > 0) {
-        return {
-          isEnabled: false,
-          source: 'dependency',
-          unmetDependencies,
-          evaluatedAt: Date.now(),
-        };
-      }
-    }
-
-    // Check flag
-    const flagValue = this.flags[feature.flagKey];
-    if (flagValue !== undefined) {
-      return {
-        isEnabled: flagValue,
-        source: 'flag',
-        evaluatedAt: Date.now(),
-      };
-    }
-
-    // Default value
-    return {
-      isEnabled: feature.defaultEnabled,
-      source: 'default',
-      evaluatedAt: Date.now(),
-    };
-  }
-
-  private toConfigurableFeature(feature: FeatureDefinition): ConfigurableFeature {
-    return {
-      ...feature,
-      state: this.evaluateFeature(feature),
-    };
-  }
-
-  private notifySubscribers(): void {
-    const allFeatures = this.getAll();
-    for (const callback of this.subscribers) {
-      try {
-        callback(allFeatures);
-      } catch (error) {
-        console.error('[FeatureRegistry] Subscriber error:', error);
-      }
-    }
-  }
-
   register(feature: FeatureDefinition): void {
     this.features.set(feature.id, feature);
     this.notifySubscribers();
@@ -429,6 +345,90 @@ class FeatureRegistryImpl implements FeatureRegistryInterface {
     this.overrides.clear();
     this.flags = {};
     this.notifySubscribers();
+  }
+
+  private evaluateFeature(feature: FeatureDefinition): FeatureState {
+    // Check for active override
+    const activeOverrides = Array.from(this.overrides.values())
+      .filter((o) => o.featureId === feature.id)
+      .filter((o) => !o.expiresAt || o.expiresAt > new Date())
+      .sort((a, b) => b.priority - a.priority);
+
+    if (activeOverrides.length > 0 && activeOverrides[0]) {
+      return {
+        isEnabled: activeOverrides[0].enabled,
+        source: 'override',
+        override: activeOverrides[0],
+        evaluatedAt: Date.now(),
+      };
+    }
+
+    // Check dependencies
+    if (feature.dependencies) {
+      const unmetDependencies: string[] = [];
+
+      for (const dep of feature.dependencies) {
+        const depFeature = this.features.get(dep.featureId);
+        const depEnabled = depFeature ? this.isEnabled(dep.featureId) : false;
+
+        if (dep.type === 'requires' && !depEnabled) {
+          unmetDependencies.push(dep.featureId);
+        }
+
+        if (dep.type === 'conflicts' && depEnabled) {
+          return {
+            isEnabled: false,
+            source: 'dependency',
+            unmetDependencies: [dep.featureId],
+            evaluatedAt: Date.now(),
+          };
+        }
+      }
+
+      if (unmetDependencies.length > 0) {
+        return {
+          isEnabled: false,
+          source: 'dependency',
+          unmetDependencies,
+          evaluatedAt: Date.now(),
+        };
+      }
+    }
+
+    // Check flag
+    const flagValue = this.flags[feature.flagKey];
+    if (flagValue !== undefined) {
+      return {
+        isEnabled: flagValue,
+        source: 'flag',
+        evaluatedAt: Date.now(),
+      };
+    }
+
+    // Default value
+    return {
+      isEnabled: feature.defaultEnabled,
+      source: 'default',
+      evaluatedAt: Date.now(),
+    };
+  }
+
+  private toConfigurableFeature(feature: FeatureDefinition): ConfigurableFeature {
+    return {
+      ...feature,
+      state: this.evaluateFeature(feature),
+    };
+  }
+
+  private notifySubscribers(): void {
+    const allFeatures = this.getAll();
+    for (const callback of this.subscribers) {
+      try {
+        callback(allFeatures);
+      } catch (error) {
+        console.error('[FeatureRegistry] Subscriber error:', error);
+      }
+    }
   }
 }
 

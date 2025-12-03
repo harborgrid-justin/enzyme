@@ -129,7 +129,7 @@ function DefaultProviderFallback({
           {getUserFriendlyMessage(error)}
         </p>
 
-        {showDetails === true && error.stack && (
+        {showDetails && error.stack && (
           <pre
             style={{
               textAlign: 'left',
@@ -276,30 +276,6 @@ export class ProviderErrorBoundary extends Component<
     }
   }
 
-  private scheduleAutoRetry(delay: number): void {
-    if (this.retryTimeoutId) {
-      clearTimeout(this.retryTimeoutId);
-    }
-
-    this.retryTimeoutId = setTimeout(() => {
-      this.handleRetry();
-    }, delay * Math.pow(1.5, this.state.retryCount)); // Exponential backoff
-  }
-
-  private handleRetry = (): void => {
-    this.setState((prev) => ({
-      hasError: false,
-      error: null,
-      retryCount: prev.retryCount + 1,
-      isRetrying: true,
-    }));
-
-    // Reset isRetrying after a short delay
-    setTimeout(() => {
-      this.setState({ isRetrying: false });
-    }, 100);
-  };
-
   override render(): ReactNode {
     const {
       children,
@@ -334,6 +310,30 @@ export class ProviderErrorBoundary extends Component<
 
     return children;
   }
+
+  private scheduleAutoRetry(delay: number): void {
+    if (this.retryTimeoutId) {
+      clearTimeout(this.retryTimeoutId);
+    }
+
+    this.retryTimeoutId = setTimeout(() => {
+      this.handleRetry();
+    }, delay * Math.pow(1.5, this.state.retryCount)); // Exponential backoff
+  }
+
+  private handleRetry = (): void => {
+    this.setState((prev) => ({
+      hasError: false,
+      error: null,
+      retryCount: prev.retryCount + 1,
+      isRetrying: true,
+    }));
+
+    // Reset isRetrying after a short delay
+    setTimeout(() => {
+      this.setState({ isRetrying: false });
+    }, 100);
+  };
 }
 
 /**

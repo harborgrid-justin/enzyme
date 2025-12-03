@@ -49,10 +49,7 @@ export {
 // =============================================================================
 // ERROR BOUNDARIES
 // =============================================================================
-export {
-  GlobalErrorBoundary,
-  type GlobalErrorBoundaryProps,
-} from './GlobalErrorBoundary';
+export { GlobalErrorBoundary, type GlobalErrorBoundaryProps } from './GlobalErrorBoundary';
 
 export {
   QueryErrorBoundary,

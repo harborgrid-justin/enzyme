@@ -26,11 +26,7 @@ import React, {
   type JSX,
 } from 'react';
 
-import type {
-  DOMContext,
-  LayoutType,
-  ContextAwareBoxProps,
-} from './types';
+import type { DOMContext, LayoutType, ContextAwareBoxProps } from './types';
 import { useDOMContextValue } from './DOMContextProvider';
 import { getDOMContextTracker } from './dom-context';
 // import { getZIndexManager } from './z-index-manager';
@@ -42,10 +38,9 @@ import { getDOMContextTracker } from './dom-context';
 /**
  * Props for polymorphic ContextAwareBox.
  */
-export type PolymorphicContextAwareBoxProps<E extends ElementType> =
-  ContextAwareBoxProps & {
-    as?: E;
-  } & Omit<ComponentPropsWithoutRef<E>, keyof ContextAwareBoxProps>;
+export type PolymorphicContextAwareBoxProps<E extends ElementType> = ContextAwareBoxProps & {
+  as?: E;
+} & Omit<ComponentPropsWithoutRef<E>, keyof ContextAwareBoxProps>;
 
 /**
  * Extended context information specific to the box.
@@ -132,7 +127,11 @@ function ContextAwareBoxInner<E extends ElementType = 'div'>(
    * Currently unused but kept for future use.
    */
   const _computeBoxContext = useCallback((): BoxContext | null => {
-    if (resolvedRef.current === null || resolvedRef.current === undefined || domContext.isInitialized === false) {
+    if (
+      resolvedRef.current === null ||
+      resolvedRef.current === undefined ||
+      !domContext.isInitialized
+    ) {
       return null;
     }
 
@@ -143,7 +142,8 @@ function ContextAwareBoxInner<E extends ElementType = 'div'>(
     const ownLayoutType = tracker.getLayoutType(element);
 
     // Determine if this is a layout root
-    const isLayoutRoot = ownLayoutType === 'flex' ||
+    const isLayoutRoot =
+      ownLayoutType === 'flex' ||
       ownLayoutType === 'grid' ||
       ownLayoutType === 'inline-flex' ||
       ownLayoutType === 'inline-grid';
@@ -165,10 +165,11 @@ function ContextAwareBoxInner<E extends ElementType = 'div'>(
   // Call onContextReady when context is initialized
   useEffect(() => {
     if (
-      domContext.isInitialized === true &&
-      resolvedRef.current !== null && resolvedRef.current !== undefined &&
+      domContext.isInitialized &&
+      resolvedRef.current !== null &&
+      resolvedRef.current !== undefined &&
       onContextReady !== undefined &&
-      contextReadyCalledRef.current === false
+      !contextReadyCalledRef.current
     ) {
       contextReadyCalledRef.current = true;
       onContextReady(domContext);
@@ -257,9 +258,7 @@ function ContextAwareBoxInner<E extends ElementType = 'div'>(
 /**
  * Forwarded ref version of ContextAwareBox.
  */
-export const ContextAwareBox = forwardRef(ContextAwareBoxInner) as <
-  E extends ElementType = 'div'
->(
+export const ContextAwareBox = forwardRef(ContextAwareBoxInner) as <E extends ElementType = 'div'>(
   props: PolymorphicContextAwareBoxProps<E> & {
     ref?: React.ForwardedRef<HTMLElement>;
   }
@@ -370,12 +369,8 @@ export function GridBox({
 }: GridBoxProps): JSX.Element {
   const gridStyle: React.CSSProperties = {
     display: 'grid',
-    gridTemplateColumns: typeof columns === 'number'
-      ? `repeat(${columns}, 1fr)`
-      : columns,
-    gridTemplateRows: typeof rows === 'number'
-      ? `repeat(${rows}, 1fr)`
-      : rows,
+    gridTemplateColumns: typeof columns === 'number' ? `repeat(${columns}, 1fr)` : columns,
+    gridTemplateRows: typeof rows === 'number' ? `repeat(${rows}, 1fr)` : rows,
     gap: typeof gap === 'number' ? `${gap}px` : gap,
     rowGap: typeof rowGap === 'number' ? `${rowGap}px` : rowGap,
     columnGap: typeof columnGap === 'number' ? `${columnGap}px` : columnGap,
@@ -393,9 +388,7 @@ export function GridBox({
 /**
  * Maps justify prop to CSS value.
  */
-function mapJustify(
-  justify: 'start' | 'end' | 'center' | 'between' | 'around' | 'evenly'
-): string {
+function mapJustify(justify: 'start' | 'end' | 'center' | 'between' | 'around' | 'evenly'): string {
   const map: Record<typeof justify, string> = {
     start: 'flex-start',
     end: 'flex-end',
@@ -410,15 +403,13 @@ function mapJustify(
 /**
  * Maps align prop to CSS value.
  */
-function mapAlign(
-  align: 'start' | 'end' | 'center' | 'stretch' | 'baseline'
-): string {
+function mapAlign(align: 'start' | 'end' | 'center' | 'stretch' | 'baseline'): string {
   const map: Record<typeof align, string> = {
     start: 'flex-start',
     end: 'flex-end',
     center: 'center',
     stretch: 'stretch',
-  baseline: 'baseline',
-};
-return map[align];
+    baseline: 'baseline',
+  };
+  return map[align];
 }

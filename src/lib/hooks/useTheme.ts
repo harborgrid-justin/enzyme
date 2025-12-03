@@ -17,31 +17,31 @@ type ThemeMode = 'light' | 'dark' | 'system';
 export interface UseThemeReturn {
   /** Current theme mode */
   theme: ThemeMode;
-  
+
   /** Whether dark mode is active */
   isDark: boolean;
-  
+
   /** Whether light mode is active */
   isLight: boolean;
-  
+
   /** Toggle between light and dark mode */
   toggle: () => void;
-  
+
   /** Set specific theme mode */
   setTheme: (mode: ThemeMode) => void;
-  
+
   /** Set to light mode */
   setLight: () => void;
-  
+
   /** Set to dark mode */
   setDark: () => void;
-  
+
   /** Set to system preference */
   setSystem: () => void;
-  
+
   /** Get CSS variable value */
   getCssVar: (name: string) => string;
-  
+
   /** Apply theme class to element */
   applyThemeClass: (element: HTMLElement) => void;
 }
@@ -51,29 +51,27 @@ export interface UseThemeReturn {
  */
 export function useTheme(): UseThemeReturn {
   const { theme, resolvedTheme, setTheme, toggleTheme } = useThemeContext();
-  
+
   const isDark = resolvedTheme === 'dark';
   const isLight = resolvedTheme === 'light';
-  
+
   const setLight = useCallback(() => {
     setTheme('light');
   }, [setTheme]);
-  
+
   const setDark = useCallback(() => {
     setTheme('dark');
   }, [setTheme]);
-  
+
   const setSystem = useCallback(() => {
     setTheme('system');
   }, [setTheme]);
-  
+
   const getCssVar = useCallback((name: string): string => {
     if (typeof window === 'undefined') return '';
-    return getComputedStyle(document.documentElement)
-      .getPropertyValue(`--${name}`)
-      .trim();
+    return getComputedStyle(document.documentElement).getPropertyValue(`--${name}`).trim();
   }, []);
-  
+
   const applyThemeClass = useCallback(
     (element: HTMLElement) => {
       element.classList.remove('theme-light', 'theme-dark');
@@ -81,7 +79,7 @@ export function useTheme(): UseThemeReturn {
     },
     [resolvedTheme]
   );
-  
+
   return useMemo(
     () => ({
       theme,
@@ -118,26 +116,28 @@ export function useSystemThemePreference(): {
   prefersLight: boolean;
 } {
   const [prefersDark, setPrefersDark] = useState(false);
-  
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     // Use microtask to avoid synchronous setState in effect
-    Promise.resolve().then(() => {
-      setPrefersDark(mediaQuery.matches);
-    }).catch(() => {
-      // Ignore errors in cleanup
-    });
+    Promise.resolve()
+      .then(() => {
+        setPrefersDark(mediaQuery.matches);
+      })
+      .catch(() => {
+        // Ignore errors in cleanup
+      });
 
     const handler = (e: MediaQueryListEvent): void => {
       setPrefersDark(e.matches);
     };
-    
+
     mediaQuery.addEventListener('change', handler);
     return () => mediaQuery.removeEventListener('change', handler);
   }, []);
-  
+
   return {
     prefersDark,
     prefersLight: !prefersDark,

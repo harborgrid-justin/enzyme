@@ -1,6 +1,7 @@
 # Contributing Guide
 
-Thank you for your interest in contributing to the Harbor React Library! This document provides guidelines and instructions for contributing.
+Thank you for your interest in contributing to the Harbor React Library! This document provides guidelines and
+instructions for contributing.
 
 ## Table of Contents
 
@@ -218,15 +219,15 @@ export { MyComponent, AnotherComponent };
 
 ### Naming Conventions
 
-| Type | Convention | Example |
-|------|------------|---------|
-| Components | PascalCase | `UserProfile` |
-| Hooks | camelCase with `use` | `useAuth` |
-| Functions | camelCase | `formatDate` |
-| Constants | UPPER_SNAKE_CASE | `DEFAULT_TIMEOUT` |
-| Types/Interfaces | PascalCase | `UserConfig` |
-| Files (components) | PascalCase | `UserProfile.tsx` |
-| Files (utilities) | camelCase | `formatDate.ts` |
+| Type               | Convention           | Example           |
+|--------------------|----------------------|-------------------|
+| Components         | PascalCase           | `UserProfile`     |
+| Hooks              | camelCase with `use` | `useAuth`         |
+| Functions          | camelCase            | `formatDate`      |
+| Constants          | UPPER_SNAKE_CASE     | `DEFAULT_TIMEOUT` |
+| Types/Interfaces   | PascalCase           | `UserConfig`      |
+| Files (components) | PascalCase           | `UserProfile.tsx` |
+| Files (utilities)  | camelCase            | `formatDate.ts`   |
 
 ---
 
@@ -374,10 +375,12 @@ describe('useMyHook', () => {
  *   password: 'password123',
  * });
  * ```
- */
+
+*/
 export async function login(credentials: LoginCredentials): Promise<User> {
-  // Implementation
+// Implementation
 }
+
 ```
 
 ### README Requirements
@@ -422,16 +425,16 @@ if (user.role === 'admin') {
 
 ### Types
 
-| Type | Description |
-|------|-------------|
-| `feat` | New feature |
-| `fix` | Bug fix |
-| `docs` | Documentation only |
-| `style` | Formatting, no code change |
+| Type       | Description                        |
+|------------|------------------------------------|
+| `feat`     | New feature                        |
+| `fix`      | Bug fix                            |
+| `docs`     | Documentation only                 |
+| `style`    | Formatting, no code change         |
 | `refactor` | Code change, no new feature or fix |
-| `perf` | Performance improvement |
-| `test` | Adding/updating tests |
-| `chore` | Maintenance tasks |
+| `perf`     | Performance improvement            |
+| `test`     | Adding/updating tests              |
+| `chore`    | Maintenance tasks                  |
 
 ### Examples
 
@@ -530,6 +533,7 @@ Any other relevant information.
 ## Recognition
 
 Contributors are recognized in:
+
 - The [CHANGELOG](./CHANGELOG.md) for significant contributions
 - GitHub's contributor list
 - Our documentation

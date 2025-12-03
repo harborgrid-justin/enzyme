@@ -194,10 +194,7 @@ export {
   createLazyLoader,
 } from './module-loader';
 
-export type {
-  PrefetchHint,
-  LoadingMetrics,
-} from './module-loader';
+export type { PrefetchHint, LoadingMetrics } from './module-loader';
 
 // =============================================================================
 // Security Sandbox
@@ -224,19 +221,14 @@ export {
   publish,
 } from './event-bus';
 
-export type {
-  EventBusStats,
-  EventBusConfig,
-} from './event-bus';
+export type { EventBusStats, EventBusConfig } from './event-bus';
 
 // =============================================================================
 // React Components
 // =============================================================================
 
 // ModuleProvider
-export {
-  ModuleProvider,
-} from './ModuleProvider';
+export { ModuleProvider } from './ModuleProvider';
 
 export {
   useModuleSystem,
@@ -249,17 +241,10 @@ export {
   useDevMode,
 } from './ModuleProviderExports';
 
-export type {
-  ModuleSystemContextValue,
-  ModuleProviderProps,
-} from './ModuleProviderContext';
+export type { ModuleSystemContextValue, ModuleProviderProps } from './ModuleProviderContext';
 
 // ModuleBoundary
-export {
-  ModuleBoundary,
-  useModuleContext,
-  useOptionalModuleContext,
-} from './ModuleBoundary';
+export { ModuleBoundary, useModuleContext, useOptionalModuleContext } from './ModuleBoundary';
 
 export type { ModuleBoundaryProps } from './ModuleBoundary';
 
@@ -273,11 +258,7 @@ export {
   ModulePortalSlot,
 } from './ModuleSlot';
 
-export {
-  useFillSlot,
-  useSlotContent,
-  useIsSlotFilled,
-} from './ModuleSlotExports';
+export { useFillSlot, useSlotContent, useIsSlotFilled } from './ModuleSlotExports';
 
 export type {
   ModuleSlotProps,
@@ -378,7 +359,7 @@ export function initializeVDOM(config?: Partial<import('./types').ModuleProvider
   getDefaultEventBus();
 
   // Log initialization in development
-  if ((config?.devMode ?? false) === true || isDev()) {
+  if ((config?.devMode ?? false) || isDev()) {
     devLog('[VDOM] Virtual Modular DOM System initialized', {
       poolStats: pool.getStats(),
       registrySize: registry.size,

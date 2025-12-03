@@ -486,7 +486,11 @@ export class RealUserMonitoring {
   /**
    * Track error
    */
-  trackError(error: Error | string, type: ErrorEvent['type'] = 'custom', context?: Record<string, unknown>): void {
+  trackError(
+    error: Error | string,
+    type: ErrorEvent['type'] = 'custom',
+    context?: Record<string, unknown>
+  ): void {
     if (!this.session) return;
 
     const errorEvent: ErrorEvent = {
@@ -520,7 +524,8 @@ export class RealUserMonitoring {
       pageViews: [...this.pageViews],
       interactions: this.session.interactions,
       errors: [...this.errors],
-      averagePageDuration: this.pageViews.length > 1 ? totalDuration / (this.pageViews.length - 1) : 0,
+      averagePageDuration:
+        this.pageViews.length > 1 ? totalDuration / (this.pageViews.length - 1) : 0,
       bounced: this.pageViews.length === 1,
       conversionEvents: [], // Would be populated by custom event tracking
     };
@@ -744,7 +749,10 @@ export class RealUserMonitoring {
 
       // Keep only recent clicks
       const cutoff = now - this.config.rageClickTimeWindow;
-      while (this.clickTracker.timestamps.length > 0 && (this.clickTracker.timestamps[0] ?? 0) < cutoff) {
+      while (
+        this.clickTracker.timestamps.length > 0 &&
+        (this.clickTracker.timestamps[0] ?? 0) < cutoff
+      ) {
         this.clickTracker.timestamps.shift();
         this.clickTracker.positions.shift();
       }
@@ -791,15 +799,17 @@ export class RealUserMonitoring {
   }
 
   private handleUnhandledRejection(event: PromiseRejectionEvent): void {
-    const message = event.reason instanceof Error
-      ? event.reason.message
-      : String(event.reason);
+    const message = event.reason instanceof Error ? event.reason.message : String(event.reason);
     this.trackError(message, 'promise');
   }
 
   private handleFormFocus(event: FocusEvent): void {
     const target = event.target as HTMLElement;
-    if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA' && target.tagName !== 'SELECT') {
+    if (
+      target.tagName !== 'INPUT' &&
+      target.tagName !== 'TEXTAREA' &&
+      target.tagName !== 'SELECT'
+    ) {
       return;
     }
 
@@ -1016,7 +1026,9 @@ export class RealUserMonitoring {
   }
 
   private getNavigationMetrics(): PageViewEvent['metrics'] {
-    const nav = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
+    const nav = performance.getEntriesByType('navigation')[0] as
+      | PerformanceNavigationTiming
+      | undefined;
     if (!nav) return undefined;
 
     // Use startTime as the navigation start reference (replaces deprecated navigationStart)
@@ -1054,9 +1066,8 @@ export class RealUserMonitoring {
 
     const tag = element.tagName.toLowerCase();
     const id = element.id ? `#${element.id}` : '';
-    const classes = element.classList.length > 0
-      ? `.${Array.from(element.classList).slice(0, 3).join('.')}`
-      : '';
+    const classes =
+      element.classList.length > 0 ? `.${Array.from(element.classList).slice(0, 3).join('.')}` : '';
 
     return `${tag}${id}${classes}`;
   }
@@ -1073,7 +1084,7 @@ export class RealUserMonitoring {
 
     const masked: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(data)) {
-      const isSensitive = this.config.sensitivePatterns.some(pattern => pattern.test(key));
+      const isSensitive = this.config.sensitivePatterns.some((pattern) => pattern.test(key));
       masked[key] = isSensitive ? '[REDACTED]' : value;
     }
     return masked;
@@ -1105,7 +1116,7 @@ export class RealUserMonitoring {
     }
 
     // Disconnect observers
-    this.observers.forEach(o => o.disconnect());
+    this.observers.forEach((o) => o.disconnect());
     this.observers = [];
 
     // Final flush

@@ -34,17 +34,10 @@
  * ```
  */
 
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLatestRef } from '../../hooks/shared/useLatestRef';
-import type {
-  SyncEngine,
-  SyncStatus,
-  SyncResult,
-  SyncConflict,
-  SyncOptions,
-  SyncEvent,
-} from '../sync/sync-engine';
-import type { ConflictStrategy, ConflictResolutionResult } from '../sync/conflict-resolver';
+import type { SyncConflict, SyncEngine, SyncEvent, SyncOptions, SyncResult, SyncStatus, } from '../sync/sync-engine';
+import type { ConflictResolutionResult, ConflictStrategy } from '../sync/conflict-resolver';
 import type { Entity } from '../normalization/normalizer';
 
 // =============================================================================
@@ -70,7 +63,7 @@ export interface SyncState<T extends Entity> {
   /** Pending changes count */
   pendingChanges: number;
   /** Active conflicts */
-  conflicts: SyncConflict<unknown>[];
+  conflicts: SyncConflict[];
   /** Last error */
   error: Error | null;
 }
@@ -94,7 +87,7 @@ export interface UseDataSyncOptions<T extends Entity> {
   /** Custom conflict resolver */
   onConflict?: (conflict: SyncConflict) => Promise<ConflictResolutionResult<unknown>>;
   /** Callback on sync success */
-  onSyncSuccess?: (result: SyncResult<unknown>) => void;
+  onSyncSuccess?: (result: SyncResult) => void;
   /** Callback on sync error */
   onSyncError?: (error: Error) => void;
   /** Callback on data change */
@@ -124,11 +117,11 @@ export interface UseDataSyncReturn<T extends Entity> {
   /** Has conflicts */
   hasConflicts: boolean;
   /** Active conflicts */
-  conflicts: SyncConflict<unknown>[];
+  conflicts: SyncConflict[];
   /** Last error */
   error: Error | null;
   /** Trigger sync */
-  sync: (options?: SyncOptions) => Promise<SyncResult<unknown>>;
+  sync: (options?: SyncOptions) => Promise<SyncResult>;
   /** Create entity */
   create: (data: Omit<T, 'id'>) => Promise<T>;
   /** Update entity */
@@ -136,7 +129,11 @@ export interface UseDataSyncReturn<T extends Entity> {
   /** Delete entity */
   remove: (id: string) => Promise<void>;
   /** Resolve conflict */
-  resolveConflict: (conflictId: string, resolution: 'local' | 'remote' | 'merge', mergedData?: T) => Promise<void>;
+  resolveConflict: (
+    conflictId: string,
+    resolution: 'local' | 'remote' | 'merge',
+    mergedData?: T
+  ) => Promise<void>;
   /** Resolve all conflicts */
   resolveAllConflicts: (strategy: 'local' | 'remote') => Promise<void>;
   /** Retry failed syncs */
@@ -267,51 +264,54 @@ export function useDataSync<T extends Entity>(
   }, [engine]);
 
   // Sync function - defined before effects that depend on it
-  const sync = useCallback(async (syncOptions?: SyncOptions): Promise<SyncResult<unknown>> => {
-    setState((prev) => ({
-      ...prev,
-      isSyncing: true,
-      status: 'syncing',
-    }));
+  const sync = useCallback(
+    async (syncOptions?: SyncOptions): Promise<SyncResult> => {
+      setState((prev) => ({
+        ...prev,
+        isSyncing: true,
+        status: 'syncing',
+      }));
 
-    try {
-      const result = await engineRef.current.syncAll(entityType, syncOptions);
+      try {
+        const result = await engineRef.current.syncAll(entityType, syncOptions);
 
-      if (mountedRef.current) {
-        setState((prev) => ({
-          ...prev,
-          data: result.data as T[],
-          isSyncing: false,
-          isLoading: false,
-          status: (result.conflicts?.length ?? 0) > 0 ? 'conflict' : 'synced',
-          lastSyncAt: Date.now(),
-          conflicts: result.conflicts ?? [],
-          error: null,
-        }));
+        if (mountedRef.current) {
+          setState((prev) => ({
+            ...prev,
+            data: result.data as T[],
+            isSyncing: false,
+            isLoading: false,
+            status: (result.conflicts?.length ?? 0) > 0 ? 'conflict' : 'synced',
+            lastSyncAt: Date.now(),
+            conflicts: result.conflicts ?? [],
+            error: null,
+          }));
 
-        onDataChange?.(result.data as T[]);
-        onSyncSuccess?.(result);
+          onDataChange?.(result.data as T[]);
+          onSyncSuccess?.(result);
+        }
+
+        return result;
+      } catch (error) {
+        const err = error instanceof Error ? error : new Error(String(error));
+
+        if (mountedRef.current) {
+          setState((prev) => ({
+            ...prev,
+            isSyncing: false,
+            isLoading: false,
+            status: 'error',
+            error: err,
+          }));
+
+          onSyncError?.(err);
+        }
+
+        throw err;
       }
-
-      return result;
-    } catch (error) {
-      const err = error instanceof Error ? error : new Error(String(error));
-
-      if (mountedRef.current) {
-        setState((prev) => ({
-          ...prev,
-          isSyncing: false,
-          isLoading: false,
-          status: 'error',
-          error: err,
-        }));
-
-        onSyncError?.(err);
-      }
-
-      throw err;
-    }
-  }, [entityType, onDataChange, onSyncSuccess, onSyncError]);
+    },
+    [entityType, onDataChange, onSyncSuccess, onSyncError]
+  );
 
   // Use useLatestRef to avoid stale closures when sync is called from effects
   // This ensures the effect always calls the latest sync function without
@@ -342,173 +342,178 @@ export function useDataSync<T extends Entity>(
   }, []); // Empty deps - syncRef.current always has latest sync function
 
   // Create entity
-  const create = useCallback(async (data: Omit<T, 'id'>): Promise<T> => {
-    const tempId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    const newEntity = { ...data, id: tempId } as T;
+  const create = useCallback(
+    async (data: Omit<T, 'id'>): Promise<T> => {
+      const tempId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const newEntity = { ...data, id: tempId } as T;
 
-    // Optimistic update
-    if (optimisticUpdates) {
-      setState((prev) => ({
-        ...prev,
-        data: [...prev.data, newEntity],
-        pendingChanges: prev.pendingChanges + 1,
-      }));
-    }
-
-    try {
-      const created = await engineRef.current.create(entityType, data as Partial<T>);
-
-      if (mountedRef.current) {
+      // Optimistic update
+      if (optimisticUpdates) {
         setState((prev) => ({
           ...prev,
-          data: prev.data.map((item) =>
-            item.id === tempId ? created : item
-          ),
-          pendingChanges: Math.max(0, prev.pendingChanges - 1),
+          data: [...prev.data, newEntity],
+          pendingChanges: prev.pendingChanges + 1,
         }));
       }
 
-      return created;
-    } catch (error) {
-      // Rollback on error
-      if (optimisticUpdates && mountedRef.current) {
-        setState((prev) => ({
-          ...prev,
-          data: prev.data.filter((item) => item.id !== tempId),
-          pendingChanges: Math.max(0, prev.pendingChanges - 1),
-          error: error instanceof Error ? error : new Error(String(error)),
-        }));
+      try {
+        const created = await engineRef.current.create(entityType, data as Partial<T>);
+
+        if (mountedRef.current) {
+          setState((prev) => ({
+            ...prev,
+            data: prev.data.map((item) => (item.id === tempId ? created : item)),
+            pendingChanges: Math.max(0, prev.pendingChanges - 1),
+          }));
+        }
+
+        return created;
+      } catch (error) {
+        // Rollback on error
+        if (optimisticUpdates && mountedRef.current) {
+          setState((prev) => ({
+            ...prev,
+            data: prev.data.filter((item) => item.id !== tempId),
+            pendingChanges: Math.max(0, prev.pendingChanges - 1),
+            error: error instanceof Error ? error : new Error(String(error)),
+          }));
+        }
+        throw error;
       }
-      throw error;
-    }
-  }, [entityType, optimisticUpdates]);
+    },
+    [entityType, optimisticUpdates]
+  );
 
   // Update entity
-  const update = useCallback(async (id: string, data: Partial<T>): Promise<T> => {
-    const originalItem = state.data.find((item) => item.id === id);
+  const update = useCallback(
+    async (id: string, data: Partial<T>): Promise<T> => {
+      const originalItem = state.data.find((item) => item.id === id);
 
-    // Optimistic update
-    if (optimisticUpdates && originalItem) {
-      setState((prev) => ({
-        ...prev,
-        data: prev.data.map((item) =>
-          item.id === id ? { ...item, ...data } : item
-        ),
-        pendingChanges: prev.pendingChanges + 1,
-      }));
-    }
-
-    try {
-      const updated = await engineRef.current.update(entityType, id, data);
-
-      if (mountedRef.current) {
+      // Optimistic update
+      if (optimisticUpdates && originalItem) {
         setState((prev) => ({
           ...prev,
-          data: prev.data.map((item) =>
-            item.id === id ? updated : item
-          ),
-          pendingChanges: Math.max(0, prev.pendingChanges - 1),
+          data: prev.data.map((item) => (item.id === id ? { ...item, ...data } : item)),
+          pendingChanges: prev.pendingChanges + 1,
         }));
       }
 
-      return updated;
-    } catch (error) {
-      // Rollback on error
-      if (optimisticUpdates && originalItem && mountedRef.current) {
-        setState((prev) => ({
-          ...prev,
-          data: prev.data.map((item) =>
-            item.id === id ? originalItem : item
-          ),
-          pendingChanges: Math.max(0, prev.pendingChanges - 1),
-          error: error instanceof Error ? error : new Error(String(error)),
-        }));
+      try {
+        const updated = await engineRef.current.update(entityType, id, data);
+
+        if (mountedRef.current) {
+          setState((prev) => ({
+            ...prev,
+            data: prev.data.map((item) => (item.id === id ? updated : item)),
+            pendingChanges: Math.max(0, prev.pendingChanges - 1),
+          }));
+        }
+
+        return updated;
+      } catch (error) {
+        // Rollback on error
+        if (optimisticUpdates && originalItem && mountedRef.current) {
+          setState((prev) => ({
+            ...prev,
+            data: prev.data.map((item) => (item.id === id ? originalItem : item)),
+            pendingChanges: Math.max(0, prev.pendingChanges - 1),
+            error: error instanceof Error ? error : new Error(String(error)),
+          }));
+        }
+        throw error;
       }
-      throw error;
-    }
-  }, [entityType, optimisticUpdates, state.data]);
+    },
+    [entityType, optimisticUpdates, state.data]
+  );
 
   // Remove entity
-  const remove = useCallback(async (id: string): Promise<void> => {
-    const originalItem = state.data.find((item) => item.id === id);
+  const remove = useCallback(
+    async (id: string): Promise<void> => {
+      const originalItem = state.data.find((item) => item.id === id);
 
-    // Optimistic update
-    if (optimisticUpdates) {
-      setState((prev) => ({
-        ...prev,
-        data: prev.data.filter((item) => item.id !== id),
-        pendingChanges: prev.pendingChanges + 1,
-      }));
-    }
+      // Optimistic update
+      if (optimisticUpdates) {
+        setState((prev) => ({
+          ...prev,
+          data: prev.data.filter((item) => item.id !== id),
+          pendingChanges: prev.pendingChanges + 1,
+        }));
+      }
 
-    try {
-      await engineRef.current.delete(entityType, id);
+      try {
+        await engineRef.current.delete(entityType, id);
+
+        if (mountedRef.current) {
+          setState((prev) => ({
+            ...prev,
+            pendingChanges: Math.max(0, prev.pendingChanges - 1),
+          }));
+        }
+      } catch (error) {
+        // Rollback on error
+        if (optimisticUpdates && originalItem && mountedRef.current) {
+          setState((prev) => ({
+            ...prev,
+            data: [...prev.data, originalItem],
+            pendingChanges: Math.max(0, prev.pendingChanges - 1),
+            error: error instanceof Error ? error : new Error(String(error)),
+          }));
+        }
+        throw error;
+      }
+    },
+    [entityType, optimisticUpdates, state.data]
+  );
+
+  // Resolve conflict
+  const resolveConflict = useCallback(
+    async (
+      conflictId: string,
+      resolution: 'local' | 'remote' | 'merge',
+      mergedData?: T
+    ): Promise<void> => {
+      const conflict = state.conflicts.find((c) => c.id === conflictId);
+      if (!conflict) return;
+
+      let resolvedData: T;
+
+      switch (resolution) {
+        case 'local':
+          resolvedData = conflict.localData as T;
+          break;
+        case 'remote':
+          resolvedData = conflict.remoteData as T;
+          break;
+        case 'merge':
+          if (!mergedData) {
+            throw new Error('Merged data required for merge resolution');
+          }
+          resolvedData = mergedData;
+          break;
+      }
+
+      await engineRef.current.resolveConflict(conflictId, resolvedData);
 
       if (mountedRef.current) {
         setState((prev) => ({
           ...prev,
-          pendingChanges: Math.max(0, prev.pendingChanges - 1),
+          data: prev.data.map((item) => (item.id === conflict.entityId ? resolvedData : item)),
+          conflicts: prev.conflicts.filter((c) => c.id !== conflictId),
         }));
       }
-    } catch (error) {
-      // Rollback on error
-      if (optimisticUpdates && originalItem && mountedRef.current) {
-        setState((prev) => ({
-          ...prev,
-          data: [...prev.data, originalItem],
-          pendingChanges: Math.max(0, prev.pendingChanges - 1),
-          error: error instanceof Error ? error : new Error(String(error)),
-        }));
-      }
-      throw error;
-    }
-  }, [entityType, optimisticUpdates, state.data]);
-
-  // Resolve conflict
-  const resolveConflict = useCallback(async (
-    conflictId: string,
-    resolution: 'local' | 'remote' | 'merge',
-    mergedData?: T
-  ): Promise<void> => {
-    const conflict = state.conflicts.find((c) => c.id === conflictId);
-    if (!conflict) return;
-
-    let resolvedData: T;
-
-    switch (resolution) {
-      case 'local':
-        resolvedData = conflict.localData as T;
-        break;
-      case 'remote':
-        resolvedData = conflict.remoteData as T;
-        break;
-      case 'merge':
-        if (!mergedData) {
-          throw new Error('Merged data required for merge resolution');
-        }
-        resolvedData = mergedData;
-        break;
-    }
-
-    await engineRef.current.resolveConflict(conflictId, resolvedData);
-
-    if (mountedRef.current) {
-      setState((prev) => ({
-        ...prev,
-        data: prev.data.map((item) =>
-          item.id === conflict.entityId ? resolvedData : item
-        ),
-        conflicts: prev.conflicts.filter((c) => c.id !== conflictId),
-      }));
-    }
-  }, [state.conflicts]);
+    },
+    [state.conflicts]
+  );
 
   // Resolve all conflicts
-  const resolveAllConflicts = useCallback(async (strategy: 'local' | 'remote'): Promise<void> => {
-    for (const conflict of state.conflicts) {
-      await resolveConflict(conflict.id, strategy);
-    }
-  }, [state.conflicts, resolveConflict]);
+  const resolveAllConflicts = useCallback(
+    async (strategy: 'local' | 'remote'): Promise<void> => {
+      for (const conflict of state.conflicts) {
+        await resolveConflict(conflict.id, strategy);
+      }
+    },
+    [state.conflicts, resolveConflict]
+  );
 
   // Retry failed syncs
   const retryFailed = useCallback(async (): Promise<void> => {
@@ -522,9 +527,12 @@ export function useDataSync<T extends Entity>(
   }, []);
 
   // Get entity by ID
-  const getById = useCallback((id: string): T | undefined => {
-    return state.data.find((item) => item.id === id);
-  }, [state.data]);
+  const getById = useCallback(
+    (id: string): T | undefined => {
+      return state.data.find((item) => item.id === id);
+    },
+    [state.data]
+  );
 
   // Refresh data
   const refresh = useCallback(async (): Promise<void> => {
@@ -657,32 +665,35 @@ export function useSyncStatus(engine: SyncEngine): {
  * @returns Conflict management methods
  */
 export function useSyncConflicts(engine: SyncEngine): {
-  conflicts: SyncConflict<unknown>[];
+  conflicts: SyncConflict[];
   hasConflicts: boolean;
   resolveConflict: (id: string, data: Entity) => Promise<void>;
   resolveAllLocal: () => Promise<void>;
   resolveAllRemote: () => Promise<void>;
 } {
-  const [conflicts, setConflicts] = useState<SyncConflict<unknown>[]>([]);
+  const [conflicts, setConflicts] = useState<SyncConflict[]>([]);
 
   useEffect(() => {
-    const unsubscribe = engine.subscribe((event: SyncEvent) => {
+
+
+    return engine.subscribe((event: SyncEvent) => {
       if (event.type === 'sync:conflict') {
-        setConflicts((prev) => [...prev, event.data as SyncConflict<unknown>]);
+        setConflicts((prev) => [...prev, event.data as SyncConflict]);
       }
       if (event.type === 'conflict-resolved') {
         const { id } = event.data as { id: string };
         setConflicts((prev) => prev.filter((c) => c.id !== id));
       }
     });
-
-    return unsubscribe;
   }, [engine]);
 
-  const resolveConflict = useCallback(async (id: string, data: Entity) => {
-    await engine.resolveConflict(id, data);
-    setConflicts((prev) => prev.filter((c) => c.id !== id));
-  }, [engine]);
+  const resolveConflict = useCallback(
+    async (id: string, data: Entity) => {
+      await engine.resolveConflict(id, data);
+      setConflicts((prev) => prev.filter((c) => c.id !== id));
+    },
+    [engine]
+  );
 
   const resolveAllLocal = useCallback(async () => {
     for (const conflict of conflicts) {
@@ -697,10 +708,10 @@ export function useSyncConflicts(engine: SyncEngine): {
   }, [conflicts, resolveConflict]);
 
   return {
-  conflicts,
-  hasConflicts: conflicts.length > 0,
-  resolveConflict,
-  resolveAllLocal,
-  resolveAllRemote,
-};
+    conflicts,
+    hasConflicts: conflicts.length > 0,
+    resolveConflict,
+    resolveAllLocal,
+    resolveAllRemote,
+  };
 }

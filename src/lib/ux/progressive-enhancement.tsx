@@ -11,30 +11,24 @@
  * - Polyfill coordination
  */
 
-import React, {
-  useState,
-  useEffect,
-  useCallback,
-  useMemo,
-  type ReactNode,
-} from 'react';
-import { 
+import React, { useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
+import {
   ProgressiveEnhancementContext,
-  type ProgressiveEnhancementContextValue
+  type ProgressiveEnhancementContextValue,
 } from '../contexts/ProgressiveEnhancementContext';
 import {
   checkWebPSupport,
   checkAVIFSupport,
   detectCapabilities,
   createFeature as createFeatureUtil,
-  type BrowserCapabilities
+  type BrowserCapabilities,
 } from './progressive-enhancement-utils';
 import {
   useProgressiveEnhancement,
   useProgressiveFeature,
   useCapability,
   useCapabilities,
-  useCapabilityConditional
+  useCapabilityConditional,
 } from './progressive-enhancement-hooks';
 
 // ============================================================================
@@ -120,10 +114,7 @@ export function ProgressiveEnhancementProvider({
   // Async capability detection
   useEffect(() => {
     async function detectAsyncCapabilities(): Promise<void> {
-      const [webP, avif] = await Promise.all([
-        checkWebPSupport(),
-        checkAVIFSupport(),
-      ]);
+      const [webP, avif] = await Promise.all([checkWebPSupport(), checkAVIFSupport()]);
 
       setCapabilities((prev: BrowserCapabilities) => {
         const updated: BrowserCapabilities = { ...prev, webP, avif };
@@ -140,7 +131,7 @@ export function ProgressiveEnhancementProvider({
    */
   const hasCapability = useCallback(
     (capability: keyof BrowserCapabilities): boolean => {
-      return capabilities[capability] === true;
+      return capabilities[capability];
     },
     [capabilities]
   );
@@ -181,14 +172,16 @@ export function ProgressiveEnhancementProvider({
       }
 
       // Update loading status
-      setFeatureStatuses((prev) => new Map(prev).set(id, {
-        id,
-        level: getFeatureLevel(id),
-        loaded: false,
-        loading: true,
-        error: null,
-        module: null,
-      }));
+      setFeatureStatuses((prev) =>
+        new Map(prev).set(id, {
+          id,
+          level: getFeatureLevel(id),
+          loaded: false,
+          loading: true,
+          error: null,
+          module: null,
+        })
+      );
 
       try {
         // Load polyfills first
@@ -209,25 +202,29 @@ export function ProgressiveEnhancementProvider({
         }
 
         // Update status
-        setFeatureStatuses((prev) => new Map(prev).set(id, {
-          id,
-          level,
-          loaded: true,
-          loading: false,
-          error: null,
-          module,
-        }));
+        setFeatureStatuses((prev) =>
+          new Map(prev).set(id, {
+            id,
+            level,
+            loaded: true,
+            loading: false,
+            error: null,
+            module,
+          })
+        );
 
         return module;
       } catch (error) {
-        setFeatureStatuses((prev) => new Map(prev).set(id, {
-          id,
-          level: 'none',
-          loaded: false,
-          loading: false,
-          error: error instanceof Error ? error : new Error(String(error)),
-          module: null,
-        }));
+        setFeatureStatuses((prev) =>
+          new Map(prev).set(id, {
+            id,
+            level: 'none',
+            loaded: false,
+            loading: false,
+            error: error instanceof Error ? error : new Error(String(error)),
+            module: null,
+          })
+        );
         throw error;
       }
     },
@@ -237,18 +234,24 @@ export function ProgressiveEnhancementProvider({
   /**
    * Register a feature
    */
-  const registerFeature = useCallback((definition: FeatureDefinition): void => {
-    featureDefinitions.set(definition.id, definition);
-  }, [featureDefinitions]);
+  const registerFeature = useCallback(
+    (definition: FeatureDefinition): void => {
+      featureDefinitions.set(definition.id, definition);
+    },
+    [featureDefinitions]
+  );
 
-  const value = useMemo<ProgressiveEnhancementContextValue>(() => ({
-    capabilities,
-    features: featureStatuses,
-    loadFeature,
-    hasCapability,
-    getFeatureLevel,
-    registerFeature,
-  }), [capabilities, featureStatuses, loadFeature, hasCapability, getFeatureLevel, registerFeature]);
+  const value = useMemo<ProgressiveEnhancementContextValue>(
+    () => ({
+      capabilities,
+      features: featureStatuses,
+      loadFeature,
+      hasCapability,
+      getFeatureLevel,
+      registerFeature,
+    }),
+    [capabilities, featureStatuses, loadFeature, hasCapability, getFeatureLevel, registerFeature]
+  );
 
   return (
     <ProgressiveEnhancementContext.Provider value={value}>
@@ -299,7 +302,7 @@ export function FeatureGate({
 }: FeatureGateProps): React.ReactElement {
   const { module, level, loading, error } = useProgressiveFeature(featureId);
 
-  if (loading === true) return <>{loadingFallback}</>;
+  if (loading) return <>{loadingFallback}</>;
   if (error != null) {
     if (errorFallback != null) {
       return <>{typeof errorFallback === 'function' ? errorFallback(error) : errorFallback}</>;

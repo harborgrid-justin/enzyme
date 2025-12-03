@@ -128,10 +128,7 @@ export {
 // Policy Evaluator
 // =============================================================================
 
-export {
-  PolicyEvaluator,
-  createPolicyEvaluator,
-} from './policy-evaluator';
+export { PolicyEvaluator, createPolicyEvaluator } from './policy-evaluator';
 export type { EvaluationContext } from './policy-evaluator';
 
 // =============================================================================

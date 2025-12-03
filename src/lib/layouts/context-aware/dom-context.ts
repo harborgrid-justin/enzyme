@@ -17,21 +17,17 @@
  */
 
 import type {
-  LayoutType,
-  PositionType,
-  LayoutAncestor,
-  LayoutConstraints,
   ComputedBounds,
-  FlexContainerProperties,
-  GridContainerProperties,
   ContextTrackingConfig,
   DimensionBounds,
+  FlexContainerProperties,
+  GridContainerProperties,
+  LayoutAncestor,
+  LayoutConstraints,
+  LayoutType,
+  PositionType,
 } from './types';
-import {
-  isPositionType,
-  isScrollContainer,
-  DEFAULT_TRACKING_CONFIG,
-} from './types';
+import { DEFAULT_TRACKING_CONFIG, isPositionType, isScrollContainer } from './types';
 
 // ============================================================================
 // Constants
@@ -246,7 +242,7 @@ export class DOMContextTracker {
     }
 
     const style = getComputedStyle(element);
-    const {position} = style;
+    const { position } = style;
     return isPositionType(position) ? position : 'static';
   }
 
@@ -284,7 +280,7 @@ export class DOMContextTracker {
   public clearAllCaches(): void {
     // WeakMaps don't have a clear method, so we create new ones
     // The old ones will be garbage collected
-    if (this.config.debug === true) {
+    if (this.config.debug) {
       console.info('[DOMContextTracker] Clearing all caches');
     }
   }
@@ -340,7 +336,7 @@ export class DOMContextTracker {
     const bounds = this.computeBounds(element);
     const constraints = this.computeConstraints(element);
 
-    const ancestor: LayoutAncestor = {
+    return {
       id: this.getElementId(element),
       element,
       layoutType,
@@ -350,15 +346,15 @@ export class DOMContextTracker {
       depth,
       isScrollContainer: isScrollContainer(element),
       isContainingBlock: this.isContainingBlock(style, positionType),
-      flexProperties: layoutType === 'flex' || layoutType === 'inline-flex'
-        ? this.extractFlexProperties(style)
-        : undefined,
-      gridProperties: layoutType === 'grid' || layoutType === 'inline-grid'
-        ? this.extractGridProperties(style)
-        : undefined,
+      flexProperties:
+        layoutType === 'flex' || layoutType === 'inline-flex'
+          ? this.extractFlexProperties(style)
+          : undefined,
+      gridProperties:
+        layoutType === 'grid' || layoutType === 'inline-grid'
+          ? this.extractGridProperties(style)
+          : undefined,
     };
-
-    return ancestor;
   }
 
   /**
@@ -461,11 +457,7 @@ export class DOMContextTracker {
     }
 
     // Contain property creates containing block
-    if (style.contain === 'layout' || style.contain === 'paint' || style.contain === 'strict') {
-      return true;
-    }
-
-    return false;
+    return style.contain === 'layout' || style.contain === 'paint' || style.contain === 'strict';
   }
 
   // ==========================================================================
@@ -481,20 +473,12 @@ export class DOMContextTracker {
   private computeConstraints(element: Element): LayoutConstraints {
     const style = getComputedStyle(element);
     const rect = element.getBoundingClientRect();
-    const {position} = style;
+    const { position } = style;
 
     // Parse dimension constraints
-    const width = this.parseDimensionBounds(
-      style.minWidth,
-      style.maxWidth,
-      rect.width
-    );
+    const width = this.parseDimensionBounds(style.minWidth, style.maxWidth, rect.width);
 
-    const height = this.parseDimensionBounds(
-      style.minHeight,
-      style.maxHeight,
-      rect.height
-    );
+    const height = this.parseDimensionBounds(style.minHeight, style.maxHeight, rect.height);
 
     // Parse flex grow/shrink
     const canGrow = parseFloat(style.flexGrow) > 0;
@@ -575,11 +559,7 @@ export class DOMContextTracker {
     }
 
     // transform, filter, perspective
-    if (
-      style.transform !== 'none' ||
-      style.filter !== 'none' ||
-      style.perspective !== 'none'
-    ) {
+    if (style.transform !== 'none' || style.filter !== 'none' || style.perspective !== 'none') {
       return true;
     }
 
@@ -594,26 +574,18 @@ export class DOMContextTracker {
     }
 
     // will-change
-    const {willChange} = style;
-    if (
-      willChange === 'transform' ||
-      willChange === 'opacity' ||
-      willChange === 'filter'
-    ) {
+    const { willChange } = style;
+    if (willChange === 'transform' || willChange === 'opacity' || willChange === 'filter') {
       return true;
     }
 
     // contain
-    if (
+    return (
       style.contain === 'layout' ||
       style.contain === 'paint' ||
       style.contain === 'strict' ||
       style.contain === 'content'
-    ) {
-      return true;
-    }
-
-    return false;
+    );
   }
 
   // ==========================================================================
@@ -818,9 +790,7 @@ export function findContainingBlockAncestor(
  * @param ancestry - Array of layout ancestors
  * @returns Merged constraints or null
  */
-export function computeInheritedConstraints(
-  ancestry: LayoutAncestor[]
-): LayoutConstraints | null {
+export function computeInheritedConstraints(ancestry: LayoutAncestor[]): LayoutConstraints | null {
   if (ancestry.length === 0) {
     return null;
   }

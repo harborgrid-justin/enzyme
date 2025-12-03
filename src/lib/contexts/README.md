@@ -4,7 +4,8 @@
 
 ## Overview
 
-The contexts module provides shared React contexts used across the library for hydration, error boundaries, and other cross-cutting concerns.
+The contexts module provides shared React contexts used across the library for hydration, error boundaries, and other
+cross-cutting concerns.
 
 ## Quick Start
 
@@ -28,12 +29,12 @@ function HydrationAwareComponent() {
 
 ## Exports
 
-| Export | Type | Description |
-|--------|------|-------------|
-| `HydrationContext` | Context | Hydration state context |
-| `ErrorBoundaryContext` | Context | Error boundary context |
-| `useHydrationContext` | Hook | Access hydration context |
-| `useErrorBoundaryContext` | Hook | Access error boundary context |
+| Export                    | Type    | Description                   |
+|---------------------------|---------|-------------------------------|
+| `HydrationContext`        | Context | Hydration state context       |
+| `ErrorBoundaryContext`    | Context | Error boundary context        |
+| `useHydrationContext`     | Hook    | Access hydration context      |
+| `useErrorBoundaryContext` | Hook    | Access error boundary context |
 
 ## See Also
 

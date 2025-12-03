@@ -66,10 +66,7 @@ export type {
 // Request Orchestrator
 // =============================================================================
 
-export {
-  RequestOrchestrator,
-  createRequestOrchestrator,
-} from './request-orchestrator';
+export { RequestOrchestrator, createRequestOrchestrator } from './request-orchestrator';
 export type {
   OrchestratedRequest,
   OrchestrationResult,
@@ -102,12 +99,7 @@ export type {
 // API Versioning
 // =============================================================================
 
-export {
-  VersionManager,
-  createVersionManager,
-  parseSemver,
-  formatVersion,
-} from './api-versioning';
+export { VersionManager, createVersionManager, parseSemver, formatVersion } from './api-versioning';
 export type {
   VersioningStrategy,
   VersionFormat,
@@ -122,17 +114,8 @@ export type {
 // Rate Limiter
 // =============================================================================
 
-export {
-  RateLimiter,
-  RateLimitError,
-  createRateLimiter,
-  RATE_LIMIT_PRESETS,
-} from './rate-limiter';
-export type {
-  RateLimitConfig,
-  RateLimitStatus,
-  RateLimitHeaders,
-} from './rate-limiter';
+export { RateLimiter, RateLimitError, createRateLimiter, RATE_LIMIT_PRESETS } from './rate-limiter';
+export type { RateLimitConfig, RateLimitStatus, RateLimitHeaders } from './rate-limiter';
 
 // =============================================================================
 // Request Deduplication

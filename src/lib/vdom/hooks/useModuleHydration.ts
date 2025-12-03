@@ -8,14 +8,7 @@
  * @version 1.0.0
  */
 
-import {
-  useState,
-  useCallback,
-  useMemo,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-} from 'react';
+import { useState, useCallback, useMemo, useEffect, useLayoutEffect, useRef } from 'react';
 import {
   type UseModuleHydrationReturn,
   type HydrationData,
@@ -65,7 +58,7 @@ export function useModuleHydration(): UseModuleHydrationReturn {
   const [error, setError] = useState<Error | null>(null);
 
   // Track hydration state from context
-  const {hydrationState} = context.state;
+  const { hydrationState } = context.state;
 
   // Derived states
   const isHydrated = hydrationState === HydrationState.HYDRATED;
@@ -358,11 +351,11 @@ export function useHydrationTiming(options: {
   }, [options.trigger, scheduleHydration]);
 
   return useMemo(
-  () => ({
-    shouldHydrate,
-    scheduleHydration,
-    cancelHydration,
-  }),
-  [shouldHydrate, scheduleHydration, cancelHydration]
-);
+    () => ({
+      shouldHydrate,
+      scheduleHydration,
+      cancelHydration,
+    }),
+    [shouldHydrate, scheduleHydration, cancelHydration]
+  );
 }

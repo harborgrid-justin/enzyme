@@ -49,14 +49,14 @@ import {
  * Types of path segments that can be extracted
  */
 export type SegmentType =
-  | 'static'           // Regular static segment (e.g., 'users')
-  | 'dynamic'          // Dynamic parameter (e.g., [id])
-  | 'optional'         // Optional parameter (e.g., [[id]])
-  | 'catch-all'        // Catch-all parameter (e.g., [...slug])
+  | 'static' // Regular static segment (e.g., 'users')
+  | 'dynamic' // Dynamic parameter (e.g., [id])
+  | 'optional' // Optional parameter (e.g., [[id]])
+  | 'catch-all' // Catch-all parameter (e.g., [...slug])
   | 'optional-catch-all' // Optional catch-all (e.g., [[...slug]])
-  | 'group'            // Route group (e.g., (auth))
-  | 'parallel'         // Parallel route slot (e.g., @modal)
-  | 'intercepting';    // Intercepting route (e.g., (.)photo)
+  | 'group' // Route group (e.g., (auth))
+  | 'parallel' // Parallel route slot (e.g., @modal)
+  | 'intercepting'; // Intercepting route (e.g., (.)photo)
 
 /**
  * Parsed path segment with full metadata
@@ -242,7 +242,11 @@ export function parseSegment(
   if ('optionalCatchAll' in patterns) {
     const optionalCatchAllMatch = segment.match(patterns.optionalCatchAll);
     const optionalCatchAllValue = optionalCatchAllMatch?.[1];
-    if (optionalCatchAllValue !== null && optionalCatchAllValue !== undefined && optionalCatchAllValue !== '') {
+    if (
+      optionalCatchAllValue !== null &&
+      optionalCatchAllValue !== undefined &&
+      optionalCatchAllValue !== ''
+    ) {
       return {
         type: 'optional-catch-all',
         value: optionalCatchAllValue,
@@ -256,7 +260,7 @@ export function parseSegment(
   // Check for catch-all
   const catchAllMatch = segment.match(patterns.catchAll);
   if (catchAllMatch) {
-    const value = config.convention === 'remix' ? '*' : catchAllMatch[1] ?? '*';
+    const value = config.convention === 'remix' ? '*' : (catchAllMatch[1] ?? '*');
     return {
       type: 'catch-all',
       value,
@@ -320,8 +324,12 @@ export function parseSegment(
 
     // Check for intercepting route
     const interceptingMatch = segment.match(NEXTJS_PATTERNS.intercepting);
-    if (interceptingMatch?.[1] != null && interceptingMatch[1] !== '' &&
-        interceptingMatch[2] != null && interceptingMatch[2] !== '') {
+    if (
+      interceptingMatch?.[1] != null &&
+      interceptingMatch[1] !== '' &&
+      interceptingMatch[2] != null &&
+      interceptingMatch[2] !== ''
+    ) {
       return {
         type: 'intercepting',
         value: interceptingMatch[2],
@@ -386,8 +394,10 @@ export function parseSegments(
 
     // Skip index/layout file names (they don't contribute to URL path)
     if (i === parts.length - 1) {
-      if (config.indexFileNames.includes(segmentName) ||
-          config.layoutFileNames.includes(segmentName)) {
+      if (
+        config.indexFileNames.includes(segmentName) ||
+        config.layoutFileNames.includes(segmentName)
+      ) {
         continue;
       }
     }
@@ -443,7 +453,7 @@ export function segmentsToUrlPath(segments: readonly ParsedSegment[]): string {
     }
   }
 
-  return `/${  parts.join('/')}`;
+  return `/${parts.join('/')}`;
 }
 
 /**
@@ -507,7 +517,7 @@ export function extractPathFromFile(
   const normalizedPath = filePath.replace(/\\/g, '/');
   const fileName = normalizedPath.split('/').pop() ?? '';
   const baseFileName = config.stripExtensions.reduce(
-    (name, ext) => name.endsWith(ext) ? name.slice(0, -ext.length) : name,
+    (name, ext) => (name.endsWith(ext) ? name.slice(0, -ext.length) : name),
     fileName
   );
 
@@ -523,7 +533,7 @@ export function extractPathFromFile(
     hasOptionalCatchAll,
     groups: Object.freeze(groups),
     parallelSlots: Object.freeze(parallelSlots),
-    depth: segments.filter(s => s.type !== 'group' && s.type !== 'parallel').length,
+    depth: segments.filter((s) => s.type !== 'group' && s.type !== 'parallel').length,
     isIndex,
     isLayout,
   };
@@ -544,10 +554,7 @@ export function extractPathFromFile(
  * console.log(params); // { id: '123' }
  * ```
  */
-export function extractParamsFromUrl(
-  pattern: string,
-  url: string
-): Record<string, string> | null {
+export function extractParamsFromUrl(pattern: string, url: string): Record<string, string> | null {
   // Delegate to core path utilities
   return coreParsePathParams(pattern, url);
 }
@@ -640,7 +647,7 @@ export function findCommonAncestor(paths: readonly string[]): string {
   if (paths.length === 0) return '/';
   if (paths.length === 1) return paths[0] ?? '/';
 
-  const splitPaths = paths.map(p => p.split('/').filter(Boolean));
+  const splitPaths = paths.map((p) => p.split('/').filter(Boolean));
   const [firstPath] = splitPaths;
   if (!firstPath) return '/';
 
@@ -648,14 +655,14 @@ export function findCommonAncestor(paths: readonly string[]): string {
 
   for (let i = 0; i < firstPath.length; i++) {
     const part = firstPath[i];
-    if (part != null && splitPaths.every(p => p[i] === part)) {
+    if (part != null && splitPaths.every((p) => p[i] === part)) {
       commonParts.push(part);
     } else {
       break;
     }
   }
 
-  return `/${  commonParts.join('/')}`;
+  return `/${commonParts.join('/')}`;
 }
 
 /**

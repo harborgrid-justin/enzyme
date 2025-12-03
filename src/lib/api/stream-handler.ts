@@ -1,6 +1,6 @@
 /**
  * @file Stream Handler
- * @description Streaming response handling utilities for Server-Sent Events (SSE), 
+ * @description Streaming response handling utilities for Server-Sent Events (SSE),
  * NDJSON streams, and custom streaming formats with subscription management.
  */
 
@@ -73,7 +73,11 @@ export function streamResponse<T>(
     if (inactivityTimer !== null) {
       clearTimeout(inactivityTimer);
     }
-    if (opts.inactivityTimeout !== undefined && opts.inactivityTimeout !== null && opts.inactivityTimeout > 0) {
+    if (
+      opts.inactivityTimeout !== undefined &&
+      opts.inactivityTimeout !== null &&
+      opts.inactivityTimeout > 0
+    ) {
       inactivityTimer = setTimeout(() => {
         emit({
           type: 'error',
@@ -128,7 +132,11 @@ export function streamResponse<T>(
   // Add data to buffer and emit
   const addData = (data: T): void => {
     // Limit buffer size
-    if (opts.bufferSize !== undefined && opts.bufferSize !== null && dataBuffer.length >= opts.bufferSize) {
+    if (
+      opts.bufferSize !== undefined &&
+      opts.bufferSize !== null &&
+      dataBuffer.length >= opts.bufferSize
+    ) {
       dataBuffer.shift();
     }
     dataBuffer.push(data);

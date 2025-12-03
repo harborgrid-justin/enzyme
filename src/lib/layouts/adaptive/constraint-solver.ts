@@ -313,7 +313,7 @@ export class ConstraintSolver implements ConstraintSolverInterface {
     state: SolverState
   ): number {
     // const _weight = PRIORITY_WEIGHTS[constraint.priority];
-    const {params} = constraint;
+    const { params } = constraint;
 
     switch (constraint.type) {
       case 'min-width':
@@ -383,7 +383,11 @@ export class ConstraintSolver implements ConstraintSolverInterface {
     params: MinMaxConstraintParams,
     state: SolverState
   ): number {
-    const minHeight = this._resolveValue(params.value, params.unit, state.containerDimensions.height);
+    const minHeight = this._resolveValue(
+      params.value,
+      params.unit,
+      state.containerDimensions.height
+    );
     if (item.size.height < minHeight) {
       const delta = minHeight - item.size.height;
       item.size = { ...item.size, height: minHeight };
@@ -400,7 +404,11 @@ export class ConstraintSolver implements ConstraintSolverInterface {
     params: MinMaxConstraintParams,
     state: SolverState
   ): number {
-    const maxHeight = this._resolveValue(params.value, params.unit, state.containerDimensions.height);
+    const maxHeight = this._resolveValue(
+      params.value,
+      params.unit,
+      state.containerDimensions.height
+    );
     if (item.size.height > maxHeight) {
       const delta = item.size.height - maxHeight;
       item.size = { ...item.size, height: maxHeight };
@@ -544,11 +552,7 @@ export class ConstraintSolver implements ConstraintSolverInterface {
   /**
    * Applies ordering constraint.
    */
-  private _applyOrder(
-    item: SolverItem,
-    params: OrderConstraintParams,
-    state: SolverState
-  ): number {
+  private _applyOrder(item: SolverItem, params: OrderConstraintParams, state: SolverState): number {
     let totalDelta = 0;
 
     // Ensure item comes before specified items
@@ -637,7 +641,10 @@ export class ConstraintSolver implements ConstraintSolverInterface {
         delta += bottomOverflow;
         // For bottom overflow, we might need to reduce size or scroll
         // For now, just adjust position
-        item.position = { ...item.position, y: Math.max(0, containerDimensions.height - item.size.height) };
+        item.position = {
+          ...item.position,
+          y: Math.max(0, containerDimensions.height - item.size.height),
+        };
       }
     }
 
@@ -682,7 +689,7 @@ export class ConstraintSolver implements ConstraintSolverInterface {
     let message = '';
 
     for (const [id, size] of solution.sizes) {
-      const {params} = constraint;
+      const { params } = constraint;
 
       switch (constraint.type) {
         case 'min-width':

@@ -29,13 +29,15 @@ import {
 export const selectSidebarOpen = (state: StoreState): boolean => state.sidebarOpen;
 export const selectSidebarCollapsed = (state: StoreState): boolean => state.sidebarCollapsed;
 export const selectActiveModal = (state: StoreState): string | null => state.activeModal;
-export const selectModalData = (state: StoreState): Record<string, unknown> | null => state.modalData;
+export const selectModalData = (state: StoreState): Record<string, unknown> | null =>
+  state.modalData;
 export const selectModalStack = (state: StoreState): StoreState['modalStack'] => state.modalStack;
 export const selectGlobalLoading = (state: StoreState): boolean => state.globalLoading;
 export const selectLoadingMessage = (state: StoreState): string | null => state.loadingMessage;
 export const selectLoadingProgress = (state: StoreState): number | null => state.loadingProgress;
 export const selectToasts = (state: StoreState): StoreState['toasts'] => state.toasts;
-export const selectLayoutDensity = (state: StoreState): StoreState['layoutDensity'] => state.layoutDensity;
+export const selectLayoutDensity = (state: StoreState): StoreState['layoutDensity'] =>
+  state.layoutDensity;
 export const selectAnimationsEnabled = (state: StoreState): boolean => state.animationsEnabled;
 export const selectCommandPaletteOpen = (state: StoreState): boolean => state.commandPaletteOpen;
 
@@ -58,17 +60,21 @@ export const selectDateFormat = (state: StoreState): string => state.dateFormat;
 export const selectTimeFormat = (state: StoreState): StoreState['timeFormat'] => state.timeFormat;
 export const selectNumberFormat = (state: StoreState): string => state.numberFormat;
 export const selectTheme = (state: StoreState): StoreState['theme'] => state.theme;
-export const selectNotificationsEnabled = (state: StoreState): boolean => state.notificationsEnabled;
+export const selectNotificationsEnabled = (state: StoreState): boolean =>
+  state.notificationsEnabled;
 export const selectSoundEnabled = (state: StoreState): boolean => state.soundEnabled;
-export const selectDesktopNotifications = (state: StoreState): boolean => state.desktopNotifications;
+export const selectDesktopNotifications = (state: StoreState): boolean =>
+  state.desktopNotifications;
 export const selectEmailNotifications = (state: StoreState): boolean => state.emailNotifications;
 export const selectReducedMotion = (state: StoreState): boolean => state.reducedMotion;
 export const selectHighContrast = (state: StoreState): boolean => state.highContrast;
 export const selectFontSize = (state: StoreState): StoreState['fontSize'] => state.fontSize;
-export const selectKeyboardShortcutsEnabled = (state: StoreState): boolean => state.keyboardShortcutsEnabled;
+export const selectKeyboardShortcutsEnabled = (state: StoreState): boolean =>
+  state.keyboardShortcutsEnabled;
 export const selectFeatures = (state: StoreState): Record<string, boolean> => state.features;
 export const selectAnalyticsEnabled = (state: StoreState): boolean => state.analyticsEnabled;
-export const selectCrashReportingEnabled = (state: StoreState): boolean => state.crashReportingEnabled;
+export const selectCrashReportingEnabled = (state: StoreState): boolean =>
+  state.crashReportingEnabled;
 
 // Hydration State
 export const selectHasHydrated = (state: StoreState): boolean => state._hasHydrated;
@@ -170,13 +176,16 @@ export const selectTimeUntilExpiry = createSelector<StoreState, [number | null],
  *
  * @see useIsSessionExpired in state/hooks/useSessionTime.ts
  */
-export const selectIsSessionExpired = createSelector<StoreState, [number | null, number | null, number], boolean>(
+export const selectIsSessionExpired = createSelector<
+  StoreState,
+  [number | null, number | null, number],
+  boolean
+>(
   [selectSessionExpiresAt, selectLastActivity, selectActivityTimeoutMs],
   (expiresAt, lastActivity, timeoutMs): boolean => {
     const now = Date.now();
     if (expiresAt !== null && now > expiresAt) return true;
-    if (lastActivity !== null && now - lastActivity > timeoutMs) return true;
-    return false;
+    return lastActivity !== null && now - lastActivity > timeoutMs;
   }
 );
 
@@ -299,8 +308,7 @@ export const selectIsSpecificModalOpen = createParameterizedSelector(
  * const toast = useStore(selectToastById('toast-123'));
  */
 export const selectToastById = createParameterizedSelector(
-  (toastId: string) => (state: StoreState) =>
-    state.toasts.find((t) => t.id === toastId) ?? null
+  (toastId: string) => (state: StoreState) => state.toasts.find((t) => t.id === toastId) ?? null
 );
 
 // ============================================================================
@@ -312,7 +320,26 @@ export const selectToastById = createParameterizedSelector(
  * Actions are stable references, but return new object each time.
  * Use with shallow equality: useStore(selectUIActions, shallow)
  */
-export const selectUIActions = (state: StoreState): Pick<StoreState, 'toggleSidebar' | 'setSidebarOpen' | 'setSidebarCollapsed' | 'openModal' | 'closeModal' | 'closeAllModals' | 'setGlobalLoading' | 'setLoadingProgress' | 'addToast' | 'removeToast' | 'clearToasts' | 'setLayoutDensity' | 'setAnimationsEnabled' | 'toggleCommandPalette' | 'setCommandPaletteOpen'> => ({
+export const selectUIActions = (
+  state: StoreState
+): Pick<
+  StoreState,
+  | 'toggleSidebar'
+  | 'setSidebarOpen'
+  | 'setSidebarCollapsed'
+  | 'openModal'
+  | 'closeModal'
+  | 'closeAllModals'
+  | 'setGlobalLoading'
+  | 'setLoadingProgress'
+  | 'addToast'
+  | 'removeToast'
+  | 'clearToasts'
+  | 'setLayoutDensity'
+  | 'setAnimationsEnabled'
+  | 'toggleCommandPalette'
+  | 'setCommandPaletteOpen'
+> => ({
   toggleSidebar: state.toggleSidebar,
   setSidebarOpen: state.setSidebarOpen,
   setSidebarCollapsed: state.setSidebarCollapsed,
@@ -333,7 +360,24 @@ export const selectUIActions = (state: StoreState): Pick<StoreState, 'toggleSide
 /**
  * Session actions selector
  */
-export const selectSessionActions = (state: StoreState): Pick<StoreState, 'initSession' | 'updateActivity' | 'endSession' | 'checkSessionExpiry' | 'extendSession' | 'addToHistory' | 'removeFromHistory' | 'clearHistory' | 'getLastVisitedPath' | 'goBack' | 'setActivityTimeout' | 'setMaxHistoryLength' | 'setBrowserTabId'> => ({
+export const selectSessionActions = (
+  state: StoreState
+): Pick<
+  StoreState,
+  | 'initSession'
+  | 'updateActivity'
+  | 'endSession'
+  | 'checkSessionExpiry'
+  | 'extendSession'
+  | 'addToHistory'
+  | 'removeFromHistory'
+  | 'clearHistory'
+  | 'getLastVisitedPath'
+  | 'goBack'
+  | 'setActivityTimeout'
+  | 'setMaxHistoryLength'
+  | 'setBrowserTabId'
+> => ({
   initSession: state.initSession,
   updateActivity: state.updateActivity,
   endSession: state.endSession,
@@ -355,7 +399,40 @@ export const selectSessionActions = (state: StoreState): Pick<StoreState, 'initS
  * Note: Fixed bug where setNumberFormat was incorrectly returning state.numberFormat (value)
  * instead of state.setNumberFormat (action function).
  */
-export const selectSettingsActions = (state: StoreState): Pick<StoreState, 'setLocale' | 'setTimezone' | 'setDateFormat' | 'setTimeFormat' | 'setNumberFormat' | 'setTheme' | 'setNotificationsEnabled' | 'setSoundEnabled' | 'setDesktopNotifications' | 'setEmailNotifications' | 'setReducedMotion' | 'setHighContrast' | 'setFontSize' | 'setKeyboardShortcutsEnabled' | 'setAnalyticsEnabled' | 'setCrashReportingEnabled' | 'updateSettings' | 'updateDisplaySettings' | 'updateAccessibilitySettings' | 'updateNotificationSettings' | 'updatePrivacySettings' | 'setFeatureFlag' | 'setFeatureFlags' | 'syncFeatureFlags' | 'isFeatureEnabled' | 'resetSettings' | 'resetDisplaySettings' | 'resetAccessibilitySettings' | 'resetNotificationSettings'> => ({
+export const selectSettingsActions = (
+  state: StoreState
+): Pick<
+  StoreState,
+  | 'setLocale'
+  | 'setTimezone'
+  | 'setDateFormat'
+  | 'setTimeFormat'
+  | 'setNumberFormat'
+  | 'setTheme'
+  | 'setNotificationsEnabled'
+  | 'setSoundEnabled'
+  | 'setDesktopNotifications'
+  | 'setEmailNotifications'
+  | 'setReducedMotion'
+  | 'setHighContrast'
+  | 'setFontSize'
+  | 'setKeyboardShortcutsEnabled'
+  | 'setAnalyticsEnabled'
+  | 'setCrashReportingEnabled'
+  | 'updateSettings'
+  | 'updateDisplaySettings'
+  | 'updateAccessibilitySettings'
+  | 'updateNotificationSettings'
+  | 'updatePrivacySettings'
+  | 'setFeatureFlag'
+  | 'setFeatureFlags'
+  | 'syncFeatureFlags'
+  | 'isFeatureEnabled'
+  | 'resetSettings'
+  | 'resetDisplaySettings'
+  | 'resetAccessibilitySettings'
+  | 'resetNotificationSettings'
+> => ({
   setLocale: state.setLocale,
   setTimezone: state.setTimezone,
   setDateFormat: state.setDateFormat,

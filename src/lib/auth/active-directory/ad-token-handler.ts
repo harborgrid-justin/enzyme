@@ -7,19 +7,13 @@
  * @module auth/active-directory/ad-token-handler
  */
 
-import type {
-  ADConfig,
-  ADTokens,
-  TokenAcquisitionRequest,
-  TokenRefreshResult,
-  ADAuthError,
-} from './types';
+import type { ADAuthError, ADConfig, ADTokens, TokenAcquisitionRequest, TokenRefreshResult, } from './types';
 import { getAuthorityUrl, getConfiguredScopes } from './ad-config';
 import {
-  type SecureStorage,
   createSecureLocalStorage,
   createSecureSessionStorage,
   isSecureStorageAvailable,
+  type SecureStorage,
 } from '@/lib/security/secure-storage';
 
 // =============================================================================
@@ -141,7 +135,7 @@ export interface AcquisitionOptions extends TokenAcquisitionRequest {
  * ```
  */
 export class ADTokenHandler {
-  private config: ADConfig;
+  private readonly config: ADConfig;
   private options: Required<TokenHandlerOptions>;
   private memoryCache: Map<string, TokenCacheEntry>;
   private refreshPromises: Map<string, Promise<TokenRefreshResult>>;
@@ -181,39 +175,6 @@ export class ADTokenHandler {
   }
 
   /**
-   * Initializes secure storage for encrypted token persistence.
-   *
-   * SECURITY: Creates a SecureStorage instance with a cryptographically
-   * random session key. Falls back to raw storage if secure storage
-   * is unavailable (SSR or unsupported browser).
-   */
-  private initializeSecureStorage(): void {
-    if (this.options.cacheLocation === 'memory') {
-      return; // No persistent storage needed
-    }
-
-    if (!isSecureStorageAvailable()) {
-      this.log('Secure storage unavailable, falling back to unencrypted storage');
-      return;
-    }
-
-    try {
-      const encryptionKey = getADSessionEncryptionKey();
-      this.secureStorage = this.options.cacheLocation === 'localStorage'
-        ? createSecureLocalStorage(encryptionKey)
-        : createSecureSessionStorage(encryptionKey);
-      this.log('Secure storage initialized for AD tokens');
-    } catch (error) {
-      this.log('Failed to initialize secure storage:', error);
-      this.secureStorage = null;
-    }
-  }
-
-  // ===========================================================================
-  // Token Acquisition Methods
-  // ===========================================================================
-
-  /**
    * Acquire token silently using cached tokens or refresh token.
    *
    * SECURITY: Tokens are retrieved from encrypted storage when available.
@@ -236,7 +197,7 @@ export class ADTokenHandler {
     // Try to refresh if we have a refresh token
     if (cached?.tokens.refreshToken !== undefined && cached?.tokens.refreshToken !== null) {
       const refreshResult = await this.refreshToken(cached.tokens.refreshToken, request);
-      if (refreshResult.success === true && refreshResult.tokens !== undefined && refreshResult.tokens !== null) {
+      if (refreshResult.success && refreshResult.tokens !== undefined && refreshResult.tokens !== null) {
         return refreshResult.tokens;
       }
 
@@ -248,6 +209,10 @@ export class ADTokenHandler {
     // No cached token and no refresh token
     return null;
   }
+
+  // ===========================================================================
+  // Token Acquisition Methods
+  // ===========================================================================
 
   /**
    * Acquire token interactively (redirect or popup).
@@ -270,95 +235,6 @@ export class ADTokenHandler {
     }
 
     return this.acquireTokenRedirect(authUrl, request);
-  }
-
-  /**
-   * Acquire token using popup window.
-   *
-   * SECURITY: Tokens are encrypted before storage.
-   */
-  private async acquireTokenPopup(
-    authUrl: string,
-    request: AcquisitionOptions
-  ): Promise<ADTokens> {
-    return new Promise((resolve, reject) => {
-      const width = 500;
-      const height = 600;
-      const left = window.screenX + (window.outerWidth - width) / 2;
-      const top = window.screenY + (window.outerHeight - height) / 2;
-
-      const popup = window.open(
-        authUrl,
-        'adauth',
-        `width=${width},height=${height},left=${left},top=${top},scrollbars=yes`
-      );
-
-      if (popup == null) {
-        reject(new Error('Popup window was blocked'));
-        return;
-      }
-
-      const timeout = request.popupTimeout ?? 120000; // 2 minute default
-      const timeoutId = setTimeout(() => {
-        popup.close();
-        reject(new Error('Authentication timed out'));
-      }, timeout);
-
-      // Poll for redirect completion
-      const pollTimer = setInterval(() => {
-        void (async (): Promise<void> => {
-        try {
-          if (popup.closed === true) {
-            clearInterval(pollTimer);
-            clearTimeout(timeoutId);
-            reject(new Error('Popup was closed before authentication completed'));
-            return;
-          }
-
-          // Check if we're back at our redirect URI
-          if (popup.location.href.startsWith(this.getRedirectUri())) {
-            clearInterval(pollTimer);
-            clearTimeout(timeoutId);
-
-            const urlParams = new URLSearchParams(popup.location.hash.substring(1));
-            popup.close();
-
-            const tokens = this.parseTokenResponse(urlParams);
-            if (tokens != null) {
-              await this.cacheTokens(tokens, request.scopes);
-              resolve(tokens);
-            } else {
-              reject(new Error('Failed to parse token response'));
-            }
-          }
-        } catch {
-          // Cross-origin error - popup is on different domain, keep polling
-        }
-        })();
-      }, 100);
-    });
-  }
-
-  /**
-   * Acquire token using redirect flow.
-   */
-  private async acquireTokenRedirect(
-    authUrl: string,
-    request: AcquisitionOptions
-  ): Promise<ADTokens> {
-    // Store request state for handling the redirect response
-    const state = request.state ?? this.generateRandomString(32);
-    const nonce = request.nonce ?? this.generateRandomString(32);
-
-    sessionStorage.setItem('ad_auth_state', state);
-    sessionStorage.setItem('ad_auth_nonce', nonce);
-    sessionStorage.setItem('ad_auth_scopes', JSON.stringify(request.scopes));
-
-    // This will redirect, so we return a never-resolving promise
-    // The actual token handling happens in handleRedirectResponse
-    window.location.href = authUrl;
-
-    return new Promise(() => {});
   }
 
   /**
@@ -414,10 +290,6 @@ export class ADTokenHandler {
     return tokens;
   }
 
-  // ===========================================================================
-  // Token Refresh Methods
-  // ===========================================================================
-
   /**
    * Refresh tokens using refresh token.
    *
@@ -444,11 +316,231 @@ export class ADTokenHandler {
     this.refreshPromises.set(cacheKey, refreshPromise);
 
     try {
-      const result = await refreshPromise;
-      return result;
+
+      return await refreshPromise;
     } finally {
       this.refreshPromises.delete(cacheKey);
     }
+  }
+
+  /**
+   * Clear all cached tokens from memory and secure storage.
+   *
+   * SECURITY: Clears tokens from both encrypted and unencrypted storage
+   * to ensure complete cleanup during logout.
+   */
+  clearCache(): void {
+    // Clear memory cache
+    this.memoryCache.clear();
+
+    // Clear persistent storage
+    if (this.options.cacheLocation !== 'memory') {
+      // Clear from secure storage if available
+      if (this.secureStorage !== undefined && this.secureStorage !== null) {
+        try {
+          void this.secureStorage.clear();
+        } catch (error) {
+          this.log('Error clearing secure storage:', error);
+        }
+      }
+
+      // Also clear raw storage (for any unencrypted entries)
+      const storage = this.getStorage();
+      const keysToRemove: string[] = [];
+
+      for (let i = 0; i < storage.length; i++) {
+        const key = storage.key(i);
+        if (key?.startsWith(TOKEN_CACHE_PREFIX) === true) {
+          keysToRemove.push(key);
+        }
+      }
+
+      keysToRemove.forEach(key => storage.removeItem(key));
+    }
+
+    // Clear refresh timer
+    if (this.refreshTimer !== undefined && this.refreshTimer !== null) {
+      clearTimeout(this.refreshTimer);
+      this.refreshTimer = null;
+    }
+
+    this.currentAccountId = null;
+  }
+
+  /**
+   * Get cached tokens for current account.
+   *
+   * SECURITY: Retrieves tokens from encrypted storage when available.
+   */
+  async getCachedTokens(): Promise<ADTokens | null> {
+    if (this.currentAccountId === undefined || this.currentAccountId === null) {
+      return null;
+    }
+
+    const cacheKey = this.getCacheKey(
+      getConfiguredScopes(this.config),
+      this.currentAccountId
+    );
+    const entry = await this.getFromCache(cacheKey);
+
+    return entry?.tokens ?? null;
+  }
+
+  // ===========================================================================
+  // Token Refresh Methods
+  // ===========================================================================
+
+  /**
+   * Get cached tokens synchronously (memory only).
+   *
+   * SECURITY NOTE: This only returns tokens from in-memory cache.
+   * Use getCachedTokens() for full encrypted storage support.
+   */
+  getCachedTokensSync(): ADTokens | null {
+    if (this.currentAccountId === undefined || this.currentAccountId === null) {
+      return null;
+    }
+
+    const cacheKey = this.getCacheKey(
+      getConfiguredScopes(this.config),
+      this.currentAccountId
+    );
+    const entry = this.getFromCacheSync(cacheKey);
+
+    return entry?.tokens ?? null;
+  }
+
+  /**
+   * Cleanup resources.
+   */
+  dispose(): void {
+    if (this.refreshTimer !== undefined && this.refreshTimer !== null) {
+      clearTimeout(this.refreshTimer);
+      this.refreshTimer = null;
+    }
+    this.refreshPromises.clear();
+  }
+
+  /**
+   * Initializes secure storage for encrypted token persistence.
+   *
+   * SECURITY: Creates a SecureStorage instance with a cryptographically
+   * random session key. Falls back to raw storage if secure storage
+   * is unavailable (SSR or unsupported browser).
+   */
+  private initializeSecureStorage(): void {
+    if (this.options.cacheLocation === 'memory') {
+      return; // No persistent storage needed
+    }
+
+    if (!isSecureStorageAvailable()) {
+      this.log('Secure storage unavailable, falling back to unencrypted storage');
+      return;
+    }
+
+    try {
+      const encryptionKey = getADSessionEncryptionKey();
+      this.secureStorage = this.options.cacheLocation === 'localStorage'
+        ? createSecureLocalStorage(encryptionKey)
+        : createSecureSessionStorage(encryptionKey);
+      this.log('Secure storage initialized for AD tokens');
+    } catch (error) {
+      this.log('Failed to initialize secure storage:', error);
+      this.secureStorage = null;
+    }
+  }
+
+  // ===========================================================================
+  // Cache Management
+  // ===========================================================================
+
+  /**
+   * Acquire token using popup window.
+   *
+   * SECURITY: Tokens are encrypted before storage.
+   */
+  private async acquireTokenPopup(
+    authUrl: string,
+    request: AcquisitionOptions
+  ): Promise<ADTokens> {
+    return new Promise((resolve, reject) => {
+      const width = 500;
+      const height = 600;
+      const left = window.screenX + (window.outerWidth - width) / 2;
+      const top = window.screenY + (window.outerHeight - height) / 2;
+
+      const popup = window.open(
+        authUrl,
+        'adauth',
+        `width=${width},height=${height},left=${left},top=${top},scrollbars=yes`
+      );
+
+      if (popup == null) {
+        reject(new Error('Popup window was blocked'));
+        return;
+      }
+
+      const timeout = request.popupTimeout ?? 120000; // 2 minute default
+      const timeoutId = setTimeout(() => {
+        popup.close();
+        reject(new Error('Authentication timed out'));
+      }, timeout);
+
+      // Poll for redirect completion
+      const pollTimer = setInterval(() => {
+        void (async (): Promise<void> => {
+        try {
+          if (popup.closed) {
+            clearInterval(pollTimer);
+            clearTimeout(timeoutId);
+            reject(new Error('Popup was closed before authentication completed'));
+            return;
+          }
+
+          // Check if we're back at our redirect URI
+          if (popup.location.href.startsWith(this.getRedirectUri())) {
+            clearInterval(pollTimer);
+            clearTimeout(timeoutId);
+
+            const urlParams = new URLSearchParams(popup.location.hash.substring(1));
+            popup.close();
+
+            const tokens = this.parseTokenResponse(urlParams);
+            if (tokens != null) {
+              await this.cacheTokens(tokens, request.scopes);
+              resolve(tokens);
+            } else {
+              reject(new Error('Failed to parse token response'));
+            }
+          }
+        } catch {
+          // Cross-origin error - popup is on different domain, keep polling
+        }
+        })();
+      }, 100);
+    });
+  }
+
+  /**
+   * Acquire token using redirect flow.
+   */
+  private async acquireTokenRedirect(
+    authUrl: string,
+    request: AcquisitionOptions
+  ): Promise<ADTokens> {
+    // Store request state for handling the redirect response
+    const state = request.state ?? this.generateRandomString(32);
+    const nonce = request.nonce ?? this.generateRandomString(32);
+
+    sessionStorage.setItem('ad_auth_state', state);
+    sessionStorage.setItem('ad_auth_nonce', nonce);
+    sessionStorage.setItem('ad_auth_scopes', JSON.stringify(request.scopes));
+
+    // This will redirect, so we return a never-resolving promise
+    // The actual token handling happens in handleRedirectResponse
+    window.location.href = authUrl;
+
+    return new Promise(() => {});
   }
 
   /**
@@ -547,7 +639,7 @@ export class ADTokenHandler {
    * Schedule automatic token refresh before expiry.
    */
   private scheduleRefresh(tokens: ADTokens): void {
-    if (this.options.autoRefresh !== true || (tokens.refreshToken === undefined || tokens.refreshToken === null)) {
+    if (!this.options.autoRefresh || (tokens.refreshToken === undefined || tokens.refreshToken === null)) {
       return;
     }
 
@@ -570,10 +662,6 @@ export class ADTokenHandler {
       }
     }, refreshIn);
   }
-
-  // ===========================================================================
-  // Cache Management
-  // ===========================================================================
 
   /**
    * Cache tokens with encryption for persistent storage.
@@ -606,7 +694,7 @@ export class ADTokenHandler {
       if (this.secureStorage !== undefined && this.secureStorage !== null) {
         try {
           const result = await this.secureStorage.setItem(storageKey, entry);
-          if (result.success !== true) {
+          if (!result.success) {
             this.log('Failed to store encrypted AD tokens:', result.error);
             // Fall back to raw storage (logged warning)
             this.fallbackStoreTokens(storageKey, entry);
@@ -658,7 +746,7 @@ export class ADTokenHandler {
       if (this.secureStorage !== undefined && this.secureStorage !== null) {
         try {
           const result = await this.secureStorage.getItem<TokenCacheEntry>(storageKey);
-          if (result.success === true && result.data !== undefined && result.data !== null) {
+          if (result.success && result.data !== undefined && result.data !== null) {
             // Restore to memory cache
             this.memoryCache.set(cacheKey, result.data);
             return result.data;
@@ -697,6 +785,10 @@ export class ADTokenHandler {
     return null;
   }
 
+  // ===========================================================================
+  // Helper Methods
+  // ===========================================================================
+
   /**
    * Synchronous cache retrieval for backwards compatibility.
    *
@@ -707,93 +799,6 @@ export class ADTokenHandler {
   private getFromCacheSync(cacheKey: string): TokenCacheEntry | null {
     return this.memoryCache.get(cacheKey) ?? null;
   }
-
-  /**
-   * Clear all cached tokens from memory and secure storage.
-   *
-   * SECURITY: Clears tokens from both encrypted and unencrypted storage
-   * to ensure complete cleanup during logout.
-   */
-  clearCache(): void {
-    // Clear memory cache
-    this.memoryCache.clear();
-
-    // Clear persistent storage
-    if (this.options.cacheLocation !== 'memory') {
-      // Clear from secure storage if available
-      if (this.secureStorage !== undefined && this.secureStorage !== null) {
-        try {
-          void this.secureStorage.clear();
-        } catch (error) {
-          this.log('Error clearing secure storage:', error);
-        }
-      }
-
-      // Also clear raw storage (for any unencrypted entries)
-      const storage = this.getStorage();
-      const keysToRemove: string[] = [];
-
-      for (let i = 0; i < storage.length; i++) {
-        const key = storage.key(i);
-        if (key?.startsWith(TOKEN_CACHE_PREFIX) === true) {
-          keysToRemove.push(key);
-        }
-      }
-
-      keysToRemove.forEach(key => storage.removeItem(key));
-    }
-
-    // Clear refresh timer
-    if (this.refreshTimer !== undefined && this.refreshTimer !== null) {
-      clearTimeout(this.refreshTimer);
-      this.refreshTimer = null;
-    }
-
-    this.currentAccountId = null;
-  }
-
-  /**
-   * Get cached tokens for current account.
-   *
-   * SECURITY: Retrieves tokens from encrypted storage when available.
-   */
-  async getCachedTokens(): Promise<ADTokens | null> {
-    if (this.currentAccountId === undefined || this.currentAccountId === null) {
-      return null;
-    }
-
-    const cacheKey = this.getCacheKey(
-      getConfiguredScopes(this.config),
-      this.currentAccountId
-    );
-    const entry = await this.getFromCache(cacheKey);
-
-    return entry?.tokens ?? null;
-  }
-
-  /**
-   * Get cached tokens synchronously (memory only).
-   *
-   * SECURITY NOTE: This only returns tokens from in-memory cache.
-   * Use getCachedTokens() for full encrypted storage support.
-   */
-  getCachedTokensSync(): ADTokens | null {
-    if (this.currentAccountId === undefined || this.currentAccountId === null) {
-      return null;
-    }
-
-    const cacheKey = this.getCacheKey(
-      getConfiguredScopes(this.config),
-      this.currentAccountId
-    );
-    const entry = this.getFromCacheSync(cacheKey);
-
-    return entry?.tokens ?? null;
-  }
-
-  // ===========================================================================
-  // Helper Methods
-  // ===========================================================================
 
   /**
    * Build authorization URL for interactive flows.
@@ -959,17 +964,6 @@ export class ADTokenHandler {
       // eslint-disable-next-line no-console
       console.log(`[ADTokenHandler] ${message}`, ...args);
     }
-  }
-
-  /**
-   * Cleanup resources.
-   */
-  dispose(): void {
-    if (this.refreshTimer !== undefined && this.refreshTimer !== null) {
-      clearTimeout(this.refreshTimer);
-      this.refreshTimer = null;
-    }
-    this.refreshPromises.clear();
   }
 }
 

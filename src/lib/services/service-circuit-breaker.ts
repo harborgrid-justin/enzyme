@@ -160,34 +160,6 @@ export class ServiceCircuitBreaker {
   }
 
   /**
-   * Handle circuit state change
-   */
-  private handleStateChange(from: CircuitState, to: CircuitState): void {
-    const health = this.getHealth();
-
-    globalEventBus.emitSync('service:stateChange', {
-      service: this.config.name,
-      from,
-      to,
-      health,
-    });
-
-    // Report significant state changes
-    if (to === 'open') {
-      ErrorReporter.reportWarning(`Service ${this.config.name} circuit opened`, {
-        action: 'circuit_open',
-        metadata: {
-          service: this.config.name,
-          successRate: this.getSuccessRate(),
-          lastError: this.metrics.lastError,
-        },
-      });
-    } else if (from === 'open' && to === 'closed') {
-      ErrorReporter.reportInfo(`Service ${this.config.name} recovered`);
-    }
-  }
-
-  /**
    * Execute a request through the circuit breaker
    *
    * @param fn - Async function to execute
@@ -467,6 +439,34 @@ export class ServiceCircuitBreaker {
   dispose(): void {
     this.stopHealthChecks();
   }
+
+  /**
+   * Handle circuit state change
+   */
+  private handleStateChange(from: CircuitState, to: CircuitState): void {
+    const health = this.getHealth();
+
+    globalEventBus.emitSync('service:stateChange', {
+      service: this.config.name,
+      from,
+      to,
+      health,
+    });
+
+    // Report significant state changes
+    if (to === 'open') {
+      ErrorReporter.reportWarning(`Service ${this.config.name} circuit opened`, {
+        action: 'circuit_open',
+        metadata: {
+          service: this.config.name,
+          successRate: this.getSuccessRate(),
+          lastError: this.metrics.lastError,
+        },
+      });
+    } else if (from === 'open' && to === 'closed') {
+      ErrorReporter.reportInfo(`Service ${this.config.name} recovered`);
+    }
+  }
 }
 
 // ============================================================================
@@ -478,6 +478,13 @@ export class ServiceCircuitBreaker {
  */
 class ServiceRegistry {
   private services: Map<string, ServiceCircuitBreaker> = new Map();
+
+  /**
+   * Get registry size
+   */
+  get size(): number {
+    return this.services.size;
+  }
 
   /**
    * Register a new service
@@ -600,13 +607,6 @@ class ServiceRegistry {
   dispose(): void {
     this.services.forEach((s) => s.dispose());
     this.services.clear();
-  }
-
-  /**
-   * Get registry size
-   */
-  get size(): number {
-    return this.services.size;
   }
 
   /**

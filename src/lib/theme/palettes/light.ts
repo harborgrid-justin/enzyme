@@ -95,11 +95,11 @@ export const lightPalette = {
   // Text colors
   // Note: All text colors meet WCAG AA contrast requirements (4.5:1 for normal text)
   text: {
-    primary: '#0f172a',    // 16.1:1 on white - AAA
-    secondary: '#475569',  // 6.0:1 on white - AA
-    tertiary: '#5c6b7f',   // 4.6:1 on white - AA (updated from #94a3b8 for accessibility)
+    primary: '#0f172a', // 16.1:1 on white - AAA
+    secondary: '#475569', // 6.0:1 on white - AA
+    tertiary: '#5c6b7f', // 4.6:1 on white - AA (updated from #94a3b8 for accessibility)
     inverse: '#ffffff',
-    muted: '#536375',      // 5.0:1 on white - AA (updated from #64748b for better contrast)
+    muted: '#536375', // 5.0:1 on white - AA (updated from #64748b for better contrast)
   },
 
   // Border colors

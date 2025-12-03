@@ -30,13 +30,13 @@
  */
 
 import {
-  GuardResult,
+  createGuardContext,
   type GuardContext,
+  type GuardExecutionResult,
+  GuardResult,
   type GuardResultObject,
   type GuardTiming,
   type RouteGuard,
-  type GuardExecutionResult,
-  createGuardContext,
 } from './route-guard';
 
 // =============================================================================
@@ -352,12 +352,59 @@ export class GuardResolver {
       const applicableGuards = this.getApplicableGuards(intent.from);
 
       // Execute canDeactivate
-      const result = await this.executeGuards(applicableGuards, 'canDeactivate', context);
 
-      return result;
+      return await this.executeGuards(applicableGuards, 'canDeactivate', context);
     } finally {
       this.isResolving = false;
     }
+  }
+
+  /**
+   * Get resolver state
+   */
+  getState(): GuardResolverState {
+    return {
+      guards: Array.from(this.guards.values()),
+      isResolving: this.isResolving,
+      lastResult: this.lastResult,
+    };
+  }
+
+  /**
+   * Get all registered guards
+   */
+  getGuards(): readonly RegisteredGuard[] {
+    return Array.from(this.guards.values());
+  }
+
+  /**
+   * Get a specific guard by ID
+   */
+  getGuard(id: string): RegisteredGuard | undefined {
+    return this.guards.get(id);
+  }
+
+  /**
+   * Clear all guards
+   */
+  clearAll(): void {
+    this.guards.clear();
+    this.globalGuards = [];
+    this.lastResult = null;
+  }
+
+  /**
+   * Check if currently resolving
+   */
+  getIsResolving(): boolean {
+    return this.isResolving;
+  }
+
+  /**
+   * Get last resolution result
+   */
+  getLastResult(): GuardResolutionResult | null {
+    return this.lastResult;
   }
 
   /**
@@ -460,7 +507,7 @@ export class GuardResolver {
         if (result === undefined) continue;
         const guardInfo = guards[i];
         if (guardInfo === undefined) continue;
-        const {guard} = guardInfo;
+        const { guard } = guardInfo;
 
         guardResults.push(result);
 
@@ -468,7 +515,11 @@ export class GuardResolver {
           passedGuards.push(guard.name);
         } else {
           failedGuards.push(guard.name);
-          if (result.result.reason !== undefined && result.result.reason !== null && result.result.reason !== '') {
+          if (
+            result.result.reason !== undefined &&
+            result.result.reason !== null &&
+            result.result.reason !== ''
+          ) {
             denialReasons.push(result.result.reason);
           }
           if (finalResult.type === 'allow') {
@@ -486,7 +537,11 @@ export class GuardResolver {
           passedGuards.push(registered.guard.name);
         } else {
           failedGuards.push(registered.guard.name);
-          if (result.result.reason !== undefined && result.result.reason !== null && result.result.reason !== '') {
+          if (
+            result.result.reason !== undefined &&
+            result.result.reason !== null &&
+            result.result.reason !== ''
+          ) {
             denialReasons.push(result.result.reason);
           }
 
@@ -580,54 +635,6 @@ export class GuardResolver {
       return execResult;
     }
   }
-
-  /**
-   * Get resolver state
-   */
-  getState(): GuardResolverState {
-    return {
-      guards: Array.from(this.guards.values()),
-      isResolving: this.isResolving,
-      lastResult: this.lastResult,
-    };
-  }
-
-  /**
-   * Get all registered guards
-   */
-  getGuards(): readonly RegisteredGuard[] {
-    return Array.from(this.guards.values());
-  }
-
-  /**
-   * Get a specific guard by ID
-   */
-  getGuard(id: string): RegisteredGuard | undefined {
-    return this.guards.get(id);
-  }
-
-  /**
-   * Clear all guards
-   */
-  clearAll(): void {
-    this.guards.clear();
-    this.globalGuards = [];
-    this.lastResult = null;
-  }
-
-  /**
-   * Check if currently resolving
-   */
-  getIsResolving(): boolean {
-    return this.isResolving;
-  }
-
-  /**
-   * Get last resolution result
-   */
-  getLastResult(): GuardResolutionResult | null {
-    return this.lastResult;
-  }
 }
 
 // =============================================================================
@@ -697,10 +704,5 @@ export function isGuardResolutionResult(value: unknown): value is GuardResolutio
  * Type guard for NavigationIntent
  */
 export function isNavigationIntent(value: unknown): value is NavigationIntent {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'to' in value &&
-    typeof (value as NavigationIntent).to === 'string'
-  );
+  return typeof value === 'object' && value !== null && 'to' in value && true;
 }

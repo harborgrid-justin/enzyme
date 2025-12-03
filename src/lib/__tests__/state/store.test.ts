@@ -108,7 +108,7 @@ describe('Store', () => {
 
     it('should allow selecting specific state slices', () => {
       // Act
-      const {sidebarOpen} = useStore.getState();
+      const { sidebarOpen } = useStore.getState();
 
       // Assert
       expect(typeof sidebarOpen).toBe('boolean');
@@ -308,7 +308,10 @@ describe('Store', () => {
       const mockStore = {
         getState: () => ({ _reset: resetFn }),
       } as unknown;
-      registerFeatureStore('resettableAlt', mockStore as ReturnType<typeof import('zustand').create>);
+      registerFeatureStore(
+        'resettableAlt',
+        mockStore as ReturnType<typeof import('zustand').create>
+      );
 
       // Act
       resetAllFeatureStores();
@@ -352,10 +355,7 @@ describe('Store', () => {
       const callback = vi.fn();
 
       // Act
-      const unsubscribe = subscribeToStore(
-        (state) => state.sidebarOpen,
-        callback
-      );
+      const unsubscribe = subscribeToStore((state) => state.sidebarOpen, callback);
 
       // Toggle sidebar to trigger subscription
       const state = getStoreState();
@@ -375,10 +375,7 @@ describe('Store', () => {
     it('should stop receiving updates after unsubscribe', () => {
       // Arrange
       const callback = vi.fn();
-      const unsubscribe = subscribeToStore(
-        (state) => state.sidebarOpen,
-        callback
-      );
+      const unsubscribe = subscribeToStore((state) => state.sidebarOpen, callback);
 
       // Unsubscribe
       unsubscribe();
@@ -401,14 +398,8 @@ describe('Store', () => {
       const callback1 = vi.fn();
       const callback2 = vi.fn();
 
-      const unsubscribe1 = subscribeToStore(
-        (state) => state.sidebarOpen,
-        callback1
-      );
-      const unsubscribe2 = subscribeToStore(
-        (state) => state.sidebarOpen,
-        callback2
-      );
+      const unsubscribe1 = subscribeToStore((state) => state.sidebarOpen, callback1);
+      const unsubscribe2 = subscribeToStore((state) => state.sidebarOpen, callback2);
 
       // Act - toggle sidebar
       const state = getStoreState();
@@ -430,10 +421,7 @@ describe('Store', () => {
     it('should provide previous and current value to subscription callback', () => {
       // Arrange
       const callback = vi.fn();
-      const unsubscribe = subscribeToStore(
-        (state) => state.sidebarOpen,
-        callback
-      );
+      const unsubscribe = subscribeToStore((state) => state.sidebarOpen, callback);
 
       // Get initial value
       const initialValue = getStoreState().sidebarOpen;
@@ -449,7 +437,7 @@ describe('Store', () => {
       // Assert - callback receives new value and previous value
       expect(callback).toHaveBeenCalledWith(
         !initialValue, // new value
-        initialValue   // previous value
+        initialValue // previous value
       );
 
       // Cleanup
@@ -660,7 +648,7 @@ describe('Store', () => {
       const after = Date.now();
 
       // Assert
-      const {lastActivity} = getStoreState();
+      const { lastActivity } = getStoreState();
       expect(lastActivity).toBeGreaterThanOrEqual(before);
       expect(lastActivity).toBeLessThanOrEqual(after);
     });

@@ -47,7 +47,7 @@ export const QUERY_STALE_TIMES = {
   REALTIME: 30 * SECOND,
 
   /** Frequently changing data (1 minute) - activity feeds, notifications */
-  SHORT: 1 * MINUTE,
+  SHORT: MINUTE,
 
   /** Standard data (5 minutes) - lists, user data */
   MEDIUM: 5 * MINUTE,
@@ -59,7 +59,7 @@ export const QUERY_STALE_TIMES = {
   EXTENDED: 30 * MINUTE,
 
   /** Static data (1 hour) - rarely changes */
-  STATIC: 1 * HOUR,
+  STATIC: HOUR,
 } as const;
 
 /**
@@ -76,7 +76,7 @@ export const QUERY_GC_TIMES = {
   MEDIUM: 30 * MINUTE,
 
   /** Extended cache (1 hour) */
-  LONG: 1 * HOUR,
+  LONG: HOUR,
 } as const;
 
 // =============================================================================
@@ -100,7 +100,7 @@ export const API_TIMING = {
   TIMEOUT_HEALTH: 5 * SECOND,
 
   /** Retry delays (exponential backoff base) */
-  RETRY_BASE_DELAY: 1 * SECOND,
+  RETRY_BASE_DELAY: SECOND,
 
   /** Maximum retry delay */
   RETRY_MAX_DELAY: 30 * SECOND,
@@ -130,7 +130,7 @@ export const AUTH_TIMING = {
   LOGOUT_REDIRECT_DELAY: 1500,
 
   /** Token validation check interval */
-  TOKEN_CHECK_INTERVAL: 1 * MINUTE,
+  TOKEN_CHECK_INTERVAL: MINUTE,
 } as const;
 
 // =============================================================================
@@ -249,7 +249,7 @@ export const BACKGROUND_TIMING = {
     STANDARD: 30 * SECOND,
 
     /** Slow polling (1 minute) */
-    SLOW: 1 * MINUTE,
+    SLOW: MINUTE,
 
     /** Very slow polling (5 minutes) */
     VERY_SLOW: 5 * MINUTE,

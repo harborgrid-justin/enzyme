@@ -265,7 +265,7 @@ export function AdaptiveGrid({
   }, [masonry, masonryPositions, itemHeights, columns, autoRows, autoFlow, gap, style]);
 
   // Render children with adaptive positioning
-   
+
   const renderedChildren = useMemo(() => {
     const childArray = Children.toArray(children);
 
@@ -289,12 +289,19 @@ export function AdaptiveGrid({
               width: `${columnWidth}px`,
             };
 
-        return cloneElement(child as ReactElement<{ style?: CSSProperties; ref?: (el: HTMLElement | null) => void; 'data-layout-id'?: string }>, {
-          key: itemId,
-          'data-layout-id': itemId,
-          style: { ...(child.props as { style?: CSSProperties }).style, ...itemStyle },
-          ref: (el: HTMLElement | null) => registerItem(index, el),
-        });
+        return cloneElement(
+          child as ReactElement<{
+            style?: CSSProperties;
+            ref?: (el: HTMLElement | null) => void;
+            'data-layout-id'?: string;
+          }>,
+          {
+            key: itemId,
+            'data-layout-id': itemId,
+            style: { ...(child.props as { style?: CSSProperties }).style, ...itemStyle },
+            ref: (el: HTMLElement | null) => registerItem(index, el),
+          }
+        );
       }
 
       return cloneElement(child as ReactElement<{ 'data-layout-id'?: string }>, {
@@ -302,7 +309,7 @@ export function AdaptiveGrid({
         'data-layout-id': itemId,
       });
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [children, masonry, masonryPositions, columnWidth, gap]);
 
   return (

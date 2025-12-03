@@ -323,6 +323,13 @@ export class EndpointRegistry {
   // =========================================================================
 
   /**
+   * Get endpoint count
+   */
+  get size(): number {
+    return this.endpoints.size;
+  }
+
+  /**
    * Register an endpoint
    */
   register(endpoint: GeneratedEndpoint): void {
@@ -411,6 +418,10 @@ export class EndpointRegistry {
     return true;
   }
 
+  // =========================================================================
+  // Lookup
+  // =========================================================================
+
   /**
    * Clear all endpoints
    */
@@ -422,10 +433,6 @@ export class EndpointRegistry {
 
     this.emit('registry_cleared', {});
   }
-
-  // =========================================================================
-  // Lookup
-  // =========================================================================
 
   /**
    * Get endpoint by ID
@@ -538,13 +545,6 @@ export class EndpointRegistry {
    */
   has(id: string): boolean {
     return this.endpoints.has(id);
-  }
-
-  /**
-   * Get endpoint count
-   */
-  get size(): number {
-    return this.endpoints.size;
   }
 
   // =========================================================================
@@ -685,31 +685,6 @@ export class EndpointRegistry {
   }
 
   /**
-   * Emit registry event
-   */
-  private emit(type: RegistryEventType, payload: RegistryEventPayload): void {
-    if (!this.config.enableEvents) return;
-
-    const event: RegistryEvent = {
-      type,
-      timestamp: Date.now(),
-      payload,
-    };
-
-    for (const listener of this.listeners) {
-      try {
-        listener(event);
-      } catch (error) {
-        console.error('Registry listener error:', error);
-      }
-    }
-  }
-
-  // =========================================================================
-  // Statistics
-  // =========================================================================
-
-  /**
    * Get registry statistics
    */
   getStats(): RegistryStats {
@@ -753,8 +728,72 @@ export class EndpointRegistry {
   }
 
   // =========================================================================
+  // Statistics
+  // =========================================================================
+
+  /**
+   * Iterate over endpoints
+   */
+  *[Symbol.iterator](): Iterator<GeneratedEndpoint> {
+    yield* this.endpoints.values();
+  }
+
+  // =========================================================================
   // Helper Methods
   // =========================================================================
+
+  /**
+   * Iterate over endpoint entries
+   */
+  *entries(): IterableIterator<[string, GeneratedEndpoint]> {
+    yield* this.endpoints.entries();
+  }
+
+  /**
+   * Iterate over endpoint IDs
+   */
+  *keys(): IterableIterator<string> {
+    yield* this.endpoints.keys();
+  }
+
+  /**
+   * Iterate over endpoints
+   */
+  *values(): IterableIterator<GeneratedEndpoint> {
+    yield* this.endpoints.values();
+  }
+
+  /**
+   * ForEach over endpoints
+   */
+  forEach(callback: (endpoint: GeneratedEndpoint, id: string) => void): void {
+    this.endpoints.forEach(callback);
+  }
+
+  // =========================================================================
+  // Iteration
+  // =========================================================================
+
+  /**
+   * Emit registry event
+   */
+  private emit(type: RegistryEventType, payload: RegistryEventPayload): void {
+    if (!this.config.enableEvents) return;
+
+    const event: RegistryEvent = {
+      type,
+      timestamp: Date.now(),
+      payload,
+    };
+
+    for (const listener of this.listeners) {
+      try {
+        listener(event);
+      } catch (error) {
+        console.error('Registry listener error:', error);
+      }
+    }
+  }
 
   /**
    * Get endpoint key for path matcher storage
@@ -796,45 +835,6 @@ export class EndpointRegistry {
     for (const key of toRemove) {
       this.pathCache.delete(key);
     }
-  }
-
-  // =========================================================================
-  // Iteration
-  // =========================================================================
-
-  /**
-   * Iterate over endpoints
-   */
-  *[Symbol.iterator](): Iterator<GeneratedEndpoint> {
-    yield* this.endpoints.values();
-  }
-
-  /**
-   * Iterate over endpoint entries
-   */
-  *entries(): IterableIterator<[string, GeneratedEndpoint]> {
-    yield* this.endpoints.entries();
-  }
-
-  /**
-   * Iterate over endpoint IDs
-   */
-  *keys(): IterableIterator<string> {
-    yield* this.endpoints.keys();
-  }
-
-  /**
-   * Iterate over endpoints
-   */
-  *values(): IterableIterator<GeneratedEndpoint> {
-    yield* this.endpoints.values();
-  }
-
-  /**
-   * ForEach over endpoints
-   */
-  forEach(callback: (endpoint: GeneratedEndpoint, id: string) => void): void {
-    this.endpoints.forEach(callback);
   }
 }
 

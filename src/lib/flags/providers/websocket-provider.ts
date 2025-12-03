@@ -198,6 +198,114 @@ export class WebSocketProvider implements FlagProvider {
     this.log('Disconnected from WebSocket server');
   }
 
+  /**
+   * Get all flags.
+   */
+  async getFlags(): Promise<readonly FeatureFlag[]> {
+    return Promise.resolve(Array.from(this.flags.values()));
+  }
+
+  /**
+   * Get a flag by key.
+   */
+  async getFlag(key: string): Promise<FeatureFlag | null> {
+    return Promise.resolve(this.flags.get(key) ?? null);
+  }
+
+  /**
+   * Get all segments.
+   */
+  async getSegments(): Promise<readonly Segment[]> {
+    return Promise.resolve(Array.from(this.segments.values()));
+  }
+
+  /**
+   * Get a segment by ID.
+   */
+  async getSegment(id: SegmentId): Promise<Segment | null> {
+    return Promise.resolve(this.segments.get(id) ?? null);
+  }
+
+  /**
+   * Check if the provider is ready.
+   */
+  isReady(): boolean {
+    return this.ready;
+  }
+
+  /**
+   * Check if the provider is healthy.
+   */
+  async isHealthy(): Promise<boolean> {
+    return Promise.resolve(this.connectionState === 'connected');
+  }
+
+  /**
+   * Get connection state.
+   */
+  getConnectionState(): ConnectionState {
+    return this.connectionState;
+  }
+
+  /**
+   * Get connection status.
+   */
+  getConnectionStatus(): {
+    state: ConnectionState;
+    reconnectAttempts: number;
+    lastMessageTime: Date | null;
+    queuedMessages: number;
+  } {
+    return {
+      state: this.connectionState,
+      reconnectAttempts: this.reconnectAttempts,
+      lastMessageTime: this.lastMessageTime,
+      queuedMessages: this.messageQueue.length,
+    };
+  }
+
+  // ==========================================================================
+  // Reconnection
+  // ==========================================================================
+
+  /**
+   * Get provider statistics.
+   */
+  getStats(): ProviderStats {
+    return {
+      flagCount: this.flags.size,
+      segmentCount: this.segments.size,
+      requestCount: 0,
+      errorCount: 0,
+      lastRefresh: this.lastMessageTime ?? undefined,
+    };
+  }
+
+  /**
+   * Subscribe to flag changes.
+   */
+  subscribe(listener: FlagChangeListener): () => void {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  // ==========================================================================
+  // Heartbeat
+  // ==========================================================================
+
+  /**
+   * Shutdown the provider.
+   */
+  async shutdown(): Promise<void> {
+    this.disconnect();
+    this.ready = false;
+    this.listeners.clear();
+    this.log('WebSocket provider shutdown');
+    return Promise.resolve();
+  }
+
   private setupSocketHandlers(): void {
     if (!this.socket) {
       return;
@@ -239,6 +347,10 @@ export class WebSocketProvider implements FlagProvider {
       this.log('WebSocket error:', error);
     };
   }
+
+  // ==========================================================================
+  // Message Sending
+  // ==========================================================================
 
   private handleMessage(event: MessageEvent): void {
     try {
@@ -290,6 +402,10 @@ export class WebSocketProvider implements FlagProvider {
     this.log(`Received ${flags.length} flags`);
   }
 
+  // ==========================================================================
+  // Flag Operations
+  // ==========================================================================
+
   private handleFlagUpdate(flag: FeatureFlag): void {
     const existing = this.flags.get(flag.key);
     const deserializedFlag = this.deserializeFlag(flag);
@@ -324,6 +440,10 @@ export class WebSocketProvider implements FlagProvider {
     }
   }
 
+  // ==========================================================================
+  // Segment Operations
+  // ==========================================================================
+
   private handleSegmentsMessage(segments: Segment[]): void {
     this.segments.clear();
     for (const segment of segments) {
@@ -337,6 +457,10 @@ export class WebSocketProvider implements FlagProvider {
     this.log(`Segment updated: ${segment.id}`);
   }
 
+  // ==========================================================================
+  // Deserialization
+  // ==========================================================================
+
   private handleDisconnect(): void {
     this.stopPing();
     this.connectionState = 'disconnected';
@@ -345,10 +469,6 @@ export class WebSocketProvider implements FlagProvider {
       this.scheduleReconnect();
     }
   }
-
-  // ==========================================================================
-  // Reconnection
-  // ==========================================================================
 
   private scheduleReconnect(): void {
     const maxAttempts = this.config.reconnect?.maxAttempts ?? 5;
@@ -363,7 +483,7 @@ export class WebSocketProvider implements FlagProvider {
     const baseDelay = this.config.reconnect?.baseDelay ?? 1000;
     const backoffMultiplier = this.config.reconnect?.backoffMultiplier ?? 2;
     const maxDelay = this.config.reconnect?.maxDelay ?? 30000;
-    
+
     const delay = Math.min(
       baseDelay * Math.pow(backoffMultiplier, this.reconnectAttempts - 1),
       maxDelay
@@ -376,6 +496,10 @@ export class WebSocketProvider implements FlagProvider {
     }, delay);
   }
 
+  // ==========================================================================
+  // Status and Health
+  // ==========================================================================
+
   private stopReconnect(): void {
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
@@ -383,10 +507,6 @@ export class WebSocketProvider implements FlagProvider {
     }
     this.reconnectAttempts = 0;
   }
-
-  // ==========================================================================
-  // Heartbeat
-  // ==========================================================================
 
   private startPing(): void {
     if (this.pingTimer) {
@@ -404,10 +524,6 @@ export class WebSocketProvider implements FlagProvider {
       this.pingTimer = null;
     }
   }
-
-  // ==========================================================================
-  // Message Sending
-  // ==========================================================================
 
   private send(message: WSMessage): void {
     if (this.socket?.readyState === WebSocket.OPEN) {
@@ -428,43 +544,7 @@ export class WebSocketProvider implements FlagProvider {
   }
 
   // ==========================================================================
-  // Flag Operations
-  // ==========================================================================
-
-  /**
-   * Get all flags.
-   */
-  async getFlags(): Promise<readonly FeatureFlag[]> {
-    return Promise.resolve(Array.from(this.flags.values()));
-  }
-
-  /**
-   * Get a flag by key.
-   */
-  async getFlag(key: string): Promise<FeatureFlag | null> {
-    return Promise.resolve(this.flags.get(key) ?? null);
-  }
-
-  // ==========================================================================
-  // Segment Operations
-  // ==========================================================================
-
-  /**
-   * Get all segments.
-   */
-  async getSegments(): Promise<readonly Segment[]> {
-    return Promise.resolve(Array.from(this.segments.values()));
-  }
-
-  /**
-   * Get a segment by ID.
-   */
-  async getSegment(id: SegmentId): Promise<Segment | null> {
-    return Promise.resolve(this.segments.get(id) ?? null);
-  }
-
-  // ==========================================================================
-  // Deserialization
+  // Subscription
   // ==========================================================================
 
   private deserializeFlag(flag: FeatureFlag): FeatureFlag {
@@ -498,73 +578,8 @@ export class WebSocketProvider implements FlagProvider {
   }
 
   // ==========================================================================
-  // Status and Health
+  // Shutdown
   // ==========================================================================
-
-  /**
-   * Check if the provider is ready.
-   */
-  isReady(): boolean {
-    return this.ready;
-  }
-
-  /**
-   * Check if the provider is healthy.
-   */
-  async isHealthy(): Promise<boolean> {
-    return Promise.resolve(this.connectionState === 'connected');
-  }
-
-  /**
-   * Get connection state.
-   */
-  getConnectionState(): ConnectionState {
-    return this.connectionState;
-  }
-
-  /**
-   * Get connection status.
-   */
-  getConnectionStatus(): {
-    state: ConnectionState;
-    reconnectAttempts: number;
-    lastMessageTime: Date | null;
-    queuedMessages: number;
-  } {
-    return {
-      state: this.connectionState,
-      reconnectAttempts: this.reconnectAttempts,
-      lastMessageTime: this.lastMessageTime,
-      queuedMessages: this.messageQueue.length,
-    };
-  }
-
-  /**
-   * Get provider statistics.
-   */
-  getStats(): ProviderStats {
-    return {
-      flagCount: this.flags.size,
-      segmentCount: this.segments.size,
-      requestCount: 0,
-      errorCount: 0,
-      lastRefresh: this.lastMessageTime ?? undefined,
-    };
-  }
-
-  // ==========================================================================
-  // Subscription
-  // ==========================================================================
-
-  /**
-   * Subscribe to flag changes.
-   */
-  subscribe(listener: FlagChangeListener): () => void {
-    this.listeners.add(listener);
-    return () => {
-      this.listeners.delete(listener);
-    };
-  }
 
   private emitChange(event: FlagChangeEvent): void {
     for (const listener of this.listeners) {
@@ -574,21 +589,6 @@ export class WebSocketProvider implements FlagProvider {
         this.log('Error in change listener:', error);
       }
     }
-  }
-
-  // ==========================================================================
-  // Shutdown
-  // ==========================================================================
-
-  /**
-   * Shutdown the provider.
-   */
-  async shutdown(): Promise<void> {
-    this.disconnect();
-    this.ready = false;
-    this.listeners.clear();
-    this.log('WebSocket provider shutdown');
-    return Promise.resolve();
   }
 
   // ==========================================================================

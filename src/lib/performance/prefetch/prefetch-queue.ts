@@ -24,12 +24,7 @@ export type PrefetchPriority = 'critical' | 'high' | 'normal' | 'low' | 'idle';
 /**
  * Prefetch item status
  */
-export type PrefetchStatus =
-  | 'pending'
-  | 'loading'
-  | 'completed'
-  | 'failed'
-  | 'cancelled';
+export type PrefetchStatus = 'pending' | 'loading' | 'completed' | 'failed' | 'cancelled';
 
 /**
  * Prefetch item
@@ -93,21 +88,12 @@ export interface QueueStats {
 /**
  * Queue event types
  */
-export type QueueEventType =
-  | 'enqueue'
-  | 'start'
-  | 'complete'
-  | 'fail'
-  | 'cancel'
-  | 'drain';
+export type QueueEventType = 'enqueue' | 'start' | 'complete' | 'fail' | 'cancel' | 'drain';
 
 /**
  * Queue event listener
  */
-export type QueueEventListener = (
-  type: QueueEventType,
-  item: PrefetchItem
-) => void;
+export type QueueEventListener = (type: QueueEventType, item: PrefetchItem) => void;
 
 // ============================================================================
 // Constants
@@ -377,9 +363,7 @@ export class PrefetchQueue {
       cancelled,
       totalSize,
       averageLoadTime:
-        loadTimes.length > 0
-          ? loadTimes.reduce((a, b) => a + b, 0) / loadTimes.length
-          : 0,
+        loadTimes.length > 0 ? loadTimes.reduce((a, b) => a + b, 0) / loadTimes.length : 0,
     };
   }
 
@@ -417,7 +401,7 @@ export class PrefetchQueue {
   // ============================================================================
 
   private processQueue(): void {
-    if (this.paused === true) {
+    if (this.paused) {
       return;
     }
 
@@ -493,9 +477,7 @@ export class PrefetchQueue {
       item.status = 'completed';
       item.completedAt = Date.now();
 
-      this.log(
-        `Completed prefetch: ${item.url} (${item.completedAt - (item.startedAt ?? 0)}ms)`
-      );
+      this.log(`Completed prefetch: ${item.url} (${item.completedAt - (item.startedAt ?? 0)}ms)`);
       this.notifyListeners('complete', item);
     } catch (error) {
       item.error = error instanceof Error ? error : new Error(String(error));
@@ -630,7 +612,7 @@ export class PrefetchQueue {
   }
 
   private getMaxConcurrent(): number {
-    if (this.config.networkAware !== true) {
+    if (!this.config.networkAware) {
       return this.config.maxConcurrent;
     }
 
@@ -639,10 +621,7 @@ export class PrefetchQueue {
       return this.config.maxConcurrent;
     }
 
-    return (
-      this.config.concurrentByNetwork[connection.effectiveType] ??
-      this.config.maxConcurrent
-    );
+    return this.config.concurrentByNetwork[connection.effectiveType] ?? this.config.maxConcurrent;
   }
 
   private getNetworkInfo(): { effectiveType?: string } | null {
@@ -715,9 +694,7 @@ let queueInstance: PrefetchQueue | null = null;
 /**
  * Get or create the global prefetch queue
  */
-export function getPrefetchQueue(
-  config?: Partial<PrefetchQueueConfig>
-): PrefetchQueue {
+export function getPrefetchQueue(config?: Partial<PrefetchQueueConfig>): PrefetchQueue {
   queueInstance ??= new PrefetchQueue(config);
   return queueInstance;
 }

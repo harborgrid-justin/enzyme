@@ -30,9 +30,9 @@
 import { useCallback, useMemo } from 'react';
 import {
   createLibraryIntegration,
-  useLibraryFlags,
   integrationRegistry,
   type LibraryIntegration,
+  useLibraryFlags,
 } from './library-integration';
 import { apiClient } from '../../api/api-client';
 
@@ -211,8 +211,6 @@ integrationRegistry.register(apiIntegration);
  * API flags helper object for direct flag checking
  */
 class ApiFlagsHelper {
-  private getFlag: (flagKey: string) => boolean = () => false;
-
   /**
    * Set the flag getter function
    */
@@ -339,6 +337,8 @@ class ApiFlagsHelper {
       [API_FLAG_KEYS.API_OFFLINE_ENABLED]: this.isOfflineEnabled(),
     };
   }
+
+  private getFlag: (flagKey: string) => boolean = () => false;
 }
 
 /**
@@ -556,8 +556,8 @@ export function createFlaggedFetch(
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
         // Raw fetch is intentional - this wrapper implements flag-based behavior
-        const response = await fetch(flaggedUrl, init);
-        return response;
+
+        return await fetch(flaggedUrl, init);
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
         if (attempt < maxRetries - 1) {

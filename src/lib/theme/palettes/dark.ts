@@ -95,11 +95,11 @@ export const darkPalette = {
   // Text colors
   // Note: All text colors meet WCAG AA contrast requirements (4.5:1 for normal text on dark bg)
   text: {
-    primary: '#f8fafc',    // 15.8:1 on #0f172a - AAA
-    secondary: '#cbd5e1',  // 9.0:1 on #0f172a - AAA
-    tertiary: '#a8b5c7',   // 5.5:1 on #0f172a - AA (updated from #94a3b8 for accessibility)
+    primary: '#f8fafc', // 15.8:1 on #0f172a - AAA
+    secondary: '#cbd5e1', // 9.0:1 on #0f172a - AAA
+    tertiary: '#a8b5c7', // 5.5:1 on #0f172a - AA (updated from #94a3b8 for accessibility)
     inverse: '#0f172a',
-    muted: '#9aa8bb',      // 4.8:1 on #0f172a - AA (updated from #64748b for better contrast)
+    muted: '#9aa8bb', // 4.8:1 on #0f172a - AA (updated from #64748b for better contrast)
   },
 
   // Border colors

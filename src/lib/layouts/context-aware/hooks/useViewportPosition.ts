@@ -8,18 +8,18 @@
  * @version 1.0.0
  */
 
-import { useRef, useEffect, useState, useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type {
-  ViewportPosition,
-  VisibilityState,
   UseViewportPositionReturn,
   ViewportInfo,
+  ViewportPosition,
+  VisibilityState,
 } from '../types';
 import { useDOMContextValue } from '../DOMContextProvider';
 import {
-  getViewportTracker,
   getDistanceFromViewportCenter,
+  getViewportTracker,
   type VisibilityChangeCallback,
 } from '../viewport-awareness';
 
@@ -69,33 +69,26 @@ export function useViewportPosition(): UseViewportPositionReturn {
   const [position, setPosition] = useState<ViewportPosition | null>(null);
 
   const context = useDOMContextValue();
-  const {isSSR} = context;
+  const { isSSR } = context;
 
   /**
    * Handles visibility changes.
    */
-  const handleVisibilityChange = useCallback<VisibilityChangeCallback>(
-    (_element, newPosition) => {
-      setPosition(newPosition);
-    },
-    []
-  );
+  const handleVisibilityChange = useCallback<VisibilityChangeCallback>((_element, newPosition) => {
+    setPosition(newPosition);
+  }, []);
 
   // Set up visibility observation
   useEffect(() => {
-    if ((isSSR === true) || !elementRef.current) {
+    if (isSSR || !elementRef.current) {
       return;
     }
 
     const tracker = getViewportTracker();
-    unobserveRef.current = tracker.observeVisibility(
-      elementRef.current,
-      handleVisibilityChange,
-      {
-        thresholds: [0, 0.25, 0.5, 0.75, 1],
-        trackPosition: true,
-      }
-    );
+    unobserveRef.current = tracker.observeVisibility(elementRef.current, handleVisibilityChange, {
+      thresholds: [0, 0.25, 0.5, 0.75, 1],
+      trackPosition: true,
+    });
 
     return () => {
       if (unobserveRef.current) {
@@ -108,19 +101,14 @@ export function useViewportPosition(): UseViewportPositionReturn {
   /**
    * Scrolls the element into view.
    */
-  const scrollIntoView = useCallback(
-    (options?: ScrollIntoViewOptions) => {
-      if (elementRef.current) {
-        elementRef.current.scrollIntoView(
-          options ?? { behavior: 'smooth', block: 'center' }
-        );
-      }
-    },
-    []
-  );
+  const scrollIntoView = useCallback((options?: ScrollIntoViewOptions) => {
+    if (elementRef.current) {
+      elementRef.current.scrollIntoView(options ?? { behavior: 'smooth', block: 'center' });
+    }
+  }, []);
 
   // Compute derived values
-  const isVisible = (position?.visibility === 'visible') || (position?.visibility === 'partial');
+  const isVisible = position?.visibility === 'visible' || position?.visibility === 'partial';
   const isFullyVisible = position?.visibility === 'visible';
   const visibility = position?.visibility ?? 'unknown';
 
@@ -253,7 +241,7 @@ export function useDistanceFromCenter(): {
   const [distanceFromCenter, setDistanceFromCenter] = useState(Infinity);
 
   useEffect(() => {
-    if ((context.isSSR === true) || !elementRef.current) {
+    if (context.isSSR || !elementRef.current) {
       return;
     }
 
@@ -267,9 +255,8 @@ export function useDistanceFromCenter(): {
 
     // Update on scroll/resize
     const tracker = getViewportTracker();
-    const unsubscribe = tracker.onViewportChange(updateDistance);
 
-    return unsubscribe;
+    return tracker.onViewportChange(updateDistance);
   }, [context.isSSR, context.lastUpdated]);
 
   return { distanceFromCenter, ref: elementRef };
@@ -429,6 +416,6 @@ export function useOrientation(): 'portrait' | 'landscape' {
  * ```
  */
 export function useSafeAreaInsets(): ViewportInfo['safeAreaInsets'] {
-const viewport = useViewport();
-return viewport.safeAreaInsets;
+  const viewport = useViewport();
+  return viewport.safeAreaInsets;
 }

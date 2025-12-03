@@ -237,9 +237,7 @@ export interface FlagAnalyticsBridge {
   /** Track flag evaluation */
   trackEvaluation(event: Omit<FlagEvaluationEvent, 'timestamp'>): void;
   /** Track correlated performance metric */
-  trackPerformanceCorrelation(
-    metric: Omit<CorrelatedMetric, 'timestamp' | 'flagStates'>
-  ): void;
+  trackPerformanceCorrelation(metric: Omit<CorrelatedMetric, 'timestamp' | 'flagStates'>): void;
   /** Track correlated error */
   trackCorrelatedError(error: Omit<CorrelatedError, 'timestamp' | 'flagStates'>): void;
   /** Record impact metric */
@@ -273,9 +271,7 @@ export interface FlagAnalyticsBridge {
 /**
  * Create an analytics bridge
  */
-export function createAnalyticsBridge(
-  config: FlagAnalyticsBridgeConfig = {}
-): FlagAnalyticsBridge {
+export function createAnalyticsBridge(config: FlagAnalyticsBridgeConfig = {}): FlagAnalyticsBridge {
   const {
     destinations = [],
     onExposure,
@@ -725,9 +721,7 @@ export function FlagAnalyticsProvider({
   );
 
   return (
-    <FlagAnalyticsContext.Provider value={contextValue}>
-      {children}
-    </FlagAnalyticsContext.Provider>
+    <FlagAnalyticsContext.Provider value={contextValue}>{children}</FlagAnalyticsContext.Provider>
   );
 }
 
@@ -783,9 +777,7 @@ export function useTrackedFeatureFlag(
 /**
  * Create a console analytics destination (for debugging)
  */
-export function createConsoleDestination(
-  prefix = '[Analytics]'
-): AnalyticsDestination {
+export function createConsoleDestination(prefix = '[Analytics]'): AnalyticsDestination {
   return {
     id: 'console',
     enabled: true,
@@ -807,9 +799,7 @@ export function createConsoleDestination(
 /**
  * Create a localStorage analytics destination (for offline storage)
  */
-export function createLocalStorageDestination(
-  key = 'flag_analytics'
-): AnalyticsDestination {
+export function createLocalStorageDestination(key = 'flag_analytics'): AnalyticsDestination {
   let events: unknown[] = [];
 
   try {
@@ -924,5 +914,3 @@ export function createHttpDestination(config: {
     },
   };
 }
-
-

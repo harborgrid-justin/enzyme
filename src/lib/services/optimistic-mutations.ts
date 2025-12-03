@@ -445,7 +445,7 @@ export class OptimisticMutationQueue {
   private queue: QueuedMutation[] = [];
   private processing = false;
   private config: Required<MutationQueueConfig>;
-  private onlineHandler?: () => void;
+  private readonly onlineHandler?: () => void;
 
   constructor(config: MutationQueueConfig = {}) {
     this.config = {
@@ -594,6 +594,15 @@ export class OptimisticMutationQueue {
   }
 
   /**
+   * Clean up
+   */
+  destroy(): void {
+    if (this.onlineHandler && typeof window !== 'undefined') {
+      window.removeEventListener('online', this.onlineHandler);
+    }
+  }
+
+  /**
    * Persist queue to storage
    */
   private persist(): void {
@@ -636,15 +645,6 @@ export class OptimisticMutationQueue {
    */
   private notifyStatusChange(): void {
     this.config.onStatusChange(this.getStatus());
-  }
-
-  /**
-   * Clean up
-   */
-  destroy(): void {
-    if (this.onlineHandler && typeof window !== 'undefined') {
-      window.removeEventListener('online', this.onlineHandler);
-    }
   }
 }
 

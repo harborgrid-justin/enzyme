@@ -26,7 +26,7 @@
  */
 
 import type { DiscoveredFile, RouteFileType } from './auto-scanner';
-import { extractPathFromFile, type ExtractedPath } from './path-extractor';
+import { type ExtractedPath, extractPathFromFile } from './path-extractor';
 
 // =============================================================================
 // Types
@@ -204,7 +204,7 @@ const MAX_RECOMMENDED_DEPTH = 5;
  */
 function defaultGenerateId(_filePath: string, extracted: ExtractedPath): string {
   // Create ID from URL path
-  const {urlPath} = extracted;
+  const { urlPath } = extracted;
   if (urlPath === '/') return 'INDEX';
 
   return urlPath
@@ -223,10 +223,7 @@ function defaultGenerateId(_filePath: string, extracted: ExtractedPath): string 
  * @returns PascalCase component name
  */
 function defaultGenerateComponentName(filePath: string): string {
-  const parts = filePath
-    .replace(/\\/g, '/')
-    .split('/')
-    .filter(Boolean);
+  const parts = filePath.replace(/\\/g, '/').split('/').filter(Boolean);
 
   // Get the last meaningful segment
   let name = parts.pop() ?? 'Route';
@@ -244,8 +241,7 @@ function defaultGenerateComponentName(filePath: string): string {
   return `${name
     .replace(/[[\]()@.]/g, '')
     .replace(/[-_](\w)/g, (_: string, c: string) => c.toUpperCase())
-    .replace(/^(\w)/, (_: string, c: string) => c.toUpperCase())
-     }Route`;
+    .replace(/^(\w)/, (_: string, c: string) => c.toUpperCase())}Route`;
 }
 
 /**
@@ -287,8 +283,8 @@ function sortRoutesBySpecificity(routes: TransformedRoute[]): TransformedRoute[]
     if (!a.extracted.hasCatchAll && b.extracted.hasCatchAll) return -1;
 
     // More static segments = more specific
-    const staticA = a.extracted.segments.filter(s => s.type === 'static').length;
-    const staticB = b.extracted.segments.filter(s => s.type === 'static').length;
+    const staticA = a.extracted.segments.filter((s) => s.type === 'static').length;
+    const staticB = b.extracted.segments.filter((s) => s.type === 'static').length;
     if (staticA !== staticB) return staticB - staticA;
 
     // Fewer dynamic segments = more specific
@@ -404,11 +400,11 @@ export class RouteTransformer {
     // Calculate stats
     const stats: TransformStats = {
       totalRoutes: routes.length,
-      lazyRoutes: routes.filter(r => r.lazy).length,
-      layoutRoutes: routes.filter(r => r.type === 'layout').length,
-      indexRoutes: routes.filter(r => r.index).length,
-      maxDepth: Math.max(0, ...routes.map(r => r.extracted.depth)),
-      parametricRoutes: routes.filter(r => r.extracted.params.length > 0).length,
+      lazyRoutes: routes.filter((r) => r.lazy).length,
+      layoutRoutes: routes.filter((r) => r.type === 'layout').length,
+      indexRoutes: routes.filter((r) => r.index).length,
+      maxDepth: Math.max(0, ...routes.map((r) => r.extracted.depth)),
+      parametricRoutes: routes.filter((r) => r.extracted.params.length > 0).length,
       durationMs: Date.now() - startTime,
     };
 
@@ -484,12 +480,10 @@ export class RouteTransformer {
     layoutMap: Map<string, TransformedRoute>
   ): TransformedRoute | null {
     // Get directory of route file
-    const routeDir = route.filePath
-      .replace(/\\/g, '/')
-      .replace(/\/[^/]+$/, '');
+
 
     // Walk up directory tree looking for layout
-    let searchDir = routeDir;
+    let searchDir = route.filePath.replace(/\\/g, '/').replace(/\/[^/]+$/, '');
     while (searchDir) {
       const layout = layoutMap.get(searchDir);
       if (layout && layout.id !== route.id) {
@@ -510,8 +504,8 @@ export class RouteTransformer {
    * Build hierarchical route tree
    */
   private buildRouteTree(routes: readonly TransformedRoute[]): readonly RouteTreeNode[] {
-    const layoutRoutes = routes.filter(r => r.type === 'layout');
-    const pageRoutes = routes.filter(r => r.type !== 'layout');
+    const layoutRoutes = routes.filter((r) => r.type === 'layout');
+    const pageRoutes = routes.filter((r) => r.type !== 'layout');
     const nodeMap = new Map<string, RouteTreeNode & { children: RouteTreeNode[] }>();
 
     // Create nodes for all layouts
@@ -531,7 +525,10 @@ export class RouteTransformer {
       const node: RouteTreeNode & { children: RouteTreeNode[] } = {
         route: page,
         children: [],
-        layout: (page.layoutId != null && page.layoutId !== '') ? (nodeMap.get(page.layoutId) ?? null) : null,
+        layout:
+          page.layoutId != null && page.layoutId !== ''
+            ? (nodeMap.get(page.layoutId) ?? null)
+            : null,
         slots: new Map(),
       };
 
@@ -568,9 +565,7 @@ export class RouteTransformer {
  * @param config - Transformer configuration
  * @returns Configured RouteTransformer
  */
-export function createRouteTransformer(
-  config: Partial<TransformerConfig> = {}
-): RouteTransformer {
+export function createRouteTransformer(config: Partial<TransformerConfig> = {}): RouteTransformer {
   return new RouteTransformer(config);
 }
 
@@ -637,14 +632,14 @@ ${routeConfigs.join(',\n')}
  * @returns Generated TypeScript type definitions
  */
 export function generateRouteTypes(routes: readonly TransformedRoute[]): string {
-  const routeIds = routes.map(r => `'${r.id}'`).join(' | ');
-  const routePaths = routes.map(r => `'${r.path}'`).join(' | ');
+  const routeIds = routes.map((r) => `'${r.id}'`).join(' | ');
+  const routePaths = routes.map((r) => `'${r.path}'`).join(' | ');
 
   const paramTypes: string[] = [];
   for (const route of routes) {
     if (route.extracted.params.length > 0) {
       const params = route.extracted.params
-        .map(p => {
+        .map((p) => {
           const isOptional = route.extracted.optionalParams.includes(p);
           return `${p}${isOptional ? '?' : ''}: string`;
         })

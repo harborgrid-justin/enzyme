@@ -82,7 +82,7 @@ export interface SliceConfig<TState, TActions> {
 export function createSlice<
   TState extends object,
   TActions extends Record<string, (...args: never[]) => unknown>,
-  TStore extends TState & TActions = TState & TActions
+  TStore extends TState & TActions = TState & TActions,
 >(
   config: SliceConfig<TState, TActions>
 ): StateCreator<
@@ -99,25 +99,28 @@ export function createSlice<
       updaterOrPartial: ((state: Draft<TState>) => void) | Partial<TState>,
       actionName?: string
     ) => {
-      const type = (actionName != null && actionName !== '') ? `${name}/${actionName}` : `${name}/update`;
+      const type =
+        actionName != null && actionName !== '' ? `${name}/${actionName}` : `${name}/update`;
 
       if (typeof updaterOrPartial === 'function') {
         // Immer-style updater function - the updater for TState is compatible with TStore which extends TState
         const storeUpdater = (state: Draft<TStore>): void => {
           updaterOrPartial(state as unknown as Draft<TState>);
         };
-        (set as (
-          updater: (state: Draft<TStore>) => void,
-          replace: boolean,
-          action: { type: string }
-        ) => void)(storeUpdater, false, { type });
+        (
+          set as (
+            updater: (state: Draft<TStore>) => void,
+            replace: boolean,
+            action: { type: string }
+          ) => void
+        )(storeUpdater, false, { type });
       } else {
         // Partial state update
-        (set as (
-          partial: Partial<TStore>,
-          replace: boolean,
-          action: { type: string }
-        ) => void)(updaterOrPartial as unknown as Partial<TStore>, false, { type });
+        (set as (partial: Partial<TStore>, replace: boolean, action: { type: string }) => void)(
+          updaterOrPartial as unknown as Partial<TStore>,
+          false,
+          { type }
+        );
       }
     };
 
@@ -200,9 +203,12 @@ export function combineSlices<T extends object>(
   ...slices: StateCreator<T, [['zustand/immer', never], ['zustand/devtools', never]], [], T>[]
 ): StateCreator<T, [['zustand/immer', never], ['zustand/devtools', never]], [], T> {
   return (...args) => {
-    return slices.reduce((acc, slice) => ({
-      ...acc,
-      ...slice(...args),
-    }), {} as T);
+    return slices.reduce(
+      (acc, slice) => ({
+        ...acc,
+        ...slice(...args),
+      }),
+      {} as T
+    );
   };
 }

@@ -15,24 +15,10 @@
  * @version 1.0.0
  */
 
-import React, {
-  useRef,
-  useEffect,
-  useState,
-  useCallback,
-  useMemo,
-  forwardRef,
-} from 'react';
+import React, { useRef, useEffect, useState, useCallback, useMemo, forwardRef } from 'react';
 
-import type {
-  ViewportPosition,
-  VisibilityState,
-  ViewportAnchorProps,
-} from './types';
-import {
-  getViewportTracker,
-  type VisibilityChangeCallback,
-} from './viewport-awareness';
+import type { ViewportPosition, VisibilityState, ViewportAnchorProps } from './types';
+import { getViewportTracker, type VisibilityChangeCallback } from './viewport-awareness';
 
 // ============================================================================
 // Types
@@ -235,7 +221,8 @@ export const ViewportAnchor = forwardRef<HTMLDivElement, ExtendedViewportAnchorP
 
       // Create sentinel element for sticky detection
       const sentinel = document.createElement('div');
-      sentinel.style.cssText = 'position: absolute; top: 0; height: 1px; width: 100%; pointer-events: none;';
+      sentinel.style.cssText =
+        'position: absolute; top: 0; height: 1px; width: 100%; pointer-events: none;';
       element.parentElement?.insertBefore(sentinel, element);
 
       observer.observe(sentinel);
@@ -253,17 +240,13 @@ export const ViewportAnchor = forwardRef<HTMLDivElement, ExtendedViewportAnchorP
       }
 
       const tracker = getViewportTracker();
-      const unobserve = tracker.observeVisibility(
-        containerRef.current,
-        handleVisibilityChange,
-        {
-          thresholds: Array.isArray(intersectionThreshold)
-            ? intersectionThreshold
-            : [intersectionThreshold],
-          rootMargin,
-          trackPosition: trackContinuously,
-        }
-      );
+      const unobserve = tracker.observeVisibility(containerRef.current, handleVisibilityChange, {
+        thresholds: Array.isArray(intersectionThreshold)
+          ? intersectionThreshold
+          : [intersectionThreshold],
+        rootMargin,
+        trackPosition: trackContinuously,
+      });
 
       unobserveRef.current = unobserve;
 
@@ -527,7 +510,7 @@ export function ScrollTrigger({
       onEnterViewport={onTrigger}
       triggerOnce={triggerOnce}
     >
-    {indicator}
-  </ViewportAnchor>
-);
+      {indicator}
+    </ViewportAnchor>
+  );
 }

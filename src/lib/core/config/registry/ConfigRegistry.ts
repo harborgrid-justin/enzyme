@@ -294,45 +294,6 @@ export class ConfigRegistry implements IConfigRegistry {
   }
 
   /**
-   * Initialize source tracking for all paths.
-   */
-  private initializeSources(): void {
-    this.traverseAndMarkSource(this.config, '', 'default');
-  }
-
-  private traverseAndMarkSource(obj: unknown, prefix: string, source: ConfigSource): void {
-    if (obj === null || typeof obj !== 'object') {
-      if (prefix) {
-        this.sources.set(prefix, source);
-      }
-      return;
-    }
-
-    for (const [key, value] of Object.entries(obj)) {
-      const path = prefix ? `${prefix}.${key}` : key;
-      if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
-        this.traverseAndMarkSource(value, path, source);
-      } else {
-        this.sources.set(path, source);
-      }
-    }
-  }
-
-  /**
-   * Detect and apply environment.
-   * Uses centralized detectEnvironment() from environment-config to avoid
-   * duplicating environment detection logic across the codebase.
-   */
-  private detectEnvironment(): void {
-    const detectedEnv = detectEnvFromConfig();
-    this.applyEnvironmentOverrides(detectedEnv);
-  }
-
-  // ===========================================================================
-  // IConfigRegistry Implementation
-  // ===========================================================================
-
-  /**
    * Get the complete library configuration (frozen).
    */
   getConfig(): DeepReadonly<LibraryConfig> {
@@ -352,6 +313,10 @@ export class ConfigRegistry implements IConfigRegistry {
   has(path: ConfigPath): boolean {
     return hasPath(this.config, path);
   }
+
+  // ===========================================================================
+  // IConfigRegistry Implementation
+  // ===========================================================================
 
   /**
    * Set a runtime configuration value.
@@ -450,10 +415,6 @@ export class ConfigRegistry implements IConfigRegistry {
     return this.sources.get(path) ?? 'default';
   }
 
-  // ===========================================================================
-  // Additional Methods
-  // ===========================================================================
-
   /**
    * Get the current environment.
    */
@@ -475,6 +436,10 @@ export class ConfigRegistry implements IConfigRegistry {
   freeze(): void {
     this.frozen = true;
   }
+
+  // ===========================================================================
+  // Additional Methods
+  // ===========================================================================
 
   /**
    * Unfreeze the configuration.
@@ -515,6 +480,41 @@ export class ConfigRegistry implements IConfigRegistry {
       console.error('[ConfigRegistry] Failed to parse JSON:', error);
       throw error;
     }
+  }
+
+  /**
+   * Initialize source tracking for all paths.
+   */
+  private initializeSources(): void {
+    this.traverseAndMarkSource(this.config, '', 'default');
+  }
+
+  private traverseAndMarkSource(obj: unknown, prefix: string, source: ConfigSource): void {
+    if (obj === null || typeof obj !== 'object') {
+      if (prefix) {
+        this.sources.set(prefix, source);
+      }
+      return;
+    }
+
+    for (const [key, value] of Object.entries(obj)) {
+      const path = prefix ? `${prefix}.${key}` : key;
+      if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+        this.traverseAndMarkSource(value, path, source);
+      } else {
+        this.sources.set(path, source);
+      }
+    }
+  }
+
+  /**
+   * Detect and apply environment.
+   * Uses centralized detectEnvironment() from environment-config to avoid
+   * duplicating environment detection logic across the codebase.
+   */
+  private detectEnvironment(): void {
+    const detectedEnv = detectEnvFromConfig();
+    this.applyEnvironmentOverrides(detectedEnv);
   }
 
   // ===========================================================================

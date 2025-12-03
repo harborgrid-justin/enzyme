@@ -110,9 +110,7 @@ export function getPerformanceMemory(): PerformanceMemoryInfo | null {
  * }
  * ```
  */
-export function calculateMemoryUsagePercent(
-  memory: PerformanceMemoryInfo | null
-): number | null {
+export function calculateMemoryUsagePercent(memory: PerformanceMemoryInfo | null): number | null {
   if (!memory) {
     return null;
   }

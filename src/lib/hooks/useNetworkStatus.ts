@@ -3,12 +3,12 @@
  * @description React hooks for network status monitoring and online/offline handling
  */
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  networkMonitor,
-  type NetworkStatus,
-  type NetworkQuality,
   getSuggestedAction,
+  networkMonitor,
+  type NetworkQuality,
+  type NetworkStatus,
 } from '../utils/networkStatus';
 import { isSlowConnection as checkSlowConnection } from './shared/networkUtils';
 
@@ -19,11 +19,9 @@ export function useOnlineStatus(): boolean {
   const [isOnline, setIsOnline] = useState(() => networkMonitor.isOnline());
 
   useEffect(() => {
-    const unsubscribe = networkMonitor.onStatusChange((status) => {
+    return networkMonitor.onStatusChange((status) => {
       setIsOnline(status.online);
     });
-
-    return unsubscribe;
   }, []);
 
   return isOnline;
@@ -36,8 +34,7 @@ export function useNetworkStatus(): NetworkStatus {
   const [status, setStatus] = useState(() => networkMonitor.getStatus());
 
   useEffect(() => {
-    const unsubscribe = networkMonitor.onStatusChange(setStatus);
-    return unsubscribe;
+    return networkMonitor.onStatusChange(setStatus);
   }, []);
 
   return status;
@@ -50,8 +47,7 @@ export function useNetworkQuality(): NetworkQuality {
   const [quality, setQuality] = useState(() => networkMonitor.getQuality());
 
   useEffect(() => {
-    const unsubscribe = networkMonitor.onQualityChange(setQuality);
-    return unsubscribe;
+    return networkMonitor.onQualityChange(setQuality);
   }, []);
 
   return quality;
@@ -107,11 +103,13 @@ export function useOfflineFallback<T>(
   useEffect(() => {
     if (isOnline) {
       // Use microtask to avoid setState in effect
-      Promise.resolve().then(() => {
-        setCachedValue(value);
-      }).catch(() => {
-        // Ignore errors in cleanup
-      });
+      Promise.resolve()
+        .then(() => {
+          setCachedValue(value);
+        })
+        .catch(() => {
+          // Ignore errors in cleanup
+        });
     }
   }, [isOnline, value]);
 
@@ -193,8 +191,7 @@ export function useNetworkAwareFetch(
   const { minQuality = 'poor', retryOnReconnect = true, fetchFn } = options;
 
   const qualityOrder: NetworkQuality[] = ['offline', 'poor', 'fair', 'good', 'excellent'];
-  const canFetch =
-    isOnline && qualityOrder.indexOf(quality) >= qualityOrder.indexOf(minQuality);
+  const canFetch = isOnline && qualityOrder.indexOf(quality) >= qualityOrder.indexOf(minQuality);
 
   // Retry on reconnect
   useOnReconnect(
@@ -235,11 +232,13 @@ export function useOfflineIndicator(): {
   useEffect(() => {
     if (!isOnline) {
       // Use microtask to avoid synchronous setState in effect
-      Promise.resolve().then(() => {
-        setShowIndicator(true);
-      }).catch(() => {
-        // Ignore errors in cleanup
-      });
+      Promise.resolve()
+        .then(() => {
+          setShowIndicator(true);
+        })
+        .catch(() => {
+          // Ignore errors in cleanup
+        });
     } else {
       // Delay hiding indicator to allow for brief disconnections
       const timer = setTimeout(() => {
@@ -277,14 +276,16 @@ export function useConnectionTracker(): {
 
   useEffect(() => {
     // Use microtask to avoid setState in effect
-    Promise.resolve().then(() => {
-      setChanges((prev) => [...prev.slice(-19), { online: isOnline, timestamp: Date.now() }]);
-    }).catch(() => {
-      // Ignore errors in cleanup
-    });
+    Promise.resolve()
+      .then(() => {
+        setChanges((prev) => [...prev.slice(-19), { online: isOnline, timestamp: Date.now() }]);
+      })
+      .catch(() => {
+        // Ignore errors in cleanup
+      });
   }, [isOnline]);
 
-  const stats = useMemo(() => {
+  return useMemo(() => {
     const disconnects = changes.filter((c) => !c.online);
     const reconnects = changes.filter((c) => c.online);
 
@@ -302,10 +303,9 @@ export function useConnectionTracker(): {
     return {
       changes,
       disconnectCount: disconnects.length,
-      lastDisconnect: disconnects.length > 0 ? (disconnects[disconnects.length - 1]?.timestamp ?? null) : null,
+      lastDisconnect:
+        disconnects.length > 0 ? (disconnects[disconnects.length - 1]?.timestamp ?? null) : null,
       avgOfflineDuration: disconnects.length > 0 ? totalOffline / disconnects.length : 0,
     };
   }, [changes]);
-
-  return stats;
 }

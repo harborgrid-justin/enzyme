@@ -121,7 +121,7 @@ export async function withRetry<T>(
  * Retry policy builder for fluent configuration
  */
 export class RetryPolicy {
-  private config: RetryConfig;
+  private readonly config: RetryConfig;
 
   constructor(config: RetryConfig = {}) {
     this.config = config;
@@ -235,32 +235,6 @@ export class CircuitBreaker {
   }
 
   /**
-   * Check if reset should be attempted
-   */
-  private shouldAttemptReset(): boolean {
-    return Date.now() - this.lastFailureTime >= this.config.resetTimeout;
-  }
-
-  /**
-   * Transition to new state
-   */
-  private transition(newState: CircuitState): void {
-    if (this.state !== newState) {
-      const oldState = this.state;
-      this.state = newState;
-
-      if (newState === 'closed') {
-        this.failures = [];
-        this.successes = 0;
-      } else if (newState === 'half-open') {
-        this.successes = 0;
-      }
-
-      this.config.onStateChange?.(oldState, newState);
-    }
-  }
-
-  /**
    * Record success
    */
   success(): void {
@@ -291,14 +265,6 @@ export class CircuitBreaker {
         this.transition('open');
       }
     }
-  }
-
-  /**
-   * Clean failures outside window
-   */
-  private cleanOldFailures(): void {
-    const cutoff = Date.now() - this.config.failureWindow;
-    this.failures = this.failures.filter((time) => time > cutoff);
   }
 
   /**
@@ -347,6 +313,40 @@ export class CircuitBreaker {
     this.successes = 0;
     this.lastFailureTime = 0;
   }
+
+  /**
+   * Check if reset should be attempted
+   */
+  private shouldAttemptReset(): boolean {
+    return Date.now() - this.lastFailureTime >= this.config.resetTimeout;
+  }
+
+  /**
+   * Transition to new state
+   */
+  private transition(newState: CircuitState): void {
+    if (this.state !== newState) {
+      const oldState = this.state;
+      this.state = newState;
+
+      if (newState === 'closed') {
+        this.failures = [];
+        this.successes = 0;
+      } else if (newState === 'half-open') {
+        this.successes = 0;
+      }
+
+      this.config.onStateChange?.(oldState, newState);
+    }
+  }
+
+  /**
+   * Clean failures outside window
+   */
+  private cleanOldFailures(): void {
+    const cutoff = Date.now() - this.config.failureWindow;
+    this.failures = this.failures.filter((time) => time > cutoff);
+  }
 }
 
 /**
@@ -370,8 +370,8 @@ export class Bulkhead {
     resolve: () => void;
     reject: (error: Error) => void;
   }> = [];
-  private maxConcurrent: number;
-  private maxQueue: number;
+  private readonly maxConcurrent: number;
+  private readonly maxQueue: number;
 
   constructor(maxConcurrent: number, maxQueue = 100) {
     this.maxConcurrent = maxConcurrent;
