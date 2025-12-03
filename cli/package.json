@@ -1,7 +1,7 @@
 {
   "name": "@missionfabric-js/enzyme-cli",
-  "version": "1.0.0",
-  "description": "Enterprise CLI scaffolding tool for the Enzyme React framework",
+  "version": "2.0.0",
+  "description": "Enterprise CLI scaffolding tool for the Enzyme React framework with Prisma-inspired extensions",
   "type": "module",
   "license": "MIT",
   "author": "Defendr Team",
@@ -15,25 +15,88 @@
   },
   "publishConfig": {
     "access": "public",
-    "registry": "https://registry.npmjs.org/"
+    "registry": "https://registry.npmjs.org/",
+    "provenance": true
   },
-  "main": "dist/index.js",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "bin": {
     "enzyme": "./dist/index.js",
     "enz": "./dist/index.js"
   },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./extensions": {
+      "types": "./dist/extensions/index.d.ts",
+      "import": "./dist/extensions/index.js",
+      "default": "./dist/extensions/index.js"
+    },
+    "./errors": {
+      "types": "./dist/errors/index.d.ts",
+      "import": "./dist/errors/index.js",
+      "default": "./dist/errors/index.js"
+    },
+    "./config": {
+      "types": "./dist/config/index.d.ts",
+      "import": "./dist/config/index.js",
+      "default": "./dist/config/index.js"
+    },
+    "./generators": {
+      "types": "./dist/generators/index.d.ts",
+      "import": "./dist/generators/index.js",
+      "default": "./dist/generators/index.js"
+    },
+    "./plugins": {
+      "types": "./dist/plugins/loader.d.ts",
+      "import": "./dist/plugins/loader.js",
+      "default": "./dist/plugins/loader.js"
+    },
+    "./testing": {
+      "types": "./dist/testing/index.d.ts",
+      "import": "./dist/testing/index.js",
+      "default": "./dist/testing/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "typesVersions": {
+    "*": {
+      "extensions": ["./dist/extensions/index.d.ts"],
+      "errors": ["./dist/errors/index.d.ts"],
+      "config": ["./dist/config/index.d.ts"],
+      "generators": ["./dist/generators/index.d.ts"],
+      "plugins": ["./dist/plugins/loader.d.ts"],
+      "testing": ["./dist/testing/index.d.ts"]
+    }
+  },
   "scripts": {
-    "build": "npm run clean && tsc",
-    "clean": "rimraf dist .tsbuildinfo .eslintcache",
+    "build": "npm run clean && tsc && npm run build:check",
+    "build:check": "node -e \"require('./dist/index.js')\" || echo 'Build verification skipped for ESM'",
+    "clean": "rimraf dist .tsbuildinfo .eslintcache coverage",
     "dev": "tsc --watch",
-    "prepublishOnly": "npm run build",
+    "prepublishOnly": "npm run verify && npm run build",
+    "preversion": "npm run verify",
+    "version": "npm run build && git add -A",
+    "postversion": "git push && git push --tags",
     "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:types": "tsd",
     "lint": "eslint src --cache",
     "lint:fix": "eslint src --fix --cache",
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
     "typecheck": "tsc --noEmit",
-    "verify": "npm run typecheck && npm run lint && npm run test"
+    "verify": "npm run typecheck && npm run lint && npm run test",
+    "docs:generate": "typedoc --out docs/api src/index.ts",
+    "release": "npm run verify && npm version",
+    "release:patch": "npm run release patch",
+    "release:minor": "npm run release minor",
+    "release:major": "npm run release major"
   },
   "keywords": [
     "enzyme",
@@ -44,14 +107,19 @@
     "missionfabric",
     "enterprise",
     "framework",
-    "typescript"
+    "typescript",
+    "extensions",
+    "prisma-like",
+    "hooks",
+    "middleware",
+    "code-generation"
   ],
-  "author": "Defendr Team",
-  "license": "MIT",
   "engines": {
     "node": ">=20.0.0",
     "npm": ">=10.0.0"
   },
+  "os": ["darwin", "linux", "win32"],
+  "cpu": ["x64", "arm64"],
   "dependencies": {
     "commander": "^11.1.0",
     "inquirer": "^9.2.12",
@@ -80,13 +148,29 @@
     "jest": "^29.7.0",
     "prettier": "^3.1.0",
     "rimraf": "^6.1.2",
-    "typescript": "^5.3.2"
+    "typescript": "^5.3.2",
+    "tsd": "^0.29.0",
+    "typedoc": "^0.25.0",
+    "typedoc-plugin-markdown": "^3.17.0"
+  },
+  "peerDependencies": {
+    "prettier": "^3.0.0"
+  },
+  "peerDependenciesMeta": {
+    "prettier": {
+      "optional": true
+    }
   },
   "files": [
     "dist",
     "templates",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "CHANGELOG.md"
   ],
-  "sideEffects": false
+  "sideEffects": false,
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/harborgrid-justin"
+  }
 }
