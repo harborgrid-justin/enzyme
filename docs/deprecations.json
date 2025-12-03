@@ -1,0 +1,162 @@
+[
+  {
+    "symbol": "HttpClient",
+    "module": "@/lib/services/http",
+    "replacementSymbol": "ApiClient",
+    "replacementModule": "@/lib/api",
+    "notes": "Legacy HTTP client; migrate to ApiClient from @/lib/api.",
+    "autoFixable": true
+  },
+  {
+    "symbol": "httpClient",
+    "module": "@/lib/services/http",
+    "replacementSymbol": "apiClient",
+    "replacementModule": "@/lib/api",
+    "notes": "Use apiClient instance from @/lib/api.",
+    "autoFixable": true
+  },
+  {
+    "symbol": "HttpError",
+    "module": "@/lib/services/http",
+    "replacementSymbol": "ApiError",
+    "replacementModule": "@/lib/api/types",
+    "notes": "Error type moved to @/lib/api/types.",
+    "autoFixable": true
+  },
+  {
+    "symbol": "createApiClient",
+    "module": "@/lib/services",
+    "replacementSymbol": "createResourceClient",
+    "replacementModule": "@/lib/services/api-clients",
+    "notes": "Rename only; resource client factory naming.",
+    "autoFixable": true
+  },
+  {
+    "symbol": "apiClients",
+    "module": "@/lib/services",
+    "replacementSymbol": "resourceClients",
+    "replacementModule": "@/lib/services/api-clients",
+    "notes": "Collection alias renamed.",
+    "autoFixable": true
+  },
+  {
+    "symbol": "ApiResponse",
+    "module": "@/lib/services",
+    "replacementSymbol": "ResourceApiResponse",
+    "replacementModule": "@/lib/services/api-clients",
+    "notes": "Type alias renamed.",
+    "autoFixable": true
+  },
+  {
+    "symbol": "ApiClientConfig",
+    "module": "@/lib/services",
+    "replacementSymbol": "ResourceClientConfig",
+    "replacementModule": "@/lib/services/api-clients",
+    "notes": "Type alias renamed.",
+    "autoFixable": true
+  },
+  {
+    "symbol": "ApiClient",
+    "module": "@/lib/services",
+    "replacementSymbol": "ResourceClient",
+    "replacementModule": "@/lib/services/api-clients",
+    "notes": "Type alias rename in resource client context (not the ApiClient from @/lib/api).",
+    "autoFixable": true
+  },
+  {
+    "symbol": "MillisecondsUnbranded",
+    "module": "@/lib/core/config/types",
+    "replacementSymbol": "Milliseconds",
+    "replacementModule": "@/lib/shared/type-utils",
+    "notes": "Prefer branded numeric types.",
+    "autoFixable": false
+  },
+  {
+    "symbol": "SecondsUnbranded",
+    "module": "@/lib/core/config/types",
+    "replacementSymbol": "Seconds",
+    "replacementModule": "@/lib/shared/type-utils",
+    "notes": "Prefer branded numeric types.",
+    "autoFixable": false
+  },
+  {
+    "symbol": "PixelsUnbranded",
+    "module": "@/lib/core/config/types",
+    "replacementSymbol": "Pixels",
+    "replacementModule": "@/lib/shared/type-utils",
+    "notes": "Prefer branded numeric types.",
+    "autoFixable": false
+  },
+  {
+    "symbol": "PercentageUnbranded",
+    "module": "@/lib/core/config/types",
+    "replacementSymbol": "Percentage",
+    "replacementModule": "@/lib/shared/type-utils",
+    "notes": "Prefer branded numeric types.",
+    "autoFixable": false
+  },
+  {
+    "symbol": "buildRoutePath (legacy)",
+    "module": "@/lib/routing/routes",
+    "replacementSymbol": "buildRoutePath",
+    "replacementModule": "@/lib/routing/route-builder",
+    "notes": "Use builder from route-builder.",
+    "autoFixable": true
+  },
+  {
+    "symbol": "createRouteFactory",
+    "module": "@/lib/routing/types",
+    "replacementSymbol": "createRouteBuilder",
+    "replacementModule": "@/lib/routing/route-builder",
+    "notes": "Adopt new route builder API.",
+    "autoFixable": true
+  },
+  {
+    "symbol": "extractParams",
+    "module": "@/lib/routing/types",
+    "replacementSymbol": "extractParamNames",
+    "replacementModule": "@/lib/routing/scanner",
+    "notes": "Scanner utility renamed.",
+    "autoFixable": true
+  },
+  {
+    "symbol": "LegacyEventEmitter*",
+    "module": "@/lib/shared/event-utils",
+    "replacementSymbol": "UnifiedEventEmitter",
+    "replacementModule": "@/lib/shared/event-utils",
+    "notes": "Consolidated event emitter implementation.",
+    "autoFixable": false
+  },
+  {
+    "symbol": "time-based selectors (using Date.now())",
+    "module": "@/lib/state/selectors/index",
+    "replacementSymbol": "pure selectors or parameterized with time",
+    "replacementModule": "@/lib/state/selectors/index",
+    "notes": "Adjust call sites to avoid time in combiner; follow inline guidance in file.",
+    "autoFixable": false
+  },
+  {
+    "symbol": "useResourceCleanup",
+    "module": "@/lib/hooks/useResourceCleanup",
+    "replacementSymbol": "useMountedState",
+    "replacementModule": "@/lib/shared/<appropriate-module>",
+    "notes": "Replace with shared hook for mounted state.",
+    "autoFixable": true
+  },
+  {
+    "symbol": "RoutePath (from config/index)",
+    "module": "@/config",
+    "replacementSymbol": "RoutePath",
+    "replacementModule": "@/lib/routing/route-registry",
+    "notes": "Import type from routes.registry instead of config index.",
+    "autoFixable": true
+  },
+  {
+    "symbol": "ApiError (from services/type-safe-api-client)",
+    "module": "@/lib/services/type-safe-api-client",
+    "replacementSymbol": "ApiError",
+    "replacementModule": "@/lib/api/types",
+    "notes": "Reference error type from @/lib/api/types.",
+    "autoFixable": true
+  }
+]
