@@ -1,9 +1,19 @@
 /**
  * @file Extension System Exports
  * @description Prisma-inspired extension system for Enzyme CLI
+ *
+ * @example
+ * import { EnzymeClient, loggingExtension, validationExtension } from '@enzyme/cli/extensions'
+ *
+ * const enzyme = new EnzymeClient()
+ *   .$extends(loggingExtension)
+ *   .$extends(validationExtension)
  */
 
-// Types
+// ============================================================================
+// Core Types
+// ============================================================================
+
 export type {
   EnzymeExtension,
   GeneratorExtension,
@@ -47,13 +57,22 @@ export type {
   GeneratorResult,
 } from './types.js';
 
-// Branded type constructors
+// ============================================================================
+// Branded Type Constructors
+// ============================================================================
+
 export { createPluginId, createExtensionId } from './types.js';
 
+// ============================================================================
 // Namespace
+// ============================================================================
+
 export { Enzyme } from './types.js';
 
-// Manager
+// ============================================================================
+// Core Classes and Factories
+// ============================================================================
+
 export {
   EnzymeExtensionManager,
   EnzymeClient,
@@ -62,5 +81,54 @@ export {
   defineExtension,
 } from './manager.js';
 
-// Built-in extensions
-export * from './built-in/index.js';
+// ============================================================================
+// Built-in Extensions
+// ============================================================================
+
+export {
+  // Individual extensions
+  loggingExtension,
+  performanceExtension,
+  validationExtension,
+  formattingExtension,
+  resultExtension,
+  gitExtension,
+  dryRunExtension,
+  errorsExtension,
+  // Factory functions
+  getBuiltInExtensions,
+  getProductionExtensions,
+  getDevelopmentExtensions,
+  createExtensionBundle,
+  getExtensionByName,
+  // Performance utilities
+  getPerformanceMetrics,
+  // Types
+  type BuiltInExtensionName,
+} from './built-in/index.js';
+
+// ============================================================================
+// React Hooks (Separate Export Path)
+// ============================================================================
+
+/**
+ * React hooks for extensions
+ * Import from '@enzyme/cli/extensions/hooks'
+ *
+ * @example
+ * import { ExtensionProvider, useExtension } from '@enzyme/cli/extensions/hooks'
+ */
+export type { ExtensionContextValue, ExtensionProviderProps } from './hooks.js';
+
+// ============================================================================
+// Testing Utilities (Separate Export Path)
+// ============================================================================
+
+/**
+ * Testing utilities for extensions
+ * Import from '@enzyme/cli/extensions/testing'
+ *
+ * @example
+ * import { createMockExtensionManager } from '@enzyme/cli/extensions/testing'
+ */
+export type { ExtensionSpy } from './testing.js';
