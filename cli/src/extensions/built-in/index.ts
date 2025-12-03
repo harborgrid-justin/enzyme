@@ -625,8 +625,134 @@ export const dryRunExtension: EnzymeExtension = {
 };
 
 // ============================================================================
+// Error Handling Extension
+// ============================================================================
+
+/**
+ * Error handling extension that enhances error messages and provides recovery
+ *
+ * @example
+ * const enzyme = new Enzyme().$extends(errorsExtension)
+ */
+export const errorsExtension: EnzymeExtension = {
+  name: 'enzyme:errors',
+  version: '1.0.0',
+  description: 'Enhanced error handling with structured error codes and suggestions',
+
+  generator: {
+    $allGenerators: {
+      async onError({ error, generator, operation, retry }) {
+        const timestamp = new Date().toISOString();
+        console.error(`\n[${timestamp}] ❌ Error in ${generator} (${operation})`);
+        console.error(`  ${error.message}`);
+
+        // Provide contextual suggestions based on error type
+        if (error.message.includes('ENOENT')) {
+          console.error('\n💡 Suggestions:');
+          console.error('  • Check that the target directory exists');
+          console.error('  • Ensure you have proper file system permissions');
+          console.error('  • Verify the path is correct and accessible');
+        } else if (error.message.includes('EACCES')) {
+          console.error('\n💡 Suggestions:');
+          console.error('  • Check file/directory permissions');
+          console.error('  • Ensure the target is not read-only');
+          console.error('  • You may need elevated privileges for this operation');
+        } else if (error.message.includes('validation')) {
+          console.error('\n💡 Suggestions:');
+          console.error('  • Check naming conventions (PascalCase for components, camelCase for hooks)');
+          console.error('  • Ensure all required fields are provided');
+          console.error('  • Review the generator documentation for valid options');
+        }
+
+        // Log to file if in debug mode
+        if (process.env.ENZYME_DEBUG) {
+          console.error('\n📋 Stack trace:');
+          console.error(error.stack);
+
+          // Suggest retry for transient errors
+          const transientErrors = ['EBUSY', 'EAGAIN', 'EMFILE', 'ENFILE'];
+          if (transientErrors.some(code => error.message.includes(code))) {
+            console.error('\n🔄 This appears to be a transient error. You can retry the operation.');
+          }
+        }
+      },
+    },
+  },
+
+  file: {
+    async onError({ path, error, retry }) {
+      console.error(`\n❌ File operation failed: ${path}`);
+      console.error(`  ${error.message}`);
+
+      // Auto-retry for EBUSY errors (file locked)
+      if (error.message.includes('EBUSY')) {
+        console.log('  🔄 File is busy, retrying in 100ms...');
+        await new Promise(resolve => setTimeout(resolve, 100));
+        try {
+          await retry();
+          console.log('  ✅ Retry successful');
+        } catch {
+          console.error('  ❌ Retry failed');
+        }
+      }
+    },
+  },
+
+  command: {
+    'error-report': {
+      description: 'Generate an error report for diagnostics',
+      options: [
+        {
+          name: 'output',
+          alias: 'o',
+          type: 'string',
+          description: 'Output file path',
+          default: 'enzyme-error-report.json',
+        },
+      ],
+      async handler(context, options) {
+        const report = {
+          timestamp: new Date().toISOString(),
+          cwd: context.cwd,
+          config: context.config,
+          platform: process.platform,
+          nodeVersion: process.version,
+          enzymeVersion: '2.0.0', // Should be imported from package.json
+        };
+
+        const outputPath = (options.output as string) || 'enzyme-error-report.json';
+
+        try {
+          const fs = await import('fs/promises');
+          await fs.writeFile(outputPath, JSON.stringify(report, null, 2));
+          console.log(`✅ Error report generated: ${outputPath}`);
+        } catch (error) {
+          console.error('❌ Failed to generate error report:', error);
+        }
+      },
+    },
+  },
+};
+
+// ============================================================================
 // Export All Built-in Extensions
 // ============================================================================
+
+/**
+ * Registry of all built-in extensions by name
+ */
+const BUILT_IN_EXTENSIONS_REGISTRY = {
+  logging: loggingExtension,
+  performance: performanceExtension,
+  validation: validationExtension,
+  formatting: formattingExtension,
+  results: resultExtension,
+  git: gitExtension,
+  dryRun: dryRunExtension,
+  errors: errorsExtension,
+} as const;
+
+export type BuiltInExtensionName = keyof typeof BUILT_IN_EXTENSIONS_REGISTRY;
 
 /**
  * Get all built-in extensions
@@ -640,6 +766,7 @@ export function getBuiltInExtensions(): EnzymeExtension[] {
     resultExtension,
     gitExtension,
     dryRunExtension,
+    errorsExtension,
   ];
 }
 
@@ -651,6 +778,7 @@ export function getProductionExtensions(): EnzymeExtension[] {
     validationExtension,
     formattingExtension,
     resultExtension,
+    errorsExtension,
   ];
 }
 
@@ -665,5 +793,52 @@ export function getDevelopmentExtensions(): EnzymeExtension[] {
     formattingExtension,
     resultExtension,
     gitExtension,
+    errorsExtension,
   ];
+}
+
+/**
+ * Create a custom bundle of extensions by name
+ *
+ * @example
+ * const bundle = createExtensionBundle(['logging', 'validation', 'errors'])
+ * const client = new EnzymeClient()
+ * bundle.forEach(ext => client = client.$extends(ext))
+ */
+export function createExtensionBundle(
+  names: BuiltInExtensionName[]
+): EnzymeExtension[] {
+  const bundle: EnzymeExtension[] = [];
+  const seen = new Set<string>();
+
+  for (const name of names) {
+    const extension = BUILT_IN_EXTENSIONS_REGISTRY[name];
+
+    if (!extension) {
+      console.warn(`Unknown extension: "${name}". Available: ${Object.keys(BUILT_IN_EXTENSIONS_REGISTRY).join(', ')}`);
+      continue;
+    }
+
+    // Avoid duplicates
+    if (seen.has(extension.name)) {
+      continue;
+    }
+
+    bundle.push(extension);
+    seen.add(extension.name);
+  }
+
+  return bundle;
+}
+
+/**
+ * Get a single built-in extension by name
+ *
+ * @example
+ * const logging = getExtensionByName('logging')
+ */
+export function getExtensionByName(
+  name: BuiltInExtensionName
+): EnzymeExtension | undefined {
+  return BUILT_IN_EXTENSIONS_REGISTRY[name];
 }
