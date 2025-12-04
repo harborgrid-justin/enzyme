@@ -1082,6 +1082,475 @@ import { useDebouncedValue, useOnlineStatus } from '@missionfabric-js/enzyme/hoo
 
 ---
 
+## Advanced Exports Reference
+
+> **Note**: This section documents 500+ additional exports available for advanced use cases. The main documentation above covers the most commonly used APIs.
+
+### @missionfabric-js/enzyme/hooks (Additional Exports)
+
+| Export | Type | Description |
+|--------|------|-------------|
+| `useLatestRefs` | Hook | Maintains refs with latest values for multiple values in an object |
+| `useMounted` | Hook | **Deprecated.** Use `useMountedState` instead |
+| `useUnmountEffect` | Hook | Runs cleanup effect on unmount |
+| `useRefCleanup` | Hook | Ref-based cleanup that runs synchronously |
+| `getNetworkInfo` | Function | Get current network information from browser |
+| `meetsMinimumQuality` | Function | Check if connection meets minimum quality requirement |
+| `shouldAllowPrefetch` | Function | Check if prefetching should be allowed based on network |
+| `monitorNetworkQuality` | Function | Monitor network quality changes with cleanup |
+| `isSlowConnection` | Function | Check if connection is considered slow |
+| `getConnectionQualityLabel` | Function | Get human-readable quality label |
+| `useNetworkSuggestions` | Hook | Get suggested actions based on network quality |
+| `useSlowConnection` | Hook | Check if connection is slow |
+| `useOnReconnect` | Hook | Execute callback when coming back online |
+| `useWaitForOnline` | Hook | Wait for online status with timeout |
+| `useOfflineIndicator` | Hook | Show offline indicator UI state |
+| `useConnectionTracker` | Hook | Track connection changes over time |
+| `useSubscription` | Hook | Managing subscriptions with automatic cleanup |
+| `useWebSocketCleanup` | Hook | Managing WebSocket connections with cleanup |
+| `usePrefetchRoute` | Hook | Prefetch route data and components |
+| `usePrefetchOnHover` | Hook | Prefetch on link hover with event handlers |
+| `useGlobalStore` | Hook | Access specific state slice from global store |
+| `useGlobalStoreMultiple` | Hook | Access multiple state slices at once |
+| `useGlobalStoreComputed` | Hook | Computed values from store with memoization |
+| `useGlobalStoreActions` | Hook | Access store actions |
+| `useStoreHydrated` | Hook | Check if store is hydrated (SSR) |
+| `createSliceHook` | Function | Create a bound selector hook for a slice |
+| `createActionHook` | Function | Create a bound action hook |
+| `useGlobalStoreSubscription` | Hook | Subscribe to store changes with callback |
+| `globalSelectors` | Object | Common pre-built selectors |
+| `useIsSidebarOpen` | Hook | Get sidebar open state |
+| `useCurrentUser` | Hook | Get current user from store |
+| `useIsAuthenticated` | Hook | Check if user is authenticated |
+| `useUnreadNotificationCount` | Hook | Get unread notification count |
+| `useTrackRenderPerformance` | Hook | Track component render performance |
+| `useTrackInteractionTiming` | Hook | Track interaction timing |
+| `useTrackForm` | Hook | Track form analytics |
+| `useTrackClick` | Hook | Click tracking with coordinates |
+| `useAnalyticsConsent` | Hook | Manage analytics consent categories |
+| `useAnalyticsIdentify` | Hook | Identify user for analytics |
+| `useAnalyticsReset` | Hook | Reset analytics state |
+| `useTrackSearch` | Hook | Track search queries and results |
+| `useTrackScrollDepth` | Hook | Track scroll depth milestones |
+| `useTrackTimeOnPage` | Hook | Track time spent on page |
+| `useTrackedSection` | Hook | Create a tracked section with visibility |
+| `SmartPrefetchManager` | Class | Manages intelligent prefetching |
+| `createPrefetchConfig` | Function | Create type-safe prefetch configurations |
+| `useNetworkAwareOperation` | Hook | Network-aware operations that wait for connectivity |
+| `useOptimisticUpdate` | Hook | Optimistic updates with automatic rollback |
+| `useSafeCallback` | Hook | Wraps callback with error handling |
+| `useErrorToast` | Hook | Managing error toasts with auto-dismiss |
+| `useRecoveryState` | Hook | Managing component-level error recovery |
+| `useErrorContext` | Hook | Managing contextual error information |
+| `ScreenReaderAnnouncementRegion` | Component | Initializes live regions for announcements |
+| `formatKeyCombo` | Function | Format keyboard shortcut for display |
+| `KeyboardShortcutsHelp` | Component | Display keyboard shortcuts help panel |
+
+### @missionfabric-js/enzyme/state (Additional Exports)
+
+| Export | Type | Description |
+|--------|------|-------------|
+| `clearPersistedStore` | Function | Clears all persisted store data from localStorage |
+| `unregisterFeatureStore` | Function | Unregisters a feature store from registry |
+| `getFeatureStore` | Function | Retrieves a feature store by name |
+| `getFeatureStoreNames` | Function | Returns array of registered feature store names |
+| `resetAllFeatureStores` | Function | Resets all registered feature stores |
+| `useStoreState` | Hook | Selects state with custom equality function |
+| `useShallowState` | Hook | Selects state with shallow equality comparison |
+| `useStoreAction` | Hook | Selects an action from the store |
+| `useIsModalOpen` | Hook | Checks if a specific modal is open |
+| `useDisplaySettings` | Hook | Returns memoized display settings bundle |
+| `useAccessibilitySettings` | Hook | Returns memoized accessibility settings |
+| `useNotificationSettings` | Hook | Returns memoized notification settings |
+| `useStoreSubscription` | Hook | Subscribes to store changes with callback |
+| `useDebouncedState` | Hook | Returns debounced version of selected state |
+| `usePreviousState` | Hook | Returns previous value of a selector |
+| `useStateChange` | Hook | Tracks if a value has changed since mount |
+| `useHydration` | Hook | Waits for store hydration before rendering |
+| `createObjectSelector` | Function | Creates selector with stable object references |
+| `createArraySelector` | Function | Creates selector with stable array references |
+| `createBoundedParameterizedSelector` | Function | Creates parameterized selector with LRU cache |
+| `combineSelectors` | Function | Combines multiple selectors into one |
+| `pickSelector` | Function | Creates selector that picks specific keys |
+| `omitSelector` | Function | Creates selector that omits specific keys |
+| `selectorUtils` | Object | Collection of selector utility functions |
+| `createFeatureStoreHooks` | Function | Creates typed hooks for a feature store |
+| `subscribeToFeatureStore` | Function | Subscribes to feature store outside React |
+| `featureStoreRegistry` | Object | Global singleton registry for feature stores |
+| `createAppStore` | Function | Creates production-grade Zustand store |
+| `createSimpleStore` | Function | Creates store with Immer and DevTools |
+| `createMinimalStore` | Function | Creates minimal store with Immer only |
+| `createStoreReset` | Function | Creates reset function for a store |
+| `createSlice` | Function | Creates type-safe slice with action naming |
+| `createAction` | Function | Creates simple action creator |
+| `combineSlices` | Function | Combines multiple slices into single state |
+| `createBroadcastSync` | Function | Creates multi-tab state synchronization |
+
+### @missionfabric-js/enzyme/api (Additional Exports)
+
+| Export | Type | Description |
+|--------|------|-------------|
+| `ApiClient` | Class | Enterprise-grade HTTP client with retry, interceptors |
+| `createApiError` | Function | Creates normalized API error |
+| `isRetryable` | Function | Checks if HTTP status is retryable |
+| `getErrorCategory` | Function | Maps status codes to error categories |
+| `getErrorSeverity` | Function | Maps error categories to severity levels |
+| `createRequest` | Function | Factory for RequestBuilder instances |
+| `serializeQueryParams` | Function | Serializes query parameters to URL string |
+| `parseQueryParams` | Function | Parses URL query string into object |
+| `buildUrl` | Function | Builds complete URL with params |
+| `joinUrl` | Function | Safely joins URL segments |
+| `createResponseParser` | Function | Creates reusable response parser |
+| `isApiError` | Function | Type guard for ApiError |
+| `extractCacheHints` | Function | Extracts cache directives from headers |
+| `streamResponse` | Function | Handles streaming response bodies |
+| `extractPagination` | Function | Extracts pagination metadata |
+| `createPaginatedResponse` | Function | Wraps data with pagination metadata |
+| `mergePaginatedResponses` | Function | Merges multiple paginated pages |
+| `createTransformPipeline` | Function | Creates chainable transformation pipeline |
+| `transformers` | Object | Common response transformers |
+| `MockServer` | Class | Mock API server for testing |
+| `createMockServer` | Function | Factory for MockServer |
+| `mockHandlers` | Object | Collection of mock response handlers |
+| `mockData` | Object | Mock data generators |
+| `createCrudHandlers` | Function | Generates complete CRUD handlers |
+| `useGet` | Hook | Simplified GET requests |
+| `useGetById` | Hook | Fetching single resource by ID |
+| `useGetList` | Hook | Fetching paginated lists |
+| `usePost` | Hook | POST mutations |
+| `usePut` | Hook | PUT mutations |
+| `usePatch` | Hook | PATCH mutations |
+| `useDelete` | Hook | DELETE mutations |
+| `useApiClient` | Hook | Access API client instance |
+| `useApiClientInstance` | Hook | Raw ApiClient instance |
+| `useApiClientStatus` | Hook | Client configuration status |
+| `useApiInterceptors` | Hook | Register request/response interceptors |
+| `useParallelRequests` | Hook | Multiple GET requests in parallel |
+| `useDependentRequest` | Hook | Sequential dependent requests |
+| `usePolling` | Hook | Polling endpoint at intervals |
+| `usePrefetch` | Hook | Prefetch data into cache |
+| `useLazyQuery` | Hook | Manual/lazy queries |
+| `useBatchMutation` | Hook | Batch multiple mutations |
+| `useCacheMonitor` | Hook | Monitor cache statistics |
+| `useCacheEntry` | Hook | Watch specific cache entry |
+| `useBulkCacheOperations` | Hook | Bulk cache operations |
+| `useApiConnectivity` | Hook | Simple connectivity check |
+| `useNetworkAware` | Hook | Network-aware operations |
+| `useMultiApiHealth` | Hook | Monitor multiple API endpoints |
+| `ApiClientProvider` | Component | React provider for API client |
+
+### @missionfabric-js/enzyme/auth (Additional Exports)
+
+| Export | Type | Description |
+|--------|------|-------------|
+| `AuthGuardLoading` | Component | Shared loading component for auth guards |
+| `withRequireRole` | HOC | Wraps component with role-based access |
+| `withRequirePermission` | HOC | Wraps component with permission-based access |
+| `getRouteAuthConfig` | Function | Gets auth configuration for route path |
+| `ADProvider` | Component | Active Directory authentication provider |
+| `useActiveDirectory` | Hook | AD authentication state and operations |
+| `ADClient` | Class | Client for Azure AD and Graph API |
+| `createADClient` | Function | Factory for ADClient |
+| `ADTokenHandler` | Class | Manages AD token acquisition and refresh |
+| `SSOManager` | Class | Manages SSO sessions across tabs |
+| `CrossDomainSSO` | Class | SSO across different subdomains |
+| `ADGroupMapper` | Class | Maps AD groups to app roles |
+| `ADAttributeMapper` | Class | Maps AD user attributes |
+| `RBACProvider` | Component | Role-Based Access Control provider |
+| `useRBAC` | Hook | Comprehensive RBAC hook |
+| `usePermissions` | Hook | Permission checking |
+| `useRoles` | Hook | Role checking |
+| `useResourceAccess` | Hook | Resource-specific access control |
+| `usePermissionGate` | Hook | Conditional rendering by permission |
+| `useRoleGate` | Hook | Conditional rendering by role |
+| `RBACEngine` | Class | Core RBAC evaluation engine |
+| `PermissionMatrixBuilder` | Class | Builder for permission matrices |
+| `RoleHierarchyManager` | Class | Manages hierarchical role structures |
+| `ResourcePermissionManager` | Class | Resource-level permissions and ACLs |
+| `PolicyEvaluator` | Class | ABAC-style policy evaluation |
+
+### @missionfabric-js/enzyme/security (Additional Exports)
+
+| Export | Type | Description |
+|--------|------|-------------|
+| `useSecureStorageWithTTL` | Hook | Secure storage with TTL enforcement |
+| `useNonceScript` | Hook | CSP nonce for inline scripts |
+| `useNonceStyle` | Hook | CSP nonce for inline styles |
+| `useSecureFormSubmit` | Hook | Secure form submission with CSRF |
+| `useSafeText` | Hook | Safe text rendering (strips HTML) |
+| `useContextEncoder` | Hook | Context-aware encoding function |
+| `useSafeHTMLWithReport` | Hook | Safe HTML with threat reporting |
+| `useSecurityState` | Hook | Security state only (no actions) |
+| `useSecurityActions` | Hook | Security actions only |
+| `useSecurityConfig` | Hook | Current security configuration |
+| `useViolationReporter` | Hook | Report security violations |
+| `useViolations` | Hook | Monitor security violations |
+| `useSecurityStatus` | Hook | Security initialization status |
+| `useSecurityReady` | Hook | Returns null until security ready |
+| `useSecureHandler` | Hook | Secure event handlers |
+| `encodeHTMLAttribute` | Function | Encode for HTML attribute |
+| `encodeJavaScript` | Function | Encode for JavaScript context |
+| `encodeCSS` | Function | Encode for CSS context |
+| `encodeURL` | Function | Encode for URL |
+| `encodeForContext` | Function | Context-aware encoding |
+| `stripTags` | Function | Strip all HTML tags |
+| `detectDangerousContent` | Function | Detect XSS patterns |
+| `CSRFProtection` | Class | CSRF protection singleton |
+| `CSPManager` | Class | CSP management singleton |
+| `SecureStorage` | Class | Encrypted storage with AES-GCM |
+| `createSecureLocalStorage` | Function | Factory for secure localStorage |
+| `createSecureSessionStorage` | Function | Factory for secure sessionStorage |
+
+### @missionfabric-js/enzyme/routing (Additional Exports)
+
+| Export | Type | Description |
+|--------|------|-------------|
+| `useQueryParam` | Hook | Single query parameter management |
+| `useRouteRegistry` | Hook | Access route registry singleton |
+| `useTypedNavigate` | Hook | Type-safe navigation with prefetch |
+| `usePrefetchHandlers` | Hook | Prefetch on hover/focus handlers |
+| `useRouteMetadata` | Hook | Get route metadata by path |
+| `useNavigationAnalytics` | Hook | Navigation analytics and history |
+| `createSimpleRouter` | Function | Simple router from RouteObjects |
+| `DefaultLoading` | Component | Default loading spinner |
+| `DefaultError` | Component | Default error fallback |
+| `DefaultNotFound` | Component | Default 404 component |
+| `routeRegistry` | Singleton | Global route registry instance |
+| `AutoScanner` | Class | Scans route files with glob |
+| `RouteTransformer` | Class | Transforms routes to framework format |
+| `DiscoveryEngine` | Class | Orchestrates route discovery |
+| `WatchMode` | Class | Watches route file changes |
+| `ParallelRoutes` | Class | Manages parallel route slots |
+| `InterceptingRouteManager` | Class | Manages intercepting routes |
+| `RouteGroupManager` | Class | Manages route groups |
+| `CatchAllRouteManager` | Class | Manages catch-all routes |
+| `RoleGuard` | Class | Role-based route guards |
+| `PermissionGuard` | Class | Permission-based guards |
+| `FeatureGuard` | Class | Feature flag guards |
+| `CompositeGuard` | Class | Combines multiple guards |
+| `GuardResolver` | Class | Resolves guards during navigation |
+| `detectConflicts` | Function | Detect all route conflicts |
+| `validateRoute` | Function | Validate route against rules |
+| `generateValidationReport` | Function | Human-readable validation report |
+
+### @missionfabric-js/enzyme/flags (Additional Exports)
+
+| Export | Type | Description |
+|--------|------|-------------|
+| `useFeatureFlagsStatus` | Hook | Multiple flags status at once |
+| `withoutFeatureFlag` | HOC | Inverse of withFeatureFlag |
+| `isDebugModeEnabled` | Function | Check debug mode (non-React) |
+| `isFlagEnabled` | Function | Check any flag (non-React) |
+| `FlagEngine` | Class | Enterprise flag evaluation engine |
+| `TargetingRulesEngine` | Class | Evaluates targeting rules |
+| `PercentageRolloutEngine` | Class | Percentage-based rollouts |
+| `SegmentMatcher` | Class | Matches users against segments |
+| `VariantManager` | Class | Manages flag variants for A/B |
+| `DependencyResolver` | Class | Resolves flag dependencies |
+| `LifecycleManager` | Class | Manages flag lifecycle states |
+| `LocalProvider` | Class | Static flag provider |
+| `RemoteProvider` | Class | Fetches flags from API |
+| `CachedProvider` | Class | Provider with caching layer |
+| `PollingProvider` | Class | Periodic polling for updates |
+| `WebSocketProvider` | Class | Real-time flag updates |
+| `createProviderChain` | Function | Robust multi-source provider |
+| `FlagAnalytics` | Class | Collects flag evaluation metrics |
+| `ExposureTracker` | Class | Tracks user exposure to variants |
+| `FlagImpactAnalyzer` | Class | Analyzes flag impact on metrics |
+| `FlagConfigurable` | Component | Universal flag-driven rendering |
+| `useFeatureFlaggedModule` | Hook | Dynamic module loading by flag |
+| `apiFlags` | Object | API-related flag helpers |
+| `routingFlags` | Object | Routing flag helpers |
+| `uiFlags` | Object | UI flag helpers |
+| `performanceFlags` | Object | Performance flag helpers |
+
+### @missionfabric-js/enzyme/config (Additional Exports)
+
+| Export | Type | Description |
+|--------|------|-------------|
+| `useHasConfig` | Hook | Check if config path exists |
+| `useConfigLoading` | Hook | Get config loading state |
+| `useConfigError` | Hook | Get config error |
+| `useSetConfig` | Hook | Setter function for config path |
+| `useResetConfig` | Hook | Reset config to defaults |
+| `useReloadConfig` | Hook | Reload config from source |
+| `useConfigState` | Hook | Value and setter like useState |
+| `useConfigChange` | Hook | Subscribe to config changes |
+| `useWatchConfig` | Hook | Auto re-render on config change |
+| `useFeatureConfig` | Hook | Check feature via config |
+| `useIsDevelopment` | Hook | Check if development env |
+| `useIsProduction` | Hook | Check if production env |
+| `useConfigSelector` | Hook | Select multiple config values |
+| `useConfigDerived` | Hook | Derived value from config |
+| `createTypedConfigHook` | Function | Type-safe config hook factory |
+| `ConfigValidator` | Class | Schema-based config validation |
+| `ConfigMerger` | Class | Merge config objects |
+| `ConfigLoader` | Class | Load config from sources |
+| `RuntimeConfig` | Class | Runtime config with hot reload |
+
+### @missionfabric-js/enzyme/performance (Additional Exports)
+
+| Export | Type | Description |
+|--------|------|-------------|
+| `useBudgetStatus` | Hook | Budget status for specific metric |
+| `useDegradedMode` | Hook | Check if in degraded mode |
+| `useBudgetConditional` | Hook | Conditional value based on budget |
+| `useRenderPhaseMetrics` | Hook | Measure render phase duration |
+| `useRenderProfiler` | Hook | React Profiler integration |
+| `useWastedRenderDetector` | Hook | Detect unnecessary re-renders |
+| `useDeferredRender` | Hook | Defer value during long tasks |
+| `useBlockingTimeTracker` | Hook | Track total blocking time |
+| `useYieldToMain` | Hook | Yield control to main thread |
+| `useMemoryCleanup` | Hook | Cleanup when memory pressure |
+| `useMemoryAwareCache` | Hook | LRU cache with memory awareness |
+| `useComponentMemoryImpact` | Hook | Monitor component memory |
+| `useAdaptiveImageQuality` | Hook | Image quality by network |
+| `useNetworkConditional` | Hook | Conditional value by network |
+| `useNetworkAwareLazyLoad` | Hook | Network-aware lazy loading |
+| `usePreconnect` | Hook | Manage preconnect links |
+| `usePerformanceAwareness` | Hook | Unified performance awareness |
+| `useAdaptiveRender` | Hook | Select render by performance |
+| `useOptimizedRender` | Hook | Priority-scheduled rendering |
+| `useLazyFeature` | Hook | Progressive feature enhancement |
+| `useProgressiveLoad` | Hook | Network-aware progressive loading |
+| `VitalsCollector` | Class | Core Web Vitals collection |
+| `BudgetManager` | Class | Performance budget management |
+| `RealUserMonitoring` | Class | Comprehensive RUM system |
+
+### @missionfabric-js/enzyme/realtime (Additional Exports)
+
+| Export | Type | Description |
+|--------|------|-------------|
+| `WebSocketClient` | Class | WebSocket connection manager |
+| `SSEClient` | Class | Server-Sent Events client |
+| `createSSEClient` | Function | Factory for SSEClient |
+| `useRealtimeContext` | Hook | Access realtime context |
+| `useMultiRealtimeStream` | Hook | Subscribe to multiple channels |
+| `useBufferedRealtimeStream` | Hook | Buffered/debounced updates |
+| `useRealtimePresence` | Hook | Track presence (who's online) |
+| `StreamQueryCacheUpdater` | Class | Maps events to React Query cache |
+| `createStreamCacheUpdater` | Function | Factory for cache updater |
+| `createCacheStrategy` | Function | Create cache update strategy |
+| `RealtimeCircuitBreaker` | Class | Circuit breaker for connections |
+| `createWebSocketCircuitBreaker` | Function | WebSocket circuit breaker |
+| `createSSECircuitBreaker` | Function | SSE circuit breaker |
+| `ConnectionTimeoutError` | Class | Connection timeout error |
+
+### @missionfabric-js/enzyme/streaming (Additional Exports)
+
+| Export | Type | Description |
+|--------|------|-------------|
+| `useStream` | Hook | **PRIMARY HOOK** - Core stream control |
+| `useMultipleStreams` | Hook | Monitor multiple boundaries |
+| `useAwaitStream` | Hook | Promise-based stream coordination |
+| `useExtendedStreamStatus` | Hook | Extended status with formatting |
+| `useStreamPriority` | Hook | Dynamic priority control |
+| `useCriticalPriority` | Hook | Pre-configured critical priority |
+| `useDeferredPriority` | Hook | Pre-configured deferred priority |
+| `useDeferredStream` | Hook | Defer until conditions met |
+| `useDeferUntilVisible` | Hook | Visibility-based deferral |
+| `useDeferUntilIdle` | Hook | Idle-based deferral |
+| `useStreamContext` | Hook | Access streaming context |
+| `useStreamMetrics` | Hook | Access streaming metrics |
+| `useStreamEvents` | Hook | Subscribe to stream events |
+| `CriticalStreamBoundary` | Component | Pre-configured for critical content |
+| `DeferredStreamBoundary` | Component | Pre-configured for deferred content |
+| `StreamErrorBoundary` | Component | Error boundary for streams |
+| `StreamingEngine` | Class | Core streaming engine |
+| `createStreamingEngine` | Function | Factory for StreamingEngine |
+| `createStreamingMiddleware` | Function | Server middleware for streaming |
+| `createHydrationScript` | Function | Generate hydration script |
+
+### @missionfabric-js/enzyme/hydration (Additional Exports)
+
+| Export | Type | Description |
+|--------|------|-------------|
+| `useHydrationStatus` | Hook | Real-time hydration status |
+| `useWaitForHydration` | Hook | Promise-based hydration wait |
+| `useHasHydrationContext` | Hook | Check if within provider |
+| `useHydrationPriority` | Hook | Dynamic priority control |
+| `useAdaptiveHydrationPriority` | Hook | Auto-adjust by engagement |
+| `useDeferredHydration` | Hook | Explicit hydration control |
+| `useIdleHydration` | Hook | Hydrate during browser idle |
+| `useHydrationMetrics` | Hook | Access aggregated metrics |
+| `useHydrationProgress` | Hook | Progress as percentage |
+| `useIsHydrationComplete` | Hook | All boundaries hydrated |
+| `useTimeToFullHydration` | Hook | Time to full hydration |
+| `HydrationScheduler` | Class | Auto-prioritized hydration |
+| `HydrationPriorityQueue` | Class | Binary min-heap queue |
+| `InteractionReplayManager` | Class | Capture/replay interactions |
+| `initHydrationSystem` | Function | Initialize without provider |
+| `LazyHydration` | Component | React.lazy + HydrationBoundary |
+
+### @missionfabric-js/enzyme/layouts (Additional Exports)
+
+| Export | Type | Description |
+|--------|------|-------------|
+| `useDOMContext` | Hook | Full DOM context access |
+| `useDOMContextWithElement` | Hook | DOM context for specific element |
+| `useContextSelector` | Hook | Optimized selector-based access |
+| `useFlexAncestor` | Hook | Nearest flex container ancestor |
+| `useGridAncestor` | Hook | Nearest grid container ancestor |
+| `useScrollContainerAncestor` | Hook | Nearest scroll container |
+| `useIsInFlex` | Hook | Boolean if in flex context |
+| `useIsInGrid` | Hook | Boolean if in grid context |
+| `useAvailableWidth` | Hook | Available width in pixels |
+| `useAvailableHeight` | Hook | Available height in pixels |
+| `useVisibility` | Hook | Element visibility state |
+| `useIntersectionRatio` | Hook | Intersection ratio (0-1) |
+| `useDistanceFromViewport` | Hook | Distance from viewport edges |
+| `useViewportDimensions` | Hook | Viewport width and height |
+| `useScrollDirection` | Hook | Current scroll direction |
+| `useScrollProgress` | Hook | Scroll progress (0-1) |
+| `useIsScrolling` | Hook | If currently scrolling |
+| `useScrollEdges` | Hook | At edges detection |
+| `useScrollToTop` | Hook | Scroll to top function |
+| `useScrollIntoView` | Hook | Scroll element into view |
+| `useIsInPortal` | Hook | If inside a portal |
+| `usePortalNestingDepth` | Hook | Portal nesting depth |
+| `useZIndexForLayer` | Hook | Z-index for layer name |
+| `useZIndexRegistration` | Hook | Register with z-index manager |
+
+### @missionfabric-js/enzyme/theme (Additional Exports)
+
+| Export | Type | Description |
+|--------|------|-------------|
+| `colorTokens` | Constant | Semantic color tokens with CSS variables |
+| `lightPalette` | Constant | Complete light theme color palette |
+| `darkPalette` | Constant | Complete dark theme color palette |
+
+### @missionfabric-js/enzyme/monitoring (Additional Exports)
+
+| Export | Type | Description |
+|--------|------|-------------|
+| `categorizeError` | Function | Determines error category |
+| `getSeverity` | Function | Maps category to severity |
+| `normalizeError` | Function | Creates normalized AppError |
+| `isRetryableError` | Function | Checks if error allows retry |
+| `getUserFriendlyMessage` | Function | User-friendly error message |
+| `ErrorReporter` | Object | Singleton error reporter |
+| `initErrorReporter` | Function | Initialize error reporting |
+| `setUserContext` | Function | Set user context for reports |
+| `setErrorContext` | Function | Set additional error context |
+| `reportError` | Function | Report error with context |
+| `addBreadcrumb` | Function | Add breadcrumb for tracking |
+| `QueryErrorBoundary` | Component | Boundary for data-fetch errors |
+| `HierarchicalErrorBoundary` | Component | Multi-level error boundary |
+| `ComponentErrorBoundary` | Component | Component-level boundary |
+| `WidgetErrorBoundary` | Component | Widget-level boundary |
+| `useErrorBoundaryOptional` | Hook | Optional boundary context |
+| `useErrorTrigger` | Hook | Programmatically trigger error |
+| `getStructuredErrorMessage` | Function | Structured error message |
+| `getRecoveryActions` | Function | Recovery action buttons |
+| `crashAnalytics` | Object | Global crash analytics |
+| `ProviderErrorBoundary` | Component | Boundary for providers |
+| `AuthProviderBoundary` | Component | Auth provider boundary |
+| `ConfigProviderBoundary` | Component | Config provider boundary |
+| `RealtimeProviderBoundary` | Component | Realtime provider boundary |
+| `SecurityProviderBoundary` | Component | Security provider boundary |
+
+---
+
 ## Version Information
 
 - **Package**: `@missionfabric-js/enzyme`
