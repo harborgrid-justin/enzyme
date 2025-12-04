@@ -769,10 +769,10 @@ const env = useEnvironment()  // 'development' | 'production' | etc.
 ### Dynamic Configuration
 
 ```typescript
-import { useDynamicConfig, useConfigValidation } from '@missionfabric-js/enzyme/config/hooks'
+import { useDynamicConfig, useConfigValidation } from '@missionfabric-js/enzyme/config'
 
-const { state, refresh, error } = useDynamicConfig()
-const { isValid, errors } = useConfigValidation()
+const { config, isLoading, error, refresh } = useDynamicConfig()
+const { isValid, errors, warnings } = useConfigValidation()
 ```
 
 ---
@@ -807,9 +807,9 @@ import {
 } from '@missionfabric-js/enzyme/performance'
 
 const { isWithinBudget, degradationState } = usePerformanceBudget()
-const { renderCount, timing } = useRenderMetrics('MyComponent')
-const longTasks = useLongTaskDetector({ threshold: 50 })
-const { level, stats } = useMemoryPressure()
+const { renderCount, lastRenderTime, averageRenderTime } = useRenderMetrics('MyComponent')
+const { longTasks, isBlocked } = useLongTaskDetector({ threshold: 50 })
+const { pressure, snapshot, usagePercent } = useMemoryPressure()
 ```
 
 ### Error Boundaries
@@ -925,7 +925,7 @@ const isHydrated = useIsHydrated()
 | `useApiCache` | Hook | Cache management |
 | `useApiHealth` | Hook | Endpoint health monitoring |
 | `RequestBuilder` | Class | Fluent request builder |
-| `get`, `post`, `put`, `patch`, `deleteRequest` | Functions | Request factories |
+| `get`, `post`, `put`, `patch`, `del` | Functions | Request factories |
 | `parseResponse` | Function | Response parsing |
 | `normalizeError` | Function | Error normalization |
 | `mockServer` | Instance | Mock server for testing |
