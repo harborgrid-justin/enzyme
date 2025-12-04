@@ -925,7 +925,7 @@ const isHydrated = useIsHydrated()
 | `useApiCache` | Hook | Cache management |
 | `useApiHealth` | Hook | Endpoint health monitoring |
 | `RequestBuilder` | Class | Fluent request builder |
-| `get`, `post`, `put`, `patch`, `del` | Functions | Request factories |
+| `get`, `post`, `put`, `patch`, `deleteRequest` | Functions | Request factories |
 | `parseResponse` | Function | Response parsing |
 | `normalizeError` | Function | Error normalization |
 | `mockServer` | Instance | Mock server for testing |
