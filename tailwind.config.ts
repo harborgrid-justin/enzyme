@@ -1,16 +1,9 @@
 import type { Config } from 'tailwindcss';
 
 /**
- * Tailwind CSS Configuration
- *
- * Enterprise-grade configuration integrating design tokens from src/config/design-tokens.ts
- *
- * Features:
- * - Custom color palette with primary brand colors
- * - Extended spacing, typography, and border radius scales
- * - Dark mode support via class strategy
- * - Custom animations and transitions
- * - Accessibility-focused focus rings
+ * Claude.ai Optimization: Enterprise Tailwind config with custom design tokens
+ * Supports dark mode, custom animations, and accessibility features
+ * Scans src/ directory for class usage, integrates with design system
  */
 const config: Config = {
   // Content paths for Tailwind to scan

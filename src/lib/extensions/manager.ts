@@ -21,7 +21,6 @@ import type {
   ErrorContext,
   BeforeOperationContext,
   AfterOperationContext,
-  ExtensionPriorities,
   IExtensionEventEmitter,
   ExtensionEvent,
   ExtensionEventHandler,

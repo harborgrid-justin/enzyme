@@ -267,9 +267,9 @@ export function createMockService<T extends Record<string, (...args: unknown[]) 
   for (const [key, impl] of Object.entries(implementations)) {
     const typedKey = key as keyof T;
     if (typeof impl === 'function' && 'mockImplementation' in impl) {
-      service[typedKey] = impl as Mock as T[keyof T];
+      service[typedKey] = impl as unknown as Mock;
     } else {
-      service[typedKey] = vi.fn().mockImplementation(impl as MockFn) as Mock as T[keyof T];
+      service[typedKey] = vi.fn().mockImplementation(impl as MockFn) as unknown as Mock;
     }
   }
 

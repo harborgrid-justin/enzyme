@@ -37,7 +37,7 @@
  */
 
 import { z, type ZodSchema, type ZodError, type ZodType } from 'zod';
-import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 
 // ============================================================================
 // Types
@@ -229,7 +229,7 @@ class CustomValidatorRegistry {
     }
 
     try {
-      return await validator(value, context);
+      return await validator(value, context) as ValidationResult<T>;
     } catch (error) {
       return {
         success: false,
@@ -348,11 +348,11 @@ const validationCache = new ValidationCache();
  * Format Zod errors for UI display
  */
 export function formatZodErrors(error: ZodError): FormattedValidationError[] {
-  return error.errors.map((err) => ({
+  return error.issues.map((err) => ({
     path: err.path.join('.'),
     message: err.message,
     code: err.code,
-    params: err,
+    params: err as unknown as Record<string, unknown>,
   }));
 }
 
@@ -523,7 +523,7 @@ export async function validateApiResponse<T>(
     ? schema.strict()
     : schema;
 
-  return validate(validationSchema, response);
+  return validate(validationSchema as ZodSchema<T>, response);
 }
 
 /**
@@ -590,7 +590,7 @@ export function useFormValidation<T extends Record<string, unknown>>(
     setIsValidating(true);
 
     try {
-      const result = await schema.parseAsync(data);
+      await schema.parseAsync(data);
       setErrors({});
       setIsValidating(false);
       return true;
@@ -766,7 +766,7 @@ export function useFormValidation<T extends Record<string, unknown>>(
  * Single field validation hook
  */
 export function useFieldValidation<T>(
-  name: string,
+  _name: string,
   schema: ZodType<T>,
   options?: {
     defaultValue?: T;
@@ -781,8 +781,8 @@ export function useFieldValidation<T>(
   const [touched, setTouched] = useState(false);
   const [validating, setValidating] = useState(false);
 
-  const debounceTimer = useRef<NodeJS.Timeout>();
-  const abortController = useRef<AbortController>();
+  const debounceTimer = useRef<NodeJS.Timeout>(undefined);
+  const abortController = useRef<AbortController>(undefined);
 
   const validateValue = useCallback(async (val: T | undefined) => {
     // Cancel previous validation
@@ -905,7 +905,7 @@ export function createAsyncValidator<T>(
           } else {
             resolve({
               success: false,
-              errors: [{ path: '', message: result, code: 'async_validation_failed' }],
+              errors: [{ path: '', message: typeof result === 'string' ? result : 'Validation failed', code: 'async_validation_failed' }],
             });
           }
         } catch (error) {
@@ -1077,39 +1077,6 @@ export const validationExtension = {
      */
     $commonSchemas: commonSchemas,
   },
-};
-
-// ============================================================================
-// Exports
-// ============================================================================
-
-export {
-  // Core functions
-  validate,
-  validateWithSchema,
-  validateApiResponse,
-  validateStateChange,
-
-  // Error formatting
-  formatZodErrors,
-  formatErrorsForForm,
-  getFieldError,
-  groupErrorsByField,
-
-  // React hooks
-  useFormValidation,
-  useFieldValidation,
-
-  // Async validators
-  createAsyncValidator,
-  createUniquenessValidator,
-
-  // Registries
-  schemaRegistry,
-  customValidatorRegistry,
-
-  // Cache
-  validationCache,
 };
 
 // Default export

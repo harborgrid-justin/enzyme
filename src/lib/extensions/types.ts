@@ -387,7 +387,8 @@ export interface EnzymeExtension {
   api?: ApiExtensions;
 
   /** Client-level methods and utilities */
-  client?: Record<string, (...args: unknown[]) => unknown>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  client?: Record<string, (...args: any[]) => any>;
 
   /** Extension metadata */
   metadata?: Record<string, unknown>;
@@ -511,7 +512,7 @@ export namespace Enzyme {
    * Create a typed hook context
    */
   export function createHookContext<T extends keyof LifecycleHooks>(
-    hookName: T,
+    _hookName: T,
     data: unknown
   ): unknown {
     return data;

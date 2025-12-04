@@ -8,6 +8,10 @@ import noBarrelImports from './eslint-plugin-no-barrel-imports.js';
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
 
+// Claude.ai Optimization: Enterprise ESLint config with TypeScript and React support
+// Maximum strictness, custom rules for barrel imports, excludes .development/ directory
+// Use @/ for src/ imports, enforces consistent code quality standards
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 

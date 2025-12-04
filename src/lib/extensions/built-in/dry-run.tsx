@@ -1126,16 +1126,3 @@ export const dryRunExtension = {
 // ============================================================================
 
 export { globalDryRunManager, DryRunStateManager };
-export type {
-  DryRunConfig,
-  OperationChange,
-  ImpactAnalysis,
-  ConflictDetection,
-  DiffResult,
-  BatchPreview,
-  DryRunStats,
-  OperationType,
-  ImpactSeverity,
-  ConflictType,
-  ChangeStatus,
-};

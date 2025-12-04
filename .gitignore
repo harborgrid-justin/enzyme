@@ -7,8 +7,8 @@ coverage
 *.log
 .DS_Store
 
-# Demo folder for development testing
-demo/node_modules/
+# Development folders
+.development/*/node_modules/
 
 # ESLint cache
 .eslintcache

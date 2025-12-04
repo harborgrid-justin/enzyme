@@ -431,8 +431,10 @@ export class ExposureTracker {
     for (const [userId, userMap] of this.userExposures.entries()) {
       for (const exposure of userMap.values()) {
         if (exposure.experimentId === experimentId && exposure.cohort != null && exposure.cohort !== '') {
-          cohorts[exposure.cohort] ??= [];
-          cohorts[exposure.cohort].push(userId);
+          if (!cohorts[exposure.cohort]) {
+            cohorts[exposure.cohort] = [];
+          }
+          cohorts[exposure.cohort]!.push(userId);
         }
       }
     }

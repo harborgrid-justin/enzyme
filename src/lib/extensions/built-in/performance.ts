@@ -47,24 +47,19 @@
  * ```
  */
 
-import type { EnzymeExtension } from '../../../cli/src/extensions/types';
+import type { EnzymeExtension } from '../types';
 
 // Import from existing performance modules
 import {
   getVitalsCollector,
   type VitalsCollector,
   type VitalsSnapshot,
-  type VitalMetricName,
-  type VitalMetricEntry,
-  type PerformanceBudget,
 } from '../../performance/vitals';
 
 import {
   getPerformanceMonitor,
   type PerformanceMonitor,
   type PerformanceMetrics,
-  type LongTaskEntry,
-  type MemorySnapshot,
 } from '../../performance/performance-monitor';
 
 import {
@@ -73,14 +68,11 @@ import {
   type BudgetThreshold,
   type BudgetViolationRecord,
   type BudgetStatusSummary,
-  formatBudgetValue,
 } from '../../performance/performance-budgets';
 
 import {
   getEnhancedVitalsCollector,
   type EnhancedVitalsCollector,
-  type CollectedMetric,
-  type MetricName,
 } from '../../performance/monitoring/vitals-collector';
 
 // ============================================================================
@@ -884,21 +876,6 @@ export const performanceExtension: EnzymeExtension = {
       PerformanceExtensionState.resetInstance();
     },
   },
-};
-
-// ============================================================================
-// Exports
-// ============================================================================
-
-export type {
-  PerformanceExtensionConfig,
-  RenderTiming,
-  OperationTiming,
-  TimelineMarker,
-  AggregatedMetrics,
-  NetworkQuality,
-  BundleInfo,
-  PerformanceReport,
 };
 
 export default performanceExtension;

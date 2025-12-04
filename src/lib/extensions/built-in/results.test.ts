@@ -2,6 +2,7 @@
  * @file Results Extension Tests
  * @description Comprehensive test suite for the results extension
  */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { QueryClient } from '@tanstack/react-query';

@@ -199,7 +199,7 @@ class MemoizationCache<T = unknown> {
 /**
  * Result enhancement engine with computed fields and transformations
  */
-export class ResultEnhancer<T extends Record<string, unknown> = Record<string, unknown>> {
+export class ResultEnhancer<T extends object = Record<string, unknown>> {
   private computedFields = new Map<string, ComputedFieldDef<T, (keyof T)[], unknown>>();
   private transformers: ResultTransformer<T, unknown>[] = [];
   private cache = new MemoizationCache();
@@ -251,17 +251,17 @@ export class ResultEnhancer<T extends Record<string, unknown> = Record<string, u
 
         const cached = this.cache.get(cacheKey);
         if (cached !== undefined) {
-          enhanced[fieldName] = cached;
+          (enhanced as any)[fieldName] = cached;
           continue;
         }
 
         // Compute and cache
         const computed = definition.compute(deps);
         this.cache.set(cacheKey, computed);
-        enhanced[fieldName] = computed;
+        (enhanced as Record<string, unknown>)[fieldName] = computed;
       } else {
         // Compute without caching
-        enhanced[fieldName] = definition.compute(deps);
+        (enhanced as Record<string, unknown>)[fieldName] = definition.compute(deps);
       }
     }
 
@@ -317,14 +317,14 @@ export function transform<T, R = T>(
 /**
  * Create a transformer that maps fields
  */
-export function mapFields<T extends Record<string, unknown>>(
+export function mapFields<T extends object = Record<string, unknown>>(
   mapper: Partial<Record<keyof T, (value: unknown) => unknown>>
 ): ResultTransformer<T> {
   return (result: T): T => {
     const mapped = { ...result };
     for (const [field, fn] of Object.entries(mapper)) {
       if (field in mapped && fn) {
-        mapped[field as keyof T] = fn(mapped[field]);
+        (mapped as Record<string, unknown>)[field] = fn((mapped as Record<string, unknown>)[field]);
       }
     }
     return mapped;
@@ -334,13 +334,13 @@ export function mapFields<T extends Record<string, unknown>>(
 /**
  * Create a transformer that filters fields
  */
-export function pickFields<T extends Record<string, unknown>>(
+export function pickFields<T extends object = Record<string, unknown>>(
   fields: (keyof T)[]
 ): ResultTransformer<T, Partial<T>> {
   return (result: T): Partial<T> => {
     const picked: Partial<T> = {};
     for (const field of fields) {
-      if (field in result) {
+      if (field in (result as object)) {
         picked[field] = result[field];
       }
     }
@@ -351,7 +351,7 @@ export function pickFields<T extends Record<string, unknown>>(
 /**
  * Create a transformer that omits fields
  */
-export function omitFields<T extends Record<string, unknown>>(
+export function omitFields<T extends object = Record<string, unknown>>(
   fields: (keyof T)[]
 ): ResultTransformer<T> {
   return (result: T): T => {
@@ -481,11 +481,11 @@ export function denormalize<T>(
 /**
  * Mask sensitive fields in results
  */
-export function mask<T extends Record<string, unknown>>(
+export function mask<T extends object = Record<string, unknown>>(
   result: T,
   config: FieldMaskConfig
 ): T {
-  const masked = { ...result };
+  const masked = { ...result } as Record<string, unknown>;
 
   // Remove fields
   if (config.remove) {
@@ -498,7 +498,7 @@ export function mask<T extends Record<string, unknown>>(
   if (config.redact) {
     for (const field of config.redact) {
       if (field in masked) {
-        masked[field] = '[REDACTED]' as T[Extract<keyof T, string>];
+        masked[field] = '[REDACTED]';
       }
     }
   }
@@ -507,12 +507,12 @@ export function mask<T extends Record<string, unknown>>(
   if (config.custom) {
     for (const [field, maskFn] of Object.entries(config.custom)) {
       if (field in masked) {
-        masked[field] = maskFn(masked[field]) as T[Extract<keyof T, string>];
+        masked[field] = maskFn(masked[field]);
       }
     }
   }
 
-  return masked;
+  return masked as T;
 }
 
 /**
@@ -537,20 +537,21 @@ export function maskDeep<T>(result: T, config: FieldMaskConfig): T {
 /**
  * Alias field names in result
  */
-export function alias<T extends Record<string, unknown>>(
+export function alias<T extends object = Record<string, unknown>>(
   result: T,
   aliases: FieldAliases
 ): Record<string, unknown> {
   const aliased: Record<string, unknown> = {};
+  const resultObj = result as Record<string, unknown>;
 
   for (const [oldName, newName] of Object.entries(aliases)) {
-    if (oldName in result) {
-      aliased[newName] = result[oldName];
+    if (oldName in resultObj) {
+      aliased[newName] = resultObj[oldName];
     }
   }
 
   // Copy non-aliased fields
-  for (const [key, value] of Object.entries(result)) {
+  for (const [key, value] of Object.entries(resultObj)) {
     if (!(key in aliases)) {
       aliased[key] = value;
     }
@@ -576,13 +577,13 @@ export function aggregate<T, R>(results: T[], aggregator: AggregationFn<T, R>): 
 export const aggregators = {
   /** Sum numeric field across results */
   sum:
-    <T extends Record<string, unknown>>(field: keyof T): AggregationFn<T, number> =>
+    <T = Record<string, unknown>>(field: keyof T): AggregationFn<T, number> =>
     (results) =>
       results.reduce((sum, result) => sum + (Number(result[field]) || 0), 0),
 
   /** Average numeric field across results */
   avg:
-    <T extends Record<string, unknown>>(field: keyof T): AggregationFn<T, number> =>
+    <T = Record<string, unknown>>(field: keyof T): AggregationFn<T, number> =>
     (results) => {
       if (results.length === 0) return 0;
       const sum = results.reduce((s, result) => s + (Number(result[field]) || 0), 0);
@@ -591,7 +592,7 @@ export const aggregators = {
 
   /** Find minimum value */
   min:
-    <T extends Record<string, unknown>>(field: keyof T): AggregationFn<T, number> =>
+    <T = Record<string, unknown>>(field: keyof T): AggregationFn<T, number> =>
     (results) => {
       if (results.length === 0) return 0;
       return Math.min(...results.map((r) => Number(r[field]) || 0));
@@ -599,7 +600,7 @@ export const aggregators = {
 
   /** Find maximum value */
   max:
-    <T extends Record<string, unknown>>(field: keyof T): AggregationFn<T, number> =>
+    <T = Record<string, unknown>>(field: keyof T): AggregationFn<T, number> =>
     (results) => {
       if (results.length === 0) return 0;
       return Math.max(...results.map((r) => Number(r[field]) || 0));
@@ -610,7 +611,7 @@ export const aggregators = {
 
   /** Group by field */
   groupBy:
-    <T extends Record<string, unknown>>(
+    <T extends object = Record<string, unknown>>(
       field: keyof T
     ): AggregationFn<T, Record<string, T[]>> =>
     (results) => {
@@ -624,8 +625,8 @@ export const aggregators = {
     },
 
   /** Merge all results into one */
-  merge: <T extends Record<string, unknown>>(): AggregationFn<T, T> => (results) =>
-    Object.assign({}, ...results),
+  merge: <T extends object = Record<string, unknown>>(): AggregationFn<T, T> => (results) =>
+    Object.assign({}, ...results) as T,
 };
 
 // ============================================================================
@@ -745,10 +746,12 @@ export function applyDiff<T>(result: T, resultDiff: ResultDiff): T {
     // Navigate to parent
     for (let i = 0; i < change.path.length - 1; i++) {
       const key = change.path[i];
-      if (!(key in current)) {
+      if (key && !(key in current)) {
         current[key] = {};
       }
-      current = current[key] as Record<string, unknown>;
+      if (key) {
+        current = current[key] as Record<string, unknown>;
+      }
     }
 
     const lastKey = change.path[change.path.length - 1];
@@ -786,7 +789,7 @@ export interface ReactQueryIntegrationOptions {
   /** Auto-enhance query results */
   autoEnhance?: boolean;
   /** Result enhancer instance */
-  enhancer?: ResultEnhancer;
+  enhancer?: ResultEnhancer<any>;
 }
 
 /**
@@ -800,12 +803,12 @@ export function createReactQueryMiddleware(options: ReactQueryIntegrationOptions
     /**
      * Enhance query data automatically
      */
-    enhanceQuery<T extends Record<string, unknown>>(
-      queryKey: unknown[],
+    enhanceQuery<T extends object = Record<string, unknown>>(
+      _queryKey: unknown[],
       data: T
     ): T & Record<string, unknown> {
-      if (!autoEnhance || !enhancer) return data;
-      return enhancer.enhance(data);
+      if (!autoEnhance || !enhancer) return data as T & Record<string, unknown>;
+      return enhancer.enhance(data as Record<string, unknown>) as T & Record<string, unknown>;
     },
 
     /**
@@ -857,14 +860,14 @@ export function createReactQueryMiddleware(options: ReactQueryIntegrationOptions
 /**
  * Built-in model registry for computed fields
  */
-const modelEnhancers = new Map<string, ResultEnhancer>();
+const modelEnhancers = new Map<string, ResultEnhancer<Record<string, unknown>>>();
 
 /**
  * Get or create enhancer for a model
  */
-function getModelEnhancer<T extends Record<string, unknown>>(model: string): ResultEnhancer<T> {
+function getModelEnhancer<T extends object = Record<string, unknown>>(model: string): ResultEnhancer<T> {
   if (!modelEnhancers.has(model)) {
-    modelEnhancers.set(model, new ResultEnhancer<T>());
+    modelEnhancers.set(model, new ResultEnhancer<Record<string, unknown>>() as ResultEnhancer<T>);
   }
   return modelEnhancers.get(model) as ResultEnhancer<T>;
 }
@@ -882,7 +885,7 @@ export const resultsExtension = {
     /**
      * Define a computed field for a model
      */
-    $defineComputedField<T extends Record<string, unknown>, TDeps extends (keyof T)[], TResult>(
+    $defineComputedField<T extends object = Record<string, unknown>, TDeps extends (keyof T)[] = (keyof T)[], TResult = unknown>(
       model: string,
       field: string,
       definition: ComputedFieldDef<T, TDeps, TResult>
@@ -918,7 +921,7 @@ export const resultsExtension = {
     /**
      * Mask sensitive fields
      */
-    $mask<T extends Record<string, unknown>>(result: T, config: FieldMaskConfig): T {
+    $mask<T extends object = Record<string, unknown>>(result: T, config: FieldMaskConfig): T {
       return mask(result, config);
     },
 
@@ -932,7 +935,7 @@ export const resultsExtension = {
     /**
      * Alias field names
      */
-    $alias<T extends Record<string, unknown>>(result: T, aliases: FieldAliases): Record<string, unknown> {
+    $alias<T extends object = Record<string, unknown>>(result: T, aliases: FieldAliases): Record<string, unknown> {
       return alias(result, aliases);
     },
 
@@ -960,23 +963,23 @@ export const resultsExtension = {
     /**
      * Enhance result with computed fields
      */
-    $enhance<T extends Record<string, unknown>>(
+    $enhance<T extends object = Record<string, unknown>>(
       model: string,
       result: T
     ): T & Record<string, unknown> {
       const enhancer = getModelEnhancer<T>(model);
-      return enhancer.enhance(result);
+      return enhancer.enhance(result as Record<string, unknown>) as T & Record<string, unknown>;
     },
 
     /**
      * Enhance multiple results
      */
-    $enhanceMany<T extends Record<string, unknown>>(
+    $enhanceMany<T extends object = Record<string, unknown>>(
       model: string,
       results: T[]
     ): (T & Record<string, unknown>)[] {
       const enhancer = getModelEnhancer<T>(model);
-      return enhancer.enhanceMany(results);
+      return enhancer.enhanceMany(results as Record<string, unknown>[]) as (T & Record<string, unknown>)[];
     },
 
     /**
@@ -1064,16 +1067,3 @@ export interface EnzymeClientWithResults {
 // ============================================================================
 
 export default resultsExtension;
-
-// Re-export all types and utilities
-export type {
-  ResultTransformer,
-  NormalizationSchema,
-  NormalizedData,
-  FieldMaskConfig,
-  FieldAliases,
-  DiffOperation,
-  ResultDiff,
-  AggregationFn,
-  ReactQueryIntegrationOptions,
-};

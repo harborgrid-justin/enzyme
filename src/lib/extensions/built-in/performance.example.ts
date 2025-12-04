@@ -2,6 +2,8 @@
  * @file Performance Extension Usage Examples
  * @description Comprehensive examples of using the performance monitoring extension
  */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { performanceExtension } from './performance';
 import type { PerformanceExtensionConfig } from './performance';

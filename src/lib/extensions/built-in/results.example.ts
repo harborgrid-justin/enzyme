@@ -2,10 +2,11 @@
  * @file Results Extension Examples
  * @description Comprehensive examples demonstrating the results extension features
  */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { QueryClient } from '@tanstack/react-query';
 import {
-  resultsExtension,
   ResultEnhancer,
   transform,
   mapFields,

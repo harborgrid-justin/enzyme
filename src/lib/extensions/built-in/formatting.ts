@@ -362,7 +362,7 @@ function getDateFormatPreset(format: 'short' | 'medium' | 'long' | 'full'): Intl
     full: { dateStyle: 'full' },
   };
 
-  return presets[format] ?? presets.medium;
+  return presets[format] ?? presets.medium!;
 }
 
 // ============================================================================
@@ -541,8 +541,8 @@ function applySingularizationRules(word: string): string {
  * Match case of target word to source word
  */
 function matchCase(source: string, target: string): string {
-  if (source[0] === source[0].toUpperCase()) {
-    return target[0].toUpperCase() + target.slice(1);
+  if (source[0] && source[0] === source[0].toUpperCase()) {
+    return (target[0]?.toUpperCase() ?? '') + target.slice(1);
   }
   return target.toLowerCase();
 }
@@ -751,7 +751,7 @@ export function compactJson(json: string): string {
  * Format code with syntax highlighting (returns ANSI colored string for terminal)
  * Note: For web use, consider using a library like highlight.js or prism.js
  */
-export function highlightCode(code: string, language: string = 'javascript'): string {
+export function highlightCode(code: string, _language: string = 'javascript'): string {
   // Basic syntax highlighting using ANSI colors
   // This is a simple implementation - for production, use a proper syntax highlighter
 
@@ -986,7 +986,7 @@ export interface EnzymeExtension {
 /**
  * Comprehensive formatting extension for Enzyme
  */
-export const formattingExtension: EnzymeExtension = {
+export const formattingExtension = {
   name: 'enzyme:formatting',
   version: '2.0.0',
   description: 'Enterprise-grade formatting utilities with i18n support',

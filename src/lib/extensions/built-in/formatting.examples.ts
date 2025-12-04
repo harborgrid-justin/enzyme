@@ -2,6 +2,7 @@
  * @file Formatting Extension Usage Examples
  * @description Demonstrates all features of the formatting extension
  */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 import {
   fmt,
@@ -12,7 +13,6 @@ import {
   toScreamingSnakeCase,
   formatCurrency,
   formatPercentage,
-  formatBytes,
   formatDate,
   formatRelativeTime,
   pluralize,
