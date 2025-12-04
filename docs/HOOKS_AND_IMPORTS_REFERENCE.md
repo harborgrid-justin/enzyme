@@ -137,8 +137,8 @@ const { isMounted, ifMounted } = useMountedState()
 ```typescript
 import { useLatestRef, useLatestCallback } from '@missionfabric-js/enzyme/hooks'
 
-const ref = useLatestRef(value)           // Keeps ref current without re-renders
-const callback = useLatestCallback(fn)     // Stable callback with latest closure
+const ref = useLatestRef(value);        // Keeps ref current without re-renders
+const callback = useLatestCallback(fn);  // Stable callback with latest closure
 ```
 
 #### useSafeState
