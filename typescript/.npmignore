@@ -1,0 +1,88 @@
+# Source files
+src/
+
+# Tests
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+**/__tests__/
+**/__mocks__/
+**/test-utils/
+**/*.stories.ts
+**/*.stories.tsx
+coverage/
+.nyc_output/
+
+# Build artifacts
+*.tsbuildinfo
+.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# Development files
+.git/
+.github/
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Config files
+.eslintrc*
+.prettierrc*
+.editorconfig
+jest.config.*
+tsconfig.json
+tsconfig.*.json
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+pnpm-debug.log*
+
+# Dependencies
+node_modules/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Misc
+*.orig
+.cache/
+.temp/
+.tmp/
+*.bak
+*.backup
+
+# Documentation (keep README.md)
+docs/
+*.md
+!README.md
+
+# CI/CD
+.travis.yml
+.gitlab-ci.yml
+.circleci/
+azure-pipelines.yml
+Jenkinsfile
+
+# Package manager files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+.pnpm-store/
+.yarn/
+.npmrc
+.yarnrc
+
+# Build scripts
+scripts/
+tools/
