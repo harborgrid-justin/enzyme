@@ -115,6 +115,9 @@ export class BundleEngineer extends BaseAgent<BundleEngineerResult> {
       modules.push({
         name: `@enzyme/lib/${dir}`,
         size: totalSize,
+        // Use a deterministic placeholder until we can compute real dependents to keep reports stable
+        dependents: 0,
+        dependencies,
         dependents: Math.floor(Math.random() * 10) + 1, // Would need actual analysis
         dependencies,
       });
