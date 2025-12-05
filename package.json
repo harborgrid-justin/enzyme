@@ -1,6 +1,6 @@
 {
   "name": "@missionfabric-js/enzyme",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Enterprise React framework with advanced routing, state management, performance optimizations, and plug-and-play architecture",
   "type": "module",
   "license": "MIT",
@@ -197,6 +197,9 @@
   "scripts": {
     "dev": "vite",
     "build": "npm run clean && vite build",
+    "build:agents": "npx tsx scripts/build-agents/cli.ts",
+    "build:agents:publish": "npx tsx scripts/build-agents/cli.ts --publish",
+    "build:agents:verbose": "npx tsx scripts/build-agents/cli.ts --verbose",
     "build:check": "npm run typecheck && npm run lint && npm run test",
     "clean": "rimraf dist .tsbuildinfo coverage .eslintcache",
     "typecheck": "./node_modules/typescript/bin/tsc --noEmit",
@@ -264,6 +267,7 @@
     "react-router-dom": "^7.10.0",
     "rimraf": "^6.1.2",
     "tailwindcss": "^4.1.17",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.48.1",
     "vite": "^7.2.6",
