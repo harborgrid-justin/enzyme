@@ -9,6 +9,11 @@
     "type": "git",
     "url": "https://github.com/harborgrid/enzyme"
   },
+  "homepage": "https://enzyme-framework.dev",
+  "bugs": {
+    "url": "https://github.com/harborgrid/enzyme/issues"
+  },
+  "qna": "marketplace",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -35,13 +40,11 @@
     "theme": "dark"
   },
   "activationEvents": [
-    "onLanguage:typescript",
-    "onLanguage:typescriptreact",
     "workspaceContains:**/enzyme.config.ts",
     "workspaceContains:**/enzyme.config.js",
     "workspaceContains:**/.enzyme/**",
-    "onView:enzyme-explorer",
-    "onCommand:enzyme.init"
+    "workspaceContains:**/.enzymerc",
+    "workspaceContains:**/.enzymerc.json"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -183,37 +186,31 @@
         {
           "id": "enzyme.views.features",
           "name": "Features",
-          "icon": "resources/enzyme-icon.svg",
           "contextualTitle": "Enzyme Features"
         },
         {
           "id": "enzyme.views.routes",
           "name": "Routes",
-          "icon": "resources/enzyme-icon.svg",
           "contextualTitle": "Enzyme Routes"
         },
         {
           "id": "enzyme.views.components",
           "name": "Components",
-          "icon": "resources/enzyme-icon.svg",
           "contextualTitle": "Enzyme Components"
         },
         {
           "id": "enzyme.views.stores",
           "name": "State Stores",
-          "icon": "resources/enzyme-icon.svg",
           "contextualTitle": "Enzyme State Stores"
         },
         {
           "id": "enzyme.views.api",
           "name": "API Clients",
-          "icon": "resources/enzyme-icon.svg",
           "contextualTitle": "Enzyme API Clients"
         },
         {
           "id": "enzyme.views.performance",
           "name": "Performance",
-          "icon": "resources/enzyme-icon.svg",
           "contextualTitle": "Performance Metrics"
         }
       ]
@@ -230,76 +227,319 @@
         "enzyme.telemetry.enabled": {
           "type": "boolean",
           "default": false,
+          "scope": "application",
+          "order": 1,
           "description": "Enable anonymous telemetry to help improve the extension"
         },
         "enzyme.logging.level": {
           "type": "string",
           "enum": ["debug", "info", "warn", "error"],
           "default": "info",
+          "scope": "application",
+          "order": 2,
           "description": "Logging level for the extension"
+        },
+        "enzyme.cli.path": {
+          "type": "string",
+          "default": "enzyme",
+          "scope": "application",
+          "order": 3,
+          "description": "Path to Enzyme CLI executable"
+        },
+        "enzyme.cli.autoInstall": {
+          "type": "boolean",
+          "default": true,
+          "scope": "application",
+          "order": 4,
+          "description": "Automatically install Enzyme CLI if not found"
         },
         "enzyme.generator.componentStyle": {
           "type": "string",
           "enum": ["function", "arrow"],
           "default": "function",
+          "scope": "resource",
+          "order": 10,
           "description": "Default component style for generator"
         },
         "enzyme.generator.testFramework": {
           "type": "string",
           "enum": ["vitest", "jest"],
           "default": "vitest",
+          "scope": "resource",
+          "order": 11,
           "description": "Test framework to use for generated tests"
         },
         "enzyme.generator.cssFramework": {
           "type": "string",
           "enum": ["tailwind", "css-modules", "styled-components", "emotion"],
           "default": "tailwind",
+          "scope": "resource",
+          "order": 12,
           "description": "CSS framework to use for generated components"
         },
         "enzyme.validation.onSave": {
           "type": "boolean",
           "default": true,
+          "scope": "resource",
+          "order": 20,
           "description": "Validate Enzyme configuration and routes on save"
         },
         "enzyme.validation.strict": {
           "type": "boolean",
           "default": false,
+          "scope": "resource",
+          "order": 21,
           "description": "Enable strict validation mode"
+        },
+        "enzyme.analysis.autoRun": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "order": 30,
+          "description": "Automatically run analysis when files change"
+        },
+        "enzyme.analysis.onSave": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "order": 31,
+          "description": "Run analysis when files are saved"
+        },
+        "enzyme.analysis.debounceMs": {
+          "type": "number",
+          "default": 300,
+          "minimum": 0,
+          "maximum": 5000,
+          "scope": "resource",
+          "order": 32,
+          "description": "Delay before running analysis after changes (milliseconds)"
+        },
+        "enzyme.diagnostics.enabled": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "order": 40,
+          "description": "Show diagnostics in the Problems panel"
+        },
+        "enzyme.diagnostics.severity": {
+          "type": "string",
+          "enum": ["error", "warning", "info", "hint"],
+          "default": "warning",
+          "scope": "resource",
+          "order": 41,
+          "description": "Default severity level for diagnostics"
+        },
+        "enzyme.diagnostics.showInline": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "order": 42,
+          "description": "Show diagnostics inline in the editor"
+        },
+        "enzyme.codeLens.enabled": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "order": 50,
+          "description": "Enable CodeLens information in the editor"
+        },
+        "enzyme.codeLens.showReferences": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "order": 51,
+          "description": "Show reference counts in CodeLens"
+        },
+        "enzyme.codeLens.showImplementations": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "order": 52,
+          "description": "Show implementation counts in CodeLens"
+        },
+        "enzyme.inlayHints.enabled": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "order": 60,
+          "description": "Show inlay hints in the editor"
+        },
+        "enzyme.inlayHints.showTypes": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "order": 61,
+          "description": "Show type inlay hints"
+        },
+        "enzyme.inlayHints.showParameters": {
+          "type": "boolean",
+          "default": false,
+          "scope": "resource",
+          "order": 62,
+          "description": "Show parameter name hints"
+        },
+        "enzyme.formatting.enabled": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "order": 70,
+          "description": "Enable Enzyme formatter"
+        },
+        "enzyme.formatting.onSave": {
+          "type": "boolean",
+          "default": false,
+          "scope": "resource",
+          "order": 71,
+          "description": "Automatically format files on save"
+        },
+        "enzyme.formatting.prettier": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "order": 72,
+          "description": "Use Prettier for formatting"
+        },
+        "enzyme.completion.enabled": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "order": 80,
+          "description": "Enable IntelliSense completions"
+        },
+        "enzyme.completion.autoImport": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "order": 81,
+          "description": "Automatically add imports on completion"
+        },
+        "enzyme.completion.snippets": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "order": 82,
+          "description": "Enable code snippets"
+        },
+        "enzyme.devServer.port": {
+          "type": "number",
+          "default": 3000,
+          "minimum": 1024,
+          "maximum": 65535,
+          "scope": "resource",
+          "order": 90,
+          "description": "Development server port"
+        },
+        "enzyme.devServer.host": {
+          "type": "string",
+          "default": "localhost",
+          "scope": "resource",
+          "order": 91,
+          "description": "Development server host"
+        },
+        "enzyme.devServer.autoStart": {
+          "type": "boolean",
+          "default": false,
+          "scope": "resource",
+          "order": 92,
+          "description": "Start dev server automatically"
+        },
+        "enzyme.debug.enabled": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "order": 100,
+          "description": "Enable debugging features"
+        },
+        "enzyme.debug.connectAutomatically": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "order": 101,
+          "description": "Automatically connect debugger"
+        },
+        "enzyme.debug.port": {
+          "type": "number",
+          "default": 9229,
+          "minimum": 1024,
+          "maximum": 65535,
+          "scope": "resource",
+          "order": 102,
+          "description": "Port for debugger connection"
         },
         "enzyme.performance.monitoring.enabled": {
           "type": "boolean",
           "default": true,
+          "scope": "resource",
+          "order": 110,
           "description": "Enable performance monitoring features"
+        },
+        "enzyme.performance.caching": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "order": 111,
+          "description": "Cache analysis results for better performance"
+        },
+        "enzyme.performance.maxCacheSize": {
+          "type": "number",
+          "default": 100,
+          "minimum": 1,
+          "maximum": 1000,
+          "scope": "resource",
+          "order": 112,
+          "description": "Maximum number of cached items"
         },
         "enzyme.security.scanning.enabled": {
           "type": "boolean",
           "default": true,
+          "scope": "resource",
+          "order": 120,
           "description": "Enable security vulnerability scanning"
         },
         "enzyme.imports.autoOptimize": {
           "type": "boolean",
           "default": true,
+          "scope": "resource",
+          "order": 130,
           "description": "Automatically optimize Enzyme imports on save"
         },
         "enzyme.snippets.enabled": {
           "type": "boolean",
           "default": true,
+          "scope": "resource",
+          "order": 140,
           "description": "Enable Enzyme code snippets"
         },
         "enzyme.codeActions.enabled": {
           "type": "boolean",
           "default": true,
+          "scope": "resource",
+          "order": 150,
           "description": "Enable Enzyme code actions and quick fixes"
         },
         "enzyme.explorer.autoRefresh": {
           "type": "boolean",
           "default": true,
+          "scope": "window",
+          "order": 160,
           "description": "Automatically refresh explorer views on file changes"
         },
         "enzyme.format.onSave": {
           "type": "boolean",
           "default": true,
+          "scope": "resource",
+          "order": 170,
           "description": "Format Enzyme configuration files on save"
+        },
+        "enzyme.experimental.features": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "scope": "resource",
+          "order": 200,
+          "description": "Enable experimental features"
         }
       }
     },
@@ -355,24 +595,27 @@
     "keybindings": [
       {
         "command": "enzyme.generate.component",
-        "key": "ctrl+shift+e c",
-        "mac": "cmd+shift+e c",
+        "key": "ctrl+alt+e c",
+        "mac": "cmd+alt+e c",
         "when": "editorTextFocus"
       },
       {
         "command": "enzyme.generate.feature",
-        "key": "ctrl+shift+e f",
-        "mac": "cmd+shift+e f"
+        "key": "ctrl+alt+e f",
+        "mac": "cmd+alt+e f",
+        "when": "explorerViewletVisible || editorTextFocus"
       },
       {
         "command": "enzyme.generate.route",
-        "key": "ctrl+shift+e r",
-        "mac": "cmd+shift+e r"
+        "key": "ctrl+alt+e r",
+        "mac": "cmd+alt+e r",
+        "when": "explorerViewletVisible || editorTextFocus"
       },
       {
         "command": "enzyme.analyze.performance",
-        "key": "ctrl+shift+e p",
-        "mac": "cmd+shift+e p"
+        "key": "ctrl+alt+e p",
+        "mac": "cmd+alt+e p",
+        "when": "editorTextFocus"
       }
     ],
     "languages": [

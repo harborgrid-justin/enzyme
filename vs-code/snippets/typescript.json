@@ -1,0 +1,103 @@
+{
+  "Enzyme Store": {
+    "prefix": "enzyme-store",
+    "body": [
+      "import { create } from 'zustand';",
+      "import { devtools, persist } from 'zustand/middleware';",
+      "",
+      "interface ${1:Name}State {",
+      "  ${2:property}: ${3:string};",
+      "  set${1:Name}: (value: ${3:string}) => void;",
+      "}",
+      "",
+      "export const use${1:Name}Store = create<${1:Name}State>()(",
+      "  devtools(",
+      "    persist(",
+      "      (set) => ({",
+      "        ${2:property}: '',",
+      "        set${1:Name}: (value) => set({ ${2:property}: value }),",
+      "      }),",
+      "      { name: '${1/(.*)/${1:/downcase}/}-storage' }",
+      "    )",
+      "  )",
+      ");"
+    ],
+    "description": "Create an Enzyme Zustand store with devtools and persistence"
+  },
+  "Enzyme API Client": {
+    "prefix": "enzyme-api",
+    "body": [
+      "import { createApiClient } from '@enzyme/core';",
+      "",
+      "export const ${1:name}Api = createApiClient({",
+      "  baseUrl: '${2:/api}',",
+      "  endpoints: {",
+      "    get${3:Resource}: {",
+      "      method: 'GET',",
+      "      path: '/${3/(.*)/${1:/downcase}/}/:id',",
+      "    },",
+      "    list${3:Resource}s: {",
+      "      method: 'GET',",
+      "      path: '/${3/(.*)/${1:/downcase}/}s',",
+      "    },",
+      "    create${3:Resource}: {",
+      "      method: 'POST',",
+      "      path: '/${3/(.*)/${1:/downcase}/}s',",
+      "    },",
+      "  },",
+      "});"
+    ],
+    "description": "Create an Enzyme API client"
+  },
+  "Enzyme Hook": {
+    "prefix": "enzyme-hook",
+    "body": [
+      "import { useState, useCallback } from 'react';",
+      "",
+      "export function use${1:Name}(${2:initialValue}: ${3:string}) {",
+      "  const [${4:value}, set${1:Name}] = useState<${3:string}>(${2:initialValue});",
+      "",
+      "  const update${1:Name} = useCallback((newValue: ${3:string}) => {",
+      "    set${1:Name}(newValue);",
+      "  }, []);",
+      "",
+      "  return {",
+      "    ${4:value},",
+      "    update${1:Name},",
+      "  };",
+      "}"
+    ],
+    "description": "Create an Enzyme custom hook"
+  },
+  "Enzyme Route": {
+    "prefix": "enzyme-route",
+    "body": [
+      "import { defineRoute } from '@enzyme/router';",
+      "",
+      "export const ${1:name}Route = defineRoute({",
+      "  path: '${2:/path}',",
+      "  component: () => import('./${3:Component}'),",
+      "  guards: [${4}],",
+      "  meta: {",
+      "    title: '${5:Page Title}',",
+      "    requiresAuth: ${6:false},",
+      "  },",
+      "});"
+    ],
+    "description": "Define an Enzyme route"
+  },
+  "Enzyme Feature": {
+    "prefix": "enzyme-feature",
+    "body": [
+      "import { defineFeature } from '@enzyme/core';",
+      "",
+      "export const ${1:name}Feature = defineFeature({",
+      "  name: '${1:name}',",
+      "  routes: [],",
+      "  stores: [],",
+      "  components: [],",
+      "});"
+    ],
+    "description": "Define an Enzyme feature module"
+  }
+}

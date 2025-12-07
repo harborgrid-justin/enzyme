@@ -22,7 +22,79 @@ export interface CLIRunResult {
 export class CLIRunner {
   private runningProcesses: Map<string, ChildProcess> = new Map();
 
+  // Allowed CLI commands for security validation
+  private static readonly ALLOWED_COMMANDS = [
+    'enzyme',
+    'npx',
+    'npm',
+    'node'
+  ];
+
   constructor(private detector: CLIDetector) {}
+
+  /**
+   * Dispose and cleanup all running processes
+   */
+  dispose(): void {
+    for (const [id, process] of this.runningProcesses.entries()) {
+      try {
+        process.kill('SIGTERM');
+
+        // Force kill after timeout
+        setTimeout(() => {
+          if (!process.killed) {
+            process.kill('SIGKILL');
+          }
+        }, 5000);
+      } catch (error) {
+        console.error(`Failed to kill process ${id}:`, error);
+      }
+    }
+
+    this.runningProcesses.clear();
+  }
+
+  /**
+   * Validate command is in allowlist for security
+   */
+  private isAllowedCommand(command: string): boolean {
+    const executable = command.split(/[\\/]/).pop()?.split(' ')[0] || '';
+    return CLIRunner.ALLOWED_COMMANDS.some(allowed =>
+      executable === allowed || executable.startsWith(`${allowed}.`) || executable.endsWith(allowed)
+    );
+  }
+
+  /**
+   * Sanitize argument to prevent command injection
+   * Removes shell metacharacters
+   */
+  private sanitizeArgument(arg: string): string {
+    // Remove dangerous shell metacharacters
+    return arg.replace(/[;&|`$(){}[\]<>!#]/g, '');
+  }
+
+  /**
+   * Validate and sanitize arguments
+   */
+  private validateArgs(args: string[]): string[] {
+    return args.map(arg => this.sanitizeArgument(arg));
+  }
+
+  /**
+   * Get safe environment variables (whitelist approach)
+   */
+  private getSafeEnvironment(customEnv?: Record<string, string>): NodeJS.ProcessEnv {
+    return {
+      PATH: process.env.PATH,
+      HOME: process.env.HOME,
+      USER: process.env.USER,
+      TMPDIR: process.env.TMPDIR,
+      LANG: process.env.LANG,
+      NODE_ENV: process.env.NODE_ENV,
+      ...customEnv,
+      FORCE_COLOR: '1',
+    };
+  }
 
   /**
    * Execute a CLI command
@@ -92,19 +164,37 @@ export class CLIRunner {
   }
 
   /**
-   * Generate code using CLI
+   * Generate code using CLI with input validation
    */
   async generate(type: string, name: string, options: Record<string, any> = {}): Promise<CLIRunResult> {
+    // Validate type
+    const validTypes = ['component', 'page', 'hook', 'service', 'feature', 'slice', 'api', 'store', 'route'];
+    if (!validTypes.includes(type)) {
+      throw new Error(`Invalid generator type: ${type}. Must be one of: ${validTypes.join(', ')}`);
+    }
+
+    // Validate name (alphanumeric, hyphens, underscores only)
+    if (!/^[a-zA-Z0-9\-_]+$/.test(name)) {
+      throw new Error(`Invalid name: ${name}. Use only alphanumeric characters, hyphens, and underscores.`);
+    }
+
     const args = ['generate', type, name];
 
-    // Add options as flags
+    // Add options as flags with validation
     for (const [key, value] of Object.entries(options)) {
+      // Validate option key
+      if (!/^[a-zA-Z][a-zA-Z0-9\-]*$/.test(key)) {
+        throw new Error(`Invalid option key: ${key}`);
+      }
+
       if (typeof value === 'boolean') {
         if (value) {
           args.push(`--${key}`);
         }
-      } else {
+      } else if (typeof value === 'string' || typeof value === 'number') {
         args.push(`--${key}`, String(value));
+      } else {
+        throw new Error(`Invalid option value type for ${key}: ${typeof value}`);
       }
     }
 
@@ -170,27 +260,34 @@ export class CLIRunner {
   }
 
   /**
-   * Execute command with spawn
+   * Execute command with spawn (secure implementation)
+   * Uses shell: false and validates all inputs for security
    */
   private async execute(command: string, options: CLIRunOptions): Promise<CLIRunResult> {
     return new Promise((resolve, reject) => {
+      // Security: Validate command is in allowlist
+      if (!this.isAllowedCommand(command)) {
+        reject(new Error(`Command not allowed: ${command}`));
+        return;
+      }
+
       const processId = `${Date.now()}-${Math.random()}`;
       let stdout = '';
       let stderr = '';
 
       // Parse command if it contains spaces (like "npx @enzyme/cli")
       const [cmd, ...cmdArgs] = command.split(' ');
-      const allArgs = [...cmdArgs, ...options.args];
 
+      // Security: Sanitize all arguments
+      const sanitizedCmdArgs = this.validateArgs(cmdArgs);
+      const sanitizedArgs = this.validateArgs(options.args);
+      const allArgs = [...sanitizedCmdArgs, ...sanitizedArgs];
+
+      // Security: Use shell: false to prevent command injection
       const childProcess = spawn(cmd, allArgs, {
         cwd: options.cwd || this.getWorkspaceRoot() || undefined,
-        env: {
-          ...process.env,
-          ...options.env,
-          // Ensure CLI outputs are not buffered
-          FORCE_COLOR: '1',
-        },
-        shell: true,
+        env: this.getSafeEnvironment(options.env),
+        shell: false, // SECURITY: Never use shell: true
       });
 
       this.runningProcesses.set(processId, childProcess);

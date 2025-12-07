@@ -14,8 +14,7 @@ import {
   FileWatcher,
 } from './core/workspace';
 
-// File watchers
-let fileWatchers: FileWatcher[] = [];
+// NOTE: File watchers are now stored in context.subscriptions to avoid module-level state
 
 /**
  * Activate the extension
@@ -45,19 +44,26 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       const workspace = await getProjectStructure();
       enzymeContext.setWorkspace(workspace);
 
-      // Create file watchers
-      fileWatchers = createEnzymeFileWatchers();
+      // Create file watchers and register them properly via context.subscriptions
+      const fileWatchers = createEnzymeFileWatchers();
 
-      // Register file watcher event handlers
+      // Register file watcher event handlers with proper error handling
       fileWatchers.forEach(watcher => {
         watcher.onEvent(async event => {
-          logger.debug(`File ${event.type}: ${event.uri.fsPath}`);
+          try {
+            logger.debug(`File ${event.type}: ${event.uri.fsPath}`);
 
-          // Refresh workspace structure on config changes
-          if (event.type === 'changed' || event.type === 'created') {
-            await refreshWorkspace(enzymeContext);
+            // Refresh workspace structure on config changes
+            if (event.type === 'changed' || event.type === 'created') {
+              await refreshWorkspace(enzymeContext);
+            }
+          } catch (error) {
+            logger.error(`File watcher error for ${event.uri.fsPath}`, error);
           }
         });
+
+        // Add watcher to disposables so VS Code manages cleanup
+        context.subscriptions.push(watcher);
       });
 
       // Show status bar item
@@ -108,18 +114,21 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 /**
  * Deactivate the extension
  * This is called when the extension is deactivated
+ *
+ * Note: File watchers are automatically disposed via context.subscriptions
  */
-export function deactivate(): void {
+export async function deactivate(): Promise<void> {
   logger.header(`Deactivating ${EXTENSION_NAME}`);
 
   try {
-    // Stop file watchers
-    fileWatchers.forEach(watcher => watcher.dispose());
-    fileWatchers = [];
-
-    // Dispose extension context
-    const enzymeContext = EnzymeExtensionContext.getInstance();
-    enzymeContext.dispose();
+    // Dispose extension context (file watchers are disposed via context.subscriptions)
+    try {
+      const enzymeContext = EnzymeExtensionContext.getInstance();
+      await enzymeContext.dispose();
+    } catch (error) {
+      // Instance may not exist if activation failed
+      logger.warn('Extension context not initialized during deactivation');
+    }
 
     logger.success(`${EXTENSION_NAME} deactivated successfully`);
   } catch (error) {
@@ -346,15 +355,20 @@ async function showWelcomeMessage(enzymeContext: EnzymeExtensionContext): Promis
 
 /**
  * Initialize telemetry (opt-in)
+ * Respects VS Code's global telemetry setting per VS Code Extension Guidelines
  */
 function initializeTelemetry(enzymeContext: EnzymeExtensionContext): void {
-  const telemetryEnabled = enzymeContext.getConfig('enzyme.telemetry.enabled', false);
+  // CRITICAL: Check VS Code's global telemetry setting first
+  const vscodeTelemetryEnabled = vscode.env.isTelemetryEnabled;
+  const extensionTelemetryEnabled = enzymeContext.getConfig('enzyme.telemetry.enabled', false);
+
+  const telemetryEnabled = vscodeTelemetryEnabled && extensionTelemetryEnabled;
 
   if (telemetryEnabled) {
     logger.info('Telemetry enabled');
     // TODO: Initialize actual telemetry provider
   } else {
-    logger.info('Telemetry disabled');
+    logger.info(`Telemetry disabled (VS Code: ${vscodeTelemetryEnabled}, Extension: ${extensionTelemetryEnabled})`);
   }
 }
 

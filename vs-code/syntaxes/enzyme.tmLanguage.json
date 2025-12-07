@@ -1,0 +1,42 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Enzyme Config",
+  "scopeName": "source.ts.enzyme",
+  "patterns": [
+    {
+      "include": "source.ts"
+    },
+    {
+      "include": "#enzyme-keywords"
+    },
+    {
+      "include": "#enzyme-decorators"
+    }
+  ],
+  "repository": {
+    "enzyme-keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.enzyme",
+          "match": "\\b(createEnzymeConfig|defineRoute|defineFeature|defineStore|createApiClient)\\b"
+        },
+        {
+          "name": "support.function.enzyme",
+          "match": "\\b(useEnzymeAuth|useEnzymeRouter|useEnzymeStore|useEnzymeQuery|useEnzymeMutation)\\b"
+        },
+        {
+          "name": "entity.name.type.enzyme",
+          "match": "\\b(EnzymeConfig|EnzymeRoute|EnzymeFeature|EnzymeStore|EnzymeAuth)\\b"
+        }
+      ]
+    },
+    "enzyme-decorators": {
+      "patterns": [
+        {
+          "name": "meta.decorator.enzyme",
+          "match": "@(EnzymeRoute|EnzymeFeature|EnzymeGuard|EnzymeProvider)\\b"
+        }
+      ]
+    }
+  }
+}
