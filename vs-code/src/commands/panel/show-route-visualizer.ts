@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as crypto from 'crypto';
 import { BaseCommand, CommandContext, CommandMetadata } from '../base-command';
 
 /**
@@ -57,15 +58,22 @@ export class ShowRouteVisualizerCommand extends BaseCommand {
     this.log('info', 'Route Visualizer panel opened');
   }
 
+  private getNonce(): string {
+    return crypto.randomBytes(16).toString('base64');
+  }
+
   private getWebviewContent(webview: vscode.Webview): string {
+    const nonce = this.getNonce();
+
+    // SECURITY: Use nonces for both styles and scripts, no 'unsafe-inline'
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src ${webview.cspSource} 'unsafe-inline';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'nonce-${nonce}'; script-src 'nonce-${nonce}';">
     <title>Route Visualizer</title>
-    <style>
+    <style nonce="${nonce}">
         body {
             padding: 20px;
             font-family: var(--vscode-font-family);
@@ -149,8 +157,8 @@ export class ShowRouteVisualizerCommand extends BaseCommand {
     <div class="header">
         <div class="title">Route Visualizer</div>
         <div class="toolbar">
-            <button class="button" onclick="refresh()">Refresh</button>
-            <button class="button" onclick="exportRoutes()">Export</button>
+            <button class="button" id="refreshBtn">Refresh</button>
+            <button class="button" id="exportBtn">Export</button>
         </div>
     </div>
 
@@ -160,67 +168,99 @@ export class ShowRouteVisualizerCommand extends BaseCommand {
         </div>
     </div>
 
-    <script>
-        const vscode = acquireVsCodeApi();
+    <script nonce="${nonce}">
+        (function() {
+            const vscode = acquireVsCodeApi();
 
-        function refresh() {
+            // SECURITY: Use event listeners instead of inline onclick handlers
+            document.getElementById('refreshBtn').addEventListener('click', function() {
+                vscode.postMessage({ type: 'refresh' });
+            });
+
+            document.getElementById('exportBtn').addEventListener('click', function() {
+                vscode.postMessage({ type: 'export' });
+            });
+
+            function navigateToRoute(path) {
+                vscode.postMessage({ type: 'navigate', path: path });
+            }
+
+            window.addEventListener('message', function(event) {
+                const message = event.data;
+
+                switch (message.type) {
+                    case 'updateRoutes':
+                        updateRouteTree(message.routes);
+                        break;
+                }
+            });
+
+            // SECURITY: Use DOM methods instead of innerHTML to prevent XSS
+            function updateRouteTree(routes) {
+                const container = document.getElementById('routes');
+                container.innerHTML = '';
+
+                if (!routes || routes.length === 0) {
+                    const emptyState = document.createElement('div');
+                    emptyState.className = 'empty-state';
+                    const p = document.createElement('p');
+                    p.textContent = 'No routes found';
+                    emptyState.appendChild(p);
+                    container.appendChild(emptyState);
+                    return;
+                }
+
+                routes.forEach(function(route) {
+                    renderRoute(container, route, 0);
+                });
+            }
+
+            function renderRoute(container, route, level) {
+                const node = document.createElement('div');
+                node.className = 'route-node';
+                node.style.marginLeft = (level * 20) + 'px';
+                node.addEventListener('click', function() {
+                    navigateToRoute(route.path);
+                });
+
+                const pathDiv = document.createElement('div');
+                pathDiv.className = 'route-path';
+                pathDiv.textContent = route.path;
+                node.appendChild(pathDiv);
+
+                if (route.component) {
+                    const componentDiv = document.createElement('div');
+                    componentDiv.className = 'route-component';
+                    componentDiv.textContent = 'Component: ' + route.component;
+                    node.appendChild(componentDiv);
+                }
+
+                const guards = route.guards || [];
+                if (guards.length > 0) {
+                    const guardsDiv = document.createElement('div');
+                    guardsDiv.className = 'route-guards';
+                    guards.forEach(function(g) {
+                        const badge = document.createElement('span');
+                        badge.className = 'guard-badge';
+                        badge.textContent = g;
+                        guardsDiv.appendChild(badge);
+                    });
+                    node.appendChild(guardsDiv);
+                }
+
+                container.appendChild(node);
+
+                // Render children
+                if (route.children && route.children.length > 0) {
+                    route.children.forEach(function(child) {
+                        renderRoute(container, child, level + 1);
+                    });
+                }
+            }
+
+            // Request initial data
             vscode.postMessage({ type: 'refresh' });
-        }
-
-        function exportRoutes() {
-            vscode.postMessage({ type: 'export' });
-        }
-
-        function navigateToRoute(path) {
-            vscode.postMessage({ type: 'navigate', path });
-        }
-
-        window.addEventListener('message', event => {
-            const message = event.data;
-
-            switch (message.type) {
-                case 'updateRoutes':
-                    updateRouteTree(message.routes);
-                    break;
-            }
-        });
-
-        function updateRouteTree(routes) {
-            const container = document.getElementById('routes');
-
-            if (!routes || routes.length === 0) {
-                container.innerHTML = \`
-                    <div class="empty-state">
-                        <p>No routes found</p>
-                    </div>
-                \`;
-                return;
-            }
-
-            container.innerHTML = routes.map(route => renderRoute(route)).join('');
-        }
-
-        function renderRoute(route, level = 0) {
-            const guards = route.guards || [];
-            const guardBadges = guards.map(g => \`<span class="guard-badge">\${g}</span>\`).join('');
-
-            let html = \`
-                <div class="route-node" onclick="navigateToRoute('\${route.path}')" style="margin-left: \${level * 20}px">
-                    <div class="route-path">\${route.path}</div>
-                    \${route.component ? \`<div class="route-component">Component: \${route.component}</div>\` : ''}
-                    \${guards.length > 0 ? \`<div class="route-guards">\${guardBadges}</div>\` : ''}
-                </div>
-            \`;
-
-            if (route.children && route.children.length > 0) {
-                html += route.children.map(child => renderRoute(child, level + 1)).join('');
-            }
-
-            return html;
-        }
-
-        // Request initial data
-        refresh();
+        })();
     </script>
 </body>
 </html>`;

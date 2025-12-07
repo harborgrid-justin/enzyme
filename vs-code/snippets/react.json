@@ -1,0 +1,132 @@
+{
+  "Enzyme Component": {
+    "prefix": "enzyme-component",
+    "body": [
+      "import React from 'react';",
+      "",
+      "interface ${1:ComponentName}Props {",
+      "  ${2:prop}?: ${3:string};",
+      "}",
+      "",
+      "export function ${1:ComponentName}({ ${2:prop} }: ${1:ComponentName}Props) {",
+      "  return (",
+      "    <div className=\"${1/(.*)/${1:/downcase}/}\">",
+      "      ${0}",
+      "    </div>",
+      "  );",
+      "}",
+      "",
+      "export default ${1:ComponentName};"
+    ],
+    "description": "Create an Enzyme React component"
+  },
+  "Enzyme Page": {
+    "prefix": "enzyme-page",
+    "body": [
+      "import React from 'react';",
+      "import { useParams } from '@enzyme/router';",
+      "",
+      "export function ${1:PageName}Page() {",
+      "  const params = useParams();",
+      "",
+      "  return (",
+      "    <main className=\"${1/(.*)/${1:/downcase}/}-page\">",
+      "      <h1>${2:Page Title}</h1>",
+      "      ${0}",
+      "    </main>",
+      "  );",
+      "}",
+      "",
+      "export default ${1:PageName}Page;"
+    ],
+    "description": "Create an Enzyme page component"
+  },
+  "Enzyme Layout": {
+    "prefix": "enzyme-layout",
+    "body": [
+      "import React from 'react';",
+      "import { Outlet } from '@enzyme/router';",
+      "",
+      "interface ${1:LayoutName}LayoutProps {",
+      "  children?: React.ReactNode;",
+      "}",
+      "",
+      "export function ${1:LayoutName}Layout({ children }: ${1:LayoutName}LayoutProps) {",
+      "  return (",
+      "    <div className=\"${1/(.*)/${1:/downcase}/}-layout\">",
+      "      <header>",
+      "        {/* Navigation */}",
+      "      </header>",
+      "      <main>",
+      "        {children ?? <Outlet />}",
+      "      </main>",
+      "      <footer>",
+      "        {/* Footer */}",
+      "      </footer>",
+      "    </div>",
+      "  );",
+      "}",
+      "",
+      "export default ${1:LayoutName}Layout;"
+    ],
+    "description": "Create an Enzyme layout component"
+  },
+  "Enzyme Protected Route": {
+    "prefix": "enzyme-protected",
+    "body": [
+      "import React from 'react';",
+      "import { Navigate, Outlet } from '@enzyme/router';",
+      "import { useEnzymeAuth } from '@enzyme/auth';",
+      "",
+      "export function ProtectedRoute() {",
+      "  const { isAuthenticated, isLoading } = useEnzymeAuth();",
+      "",
+      "  if (isLoading) {",
+      "    return <div>Loading...</div>;",
+      "  }",
+      "",
+      "  if (!isAuthenticated) {",
+      "    return <Navigate to=\"/login\" replace />;",
+      "  }",
+      "",
+      "  return <Outlet />;",
+      "}"
+    ],
+    "description": "Create an Enzyme protected route wrapper"
+  },
+  "Enzyme Query Hook": {
+    "prefix": "enzyme-usequery",
+    "body": [
+      "import { useQuery } from '@tanstack/react-query';",
+      "import { ${1:api}Api } from '../api/${1:api}';",
+      "",
+      "export function use${2:Resource}Query(${3:id}: string) {",
+      "  return useQuery({",
+      "    queryKey: ['${2/(.*)/${1:/downcase}/}', ${3:id}],",
+      "    queryFn: () => ${1:api}Api.get${2:Resource}(${3:id}),",
+      "    staleTime: 5 * 60 * 1000,",
+      "  });",
+      "}"
+    ],
+    "description": "Create an Enzyme query hook with React Query"
+  },
+  "Enzyme Mutation Hook": {
+    "prefix": "enzyme-usemutation",
+    "body": [
+      "import { useMutation, useQueryClient } from '@tanstack/react-query';",
+      "import { ${1:api}Api } from '../api/${1:api}';",
+      "",
+      "export function use${2:Action}Mutation() {",
+      "  const queryClient = useQueryClient();",
+      "",
+      "  return useMutation({",
+      "    mutationFn: ${1:api}Api.${2/(.*)/${1:/downcase}/},",
+      "    onSuccess: () => {",
+      "      queryClient.invalidateQueries({ queryKey: ['${3:resource}'] });",
+      "    },",
+      "  });",
+      "}"
+    ],
+    "description": "Create an Enzyme mutation hook with React Query"
+  }
+}

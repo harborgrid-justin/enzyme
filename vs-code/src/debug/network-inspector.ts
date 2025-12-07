@@ -52,7 +52,46 @@ export interface InspectorOptions {
   recordBodies?: boolean;
   /** URL patterns to ignore */
   ignorePatterns?: RegExp[];
+  /** Sanitize sensitive data (default: true) */
+  sanitizeSensitiveData?: boolean;
+  /** Additional header names to sanitize */
+  sensitiveHeaders?: string[];
+  /** Additional body field names to sanitize */
+  sensitiveBodyFields?: string[];
 }
+
+// SECURITY: Headers that may contain sensitive data
+const DEFAULT_SENSITIVE_HEADERS = [
+  'authorization',
+  'x-api-key',
+  'x-auth-token',
+  'cookie',
+  'set-cookie',
+  'x-access-token',
+  'x-refresh-token',
+  'proxy-authorization',
+  'www-authenticate',
+  'x-csrf-token',
+  'x-xsrf-token',
+];
+
+// SECURITY: Body fields that may contain sensitive data
+const DEFAULT_SENSITIVE_FIELDS = [
+  'password',
+  'secret',
+  'token',
+  'apiKey',
+  'api_key',
+  'accessToken',
+  'access_token',
+  'refreshToken',
+  'refresh_token',
+  'credit_card',
+  'creditCard',
+  'ssn',
+  'socialSecurityNumber',
+  'social_security_number',
+];
 
 export interface NetworkStats {
   total: number;
@@ -77,6 +116,8 @@ export class NetworkInspector {
   private isInspecting = false;
   private originalFetch: typeof fetch | null = null;
   private originalXHR: typeof XMLHttpRequest | null = null;
+  private sensitiveHeadersSet: Set<string>;
+  private sensitiveFieldsSet: Set<string>;
 
   constructor(options: InspectorOptions = {}) {
     this.options = {
@@ -85,7 +126,91 @@ export class NetworkInspector {
       maxRequests: options.maxRequests ?? 1000,
       recordBodies: options.recordBodies ?? true,
       ignorePatterns: options.ignorePatterns ?? [],
+      sanitizeSensitiveData: options.sanitizeSensitiveData ?? true,
+      sensitiveHeaders: options.sensitiveHeaders ?? [],
+      sensitiveBodyFields: options.sensitiveBodyFields ?? [],
     };
+
+    // SECURITY: Build sets of sensitive header/field names for efficient lookup
+    this.sensitiveHeadersSet = new Set([
+      ...DEFAULT_SENSITIVE_HEADERS,
+      ...this.options.sensitiveHeaders.map(h => h.toLowerCase()),
+    ]);
+    this.sensitiveFieldsSet = new Set([
+      ...DEFAULT_SENSITIVE_FIELDS,
+      ...this.options.sensitiveBodyFields,
+    ]);
+  }
+
+  /**
+   * SECURITY: Sanitize headers to redact sensitive values
+   */
+  private sanitizeHeaders(headers: Record<string, string>): Record<string, string> {
+    if (!this.options.sanitizeSensitiveData) {
+      return headers;
+    }
+
+    const sanitized: Record<string, string> = {};
+    for (const [key, value] of Object.entries(headers)) {
+      if (this.sensitiveHeadersSet.has(key.toLowerCase())) {
+        sanitized[key] = '[REDACTED]';
+      } else {
+        sanitized[key] = value;
+      }
+    }
+    return sanitized;
+  }
+
+  /**
+   * SECURITY: Sanitize body to redact sensitive fields
+   */
+  private sanitizeBody(body: unknown): unknown {
+    if (!this.options.sanitizeSensitiveData || body === null || body === undefined) {
+      return body;
+    }
+
+    if (typeof body === 'string') {
+      // Try to parse as JSON and sanitize
+      try {
+        const parsed = JSON.parse(body);
+        return JSON.stringify(this.sanitizeObject(parsed));
+      } catch {
+        // Not JSON, return as-is
+        return body;
+      }
+    }
+
+    if (typeof body === 'object') {
+      return this.sanitizeObject(body as Record<string, unknown>);
+    }
+
+    return body;
+  }
+
+  /**
+   * SECURITY: Recursively sanitize object fields
+   */
+  private sanitizeObject(obj: Record<string, unknown> | unknown[]): unknown {
+    if (Array.isArray(obj)) {
+      return obj.map(item => {
+        if (typeof item === 'object' && item !== null) {
+          return this.sanitizeObject(item as Record<string, unknown>);
+        }
+        return item;
+      });
+    }
+
+    const sanitized: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(obj)) {
+      if (this.sensitiveFieldsSet.has(key)) {
+        sanitized[key] = '[REDACTED]';
+      } else if (typeof value === 'object' && value !== null) {
+        sanitized[key] = this.sanitizeObject(value as Record<string, unknown>);
+      } else {
+        sanitized[key] = value;
+      }
+    }
+    return sanitized;
   }
 
   /**
@@ -119,6 +244,7 @@ export class NetworkInspector {
 
   /**
    * Record a network request
+   * SECURITY: Automatically sanitizes sensitive headers and body fields
    */
   recordRequest(
     url: string,
@@ -131,12 +257,17 @@ export class NetworkInspector {
     }
 
     const requestId = this.generateRequestId();
+
+    // SECURITY: Sanitize headers and body before storing
+    const sanitizedHeaders = headers ? this.sanitizeHeaders(headers) : {};
+    const sanitizedBody = this.options.recordBodies ? this.sanitizeBody(body) : undefined;
+
     const request: NetworkRequest = {
       id: requestId,
       url,
       method: method.toUpperCase(),
-      headers: headers ?? {},
-      body: this.options.recordBodies ? body : undefined,
+      headers: sanitizedHeaders,
+      body: sanitizedBody,
       timestamp: Date.now(),
     };
 
@@ -146,6 +277,7 @@ export class NetworkInspector {
 
   /**
    * Record request response
+   * SECURITY: Automatically sanitizes sensitive headers and body fields
    */
   recordResponse(
     requestId: string,
@@ -161,8 +293,10 @@ export class NetworkInspector {
 
     request.status = status;
     request.statusText = statusText;
-    request.responseHeaders = headers;
-    request.response = this.options.recordBodies ? response : undefined;
+
+    // SECURITY: Sanitize response headers and body before storing
+    request.responseHeaders = headers ? this.sanitizeHeaders(headers) : undefined;
+    request.response = this.options.recordBodies ? this.sanitizeBody(response) : undefined;
     request.duration = Date.now() - request.timestamp;
 
     this.requests.push(request);

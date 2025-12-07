@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as crypto from 'crypto';
 import { BaseCommand, CommandContext, CommandMetadata } from '../base-command';
 
 /**
@@ -81,18 +82,23 @@ export class ShowStateInspectorCommand extends BaseCommand {
     this.log('info', 'State Inspector panel opened');
   }
 
-  private getWebviewContent(webview: vscode.Webview): string {
-    // In production, this would load the compiled webview bundle
-    // For now, we'll provide a placeholder HTML
+  private getNonce(): string {
+    return crypto.randomBytes(16).toString('base64');
+  }
 
+  private getWebviewContent(webview: vscode.Webview): string {
+    const nonce = this.getNonce();
+
+    // SECURITY: Use nonces for both styles and scripts, no 'unsafe-inline'
+    // Use textContent and proper DOM methods to prevent XSS
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src ${webview.cspSource} 'unsafe-inline';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'nonce-${nonce}'; script-src 'nonce-${nonce}';">
     <title>State Inspector</title>
-    <style>
+    <style nonce="${nonce}">
         body {
             padding: 0;
             margin: 0;
@@ -144,6 +150,9 @@ export class ShowStateInspectorCommand extends BaseCommand {
             padding: 40px;
             color: var(--vscode-descriptionForeground);
         }
+        .empty-state-hint {
+            font-size: 12px;
+        }
         .refresh-button {
             padding: 6px 12px;
             background-color: var(--vscode-button-background);
@@ -161,59 +170,85 @@ export class ShowStateInspectorCommand extends BaseCommand {
     <div class="container">
         <div class="header">
             <div class="title">State Inspector</div>
-            <button class="refresh-button" onclick="refreshStores()">Refresh</button>
+            <button class="refresh-button" id="refreshBtn">Refresh</button>
         </div>
         <div id="stores" class="store-list">
             <div class="empty-state">
                 <p>No stores detected</p>
-                <p style="font-size: 12px;">Make sure your app is running and connected</p>
+                <p class="empty-state-hint">Make sure your app is running and connected</p>
             </div>
         </div>
     </div>
-    <script>
-        const vscode = acquireVsCodeApi();
+    <script nonce="${nonce}">
+        (function() {
+            const vscode = acquireVsCodeApi();
 
-        function refreshStores() {
+            // Use event listeners instead of inline onclick handlers
+            document.getElementById('refreshBtn').addEventListener('click', function() {
+                vscode.postMessage({ type: 'refresh' });
+            });
+
+            function inspectStore(storeName) {
+                vscode.postMessage({ type: 'inspect', storeName: storeName });
+            }
+
+            window.addEventListener('message', function(event) {
+                const message = event.data;
+
+                switch (message.type) {
+                    case 'updateStores':
+                        updateStoresList(message.stores);
+                        break;
+                }
+            });
+
+            // SECURITY: Use DOM methods instead of innerHTML to prevent XSS
+            function updateStoresList(stores) {
+                const container = document.getElementById('stores');
+                container.innerHTML = '';
+
+                if (!stores || stores.length === 0) {
+                    const emptyState = document.createElement('div');
+                    emptyState.className = 'empty-state';
+
+                    const p1 = document.createElement('p');
+                    p1.textContent = 'No stores detected';
+                    emptyState.appendChild(p1);
+
+                    const p2 = document.createElement('p');
+                    p2.className = 'empty-state-hint';
+                    p2.textContent = 'Make sure your app is running and connected';
+                    emptyState.appendChild(p2);
+
+                    container.appendChild(emptyState);
+                    return;
+                }
+
+                stores.forEach(function(store) {
+                    const item = document.createElement('div');
+                    item.className = 'store-item';
+                    item.addEventListener('click', function() {
+                        inspectStore(store.name);
+                    });
+
+                    const nameDiv = document.createElement('div');
+                    nameDiv.className = 'store-name';
+                    nameDiv.textContent = store.name;
+                    item.appendChild(nameDiv);
+
+                    const stateDiv = document.createElement('div');
+                    stateDiv.className = 'store-state';
+                    const stateStr = JSON.stringify(store.state, null, 2);
+                    stateDiv.textContent = stateStr.substring(0, 100) + (stateStr.length > 100 ? '...' : '');
+                    item.appendChild(stateDiv);
+
+                    container.appendChild(item);
+                });
+            }
+
+            // Request initial data
             vscode.postMessage({ type: 'refresh' });
-        }
-
-        function inspectStore(storeName) {
-            vscode.postMessage({ type: 'inspect', storeName });
-        }
-
-        window.addEventListener('message', event => {
-            const message = event.data;
-
-            switch (message.type) {
-                case 'updateStores':
-                    updateStoresList(message.stores);
-                    break;
-            }
-        });
-
-        function updateStoresList(stores) {
-            const container = document.getElementById('stores');
-
-            if (!stores || stores.length === 0) {
-                container.innerHTML = \`
-                    <div class="empty-state">
-                        <p>No stores detected</p>
-                        <p style="font-size: 12px;">Make sure your app is running and connected</p>
-                    </div>
-                \`;
-                return;
-            }
-
-            container.innerHTML = stores.map(store => \`
-                <div class="store-item" onclick="inspectStore('\${store.name}')">
-                    <div class="store-name">\${store.name}</div>
-                    <div class="store-state">\${JSON.stringify(store.state, null, 2).substring(0, 100)}...</div>
-                </div>
-            \`).join('');
-        }
-
-        // Request initial data
-        refreshStores();
+        })();
     </script>
 </body>
 </html>`;
