@@ -85,11 +85,11 @@ export const routesConfigSchema = z.object({
 });
 
 /**
- *
+ * Route configuration type
  */
 export type RouteConfig = z.infer<typeof routeConfigSchema>;
 /**
- *
+ * Routes configuration collection type
  */
 export type RoutesConfig = z.infer<typeof routesConfigSchema>;
 
@@ -128,7 +128,7 @@ export const authConfigSchema = z.object({
 });
 
 /**
- *
+ * Authentication configuration type
  */
 export type AuthConfig = z.infer<typeof authConfigSchema>;
 
@@ -163,7 +163,7 @@ export const apiConfigSchema = z.object({
 });
 
 /**
- *
+ * API configuration type
  */
 export type ApiConfig = z.infer<typeof apiConfigSchema>;
 
@@ -195,11 +195,11 @@ export const featureFlagsConfigSchema = z.object({
 });
 
 /**
- *
+ * Feature flag configuration type
  */
 export type FeatureConfig = z.infer<typeof featureFlagSchema>;
 /**
- *
+ * Feature flags configuration collection type
  */
 export type FeatureFlagsConfig = z.infer<typeof featureFlagsConfigSchema>;
 
@@ -222,7 +222,7 @@ export const performanceConfigSchema = z.object({
 });
 
 /**
- *
+ * Performance configuration type
  */
 export type PerformanceConfig = z.infer<typeof performanceConfigSchema>;
 
@@ -248,7 +248,7 @@ export const devServerConfigSchema = z.object({
 });
 
 /**
- *
+ * Development server configuration type
  */
 export type DevServerConfig = z.infer<typeof devServerConfigSchema>;
 
@@ -270,7 +270,7 @@ export const buildConfigSchema = z.object({
 });
 
 /**
- *
+ * Build configuration type
  */
 export type BuildConfig = z.infer<typeof buildConfigSchema>;
 
@@ -299,7 +299,7 @@ export const monitoringConfigSchema = z.object({
 });
 
 /**
- *
+ * Monitoring configuration type
  */
 export type MonitoringConfig = z.infer<typeof monitoringConfigSchema>;
 
@@ -355,7 +355,7 @@ export const enzymeConfigSchema = z.object({
 });
 
 /**
- *
+ * Complete Enzyme configuration schema type
  */
 export type EnzymeConfigSchema = z.infer<typeof enzymeConfigSchema>;
 
@@ -365,7 +365,8 @@ export type EnzymeConfigSchema = z.infer<typeof enzymeConfigSchema>;
 
 /**
  * Validate configuration against schema
- * @param config
+ * @param config - Configuration to validate
+ * @returns Validation result
  */
 export function validateEnzymeConfig(config: unknown) {
   return enzymeConfigSchema.safeParse(config);
@@ -373,7 +374,8 @@ export function validateEnzymeConfig(config: unknown) {
 
 /**
  * Parse and validate configuration with defaults
- * @param config
+ * @param config - Configuration to parse
+ * @returns Parsed configuration with defaults applied
  */
 export function parseEnzymeConfig(config: unknown): EnzymeConfigSchema {
   return enzymeConfigSchema.parse(config);
@@ -381,6 +383,7 @@ export function parseEnzymeConfig(config: unknown): EnzymeConfigSchema {
 
 /**
  * Get default configuration
+ * @returns Default Enzyme configuration
  */
 export function getDefaultEnzymeConfig(): EnzymeConfigSchema {
   return enzymeConfigSchema.parse({});
@@ -388,7 +391,8 @@ export function getDefaultEnzymeConfig(): EnzymeConfigSchema {
 
 /**
  * Validate partial configuration
- * @param config
+ * @param config - Partial configuration to validate
+ * @returns Validation result
  */
 export function validatePartialConfig(config: unknown) {
   return enzymeConfigSchema.partial().safeParse(config);
@@ -410,13 +414,14 @@ export const schemaRegistry = {
 } as const;
 
 /**
- *
+ * Schema registry key type
  */
 export type SchemaKey = keyof typeof schemaRegistry;
 
 /**
  * Get schema by key
- * @param key
+ * @param key - Schema registry key
+ * @returns Schema for the given key
  */
 export function getSchema(key: SchemaKey) {
   return schemaRegistry[key];
@@ -424,8 +429,9 @@ export function getSchema(key: SchemaKey) {
 
 /**
  * Validate against specific schema
- * @param key
- * @param config
+ * @param key - Schema key to use for validation
+ * @param config - Configuration to validate
+ * @returns Validation result
  */
 export function validateWithSchema<K extends SchemaKey>(
   key: K,

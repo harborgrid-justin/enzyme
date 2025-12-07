@@ -431,7 +431,7 @@ export class FeatureDashboardPanel extends BaseWebViewPanel {
 			this.sendFeaturesUpdate();
 			this.persistFeatures();
 
-			vscode.window.showInformationMessage(`Feature "${this.features[index]!.name}" updated`);
+			vscode.window.showInformationMessage(`Feature "${this.features[index].name}" updated`);
 		}
 	}
 

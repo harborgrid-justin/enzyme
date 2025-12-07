@@ -376,7 +376,7 @@ export class NetworkInspector {
     let filtered = [...this.requests];
 
     if (filter?.method) {
-      const method = filter.method;
+      const {method} = filter;
       filtered = filtered.filter((r) => r.method === method.toUpperCase());
     }
 
@@ -385,7 +385,7 @@ export class NetworkInspector {
     }
 
     if (filter?.url) {
-      const url = filter.url;
+      const {url} = filter;
       filtered = filtered.filter((r) => r.url.includes(url));
     }
 

@@ -191,9 +191,10 @@ return (
 export class EnzymeHoverProvider implements vscode.HoverProvider {
   /**
    * Provide hover information
-   * @param document
-   * @param position
-   * @param token
+   * @param document - Document to provide hover for
+   * @param position - Position in the document
+   * @param _token - Cancellation token
+   * @returns Hover information or null
    */
   public provideHover(
     document: vscode.TextDocument,
@@ -254,6 +255,7 @@ export class EnzymeHoverProvider implements vscode.HoverProvider {
 
 /**
  * Register the Enzyme Hover Provider
+ * @returns Disposable for the registered hover provider
  */
 export function registerEnzymeHoverProvider(): vscode.Disposable {
   const selector: vscode.DocumentSelector = [

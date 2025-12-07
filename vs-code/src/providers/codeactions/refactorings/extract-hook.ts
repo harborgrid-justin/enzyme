@@ -10,6 +10,7 @@ export class ExtractHookRefactoring {
    * @param document
    * @param range
    * @param context
+   * @param _context
    */
   public provideRefactorings(
     document: vscode.TextDocument,
@@ -73,13 +74,13 @@ export class ExtractHookRefactoring {
 
     // Try to extract from state variable names
     const stateMatch = /const\s+\[(\w+),\s*set\w+]\s*=\s*useState/.exec(text);
-    if (stateMatch && stateMatch[1]) {
+    if (stateMatch?.[1]) {
       return `use${this.toPascalCase(stateMatch[1])}`;
     }
 
     // Try to extract from function context
     const functionMatch = /(?:const|function)\s+(\w+)/.exec(text);
-    if (functionMatch && functionMatch[1]) {
+    if (functionMatch?.[1]) {
       return `use${this.toPascalCase(functionMatch[1])}`;
     }
 
@@ -229,7 +230,7 @@ function analyzeHookCode(code: string): HookAnalysis {
 
   // Extract dependencies from function parameters
   const paramMatches = /^\s*(?:const|function)\s+\w+\s*\(([^)]*)\)/m.exec(code);
-  if (paramMatches && paramMatches[1]) {
+  if (paramMatches?.[1]) {
     const params = paramMatches[1].split(',').map((p) => p.trim().split(':')[0]?.trim() ?? '');
     params.forEach((p) => {
       if (p) {
@@ -267,6 +268,7 @@ ${code.split('\n').map((line) => `  ${  line}`).join('\n')}${returnStatement}
 /**
  *
  * @param hookName
+ * @param _hookName
  * @param hookCode
  * @param analysis
  */

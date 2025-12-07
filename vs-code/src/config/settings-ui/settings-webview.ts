@@ -4,7 +4,7 @@
  */
 
 import * as vscode from 'vscode';
-import { getExtensionConfig, DEFAULT_SETTINGS, type ExtensionSettingKey , ExtensionConfig} from '../extension-config';
+import { getExtensionConfig, DEFAULT_SETTINGS, type ExtensionConfig, type ExtensionSettingKey } from '../extension-config';
 import { generateSettingsHTML } from './settings-html';
 
 // =============================================================================
@@ -76,14 +76,14 @@ export class SettingsWebView {
    */
   private setupMessageHandling(): void {
     this.panel!.webview.onDidReceiveMessage(
-      async (message) => {
+      async (message: { type: string; key?: string; value?: unknown }) => {
         switch (message.type) {
           case 'updateSetting':
-            await this.handleUpdateSetting(message.key, message.value);
+            await this.handleUpdateSetting(message.key!, message.value);
             break;
 
           case 'resetSetting':
-            await this.handleResetSetting(message.key);
+            await this.handleResetSetting(message.key!);
             break;
 
           case 'resetAll':

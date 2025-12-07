@@ -1,7 +1,7 @@
 export * from './generator-runner';
 
 /**
- *
+ * Generator options interface
  */
 export interface GeneratorOptions {
   name: string;
@@ -11,7 +11,7 @@ export interface GeneratorOptions {
   skipStyles?: boolean;
   typescript?: boolean;
   export?: 'default' | 'named';
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**

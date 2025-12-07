@@ -9,6 +9,7 @@ export class ConvertToLazyRouteRefactoring {
    * @param document
    * @param range
    * @param context
+   * @param _context
    */
   public provideRefactorings(
     document: vscode.TextDocument,
@@ -143,7 +144,7 @@ export class ConvertToLazyRouteRefactoring {
       const line = document.lineAt(currentLine);
       const componentMatch = /component:\s*(\w+)/.exec(line.text);
 
-      if (componentMatch && componentMatch[1]) {
+      if (componentMatch?.[1]) {
         component = componentMatch[1];
       }
 
@@ -268,7 +269,7 @@ export function ensureLazyImport(document: vscode.TextDocument): vscode.Workspac
       // Add lazy to existing import
       const importMatch = /import\s+{([^}]*)}\s+from\s+["']react["']/.exec(line.text);
 
-      if (importMatch && importMatch[1]) {
+      if (importMatch?.[1]) {
         const existingImports = importMatch[1];
         const newImports = existingImports.includes('lazy')
           ? existingImports

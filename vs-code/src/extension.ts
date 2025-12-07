@@ -34,7 +34,7 @@ import { registerWebViewProviders } from './providers/webviews/register-webviews
  * @param context - The VS Code extension context providing access to extension APIs and lifecycle
  * @returns A promise that resolves when activation is complete
  *
- * @remarks
+ * @description
  * - Respects workspace trust settings per VS Code Extension Guidelines
  * - Uses performance monitoring to track activation time (target: < 10ms)
  * - Defers heavy operations (workspace analysis, file watching) to avoid blocking
@@ -92,7 +92,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
  *
  * @param context - The VS Code extension context for registering commands
  *
- * @remarks
+ * @description
  * Safe commands include:
  * - Documentation links (read-only, external)
  * - Log viewing (diagnostic, no code execution)
@@ -130,7 +130,7 @@ function registerSafeCommands(context: vscode.ExtensionContext): void {
  * @param context - The VS Code extension context
  * @returns A promise that resolves when initialization is complete
  *
- * @remarks
+ * @description
  * Heavy operations like workspace analysis are deferred using `setImmediate`
  * to ensure the extension activation completes quickly (< 10ms target).
  * This prevents blocking the VS Code extension host during startup.
@@ -215,7 +215,7 @@ async function initializeFullFunctionality(context: vscode.ExtensionContext): Pr
  *
  * @returns A promise that resolves when deactivation is complete
  *
- * @remarks
+ * @description
  * - File watchers are automatically disposed via context.subscriptions
  * - Handles cases where activation may have failed (context may not exist)
  * - All errors during deactivation are logged but don't throw
@@ -256,7 +256,7 @@ export async function deactivate(): Promise<void> {
  * @param context - The VS Code extension context
  * @returns A promise that resolves when workspace initialization is complete
  *
- * @remarks
+ * @description
  * - Called via `setImmediate` to avoid blocking extension activation
  * - Uses progress indicators for long-running operations
  * - File watchers are registered via context.subscriptions for proper cleanup
@@ -369,7 +369,7 @@ async function initializeEnzymeWorkspace(
  * @param enzymeContext - The Enzyme extension context singleton
  * @returns A promise that resolves when the check is complete
  *
- * @remarks
+ * @description
  * - Uses global state to persist first activation flag across sessions
  * - Called asynchronously after main activation completes
  * - Errors are caught and logged without disrupting extension functionality
@@ -396,7 +396,7 @@ async function isFirstActivationCheck(enzymeContext: EnzymeExtensionContext): Pr
  * @param handler - The async command handler function to wrap
  * @returns A wrapped command handler with error handling
  *
- * @remarks
+ * @description
  * All extension commands should be wrapped with this function to ensure
  * consistent error handling and user experience.
  *
@@ -451,7 +451,7 @@ function wrapCommandHandler(
  *
  * @param enzymeContext - The Enzyme extension context singleton
  *
- * @remarks
+ * @description
  * - All commands are wrapped with `wrapCommandHandler` for consistent error handling
  * - Commands are registered via enzymeContext.registerDisposable for proper cleanup
  * - Command enablement is controlled by context keys set in package.json
@@ -633,7 +633,7 @@ function registerCommands(enzymeContext: EnzymeExtensionContext): void {
  * @param enzymeContext - The Enzyme extension context singleton
  * @returns A promise that resolves when the command completes
  *
- * @remarks
+ * @description
  * Currently shows a placeholder message. Future implementation will:
  * - Create enzyme.config.ts
  * - Set up project structure
@@ -666,7 +666,7 @@ async function handleInitCommand(enzymeContext: EnzymeExtensionContext): Promise
  * @param enzymeContext - The Enzyme extension context singleton
  * @returns A promise that resolves when the workspace is refreshed
  *
- * @remarks
+ * @description
  * - Invalidates all cached workspace data before re-scanning
  * - Updates all TreeView providers with new data
  * - Errors are logged but don't throw to maintain extension stability
@@ -699,7 +699,7 @@ async function refreshWorkspace(enzymeContext: EnzymeExtensionContext): Promise<
  * @param _enzymeContext - The Enzyme extension context singleton (unused in current implementation)
  * @returns A promise that resolves when the user responds to the message
  *
- * @remarks
+ * @description
  * - Only shown once per installation (tracked in global state)
  * - Provides new users with immediate guidance
  * - Non-blocking - user can dismiss and continue working
@@ -729,7 +729,7 @@ async function showWelcomeMessage(_enzymeContext: EnzymeExtensionContext): Promi
  *
  * @param enzymeContext - The Enzyme extension context singleton
  *
- * @remarks
+ * @description
  * - Respects VS Code Extension Guidelines for telemetry
  * - No personal data is collected
  * - Defaults to disabled (opt-in only)
@@ -762,7 +762,7 @@ function initializeTelemetry(enzymeContext: EnzymeExtensionContext): void {
  * @param enzymeContext - The Enzyme extension context singleton
  * @returns A promise that resolves when the setting is updated
  *
- * @remarks
+ * @description
  * - Updates the 'enzyme.telemetry.enabled' configuration
  * - Shows confirmation message to user
  * - Logs the new telemetry state

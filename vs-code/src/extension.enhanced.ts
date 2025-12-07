@@ -301,7 +301,15 @@ async function initializeFullFunctionality(context: vscode.ExtensionContext): Pr
     workspaceService,
     analysisService,
     lifecycleManager,
-    getVersion: () => context.extension.packageJSON.version,
+    getVersion: () => {
+      try {
+         
+        const {version} = context.extension.packageJSON;
+        return typeof version === 'string' ? version : '0.0.0';
+      } catch {
+        return '0.0.0';
+      }
+    },
     isReady: () => lifecycleManager.isExtensionReady(),
     getContext: () => context,
   };
@@ -321,6 +329,7 @@ async function initializeFullFunctionality(context: vscode.ExtensionContext): Pr
  * @param context - VS Code context
  * @param healthMonitor - Health monitor service
  *
+ * @param _healthMonitor
  * @internal
  */
 async function initializeDeferredOperations(
@@ -406,6 +415,7 @@ async function initializeDeferredOperations(
  * - Quick setup guide
  *
  * @param enzymeContext - Extension context
+ * @param _enzymeContext
  * @param isEnzymeWorkspace - Whether workspace is an Enzyme project
  *
  * @internal
@@ -472,6 +482,7 @@ async function showEnhancedWelcome(
  * Show quiet activation notification for returning users
  *
  * @param enzymeContext - Extension context
+ * @param _enzymeContext
  * @internal
  */
 function showQuietActivationNotification(_enzymeContext: EnzymeExtensionContext): void {
@@ -544,9 +555,17 @@ function initializeTelemetry(
 
   if (telemetryEnabled) {
     logger.info('Telemetry enabled');
-    telemetryService.trackEvent('extension.activated', {
-      version: enzymeContext.getContext().extension.packageJSON.version,
-    });
+    try {
+       
+      const {version} = enzymeContext.getContext().extension.packageJSON;
+      telemetryService.trackEvent('extension.activated', {
+        version: typeof version === 'string' ? version : '0.0.0',
+      });
+    } catch {
+      telemetryService.trackEvent('extension.activated', {
+        version: '0.0.0',
+      });
+    }
   } else {
     logger.info(`Telemetry disabled (VS Code: ${vscodeTelemetryEnabled}, Extension: ${extensionTelemetryEnabled})`);
   }
@@ -597,8 +616,16 @@ function createLimitedAPI(context: vscode.ExtensionContext): EnzymeExtensionAPI 
     logger: loggerService,
     workspaceService,
     analysisService,
-    lifecycleManager: null as any, // Not available in restricted mode
-    getVersion: () => context.extension.packageJSON.version,
+    lifecycleManager: {} as LifecycleManager, // Not available in restricted mode
+    getVersion: () => {
+      try {
+         
+        const {version} = context.extension.packageJSON;
+        return typeof version === 'string' ? version : '0.0.0';
+      } catch {
+        return '0.0.0';
+      }
+    },
     isReady: () => false, // Never ready in restricted mode
     getContext: () => context,
   };

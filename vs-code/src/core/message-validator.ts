@@ -244,6 +244,7 @@ export class MessageValidator {
    * SECURITY: Validate boolean value
    * @param value
    * @param schema
+   * @param _schema
    * @param errors
    */
   private validateBoolean(

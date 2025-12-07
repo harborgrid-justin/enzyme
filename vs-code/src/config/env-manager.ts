@@ -165,16 +165,12 @@ export class EnvManager {
 
       // Parse key=value
       const match = /^([A-Z_][\dA-Z_]*)\s*=\s*(.*)$/.exec(line);
-      if (match && match[1]) {
+      if (match?.[1]) {
         const key = match[1];
         let value = match[2];
 
         // Remove quotes
-        if (value) {
-          value = value.replace(/^["'](.*)["']$/, '$1');
-        } else {
-          value = '';
-        }
+        value = value ? value.replace(/^["'](.*)["']$/, '$1') : '';
 
         const variable: EnvironmentVariable = {
           key,

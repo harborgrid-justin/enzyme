@@ -12,7 +12,8 @@ export class ShowStateInspectorCommand extends BaseCommand {
   private panel: vscode.WebviewPanel | undefined;
 
   /**
-   *
+   * Get command metadata for registration
+   * @returns Command metadata object
    */
   getMetadata(): CommandMetadata {
     return {
@@ -28,8 +29,9 @@ export class ShowStateInspectorCommand extends BaseCommand {
   }
 
   /**
-   *
-   * @param _context
+   * Execute the command
+   * @param _context - Command execution context
+   * @returns Promise that resolves when command completes
    */
   protected async executeCommand(_context: CommandContext): Promise<void> {
     // If panel already exists, reveal it

@@ -10,7 +10,7 @@ import * as vscode from 'vscode';
 // =============================================================================
 
 /**
- *
+ * Configuration property definition
  */
 interface ConfigProperty {
   name: string;
@@ -137,6 +137,7 @@ export class ConfigCompletionProvider implements vscode.CompletionItemProvider {
    * @param document
    * @param position
    * @param token
+   * @param _token
    * @param context
    */
   public provideCompletionItems(
@@ -162,6 +163,7 @@ export class ConfigCompletionProvider implements vscode.CompletionItemProvider {
    * @param prop
    * @param property
    * @param context
+   * @param _context
    */
   private createCompletionItem(
     property: ConfigProperty,

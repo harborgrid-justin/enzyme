@@ -314,7 +314,7 @@ export class WorkspaceConfig {
 
     this.watcher = vscode.workspace.createFileSystemWatcher(pattern);
 
-    this.watcher.onDidChange(() => {
+    this.watcher.onDidChange((_uri: vscode.Uri) => {
       // Settings changed externally
       console.log('Workspace settings changed');
     });
@@ -385,9 +385,9 @@ export class MultiRootWorkspaceManager {
    */
   private watchWorkspaceChanges(): void {
     this.disposables.push(
-      vscode.workspace.onDidChangeWorkspaceFolders((event) => {
-        event.added.forEach(async (folder) => this.addWorkspace(folder));
-        event.removed.forEach((folder) => this.removeWorkspace(folder));
+      vscode.workspace.onDidChangeWorkspaceFolders((event: vscode.WorkspaceFoldersChangeEvent) => {
+        event.added.forEach(async (folder: vscode.WorkspaceFolder) => this.addWorkspace(folder));
+        event.removed.forEach((folder: vscode.WorkspaceFolder) => this.removeWorkspace(folder));
       })
     );
   }

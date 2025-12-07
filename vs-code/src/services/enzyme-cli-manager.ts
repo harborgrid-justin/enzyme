@@ -43,11 +43,11 @@ async function execSafe(
     let stdout = '';
     let stderr = '';
 
-    child.stdout?.on('data', (data) => {
+    child.stdout.on('data', (data: Buffer) => {
       stdout += data.toString();
     });
 
-    child.stderr?.on('data', (data) => {
+    child.stderr.on('data', (data: Buffer) => {
       stderr += data.toString();
     });
 
@@ -145,17 +145,18 @@ export class EnzymeCliManager {
    * @returns EnzymeCliManager instance
    */
   public static create(logger: LoggerService, eventBus: EventBus): EnzymeCliManager {
-    if (!EnzymeCliManager.instance) {
-      EnzymeCliManager.instance = new EnzymeCliManager(logger, eventBus);
-    }
+     
+    EnzymeCliManager.instance ??= new EnzymeCliManager(logger, eventBus);
     return EnzymeCliManager.instance;
   }
 
   /**
    * Get singleton instance (must be created first)
+   * @returns EnzymeCliManager instance
    */
   public static getInstance(): EnzymeCliManager {
-    if (!EnzymeCliManager.instance) {
+     
+    if (EnzymeCliManager.instance === undefined) {
       throw new Error('EnzymeCliManager not created. Call create() first.');
     }
     return EnzymeCliManager.instance;
@@ -237,9 +238,9 @@ export class EnzymeCliManager {
   public async install(options: CLIInstallOptions = {}): Promise<boolean> {
     this.logger.info('Installing Enzyme CLI', options);
 
-    const packageManager = options.packageManager || await this.detectPackageManager();
+    const packageManager = options.packageManager ?? await this.detectPackageManager();
     const isGlobal = options.global ?? true; // Default to global
-    const packageName = options.version ? `@enzymejs/cli@${options.version}` : '@enzymejs/cli';
+    const packageName = options.version !== undefined ? `@enzymejs/cli@${options.version}` : '@enzymejs/cli';
 
     try {
       if (options.showProgress !== false) {
@@ -372,7 +373,7 @@ export class EnzymeCliManager {
       return false;
     }
 
-    const packageManager = detection.packageManager || await this.detectPackageManager();
+    const packageManager = detection.packageManager ?? await this.detectPackageManager();
     const isGlobal = detection.type === 'global';
 
     return await this.install({
@@ -404,9 +405,9 @@ export class EnzymeCliManager {
     this.logger.info(`Executing CLI command: ${cmd} ${allArgs.join(' ')}`);
 
     try {
-      const workDir = cwd || this.getWorkspacePath();
+      const workDirectory = cwd ?? this.getWorkspacePath();
       const result = await execSafe(cmd, allArgs, {
-        ...(workDir ? { cwd: workDir } : {}),
+        ...(workDirectory !== undefined ? { cwd: workDirectory } : {}),
       });
 
       this.logger.info('CLI command output:', result.stdout);
@@ -428,23 +429,22 @@ export class EnzymeCliManager {
     const detection = await this.detect();
 
     if (!detection.installed) {
-      await vscode.window.showInformationMessage(
+      const selection = await vscode.window.showInformationMessage(
         'Enzyme CLI is not installed',
         'Install Now'
-      ).then(selection => {
-        if (selection === 'Install Now') {
-          this.install({ showProgress: true });
-        }
-      });
+      );
+      if (selection === 'Install Now') {
+        await this.install({ showProgress: true });
+      }
       return;
     }
 
     const message = `
 Enzyme CLI Information:
-- Version: ${detection.version || 'unknown'}
-- Type: ${detection.type || 'unknown'}
-- Path: ${detection.path || 'not found'}
-- Package Manager: ${detection.packageManager || 'unknown'}
+- Version: ${detection.version ?? 'unknown'}
+- Type: ${detection.type ?? 'unknown'}
+- Path: ${detection.path ?? 'not found'}
+- Package Manager: ${detection.packageManager ?? 'unknown'}
     `.trim();
 
     await vscode.window.showInformationMessage(message, 'Update', 'Dismiss');
@@ -597,7 +597,7 @@ Enzyme CLI Information:
     }
 
     return {
-      cmd: detection.path || 'enzyme',
+      cmd: detection.path ?? 'enzyme',
       cmdArgs: [],
     };
   }

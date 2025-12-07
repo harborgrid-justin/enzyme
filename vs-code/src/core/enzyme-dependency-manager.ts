@@ -295,7 +295,7 @@ export class EnzymeDependencyManager {
         title: `Installing ${isDevelopment ? 'dev ' : ''}dependencies`,
         cancellable: false,
       },
-      async (progress) => {
+      async (progress: vscode.Progress<{message?: string; increment?: number}>) => {
         const result: InstallationResult = {
           success: true,
           installed: [],
@@ -363,19 +363,19 @@ export class EnzymeDependencyManager {
       let stdout = '';
       let stderr = '';
 
-      child.stdout?.on('data', (data) => {
+      child.stdout?.on('data', (data: Buffer | string) => {
         stdout += data.toString();
       });
 
-      child.stderr?.on('data', (data) => {
+      child.stderr?.on('data', (data: Buffer | string) => {
         stderr += data.toString();
       });
 
-      child.on('error', (error) => {
+      child.on('error', (error: Error) => {
         reject(error);
       });
 
-      child.on('close', (code) => {
+      child.on('close', (code: number | null) => {
         if (code === 0) {
           resolve();
         } else {

@@ -178,7 +178,7 @@ export class ImportQuickFixes {
     const line = document.lineAt(diagnostic.range.start.line);
     const importMatch = /import\s+{([^}]+)}\s+from\s+["']([^"']+)["']/.exec(line.text);
 
-    if (importMatch && importMatch[1] && importMatch[2]) {
+    if (importMatch?.[1] && importMatch[2]) {
       const imports = importMatch[1].split(',').map((s) => s.trim());
       const _module = importMatch[2];
 
@@ -235,6 +235,7 @@ export class ImportQuickFixes {
    *
    * @param document
    * @param module
+   * @param _module
    */
   private findImportInsertPosition(document: vscode.TextDocument, _module: string): vscode.Position {
     // Find the last import statement

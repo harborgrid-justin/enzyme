@@ -244,7 +244,7 @@ export function getShortcutForCommand(command: string): string | undefined {
     return undefined;
   }
 
-  const isMac = process.platform === 'darwin';
+  const isMac = typeof process !== 'undefined' && process.platform === 'darwin';
   return isMac ? shortcut.mac : shortcut.windows;
 }
 
@@ -288,7 +288,7 @@ export function formatShortcutForDisplay(shortcut: string): string {
  * @returns Markdown string with shortcuts reference
  */
 export function generateShortcutsHelp(): string {
-  const isMac = process.platform === 'darwin';
+  const isMac = typeof process !== 'undefined' && process.platform === 'darwin';
   const categories = [...new Set(KEYBOARD_SHORTCUTS.map(s => s.category))];
 
   let markdown = '# Enzyme Keyboard Shortcuts\n\n';
@@ -317,7 +317,7 @@ export function generateShortcutsHelp(): string {
  * Users can select a shortcut to execute the corresponding command.
  */
 export async function showShortcutsQuickPick(): Promise<void> {
-  const isMac = process.platform === 'darwin';
+  const isMac = typeof process !== 'undefined' && process.platform === 'darwin';
 
   // Group by category
   const categorizedItems: vscode.QuickPickItem[] = [];
@@ -379,6 +379,7 @@ function getCategoryIcon(category: KeyboardShortcut['category']): string {
  * Should be called during extension activation.
  *
  * @param context - Extension context
+ * @param _context
  * @returns Disposable for cleanup
  */
 export function registerKeyboardShortcutsCommand(

@@ -43,7 +43,7 @@ export enum CommandCategory {
 
 /**
  * Register all commands with VS Code
- * @param context Extension context
+ * @param context - Extension context for registration
  * @returns Array of disposables for command registrations
  */
 export function registerAllCommands(
@@ -132,7 +132,7 @@ export function registerAllCommands(
 
 /**
  * Get all registered command IDs
- * @returns Array of command IDs
+ * @returns Array of all registered command identifier strings
  */
 export function getRegisteredCommandIds(): string[] {
   return [
@@ -168,9 +168,9 @@ export function getRegisteredCommandIds(): string[] {
 
 /**
  * Get command metadata for package.json contribution
- * @returns Command contribution configuration
+ * @returns Object containing commands and keybindings configuration
  */
-export function getCommandContributions() {
+export function getCommandContributions(): { commands: unknown[]; keybindings: unknown[] } {
   return {
     commands: [
       // Generator Commands

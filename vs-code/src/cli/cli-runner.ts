@@ -80,7 +80,7 @@ export class CLIRunner {
    * @private
    */
   private isAllowedCommand(command: string): boolean {
-    const executable = command.split(/[/\\]/).pop()?.split(' ')[0] || '';
+    const executable = command.split(/[/\\]/).pop()?.split(' ')[0] ?? '';
     return CLIRunner.ALLOWED_COMMANDS.some(allowed =>
       executable === allowed || executable.startsWith(`${allowed}.`) || executable.endsWith(allowed)
     );
@@ -90,8 +90,7 @@ export class CLIRunner {
    * Sanitize argument to prevent command injection
    * SECURITY: Removes shell metacharacters that could be used for injection attacks
    *
-   * @param arg - The argument to sanitize
-   * @param argument
+   * @param argument - The argument to sanitize
    * @returns Sanitized argument string
    * @private
    */
@@ -116,8 +115,7 @@ export class CLIRunner {
    * Get safe environment variables (whitelist approach)
    * SECURITY: Only passes whitelisted environment variables to child processes
    *
-   * @param customEnv - Optional custom environment variables to merge
-   * @param customEnvironment
+   * @param customEnvironment - Optional custom environment variables to merge
    * @returns Safe environment object for child process
    * @private
    */
@@ -137,6 +135,7 @@ export class CLIRunner {
   /**
    * Execute a CLI command
    * @param options
+   * @returns CLI execution result
    */
   async run(options: CLIRunOptions): Promise<CLIRunResult> {
     const cliPath = await this.detector.getExecutablePath();
@@ -151,6 +150,7 @@ export class CLIRunner {
    * Execute a CLI command and stream output to a channel
    * @param options
    * @param outputChannel
+   * @returns CLI execution result
    */
   async runWithOutput(
     options: CLIRunOptions,
@@ -172,8 +172,9 @@ export class CLIRunner {
   /**
    * Execute a CLI command with JSON output
    * @param options
+   * @returns Parsed JSON output
    */
-  async runJSON<T = any>(options: CLIRunOptions): Promise<T> {
+  async runJSON<T = unknown>(options: CLIRunOptions): Promise<T> {
     const result = await this.run({
       ...options,
       args: [...options.args, '--json'],
@@ -184,14 +185,16 @@ export class CLIRunner {
     }
 
     try {
-      return JSON.parse(result.stdout);
+      return JSON.parse(result.stdout) as T;
     } catch (error) {
-      throw new Error(`Failed to parse CLI JSON output: ${error}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to parse CLI JSON output: ${errorMessage}`);
     }
   }
 
   /**
    * Get CLI version
+   * @returns CLI version string or null if not available
    */
   async getVersion(): Promise<string | null> {
     try {
@@ -210,8 +213,9 @@ export class CLIRunner {
    * @param type
    * @param name
    * @param options
+   * @returns CLI execution result
    */
-  async generate(type: string, name: string, options: Record<string, any> = {}): Promise<CLIRunResult> {
+  async generate(type: string, name: string, options: Record<string, unknown> = {}): Promise<CLIRunResult> {
     // Validate type
     const validTypes = ['component', 'page', 'hook', 'service', 'feature', 'slice', 'api', 'store', 'route'];
     if (!validTypes.includes(type)) {
@@ -219,7 +223,7 @@ export class CLIRunner {
     }
 
     // Validate name (alphanumeric, hyphens, underscores only)
-    if (!/^[\w\-]+$/.test(name)) {
+    if (!/^[\w-]+$/.test(name)) {
       throw new Error(`Invalid name: ${name}. Use only alphanumeric characters, hyphens, and underscores.`);
     }
 
@@ -228,7 +232,7 @@ export class CLIRunner {
     // Add options as flags with validation
     for (const [key, value] of Object.entries(options)) {
       // Validate option key
-      if (!/^[A-Za-z][\dA-Za-z\-]*$/.test(key)) {
+      if (!/^[A-Za-z][\dA-Za-z-]*$/.test(key)) {
         throw new Error(`Invalid option key: ${key}`);
       }
 
@@ -250,8 +254,9 @@ export class CLIRunner {
    * Add a feature using CLI
    * @param feature
    * @param options
+   * @returns CLI execution result
    */
-  async addFeature(feature: string, options: Record<string, any> = {}): Promise<CLIRunResult> {
+  async addFeature(feature: string, options: Record<string, unknown> = {}): Promise<CLIRunResult> {
     const args = ['add', feature];
 
     for (const [key, value] of Object.entries(options)) {
@@ -270,8 +275,9 @@ export class CLIRunner {
   /**
    * Analyze project using CLI
    * @param options
+   * @returns Analysis results
    */
-  async analyze(options: Record<string, any> = {}): Promise<any> {
+  async analyze(options: Record<string, unknown> = {}): Promise<unknown> {
     return this.runJSON({
       args: ['analyze', ...this.buildArgs(options)],
     });
@@ -279,8 +285,9 @@ export class CLIRunner {
 
   /**
    * Run project doctor
+   * @returns Doctor diagnostics results
    */
-  async doctor(): Promise<any> {
+  async doctor(): Promise<unknown> {
     return this.runJSON({
       args: ['doctor'],
     });
@@ -289,6 +296,7 @@ export class CLIRunner {
   /**
    * Cancel a running command
    * @param processId
+   * @returns void
    */
   cancel(processId: string): void {
     const process = this.runningProcesses.get(processId);
@@ -300,6 +308,7 @@ export class CLIRunner {
 
   /**
    * Cancel all running commands
+   * @returns void
    */
   cancelAll(): void {
     for (const [id, process] of this.runningProcesses.entries()) {
@@ -313,6 +322,7 @@ export class CLIRunner {
    * Uses shell: false and validates all inputs for security
    * @param command
    * @param options
+   * @returns CLI execution result
    */
   private async execute(command: string, options: CLIRunOptions): Promise<CLIRunResult> {
     return new Promise((resolve, reject) => {
@@ -328,7 +338,8 @@ export class CLIRunner {
 
       // Parse command if it contains spaces (like "npx @enzyme/cli")
       const parts = command.split(' ');
-      const cmd = parts[0]!; // split always returns at least one element
+      // split always returns at least one element
+      const cmd = parts[0] ?? command;
       const cmdArgs = parts.slice(1);
 
       // Security: Sanitize all arguments
@@ -342,16 +353,20 @@ export class CLIRunner {
 
       // Security: Use shell: false to prevent command injection
       // Build spawn options conditionally to satisfy exactOptionalPropertyTypes
-      const spawnOptions: any = {
+      /**
+       * Spawn options interface
+       */
+      interface SpawnOptions {
+        shell: boolean;
+        cwd?: string;
+        env: NodeJS.ProcessEnv;
+      }
+      const spawnOptions: SpawnOptions = {
         shell: false, // SECURITY: Never use shell: true
+        env: this.getSafeEnvironment(options.env),
       };
       if (cwd) {
         spawnOptions.cwd = cwd;
-      }
-      if (options.env) {
-        spawnOptions.env = this.getSafeEnvironment(options.env);
-      } else {
-        spawnOptions.env = this.getSafeEnvironment();
       }
       const childProcess: ReturnType<typeof spawn> = spawn(cmd, allArgs, spawnOptions);
 
@@ -419,7 +434,7 @@ export class CLIRunner {
    * @returns Array of CLI arguments
    * @private
    */
-  private buildArgs(options: Record<string, any>): string[] {
+  private buildArgs(options: Record<string, unknown>): string[] {
     const args: string[] = [];
 
     for (const [key, value] of Object.entries(options)) {

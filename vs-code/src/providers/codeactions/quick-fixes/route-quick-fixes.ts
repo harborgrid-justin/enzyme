@@ -8,6 +8,7 @@ export class RouteQuickFixes {
    *
    * @param document
    * @param range
+   * @param _range
    * @param context
    */
   public provideQuickFixes(
@@ -62,7 +63,7 @@ export class RouteQuickFixes {
 
     const line = document.lineAt(diagnostic.range.start.line);
     const pathMatch = /path:\s*["']([^"']+)["']/.exec(line.text);
-    if (pathMatch && pathMatch[1]) {
+    if (pathMatch?.[1]) {
       const currentPath = pathMatch[1];
       const newPath = this.generateUniquePath(currentPath);
       renameAction.edit.replace(
@@ -210,7 +211,7 @@ export class RouteQuickFixes {
     // Extract route params from path
     const line = document.lineAt(diagnostic.range.start.line);
     const pathMatch = /path:\s*["']([^"']+)["']/.exec(line.text);
-    if (pathMatch && pathMatch[1]) {
+    if (pathMatch?.[1]) {
       const path = pathMatch[1];
       const params = this.extractRouteParams(path);
       if (params.length > 0) {

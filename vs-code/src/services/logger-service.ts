@@ -21,7 +21,7 @@ export class LoggerService {
   private configDisposable?: vscode.Disposable;
 
   /**
-   *
+   * Private constructor for singleton pattern
    */
   public constructor() {
     this.loadConfiguration();
@@ -30,11 +30,11 @@ export class LoggerService {
 
   /**
    * Get the singleton instance
+   * @returns LoggerService instance
    */
   public static getInstance(): LoggerService {
-    if (!LoggerService.instance) {
-      LoggerService.instance = new LoggerService();
-    }
+     
+    LoggerService.instance ??= new LoggerService();
     return LoggerService.instance;
   }
 
@@ -62,7 +62,8 @@ export class LoggerService {
 
   /**
    * Parse log level string to LogLevel enum
-   * @param level
+   * @param level - Log level string
+   * @returns LogLevel enum value
    */
   private parseLogLevel(level: string): LogLevel {
     switch (level.toLowerCase()) {
@@ -81,7 +82,8 @@ export class LoggerService {
 
   /**
    * Get or create an output channel
-   * @param channelName
+   * @param channelName - Name of the output channel
+   * @returns Output channel instance
    */
   private getChannel(channelName: string = OUTPUT_CHANNELS.MAIN): vscode.OutputChannel {
     let channel = this.outputChannels.get(channelName);
@@ -94,7 +96,8 @@ export class LoggerService {
 
   /**
    * Check if a log level should be logged
-   * @param level
+   * @param level - Log level to check
+   * @returns True if level should be logged
    */
   private shouldLog(level: LogLevel): boolean {
     const levels = [LogLevel.DEBUG, LogLevel.INFO, LogLevel.WARN, LogLevel.ERROR];
@@ -105,9 +108,10 @@ export class LoggerService {
 
   /**
    * Format a log message
-   * @param level
-   * @param message
-   * @param data
+   * @param level - Log level
+   * @param message - Log message
+   * @param data - Optional data to log
+   * @returns Formatted log message
    */
   private formatMessage(level: LogLevel, message: string, data?: unknown): string {
     const timestamp = new Date().toISOString();
@@ -181,11 +185,11 @@ export class LoggerService {
 
   /**
    * Log an error message
-   * @param message
-   * @param error
-   * @param channelName
+   * @param message - Error message
+   * @param error - Error object or data
+   * @param channelName - Optional channel name
    */
-  public error(message: string, error?: Error | unknown, channelName?: string): void {
+  public error(message: string, error?: unknown, channelName?: string): void {
     let errorData: unknown = error;
 
     if (error instanceof Error) {
@@ -239,6 +243,7 @@ export class LoggerService {
 
   /**
    * Get log level
+   * @returns Current log level
    */
   public getLogLevel(): LogLevel {
     return this.logLevel;
@@ -246,7 +251,8 @@ export class LoggerService {
 
   /**
    * Get log history
-   * @param count
+   * @param count - Optional number of recent entries to return
+   * @returns Log history array
    */
   public getHistory(count?: number): typeof this.logHistory {
     if (count) {
@@ -273,7 +279,7 @@ export class LoggerService {
     this.configDisposable?.dispose();
     // Reset singleton instance
     if (LoggerService.instance === this) {
-      LoggerService.instance = null as any;
+      LoggerService.instance = undefined as unknown as LoggerService;
     }
   }
 }

@@ -62,6 +62,7 @@ export class EnzymeRoutesTreeProvider extends BaseTreeProvider<EnzymeRouteItem |
 
   /**
    * Get watch patterns for auto-refresh
+   * @returns Array of glob patterns to watch for route file changes
    */
   protected override getWatchPatterns(): string[] {
     return [
@@ -82,6 +83,7 @@ export class EnzymeRoutesTreeProvider extends BaseTreeProvider<EnzymeRouteItem |
 
   /**
    * Get root tree items
+   * @returns Array of route items and category items based on current grouping mode
    */
   protected async getRootItems(): Promise<Array<EnzymeRouteItem | EnzymeCategoryItem>> {
     return this.getCachedOrFetch('routes-root', async () => {
@@ -106,6 +108,7 @@ export class EnzymeRoutesTreeProvider extends BaseTreeProvider<EnzymeRouteItem |
   /**
    * Get child items
    * @param element
+   * @returns Array of route items for the given category
    */
   protected async getChildItems(
     element: EnzymeRouteItem | EnzymeCategoryItem
@@ -225,7 +228,7 @@ export class EnzymeRoutesTreeProvider extends BaseTreeProvider<EnzymeRouteItem |
     }
 
     if (baseIndex === -1) {
-      return `/${  path.basename(filePath, path.extname(filePath))}`;
+      return `/${path.basename(filePath, path.extname(filePath))}`;
     }
 
     const relativePath = filePath.slice(Math.max(0, baseIndex));
@@ -253,7 +256,7 @@ export class EnzymeRoutesTreeProvider extends BaseTreeProvider<EnzymeRouteItem |
       .filter(Boolean)
       .join('/');
 
-    return `/${  urlPath}` || '/';
+    return `/${urlPath}` || '/';
   }
 
   /**
@@ -415,7 +418,7 @@ export class EnzymeRoutesTreeProvider extends BaseTreeProvider<EnzymeRouteItem |
     for (const route of this.routes) {
       const segments = route.path.split('/').filter(Boolean);
       if (segments.length > 0) {
-        topLevelPaths.add(`/${  segments[0]}`);
+        topLevelPaths.add(`/${segments[0]}`);
       } else {
         topLevelPaths.add('/');
       }
@@ -425,7 +428,7 @@ export class EnzymeRoutesTreeProvider extends BaseTreeProvider<EnzymeRouteItem |
     const items: EnzymeCategoryItem[] = [];
     for (const topPath of topLevelPaths) {
       const matchingRoutes = this.routes.filter(r =>
-        r.path === topPath || r.path.startsWith(`${topPath  }/`)
+        r.path === topPath || r.path.startsWith(`${topPath}/`)
       );
 
       items.push(new EnzymeCategoryItem(
@@ -454,11 +457,11 @@ export class EnzymeRoutesTreeProvider extends BaseTreeProvider<EnzymeRouteItem |
 
     if (this.grouping === 'by-feature') {
       filteredRoutes = this.routes.filter(r =>
-        (r.feature || 'No Feature') === categoryName
+        (r.feature ?? 'No Feature') === categoryName
       );
     } else if (this.grouping === 'by-path') {
       filteredRoutes = this.routes.filter(r =>
-        r.path === categoryName || r.path.startsWith(`${categoryName  }/`)
+        r.path === categoryName || r.path.startsWith(`${categoryName}/`)
       );
     } else {
       filteredRoutes = this.routes;
@@ -490,6 +493,7 @@ export class EnzymeRoutesTreeProvider extends BaseTreeProvider<EnzymeRouteItem |
 
   /**
    * Get all discovered routes
+   * @returns Array of all route metadata
    */
   getRoutes(): RouteMetadata[] {
     return [...this.routes];
@@ -497,6 +501,7 @@ export class EnzymeRoutesTreeProvider extends BaseTreeProvider<EnzymeRouteItem |
 
   /**
    * Get routes with conflicts
+   * @returns Array of routes that have path conflicts
    */
   getConflictingRoutes(): RouteMetadata[] {
     return this.routes.filter(r => r.hasConflict);

@@ -456,7 +456,7 @@ async function executeMigration(
       title: 'Migrating Enzyme configuration...',
       cancellable: false,
     },
-    async (progress) => {
+    async (progress: vscode.Progress<{ message?: string; increment?: number }>) => {
       progress.report({ increment: 0 });
 
       const result = await migrator.migrate(config);

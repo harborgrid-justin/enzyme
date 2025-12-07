@@ -46,11 +46,11 @@ export class EnzymeHoverProvider implements vscode.HoverProvider {
    * PERFORMANCE: Uses early returns and context detection to minimize work
    * BEST PRACTICE: Properly handles cancellation for responsiveness
    */
-  public async provideHover(
+  public provideHover(
     document: vscode.TextDocument,
     position: vscode.Position,
     token: vscode.CancellationToken
-  ): Promise<vscode.Hover | undefined> {
+  ): vscode.Hover | undefined {
     // BEST PRACTICE: Check cancellation token
     if (token.isCancellationRequested) {
       return undefined;
@@ -66,7 +66,7 @@ export class EnzymeHoverProvider implements vscode.HoverProvider {
     const line = document.lineAt(position.line).text;
 
     // Check for route hover
-    if (line.includes('routes.') && wordRange) {
+    if (line.includes('routes.')) {
       const routeHover = this.getRouteHover(word, wordRange);
       if (routeHover) {
         return routeHover;
@@ -187,7 +187,7 @@ export class EnzymeHoverProvider implements vscode.HoverProvider {
 
       // Add link to route file
       markdown.appendMarkdown('\n---\n\n');
-      markdown.appendMarkdown(`[View route definition](${vscode.Uri.file(route.file)})\n`);
+      markdown.appendMarkdown(`[View route definition](${vscode.Uri.file(route.file).toString()})\n`);
 
       return new vscode.Hover(markdown, range);
     } catch (error) {
@@ -251,9 +251,10 @@ export class EnzymeHoverProvider implements vscode.HoverProvider {
 
       if (hook.examples && hook.examples.length > 0) {
         markdown.appendMarkdown('---\n\n**Examples:**\n\n');
-        hook.examples.forEach((example, index) => {
+        const {examples} = hook;
+        examples.forEach((example, index) => {
           markdown.appendCodeblock(example, 'typescript');
-          if (index < hook.examples!.length - 1) {
+          if (index < examples.length - 1) {
             markdown.appendMarkdown('\n');
           }
         });
@@ -342,7 +343,7 @@ export class EnzymeHoverProvider implements vscode.HoverProvider {
 
       // Add link to component file
       markdown.appendMarkdown('\n---\n\n');
-      markdown.appendMarkdown(`[View component source](${vscode.Uri.file(component.file)})\n`);
+      markdown.appendMarkdown(`[View component source](${vscode.Uri.file(component.file).toString()})\n`);
 
       return new vscode.Hover(markdown, range);
     } catch {
@@ -352,6 +353,10 @@ export class EnzymeHoverProvider implements vscode.HoverProvider {
 
   /**
    * Get store hover information
+   * @param storeName - Name of the store slice
+   * @param range - Range of the store reference
+   * @returns Hover object with store information or undefined
+   * @private
    */
   private getStoreHover(storeName: string, range: vscode.Range): vscode.Hover | undefined {
     try {
@@ -407,7 +412,7 @@ export class EnzymeHoverProvider implements vscode.HoverProvider {
 
       // Add link to store file
       markdown.appendMarkdown('\n---\n\n');
-      markdown.appendMarkdown(`[View store definition](${vscode.Uri.file(store.file)})\n`);
+      markdown.appendMarkdown(`[View store definition](${vscode.Uri.file(store.file).toString()})\n`);
 
       return new vscode.Hover(markdown, range);
     } catch {
@@ -417,6 +422,11 @@ export class EnzymeHoverProvider implements vscode.HoverProvider {
 
   /**
    * Get API hover information
+   * @param document - Document containing the API call
+   * @param position - Position of the cursor
+   * @param range - Range of the API reference
+   * @returns Hover object with API information or undefined
+   * @private
    */
   private getApiHover(
     document: vscode.TextDocument,
@@ -486,6 +496,10 @@ export class EnzymeHoverProvider implements vscode.HoverProvider {
 
   /**
    * Get configuration hover information
+   * @param configKey - Configuration key name
+   * @param range - Range of the config reference
+   * @returns Hover object with configuration information or undefined
+   * @private
    */
   private getConfigHover(configKey: string, range: vscode.Range): vscode.Hover | undefined {
     const configDocs: Record<string, { description: string; type: string; example: string }> = {

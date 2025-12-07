@@ -20,10 +20,21 @@ export class EnzymeTerminalProvider {
 
   /**
    * Create terminal profile for Enzyme commands
+   * @returns Terminal profile for Enzyme
    */
   createTerminalProfile(): vscode.TerminalProfile {
     const workspaceRoot = this.getWorkspaceRoot();
-    const options: any = {
+    /**
+     * Terminal options interface
+     */
+    interface TerminalOptions {
+      name: string;
+      iconPath: vscode.ThemeIcon;
+      color: vscode.ThemeColor;
+      env: Record<string, string>;
+      cwd?: string;
+    }
+    const options: TerminalOptions = {
       name: 'Enzyme Terminal',
       iconPath: new vscode.ThemeIcon('beaker'),
       color: new vscode.ThemeColor('terminal.ansiCyan'),
@@ -42,11 +53,22 @@ export class EnzymeTerminalProvider {
 
   /**
    * Get or create the Enzyme terminal
+   * @returns The Enzyme terminal instance
    */
   getOrCreateTerminal(): vscode.Terminal {
     if (!this.terminal || this.isTerminalClosed(this.terminal)) {
       const workspaceRoot = this.getWorkspaceRoot();
-      const options: any = {
+      /**
+       * Terminal options interface
+       */
+      interface TerminalOptions {
+        name: string;
+        iconPath: vscode.ThemeIcon;
+        color: vscode.ThemeColor;
+        env: Record<string, string>;
+        cwd?: string;
+      }
+      const options: TerminalOptions = {
         name: 'Enzyme',
         iconPath: new vscode.ThemeIcon('beaker'),
         color: new vscode.ThemeColor('terminal.ansiCyan'),
@@ -97,6 +119,7 @@ export class EnzymeTerminalProvider {
   /**
    * Check for malicious command patterns
    * @param command
+   * @returns True if malicious patterns detected, false otherwise
    */
   private containsMaliciousPatterns(command: string): boolean {
     // Check for command chaining that could be used for injection
@@ -118,6 +141,7 @@ export class EnzymeTerminalProvider {
    * Run an enzyme CLI command
    * @param args
    * @param show
+   * @returns void
    */
   runEnzymeCommand(args: string[], show = true): void {
     const command = `enzyme ${args.join(' ')}`;
@@ -129,8 +153,9 @@ export class EnzymeTerminalProvider {
    * @param type
    * @param name
    * @param options
+   * @returns void
    */
-  async generateAndNavigate(type: string, name: string, options: Record<string, any> = {}): Promise<void> {
+  generateAndNavigate(type: string, name: string, options: Record<string, unknown> = {}): void {
     const terminal = this.getOrCreateTerminal();
     terminal.show();
 
@@ -151,17 +176,20 @@ export class EnzymeTerminalProvider {
     terminal.sendText(command);
 
     // Attempt to navigate to generated file after a delay
-    setTimeout(async () => {
-      const generatedFile = await this.findGeneratedFile(type, name);
-      if (generatedFile) {
-        const document = await vscode.workspace.openTextDocument(generatedFile);
-        await vscode.window.showTextDocument(document);
-      }
+    setTimeout(() => {
+      void this.findGeneratedFile(type, name).then((generatedFile) => {
+        if (generatedFile) {
+          void vscode.workspace.openTextDocument(generatedFile).then((document) => {
+            void vscode.window.showTextDocument(document);
+          });
+        }
+      });
     }, 2000);
   }
 
   /**
    * Clear the terminal
+   * @returns void
    */
   clear(): void {
     if (this.terminal && !this.isTerminalClosed(this.terminal)) {
@@ -171,6 +199,7 @@ export class EnzymeTerminalProvider {
 
   /**
    * Dispose terminal
+   * @returns void
    */
   dispose(): void {
     if (this.terminal) {
@@ -185,6 +214,7 @@ export class EnzymeTerminalProvider {
 
   /**
    * Register terminal link provider to make file paths clickable
+   * @returns void
    */
   private registerLinkProvider(): void {
     this.linkProvider = vscode.window.registerTerminalLinkProvider({
@@ -198,7 +228,7 @@ export class EnzymeTerminalProvider {
 
         // Match file paths in terminal output
         // Patterns: src/components/Button.tsx, ./src/pages/Home.tsx, etc.
-        const filePathRegex = /(?:\.\/)?(?:src|pages|components|hooks|services|features|store|api)\/[\w/\-]+\.\w+/g;
+        const filePathRegex = /(?:\.\/)?(?:src|pages|components|hooks|services|features|store|api)\/[\w/-]+\.\w+/g;
         const {line} = context;
 
         let match;
@@ -218,7 +248,7 @@ export class EnzymeTerminalProvider {
       handleTerminalLink: async (link: vscode.TerminalLink) => {
         // Use the tooltip to store the file path info
         try {
-          const document = await vscode.workspace.openTextDocument(link.tooltip || '');
+          const document = await vscode.workspace.openTextDocument(link.tooltip ?? '');
           await vscode.window.showTextDocument(document);
         } catch {
           vscode.window.showErrorMessage(`Could not open file`);
@@ -231,6 +261,7 @@ export class EnzymeTerminalProvider {
    * Find generated file based on type and name
    * @param type
    * @param name
+   * @returns Path to generated file or null if not found
    */
   private async findGeneratedFile(type: string, name: string): Promise<string | null> {
     const workspaceRoot = this.getWorkspaceRoot();
@@ -248,7 +279,7 @@ export class EnzymeTerminalProvider {
       slice: [`src/store/${name}.ts`, `src/store/slices/${name}.ts`],
     };
 
-    const possiblePaths = pathMap[type] || [];
+    const possiblePaths = pathMap[type] ?? [];
 
     for (const relativePath of possiblePaths) {
       const fullPath = path.join(workspaceRoot, relativePath);
@@ -266,6 +297,7 @@ export class EnzymeTerminalProvider {
   /**
    * Check if terminal is closed
    * @param terminal
+   * @returns True if terminal is closed, false otherwise
    */
   private isTerminalClosed(terminal: vscode.Terminal): boolean {
     return !vscode.window.terminals.includes(terminal);
@@ -273,6 +305,7 @@ export class EnzymeTerminalProvider {
 
   /**
    * Get workspace root
+   * @returns Workspace root path or null
    */
   private getWorkspaceRoot(): string | null {
     const folders = vscode.workspace.workspaceFolders;

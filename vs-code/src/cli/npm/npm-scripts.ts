@@ -21,6 +21,7 @@ export class NPMScripts {
 
   /**
    * Detect available npm scripts from package.json
+   * @returns Array of NPM scripts
    */
   async detectScripts(): Promise<NPMScript[]> {
     const workspaceRoot = this.getWorkspaceRoot();
@@ -31,7 +32,7 @@ export class NPMScripts {
     try {
       const packageJsonPath = path.join(workspaceRoot, 'package.json');
       const content = await fs.readFile(packageJsonPath, 'utf-8');
-      const packageJson = JSON.parse(content);
+      const packageJson: { scripts?: Record<string, unknown> } = JSON.parse(content) as { scripts?: Record<string, unknown> };
 
       if (!packageJson.scripts) {
         return [];
@@ -39,12 +40,13 @@ export class NPMScripts {
 
       this.scripts = Object.entries(packageJson.scripts).map(([name, command]) => ({
         name,
-        command: command as string,
+        command: typeof command === 'string' ? command : String(command),
       }));
 
       return this.scripts;
     } catch (error) {
-      vscode.window.showErrorMessage(`Failed to read package.json: ${error}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      vscode.window.showErrorMessage(`Failed to read package.json: ${errorMessage}`);
       return [];
     }
   }
@@ -53,8 +55,9 @@ export class NPMScripts {
    * Run a specific npm script
    * @param scriptName
    * @param packageManager
+   * @returns void
    */
-  async runScript(scriptName: string, packageManager: 'npm' | 'yarn' | 'pnpm' = 'npm'): Promise<void> {
+  runScript(scriptName: string, packageManager: 'npm' | 'yarn' | 'pnpm' = 'npm'): void {
     const workspaceRoot = this.getWorkspaceRoot();
     if (!workspaceRoot) {
       vscode.window.showErrorMessage('No workspace folder open');
@@ -77,6 +80,7 @@ export class NPMScripts {
 
   /**
    * Show quick pick for available scripts
+   * @returns Promise that resolves when complete
    */
   async showScriptPicker(): Promise<void> {
     const scripts = await this.detectScripts();
@@ -102,7 +106,7 @@ export class NPMScripts {
 
     if (choice) {
       const packageManager = await this.detectPackageManager();
-      await this.runScript(choice.script.name, packageManager);
+      this.runScript(choice.script.name, packageManager);
     }
   }
 
@@ -112,6 +116,7 @@ export class NPMScripts {
    * @param scriptName
    * @param packageManager
    * @param outputChannel
+   * @returns Exit code of the process
    */
   async runScriptWithOutput(
     scriptName: string,
@@ -128,7 +133,7 @@ export class NPMScripts {
       throw new Error(`Invalid script name: ${scriptName}. Only alphanumeric, hyphens, and colons allowed.`);
     }
 
-    const channel = outputChannel || vscode.window.createOutputChannel(`npm ${scriptName}`);
+    const channel = outputChannel ?? vscode.window.createOutputChannel(`npm ${scriptName}`);
     channel.show();
 
     return new Promise((resolve, reject) => {
@@ -141,11 +146,11 @@ export class NPMScripts {
         shell: false,
       });
 
-      child.stdout?.on('data', (data) => {
+      child.stdout.on('data', (data: Buffer) => {
         channel.append(data.toString());
       });
 
-      child.stderr?.on('data', (data) => {
+      child.stderr.on('data', (data: Buffer) => {
         channel.append(data.toString());
       });
 
@@ -167,14 +172,16 @@ export class NPMScripts {
   /**
    * Validate script name to prevent command injection
    * @param name
+   * @returns True if script name is valid, false otherwise
    */
   private isValidScriptName(name: string): boolean {
     // Allow alphanumeric characters, hyphens, underscores, and colons (for namespaced scripts)
-    return /^[\w:\-]+$/.test(name);
+    return /^[\w:-]+$/.test(name);
   }
 
   /**
    * Create status bar item for scripts
+   * @returns Status bar item instance
    */
   createStatusBarItem(): vscode.StatusBarItem {
     if (this.statusBarItem) {
@@ -196,6 +203,7 @@ export class NPMScripts {
 
   /**
    * Detect package manager used in project
+   * @returns Package manager type
    */
   private async detectPackageManager(): Promise<'npm' | 'yarn' | 'pnpm'> {
     const workspaceRoot = this.getWorkspaceRoot();
@@ -207,12 +215,16 @@ export class NPMScripts {
     try {
       await fs.access(path.join(workspaceRoot, 'pnpm-lock.yaml'));
       return 'pnpm';
-    } catch {}
+    } catch {
+      // pnpm-lock.yaml not found, continue
+    }
 
     try {
       await fs.access(path.join(workspaceRoot, 'yarn.lock'));
       return 'yarn';
-    } catch {}
+    } catch {
+      // yarn.lock not found, continue
+    }
 
     return 'npm';
   }
@@ -221,6 +233,7 @@ export class NPMScripts {
    * Update status bar based on script state
    * @param scriptName
    * @param state
+   * @returns void
    */
   private updateStatusBar(scriptName: string, state: 'running' | 'success' | 'failed'): void {
     if (!this.statusBarItem) {
@@ -247,6 +260,7 @@ export class NPMScripts {
 
   /**
    * Reset status bar to default
+   * @returns void
    */
   private resetStatusBar(): void {
     if (this.statusBarItem) {
@@ -258,6 +272,7 @@ export class NPMScripts {
   /**
    * Get script category/type
    * @param scriptName
+   * @returns Script category
    */
   private getScriptCategory(scriptName: string): string {
     if (scriptName.includes('dev') || scriptName.includes('start')) {
@@ -283,6 +298,7 @@ export class NPMScripts {
 
   /**
    * Get common Enzyme scripts
+   * @returns Array of common Enzyme scripts
    */
   getCommonScripts(): NPMScript[] {
     return [
@@ -296,6 +312,7 @@ export class NPMScripts {
 
   /**
    * Dispose status bar item
+   * @returns void
    */
   dispose(): void {
     if (this.statusBarItem) {
@@ -306,6 +323,7 @@ export class NPMScripts {
 
   /**
    * Get workspace root
+   * @returns Workspace root path or null
    */
   private getWorkspaceRoot(): string | null {
     const folders = vscode.workspace.workspaceFolders;

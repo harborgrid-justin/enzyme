@@ -46,8 +46,8 @@ export abstract class BaseTreeProvider<T extends vscode.TreeItem>
 
   /**
    * PERFORMANCE: Optimized tree provider with increased cache TTL and better defaults
-   * @param context
-   * @param options
+   * @param context - VS Code extension context
+   * @param options - Tree provider configuration options
    */
   constructor(
     protected readonly context: vscode.ExtensionContext,
@@ -70,6 +70,7 @@ export abstract class BaseTreeProvider<T extends vscode.TreeItem>
   /**
    * Get tree item representation for VS Code
    * @param element
+   * @returns Tree item or a promise that resolves to a tree item
    */
   getTreeItem(element: T): vscode.TreeItem | Thenable<vscode.TreeItem> {
     return element;
@@ -97,6 +98,7 @@ export abstract class BaseTreeProvider<T extends vscode.TreeItem>
   /**
    * Get parent of a tree item (for reveal operations)
    * @param element
+   * @returns Parent tree item or undefined if no parent
    */
   getParent?(element: T): vscode.ProviderResult<T> {
     return this.parentMap.get(element);
@@ -116,6 +118,7 @@ export abstract class BaseTreeProvider<T extends vscode.TreeItem>
    * @param _item
    * @param _element
    * @param _token
+   * @returns Resolved tree item with additional information
    */
   resolveTreeItem?(_item: T, _element: T, _token: vscode.CancellationToken): vscode.ProviderResult<T> {
     return _element;
@@ -196,9 +199,14 @@ export abstract class BaseTreeProvider<T extends vscode.TreeItem>
   /**
    * Get cache key for an item
    * @param item
+   * @returns Cache key string or undefined if item has no label
    */
   protected getCacheKeyForItem(item: T): string | undefined {
-    return item.label?.toString();
+    const {label} = item;
+    if (label === undefined || label === null) {
+      return undefined;
+    }
+    return typeof label === 'string' ? label : label.label;
   }
 
   /**
@@ -231,6 +239,7 @@ export abstract class BaseTreeProvider<T extends vscode.TreeItem>
   /**
    * Get file patterns to watch for changes
    * Override in subclasses to specify which files to watch
+   * @returns Array of glob patterns to watch
    */
   protected getWatchPatterns(): string[] {
     return [];
@@ -266,6 +275,7 @@ export abstract class BaseTreeProvider<T extends vscode.TreeItem>
 
   /**
    * Get workspace root path
+   * @returns Workspace root path or undefined if no workspace is open
    */
   protected getWorkspaceRoot(): string | undefined {
     return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
@@ -274,6 +284,7 @@ export abstract class BaseTreeProvider<T extends vscode.TreeItem>
   /**
    * Check if a file exists
    * @param path
+   * @returns True if file exists, false otherwise
    */
   protected async fileExists(path: string): Promise<boolean> {
     try {
@@ -287,6 +298,7 @@ export abstract class BaseTreeProvider<T extends vscode.TreeItem>
   /**
    * Read file content
    * @param path
+   * @returns File content as string
    */
   protected async readFile(path: string): Promise<string> {
     const uri = vscode.Uri.file(path);
@@ -298,6 +310,7 @@ export abstract class BaseTreeProvider<T extends vscode.TreeItem>
    * Get all files matching a glob pattern
    * @param pattern
    * @param exclude
+   * @returns Array of file URIs matching the pattern
    */
   protected async findFiles(pattern: string, exclude?: string): Promise<vscode.Uri[]> {
     return vscode.workspace.findFiles(pattern, exclude);

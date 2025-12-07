@@ -58,7 +58,8 @@ interface ComponentOptions {
  */
 export class GenerateComponentCommand extends BaseCommand {
   /**
-   *
+   * Get command metadata for registration
+   * @returns Command metadata object
    */
   getMetadata(): CommandMetadata {
     return {
@@ -75,8 +76,9 @@ export class GenerateComponentCommand extends BaseCommand {
   }
 
   /**
-   *
-   * @param _context
+   * Execute the command
+   * @param _context - Command execution context
+   * @returns Promise that resolves when command completes
    */
   protected async executeCommand(_context: CommandContext): Promise<void> {
     const workspaceFolder = await this.ensureWorkspaceFolder();
@@ -118,6 +120,11 @@ export class GenerateComponentCommand extends BaseCommand {
   /**
    *
    * @param workspaceFolder
+   */
+  /**
+   * Gather component generation options from user
+   * @param workspaceFolder - Workspace folder context
+   * @returns Promise resolving to component options or undefined if cancelled
    */
   private async gatherComponentOptions(
     workspaceFolder: vscode.WorkspaceFolder

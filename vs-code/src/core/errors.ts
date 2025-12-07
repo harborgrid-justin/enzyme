@@ -232,8 +232,10 @@ export class EnzymeError extends Error {
     this.recoveryActions = recoveryActions;
     this.reportable = reportable;
 
-    // Capture stack trace
-    Error.captureStackTrace(this, this.constructor);
+    // Capture stack trace (check if available)
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, this.constructor);
+    }
   }
 
   /**

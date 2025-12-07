@@ -5,7 +5,7 @@ import { BaseCommand } from '../base-command';
 import type { CommandContext, CommandMetadata } from '../base-command';
 
 /**
- *
+ * Project analysis result interface
  */
 interface ProjectAnalysis {
   summary: {
@@ -21,7 +21,7 @@ interface ProjectAnalysis {
 }
 
 /**
- *
+ * Analysis issue interface
  */
 interface AnalysisIssue {
   severity: 'error' | 'warning' | 'info';
@@ -37,7 +37,8 @@ interface AnalysisIssue {
  */
 export class AnalyzeProjectCommand extends BaseCommand {
   /**
-   *
+   * Get command metadata for registration
+   * @returns Command metadata object
    */
   getMetadata(): CommandMetadata {
     return {
@@ -53,8 +54,9 @@ export class AnalyzeProjectCommand extends BaseCommand {
   }
 
   /**
-   *
-   * @param _context
+   * Execute the project analysis command
+   * @param _context - Command execution context
+   * @returns Promise that resolves when command completes
    */
   protected async executeCommand(_context: CommandContext): Promise<void> {
     const workspaceFolder = await this.ensureWorkspaceFolder();
@@ -99,10 +101,11 @@ export class AnalyzeProjectCommand extends BaseCommand {
   }
 
   /**
-   *
-   * @param workspaceFolder
-   * @param progress
-   * @param token
+   * Analyze the project structure and generate report
+   * @param workspaceFolder - Workspace folder to analyze
+   * @param progress - Progress reporter for status updates
+   * @param token - Cancellation token
+   * @returns Promise resolving to analysis results or undefined if cancelled
    */
   private async analyzeProject(
     workspaceFolder: vscode.WorkspaceFolder,
@@ -189,9 +192,10 @@ export class AnalyzeProjectCommand extends BaseCommand {
   }
 
   /**
-   *
-   * @param sourcePath
-   * @param analysis
+   * Analyze components in the project
+   * @param sourcePath - Source directory path
+   * @param analysis - Analysis object to update
+   * @returns Promise that resolves when analysis completes
    */
   private async analyzeComponents(
     sourcePath: string,
@@ -230,9 +234,10 @@ export class AnalyzeProjectCommand extends BaseCommand {
   }
 
   /**
-   *
-   * @param sourcePath
-   * @param analysis
+   * Analyze routes in the project
+   * @param sourcePath - Source directory path
+   * @param analysis - Analysis object to update
+   * @returns Promise that resolves when analysis completes
    */
   private async analyzeRoutes(
     sourcePath: string,
@@ -259,9 +264,10 @@ export class AnalyzeProjectCommand extends BaseCommand {
   }
 
   /**
-   *
-   * @param sourcePath
-   * @param analysis
+   * Analyze stores in the project
+   * @param sourcePath - Source directory path
+   * @param analysis - Analysis object to update
+   * @returns Promise that resolves when analysis completes
    */
   private async analyzeStores(
     sourcePath: string,
@@ -297,9 +303,10 @@ export class AnalyzeProjectCommand extends BaseCommand {
   }
 
   /**
-   *
-   * @param sourcePath
-   * @param analysis
+   * Analyze feature modules in the project
+   * @param sourcePath - Source directory path
+   * @param analysis - Analysis object to update
+   * @returns Promise that resolves when analysis completes
    */
   private async analyzeFeatures(
     sourcePath: string,
@@ -332,9 +339,10 @@ export class AnalyzeProjectCommand extends BaseCommand {
   }
 
   /**
-   *
-   * @param sourcePath
-   * @param analysis
+   * Analyze custom hooks in the project
+   * @param sourcePath - Source directory path
+   * @param analysis - Analysis object to update
+   * @returns Promise that resolves when analysis completes
    */
   private async analyzeHooks(
     sourcePath: string,
@@ -361,8 +369,9 @@ export class AnalyzeProjectCommand extends BaseCommand {
   }
 
   /**
-   *
-   * @param analysis
+   * Generate recommendations based on project analysis
+   * @param analysis - Analysis results to generate recommendations from
+   * @returns void
    */
   private generateRecommendations(analysis: ProjectAnalysis): void {
     const { summary } = analysis;
@@ -393,8 +402,9 @@ export class AnalyzeProjectCommand extends BaseCommand {
   }
 
   /**
-   *
-   * @param analysis
+   * Display analysis results in output channel
+   * @param analysis - Analysis results to display
+   * @returns void
    */
   private displayAnalysisResults(analysis: ProjectAnalysis): void {
     this.outputChannel.appendLine('='.repeat(80));
@@ -447,9 +457,10 @@ export class AnalyzeProjectCommand extends BaseCommand {
   }
 
   /**
-   *
-   * @param workspaceFolder
-   * @param analysis
+   * Generate markdown analysis report file
+   * @param workspaceFolder - Workspace folder for report location
+   * @param analysis - Analysis results to include in report
+   * @returns Promise that resolves when report is generated and opened
    */
   private async generateAnalysisReport(
     workspaceFolder: vscode.WorkspaceFolder,
@@ -471,8 +482,9 @@ export class AnalyzeProjectCommand extends BaseCommand {
   }
 
   /**
-   *
-   * @param analysis
+   * Format analysis results as markdown
+   * @param analysis - Analysis results to format
+   * @returns Markdown formatted string
    */
   private formatAnalysisAsMarkdown(analysis: ProjectAnalysis): string {
     const timestamp = new Date().toLocaleString();
@@ -511,8 +523,9 @@ _Generated by Enzyme VS Code Extension_
   }
 
   /**
-   *
-   * @param filePath
+   * Check if file exists at given path
+   * @param filePath - Path to check
+   * @returns Promise resolving to true if file exists, false otherwise
    */
   private async fileExists(filePath: string): Promise<boolean> {
     try {

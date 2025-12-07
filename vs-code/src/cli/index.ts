@@ -148,6 +148,7 @@ async function installCLI(): Promise<void> {
 
 /**
  * Get the CLI runner instance
+ * @returns {CLIRunner} The CLI runner instance
  */
 export function getCLIRunner(): CLIRunner {
   return cliRunner;
@@ -155,6 +156,7 @@ export function getCLIRunner(): CLIRunner {
 
 /**
  * Get the CLI detector instance
+ * @returns {CLIDetector} The CLI detector instance
  */
 export function getCLIDetector(): CLIDetector {
   return cliDetector;

@@ -8,10 +8,11 @@ import { getIndex } from './enzyme-index';
 export class EnzymeSignatureProvider implements vscode.SignatureHelpProvider {
   /**
    * Provide signature help
-   * @param document
-   * @param position
-   * @param _token
-   * @param _context
+   * @param document - Document to provide signature help for
+   * @param position - Position in the document
+   * @param _token - Cancellation token
+   * @param _context - Signature help context
+   * @returns Signature help information or undefined
    */
   public async provideSignatureHelp(
     document: vscode.TextDocument,
@@ -47,7 +48,8 @@ export class EnzymeSignatureProvider implements vscode.SignatureHelpProvider {
 
   /**
    * Check if current position is a hook call
-   * @param text
+   * @param text - Text to check
+   * @returns True if text matches a hook call pattern
    */
   private isHookCall(text: string): boolean {
     return /use[A-Z]\w*\s*\($/.test(text);
@@ -55,8 +57,9 @@ export class EnzymeSignatureProvider implements vscode.SignatureHelpProvider {
 
   /**
    * Get hook signature help
-   * @param text
-   * @param _position
+   * @param text - Text containing the hook call
+   * @param _position - Position in the document
+   * @returns Signature help or undefined
    */
   private getHookSignature(text: string, _position: vscode.Position): vscode.SignatureHelp | undefined {
     try {
@@ -106,7 +109,8 @@ export class EnzymeSignatureProvider implements vscode.SignatureHelpProvider {
 
   /**
    * Check if current position is an API call
-   * @param text
+   * @param text - Text to check
+   * @returns True if text matches an API call pattern
    */
   private isApiCall(text: string): boolean {
     return /\.(get|post|put|patch|delete|head|options)\s*\($/.test(text);
@@ -114,11 +118,12 @@ export class EnzymeSignatureProvider implements vscode.SignatureHelpProvider {
 
   /**
    * Get API signature help
-   * @param text
+   * @param text - Text containing the API call
+   * @returns Signature help or undefined
    */
   private getApiSignature(text: string): vscode.SignatureHelp | undefined {
     const match = /\.(get|post|put|patch|delete|head|options)\s*\($/.exec(text);
-    if (!match || !match[1]) {
+    if (!match?.[1]) {
       return undefined;
     }
 
@@ -174,6 +179,7 @@ export class EnzymeSignatureProvider implements vscode.SignatureHelpProvider {
 
   /**
    * Get buildPath signature help
+   * @returns Signature help for buildPath function
    */
   private getBuildPathSignature(): vscode.SignatureHelp {
     const signatureHelp = new vscode.SignatureHelp();
@@ -200,7 +206,8 @@ export class EnzymeSignatureProvider implements vscode.SignatureHelpProvider {
 
   /**
    * Check if current position is component props
-   * @param text
+   * @param text - Text to check
+   * @returns True if text matches component props pattern
    */
   private isComponentProps(text: string): boolean {
     return /<[A-Z]\w+\s+\w+=$/.test(text);
@@ -208,13 +215,14 @@ export class EnzymeSignatureProvider implements vscode.SignatureHelpProvider {
 
   /**
    * Get component props signature help
-   * @param text
+   * @param text - Text containing the component props
+   * @returns Signature help or undefined
    */
   private getComponentPropsSignature(text: string): vscode.SignatureHelp | undefined {
     try {
       // Extract component name
       const match = /<([A-Z]\w+)/.exec(text);
-      if (!match || !match[1]) {
+      if (!match?.[1]) {
         return undefined;
       }
 
@@ -261,6 +269,7 @@ export class EnzymeSignatureProvider implements vscode.SignatureHelpProvider {
 
 /**
  * Get trigger characters for signature help
+ * @returns Array of trigger characters
  */
 export function getSignatureTriggerCharacters(): string[] {
   return ['(', ','];

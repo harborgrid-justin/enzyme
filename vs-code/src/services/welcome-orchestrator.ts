@@ -125,23 +125,24 @@ export class WelcomeOrchestrator {
     cliManager: EnzymeCliManager,
     eventBus: EventBus
   ): WelcomeOrchestrator {
-    if (!WelcomeOrchestrator.instance) {
-      WelcomeOrchestrator.instance = new WelcomeOrchestrator(
-        context,
-        logger,
-        workspaceService,
-        cliManager,
-        eventBus
-      );
-    }
+     
+    WelcomeOrchestrator.instance ??= new WelcomeOrchestrator(
+      context,
+      logger,
+      workspaceService,
+      cliManager,
+      eventBus
+    );
     return WelcomeOrchestrator.instance;
   }
 
   /**
    * Get singleton instance (must be created first)
+   * @returns WelcomeOrchestrator instance
    */
   public static getInstance(): WelcomeOrchestrator {
-    if (!WelcomeOrchestrator.instance) {
+     
+    if (WelcomeOrchestrator.instance === undefined) {
       throw new Error('WelcomeOrchestrator not created. Call create() first.');
     }
     return WelcomeOrchestrator.instance;
@@ -150,10 +151,10 @@ export class WelcomeOrchestrator {
   /**
    * Check if this is the first run
    *
-   * @returns Promise resolving to true if first run
+   * @returns True if first run
    */
-  public async isFirstRun(): Promise<boolean> {
-    const state = await this.getOnboardingState();
+  public isFirstRun(): boolean {
+    const state = this.getOnboardingState();
     return !state.welcomeCompleted;
   }
 
@@ -162,7 +163,7 @@ export class WelcomeOrchestrator {
    *
    * @returns Promise resolving to onboarding state
    */
-  public async getOnboardingState(): Promise<OnboardingState> {
+  public getOnboardingState(): OnboardingState {
     const defaultState: OnboardingState = {
       welcomeCompleted: false,
       cliInstalled: false,
@@ -187,7 +188,7 @@ export class WelcomeOrchestrator {
    * @param updates - Partial state updates
    */
   public async updateOnboardingState(updates: Partial<OnboardingState>): Promise<void> {
-    const currentState = await this.getOnboardingState();
+    const currentState = this.getOnboardingState();
     const newState: OnboardingState = {
       ...currentState,
       ...updates,
@@ -397,23 +398,31 @@ export class WelcomeOrchestrator {
    */
   private setupEventListeners(): void {
     // Listen for component generation
-    this.eventBus.onType('cli:installed' as any, async () => {
-      const state = await this.getOnboardingState();
-      if (!state.firstComponentGenerated) {
-        await this.updateOnboardingState({ firstComponentGenerated: true });
-        await this.celebrateMilestone('firstComponent');
-      }
+    this.eventBus.onType('cli:installed', () => {
+      void this.handleFirstComponentGeneration();
     });
 
     // Listen for CLI installation
-    this.eventBus.onType('cli:installed', async () => {
-      await this.updateOnboardingState({ cliInstalled: true });
+    this.eventBus.onType('cli:installed', () => {
+      void this.updateOnboardingState({ cliInstalled: true });
     });
 
     // Listen for project initialization
-    this.eventBus.onType('workspace:detected' as any, async () => {
-      await this.updateOnboardingState({ projectInitialized: true });
+    this.eventBus.onType('workspace:detected', () => {
+      void this.updateOnboardingState({ projectInitialized: true });
     });
+  }
+
+  /**
+   * Handle first component generation milestone
+   * @private
+   */
+  private async handleFirstComponentGeneration(): Promise<void> {
+    const state = this.getOnboardingState();
+    if (!state.firstComponentGenerated) {
+      await this.updateOnboardingState({ firstComponentGenerated: true });
+      await this.celebrateMilestone('firstComponent');
+    }
   }
 
   /**
@@ -451,7 +460,7 @@ export class WelcomeOrchestrator {
    * @param feature - Feature to hint about
    */
   public async showFeatureHint(feature: string): Promise<void> {
-    const state = await this.getOnboardingState();
+    const state = this.getOnboardingState();
 
     // Only show hints if user has completed basic onboarding
     if (!state.welcomeCompleted) {
@@ -507,10 +516,10 @@ export class WelcomeOrchestrator {
   /**
    * Get onboarding completion percentage
    *
-   * @returns Promise resolving to completion percentage (0-100)
+   * @returns Completion percentage (0-100)
    */
-  public async getCompletionPercentage(): Promise<number> {
-    const state = await this.getOnboardingState();
+  public getCompletionPercentage(): number {
+    const state = this.getOnboardingState();
     const steps = [
       state.welcomeCompleted,
       state.cliInstalled,

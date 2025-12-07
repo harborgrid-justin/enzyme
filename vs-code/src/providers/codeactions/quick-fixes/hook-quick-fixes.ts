@@ -8,6 +8,7 @@ export class HookQuickFixes {
    *
    * @param document
    * @param range
+   * @param _range
    * @param context
    */
   public provideQuickFixes(
@@ -70,7 +71,7 @@ export class HookQuickFixes {
       const text = document.getText(diagnostic.range);
       const depsMatch = /\[([^\]]*)]/.exec(text);
 
-      if (depsMatch && depsMatch[1]) {
+      if (depsMatch?.[1]) {
         const currentDeps = depsMatch[1]
           .split(',')
           .map((d) => d.trim())
@@ -133,7 +134,7 @@ export class HookQuickFixes {
     const text = document.getText(diagnostic.range);
     const functionMatch = /const\s+(\w+)\s*=\s*(\([^)]*\)\s*=>\s*{[\S\s]*})/.exec(text);
 
-    if (functionMatch && functionMatch[1] && functionMatch[2]) {
+    if (functionMatch?.[1] && functionMatch[2]) {
       const functionName = functionMatch[1];
       const functionBody = functionMatch[2];
       const deps = this.inferDependencies(functionBody);
@@ -168,7 +169,7 @@ export class HookQuickFixes {
     const text = document.getText(diagnostic.range);
     const variableMatch = /const\s+(\w+)\s*=\s*(.+);/.exec(text);
 
-    if (variableMatch && variableMatch[1] && variableMatch[2]) {
+    if (variableMatch?.[1] && variableMatch[2]) {
       const _variableName = variableMatch[1];
       const computation = variableMatch[2];
       const deps = this.inferDependencies(computation);
@@ -204,7 +205,7 @@ export class HookQuickFixes {
     const text = document.getText(diagnostic.range);
     const bodyMatch = /{\s*([\S\s]*)\s*}/.exec(text);
 
-    if (bodyMatch && bodyMatch[1]) {
+    if (bodyMatch?.[1]) {
       const body = bodyMatch[1];
       const wrappedBody = `{
     try {
@@ -280,7 +281,7 @@ ${body.split('\n').map((line) => `  ${  line}`).join('\n')}
    */
   private extractMissingDependencies(message: string): string[] {
     const match = /missing dependencies?:\s*(.+)/i.exec(message);
-    if (match && match[1]) {
+    if (match?.[1]) {
       return match[1]
         .split(',')
         .map((dep) => dep.trim().replace(/["'`]/g, ''));
@@ -301,7 +302,7 @@ ${body.split('\n').map((line) => `  ${  line}`).join('\n')}
     const seen = new Set<string>();
     for (const match of matches) {
       const variableName = match[1];
-      if (!variableName) continue;
+      if (!variableName) {continue;}
       // Skip common keywords and built-ins
       if (
         !seen.has(variableName) &&

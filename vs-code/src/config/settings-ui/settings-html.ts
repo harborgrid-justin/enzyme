@@ -313,6 +313,8 @@ export function generateSettingsHTML(options: SettingsHTMLOptions): string {
  * Group settings by category
  * @param settings
  * @param defaultSettings
+ * @param _settings
+ * @param _defaultSettings
  */
 function groupSettings(
   _settings: Partial<EnzymeExtensionSettings>,

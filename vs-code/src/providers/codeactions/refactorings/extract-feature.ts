@@ -10,6 +10,7 @@ export class ExtractFeatureRefactoring {
    * @param document
    * @param range
    * @param context
+   * @param _context
    */
   public provideRefactorings(
     document: vscode.TextDocument,
@@ -68,6 +69,7 @@ export class ExtractFeatureRefactoring {
    *
    * @param document
    * @param range
+   * @param _range
    */
   private suggestFeatureName(document: vscode.TextDocument, _range: vscode.Range): string {
     // Try to extract from file name
@@ -182,6 +184,7 @@ export async function executeExtractFeature(args: {
  *
  * @param featureName
  * @param content
+ * @param _content
  */
 function generateFeatureIndex(featureName: string, _content: string): string {
   return `/**
@@ -199,6 +202,7 @@ export * from './routes';
  *
  * @param content
  * @param featureName
+ * @param _featureName
  */
 function extractComponents(content: string, _featureName: string): string {
   // Extract component definitions

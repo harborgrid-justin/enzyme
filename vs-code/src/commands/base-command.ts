@@ -418,8 +418,9 @@ export abstract class BaseCommand {
 
   /**
    * Show quick pick selection
-   * @param items
-   * @param options
+   * @param items - Array of quick pick items or promise that resolves to items
+   * @param options - Optional quick pick configuration options
+   * @returns Promise resolving to selected item or undefined if cancelled
    */
   protected async showQuickPick<T extends vscode.QuickPickItem>(
     items: T[] | Promise<T[]>,
@@ -433,7 +434,8 @@ export abstract class BaseCommand {
 
   /**
    * Show input box
-   * @param options
+   * @param options - Optional input box configuration options
+   * @returns Promise resolving to input string or undefined if cancelled
    */
   protected async showInputBox(
     options?: vscode.InputBoxOptions
@@ -446,6 +448,7 @@ export abstract class BaseCommand {
 
   /**
    * Get workspace folder
+   * @returns The active workspace folder or undefined if none available
    */
   protected getWorkspaceFolder(): vscode.WorkspaceFolder | undefined {
     const folders = vscode.workspace.workspaceFolders;
@@ -463,6 +466,8 @@ export abstract class BaseCommand {
 
   /**
    * Ensure workspace folder exists
+   * @returns Promise resolving to the workspace folder
+   * @throws Error if no workspace folder is open
    */
   protected async ensureWorkspaceFolder(): Promise<vscode.WorkspaceFolder> {
     const folder = this.getWorkspaceFolder();
@@ -474,6 +479,7 @@ export abstract class BaseCommand {
 
   /**
    * Get active text editor
+   * @returns The currently active text editor or undefined if none
    */
   protected getActiveEditor(): vscode.TextEditor | undefined {
     return vscode.window.activeTextEditor;
@@ -481,8 +487,9 @@ export abstract class BaseCommand {
 
   /**
    * Open file in editor
-   * @param uri
-   * @param options
+   * @param uri - The file URI to open
+   * @param options - Optional document show options
+   * @returns Promise resolving to the text editor
    */
   protected async openFile(
     uri: vscode.Uri,
@@ -494,9 +501,10 @@ export abstract class BaseCommand {
 
   /**
    * Log message to output channel
-   * @param level
-   * @param message
-   * @param data
+   * @param level - Log level (info, warn, error, debug)
+   * @param message - Log message
+   * @param data - Optional additional data to log
+   * @returns void
    */
   protected log(
     level: 'info' | 'warn' | 'error' | 'debug',
@@ -524,7 +532,8 @@ export abstract class BaseCommand {
   /**
    * Send telemetry event
    * Override this method to integrate with your telemetry provider
-   * @param event
+   * @param event - The telemetry event to send
+   * @returns void
    */
   protected sendTelemetry(event: TelemetryEvent): void {
     // Log telemetry event for debugging
@@ -544,6 +553,7 @@ export abstract class BaseCommand {
 
   /**
    * Register this command with VS Code
+   * @returns Disposable for the command registration
    */
   register(): vscode.Disposable {
     const metadata = this.getMetadata();

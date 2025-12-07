@@ -231,7 +231,7 @@ export class ExtensionConfig {
   private constructor() {
     // Listen for configuration changes
     this.disposables.push(
-      vscode.workspace.onDidChangeConfiguration((e) => {
+      vscode.workspace.onDidChangeConfiguration((e: vscode.ConfigurationChangeEvent) => {
         this.handleConfigChange(e);
       })
     );

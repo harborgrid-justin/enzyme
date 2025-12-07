@@ -3,6 +3,7 @@
   "displayName": "Enzyme Framework",
   "description": "Enterprise VS Code extension for Enzyme React Framework - Intelligent tooling for modern React development",
   "version": "1.0.0",
+  "type": "module",
   "publisher": "missionfabric",
   "license": "MIT",
   "repository": {

@@ -4,7 +4,7 @@ import { BaseCommand } from '../base-command';
 import type { CommandContext, CommandMetadata } from '../base-command';
 
 /**
- *
+ * Store definition interface
  */
 interface StoreDefinition {
   name: string;
@@ -20,7 +20,8 @@ interface StoreDefinition {
  */
 export class GoToStoreCommand extends BaseCommand {
   /**
-   *
+   * Get command metadata for registration
+   * @returns Command metadata object
    */
   getMetadata(): CommandMetadata {
     return {
@@ -36,8 +37,9 @@ export class GoToStoreCommand extends BaseCommand {
   }
 
   /**
-   *
-   * @param _context
+   * Execute the command
+   * @param _context - Command execution context
+   * @returns Promise that resolves when command completes
    */
   protected async executeCommand(_context: CommandContext): Promise<void> {
     const workspaceFolder = await this.ensureWorkspaceFolder();
@@ -85,6 +87,11 @@ export class GoToStoreCommand extends BaseCommand {
    *
    * @param workspaceFolder
    */
+  /**
+   * Find all stores in workspace
+   * @param workspaceFolder - Workspace to search
+   * @returns Promise resolving to array of store definitions
+   */
   private async findStores(
     workspaceFolder: vscode.WorkspaceFolder
   ): Promise<StoreDefinition[]> {
@@ -129,7 +136,7 @@ export class GoToStoreCommand extends BaseCommand {
 
         while ((match = zustandPattern.exec(text)) !== null) {
           const hookName = match[1];
-          if (!hookName) continue;
+          if (!hookName) {continue;}
 
           const storeName = hookName.replace(/^use/, '').replace(/Store$/, '');
 
@@ -145,7 +152,7 @@ export class GoToStoreCommand extends BaseCommand {
         const contextPattern = /export\s+const\s+(\w+Context)\s*=/g;
         while ((match = contextPattern.exec(text)) !== null) {
           const contextName = match[1];
-          if (!contextName) continue;
+          if (!contextName) {continue;}
 
           const storeName = contextName.replace(/Context$/, '');
 

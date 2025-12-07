@@ -64,6 +64,7 @@ export class EnzymeAPITreeProvider extends BaseTreeProvider<EnzymeAPIItem | Enzy
 
   /**
    * Get watch patterns for auto-refresh
+   * @returns Array of glob patterns to watch for API file changes
    */
   protected override getWatchPatterns(): string[] {
     return [
@@ -75,6 +76,7 @@ export class EnzymeAPITreeProvider extends BaseTreeProvider<EnzymeAPIItem | Enzy
 
   /**
    * Get root tree items
+   * @returns Array of API items and category items grouped by resource
    */
   protected async getRootItems(): Promise<Array<EnzymeAPIItem | EnzymeCategoryItem>> {
     return this.getCachedOrFetch('api-root', async () => {
@@ -92,6 +94,7 @@ export class EnzymeAPITreeProvider extends BaseTreeProvider<EnzymeAPIItem | Enzy
   /**
    * Get child items
    * @param element
+   * @returns Array of API endpoint items for the given category
    */
   protected async getChildItems(
     element: EnzymeAPIItem | EnzymeCategoryItem
@@ -268,6 +271,7 @@ export class EnzymeAPITreeProvider extends BaseTreeProvider<EnzymeAPIItem | Enzy
   /**
    * Infer HTTP method from function name
    * @param methodName
+   * @returns Inferred HTTP method based on function name pattern
    */
   private inferMethodFromName(methodName: string): HttpMethod {
     const lowerName = methodName.toLowerCase();
@@ -294,6 +298,7 @@ export class EnzymeAPITreeProvider extends BaseTreeProvider<EnzymeAPIItem | Enzy
   /**
    * Extract resource name from API path
    * @param apiPath
+   * @returns Capitalized resource name extracted from path
    */
   private extractResourceFromPath(apiPath: string): string {
     // Remove leading slash and query params
@@ -305,7 +310,7 @@ export class EnzymeAPITreeProvider extends BaseTreeProvider<EnzymeAPIItem | Enzy
 
     // Get first segment
     const segments = cleanPath.split('/');
-    const resource = segments[0] || 'Unknown';
+    const resource = segments[0] ?? 'Unknown';
 
     // Capitalize
     return resource.charAt(0).toUpperCase() + resource.slice(1);
@@ -315,6 +320,7 @@ export class EnzymeAPITreeProvider extends BaseTreeProvider<EnzymeAPIItem | Enzy
    * Extract request type from content
    * @param content
    * @param context
+   * @returns Request type string if found, undefined otherwise
    */
   private extractRequestType(content: string, context: string): string | undefined {
     // Look for type annotations near the context
@@ -343,6 +349,7 @@ export class EnzymeAPITreeProvider extends BaseTreeProvider<EnzymeAPIItem | Enzy
    * Extract response type from content
    * @param content
    * @param context
+   * @returns Response type string if found, undefined otherwise
    */
   private extractResponseType(content: string, context: string): string | undefined {
     // Look for return type annotation
@@ -373,6 +380,7 @@ export class EnzymeAPITreeProvider extends BaseTreeProvider<EnzymeAPIItem | Enzy
   /**
    * Check if endpoint is mocked
    * @param content
+   * @returns True if endpoint appears to be mocked
    */
   private checkIsMocked(content: string): boolean {
     return (
@@ -386,6 +394,7 @@ export class EnzymeAPITreeProvider extends BaseTreeProvider<EnzymeAPIItem | Enzy
   /**
    * Check if endpoint requires authentication
    * @param content
+   * @returns True if endpoint requires authentication
    */
   private checkHasAuth(content: string): boolean {
     return (
@@ -400,6 +409,7 @@ export class EnzymeAPITreeProvider extends BaseTreeProvider<EnzymeAPIItem | Enzy
    * Extract description from JSDoc
    * @param content
    * @param methodName
+   * @returns Description string if found, undefined otherwise
    */
   private extractDescription(content: string, methodName?: string): string | undefined {
     if (!methodName) {return undefined;}
@@ -470,6 +480,7 @@ export class EnzymeAPITreeProvider extends BaseTreeProvider<EnzymeAPIItem | Enzy
 
   /**
    * Get all discovered endpoints
+   * @returns Array of all API endpoint metadata
    */
   getEndpoints(): APIEndpointMetadata[] {
     return [...this.endpoints];
@@ -478,6 +489,7 @@ export class EnzymeAPITreeProvider extends BaseTreeProvider<EnzymeAPIItem | Enzy
   /**
    * Get endpoints by method
    * @param method
+   * @returns Array of endpoints matching the specified HTTP method
    */
   getEndpointsByMethod(method: HttpMethod): APIEndpointMetadata[] {
     return this.endpoints.filter(e => e.method === method);
@@ -485,6 +497,7 @@ export class EnzymeAPITreeProvider extends BaseTreeProvider<EnzymeAPIItem | Enzy
 
   /**
    * Get mocked endpoints
+   * @returns Array of mocked endpoints
    */
   getMockedEndpoints(): APIEndpointMetadata[] {
     return this.endpoints.filter(e => e.isMocked);
@@ -492,6 +505,7 @@ export class EnzymeAPITreeProvider extends BaseTreeProvider<EnzymeAPIItem | Enzy
 
   /**
    * Get authenticated endpoints
+   * @returns Array of endpoints that require authentication
    */
   getAuthenticatedEndpoints(): APIEndpointMetadata[] {
     return this.endpoints.filter(e => e.hasAuth);

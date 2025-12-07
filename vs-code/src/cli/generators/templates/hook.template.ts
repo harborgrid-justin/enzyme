@@ -1,8 +1,9 @@
 import type { GeneratorOptions, GeneratorTemplate } from '../index';
 
 /**
- *
- * @param options
+ * Generate hook template files
+ * @param options - Generator configuration options
+ * @returns {GeneratorTemplate} The generated hook template structure
  */
 export function hookTemplate(options: GeneratorOptions): GeneratorTemplate {
   const { name, path: basePath = 'src/hooks', skipTests } = options;
@@ -40,8 +41,9 @@ export function hookTemplate(options: GeneratorOptions): GeneratorTemplate {
 }
 
 /**
- *
- * @param name
+ * Generate custom React hook
+ * @param name - The name of the hook
+ * @returns {string} The generated hook code
  */
 function generateHook(name: string): string {
   const stateName = name.replace(/^use/, '').toLowerCase();
@@ -92,8 +94,9 @@ async function doSomething(options?: ${name}Options): Promise<any> {
 }
 
 /**
- *
- * @param name
+ * Generate TypeScript types for hook
+ * @param name - The name of the hook
+ * @returns {string} The generated types code
  */
 function generateTypes(name: string): string {
   const stateName = name.replace(/^use/, '').toLowerCase();
@@ -113,8 +116,9 @@ export interface ${name}Result {
 }
 
 /**
- *
- * @param name
+ * Generate test file
+ * @param name - The name of the hook
+ * @returns {string} The generated test code
  */
 function generateTest(name: string): string {
   return `import { renderHook, waitFor } from '@testing-library/react';
@@ -150,8 +154,9 @@ describe('${name}', () => {
 }
 
 /**
- *
- * @param string_
+ * Capitalize first letter of string
+ * @param string_ - The string to capitalize
+ * @returns {string} The capitalized string
  */
 function capitalize(string_: string): string {
   return string_.charAt(0).toUpperCase() + string_.slice(1);

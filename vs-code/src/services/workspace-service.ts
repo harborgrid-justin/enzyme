@@ -19,7 +19,8 @@ import type {
 
 /**
  * PERFORMANCE: Helper to check if path exists (async)
- * @param filePath
+ * @param filePath - Path to check
+ * @returns Promise resolving to true if path exists
  */
 async function pathExists(filePath: string): Promise<boolean> {
   try {
@@ -32,7 +33,8 @@ async function pathExists(filePath: string): Promise<boolean> {
 
 /**
  * PERFORMANCE: Helper to check if path is directory (async)
- * @param filePath
+ * @param filePath - Path to check
+ * @returns Promise resolving to true if path is a directory
  */
 async function isDirectory(filePath: string): Promise<boolean> {
   try {
@@ -52,7 +54,7 @@ export class WorkspaceService {
   private readonly eventEmitter: vscode.EventEmitter<EnzymeWorkspace>;
 
   /**
-   *
+   * Private constructor for singleton pattern
    */
   private constructor() {
     this.eventEmitter = new vscode.EventEmitter<EnzymeWorkspace>();
@@ -60,17 +62,18 @@ export class WorkspaceService {
 
   /**
    * Get the singleton instance
+   * @returns WorkspaceService instance
    */
   public static getInstance(): WorkspaceService {
-    if (!WorkspaceService.instance) {
-      WorkspaceService.instance = new WorkspaceService();
-    }
+     
+    WorkspaceService.instance ??= new WorkspaceService();
     return WorkspaceService.instance;
   }
 
   /**
    * Detect if workspace contains an Enzyme project
    * PERFORMANCE: Uses async file operations to prevent blocking
+   * @returns Promise resolving to true if Enzyme project detected
    */
   public async detectEnzymeProject(): Promise<boolean> {
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
@@ -112,21 +115,18 @@ export class WorkspaceService {
     }
 
     // Check for .enzyme directory (async)
-    const enzymeDirPath = path.join(rootPath, '.enzyme');
-    if (await pathExists(enzymeDirPath) && await isDirectory(enzymeDirPath)) {
-      return true;
-    }
-
-    return false;
+    const enzymeDirectoryPath = path.join(rootPath, '.enzyme');
+    return await pathExists(enzymeDirectoryPath) && await isDirectory(enzymeDirectoryPath);
   }
 
   /**
    * Get package.json (async version - preferred)
    * PERFORMANCE: Uses async file operations
-   * @param rootPath
+   * @param rootPath - Optional root path (defaults to workspace root)
+   * @returns Promise resolving to package.json or undefined
    */
   public async getPackageJsonAsync(rootPath?: string): Promise<PackageJson | undefined> {
-    const root = rootPath || this.getRootPath();
+    const root = rootPath ?? this.getRootPath();
     if (!root) {
       return undefined;
     }
@@ -146,13 +146,14 @@ export class WorkspaceService {
 
   /**
    * Get package.json (sync version - for backwards compatibility)
-   * @param rootPath
+   * @param rootPath - Optional root path (defaults to workspace root)
+   * @returns Package.json or undefined
    * @deprecated Use getPackageJsonAsync instead
    */
   public getPackageJson(rootPath?: string): PackageJson | undefined {
     // This is kept for backwards compatibility but should be avoided
     // Calls the async version synchronously which is not ideal
-    const root = rootPath || this.getRootPath();
+    const root = rootPath ?? this.getRootPath();
     if (!root) {
       return undefined;
     }
@@ -163,7 +164,8 @@ export class WorkspaceService {
 
   /**
    * Get Enzyme version from package.json
-   * @param rootPath
+   * @param rootPath - Optional root path (defaults to workspace root)
+   * @returns Enzyme version string or undefined
    */
   public getEnzymeVersion(rootPath?: string): string | undefined {
     const packageJson = this.getPackageJson(rootPath);
@@ -198,10 +200,11 @@ export class WorkspaceService {
   /**
    * Find Enzyme configuration file
    * PERFORMANCE: Uses async file operations
-   * @param rootPath
+   * @param rootPath - Optional root path (defaults to workspace root)
+   * @returns Promise resolving to Enzyme config or undefined
    */
   public async findEnzymeConfig(rootPath?: string): Promise<EnzymeConfig | undefined> {
-    const root = rootPath || this.getRootPath();
+    const root = rootPath ?? this.getRootPath();
     if (!root) {
       return undefined;
     }
@@ -227,6 +230,7 @@ export class WorkspaceService {
 
   /**
    * Analyze and return workspace information
+   * @returns Promise resolving to workspace information
    */
   public async analyzeWorkspace(): Promise<EnzymeWorkspace> {
     const rootPath = this.getRootPath();
@@ -241,10 +245,10 @@ export class WorkspaceService {
     const enzymeVersion = this.getEnzymeVersion(rootPath);
 
     const features = await this.scanFeatures(rootPath);
-    const routes = await this.scanRoutes(rootPath);
-    const components = await this.scanComponents(rootPath);
-    const stores = await this.scanStores(rootPath);
-    const apiClients = await this.scanApiClients(rootPath);
+    const routes = this.scanRoutes(rootPath);
+    const components = this.scanComponents(rootPath);
+    const stores = this.scanStores(rootPath);
+    const apiClients = this.scanApiClients(rootPath);
 
     const workspace: EnzymeWorkspace = {
       rootPath,
@@ -275,6 +279,7 @@ export class WorkspaceService {
 
   /**
    * Get current workspace
+   * @returns Current workspace or null
    */
   public getWorkspace(): EnzymeWorkspace | null {
     return this.workspace;
@@ -282,6 +287,7 @@ export class WorkspaceService {
 
   /**
    * Get workspace root path
+   * @returns Workspace root path or undefined
    */
   public getRootPath(): string | undefined {
     return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
@@ -289,6 +295,7 @@ export class WorkspaceService {
 
   /**
    * Get workspace URI
+   * @returns Workspace root URI or undefined
    */
   public getRootUri(): vscode.Uri | undefined {
     return vscode.workspace.workspaceFolders?.[0]?.uri;
@@ -296,6 +303,7 @@ export class WorkspaceService {
 
   /**
    * Check if multi-root workspace
+   * @returns True if workspace has multiple root folders
    */
   public isMultiRoot(): boolean {
     return (vscode.workspace.workspaceFolders?.length ?? 0) > 1;
@@ -303,7 +311,8 @@ export class WorkspaceService {
 
   /**
    * Get relative path from workspace root
-   * @param absolutePath
+   * @param absolutePath - Absolute path to convert
+   * @returns Relative path from workspace root
    */
   public getRelativePath(absolutePath: string): string {
     const rootPath = this.getRootPath();
@@ -315,7 +324,8 @@ export class WorkspaceService {
 
   /**
    * Get absolute path from workspace root
-   * @param relativePath
+   * @param relativePath - Relative path to convert
+   * @returns Absolute path
    */
   public getAbsolutePath(relativePath: string): string {
     const rootPath = this.getRootPath();
@@ -328,7 +338,8 @@ export class WorkspaceService {
   /**
    * Check if file exists (async)
    * PERFORMANCE: Uses async file operations
-   * @param filePath
+   * @param filePath - Path to check
+   * @returns Promise resolving to true if file exists
    */
   public async fileExistsAsync(filePath: string): Promise<boolean> {
     return pathExists(filePath);
@@ -336,7 +347,8 @@ export class WorkspaceService {
 
   /**
    * Check if file exists (sync - deprecated)
-   * @param _filePath
+   * @param _filePath - Path to check (unused)
+   * @returns Always false (deprecated)
    * @deprecated Use fileExistsAsync instead
    */
   public fileExists(_filePath: string): boolean {
@@ -347,7 +359,8 @@ export class WorkspaceService {
   /**
    * Read file content
    * PERFORMANCE: Already async
-   * @param filePath
+   * @param filePath - Path to file
+   * @returns Promise resolving to file content
    */
   public async readFile(filePath: string): Promise<string> {
     return fs.readFile(filePath, 'utf-8');
@@ -356,20 +369,21 @@ export class WorkspaceService {
   /**
    * Write file content
    * PERFORMANCE: Uses async file operations
-   * @param filePath
-   * @param content
+   * @param filePath - Path to file
+   * @param content - Content to write
    */
   public async writeFile(filePath: string, content: string): Promise<void> {
-    const dir = path.dirname(filePath);
-    if (!(await pathExists(dir))) {
-      await fs.mkdir(dir, { recursive: true });
+    const directory = path.dirname(filePath);
+    if (!(await pathExists(directory))) {
+      await fs.mkdir(directory, { recursive: true });
     }
     await fs.writeFile(filePath, content, 'utf-8');
   }
 
   /**
    * Subscribe to workspace changes
-   * @param listener
+   * @param listener - Event listener callback
+   * @returns Disposable to unsubscribe
    */
   public onWorkspaceChanged(listener: (workspace: EnzymeWorkspace) => void): vscode.Disposable {
     return this.eventEmitter.event(listener);
@@ -378,7 +392,8 @@ export class WorkspaceService {
   /**
    * Scan for features
    * PERFORMANCE: Uses async file operations
-   * @param rootPath
+   * @param rootPath - Root path of the project
+   * @returns Promise resolving to array of features
    */
   private async scanFeatures(rootPath: string): Promise<EnzymeFeature[]> {
     const features: EnzymeFeature[] = [];
@@ -392,11 +407,11 @@ export class WorkspaceService {
       const entries = await fs.readdir(featuresPath, { withFileTypes: true });
       const featureDirectories = entries.filter(dirent => dirent.isDirectory());
 
-      for (const featureDir of featureDirectories) {
+      for (const featureDirectory of featureDirectories) {
         features.push({
-          id: featureDir.name,
-          name: featureDir.name.charAt(0).toUpperCase() + featureDir.name.slice(1),
-          path: path.join(featuresPath, featureDir.name),
+          id: featureDirectory.name,
+          name: featureDirectory.name.charAt(0).toUpperCase() + featureDirectory.name.slice(1),
+          path: path.join(featuresPath, featureDirectory.name),
           version: '1.0.0',
           enabled: true,
           routes: [],
@@ -412,42 +427,47 @@ export class WorkspaceService {
 
   /**
    * Scan for routes
-   * @param _rootPath
+   * @param _rootPath - Root path of the project (unused)
+   * @returns Promise resolving to array of routes
    */
-  private async scanRoutes(_rootPath: string): Promise<EnzymeRoute[]> {
+  private scanRoutes(_rootPath: string): EnzymeRoute[] {
     // Placeholder implementation
     return [];
   }
 
   /**
    * Scan for components
-   * @param _rootPath
+   * @param _rootPath - Root path of the project (unused)
+   * @returns Promise resolving to array of components
    */
-  private async scanComponents(_rootPath: string): Promise<EnzymeComponent[]> {
+  private scanComponents(_rootPath: string): EnzymeComponent[] {
     // Placeholder implementation
     return [];
   }
 
   /**
    * Scan for stores
-   * @param _rootPath
+   * @param _rootPath - Root path of the project (unused)
+   * @returns Promise resolving to array of stores
    */
-  private async scanStores(_rootPath: string): Promise<EnzymeStore[]> {
+  private scanStores(_rootPath: string): EnzymeStore[] {
     // Placeholder implementation
     return [];
   }
 
   /**
    * Scan for API clients
-   * @param _rootPath
+   * @param _rootPath - Root path of the project (unused)
+   * @returns Promise resolving to array of API clients
    */
-  private async scanApiClients(_rootPath: string): Promise<EnzymeApiClient[]> {
+  private scanApiClients(_rootPath: string): EnzymeApiClient[] {
     // Placeholder implementation
     return [];
   }
 
   /**
    * Create empty workspace
+   * @returns Empty workspace object
    */
   private createEmptyWorkspace(): EnzymeWorkspace {
     return {
@@ -476,9 +496,10 @@ export class WorkspaceService {
    * Reset the singleton instance (for testing and cleanup)
    */
   public static reset(): void {
-    if (WorkspaceService.instance) {
+     
+    if (WorkspaceService.instance !== undefined) {
       WorkspaceService.instance.dispose();
     }
-    WorkspaceService.instance = null as unknown as WorkspaceService;
+    WorkspaceService.instance = undefined as unknown as WorkspaceService;
   }
 }

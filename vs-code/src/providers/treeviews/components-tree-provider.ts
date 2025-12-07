@@ -71,6 +71,7 @@ export class EnzymeComponentsTreeProvider extends BaseTreeProvider<EnzymeCompone
 
   /**
    * Get watch patterns for auto-refresh
+   * @returns Array of glob patterns to watch for component file changes
    */
   protected override getWatchPatterns(): string[] {
     return [
@@ -99,6 +100,7 @@ export class EnzymeComponentsTreeProvider extends BaseTreeProvider<EnzymeCompone
 
   /**
    * Get root tree items
+   * @returns Array of component items and category items grouped by category
    */
   protected async getRootItems(): Promise<Array<EnzymeComponentItem | EnzymeCategoryItem>> {
     return this.getCachedOrFetch('components-root', async () => {
@@ -123,6 +125,7 @@ export class EnzymeComponentsTreeProvider extends BaseTreeProvider<EnzymeCompone
   /**
    * Get child items
    * @param element
+   * @returns Array of component items for the given category
    */
   protected async getChildItems(
     element: EnzymeComponentItem | EnzymeCategoryItem
@@ -467,6 +470,7 @@ export class EnzymeComponentsTreeProvider extends BaseTreeProvider<EnzymeCompone
 
   /**
    * Get all discovered components
+   * @returns Array of all component metadata
    */
   getComponents(): ComponentMetadata[] {
     return [...this.components];
@@ -475,6 +479,7 @@ export class EnzymeComponentsTreeProvider extends BaseTreeProvider<EnzymeCompone
   /**
    * Get components by category
    * @param category
+   * @returns Array of components in the specified category
    */
   getComponentsByCategory(category: ComponentCategory): ComponentMetadata[] {
     return this.components.filter(c => c.category === category);

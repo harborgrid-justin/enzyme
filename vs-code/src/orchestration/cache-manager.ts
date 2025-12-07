@@ -286,7 +286,15 @@ export class CacheManager {
    * @param defaultValue
    */
   public getPersistent<T>(key: string, defaultValue: T): T;
+  /**
+   *
+   */
   public getPersistent<T>(key: string): T | undefined;
+  /**
+   *
+   * @param key
+   * @param defaultValue
+   */
   public getPersistent<T>(key: string, defaultValue?: T): T | undefined {
     if (!this.context) {
       this.logger.warn('Cannot get persistent cache: context not initialized');
