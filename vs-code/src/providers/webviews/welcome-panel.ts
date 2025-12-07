@@ -1,27 +1,17 @@
 import * as vscode from 'vscode';
 import { BaseWebViewPanel } from './base-webview-panel';
 
-interface QuickAction {
-	id: string;
-	title: string;
-	description: string;
-	icon: string;
-	command: string;
-}
-
 /**
  * WebView panel for welcoming new users to Enzyme.
  * Provides quick start guide, tutorials, and configuration wizard.
  */
 export class WelcomePanel extends BaseWebViewPanel {
 	private static instance: WelcomePanel | undefined;
-	private quickActions: QuickAction[] = [];
 	private showOnStartup: boolean = true;
 
 	private constructor(context: vscode.ExtensionContext) {
 		super(context, 'enzyme.welcome', 'Welcome to Enzyme');
 		this.loadPreferences();
-		this.initializeQuickActions();
 	}
 
 	/**
@@ -52,7 +42,7 @@ export class WelcomePanel extends BaseWebViewPanel {
 		}
 	}
 
-	protected getIconPath(): vscode.Uri | { light: vscode.Uri; dark: vscode.Uri } | undefined {
+	protected override getIconPath(): vscode.Uri | { light: vscode.Uri; dark: vscode.Uri } | undefined {
 		return {
 			light: vscode.Uri.file(this.context.asAbsolutePath('resources/icons/enzyme-light.svg')),
 			dark: vscode.Uri.file(this.context.asAbsolutePath('resources/icons/enzyme-dark.svg'))
@@ -282,7 +272,7 @@ export class WelcomePanel extends BaseWebViewPanel {
 		`;
 	}
 
-	protected getStyles(webview: vscode.Webview, nonce: string): string {
+	protected override getStyles(webview: vscode.Webview, nonce: string): string {
 		const sharedStylesUri = this.getWebviewUri(webview, ['src', 'webview-ui', 'shared', 'styles.css']);
 		const welcomeStylesUri = this.getWebviewUri(webview, ['src', 'webview-ui', 'welcome', 'styles.css']);
 		return `
@@ -340,32 +330,6 @@ export class WelcomePanel extends BaseWebViewPanel {
 		}
 	}
 
-	private initializeQuickActions(): void {
-		this.quickActions = [
-			{
-				id: 'state-inspector',
-				title: 'State Inspector',
-				description: 'Inspect and debug Zustand state',
-				icon: 'search',
-				command: 'enzyme.openStateInspector'
-			},
-			{
-				id: 'performance',
-				title: 'Performance Monitor',
-				description: 'Monitor Web Vitals and performance',
-				icon: 'pulse',
-				command: 'enzyme.openPerformance'
-			},
-			{
-				id: 'generator',
-				title: 'Code Generator',
-				description: 'Generate components and code',
-				icon: 'wand',
-				command: 'enzyme.openGenerator'
-			}
-		];
-	}
-
 	private async createNewProject(): Promise<void> {
 		const projectName = await vscode.window.showInputBox({
 			prompt: 'Enter project name',
@@ -411,7 +375,7 @@ export class WelcomePanel extends BaseWebViewPanel {
 		this.showOnStartup = this.getPersistedState<boolean>('showOnStartup', true, true);
 	}
 
-	public dispose(): void {
+	public override dispose(): void {
 		super.dispose();
 		WelcomePanel.instance = undefined;
 	}

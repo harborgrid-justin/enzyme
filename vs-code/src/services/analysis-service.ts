@@ -3,7 +3,7 @@
  */
 
 import * as vscode from 'vscode';
-import { AnalysisResult, AnalysisIssue } from '../types';
+import { AnalysisResult } from '../types';
 
 /**
  * AnalysisService - Service for code analysis
@@ -96,7 +96,7 @@ export class AnalysisService {
   /**
    * Get code quality metrics
    */
-  public async getCodeQualityMetrics(rootPath: string): Promise<{
+  public async getCodeQualityMetrics(_rootPath: string): Promise<{
     complexity: number;
     maintainability: number;
     testCoverage: number;
@@ -114,7 +114,7 @@ export class AnalysisService {
   /**
    * Get bundle analysis
    */
-  public async getBundleAnalysis(rootPath: string): Promise<{
+  public async getBundleAnalysis(_rootPath: string): Promise<{
     totalSize: number;
     chunks: Array<{ name: string; size: number }>;
     suggestions: string[];

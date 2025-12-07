@@ -11,7 +11,7 @@ export class EnzymeWorkspaceSymbolProvider implements vscode.WorkspaceSymbolProv
    */
   public async provideWorkspaceSymbols(
     query: string,
-    token: vscode.CancellationToken
+    _token: vscode.CancellationToken
   ): Promise<vscode.SymbolInformation[] | undefined> {
     if (!query || query.length < 2) {
       return undefined;
@@ -100,7 +100,7 @@ export class EnzymeWorkspaceSymbolProvider implements vscode.WorkspaceSymbolProv
    */
   public async resolveWorkspaceSymbol(
     symbol: vscode.SymbolInformation,
-    token: vscode.CancellationToken
+    _token: vscode.CancellationToken
   ): Promise<vscode.SymbolInformation | undefined> {
     return symbol;
   }

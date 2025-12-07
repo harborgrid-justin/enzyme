@@ -12,8 +12,8 @@ export class EnzymeSignatureProvider implements vscode.SignatureHelpProvider {
   public async provideSignatureHelp(
     document: vscode.TextDocument,
     position: vscode.Position,
-    token: vscode.CancellationToken,
-    context: vscode.SignatureHelpContext
+    _token: vscode.CancellationToken,
+    _context: vscode.SignatureHelpContext
   ): Promise<vscode.SignatureHelp | undefined> {
     const line = document.lineAt(position.line).text;
     const textBeforeCursor = line.substring(0, position.character);

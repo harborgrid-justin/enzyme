@@ -68,14 +68,14 @@ export class GeneratorWizardPanel extends BaseWebViewPanel {
 		panel.show();
 	}
 
-	protected getIconPath(): vscode.Uri | { light: vscode.Uri; dark: vscode.Uri } | undefined {
+	protected override getIconPath(): vscode.Uri | { light: vscode.Uri; dark: vscode.Uri } | undefined {
 		return {
 			light: vscode.Uri.file(this.context.asAbsolutePath('resources/icons/generator-light.svg')),
 			dark: vscode.Uri.file(this.context.asAbsolutePath('resources/icons/generator-dark.svg'))
 		};
 	}
 
-	protected getBodyContent(webview: vscode.Webview): string {
+	protected getBodyContent(_webview: vscode.Webview): string {
 		return `
 			<div class="container">
 				<div class="header">
@@ -246,11 +246,11 @@ export class GeneratorWizardPanel extends BaseWebViewPanel {
 		}
 	}
 
-	protected onPanelCreated(): void {
+	protected override onPanelCreated(): void {
 		this.sendTemplatesUpdate();
 	}
 
-	protected onPanelVisible(): void {
+	protected override onPanelVisible(): void {
 		this.sendTemplatesUpdate();
 	}
 
@@ -526,8 +526,8 @@ export class GeneratorWizardPanel extends BaseWebViewPanel {
 
 	private generateFileList(template: GeneratorTemplate, data: Record<string, any>): { path: string; content: string }[] {
 		const files: { path: string; content: string }[] = [];
-		const name = data.name || 'MyComponent';
-		const path = data.path || 'src';
+		const name = data['name'] || 'MyComponent';
+		const path = data['path'] || 'src';
 
 		switch (template.id) {
 			case 'component':
@@ -536,14 +536,14 @@ export class GeneratorWizardPanel extends BaseWebViewPanel {
 					content: this.generateComponentContent(name, data)
 				});
 
-				if (data.withStyles) {
+				if (data['withStyles']) {
 					files.push({
 						path: `${path}/${name}/${name}.module.css`,
-						content: this.generateStylesContent(name)
+						content: this.generateStylesContent()
 					});
 				}
 
-				if (data.withTests) {
+				if (data['withTests']) {
 					files.push({
 						path: `${path}/${name}/${name}.test.tsx`,
 						content: this.generateTestContent(name)
@@ -558,22 +558,22 @@ export class GeneratorWizardPanel extends BaseWebViewPanel {
 
 			case 'hook':
 				files.push({
-					path: `${path}/${data.name}.ts`,
-					content: this.generateHookContent(data.name)
+					path: `${path}/${data['name']}.ts`,
+					content: this.generateHookContent(data['name'])
 				});
 
-				if (data.withTests) {
+				if (data['withTests']) {
 					files.push({
-						path: `${path}/${data.name}.test.ts`,
-						content: this.generateHookTestContent(data.name)
+						path: `${path}/${data['name']}.test.ts`,
+						content: this.generateHookTestContent(data['name'])
 					});
 				}
 				break;
 
 			case 'store':
 				files.push({
-					path: `${path}/${data.name}.ts`,
-					content: this.generateStoreContent(data.name, data)
+					path: `${path}/${data['name']}.ts`,
+					content: this.generateStoreContent(data['name'], data)
 				});
 				break;
 
@@ -584,8 +584,8 @@ export class GeneratorWizardPanel extends BaseWebViewPanel {
 	}
 
 	private generateComponentContent(name: string, data: Record<string, any>): string {
-		const hasProps = data.withProps;
-		const hasStyles = data.withStyles;
+		const hasProps = data['withProps'];
+		const hasStyles = data['withStyles'];
 
 		return `import React from 'react';
 ${hasStyles ? `import styles from './${name}.module.css';` : ''}
@@ -604,7 +604,7 @@ ${hasProps ? `interface ${name}Props {
 `;
 	}
 
-	private generateStylesContent(name: string): string {
+	private generateStylesContent(): string {
 		return `.container {
   /* Add your styles here */
 }
@@ -653,8 +653,8 @@ describe('${name}', () => {
 	}
 
 	private generateStoreContent(name: string, data: Record<string, any>): string {
-		const withPersist = data.withPersist;
-		const withDevtools = data.withDevtools;
+		const withPersist = data['withPersist'];
+		const withDevtools = data['withDevtools'];
 
 		return `import { create } from 'zustand';
 ${withDevtools ? `import { devtools } from 'zustand/middleware';` : ''}
@@ -710,7 +710,7 @@ export const use${name} = create${withDevtools || withPersist ? '(' : '<'}${name
 		});
 	}
 
-	public dispose(): void {
+	public override dispose(): void {
 		super.dispose();
 		GeneratorWizardPanel.instance = undefined;
 	}

@@ -184,19 +184,18 @@ export class EnzymeTerminalProvider {
             startIndex: match.index,
             length: match[0].length,
             tooltip: 'Open file',
-            data: fullPath,
-          });
+          } as vscode.TerminalLink & { data?: string });
         }
 
         return links;
       },
       handleTerminalLink: async (link: vscode.TerminalLink) => {
-        const filePath = link.data as string;
+        // Use the tooltip to store the file path info
         try {
-          const doc = await vscode.workspace.openTextDocument(filePath);
+          const doc = await vscode.workspace.openTextDocument(link.tooltip || '');
           await vscode.window.showTextDocument(doc);
         } catch (error) {
-          vscode.window.showErrorMessage(`Could not open file: ${filePath}`);
+          vscode.window.showErrorMessage(`Could not open file`);
         }
       },
     });

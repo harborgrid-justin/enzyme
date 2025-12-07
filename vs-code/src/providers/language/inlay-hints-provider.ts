@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { getIndex } from './enzyme-index';
-import { getParser } from './parser';
 
 /**
  * EnzymeInlayHintsProvider - Provides inline type hints
@@ -13,7 +12,7 @@ export class EnzymeInlayHintsProvider implements vscode.InlayHintsProvider {
   public async provideInlayHints(
     document: vscode.TextDocument,
     range: vscode.Range,
-    token: vscode.CancellationToken
+    _token: vscode.CancellationToken
   ): Promise<vscode.InlayHint[] | undefined> {
     const hints: vscode.InlayHint[] = [];
 
@@ -56,7 +55,7 @@ export class EnzymeInlayHintsProvider implements vscode.InlayHintsProvider {
    */
   private addHookReturnTypeHints(
     document: vscode.TextDocument,
-    range: vscode.Range,
+    _range: vscode.Range,
     text: string,
     startOffset: number,
     hints: vscode.InlayHint[]

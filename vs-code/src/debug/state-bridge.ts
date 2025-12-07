@@ -292,7 +292,7 @@ export class StateBridge {
       const handlers = this.messageHandlers.get(message.type);
       if (handlers) {
         for (const handler of handlers) {
-          handler(message).catch((error) => {
+          Promise.resolve(handler(message)).catch((error) => {
             console.error('Message handler error:', error);
           });
         }
@@ -395,7 +395,7 @@ export class StateBridge {
       };
 
       for (const handler of handlers) {
-        handler(message).catch((error) => {
+        Promise.resolve(handler(message)).catch((error) => {
           console.error('Message handler error:', error);
         });
       }

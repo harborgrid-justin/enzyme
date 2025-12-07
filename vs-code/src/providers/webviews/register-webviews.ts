@@ -6,7 +6,6 @@
 import * as vscode from 'vscode';
 import { EnzymeExtensionContext } from '../../core/context';
 import { logger } from '../../core/logger';
-import { COMMANDS } from '../../core/constants';
 import {
   StateInspectorPanel,
   PerformancePanel,
@@ -22,7 +21,7 @@ export function registerWebViewProviders(
 ): vscode.Disposable[] {
   logger.info('Registering WebView providers');
 
-  const context = enzymeContext.getVSCodeContext();
+  const context = enzymeContext.getContext();
   const disposables: vscode.Disposable[] = [];
 
   try {

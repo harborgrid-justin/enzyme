@@ -79,7 +79,7 @@ function generateTypes(name: string): string {
 `;
 }
 
-function generateStyles(name: string): string {
+function generateStyles(_name: string): string {
   return `import styled from 'styled-components';
 
 export const Container = styled.div\`
@@ -143,4 +143,5 @@ function generateIndex(name: string): string {
   return `export { ${name} } from './${name}';
 export type { ${name}Props } from './${name}.types';
 `;
-}
+}1
+1

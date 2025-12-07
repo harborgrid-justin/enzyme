@@ -40,6 +40,8 @@ export const minimalTemplate: ConfigTemplate = {
       timeout: 30000,
       retryCount: 3,
       retryDelay: 1000,
+      mockEnabled: false,
+      mockDelay: 0,
     },
 
     devServer: {
@@ -47,6 +49,8 @@ export const minimalTemplate: ConfigTemplate = {
       host: 'localhost',
       open: true,
       hmr: true,
+      https: false,
+      cors: false,
     },
   },
 };
@@ -72,6 +76,8 @@ export const standardTemplate: ConfigTemplate = {
       headers: {
         'Content-Type': 'application/json',
       },
+      mockEnabled: false,
+      mockDelay: 0,
     },
 
     auth: {
@@ -84,6 +90,9 @@ export const standardTemplate: ConfigTemplate = {
       loginPath: '/auth/login',
       logoutPath: '/auth/logout',
       persistSession: true,
+      redirectAfterLogin: '/',
+      redirectAfterLogout: '/login',
+      secureCookies: true,
     },
 
     routes: {
@@ -106,6 +115,7 @@ export const standardTemplate: ConfigTemplate = {
       open: true,
       hmr: true,
       cors: true,
+      https: false,
     },
 
     performance: {
@@ -113,6 +123,10 @@ export const standardTemplate: ConfigTemplate = {
       codesplitting: true,
       prefetch: true,
       compression: true,
+      preload: false,
+      bundleAnalysis: false,
+      sourceMaps: true,
+      minify: true,
     },
   },
 };
@@ -351,6 +365,11 @@ export const apiTemplate: ConfigTemplate = {
       lazyLoading: true,
       codesplitting: true,
       prefetch: true,
+      preload: false,
+      compression: false,
+      bundleAnalysis: false,
+      sourceMaps: true,
+      minify: false,
     },
   },
 };
@@ -417,11 +436,17 @@ export const developmentTemplate: ConfigTemplate = {
       open: true,
       hmr: true,
       cors: true,
+      https: false,
     },
 
     build: {
+      outDir: 'dist',
+      assetsDir: 'assets',
       sourcemap: true,
       minify: false,
+      target: 'es2020',
+      polyfills: true,
+      cssCodeSplit: true,
     },
 
     logging: {
@@ -432,6 +457,8 @@ export const developmentTemplate: ConfigTemplate = {
 
     monitoring: {
       enabled: false,
+      performanceMonitoring: false,
+      errorReporting: false,
     },
   },
 };
@@ -450,6 +477,7 @@ export const productionTemplate: ConfigTemplate = {
 
     build: {
       outDir: 'dist',
+      assetsDir: 'assets',
       sourcemap: 'hidden',
       minify: 'esbuild',
       target: 'es2020',
@@ -461,7 +489,10 @@ export const productionTemplate: ConfigTemplate = {
       lazyLoading: true,
       codesplitting: true,
       prefetch: true,
+      preload: true,
       compression: true,
+      bundleAnalysis: false,
+      sourceMaps: false,
       minify: true,
     },
 
@@ -498,8 +529,13 @@ export const stagingTemplate: ConfigTemplate = {
     environment: 'staging',
 
     build: {
+      outDir: 'dist',
+      assetsDir: 'assets',
       sourcemap: true,
       minify: 'esbuild',
+      target: 'es2020',
+      polyfills: true,
+      cssCodeSplit: true,
     },
 
     monitoring: {
@@ -508,6 +544,7 @@ export const stagingTemplate: ConfigTemplate = {
         dsn: 'YOUR_SENTRY_DSN',
         environment: 'staging',
         tracesSampleRate: 1.0,
+        replaysSessionSampleRate: 0.1,
       },
       performanceMonitoring: true,
       errorReporting: true,

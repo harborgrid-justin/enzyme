@@ -30,7 +30,7 @@ export class EnzymeFeatureItem extends vscode.TreeItem {
       components?: number;
       stores?: number;
     },
-    public readonly collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Collapsed
+    public override readonly collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Collapsed
   ) {
     super(featureName, collapsibleState);
 
@@ -82,7 +82,7 @@ export class EnzymeRouteItem extends vscode.TreeItem {
       feature?: string;
       params?: string[];
     },
-    public readonly collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.None
+    public override readonly collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.None
   ) {
     super(routePath, collapsibleState);
 
@@ -174,7 +174,7 @@ export class EnzymeComponentItem extends vscode.TreeItem {
       hasStory?: boolean;
       hasTests?: boolean;
     },
-    public readonly collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.None
+    public override readonly collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.None
   ) {
     super(componentName, collapsibleState);
 
@@ -246,7 +246,7 @@ export class EnzymeStoreItem extends vscode.TreeItem {
       hasMiddleware?: boolean;
       stateShape?: Record<string, string>;
     },
-    public readonly collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.None
+    public override readonly collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.None
   ) {
     super(storeName, collapsibleState);
 
@@ -313,7 +313,7 @@ export class EnzymeHookItem extends vscode.TreeItem {
       dependencies?: string[];
       isAsync?: boolean;
     },
-    public readonly collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.None
+    public override readonly collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.None
   ) {
     super(hookName, collapsibleState);
 
@@ -369,7 +369,7 @@ export class EnzymeAPIItem extends vscode.TreeItem {
       isMocked?: boolean;
       hasAuth?: boolean;
     },
-    public readonly collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.None
+    public override readonly collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.None
   ) {
     super(endpointName, collapsibleState);
 
@@ -450,7 +450,7 @@ export class EnzymeCategoryItem extends vscode.TreeItem {
   constructor(
     public readonly categoryName: string,
     public readonly itemCount: number = 0,
-    public readonly collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Expanded
+    public override readonly collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Expanded
   ) {
     super(categoryName, collapsibleState);
 

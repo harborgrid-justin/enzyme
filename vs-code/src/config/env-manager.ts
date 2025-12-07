@@ -320,17 +320,17 @@ export class EnvManager {
       const key = variable.key;
 
       if (key.startsWith('VITE_APP_') || key.startsWith('APP_')) {
-        groups.App.push(variable);
+        groups['App'].push(variable);
       } else if (key.startsWith('VITE_API_') || key.startsWith('API_')) {
-        groups.API.push(variable);
+        groups['API'].push(variable);
       } else if (key.startsWith('VITE_AUTH_') || key.startsWith('AUTH_')) {
-        groups.Auth.push(variable);
+        groups['Auth'].push(variable);
       } else if (key.startsWith('DB_') || key.startsWith('DATABASE_')) {
-        groups.Database.push(variable);
+        groups['Database'].push(variable);
       } else if (key.startsWith('SENTRY_') || key.startsWith('ANALYTICS_')) {
-        groups.Monitoring.push(variable);
+        groups['Monitoring'].push(variable);
       } else {
-        groups.Other.push(variable);
+        groups['Other'].push(variable);
       }
     }
 

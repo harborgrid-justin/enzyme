@@ -196,7 +196,7 @@ export function getIconForHook(isAsync?: boolean): vscode.ThemeIcon {
 /**
  * Create a badge icon with text
  */
-export function createBadgeIcon(text: string, color?: string): vscode.ThemeIcon {
+export function createBadgeIcon(_text: string, color?: string): vscode.ThemeIcon {
   return new vscode.ThemeIcon(
     'circle-filled',
     color ? new vscode.ThemeColor(color) : undefined

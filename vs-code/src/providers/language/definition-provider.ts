@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { getIndex } from './enzyme-index';
-import { getParser } from './parser';
 
 /**
  * EnzymeDefinitionProvider - Provides go-to-definition functionality
@@ -13,7 +12,7 @@ export class EnzymeDefinitionProvider implements vscode.DefinitionProvider {
   public async provideDefinition(
     document: vscode.TextDocument,
     position: vscode.Position,
-    token: vscode.CancellationToken
+    _token: vscode.CancellationToken
   ): Promise<vscode.Definition | vscode.LocationLink[] | undefined> {
     const wordRange = document.getWordRangeAtPosition(position);
     if (!wordRange) {
@@ -154,9 +153,9 @@ export class EnzymeDefinitionProvider implements vscode.DefinitionProvider {
    * Get import definition location
    */
   private async getImportDefinition(
-    document: vscode.TextDocument,
-    position: vscode.Position,
-    word: string
+    _document: vscode.TextDocument,
+    _position: vscode.Position,
+    _word: string
   ): Promise<vscode.Location | undefined> {
     // This would require resolving module paths
     // For now, return undefined - can be enhanced with module resolution

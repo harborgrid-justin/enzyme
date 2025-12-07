@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { getIndex } from './enzyme-index';
-import { getParser } from './parser';
 
 /**
  * EnzymeReferenceProvider - Provides find-all-references functionality
@@ -13,8 +12,8 @@ export class EnzymeReferenceProvider implements vscode.ReferenceProvider {
   public async provideReferences(
     document: vscode.TextDocument,
     position: vscode.Position,
-    context: vscode.ReferenceContext,
-    token: vscode.CancellationToken
+    _context: vscode.ReferenceContext,
+    _token: vscode.CancellationToken
   ): Promise<vscode.Location[] | undefined> {
     const wordRange = document.getWordRangeAtPosition(position);
     if (!wordRange) {

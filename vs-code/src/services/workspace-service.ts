@@ -329,7 +329,7 @@ export class WorkspaceService {
   /**
    * Scan for routes
    */
-  private async scanRoutes(rootPath: string): Promise<EnzymeRoute[]> {
+  private async scanRoutes(_rootPath: string): Promise<EnzymeRoute[]> {
     // Placeholder implementation
     return [];
   }
@@ -337,7 +337,7 @@ export class WorkspaceService {
   /**
    * Scan for components
    */
-  private async scanComponents(rootPath: string): Promise<EnzymeComponent[]> {
+  private async scanComponents(_rootPath: string): Promise<EnzymeComponent[]> {
     // Placeholder implementation
     return [];
   }
@@ -345,7 +345,7 @@ export class WorkspaceService {
   /**
    * Scan for stores
    */
-  private async scanStores(rootPath: string): Promise<EnzymeStore[]> {
+  private async scanStores(_rootPath: string): Promise<EnzymeStore[]> {
     // Placeholder implementation
     return [];
   }
@@ -353,7 +353,7 @@ export class WorkspaceService {
   /**
    * Scan for API clients
    */
-  private async scanApiClients(rootPath: string): Promise<EnzymeApiClient[]> {
+  private async scanApiClients(_rootPath: string): Promise<EnzymeApiClient[]> {
     // Placeholder implementation
     return [];
   }

@@ -96,7 +96,7 @@ export class GoToFeatureCommand extends BaseCommand {
     workspaceFolder: vscode.WorkspaceFolder
   ): Promise<FeatureInfo[]> {
     const features: FeatureInfo[] = [];
-    const srcPath = path.join(workspaceFolder.uri.fsPath, 'src');
+    const srcPath = path.join(workspaceFolder!.uri.fsPath, 'src');
     const featuresPath = path.join(srcPath, 'features');
 
     try {

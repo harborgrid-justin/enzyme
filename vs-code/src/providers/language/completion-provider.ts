@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { getIndex } from './enzyme-index';
-import { getParser } from './parser';
 
 /**
  * EnzymeCompletionProvider - Provides IntelliSense completions for Enzyme
@@ -71,7 +70,7 @@ export class EnzymeCompletionProvider implements vscode.CompletionItemProvider {
   public async provideCompletionItems(
     document: vscode.TextDocument,
     position: vscode.Position,
-    token: vscode.CancellationToken,
+    _token: vscode.CancellationToken,
     context: vscode.CompletionContext
   ): Promise<vscode.CompletionItem[] | vscode.CompletionList | undefined> {
     const line = document.lineAt(position.line).text;
@@ -129,9 +128,9 @@ export class EnzymeCompletionProvider implements vscode.CompletionItemProvider {
   /**
    * Check if position is inside config object
    */
-  private isInConfigObject(document: vscode.TextDocument, position: vscode.Position): boolean {
+  private isInConfigObject(_document: vscode.TextDocument, _position: vscode.Position): boolean {
     // Simplified check - look for export default or defineConfig
-    const text = document.getText();
+    const text = _document.getText();
     return text.includes('export default') || text.includes('defineConfig');
   }
 
@@ -261,7 +260,7 @@ export class EnzymeCompletionProvider implements vscode.CompletionItemProvider {
   /**
    * Provide component completions
    */
-  private provideComponentCompletions(linePrefix: string): vscode.CompletionItem[] {
+  private provideComponentCompletions(_linePrefix: string): vscode.CompletionItem[] {
     try {
       const index = getIndex();
       const components = index.getAllComponents();
@@ -324,7 +323,8 @@ export class EnzymeCompletionProvider implements vscode.CompletionItemProvider {
   /**
    * Provide import completions
    */
-  private provideImportCompletions(linePrefix: string): vscode.CompletionItem[] {
+  private provideImportCompletions(_linePrefix: string): vscode.CompletionItem[] {
+    // Enzyme framework imports - Correct package structure
     const items: vscode.CompletionItem[] = [];
 
     // Enzyme framework imports - Correct package structure
@@ -405,7 +405,7 @@ export class EnzymeCompletionProvider implements vscode.CompletionItemProvider {
   /**
    * Provide store completions
    */
-  private provideStoreCompletions(linePrefix: string): vscode.CompletionItem[] {
+  private provideStoreCompletions(_linePrefix: string): vscode.CompletionItem[] {
     try {
       const index = getIndex();
       const stores = index.getAllStores();

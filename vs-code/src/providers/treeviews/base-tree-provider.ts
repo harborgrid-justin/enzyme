@@ -37,9 +37,8 @@ export abstract class BaseTreeProvider<T extends vscode.TreeItem>
   private _onDidChangeTreeData = new vscode.EventEmitter<T | undefined | null | void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
-  private cache = new Map<string, CacheEntry<T[]>>();
+  private cache = new Map<string, CacheEntry<unknown[]>>();
   private refreshDebounceTimer: NodeJS.Timeout | undefined;
-  private fileWatcher: vscode.FileSystemWatcher | undefined;
   private disposables: vscode.Disposable[] = [];
   private parentMap = new Map<T, T | undefined>();
 
@@ -105,8 +104,8 @@ export abstract class BaseTreeProvider<T extends vscode.TreeItem>
   /**
    * Resolve additional information for a tree item
    */
-  resolveTreeItem?(item: T, element: T, token: vscode.CancellationToken): vscode.ProviderResult<T> {
-    return element;
+  resolveTreeItem?(_item: T, _element: T, _token: vscode.CancellationToken): vscode.ProviderResult<T> {
+    return _element;
   }
 
   /**

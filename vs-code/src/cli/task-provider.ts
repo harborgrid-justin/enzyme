@@ -149,20 +149,20 @@ export class EnzymeTaskProvider implements vscode.TaskProvider {
 /**
  * Register custom problem matchers for Enzyme
  */
-export function registerProblemMatchers(context: vscode.ExtensionContext): void {
+export function registerProblemMatchers(_context: vscode.ExtensionContext): void {
   // Problem matcher for Enzyme build errors
-  const enzymeErrorMatcher: vscode.ProblemMatcher = {
-    owner: 'enzyme',
-    fileLocation: ['relative', '${workspaceFolder}'],
-    pattern: {
-      regexp: /^(.+)\\((\\d+),(\\d+)\\):\\s+(error|warning|info)\\s+(.+)$/,
-      file: 1,
-      line: 2,
-      column: 3,
-      severity: 4,
-      message: 5,
-    },
-  };
+  // const enzymeErrorMatcher: vscode.ProblemMatcher = {
+  //   owner: 'enzyme',
+  //   fileLocation: ['relative', '${workspaceFolder}'],
+  //   pattern: {
+  //     regexp: /^(.+)\\((\\d+),(\\d+)\\):\\s+(error|warning|info)\\s+(.+)$/,
+  //     file: 1,
+  //     line: 2,
+  //     column: 3,
+  //     severity: 4,
+  //     message: 5,
+  //   },
+  // };
 
   // Register via package.json contribution point
   // This is typically done in package.json, but can be dynamically registered

@@ -4,7 +4,6 @@
  */
 
 import * as vscode from 'vscode';
-import * as path from 'path';
 import { BaseTreeProvider, TreeProviderOptions } from './base-tree-provider';
 import { EnzymeHookItem, EnzymeCategoryItem } from './tree-items';
 
@@ -42,7 +41,7 @@ export class EnzymeHooksTreeProvider extends BaseTreeProvider<EnzymeHookItem | E
   /**
    * Get watch patterns for auto-refresh
    */
-  protected getWatchPatterns(): string[] {
+  protected override getWatchPatterns(): string[] {
     return [
       '**/hooks/**/*.{ts,tsx}',
       '**/lib/hooks/**/*.{ts,tsx}',

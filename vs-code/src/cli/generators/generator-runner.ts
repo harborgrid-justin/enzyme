@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import { CLIRunner } from '../cli-runner';
-import { GeneratorOptions, GeneratorResult, GeneratorType, GeneratorTemplate, GeneratorFile } from './index';
+import { GeneratorOptions, GeneratorResult, GeneratorType, GeneratorTemplate } from './index';
 import { componentTemplate } from './templates/component.template';
 import { pageTemplate } from './templates/page.template';
 import { hookTemplate } from './templates/hook.template';
@@ -19,7 +19,7 @@ export class GeneratorRunner {
   }
 
   /**
-   * Generate code using CLI or fallback to direct generation
+   * generate code using CLI or fallback to direct generation
    */
   async generate(type: GeneratorType, options: GeneratorOptions): Promise<GeneratorResult> {
     try {
@@ -36,7 +36,7 @@ export class GeneratorRunner {
   }
 
   /**
-   * Generate using CLI
+   * generate using CLI
    */
   private async generateViaCLI(type: GeneratorType, options: GeneratorOptions): Promise<GeneratorResult> {
     const result = await this.cliRunner.generate(type, options.name, options);
@@ -56,7 +56,7 @@ export class GeneratorRunner {
   }
 
   /**
-   * Generate directly using templates
+   * generate directly using templates
    */
   private async generateDirect(type: GeneratorType, options: GeneratorOptions): Promise<GeneratorResult> {
     const templateFn = this.templates.get(type);

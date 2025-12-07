@@ -38,7 +38,7 @@ export class EnzymeRoutesTreeProvider extends BaseTreeProvider<EnzymeRouteItem |
   /**
    * Get watch patterns for auto-refresh
    */
-  protected getWatchPatterns(): string[] {
+  protected override getWatchPatterns(): string[] {
     return [
       '**/routes/**/*.{ts,tsx}',
       '**/pages/**/*.{ts,tsx}',

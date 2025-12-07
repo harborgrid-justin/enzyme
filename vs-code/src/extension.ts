@@ -338,12 +338,13 @@ function registerCommands(enzymeContext: EnzymeExtensionContext): void {
   );
 
   enzymeContext.registerDisposable(
-    vscode.commands.registerCommand(COMMANDS.EXPLORER_OPEN_FILE, wrapCommandHandler(COMMANDS.EXPLORER_OPEN_FILE, async (uri: vscode.Uri) => {
+    vscode.commands.registerCommand(COMMANDS.EXPLORER_OPEN_FILE, async (...args: unknown[]) => {
+      const uri = args[0] as vscode.Uri;
       if (!uri) {
         throw new Error('No file URI provided');
       }
       await vscode.window.showTextDocument(uri);
-    }))
+    })
   );
 
   // Documentation Commands

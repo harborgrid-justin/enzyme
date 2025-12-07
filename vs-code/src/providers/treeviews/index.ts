@@ -3,6 +3,14 @@
  * @description Exports all TreeView providers for the Enzyme VS Code extension
  */
 
+// Imports for types used in this file
+import { EnzymeFeaturesTreeProvider } from './features-tree-provider';
+import { EnzymeRoutesTreeProvider } from './routes-tree-provider';
+import { EnzymeComponentsTreeProvider } from './components-tree-provider';
+import { EnzymeStateTreeProvider } from './state-tree-provider';
+import { EnzymeHooksTreeProvider } from './hooks-tree-provider';
+import { EnzymeAPITreeProvider } from './api-tree-provider';
+
 // Base provider
 export { BaseTreeProvider } from './base-tree-provider';
 export type { TreeProviderOptions } from './base-tree-provider';

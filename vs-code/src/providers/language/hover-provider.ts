@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { getIndex } from './enzyme-index';
-import { getParser } from './parser';
 
 /**
  * EnzymeHoverProvider - Provides hover information for Enzyme entities
@@ -13,7 +12,7 @@ export class EnzymeHoverProvider implements vscode.HoverProvider {
   public async provideHover(
     document: vscode.TextDocument,
     position: vscode.Position,
-    token: vscode.CancellationToken
+    _token: vscode.CancellationToken
   ): Promise<vscode.Hover | undefined> {
     const wordRange = document.getWordRangeAtPosition(position);
     if (!wordRange) {

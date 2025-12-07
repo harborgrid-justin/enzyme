@@ -43,7 +43,7 @@ export const logLevelSchema = z.enum(['debug', 'info', 'warn', 'error', 'silent'
  */
 export const routeGuardSchema = z.object({
   type: z.enum(['auth', 'role', 'permission', 'custom']),
-  config: z.record(z.unknown()).optional(),
+  config: z.record(z.string(), z.unknown()).optional(),
   redirect: z.string().optional(),
 });
 
@@ -116,7 +116,7 @@ export const authConfigSchema = z.object({
   logoutPath: z.string().default('/auth/logout'),
   redirectAfterLogin: z.string().default('/'),
   redirectAfterLogout: z.string().default('/auth/login'),
-  oauth: z.record(oauthProviderSchema).optional(),
+  oauth: z.record(z.string(), oauthProviderSchema).optional(),
   persistSession: z.boolean().default(true),
   secureCookies: z.boolean().default(true),
 });
@@ -136,7 +136,7 @@ export const apiEndpointSchema = z.object({
   timeout: z.number().int().positive().optional(),
   retry: z.number().int().min(0).max(5).optional(),
   cache: z.boolean().optional(),
-  headers: z.record(z.string()).optional(),
+  headers: z.record(z.string(), z.string()).optional(),
 });
 
 /**
@@ -147,8 +147,8 @@ export const apiConfigSchema = z.object({
   timeout: z.number().int().positive().default(30000),
   retryCount: z.number().int().min(0).max(5).default(3),
   retryDelay: z.number().int().positive().default(1000),
-  headers: z.record(z.string()).optional(),
-  endpoints: z.record(apiEndpointSchema).optional(),
+  headers: z.record(z.string(), z.string()).optional(),
+  endpoints: z.record(z.string(), apiEndpointSchema).optional(),
   mockEnabled: z.boolean().default(false),
   mockDelay: z.number().int().min(0).default(500),
 });
@@ -167,7 +167,7 @@ export const featureFlagSchema = z.object({
   enabled: z.boolean(),
   description: z.string().optional(),
   rolloutPercentage: z.number().min(0).max(100).optional(),
-  variants: z.record(z.unknown()).optional(),
+  variants: z.record(z.string(), z.unknown()).optional(),
 });
 
 /**
@@ -179,7 +179,7 @@ export const featureFlagsConfigSchema = z.object({
   remoteUrl: z.string().url().optional(),
   pollInterval: z.number().int().positive().default(60000),
   flags: z.array(featureFlagSchema).default([]),
-  localOverrides: z.record(z.boolean()).optional(),
+  localOverrides: z.record(z.string(), z.boolean()).optional(),
 });
 
 export type FeatureConfig = z.infer<typeof featureFlagSchema>;
@@ -217,7 +217,7 @@ export const devServerConfigSchema = z.object({
   host: z.string().default('localhost'),
   open: z.boolean().default(true),
   https: z.boolean().default(false),
-  proxy: z.record(z.object({
+  proxy: z.record(z.string(), z.object({
     target: z.string().url(),
     changeOrigin: z.boolean().optional(),
     rewrite: z.function().optional(),
@@ -310,11 +310,11 @@ export const enzymeConfigSchema = z.object({
   // Custom configurations
   plugins: z.array(z.object({
     name: z.string(),
-    options: z.record(z.unknown()).optional(),
+    options: z.record(z.string(), z.unknown()).optional(),
   })).optional(),
 
   // Advanced
-  experimental: z.record(z.boolean()).optional(),
+  experimental: z.record(z.string(), z.boolean()).optional(),
 
   // Logging
   logging: z.object({
@@ -388,7 +388,7 @@ export function getSchema(key: SchemaKey) {
 export function validateWithSchema<K extends SchemaKey>(
   key: K,
   config: unknown
-): z.SafeParseReturnType<unknown, z.infer<typeof schemaRegistry[K]>> {
+) {
   const schema = getSchema(key);
   return schema.safeParse(config);
 }

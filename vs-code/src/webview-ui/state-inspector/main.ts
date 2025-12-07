@@ -7,7 +7,7 @@ import { vscode, createMessageSender, webviewUtils } from '../shared/vscode-api'
 
 // Message senders
 const sendGetState = createMessageSender('getState');
-const sendSetState = createMessageSender('setState');
+// const sendSetState = createMessageSender('setState');
 const sendExportState = createMessageSender('exportState');
 const sendImportState = createMessageSender('importState');
 const sendTimeTravel = createMessageSender<number>('timeTravel');
@@ -30,24 +30,24 @@ function init() {
 
 function setupEventListeners() {
 	// Header actions
-	document.getElementById('clearHistory')?.addEventListener('click', () => {
+	(document as any).getElementById('clearHistory')?.addEventListener('click', () => {
 		sendClearHistory();
 	});
 
-	document.getElementById('exportState')?.addEventListener('click', () => {
+	(document as any).getElementById('exportState')?.addEventListener('click', () => {
 		sendExportState();
 	});
 
-	document.getElementById('importState')?.addEventListener('click', () => {
+	(document as any).getElementById('importState')?.addEventListener('click', () => {
 		sendImportState();
 	});
 
-	document.getElementById('refreshState')?.addEventListener('click', () => {
+	(document as any).getElementById('refreshState')?.addEventListener('click', () => {
 		sendGetState();
 	});
 
 	// Search/filter
-	const filterInput = document.getElementById('stateFilter') as HTMLInputElement;
+	const filterInput = (document as any).getElementById('stateFilter') as HTMLInputElement;
 	filterInput?.addEventListener('input', webviewUtils.debounce(() => {
 		filterText = filterInput.value.toLowerCase();
 		sendFilterState(filterText);
@@ -55,36 +55,36 @@ function setupEventListeners() {
 	}, 300));
 
 	// Time travel controls
-	document.getElementById('timeTravelFirst')?.addEventListener('click', () => {
+	(document as any).getElementById('timeTravelFirst')?.addEventListener('click', () => {
 		if (currentHistory.length > 0) {
 			sendTimeTravel(0);
 		}
 	});
 
-	document.getElementById('timeTravelPrev')?.addEventListener('click', () => {
+	(document as any).getElementById('timeTravelPrev')?.addEventListener('click', () => {
 		if (currentIndex > 0) {
 			sendTimeTravel(currentIndex - 1);
 		}
 	});
 
-	document.getElementById('timeTravelNext')?.addEventListener('click', () => {
+	(document as any).getElementById('timeTravelNext')?.addEventListener('click', () => {
 		if (currentIndex < totalStates - 1) {
 			sendTimeTravel(currentIndex + 1);
 		}
 	});
 
-	document.getElementById('timeTravelLast')?.addEventListener('click', () => {
+	(document as any).getElementById('timeTravelLast')?.addEventListener('click', () => {
 		if (totalStates > 0) {
 			sendTimeTravel(totalStates - 1);
 		}
 	});
 
 	// Expand/collapse
-	document.getElementById('expandAll')?.addEventListener('click', () => {
+	(document as any).getElementById('expandAll')?.addEventListener('click', () => {
 		expandAll();
 	});
 
-	document.getElementById('collapseAll')?.addEventListener('click', () => {
+	(document as any).getElementById('collapseAll')?.addEventListener('click', () => {
 		collapseAll();
 	});
 
@@ -115,19 +115,19 @@ function handleStateUpdate(payload: any) {
 }
 
 function renderStateTree() {
-	const container = document.getElementById('stateTree');
+	const container = (document as any).getElementById('stateTree');
 	if (!container) return;
 
 	if (!currentState) {
 		// SECURITY: Use safe DOM manipulation instead of innerHTML
 		container.textContent = '';
-		const emptyState = document.createElement('div');
+		const emptyState = (document as any).createElement('div');
 		emptyState.className = 'empty-state';
 
-		const icon = document.createElement('span');
+		const icon = (document as any).createElement('span');
 		icon.className = 'codicon codicon-info';
 
-		const text = document.createElement('p');
+		const text = (document as any).createElement('p');
 		text.textContent = 'No state available. Start your application to see state.';
 
 		emptyState.appendChild(icon);
@@ -138,7 +138,7 @@ function renderStateTree() {
 
 	// SECURITY: renderObject returns sanitized HTML, but we use a safer approach
 	// by creating a wrapper element
-	const wrapper = document.createElement('div');
+	const wrapper = (document as any).createElement('div');
 	wrapper.innerHTML = renderObject(currentState, 'root');
 	container.textContent = '';
 	container.appendChild(wrapper);
@@ -177,7 +177,7 @@ function renderObject(obj: any, path: string, level: number = 0): string {
 
 		let html = `
 			<div class="state-node">
-				<div class="state-key-line" onclick="window.togglePath('${path}')">
+				<div class="state-key-line" onclick="(window as any).togglePath('${path}')">
 					<span class="codicon codicon-chevron-${isExpanded ? 'down' : 'right'}"></span>
 					<span class="state-bracket">[</span>
 					<span class="state-info">${length} items</span>
@@ -218,7 +218,7 @@ function renderObject(obj: any, path: string, level: number = 0): string {
 
 		let html = `
 			<div class="state-node">
-				<div class="state-key-line" onclick="window.togglePath('${path}')">
+				<div class="state-key-line" onclick="(window as any).togglePath('${path}')">
 					<span class="codicon codicon-chevron-${isExpanded ? 'down' : 'right'}"></span>
 					<span class="state-bracket">{</span>
 					<span class="state-info">${length} keys</span>
@@ -252,8 +252,8 @@ function renderObject(obj: any, path: string, level: number = 0): string {
 }
 
 function renderActionHistory() {
-	const container = document.getElementById('actionHistory');
-	const countElement = document.getElementById('historyCount');
+	const container = (document as any).getElementById('actionHistory');
+	const countElement = (document as any).getElementById('historyCount');
 
 	if (!container) return;
 
@@ -264,13 +264,13 @@ function renderActionHistory() {
 	if (currentHistory.length === 0) {
 		// SECURITY: Use safe DOM manipulation
 		container.textContent = '';
-		const emptyState = document.createElement('div');
+		const emptyState = (document as any).createElement('div');
 		emptyState.className = 'empty-state';
 
-		const icon = document.createElement('span');
+		const icon = (document as any).createElement('span');
 		icon.className = 'codicon codicon-history';
 
-		const text = document.createElement('p');
+		const text = (document as any).createElement('p');
 		text.textContent = 'No actions recorded yet.';
 
 		emptyState.appendChild(icon);
@@ -281,32 +281,32 @@ function renderActionHistory() {
 
 	// SECURITY: Use DOM manipulation instead of innerHTML to prevent XSS
 	container.textContent = '';
-	const historyItemsDiv = document.createElement('div');
+	const historyItemsDiv = (document as any).createElement('div');
 	historyItemsDiv.className = 'history-items';
 
 	currentHistory.forEach((item, index) => {
 		const isActive = index === currentIndex;
 		const time = webviewUtils.formatRelativeTime(item.timestamp);
 
-		const historyItem = document.createElement('div');
+		const historyItem = (document as any).createElement('div');
 		historyItem.className = `history-item ${isActive ? 'active' : ''}`;
 		historyItem.onclick = () => (window as any).selectHistoryItem(index);
 
-		const header = document.createElement('div');
+		const header = (document as any).createElement('div');
 		header.className = 'history-item-header';
 
-		const actionSpan = document.createElement('span');
+		const actionSpan = (document as any).createElement('span');
 		actionSpan.className = 'history-action';
 		actionSpan.textContent = item.action || 'State Update';
 		header.appendChild(actionSpan);
 
 		if (item.hasChanges) {
-			const diffIcon = document.createElement('span');
+			const diffIcon = (document as any).createElement('span');
 			diffIcon.className = 'codicon codicon-diff';
 			header.appendChild(diffIcon);
 		}
 
-		const timeDiv = document.createElement('div');
+		const timeDiv = (document as any).createElement('div');
 		timeDiv.className = 'history-item-time';
 		timeDiv.textContent = time;
 
@@ -319,11 +319,11 @@ function renderActionHistory() {
 }
 
 function updateTimeTravelControls() {
-	const firstBtn = document.getElementById('timeTravelFirst') as HTMLButtonElement;
-	const prevBtn = document.getElementById('timeTravelPrev') as HTMLButtonElement;
-	const nextBtn = document.getElementById('timeTravelNext') as HTMLButtonElement;
-	const lastBtn = document.getElementById('timeTravelLast') as HTMLButtonElement;
-	const positionSpan = document.getElementById('statePosition');
+	const firstBtn = (document as any).getElementById('timeTravelFirst') as HTMLButtonElement;
+	const prevBtn = (document as any).getElementById('timeTravelPrev') as HTMLButtonElement;
+	const nextBtn = (document as any).getElementById('timeTravelNext') as HTMLButtonElement;
+	const lastBtn = (document as any).getElementById('timeTravelLast') as HTMLButtonElement;
+	const positionSpan = (document as any).getElementById('statePosition');
 
 	if (firstBtn) firstBtn.disabled = currentIndex <= 0;
 	if (prevBtn) prevBtn.disabled = currentIndex <= 0;
@@ -336,12 +336,12 @@ function updateTimeTravelControls() {
 }
 
 function updateFooter() {
-	const lastUpdateElement = document.getElementById('lastUpdate');
+	const lastUpdateElement = (document as any).getElementById('lastUpdate');
 	if (lastUpdateElement) {
 		lastUpdateElement.textContent = webviewUtils.formatRelativeTime(Date.now());
 	}
 
-	const storeCountElement = document.getElementById('storeCount');
+	const storeCountElement = (document as any).getElementById('storeCount');
 	if (storeCountElement && currentState) {
 		const keys = Object.keys(currentState);
 		storeCountElement.textContent = `${keys.length} store${keys.length !== 1 ? 's' : ''}`;
@@ -390,8 +390,8 @@ function addAllPaths(obj: any, path: string) {
 };
 
 // Start the app
-if (document.readyState === 'loading') {
-	document.addEventListener('DOMContentLoaded', init);
+if ((document as any).readyState === 'loading') {
+	(document as any).addEventListener('DOMContentLoaded', init);
 } else {
 	init();
 }

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { getParser } from './parser';
 import { getIndex } from './enzyme-index';
+import { getParser } from './parser';
 
 /**
  * Semantic token types for Enzyme
@@ -58,7 +58,7 @@ export class EnzymeSemanticTokensProvider implements vscode.DocumentSemanticToke
    */
   public async provideDocumentSemanticTokens(
     document: vscode.TextDocument,
-    token: vscode.CancellationToken
+    _token: vscode.CancellationToken
   ): Promise<vscode.SemanticTokens | undefined> {
     const tokensBuilder = new vscode.SemanticTokensBuilder(this.legend);
 

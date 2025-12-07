@@ -432,7 +432,7 @@ export class APIExplorerPanel extends BaseWebViewPanel {
 				payload: request
 			});
 
-			vscode.window.showErrorMessage(`Request failed: ${error.message}`);
+			vscode.window.showErrorMessage(`Request failed: ${error instanceof Error ? error.message : String(error)}`);
 		}
 	}
 

@@ -36,7 +36,7 @@ export class EnzymeFeaturesTreeProvider extends BaseTreeProvider<EnzymeFeatureIt
   /**
    * Get watch patterns for auto-refresh
    */
-  protected getWatchPatterns(): string[] {
+  protected override getWatchPatterns(): string[] {
     return [
       '**/features/**/index.ts',
       '**/features/**/index.tsx',

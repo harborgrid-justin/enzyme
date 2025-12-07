@@ -340,7 +340,7 @@ export class ShowAPIExplorerCommand extends BaseCommand {
   private async handleWebviewMessage(message: { type: string; [key: string]: unknown }): Promise<void> {
     switch (message.type) {
       case 'sendRequest':
-        this.log('info', `Sending ${message.method} request to ${message.url}`);
+        this.log('info', `Sending ${message['method']} request to ${message['url']}`);
 
         // Simulate API response
         const mockResponse = {

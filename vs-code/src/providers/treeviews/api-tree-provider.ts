@@ -4,7 +4,6 @@
  */
 
 import * as vscode from 'vscode';
-import * as path from 'path';
 import { BaseTreeProvider, TreeProviderOptions } from './base-tree-provider';
 import { EnzymeAPIItem, EnzymeCategoryItem } from './tree-items';
 
@@ -36,7 +35,7 @@ export class EnzymeAPITreeProvider extends BaseTreeProvider<EnzymeAPIItem | Enzy
   /**
    * Get watch patterns for auto-refresh
    */
-  protected getWatchPatterns(): string[] {
+  protected override getWatchPatterns(): string[] {
     return [
       '**/api/**/*.{ts,tsx}',
       '**/services/**/*.{ts,tsx}',

@@ -36,7 +36,7 @@ export class EventBus {
   private maxHistorySize: number = 100;
   private oneTimeListeners: Map<string, Array<(event: ExtensionEvent) => void>> = new Map();
 
-  private constructor() {
+  public constructor() {
     this.emitter = new vscode.EventEmitter<ExtensionEvent>();
   }
 

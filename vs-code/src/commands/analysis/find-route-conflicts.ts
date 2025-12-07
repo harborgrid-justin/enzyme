@@ -148,23 +148,23 @@ export class FindRouteConflictsCommand extends BaseCommand {
         const route2 = routes[j];
 
         // Exact duplicates
-        if (route1.path === route2.path) {
+        if (route1!.path === route2!.path) {
           conflicts.push({
             route1,
             route2,
             type: 'duplicate',
-            description: `Duplicate route path: ${route1.path}`,
+            description: `Duplicate route path: ${route1!.path}`,
           });
           continue;
         }
 
         // Pattern conflicts (e.g., /users/:id and /users/:userId)
-        if (route1.pattern === route2.pattern && route1.path !== route2.path) {
+        if (route1!.pattern === route2!.pattern && route1!.path !== route2!.path) {
           conflicts.push({
             route1,
             route2,
             type: 'ambiguous',
-            description: `Ambiguous routes: ${route1.path} and ${route2.path} will match the same URLs`,
+            description: `Ambiguous routes: ${route1!.path} and ${route2!.path} will match the same URLs`,
           });
           continue;
         }
@@ -175,7 +175,7 @@ export class FindRouteConflictsCommand extends BaseCommand {
             route1,
             route2,
             type: 'shadowed',
-            description: `Route ${route1.path} may be shadowed by ${route2.path}`,
+            description: `Route ${route1!.path} may be shadowed by ${route2!.path}`,
           });
         }
       }
@@ -185,8 +185,8 @@ export class FindRouteConflictsCommand extends BaseCommand {
   }
 
   private isShadowed(route1: RouteInfo, route2: RouteInfo): boolean {
-    const parts1 = route1.path.split('/').filter(Boolean);
-    const parts2 = route2.path.split('/').filter(Boolean);
+    const parts1 = route1!.path.split('/').filter(Boolean);
+    const parts2 = route2!.path.split('/').filter(Boolean);
 
     if (parts1.length !== parts2.length) {
       return false;
@@ -197,12 +197,12 @@ export class FindRouteConflictsCommand extends BaseCommand {
       const part2 = parts2[i];
 
       // If route2 has a param where route1 has a static segment
-      if (!part1.startsWith(':') && part2.startsWith(':')) {
+      if (!part1!.startsWith(':') && part2!.startsWith(':')) {
         return true;
       }
 
       // If parts are different and neither is a param
-      if (part1 !== part2 && !part1.startsWith(':') && !part2.startsWith(':')) {
+      if (part1 !== part2 && !part1!.startsWith(':') && !part2!.startsWith(':')) {
         return false;
       }
     }
@@ -268,9 +268,9 @@ export class FindRouteConflictsCommand extends BaseCommand {
     if (duplicates.length > 0) {
       this.outputChannel.appendLine('DUPLICATE ROUTES:');
       for (const conflict of duplicates) {
-        this.outputChannel.appendLine(`  ❌ ${conflict.route1.path}`);
-        this.outputChannel.appendLine(`     ${conflict.route1.file}:${conflict.route1.line + 1}`);
-        this.outputChannel.appendLine(`     ${conflict.route2.file}:${conflict.route2.line + 1}`);
+        this.outputChannel.appendLine(`  ❌ ${conflict.route1!.path}`);
+        this.outputChannel.appendLine(`     ${conflict.route1!.file}:${conflict.route1!.line + 1}`);
+        this.outputChannel.appendLine(`     ${conflict.route2!.file}:${conflict.route2!.line + 1}`);
         this.outputChannel.appendLine('');
       }
     }
@@ -278,9 +278,9 @@ export class FindRouteConflictsCommand extends BaseCommand {
     if (ambiguous.length > 0) {
       this.outputChannel.appendLine('AMBIGUOUS ROUTES:');
       for (const conflict of ambiguous) {
-        this.outputChannel.appendLine(`  ⚠️  ${conflict.route1.path} ↔ ${conflict.route2.path}`);
-        this.outputChannel.appendLine(`     ${conflict.route1.file}:${conflict.route1.line + 1}`);
-        this.outputChannel.appendLine(`     ${conflict.route2.file}:${conflict.route2.line + 1}`);
+        this.outputChannel.appendLine(`  ⚠️  ${conflict.route1!.path} ↔ ${conflict.route2!.path}`);
+        this.outputChannel.appendLine(`     ${conflict.route1!.file}:${conflict.route1!.line + 1}`);
+        this.outputChannel.appendLine(`     ${conflict.route2!.file}:${conflict.route2!.line + 1}`);
         this.outputChannel.appendLine('');
       }
     }
@@ -288,8 +288,8 @@ export class FindRouteConflictsCommand extends BaseCommand {
     if (shadowed.length > 0) {
       this.outputChannel.appendLine('SHADOWED ROUTES:');
       for (const conflict of shadowed) {
-        this.outputChannel.appendLine(`  ℹ️  ${conflict.route1.path} shadowed by ${conflict.route2.path}`);
-        this.outputChannel.appendLine(`     ${conflict.route1.file}:${conflict.route1.line + 1}`);
+        this.outputChannel.appendLine(`  ℹ️  ${conflict.route1!.path} shadowed by ${conflict.route2!.path}`);
+        this.outputChannel.appendLine(`     ${conflict.route1!.file}:${conflict.route1!.line + 1}`);
         this.outputChannel.appendLine('');
       }
     }

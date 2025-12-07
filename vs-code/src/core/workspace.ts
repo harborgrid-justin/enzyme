@@ -257,10 +257,10 @@ async function loadCachedWorkspaceStructure(rootPath: string): Promise<EnzymeWor
     }
 
     const cacheKey = `workspace:${rootPath}`;
-    const cached = context.workspaceState.get<{
+    const cached = context.workspaceState.get(cacheKey) as {
       data: EnzymeWorkspace;
       timestamp: number;
-    }>(cacheKey);
+    } | undefined;
 
     if (!cached) {
       return null;

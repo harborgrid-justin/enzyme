@@ -461,10 +461,10 @@ export class WorkspaceFeatureFlagsManager {
    * Get or create manager for workspace folder
    */
   public async getManager(workspaceFolder: vscode.WorkspaceFolder): Promise<FeatureFlagsManager> {
-    const key = workspaceFolder.uri.fsPath;
+    const key = workspaceFolder!.uri.fsPath;
 
     if (!this.managers.has(key)) {
-      const manager = new FeatureFlagsManager(workspaceFolder.uri.fsPath);
+      const manager = new FeatureFlagsManager(workspaceFolder!.uri.fsPath);
       await manager.initialize();
       this.managers.set(key, manager);
     }

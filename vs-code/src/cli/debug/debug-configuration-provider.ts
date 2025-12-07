@@ -6,7 +6,7 @@ export class EnzymeDebugConfigurationProvider implements vscode.DebugConfigurati
    * Provide debug configurations
    */
   async provideDebugConfigurations(
-    folder: vscode.WorkspaceFolder | undefined
+    _folder: vscode.WorkspaceFolder | undefined
   ): Promise<vscode.DebugConfiguration[]> {
     return [
       this.createChromeConfig(),
@@ -22,7 +22,7 @@ export class EnzymeDebugConfigurationProvider implements vscode.DebugConfigurati
   async resolveDebugConfiguration(
     folder: vscode.WorkspaceFolder | undefined,
     config: vscode.DebugConfiguration,
-    token?: vscode.CancellationToken
+    _token?: vscode.CancellationToken
   ): Promise<vscode.DebugConfiguration | null> {
     // If launch.json is empty, provide default config
     if (!config.type && !config.request && !config.name) {
@@ -85,6 +85,8 @@ export class EnzymeDebugConfigurationProvider implements vscode.DebugConfigurati
    */
   private createCompoundConfig(): vscode.DebugConfiguration {
     return {
+      type: 'compound',
+      request: 'launch',
       name: 'Enzyme: Debug Full Stack',
       configurations: ['Enzyme: Debug in Chrome', 'Enzyme: Debug SSR'],
       stopAll: true,
@@ -121,21 +123,21 @@ export class EnzymeDebugConfigurationProvider implements vscode.DebugConfigurati
     const workspaceRoot = folder?.uri.fsPath || '';
 
     // Set default values
-    if (!config.url) {
-      config.url = 'http://localhost:3000';
+    if (!config['url']) {
+      config['url'] = 'http://localhost:3000';
     }
 
-    if (!config.webRoot) {
-      config.webRoot = path.join(workspaceRoot, 'src');
+    if (!config['webRoot']) {
+      config['webRoot'] = path.join(workspaceRoot, 'src');
     }
 
-    if (!config.cwd) {
-      config.cwd = workspaceRoot;
+    if (!config['cwd']) {
+      config['cwd'] = workspaceRoot;
     }
 
     // Add Enzyme environment variables
-    config.env = {
-      ...config.env,
+    config['env'] = {
+      ...config['env'],
       ENZYME_ENV: 'development',
       ENZYME_DEBUG: 'true',
     };
@@ -212,3 +214,5 @@ export function getDebugConfigurationContribution() {
     ],
   };
 }
+1
+1

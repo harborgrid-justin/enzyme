@@ -39,7 +39,7 @@ export class Container {
   private singletons: Map<string, unknown> = new Map();
   private context?: vscode.ExtensionContext;
 
-  private constructor() {}
+  public constructor() {}
 
   /**
    * Get the singleton instance

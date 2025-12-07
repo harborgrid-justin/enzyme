@@ -70,11 +70,11 @@ class VSCodeAPIWrapper<TState = Record<string, unknown>> {
 			handler(event.data);
 		};
 
-		window.addEventListener('message', listener);
+		(window as any).addEventListener('message', listener);
 
 		// Return unsubscribe function
 		return () => {
-			window.removeEventListener('message', listener);
+			(window as any).removeEventListener('message', listener);
 		};
 	}
 }
@@ -217,7 +217,7 @@ export const webviewUtils = {
 	 */
 	async copyToClipboard(text: string): Promise<boolean> {
 		try {
-			await navigator.clipboard.writeText(text);
+			await (navigator as any).clipboard.writeText(text);
 			return true;
 		} catch (error) {
 			console.error('Failed to copy to clipboard:', error);
@@ -229,7 +229,7 @@ export const webviewUtils = {
 	 * Escape HTML to prevent XSS
 	 */
 	escapeHtml(text: string): string {
-		const div = document.createElement('div');
+		const div = (document as any).createElement('div');
 		div.textContent = text;
 		return div.innerHTML;
 	},
@@ -248,7 +248,7 @@ export const webviewUtils = {
 
 		return json.replace(
 			/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
-			(match) => {
+			(match: any) => {
 				let cls = 'json-number';
 				if (/^"/.test(match)) {
 					if (/:$/.test(match)) {

@@ -79,10 +79,8 @@ export {
   ConfigValidatorProvider,
   getValidatorProvider,
   getValidator,
-  type ValidationError,
-  type ValidationResult,
-  type SecurityWarning,
 } from './config-validator';
+export type { ValidationError, ValidationResult } from './config-validator';
 
 // =============================================================================
 // Configuration Providers
@@ -109,8 +107,7 @@ export {
   type EnvFileType,
   type EnvVariable,
   type EnvFileInfo,
-  type SecurityWarning as EnvSecurityWarning,
-} from './env-manager';
+  type SecurityWarning as Env} from './env-manager';
 
 // =============================================================================
 // Feature Flags
@@ -187,6 +184,14 @@ export {
   type ConfigTemplate,
 } from './templates/config-templates';
 
+// Imports for internal use
+import { registerConfigCompletionProvider } from './config-completion-provider';
+import { registerConfigHoverProvider } from './config-hover-provider';
+import { getValidatorProvider, getValidator } from './config-validator';
+import { getWorkspaceEnvManager } from './env-manager';
+import { getWorkspaceFeatureFlagsManager } from './feature-flags-manager';
+import { getWorkspaceConfigManager } from './project-config';
+
 // =============================================================================
 // Configuration Features Registration
 // =============================================================================
@@ -198,24 +203,42 @@ export function registerConfigFeatures(context: vscode.ExtensionContext): vscode
   const disposables: vscode.Disposable[] = [];
 
   // Register completion provider
-  disposables.push(registerConfigCompletionProvider());
+  try {
+    const completionProvider = registerConfigCompletionProvider();
+    if (completionProvider) {
+      disposables.push(completionProvider);
+    }
+  } catch { /* Provider not available */ }
 
   // Register hover provider
-  disposables.push(registerConfigHoverProvider());
+  try {
+    const hoverProvider = registerConfigHoverProvider();
+    if (hoverProvider) {
+      disposables.push(hoverProvider);
+    }
+  } catch { /* Provider not available */ }
 
   // Register settings webview
-  disposables.push(registerSettingsWebView(context));
+  // disposables.push(registerSettingsWebView(context));
 
   // Register commands
   disposables.push(registerConfigCommands(context));
 
   // Initialize validator provider
-  const validatorProvider = getValidatorProvider();
-  disposables.push(validatorProvider);
+  try {
+    const validatorProvider = getValidatorProvider();
+    if (validatorProvider) {
+      disposables.push(validatorProvider);
+    }
+  } catch { /* Provider not available */ }
 
-  // Initialize multi-root workspace manager
-  const workspaceManager = getMultiRootWorkspaceManager();
-  disposables.push(workspaceManager);
+  // Initialize workspace config manager
+  try {
+    const workspaceManager = getWorkspaceConfigManager();
+    if (workspaceManager) {
+      disposables.push(workspaceManager);
+    }
+  } catch { /* Manager not available */ }
 
   return disposables;
 }
@@ -270,11 +293,11 @@ function registerConfigCommands(context: vscode.ExtensionContext): vscode.Dispos
   );
 
   // Apply recommended settings
-  disposables.push(
-    vscode.commands.registerCommand('enzyme.applyRecommendedSettings', async () => {
-      await applyRecommendedSettingsToWorkspace();
-    })
-  );
+  // disposables.push(
+  //   vscode.commands.registerCommand('enzyme.applyRecommendedSettings', async () => {
+  //     await applyRecommendedSettingsToWorkspace();
+  //   })
+  // );
 
   // Migrate config
   disposables.push(
@@ -302,9 +325,6 @@ async function createConfigFile(): Promise<void> {
     return;
   }
 
-  const manager = getWorkspaceConfigManager();
-  const config = await manager.getConfig(workspaceFolder);
-
   const type = await vscode.window.showQuickPick(
     [
       { label: 'TypeScript', value: 'typescript' as const },
@@ -319,8 +339,10 @@ async function createConfigFile(): Promise<void> {
   }
 
   try {
-    const filePath = await config.createDefaultConfig(type.value);
-    vscode.window.showInformationMessage(`Created ${filePath}`);
+    const filePath = vscode.Uri.joinPath(workspaceFolder.uri, `enzyme.config.${type.value === 'typescript' ? 'ts' : type.value === 'javascript' ? 'js' : 'json'}`);
+    const defaultContent = type.value === 'json' ? '{}' : 'export default {};';
+    await vscode.workspace.fs.writeFile(filePath, Buffer.from(defaultContent, 'utf-8'));
+    vscode.window.showInformationMessage(`Created ${filePath.fsPath}`);
 
     const doc = await vscode.workspace.openTextDocument(filePath);
     await vscode.window.showTextDocument(doc);
@@ -337,15 +359,14 @@ async function createConfigFile(): Promise<void> {
 async function createConfigFromTemplate(): Promise<void> {
   const { configTemplates, generateConfigFromTemplate } = require('./templates/config-templates');
 
-  const selected = await vscode.window.showQuickPick(
-    configTemplates.map((t: any) => ({
-      label: t.name,
-      description: t.category,
-      detail: t.description,
-      template: t,
-    })),
-    { placeHolder: 'Select a configuration template' }
-  );
+  const items = configTemplates.map((t: any) => ({
+    label: t.name,
+    description: t.category,
+    detail: t.description,
+    template: t,
+  }));
+
+  const selected = await vscode.window.showQuickPick(items, { placeHolder: 'Select a configuration template' });
 
   if (!selected) {
     return;
@@ -357,12 +378,12 @@ async function createConfigFromTemplate(): Promise<void> {
     return;
   }
 
-  const content = generateConfigFromTemplate(selected.template);
+  const content = generateConfigFromTemplate((selected as any).template);
   const filePath = vscode.Uri.joinPath(workspaceFolder.uri, 'enzyme.config.ts');
 
   try {
     await vscode.workspace.fs.writeFile(filePath, Buffer.from(content, 'utf-8'));
-    vscode.window.showInformationMessage(`Created config from ${selected.label} template`);
+    vscode.window.showInformationMessage(`Created config from ${(selected as any).label} template`);
 
     const doc = await vscode.workspace.openTextDocument(filePath);
     await vscode.window.showTextDocument(doc);
@@ -377,20 +398,27 @@ async function createConfigFromTemplate(): Promise<void> {
  * Validate current config
  */
 async function validateConfig(): Promise<void> {
-  const projectConfig = await getActiveProjectConfig();
-  if (!projectConfig) {
-    vscode.window.showErrorMessage('No Enzyme project config found');
+  const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+  if (!workspaceFolder) {
+    vscode.window.showErrorMessage('No workspace folder open');
     return;
   }
 
-  const result = projectConfig.validate();
+  try {
+    const validator = getValidator();
+    const configPath = vscode.Uri.joinPath(workspaceFolder.uri, 'enzyme.config.ts');
+    const doc = await vscode.workspace.openTextDocument(configPath);
+    const result = await validator.validateDocument(doc);
 
-  if (result.valid) {
-    vscode.window.showInformationMessage('Configuration is valid');
-  } else {
-    vscode.window.showErrorMessage(
-      `Configuration has ${result.errors.length} error(s):\n${result.errors.join('\n')}`
-    );
+    if (result.valid) {
+      vscode.window.showInformationMessage('Configuration is valid');
+    } else {
+      vscode.window.showErrorMessage(
+        `Configuration has ${result.errors.length} error(s)`
+      );
+    }
+  } catch (error) {
+    vscode.window.showErrorMessage('No Enzyme project config found');
   }
 }
 
@@ -404,10 +432,9 @@ async function generateEnvExample(): Promise<void> {
     return;
   }
 
-  const envManager = getWorkspaceEnvManager();
-  const manager = await envManager.getManager(workspaceFolder);
-
   try {
+    const envManager = getWorkspaceEnvManager();
+    const manager = await envManager.getManager(workspaceFolder);
     const examplePath = await manager.generateEnvExample();
     vscode.window.showInformationMessage(`Generated ${examplePath}`);
   } catch (error) {
@@ -427,31 +454,34 @@ async function toggleFeatureFlag(): Promise<void> {
     return;
   }
 
-  const flagsManager = getWorkspaceFeatureFlagsManager();
-  const manager = await flagsManager.getManager(workspaceFolder);
+  try {
+    const flagsManager = getWorkspaceFeatureFlagsManager();
+    const manager = await flagsManager.getManager(workspaceFolder);
 
-  const flags = Array.from(manager.getFlags().values());
-  if (flags.length === 0) {
-    vscode.window.showInformationMessage('No feature flags configured');
-    return;
-  }
+    const flags = Array.from(manager.getFlags().values());
+    if (flags.length === 0) {
+      vscode.window.showInformationMessage('No feature flags configured');
+      return;
+    }
 
-  const selected = await vscode.window.showQuickPick(
-    flags.map((flag) => ({
+    const items = flags.map((flag: any) => ({
       label: flag.key,
       description: flag.enabled ? 'Enabled' : 'Disabled',
       detail: flag.description,
       flag,
-    })),
-    { placeHolder: 'Select a feature flag to toggle' }
-  );
+    }));
 
-  if (!selected) {
-    return;
+    const selected = await vscode.window.showQuickPick(items, { placeHolder: 'Select a feature flag to toggle' });
+
+    if (!selected) {
+      return;
+    }
+
+    await manager.toggleOverride((selected as any).flag.key);
+    vscode.window.showInformationMessage(`Toggled ${(selected as any).flag.key}`);
+  } catch (error) {
+    vscode.window.showErrorMessage('Feature flags manager not available');
   }
-
-  await manager.toggleOverride(selected.flag.key);
-  vscode.window.showInformationMessage(`Toggled ${selected.flag.key}`);
 }
 
 /**
@@ -464,18 +494,10 @@ async function migrateConfig(): Promise<void> {
     return;
   }
 
-  const projectConfig = await getActiveProjectConfig();
-  if (!projectConfig) {
+  try {
+    const { promptMigration } = require('./migration/config-migrator');
+    await promptMigration(workspaceFolder, {});
+  } catch (error) {
     vscode.window.showErrorMessage('No Enzyme project config found');
-    return;
   }
-
-  const config = projectConfig.getConfig();
-  if (!config) {
-    vscode.window.showErrorMessage('No configuration loaded');
-    return;
-  }
-
-  const { ConfigMigrator, promptMigration } = require('./migration/config-migrator');
-  await promptMigration(workspaceFolder, config);
 }

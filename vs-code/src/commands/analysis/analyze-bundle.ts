@@ -40,8 +40,8 @@ export class AnalyzeBundleCommand extends BaseCommand {
     const workspaceFolder = await this.ensureWorkspaceFolder();
 
     // Check if build exists
-    const distPath = path.join(workspaceFolder.uri.fsPath, 'dist');
-    const buildPath = path.join(workspaceFolder.uri.fsPath, 'build');
+    const distPath = path.join(workspaceFolder!.uri.fsPath, 'dist');
+    const buildPath = path.join(workspaceFolder!.uri.fsPath, 'build');
 
     let bundlePath: string | undefined;
 
@@ -92,7 +92,7 @@ export class AnalyzeBundleCommand extends BaseCommand {
   ): Promise<void> {
     const terminal = vscode.window.createTerminal({
       name: 'Enzyme Build',
-      cwd: workspaceFolder.uri.fsPath,
+      cwd: workspaceFolder!.uri.fsPath,
     });
 
     terminal.show();

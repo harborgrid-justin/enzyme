@@ -45,7 +45,7 @@ export class EnzymeComponentsTreeProvider extends BaseTreeProvider<EnzymeCompone
   /**
    * Get watch patterns for auto-refresh
    */
-  protected getWatchPatterns(): string[] {
+  protected override getWatchPatterns(): string[] {
     return [
       '**/lib/ui/**/*.{ts,tsx}',
       '**/components/**/*.{ts,tsx}',

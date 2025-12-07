@@ -275,17 +275,17 @@ export class ExtensionConfig {
    */
   public getAll(scope?: vscode.ConfigurationScope): Partial<EnzymeExtensionSettings> {
     const config = vscode.workspace.getConfiguration('enzyme', scope);
-    const settings: Partial<EnzymeExtensionSettings> = {};
+    const settings: Record<string, any> = {};
 
     for (const key of Object.keys(DEFAULT_SETTINGS) as ExtensionSettingKey[]) {
       const settingKey = key.replace('enzyme.', '');
       const value = config.get(settingKey);
       if (value !== undefined) {
-        settings[key] = value as any;
+        settings[key] = value;
       }
     }
 
-    return settings;
+    return settings as Partial<EnzymeExtensionSettings>;
   }
 
   /**

@@ -47,14 +47,14 @@ export class StateInspectorPanel extends BaseWebViewPanel {
 		panel.show();
 	}
 
-	protected getIconPath(): vscode.Uri | { light: vscode.Uri; dark: vscode.Uri } | undefined {
+	protected override getIconPath(): vscode.Uri | { light: vscode.Uri; dark: vscode.Uri } | undefined {
 		return {
 			light: vscode.Uri.file(this.context.asAbsolutePath('resources/icons/state-light.svg')),
 			dark: vscode.Uri.file(this.context.asAbsolutePath('resources/icons/state-dark.svg'))
 		};
 	}
 
-	protected getStyles(webview: vscode.Webview, nonce: string): string {
+	protected override getStyles(webview: vscode.Webview, nonce: string): string {
 		const sharedStylesUri = this.getWebviewUri(webview, ['src', 'webview-ui', 'shared', 'styles.css']);
 		const stateStylesUri = this.getWebviewUri(webview, ['src', 'webview-ui', 'state-inspector', 'styles.css']);
 		return `
@@ -63,7 +63,7 @@ export class StateInspectorPanel extends BaseWebViewPanel {
 		`;
 	}
 
-	protected getBodyContent(webview: vscode.Webview): string {
+	protected getBodyContent(_webview: vscode.Webview): string {
 		return `
 			<div class="container">
 				<div class="header">
@@ -214,12 +214,12 @@ export class StateInspectorPanel extends BaseWebViewPanel {
 		}
 	}
 
-	protected onPanelCreated(): void {
+	protected override onPanelCreated(): void {
 		// Send initial state to the webview
 		this.sendStateUpdate();
 	}
 
-	protected onPanelVisible(): void {
+	protected override onPanelVisible(): void {
 		// Refresh state when panel becomes visible
 		this.sendStateUpdate();
 	}
@@ -242,7 +242,7 @@ export class StateInspectorPanel extends BaseWebViewPanel {
 
 			// Calculate diff from previous state
 			if (this.stateHistory.length > 0) {
-				const previousState = this.stateHistory[this.stateHistory.length - 1].state;
+				const previousState = this.stateHistory[this.stateHistory.length - 1]!.state;
 				snapshot.diff = this.calculateDiff(previousState, state);
 			}
 
@@ -306,7 +306,7 @@ export class StateInspectorPanel extends BaseWebViewPanel {
 
 		if (uris && uris.length > 0) {
 			try {
-				const content = await vscode.workspace.fs.readFile(uris[0]);
+				const content = await vscode.workspace.fs.readFile(uris[0]!);
 				const state = JSON.parse(content.toString());
 				this.updateState(state, 'Imported State');
 				vscode.window.showInformationMessage('State imported successfully');
@@ -367,14 +367,14 @@ export class StateInspectorPanel extends BaseWebViewPanel {
 
 	private getCurrentState(): any {
 		if (this.currentStateIndex >= 0 && this.currentStateIndex < this.stateHistory.length) {
-			return this.stateHistory[this.currentStateIndex].state;
+			return this.stateHistory[this.currentStateIndex]!.state;
 		}
 		return null;
 	}
 
 	private getCurrentSnapshot(): StateSnapshot | null {
 		if (this.currentStateIndex >= 0 && this.currentStateIndex < this.stateHistory.length) {
-			return this.stateHistory[this.currentStateIndex];
+			return this.stateHistory[this.currentStateIndex]!;
 		}
 		return null;
 	}
@@ -424,7 +424,7 @@ export class StateInspectorPanel extends BaseWebViewPanel {
 		this.currentStateIndex = history.length - 1;
 	}
 
-	public dispose(): void {
+	public override dispose(): void {
 		if (this.updateThrottle) {
 			clearTimeout(this.updateThrottle);
 		}

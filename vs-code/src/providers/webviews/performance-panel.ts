@@ -72,14 +72,14 @@ export class PerformancePanel extends BaseWebViewPanel {
 		panel.show();
 	}
 
-	protected getIconPath(): vscode.Uri | { light: vscode.Uri; dark: vscode.Uri } | undefined {
+	protected override getIconPath(): vscode.Uri | { light: vscode.Uri; dark: vscode.Uri } | undefined {
 		return {
 			light: vscode.Uri.file(this.context.asAbsolutePath('resources/icons/performance-light.svg')),
 			dark: vscode.Uri.file(this.context.asAbsolutePath('resources/icons/performance-dark.svg'))
 		};
 	}
 
-	protected getBodyContent(webview: vscode.Webview): string {
+	protected getBodyContent(_webview: vscode.Webview): string {
 		return `
 			<div class="container">
 				<div class="header">
@@ -329,11 +329,11 @@ export class PerformancePanel extends BaseWebViewPanel {
 		}
 	}
 
-	protected onPanelCreated(): void {
+	protected override onPanelCreated(): void {
 		this.sendMetricsUpdate();
 	}
 
-	protected onPanelVisible(): void {
+	protected override onPanelVisible(): void {
 		this.sendMetricsUpdate();
 	}
 
@@ -500,7 +500,7 @@ export class PerformancePanel extends BaseWebViewPanel {
 		this.metricsHistory = history;
 	}
 
-	public dispose(): void {
+	public override dispose(): void {
 		super.dispose();
 		PerformancePanel.instance = undefined;
 	}

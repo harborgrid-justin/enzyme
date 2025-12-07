@@ -12,7 +12,7 @@ export class EnzymeRenameProvider implements vscode.RenameProvider {
   public async prepareRename(
     document: vscode.TextDocument,
     position: vscode.Position,
-    token: vscode.CancellationToken
+    _token: vscode.CancellationToken
   ): Promise<vscode.Range | { range: vscode.Range; placeholder: string } | undefined> {
     const wordRange = document.getWordRangeAtPosition(position);
     if (!wordRange) {
@@ -40,7 +40,7 @@ export class EnzymeRenameProvider implements vscode.RenameProvider {
     document: vscode.TextDocument,
     position: vscode.Position,
     newName: string,
-    token: vscode.CancellationToken
+    _token: vscode.CancellationToken
   ): Promise<vscode.WorkspaceEdit | undefined> {
     const wordRange = document.getWordRangeAtPosition(position);
     if (!wordRange) {

@@ -50,14 +50,14 @@ export class RouteVisualizerPanel extends BaseWebViewPanel {
 		panel.show();
 	}
 
-	protected getIconPath(): vscode.Uri | { light: vscode.Uri; dark: vscode.Uri } | undefined {
+	protected override getIconPath(): vscode.Uri | { light: vscode.Uri; dark: vscode.Uri } | undefined {
 		return {
 			light: vscode.Uri.file(this.context.asAbsolutePath('resources/icons/route-light.svg')),
 			dark: vscode.Uri.file(this.context.asAbsolutePath('resources/icons/route-dark.svg'))
 		};
 	}
 
-	protected getBodyContent(webview: vscode.Webview): string {
+	protected getBodyContent(_webview: vscode.Webview): string {
 		return `
 			<div class="container">
 				<div class="header">
@@ -270,11 +270,11 @@ export class RouteVisualizerPanel extends BaseWebViewPanel {
 		}
 	}
 
-	protected onPanelCreated(): void {
+	protected override onPanelCreated(): void {
 		this.sendRoutesUpdate();
 	}
 
-	protected onPanelVisible(): void {
+	protected override onPanelVisible(): void {
 		this.sendRoutesUpdate();
 	}
 
@@ -424,7 +424,7 @@ export class RouteVisualizerPanel extends BaseWebViewPanel {
 			'**/node_modules/**',
 			1
 		);
-		return files.length > 0 ? files[0] : null;
+		return files.length > 0 ? files[0]! : null;
 	}
 
 	private sendRoutesUpdate(): void {
@@ -481,7 +481,7 @@ export class RouteVisualizerPanel extends BaseWebViewPanel {
 		await this.persistState('routes', this.routes);
 	}
 
-	public dispose(): void {
+	public override dispose(): void {
 		super.dispose();
 		RouteVisualizerPanel.instance = undefined;
 	}

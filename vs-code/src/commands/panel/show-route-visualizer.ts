@@ -220,12 +220,12 @@ export class ShowRouteVisualizerCommand extends BaseCommand {
                 node.className = 'route-node';
                 node.style.marginLeft = (level * 20) + 'px';
                 node.addEventListener('click', function() {
-                    navigateToRoute(route.path);
+                    navigateToRoute(route['path']);
                 });
 
                 const pathDiv = document.createElement('div');
                 pathDiv.className = 'route-path';
-                pathDiv.textContent = route.path;
+                pathDiv.textContent = route['path'];
                 node.appendChild(pathDiv);
 
                 if (route.component) {
@@ -303,8 +303,8 @@ export class ShowRouteVisualizerCommand extends BaseCommand {
         break;
 
       case 'navigate':
-        this.log('info', `Navigating to route: ${message.path}`);
-        await this.showInfo(`Navigate to: ${message.path}`);
+        this.log('info', `Navigating to route: ${message['path']}`);
+        await this.showInfo(`Navigate to: ${message['path']}`);
         break;
     }
   }

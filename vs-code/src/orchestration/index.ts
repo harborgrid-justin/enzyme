@@ -3,15 +3,20 @@
  */
 
 // Core orchestration
-export { Container, ServiceFactory, ServiceDescriptor, inject, getContainer } from './container';
-export { EventBus, ExtensionEvent } from './event-bus';
-export { LifecycleManager, LifecyclePhase, LifecycleStatus } from './lifecycle-manager';
+export { Container, inject, getContainer } from './container';
+export type { ServiceFactory, ServiceDescriptor } from './container';
+export { EventBus } from './event-bus';
+export type { ExtensionEvent } from './event-bus';
+export { LifecycleManager, LifecyclePhase } from './lifecycle-manager';
+export type { LifecycleStatus } from './lifecycle-manager';
 
 // Registries
 export {
   ServiceRegistry,
   ServiceHealth,
   ServiceState,
+} from './service-registry';
+export type {
   ServiceMetadata,
   ServiceMetrics,
   IService,
@@ -22,12 +27,16 @@ export {
   ProviderRegistry,
   ProviderType,
   ProviderStatus,
+} from './provider-registry';
+export type {
   ProviderMetadata,
   ProviderRegistration,
 } from './provider-registry';
 
 export {
   CommandRegistry,
+} from './command-registry';
+export type {
   CommandMetadata,
   CommandExecutionContext,
   CommandRegistration,
@@ -36,12 +45,16 @@ export {
 // Coordinators
 export {
   IndexingCoordinator,
+} from './indexing-coordinator';
+export type {
   IndexEntry,
   IndexingTask,
 } from './indexing-coordinator';
 
 export {
   FileWatcherCoordinator,
+} from './file-watcher-coordinator';
+export type {
   FileChangeEvent,
   WatchPatternRegistration,
 } from './file-watcher-coordinator';
@@ -49,6 +62,8 @@ export {
 export {
   ViewOrchestrator,
   ViewType,
+} from './view-orchestrator';
+export type {
   ViewState,
   TreeViewRegistration,
   WebViewRegistration,
@@ -57,17 +72,23 @@ export {
 // Support services
 export {
   TelemetryService,
+} from './telemetry-service';
+export type {
   TelemetryEvent,
 } from './telemetry-service';
 
 export {
   HealthMonitor,
+} from './health-monitor';
+export type {
   HealthCheckResult,
   HealthMetrics,
 } from './health-monitor';
 
 export {
   CacheManager,
+} from './cache-manager';
+export type {
   CacheEntry,
   CacheStatistics,
 } from './cache-manager';
@@ -75,6 +96,8 @@ export {
 export {
   WorkspaceAnalyzer,
   ProjectType,
+} from './workspace-analyzer';
+export type {
   ConfigurationIssue,
   AnalysisReport,
 } from './workspace-analyzer';

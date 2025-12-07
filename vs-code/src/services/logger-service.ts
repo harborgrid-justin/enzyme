@@ -18,7 +18,7 @@ export class LoggerService {
   private logHistory: Array<{ level: LogLevel; message: string; timestamp: number; data?: unknown }> = [];
   private maxHistorySize: number = 1000;
 
-  private constructor() {
+  public constructor() {
     this.loadConfiguration();
   }
 

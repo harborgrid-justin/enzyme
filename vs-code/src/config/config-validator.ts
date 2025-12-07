@@ -92,7 +92,7 @@ export class ConfigValidator {
       const result = enzymeConfigSchema.safeParse(config);
 
       if (!result.success) {
-        for (const error of result.error.errors) {
+        for (const error of result.error.issues) {
           const validationError: ValidationError = {
             message: error.message,
             path: error.path.map(String),
@@ -252,19 +252,16 @@ export class ConfigValidator {
   private getSuggestion(error: z.ZodIssue): string | undefined {
     switch (error.code) {
       case 'invalid_type':
-        return `Expected ${error.expected}, received ${error.received}`;
+        return `Expected ${(error as any).expected}, received ${(error as any).received}`;
 
-      case 'invalid_enum_value':
-        const enumError = error as z.ZodInvalidEnumValueIssue;
-        return `Valid options: ${enumError.options.join(', ')}`;
+      case 'invalid_value':
+        return `Invalid value provided`;
 
       case 'too_small':
-        const smallError = error as z.ZodTooSmallIssue;
-        return `Minimum value: ${smallError.minimum}`;
+        return `Minimum value: ${(error as any).minimum}`;
 
       case 'too_big':
-        const bigError = error as z.ZodTooBigIssue;
-        return `Maximum value: ${bigError.maximum}`;
+        return `Maximum value: ${(error as any).maximum}`;
 
       default:
         return undefined;
@@ -355,7 +352,7 @@ export class ConfigValidator {
     const errors: ValidationError[] = [];
 
     if (!result.success) {
-      for (const error of result.error.errors) {
+      for (const error of result.error.issues) {
         errors.push({
           message: error.message,
           path: error.path.map(String),

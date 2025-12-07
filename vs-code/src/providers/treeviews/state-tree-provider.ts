@@ -38,7 +38,7 @@ export class EnzymeStateTreeProvider extends BaseTreeProvider<EnzymeStoreItem | 
   /**
    * Get watch patterns for auto-refresh
    */
-  protected getWatchPatterns(): string[] {
+  protected override getWatchPatterns(): string[] {
     return [
       '**/store/**/*.{ts,tsx}',
       '**/stores/**/*.{ts,tsx}',

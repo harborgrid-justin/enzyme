@@ -3,6 +3,17 @@
  * @description Main export file for Enzyme VS Code debugging tools
  */
 
+// Imports for types used in this file
+import { StateDebugger, getGlobalDebugger } from './state-debugger';
+import { ActionRecorder, getGlobalRecorder } from './action-recorder';
+import { RenderTracker, getGlobalTracker } from './render-tracker';
+import { PerformanceProfiler, getGlobalProfiler } from './performance-profiler';
+import { NetworkInspector, getGlobalInspector } from './network-inspector';
+import { StateBreakpointProvider, getGlobalBreakpointProvider } from './breakpoints/state-breakpoint-provider';
+import { RouteBreakpointProvider, getGlobalRouteBreakpointProvider } from './breakpoints/route-breakpoint-provider';
+import { StateWatchProvider, getGlobalWatchProvider } from './watch/state-watch-provider';
+import { SnapshotManager, getGlobalSnapshotManager } from './snapshots/snapshot-manager';
+
 // ============================================================================
 // Core Debugging
 // ============================================================================
@@ -49,10 +60,6 @@ export {
   type DiffSummary,
 } from './state-diff';
 
-// ============================================================================
-// Breakpoints
-// ============================================================================
-
 export {
   StateBreakpointProvider,
   getGlobalBreakpointProvider,
@@ -74,10 +81,6 @@ export {
   type RouteBreakpointCallback,
 } from './breakpoints/route-breakpoint-provider';
 
-// ============================================================================
-// Watch
-// ============================================================================
-
 export {
   StateWatchProvider,
   getGlobalWatchProvider,
@@ -86,10 +89,6 @@ export {
   type WatchUpdate,
   type WatchCallback,
 } from './watch/state-watch-provider';
-
-// ============================================================================
-// Performance
-// ============================================================================
 
 export {
   RenderTracker,
@@ -123,6 +122,15 @@ export {
   type InspectorOptions,
   type NetworkStats,
 } from './network-inspector';
+
+export {
+  SnapshotManager,
+  getGlobalSnapshotManager,
+  resetGlobalSnapshotManager,
+  type Snapshot,
+  type SnapshotComparison,
+  type SnapshotOptions,
+} from './snapshots/snapshot-manager';
 
 // ============================================================================
 // Debug Adapters
@@ -194,19 +202,6 @@ export {
 } from './visualizations/dependency-graph';
 
 // ============================================================================
-// Snapshots
-// ============================================================================
-
-export {
-  SnapshotManager,
-  getGlobalSnapshotManager,
-  resetGlobalSnapshotManager,
-  type Snapshot,
-  type SnapshotComparison,
-  type SnapshotOptions,
-} from './snapshots/snapshot-manager';
-
-// ============================================================================
 // Debug Features Registration
 // ============================================================================
 
@@ -245,7 +240,7 @@ export interface DebugFeaturesConfig {
 export class DebugFeatures {
   private config: Required<DebugFeaturesConfig>;
   private debugger?: StateDebugger;
-  private bridge?: StateBridge;
+  // private bridge?: StateBridge;
   private recorder?: ActionRecorder;
   private renderTracker?: RenderTracker;
   private profiler?: PerformanceProfiler;
@@ -283,7 +278,7 @@ export class DebugFeatures {
         enableDevTools: true,
         enableRecording: this.config.enableActionRecording,
         enableSnapshots: this.config.enableSnapshots,
-        bridge: this.config.bridge,
+        bridge: this.config.bridge as { url: string; autoConnect?: boolean },
       });
       await this.debugger.initialize();
     }

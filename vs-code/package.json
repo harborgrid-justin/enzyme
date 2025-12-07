@@ -260,7 +260,12 @@
         },
         "enzyme.logging.level": {
           "type": "string",
-          "enum": ["debug", "info", "warn", "error"],
+          "enum": [
+            "debug",
+            "info",
+            "warn",
+            "error"
+          ],
           "default": "info",
           "scope": "application",
           "order": 2,
@@ -282,7 +287,10 @@
         },
         "enzyme.generator.componentStyle": {
           "type": "string",
-          "enum": ["function", "arrow"],
+          "enum": [
+            "function",
+            "arrow"
+          ],
           "default": "function",
           "scope": "resource",
           "order": 10,
@@ -290,7 +298,10 @@
         },
         "enzyme.generator.testFramework": {
           "type": "string",
-          "enum": ["vitest", "jest"],
+          "enum": [
+            "vitest",
+            "jest"
+          ],
           "default": "vitest",
           "scope": "resource",
           "order": 11,
@@ -298,7 +309,12 @@
         },
         "enzyme.generator.cssFramework": {
           "type": "string",
-          "enum": ["tailwind", "css-modules", "styled-components", "emotion"],
+          "enum": [
+            "tailwind",
+            "css-modules",
+            "styled-components",
+            "emotion"
+          ],
           "default": "tailwind",
           "scope": "resource",
           "order": 12,
@@ -350,7 +366,12 @@
         },
         "enzyme.diagnostics.severity": {
           "type": "string",
-          "enum": ["error", "warning", "info", "hint"],
+          "enum": [
+            "error",
+            "warning",
+            "info",
+            "hint"
+          ],
           "default": "warning",
           "scope": "resource",
           "order": 41,
@@ -648,8 +669,13 @@
     "languages": [
       {
         "id": "enzyme-config",
-        "extensions": [".enzyme.ts", ".enzyme.js"],
-        "aliases": ["Enzyme Config"],
+        "extensions": [
+          ".enzyme.ts",
+          ".enzyme.js"
+        ],
+        "aliases": [
+          "Enzyme Config"
+        ],
         "configuration": "./language-configuration.json"
       }
     ],
@@ -680,7 +706,10 @@
       {
         "name": "enzyme",
         "owner": "enzyme",
-        "fileLocation": ["relative", "${workspaceFolder}"],
+        "fileLocation": [
+          "relative",
+          "${workspaceFolder}"
+        ],
         "pattern": {
           "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
           "file": 1,
@@ -694,7 +723,9 @@
     "taskDefinitions": [
       {
         "type": "enzyme",
-        "required": ["task"],
+        "required": [
+          "task"
+        ],
         "properties": {
           "task": {
             "type": "string",
@@ -709,17 +740,24 @@
     "compile": "tsc -p ./ && npm run copy-resources",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
-    "lint": "eslint src --ext ts",
-    "lint:fix": "eslint src --ext ts --fix",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "lint:report": "eslint . --format json --output-file eslint-report.json",
+    "lint:check": "eslint . --max-warnings 0",
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
+    "security": "npm audit --audit-level=moderate",
     "test": "node ./out/test/runTest.js",
     "test:unit": "vitest",
     "package": "vsce package",
     "publish": "vsce publish",
-    "copy-resources": "mkdir -p out/resources && cp -r resources/* out/resources/ 2>/dev/null || true"
+    "copy-resources": "mkdir -p out/resources && cp -r resources/* out/resources/ 2>/dev/null || true",
+    "ci": "npm run lint:check && npm run format:check && npm run compile && npm run test",
+    "pre-commit": "npm run lint:fix && npm run format"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@types/mocha": "^10.0.10",
     "@types/node": "^20.10.0",
     "@types/vscode": "^1.85.0",
     "@typescript-eslint/eslint-plugin": "^6.15.0",
@@ -727,11 +765,20 @@
     "@vscode/test-electron": "^2.3.8",
     "@vscode/vsce": "^2.22.0",
     "esbuild": "^0.19.10",
-    "eslint": "^8.56.0",
+    "eslint": "^9.39.1",
     "eslint-config-prettier": "^9.1.0",
+    "eslint-import-resolver-typescript": "^3.10.1",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-jsdoc": "^50.8.0",
     "eslint-plugin-prettier": "^5.1.0",
+    "eslint-plugin-promise": "^7.2.1",
+    "eslint-plugin-security": "^3.0.1",
+    "eslint-plugin-sonarjs": "^2.0.4",
+    "eslint-plugin-unicorn": "^62.0.0",
+    "globals": "^15.15.0",
     "prettier": "^3.1.1",
     "typescript": "^5.3.3",
+    "typescript-eslint": "^8.48.1",
     "vitest": "^1.1.0"
   },
   "dependencies": {

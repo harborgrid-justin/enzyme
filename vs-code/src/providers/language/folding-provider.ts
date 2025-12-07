@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { getParser } from './parser';
 
 /**
  * EnzymeFoldingProvider - Provides code folding ranges
@@ -11,8 +10,8 @@ export class EnzymeFoldingProvider implements vscode.FoldingRangeProvider {
    */
   public async provideFoldingRanges(
     document: vscode.TextDocument,
-    context: vscode.FoldingContext,
-    token: vscode.CancellationToken
+    _context: vscode.FoldingContext,
+    _token: vscode.CancellationToken
   ): Promise<vscode.FoldingRange[] | undefined> {
     const foldingRanges: vscode.FoldingRange[] = [];
 

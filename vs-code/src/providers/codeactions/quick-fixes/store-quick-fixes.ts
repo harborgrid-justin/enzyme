@@ -183,7 +183,7 @@ const persistedStore = persist(store, {
 
       memoizeAction.edit.replace(document.uri, diagnostic.range, memoizedSelector);
       memoizeAction.isPreferred = true;
-      actions.push(memoizedSelector);
+      actions.push(memoizeAction);
 
       // Add import if needed
       const hasImport = document.getText().includes('createSelector');

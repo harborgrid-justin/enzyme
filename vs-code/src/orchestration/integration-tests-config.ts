@@ -176,7 +176,7 @@ export class TestUtilities {
     eventType: string,
     timeout: number = 5000
   ): Promise<void> {
-    return await eventBus.waitFor(eventType as any, timeout);
+    await eventBus.waitFor(eventType as any, timeout);
   }
 
   /**

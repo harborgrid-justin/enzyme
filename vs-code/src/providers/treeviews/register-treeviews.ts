@@ -12,7 +12,6 @@ import {
   EnzymeRoutesTreeProvider,
   EnzymeComponentsTreeProvider,
   EnzymeStateTreeProvider,
-  EnzymeHooksTreeProvider,
   EnzymeAPITreeProvider,
 } from './index';
 
@@ -24,7 +23,7 @@ class EnzymePerformanceTreeProvider implements vscode.TreeDataProvider<vscode.Tr
   private _onDidChangeTreeData = new vscode.EventEmitter<vscode.TreeItem | undefined | null | void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
-  constructor(private context: vscode.ExtensionContext) {}
+  constructor(private _context: vscode.ExtensionContext) {}
 
   refresh(): void {
     this._onDidChangeTreeData.fire();
@@ -54,7 +53,7 @@ export function registerTreeViewProviders(
 ): vscode.Disposable[] {
   logger.info('Registering TreeView providers');
 
-  const context = enzymeContext.getVSCodeContext();
+  const context = enzymeContext.getContext();
   const disposables: vscode.Disposable[] = [];
 
   try {
