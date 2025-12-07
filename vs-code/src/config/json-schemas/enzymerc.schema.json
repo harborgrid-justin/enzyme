@@ -1,0 +1,246 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://enzyme.dev/schemas/enzymerc.json",
+  "title": "Enzyme RC Configuration",
+  "description": "Configuration schema for .enzymerc CLI settings",
+  "type": "object",
+  "properties": {
+    "cli": {
+      "type": "object",
+      "description": "CLI configuration",
+      "properties": {
+        "packageManager": {
+          "type": "string",
+          "description": "Package manager to use",
+          "enum": ["npm", "yarn", "pnpm", "bun"],
+          "default": "npm"
+        },
+        "typescript": {
+          "type": "boolean",
+          "description": "Use TypeScript by default",
+          "default": true
+        },
+        "strict": {
+          "type": "boolean",
+          "description": "Use strict mode",
+          "default": true
+        }
+      }
+    },
+    "generators": {
+      "type": "object",
+      "description": "Generator defaults",
+      "properties": {
+        "component": {
+          "type": "object",
+          "properties": {
+            "style": {
+              "type": "string",
+              "enum": ["css", "scss", "tailwind", "styled-components"],
+              "default": "tailwind"
+            },
+            "exportType": {
+              "type": "string",
+              "enum": ["default", "named"],
+              "default": "named"
+            },
+            "functional": {
+              "type": "boolean",
+              "default": true
+            },
+            "includeTests": {
+              "type": "boolean",
+              "default": true
+            },
+            "includeStories": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        },
+        "hook": {
+          "type": "object",
+          "properties": {
+            "includeTests": {
+              "type": "boolean",
+              "default": true
+            },
+            "prefix": {
+              "type": "string",
+              "default": "use"
+            }
+          }
+        },
+        "store": {
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "enum": ["zustand", "redux", "jotai"],
+              "default": "zustand"
+            },
+            "includeDevtools": {
+              "type": "boolean",
+              "default": true
+            }
+          }
+        },
+        "route": {
+          "type": "object",
+          "properties": {
+            "lazyByDefault": {
+              "type": "boolean",
+              "default": true
+            },
+            "includeLayout": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        }
+      }
+    },
+    "paths": {
+      "type": "object",
+      "description": "Path configurations",
+      "properties": {
+        "components": {
+          "type": "string",
+          "description": "Components directory",
+          "default": "src/components"
+        },
+        "pages": {
+          "type": "string",
+          "description": "Pages directory",
+          "default": "src/pages"
+        },
+        "hooks": {
+          "type": "string",
+          "description": "Hooks directory",
+          "default": "src/hooks"
+        },
+        "stores": {
+          "type": "string",
+          "description": "Stores directory",
+          "default": "src/stores"
+        },
+        "features": {
+          "type": "string",
+          "description": "Features directory",
+          "default": "src/features"
+        },
+        "api": {
+          "type": "string",
+          "description": "API directory",
+          "default": "src/api"
+        },
+        "utils": {
+          "type": "string",
+          "description": "Utils directory",
+          "default": "src/utils"
+        },
+        "types": {
+          "type": "string",
+          "description": "Types directory",
+          "default": "src/types"
+        }
+      }
+    },
+    "plugins": {
+      "type": "array",
+      "description": "CLI plugins",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Plugin name"
+          },
+          "enabled": {
+            "type": "boolean",
+            "default": true
+          },
+          "options": {
+            "type": "object",
+            "description": "Plugin options"
+          }
+        }
+      }
+    },
+    "formatting": {
+      "type": "object",
+      "description": "Code formatting preferences",
+      "properties": {
+        "singleQuote": {
+          "type": "boolean",
+          "default": true
+        },
+        "semi": {
+          "type": "boolean",
+          "default": true
+        },
+        "tabWidth": {
+          "type": "number",
+          "minimum": 2,
+          "maximum": 8,
+          "default": 2
+        },
+        "trailingComma": {
+          "type": "string",
+          "enum": ["none", "es5", "all"],
+          "default": "es5"
+        }
+      }
+    },
+    "linting": {
+      "type": "object",
+      "description": "Linting preferences",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        },
+        "preset": {
+          "type": "string",
+          "enum": ["recommended", "strict", "custom"],
+          "default": "recommended"
+        },
+        "autoFix": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    },
+    "testing": {
+      "type": "object",
+      "description": "Testing configuration",
+      "properties": {
+        "framework": {
+          "type": "string",
+          "enum": ["vitest", "jest", "mocha"],
+          "default": "vitest"
+        },
+        "coverage": {
+          "type": "boolean",
+          "default": true
+        },
+        "watchMode": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    },
+    "telemetry": {
+      "type": "object",
+      "description": "Telemetry settings",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable anonymous usage telemetry",
+          "default": true
+        }
+      }
+    }
+  }
+}

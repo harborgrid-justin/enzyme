@@ -1,0 +1,211 @@
+import * as vscode from 'vscode';
+import * as path from 'path';
+
+export class ExtractFeatureRefactoring {
+  public provideRefactorings(
+    document: vscode.TextDocument,
+    range: vscode.Range | vscode.Selection,
+    context: vscode.CodeActionContext
+  ): vscode.CodeAction[] {
+    const actions: vscode.CodeAction[] = [];
+
+    // Only offer this refactoring when selecting multiple components or a large section
+    if (!this.isValidSelectionForFeature(document, range)) {
+      return actions;
+    }
+
+    const extractAction = new vscode.CodeAction(
+      'Extract to Enzyme Feature Module',
+      vscode.CodeActionKind.Refactor
+    );
+
+    extractAction.command = {
+      title: 'Extract Feature',
+      command: 'enzyme.extractFeature',
+      arguments: [
+        {
+          uri: document.uri,
+          range,
+          featureName: this.suggestFeatureName(document, range),
+        },
+      ],
+    };
+
+    actions.push(extractAction);
+
+    return actions;
+  }
+
+  private isValidSelectionForFeature(
+    document: vscode.TextDocument,
+    range: vscode.Range
+  ): boolean {
+    const text = document.getText(range);
+
+    // Check if selection contains components
+    const componentCount = (text.match(/(?:export\s+)?(?:const|function)\s+\w+\s*(?:=|:)/g) || [])
+      .length;
+
+    // Valid if we have 2+ components or a large selection (likely a feature)
+    return componentCount >= 2 || text.split('\n').length > 50;
+  }
+
+  private suggestFeatureName(document: vscode.TextDocument, range: vscode.Range): string {
+    // Try to extract from file name
+    const fileName = path.basename(document.fileName, path.extname(document.fileName));
+
+    if (fileName && fileName !== 'index') {
+      return this.toPascalCase(fileName);
+    }
+
+    // Try to extract from directory name
+    const dirName = path.basename(path.dirname(document.fileName));
+    return this.toPascalCase(dirName);
+  }
+
+  private toPascalCase(str: string): string {
+    return str
+      .replace(/[-_\s]+(.)?/g, (_, c) => (c ? c.toUpperCase() : ''))
+      .replace(/^(.)/, (c) => c.toUpperCase());
+  }
+}
+
+export async function executeExtractFeature(args: {
+  uri: vscode.Uri;
+  range: vscode.Range;
+  featureName: string;
+}): Promise<void> {
+  const { uri, range, featureName } = args;
+
+  // Ask user for feature name
+  const inputFeatureName = await vscode.window.showInputBox({
+    prompt: 'Enter feature name',
+    value: featureName,
+    validateInput: (value) => {
+      if (!value || value.trim().length === 0) {
+        return 'Feature name is required';
+      }
+      if (!/^[A-Z][a-zA-Z0-9]*$/.test(value)) {
+        return 'Feature name must be PascalCase';
+      }
+      return null;
+    },
+  });
+
+  if (!inputFeatureName) {
+    return;
+  }
+
+  const document = await vscode.workspace.openTextDocument(uri);
+  const selectedText = document.getText(range);
+
+  // Determine feature structure
+  const featureDir = path.join(
+    path.dirname(uri.fsPath),
+    'features',
+    inputFeatureName.toLowerCase()
+  );
+
+  // Create feature structure
+  const edit = new vscode.WorkspaceEdit();
+
+  // Create feature directory structure
+  const featureDirUri = vscode.Uri.file(featureDir);
+
+  // Create index.ts
+  const indexUri = vscode.Uri.file(path.join(featureDir, 'index.ts'));
+  const indexContent = generateFeatureIndex(inputFeatureName, selectedText);
+  edit.createFile(indexUri, { ignoreIfExists: true });
+  edit.insert(indexUri, new vscode.Position(0, 0), indexContent);
+
+  // Create components directory
+  const componentsDir = vscode.Uri.file(path.join(featureDir, 'components'));
+  const componentsIndexUri = vscode.Uri.file(path.join(featureDir, 'components', 'index.ts'));
+  edit.createFile(componentsIndexUri, { ignoreIfExists: true });
+  edit.insert(
+    componentsIndexUri,
+    new vscode.Position(0, 0),
+    extractComponents(selectedText, inputFeatureName)
+  );
+
+  // Create routes.ts
+  const routesUri = vscode.Uri.file(path.join(featureDir, 'routes.ts'));
+  edit.createFile(routesUri, { ignoreIfExists: true });
+  edit.insert(routesUri, new vscode.Position(0, 0), generateFeatureRoutes(inputFeatureName));
+
+  // Create feature.ts
+  const featureUri = vscode.Uri.file(path.join(featureDir, 'feature.ts'));
+  edit.createFile(featureUri, { ignoreIfExists: true });
+  edit.insert(featureUri, new vscode.Position(0, 0), generateFeatureDefinition(inputFeatureName));
+
+  // Replace selected text with import
+  edit.replace(
+    uri,
+    range,
+    `// Extracted to features/${inputFeatureName.toLowerCase()}\nimport { ${inputFeatureName} } from './features/${inputFeatureName.toLowerCase()}';\n`
+  );
+
+  await vscode.workspace.applyEdit(edit);
+
+  vscode.window.showInformationMessage(
+    `Feature '${inputFeatureName}' extracted successfully!`
+  );
+}
+
+function generateFeatureIndex(featureName: string, content: string): string {
+  return `/**
+ * ${featureName} Feature Module
+ * Generated by Enzyme VS Code Extension
+ */
+
+export { ${featureName}Feature } from './feature';
+export * from './components';
+export * from './routes';
+`;
+}
+
+function extractComponents(content: string, featureName: string): string {
+  // Extract component definitions
+  const componentMatches = content.matchAll(
+    /(?:export\s+)?(?:const|function)\s+(\w+)\s*(?:=|:|\()/g
+  );
+
+  const components: string[] = [];
+  for (const match of componentMatches) {
+    components.push(match[1]);
+  }
+
+  return `${content}
+
+// Re-export components
+export { ${components.join(', ')} };
+`;
+}
+
+function generateFeatureRoutes(featureName: string): string {
+  const routePath = featureName.toLowerCase().replace(/([A-Z])/g, '-$1').toLowerCase();
+
+  return `import { createRoute } from '@enzyme/routing';
+import { ${featureName}Page } from './components';
+
+export const ${featureName.toLowerCase()}Routes = [
+  createRoute({
+    path: '/${routePath}',
+    component: ${featureName}Page,
+    name: '${featureName}',
+  }),
+];
+`;
+}
+
+function generateFeatureDefinition(featureName: string): string {
+  return `import { createFeature } from '@enzyme/features';
+import { ${featureName.toLowerCase()}Routes } from './routes';
+
+export const ${featureName}Feature = createFeature({
+  name: '${featureName}',
+  routes: ${featureName.toLowerCase()}Routes,
+  enabled: true,
+});
+`;
+}

@@ -1,0 +1,547 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://enzyme.dev/schemas/config.json",
+  "title": "Enzyme Configuration",
+  "description": "Configuration schema for Enzyme applications",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Application name",
+      "default": "Enzyme App"
+    },
+    "version": {
+      "type": "string",
+      "description": "Application version (semantic versioning)",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(-[a-zA-Z0-9.]+)?$",
+      "default": "1.0.0"
+    },
+    "description": {
+      "type": "string",
+      "description": "Application description"
+    },
+    "environment": {
+      "type": "string",
+      "description": "Runtime environment",
+      "enum": ["development", "staging", "production", "test"],
+      "default": "development"
+    },
+    "routes": {
+      "type": "object",
+      "description": "Route configuration",
+      "properties": {
+        "basePath": {
+          "type": "string",
+          "description": "Base path for all routes",
+          "default": "/"
+        },
+        "routes": {
+          "type": "array",
+          "description": "Route definitions",
+          "items": {
+            "$ref": "#/definitions/RouteConfig"
+          }
+        },
+        "notFound": {
+          "type": "string",
+          "description": "Component path for 404 page"
+        },
+        "error": {
+          "type": "string",
+          "description": "Component path for error page"
+        }
+      }
+    },
+    "auth": {
+      "type": "object",
+      "description": "Authentication configuration",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable authentication",
+          "default": true
+        },
+        "provider": {
+          "type": "string",
+          "description": "Authentication provider",
+          "enum": ["jwt", "oauth", "custom"],
+          "default": "jwt"
+        },
+        "tokenKey": {
+          "type": "string",
+          "description": "Token storage key",
+          "default": "auth_token"
+        },
+        "refreshKey": {
+          "type": "string",
+          "description": "Refresh token key",
+          "default": "refresh_token"
+        },
+        "tokenExpiry": {
+          "type": "number",
+          "description": "Token expiry in seconds",
+          "minimum": 60,
+          "default": 3600
+        },
+        "refreshInterval": {
+          "type": "number",
+          "description": "Refresh interval in seconds",
+          "minimum": 10,
+          "default": 300
+        },
+        "loginPath": {
+          "type": "string",
+          "description": "Login page path",
+          "default": "/auth/login"
+        },
+        "logoutPath": {
+          "type": "string",
+          "description": "Logout endpoint path",
+          "default": "/auth/logout"
+        },
+        "redirectAfterLogin": {
+          "type": "string",
+          "description": "Redirect path after login",
+          "default": "/"
+        },
+        "redirectAfterLogout": {
+          "type": "string",
+          "description": "Redirect path after logout",
+          "default": "/auth/login"
+        },
+        "persistSession": {
+          "type": "boolean",
+          "description": "Persist session in storage",
+          "default": true
+        },
+        "secureCookies": {
+          "type": "boolean",
+          "description": "Use secure cookies",
+          "default": true
+        }
+      }
+    },
+    "api": {
+      "type": "object",
+      "description": "API configuration",
+      "required": ["baseUrl"],
+      "properties": {
+        "baseUrl": {
+          "type": "string",
+          "description": "API base URL",
+          "format": "uri"
+        },
+        "timeout": {
+          "type": "number",
+          "description": "Request timeout in milliseconds",
+          "minimum": 1000,
+          "default": 30000
+        },
+        "retryCount": {
+          "type": "number",
+          "description": "Number of retry attempts",
+          "minimum": 0,
+          "maximum": 5,
+          "default": 3
+        },
+        "retryDelay": {
+          "type": "number",
+          "description": "Retry delay in milliseconds",
+          "minimum": 100,
+          "default": 1000
+        },
+        "headers": {
+          "type": "object",
+          "description": "Default headers",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "mockEnabled": {
+          "type": "boolean",
+          "description": "Enable API mocking",
+          "default": false
+        },
+        "mockDelay": {
+          "type": "number",
+          "description": "Mock response delay in milliseconds",
+          "minimum": 0,
+          "default": 500
+        }
+      }
+    },
+    "features": {
+      "type": "object",
+      "description": "Feature flags configuration",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable feature flags system",
+          "default": true
+        },
+        "source": {
+          "type": "string",
+          "description": "Feature flags source",
+          "enum": ["local", "remote", "hybrid"],
+          "default": "local"
+        },
+        "remoteUrl": {
+          "type": "string",
+          "description": "Remote feature flags service URL",
+          "format": "uri"
+        },
+        "pollInterval": {
+          "type": "number",
+          "description": "Polling interval in milliseconds",
+          "minimum": 1000,
+          "default": 60000
+        },
+        "flags": {
+          "type": "array",
+          "description": "Feature flag definitions",
+          "items": {
+            "$ref": "#/definitions/FeatureFlag"
+          }
+        }
+      }
+    },
+    "devServer": {
+      "type": "object",
+      "description": "Development server configuration",
+      "properties": {
+        "port": {
+          "type": "number",
+          "description": "Server port",
+          "minimum": 1024,
+          "maximum": 65535,
+          "default": 3000
+        },
+        "host": {
+          "type": "string",
+          "description": "Server host",
+          "default": "localhost"
+        },
+        "open": {
+          "type": "boolean",
+          "description": "Open browser on start",
+          "default": true
+        },
+        "https": {
+          "type": "boolean",
+          "description": "Enable HTTPS",
+          "default": false
+        },
+        "hmr": {
+          "type": "boolean",
+          "description": "Enable hot module replacement",
+          "default": true
+        },
+        "cors": {
+          "type": "boolean",
+          "description": "Enable CORS",
+          "default": true
+        }
+      }
+    },
+    "build": {
+      "type": "object",
+      "description": "Build configuration",
+      "properties": {
+        "outDir": {
+          "type": "string",
+          "description": "Output directory",
+          "default": "dist"
+        },
+        "assetsDir": {
+          "type": "string",
+          "description": "Assets directory",
+          "default": "assets"
+        },
+        "sourcemap": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "string",
+              "enum": ["inline", "hidden"]
+            }
+          ],
+          "description": "Generate source maps",
+          "default": true
+        },
+        "minify": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "string",
+              "enum": ["terser", "esbuild"]
+            }
+          ],
+          "description": "Minification strategy",
+          "default": "esbuild"
+        },
+        "target": {
+          "type": "string",
+          "description": "Build target",
+          "default": "es2020"
+        },
+        "polyfills": {
+          "type": "boolean",
+          "description": "Include polyfills",
+          "default": true
+        },
+        "cssCodeSplit": {
+          "type": "boolean",
+          "description": "Split CSS by chunk",
+          "default": true
+        }
+      }
+    },
+    "performance": {
+      "type": "object",
+      "description": "Performance optimization settings",
+      "properties": {
+        "lazyLoading": {
+          "type": "boolean",
+          "description": "Enable lazy loading",
+          "default": true
+        },
+        "codesplitting": {
+          "type": "boolean",
+          "description": "Enable code splitting",
+          "default": true
+        },
+        "prefetch": {
+          "type": "boolean",
+          "description": "Prefetch resources",
+          "default": true
+        },
+        "preload": {
+          "type": "boolean",
+          "description": "Preload critical resources",
+          "default": false
+        },
+        "compression": {
+          "type": "boolean",
+          "description": "Enable compression",
+          "default": true
+        },
+        "bundleAnalysis": {
+          "type": "boolean",
+          "description": "Generate bundle analysis",
+          "default": false
+        },
+        "sourceMaps": {
+          "type": "boolean",
+          "description": "Enable source maps",
+          "default": true
+        },
+        "minify": {
+          "type": "boolean",
+          "description": "Minify output",
+          "default": true
+        }
+      }
+    },
+    "monitoring": {
+      "type": "object",
+      "description": "Monitoring and analytics configuration",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable monitoring",
+          "default": false
+        },
+        "sentry": {
+          "type": "object",
+          "description": "Sentry configuration",
+          "properties": {
+            "dsn": {
+              "type": "string",
+              "description": "Sentry DSN"
+            },
+            "environment": {
+              "type": "string",
+              "enum": ["development", "staging", "production", "test"]
+            },
+            "tracesSampleRate": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "default": 0.1
+            },
+            "replaysSessionSampleRate": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "default": 0.1
+            }
+          }
+        },
+        "performanceMonitoring": {
+          "type": "boolean",
+          "description": "Enable performance monitoring",
+          "default": true
+        },
+        "errorReporting": {
+          "type": "boolean",
+          "description": "Enable error reporting",
+          "default": true
+        }
+      }
+    },
+    "logging": {
+      "type": "object",
+      "description": "Logging configuration",
+      "properties": {
+        "level": {
+          "type": "string",
+          "enum": ["debug", "info", "warn", "error", "silent"],
+          "default": "info"
+        },
+        "format": {
+          "type": "string",
+          "enum": ["json", "pretty"],
+          "default": "pretty"
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["console", "file", "remote"]
+          },
+          "default": ["console"]
+        }
+      }
+    },
+    "plugins": {
+      "type": "array",
+      "description": "Plugin configurations",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Plugin name"
+          },
+          "options": {
+            "type": "object",
+            "description": "Plugin options"
+          }
+        }
+      }
+    },
+    "experimental": {
+      "type": "object",
+      "description": "Experimental features",
+      "additionalProperties": {
+        "type": "boolean"
+      }
+    }
+  },
+  "definitions": {
+    "RouteConfig": {
+      "type": "object",
+      "required": ["path"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "Route path pattern"
+        },
+        "component": {
+          "type": "string",
+          "description": "Component file path"
+        },
+        "lazy": {
+          "type": "boolean",
+          "description": "Enable lazy loading",
+          "default": false
+        },
+        "guards": {
+          "type": "array",
+          "description": "Route guards",
+          "items": {
+            "type": "object",
+            "required": ["type"],
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["auth", "role", "permission", "custom"]
+              },
+              "redirect": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "metadata": {
+          "type": "object",
+          "description": "Route metadata",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "icon": {
+              "type": "string"
+            },
+            "hidden": {
+              "type": "boolean"
+            }
+          }
+        },
+        "children": {
+          "type": "array",
+          "description": "Child routes",
+          "items": {
+            "$ref": "#/definitions/RouteConfig"
+          }
+        },
+        "redirect": {
+          "type": "string",
+          "description": "Redirect path"
+        },
+        "caseSensitive": {
+          "type": "boolean",
+          "description": "Case-sensitive matching",
+          "default": false
+        },
+        "index": {
+          "type": "boolean",
+          "description": "Index route",
+          "default": false
+        }
+      }
+    },
+    "FeatureFlag": {
+      "type": "object",
+      "required": ["key", "enabled"],
+      "properties": {
+        "key": {
+          "type": "string",
+          "description": "Feature flag key"
+        },
+        "enabled": {
+          "type": "boolean",
+          "description": "Flag enabled status"
+        },
+        "description": {
+          "type": "string",
+          "description": "Flag description"
+        },
+        "rolloutPercentage": {
+          "type": "number",
+          "description": "Rollout percentage",
+          "minimum": 0,
+          "maximum": 100
+        }
+      }
+    }
+  }
+}
