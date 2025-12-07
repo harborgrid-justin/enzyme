@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as crypto from 'crypto';
 import { BaseCommand, CommandContext, CommandMetadata } from '../base-command';
 
 /**
@@ -57,15 +58,22 @@ export class ShowAPIExplorerCommand extends BaseCommand {
     this.log('info', 'API Explorer panel opened');
   }
 
+  private getNonce(): string {
+    return crypto.randomBytes(16).toString('base64');
+  }
+
   private getWebviewContent(webview: vscode.Webview): string {
+    const nonce = this.getNonce();
+
+    // SECURITY: Use nonces for both styles and scripts, no 'unsafe-inline'
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src ${webview.cspSource} 'unsafe-inline';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'nonce-${nonce}'; script-src 'nonce-${nonce}';">
     <title>API Explorer</title>
-    <style>
+    <style nonce="${nonce}">
         body {
             padding: 0;
             margin: 0;
@@ -201,22 +209,22 @@ export class ShowAPIExplorerCommand extends BaseCommand {
             <div class="header">Endpoints</div>
             <div class="endpoint-group">
                 <div class="group-title">Users</div>
-                <div class="endpoint-item active" onclick="selectEndpoint('GET', '/api/users')">
+                <div class="endpoint-item active" data-method="GET" data-path="/api/users">
                     <span class="method get">GET</span>
                     <span>/api/users</span>
                 </div>
-                <div class="endpoint-item" onclick="selectEndpoint('POST', '/api/users')">
+                <div class="endpoint-item" data-method="POST" data-path="/api/users">
                     <span class="method post">POST</span>
                     <span>/api/users</span>
                 </div>
-                <div class="endpoint-item" onclick="selectEndpoint('GET', '/api/users/:id')">
+                <div class="endpoint-item" data-method="GET" data-path="/api/users/:id">
                     <span class="method get">GET</span>
                     <span>/api/users/:id</span>
                 </div>
             </div>
             <div class="endpoint-group">
                 <div class="group-title">Products</div>
-                <div class="endpoint-item" onclick="selectEndpoint('GET', '/api/products')">
+                <div class="endpoint-item" data-method="GET" data-path="/api/products">
                     <span class="method get">GET</span>
                     <span>/api/products</span>
                 </div>
@@ -246,9 +254,9 @@ export class ShowAPIExplorerCommand extends BaseCommand {
                 </div>
             </div>
 
-            <button class="button" onclick="sendRequest()">Send Request</button>
+            <button class="button" id="sendBtn">Send Request</button>
 
-            <div id="response" style="display: none;" class="response-container">
+            <div id="response" class="response-container" style="display: none;">
                 <div class="section-title">Response</div>
                 <div class="response-status" id="status"></div>
                 <div class="response-body" id="responseBody"></div>
@@ -256,57 +264,74 @@ export class ShowAPIExplorerCommand extends BaseCommand {
         </div>
     </div>
 
-    <script>
-        const vscode = acquireVsCodeApi();
-        let currentMethod = 'GET';
+    <script nonce="${nonce}">
+        (function() {
+            const vscode = acquireVsCodeApi();
+            let currentMethod = 'GET';
 
-        function selectEndpoint(method, path) {
-            currentMethod = method;
-            document.getElementById('url').value = path;
+            // SECURITY: Use event delegation instead of inline onclick handlers
+            document.querySelectorAll('.endpoint-item').forEach(function(item) {
+                item.addEventListener('click', function() {
+                    currentMethod = this.dataset.method;
+                    document.getElementById('url').value = this.dataset.path;
 
-            // Update active state
-            document.querySelectorAll('.endpoint-item').forEach(item => {
-                item.classList.remove('active');
+                    // Update active state
+                    document.querySelectorAll('.endpoint-item').forEach(function(el) {
+                        el.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                });
             });
-            event.target.closest('.endpoint-item').classList.add('active');
-        }
 
-        function sendRequest() {
-            const url = document.getElementById('url').value;
-            const headers = document.getElementById('headers').value;
-            const body = document.getElementById('body').value;
+            document.getElementById('sendBtn').addEventListener('click', function() {
+                const url = document.getElementById('url').value;
+                const headers = document.getElementById('headers').value;
+                const body = document.getElementById('body').value;
 
-            vscode.postMessage({
-                type: 'sendRequest',
-                method: currentMethod,
-                url,
-                headers: headers ? JSON.parse(headers) : {},
-                body: body || undefined
+                try {
+                    vscode.postMessage({
+                        type: 'sendRequest',
+                        method: currentMethod,
+                        url: url,
+                        headers: headers ? JSON.parse(headers) : {},
+                        body: body || undefined
+                    });
+                } catch (e) {
+                    // Handle JSON parse error for headers
+                    vscode.postMessage({
+                        type: 'sendRequest',
+                        method: currentMethod,
+                        url: url,
+                        headers: {},
+                        body: body || undefined
+                    });
+                }
             });
-        }
 
-        window.addEventListener('message', event => {
-            const message = event.data;
+            window.addEventListener('message', function(event) {
+                const message = event.data;
 
-            switch (message.type) {
-                case 'response':
-                    displayResponse(message);
-                    break;
+                switch (message.type) {
+                    case 'response':
+                        displayResponse(message);
+                        break;
+                }
+            });
+
+            function displayResponse(response) {
+                const responseDiv = document.getElementById('response');
+                const statusDiv = document.getElementById('status');
+                const bodyDiv = document.getElementById('responseBody');
+
+                responseDiv.style.display = 'block';
+
+                // SECURITY: Use textContent instead of innerHTML
+                statusDiv.textContent = 'Status: ' + response.status + ' ' + response.statusText;
+                statusDiv.className = 'response-status ' + (response.status < 400 ? 'success' : 'error');
+
+                bodyDiv.textContent = JSON.stringify(response.body, null, 2);
             }
-        });
-
-        function displayResponse(response) {
-            const responseDiv = document.getElementById('response');
-            const statusDiv = document.getElementById('status');
-            const bodyDiv = document.getElementById('responseBody');
-
-            responseDiv.style.display = 'block';
-
-            statusDiv.textContent = \`Status: \${response.status} \${response.statusText}\`;
-            statusDiv.className = 'response-status ' + (response.status < 400 ? 'success' : 'error');
-
-            bodyDiv.textContent = JSON.stringify(response.body, null, 2);
-        }
+        })();
     </script>
 </body>
 </html>`;

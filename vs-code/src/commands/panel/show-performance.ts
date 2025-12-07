@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as crypto from 'crypto';
 import { BaseCommand, CommandContext, CommandMetadata } from '../base-command';
 
 /**
@@ -57,15 +58,22 @@ export class ShowPerformanceCommand extends BaseCommand {
     this.log('info', 'Performance panel opened');
   }
 
+  private getNonce(): string {
+    return crypto.randomBytes(16).toString('base64');
+  }
+
   private getWebviewContent(webview: vscode.Webview): string {
+    const nonce = this.getNonce();
+
+    // SECURITY: Use nonces for both styles and scripts, no 'unsafe-inline'
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src ${webview.cspSource} 'unsafe-inline';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'nonce-${nonce}'; script-src 'nonce-${nonce}';">
     <title>Performance Monitor</title>
-    <style>
+    <style nonce="${nonce}">
         body {
             padding: 20px;
             font-family: var(--vscode-font-family);
@@ -124,6 +132,11 @@ export class ShowPerformanceCommand extends BaseCommand {
         .render-item.slow {
             border-left-color: var(--vscode-charts-red);
         }
+        .waiting-state {
+            color: var(--vscode-descriptionForeground);
+            padding: 20px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -151,22 +164,24 @@ export class ShowPerformanceCommand extends BaseCommand {
     <div class="section">
         <div class="section-title">Component Renders</div>
         <div id="renders" class="renders-list">
-            <div style="color: var(--vscode-descriptionForeground); padding: 20px; text-align: center;">
+            <div class="waiting-state">
                 Waiting for performance data...
             </div>
         </div>
     </div>
 
-    <script>
-        const vscode = acquireVsCodeApi();
+    <script nonce="${nonce}">
+        (function() {
+            const vscode = acquireVsCodeApi();
 
-        // Simulate performance data updates
-        setInterval(() => {
-            document.getElementById('fcp').textContent = (Math.random() * 2000).toFixed(0) + 'ms';
-            document.getElementById('lcp').textContent = (Math.random() * 3000).toFixed(0) + 'ms';
-            document.getElementById('fid').textContent = (Math.random() * 100).toFixed(0) + 'ms';
-            document.getElementById('cls').textContent = (Math.random() * 0.1).toFixed(3);
-        }, 2000);
+            // Simulate performance data updates
+            setInterval(function() {
+                document.getElementById('fcp').textContent = (Math.random() * 2000).toFixed(0) + 'ms';
+                document.getElementById('lcp').textContent = (Math.random() * 3000).toFixed(0) + 'ms';
+                document.getElementById('fid').textContent = (Math.random() * 100).toFixed(0) + 'ms';
+                document.getElementById('cls').textContent = (Math.random() * 0.1).toFixed(3);
+            }, 2000);
+        })();
     </script>
 </body>
 </html>`;

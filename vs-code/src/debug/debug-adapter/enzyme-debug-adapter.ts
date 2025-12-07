@@ -133,7 +133,9 @@ export class EnzymeDebugAdapter {
   }
 
   /**
-   * Evaluate expression
+   * Evaluate expression safely
+   * SECURITY: Do NOT use eval() - it allows arbitrary code execution
+   * Instead, use a safe expression parser for simple expressions
    */
   evaluate(expression: string, frameId?: number): {
     result: string;
@@ -141,14 +143,13 @@ export class EnzymeDebugAdapter {
     variablesReference: number;
   } {
     try {
-      // Simple expression evaluation
-      // In production, this would evaluate in the context of the current frame
-      const result = eval(expression);
+      // SECURITY: Use safe expression evaluation instead of eval()
+      const result = this.safeEvaluate(expression, frameId);
 
       return {
-        result: String(result),
-        type: typeof result,
-        variablesReference: this.isComplexType(result) ? this.createVariableHandle(result) : 0,
+        result: String(result.value),
+        type: result.type,
+        variablesReference: this.isComplexType(result.value) ? this.createVariableHandle(result.value) : 0,
       };
     } catch (error) {
       return {
@@ -157,6 +158,63 @@ export class EnzymeDebugAdapter {
         variablesReference: 0,
       };
     }
+  }
+
+  /**
+   * Safe expression evaluator
+   * SECURITY: Only evaluates simple, safe expressions - no arbitrary code execution
+   * Supports: literals (numbers, strings, booleans, null, undefined), JSON
+   */
+  private safeEvaluate(expression: string, _frameId?: number): { value: unknown; type: string } {
+    const trimmed = expression.trim();
+
+    // Handle null/undefined
+    if (trimmed === 'null') {
+      return { value: null, type: 'null' };
+    }
+    if (trimmed === 'undefined') {
+      return { value: undefined, type: 'undefined' };
+    }
+
+    // Handle boolean literals
+    if (trimmed === 'true') {
+      return { value: true, type: 'boolean' };
+    }
+    if (trimmed === 'false') {
+      return { value: false, type: 'boolean' };
+    }
+
+    // Handle number literals
+    const num = Number(trimmed);
+    if (!isNaN(num) && /^-?\d*\.?\d+$/.test(trimmed)) {
+      return { value: num, type: 'number' };
+    }
+
+    // Handle string literals (single or double quoted)
+    if ((trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+        (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+      const strValue = trimmed.slice(1, -1);
+      return { value: strValue, type: 'string' };
+    }
+
+    // Handle JSON objects and arrays
+    if ((trimmed.startsWith('{') && trimmed.endsWith('}')) ||
+        (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        return { value: parsed, type: Array.isArray(parsed) ? 'array' : 'object' };
+      } catch {
+        // Not valid JSON, fall through
+      }
+    }
+
+    // For complex expressions that require actual runtime context,
+    // return a message indicating the expression cannot be evaluated locally
+    // In a real implementation, this would communicate with the debug runtime
+    return {
+      value: `[Expression evaluation requires debug runtime: ${trimmed}]`,
+      type: 'string',
+    };
   }
 
   /**
