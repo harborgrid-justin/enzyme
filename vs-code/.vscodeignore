@@ -1,0 +1,99 @@
+# VS Code Extension Packaging - Files to Exclude
+
+# Source files
+src/**
+.vscode/**
+.vscode-test/**
+
+# Build artifacts
+*.vsix
+out/test/**
+out/**/*.map
+out/.tsbuildinfo
+
+# TypeScript
+tsconfig.json
+tsconfig.*.json
+**/*.ts
+**/*.map
+
+# Tests
+**/test/**
+**/*.test.*
+**/*.spec.*
+**/__tests__/**
+**/__mocks__/**
+.vscode-test/**
+
+# Documentation (except README)
+docs/**
+*.md
+!README.md
+!LICENSE
+!CHANGELOG.md
+
+# Configuration files
+.editorconfig
+.gitignore
+.gitattributes
+.eslintrc*
+.prettierrc*
+.npmrc
+.nvmrc
+.yarnrc
+
+# Node modules (should not be in package anyway)
+node_modules/**
+**/node_modules/**
+
+# Development files
+.env
+.env.*
+*.log
+*.logs
+
+# Git
+.git/**
+.gitignore
+.github/**
+
+# CI/CD
+.travis.yml
+.gitlab-ci.yml
+azure-pipelines.yml
+.circleci/**
+
+# Package managers
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# IDE
+.idea/**
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Build tools
+webpack.config.js
+rollup.config.js
+vite.config.ts
+
+# Scripts
+scripts/**
+.husky/**
+
+# Coverage
+coverage/**
+.nyc_output/**
+*.lcov
+
+# Temporary files
+tmp/**
+temp/**
+*.tmp
+
+# Other
+.eslintcache
+.stylelintcache

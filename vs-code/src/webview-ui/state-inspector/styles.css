@@ -1,0 +1,245 @@
+/**
+ * State Inspector WebView Styles
+ */
+
+/* Content Grid Layout */
+.content {
+	grid-template-columns: 1fr;
+	grid-template-rows: auto 1fr auto;
+}
+
+@media (min-width: 1200px) {
+	.content {
+		grid-template-columns: 2fr 1fr;
+		grid-template-rows: auto auto auto;
+	}
+
+	.state-panel {
+		grid-column: 1;
+		grid-row: 1 / 3;
+	}
+
+	.history-panel {
+		grid-column: 2;
+		grid-row: 1;
+	}
+
+	.diff-panel {
+		grid-column: 2;
+		grid-row: 2;
+	}
+}
+
+/* Time Travel Controls */
+.time-travel-controls {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-xs);
+}
+
+.state-position {
+	min-width: 60px;
+	text-align: center;
+	font-size: 0.85rem;
+	color: var(--vscode-descriptionForeground);
+}
+
+/* State Tree */
+.state-tree {
+	padding: var(--spacing-md);
+	overflow-y: auto;
+	max-height: 600px;
+	font-family: var(--vscode-editor-font-family);
+	font-size: 0.9rem;
+}
+
+.state-node {
+	margin-left: var(--spacing-md);
+}
+
+.state-key-line {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-xs);
+	cursor: pointer;
+	padding: 2px 4px;
+	border-radius: var(--border-radius-sm);
+	transition: background-color var(--transition-fast);
+}
+
+.state-key-line:hover {
+	background-color: var(--vscode-list-hoverBackground);
+}
+
+.state-children {
+	margin-left: var(--spacing-lg);
+	border-left: 1px solid var(--vscode-panel-border);
+	padding-left: var(--spacing-sm);
+}
+
+.state-item {
+	display: flex;
+	gap: var(--spacing-sm);
+	padding: 2px 0;
+}
+
+.state-key {
+	color: var(--vscode-symbolIcon-propertyForeground);
+	font-weight: 500;
+}
+
+.state-value {
+	flex: 1;
+}
+
+.state-string {
+	color: var(--vscode-symbolIcon-stringForeground);
+}
+
+.state-number {
+	color: var(--vscode-symbolIcon-numberForeground);
+}
+
+.state-boolean {
+	color: var(--vscode-symbolIcon-booleanForeground);
+}
+
+.state-null,
+.state-undefined {
+	color: var(--vscode-symbolIcon-nullForeground);
+	font-style: italic;
+}
+
+.state-bracket {
+	color: var(--vscode-foreground);
+	opacity: 0.6;
+}
+
+.state-info {
+	color: var(--vscode-descriptionForeground);
+	font-size: 0.85em;
+	font-style: italic;
+}
+
+/* Action History */
+.action-history {
+	padding: var(--spacing-sm);
+	overflow-y: auto;
+	max-height: 400px;
+}
+
+.history-items {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-xs);
+}
+
+.history-item {
+	padding: var(--spacing-sm);
+	border: 1px solid var(--vscode-panel-border);
+	border-radius: var(--border-radius-sm);
+	cursor: pointer;
+	transition: all var(--transition-fast);
+}
+
+.history-item:hover {
+	background-color: var(--vscode-list-hoverBackground);
+	border-color: var(--vscode-focusBorder);
+}
+
+.history-item.active {
+	background-color: var(--vscode-list-activeSelectionBackground);
+	color: var(--vscode-list-activeSelectionForeground);
+	border-color: var(--vscode-focusBorder);
+}
+
+.history-item-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 2px;
+}
+
+.history-action {
+	font-weight: 500;
+	font-size: 0.9rem;
+}
+
+.history-item-time {
+	font-size: 0.75rem;
+	color: var(--vscode-descriptionForeground);
+}
+
+/* State Diff */
+.state-diff {
+	padding: var(--spacing-md);
+	overflow-y: auto;
+	max-height: 400px;
+	font-family: var(--vscode-editor-font-family);
+	font-size: 0.9rem;
+}
+
+.diff-item {
+	padding: var(--spacing-sm);
+	margin-bottom: var(--spacing-xs);
+	border-radius: var(--border-radius-sm);
+	border-left: 3px solid transparent;
+}
+
+.diff-item.added {
+	background-color: rgba(0, 255, 0, 0.1);
+	border-left-color: var(--vscode-terminal-ansiGreen);
+}
+
+.diff-item.removed {
+	background-color: rgba(255, 0, 0, 0.1);
+	border-left-color: var(--vscode-terminal-ansiRed);
+}
+
+.diff-item.modified {
+	background-color: rgba(255, 255, 0, 0.1);
+	border-left-color: var(--vscode-terminal-ansiYellow);
+}
+
+.diff-key {
+	font-weight: 500;
+	color: var(--vscode-symbolIcon-propertyForeground);
+}
+
+.diff-old-value {
+	color: var(--vscode-terminal-ansiRed);
+	text-decoration: line-through;
+	opacity: 0.7;
+}
+
+.diff-new-value {
+	color: var(--vscode-terminal-ansiGreen);
+}
+
+.diff-arrow {
+	margin: 0 var(--spacing-xs);
+	color: var(--vscode-descriptionForeground);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+	.state-tree,
+	.action-history,
+	.state-diff {
+		max-height: 300px;
+	}
+
+	.toolbar {
+		flex-direction: column;
+		align-items: stretch;
+		gap: var(--spacing-sm);
+	}
+
+	.search-box {
+		max-width: none;
+	}
+
+	.time-travel-controls {
+		justify-content: center;
+	}
+}

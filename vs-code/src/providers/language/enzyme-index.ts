@@ -1,0 +1,616 @@
+import * as vscode from 'vscode';
+import * as path from 'path';
+import {
+  EnzymeParser,
+  getParser,
+  RouteDefinition,
+  HookUsage,
+  ComponentDefinition,
+  StoreDefinition,
+  ApiDefinition,
+} from './parser';
+
+/**
+ * Route metadata for indexing
+ */
+export interface RouteMetadata extends RouteDefinition {
+  description?: string;
+  meta?: Record<string, any>;
+}
+
+/**
+ * Component metadata for indexing
+ */
+export interface ComponentMetadata extends ComponentDefinition {
+  description?: string;
+  examples?: string[];
+  tags?: string[];
+}
+
+/**
+ * Hook metadata for indexing
+ */
+export interface HookMetadata {
+  name: string;
+  signature: string;
+  description?: string;
+  parameters?: Array<{ name: string; type: string; description?: string }>;
+  returnType?: string;
+  examples?: string[];
+  file?: string;
+  position?: vscode.Position;
+  range?: vscode.Range;
+}
+
+/**
+ * Store metadata for indexing
+ */
+export interface StoreMetadata extends StoreDefinition {
+  description?: string;
+}
+
+/**
+ * API endpoint metadata for indexing
+ */
+export interface ApiMetadata extends ApiDefinition {
+  description?: string;
+  tags?: string[];
+}
+
+/**
+ * EnzymeIndex - Background indexing system for all Enzyme entities
+ * Maintains a searchable index of routes, components, hooks, stores, and APIs
+ */
+export class EnzymeIndex {
+  private parser: EnzymeParser;
+  private routes = new Map<string, RouteMetadata>();
+  private components = new Map<string, ComponentMetadata>();
+  private hooks = new Map<string, HookMetadata>();
+  private stores = new Map<string, StoreMetadata>();
+  private apis = new Map<string, ApiMetadata>();
+  private fileWatcher?: vscode.FileSystemWatcher;
+  private indexingInProgress = false;
+  private onDidChangeEmitter = new vscode.EventEmitter<void>();
+  public readonly onDidChange = this.onDidChangeEmitter.event;
+
+  constructor(private workspaceRoot: string) {
+    this.parser = getParser();
+    this.initializeBuiltInHooks();
+  }
+
+  /**
+   * Initialize index with built-in Enzyme hooks
+   */
+  private initializeBuiltInHooks(): void {
+    const builtInHooks: HookMetadata[] = [
+      {
+        name: 'useAuth',
+        signature: 'useAuth(): AuthState',
+        description: 'Access authentication state and methods',
+        returnType: 'AuthState',
+        examples: [
+          'const { user, isAuthenticated, login, logout } = useAuth();',
+        ],
+      },
+      {
+        name: 'useStore',
+        signature: 'useStore<T>(selector: (state: RootState) => T): T',
+        description: 'Select data from the global store',
+        parameters: [
+          { name: 'selector', type: '(state: RootState) => T', description: 'State selector function' },
+        ],
+        returnType: 'T',
+        examples: [
+          'const user = useStore(state => state.auth.user);',
+          'const { count } = useStore(state => ({ count: state.counter.value }));',
+        ],
+      },
+      {
+        name: 'useFeatureFlag',
+        signature: 'useFeatureFlag(flagName: string): boolean',
+        description: 'Check if a feature flag is enabled',
+        parameters: [
+          { name: 'flagName', type: 'string', description: 'Name of the feature flag' },
+        ],
+        returnType: 'boolean',
+        examples: [
+          'const isDarkModeEnabled = useFeatureFlag("dark-mode");',
+        ],
+      },
+      {
+        name: 'useApiRequest',
+        signature: 'useApiRequest<T>(request: ApiRequest): ApiResponse<T>',
+        description: 'Make API requests with loading and error states',
+        parameters: [
+          { name: 'request', type: 'ApiRequest', description: 'API request configuration' },
+        ],
+        returnType: 'ApiResponse<T>',
+        examples: [
+          'const { data, loading, error } = useApiRequest({ url: "/api/users" });',
+        ],
+      },
+      {
+        name: 'useRouter',
+        signature: 'useRouter(): Router',
+        description: 'Access routing functionality',
+        returnType: 'Router',
+        examples: [
+          'const router = useRouter();',
+          'router.push(routes.home);',
+        ],
+      },
+      {
+        name: 'useRouteParams',
+        signature: 'useRouteParams<T>(): T',
+        description: 'Access current route parameters',
+        returnType: 'T',
+        examples: [
+          'const { id } = useRouteParams<{ id: string }>();',
+        ],
+      },
+      {
+        name: 'useQuery',
+        signature: 'useQuery<T>(key: string, fetcher: () => Promise<T>): QueryResult<T>',
+        description: 'Fetch and cache data with automatic refetching',
+        parameters: [
+          { name: 'key', type: 'string', description: 'Query cache key' },
+          { name: 'fetcher', type: '() => Promise<T>', description: 'Data fetching function' },
+        ],
+        returnType: 'QueryResult<T>',
+        examples: [
+          'const { data, isLoading } = useQuery("users", () => fetchUsers());',
+        ],
+      },
+      {
+        name: 'useMutation',
+        signature: 'useMutation<T>(mutationFn: (variables: any) => Promise<T>): MutationResult<T>',
+        description: 'Execute mutations with loading and error states',
+        parameters: [
+          { name: 'mutationFn', type: '(variables: any) => Promise<T>', description: 'Mutation function' },
+        ],
+        returnType: 'MutationResult<T>',
+        examples: [
+          'const { mutate, isLoading } = useMutation(createUser);',
+        ],
+      },
+    ];
+
+    builtInHooks.forEach(hook => {
+      this.hooks.set(hook.name, hook);
+    });
+  }
+
+  /**
+   * Start background indexing
+   */
+  public async startIndexing(): Promise<void> {
+    if (this.indexingInProgress) {
+      return;
+    }
+
+    this.indexingInProgress = true;
+
+    try {
+      // Initialize parser
+      await this.parser.initialize(this.workspaceRoot);
+
+      // Index all TypeScript/TSX files
+      await this.indexWorkspace();
+
+      // Set up file watchers
+      this.setupFileWatchers();
+
+      this.onDidChangeEmitter.fire();
+    } finally {
+      this.indexingInProgress = false;
+    }
+  }
+
+  /**
+   * Index all files in workspace
+   */
+  private async indexWorkspace(): Promise<void> {
+    const files = await vscode.workspace.findFiles(
+      '**/*.{ts,tsx,js,jsx}',
+      '**/node_modules/**',
+      10000
+    );
+
+    const indexPromises = files.map(file => this.indexFile(file));
+    await Promise.all(indexPromises);
+  }
+
+  /**
+   * Index a single file
+   */
+  private async indexFile(uri: vscode.Uri): Promise<void> {
+    try {
+      const document = await vscode.workspace.openTextDocument(uri);
+      const result = this.parser.parseDocument(document);
+
+      // Index routes
+      result.routes.forEach(route => {
+        this.routes.set(`${route.file}:${route.name}`, {
+          ...route,
+          description: `Route: ${route.path}`,
+        });
+      });
+
+      // Index components
+      result.components.forEach(component => {
+        if (component.isExported) {
+          this.components.set(`${component.file}:${component.name}`, {
+            ...component,
+            description: `Component: ${component.name}`,
+          });
+        }
+      });
+
+      // Index stores
+      result.stores.forEach(store => {
+        this.stores.set(`${store.file}:${store.name}`, {
+          ...store,
+          description: `Store: ${store.name}`,
+        });
+      });
+
+      // Index APIs
+      result.apis.forEach(api => {
+        this.apis.set(`${api.file}:${api.name}`, {
+          ...api,
+          description: `API: ${api.method} ${api.endpoint}`,
+        });
+      });
+    } catch (error) {
+      console.error(`Error indexing file ${uri.fsPath}:`, error);
+    }
+  }
+
+  /**
+   * Set up file system watchers for incremental updates
+   */
+  private setupFileWatchers(): void {
+    this.fileWatcher = vscode.workspace.createFileSystemWatcher(
+      '**/*.{ts,tsx,js,jsx}'
+    );
+
+    // Handle file changes
+    this.fileWatcher.onDidChange(async uri => {
+      await this.updateFileIndex(uri);
+      this.onDidChangeEmitter.fire();
+    });
+
+    // Handle file creation
+    this.fileWatcher.onDidCreate(async uri => {
+      await this.indexFile(uri);
+      this.onDidChangeEmitter.fire();
+    });
+
+    // Handle file deletion
+    this.fileWatcher.onDidDelete(uri => {
+      this.removeFileFromIndex(uri.fsPath);
+      this.onDidChangeEmitter.fire();
+    });
+  }
+
+  /**
+   * Update index for a changed file
+   */
+  private async updateFileIndex(uri: vscode.Uri): Promise<void> {
+    // Remove old entries
+    this.removeFileFromIndex(uri.fsPath);
+
+    // Re-index file
+    await this.indexFile(uri);
+  }
+
+  /**
+   * Remove all entries for a file from index
+   */
+  private removeFileFromIndex(filePath: string): void {
+    // Remove routes
+    for (const [key, route] of this.routes.entries()) {
+      if (route.file === filePath) {
+        this.routes.delete(key);
+      }
+    }
+
+    // Remove components
+    for (const [key, component] of this.components.entries()) {
+      if (component.file === filePath) {
+        this.components.delete(key);
+      }
+    }
+
+    // Remove stores
+    for (const [key, store] of this.stores.entries()) {
+      if (store.file === filePath) {
+        this.stores.delete(key);
+      }
+    }
+
+    // Remove APIs
+    for (const [key, api] of this.apis.entries()) {
+      if (api.file === filePath) {
+        this.apis.delete(key);
+      }
+    }
+
+    // Clear parser cache
+    this.parser.clearCache(filePath);
+  }
+
+  /**
+   * Get all routes
+   */
+  public getAllRoutes(): RouteMetadata[] {
+    return Array.from(this.routes.values());
+  }
+
+  /**
+   * Get route by name
+   */
+  public getRoute(name: string): RouteMetadata | undefined {
+    for (const route of this.routes.values()) {
+      if (route.name === name) {
+        return route;
+      }
+    }
+    return undefined;
+  }
+
+  /**
+   * Search routes by query
+   */
+  public searchRoutes(query: string): RouteMetadata[] {
+    const lowerQuery = query.toLowerCase();
+    return this.getAllRoutes().filter(route =>
+      route.name.toLowerCase().includes(lowerQuery) ||
+      route.path.toLowerCase().includes(lowerQuery)
+    );
+  }
+
+  /**
+   * Get all components
+   */
+  public getAllComponents(): ComponentMetadata[] {
+    return Array.from(this.components.values());
+  }
+
+  /**
+   * Get component by name
+   */
+  public getComponent(name: string): ComponentMetadata | undefined {
+    for (const component of this.components.values()) {
+      if (component.name === name) {
+        return component;
+      }
+    }
+    return undefined;
+  }
+
+  /**
+   * Search components by query
+   */
+  public searchComponents(query: string): ComponentMetadata[] {
+    const lowerQuery = query.toLowerCase();
+    return this.getAllComponents().filter(component =>
+      component.name.toLowerCase().includes(lowerQuery)
+    );
+  }
+
+  /**
+   * Get all hooks
+   */
+  public getAllHooks(): HookMetadata[] {
+    return Array.from(this.hooks.values());
+  }
+
+  /**
+   * Get hook by name
+   */
+  public getHook(name: string): HookMetadata | undefined {
+    return this.hooks.get(name);
+  }
+
+  /**
+   * Search hooks by query
+   */
+  public searchHooks(query: string): HookMetadata[] {
+    const lowerQuery = query.toLowerCase();
+    return this.getAllHooks().filter(hook =>
+      hook.name.toLowerCase().includes(lowerQuery)
+    );
+  }
+
+  /**
+   * Get all stores
+   */
+  public getAllStores(): StoreMetadata[] {
+    return Array.from(this.stores.values());
+  }
+
+  /**
+   * Get store by name
+   */
+  public getStore(name: string): StoreMetadata | undefined {
+    for (const store of this.stores.values()) {
+      if (store.name === name || store.sliceName === name) {
+        return store;
+      }
+    }
+    return undefined;
+  }
+
+  /**
+   * Search stores by query
+   */
+  public searchStores(query: string): StoreMetadata[] {
+    const lowerQuery = query.toLowerCase();
+    return this.getAllStores().filter(store =>
+      store.name.toLowerCase().includes(lowerQuery) ||
+      (store.sliceName && store.sliceName.toLowerCase().includes(lowerQuery))
+    );
+  }
+
+  /**
+   * Get all APIs
+   */
+  public getAllApis(): ApiMetadata[] {
+    return Array.from(this.apis.values());
+  }
+
+  /**
+   * Search APIs by query
+   */
+  public searchApis(query: string): ApiMetadata[] {
+    const lowerQuery = query.toLowerCase();
+    return this.getAllApis().filter(api =>
+      api.endpoint.toLowerCase().includes(lowerQuery) ||
+      api.method.toLowerCase().includes(lowerQuery)
+    );
+  }
+
+  /**
+   * Get all entities in a file
+   */
+  public getEntitiesInFile(filePath: string): {
+    routes: RouteMetadata[];
+    components: ComponentMetadata[];
+    stores: StoreMetadata[];
+    apis: ApiMetadata[];
+  } {
+    return {
+      routes: this.getAllRoutes().filter(r => r.file === filePath),
+      components: this.getAllComponents().filter(c => c.file === filePath),
+      stores: this.getAllStores().filter(s => s.file === filePath),
+      apis: this.getAllApis().filter(a => a.file === filePath),
+    };
+  }
+
+  /**
+   * Find entity at position
+   */
+  public findEntityAtPosition(
+    document: vscode.TextDocument,
+    position: vscode.Position
+  ): RouteMetadata | ComponentMetadata | StoreMetadata | ApiMetadata | undefined {
+    const filePath = document.uri.fsPath;
+    const entities = this.getEntitiesInFile(filePath);
+
+    // Check routes
+    for (const route of entities.routes) {
+      if (route.range.contains(position)) {
+        return route;
+      }
+    }
+
+    // Check components
+    for (const component of entities.components) {
+      if (component.range.contains(position)) {
+        return component;
+      }
+    }
+
+    // Check stores
+    for (const store of entities.stores) {
+      if (store.range.contains(position)) {
+        return store;
+      }
+    }
+
+    // Check APIs
+    for (const api of entities.apis) {
+      if (api.range.contains(position)) {
+        return api;
+      }
+    }
+
+    return undefined;
+  }
+
+  /**
+   * Get index statistics
+   */
+  public getStats(): {
+    routes: number;
+    components: number;
+    hooks: number;
+    stores: number;
+    apis: number;
+    totalFiles: number;
+  } {
+    const files = new Set<string>();
+
+    this.routes.forEach(r => files.add(r.file));
+    this.components.forEach(c => files.add(c.file));
+    this.stores.forEach(s => files.add(s.file));
+    this.apis.forEach(a => files.add(a.file));
+
+    return {
+      routes: this.routes.size,
+      components: this.components.size,
+      hooks: this.hooks.size,
+      stores: this.stores.size,
+      apis: this.apis.size,
+      totalFiles: files.size,
+    };
+  }
+
+  /**
+   * Refresh entire index
+   */
+  public async refresh(): Promise<void> {
+    this.routes.clear();
+    this.components.clear();
+    this.stores.clear();
+    this.apis.clear();
+
+    // Re-initialize built-in hooks
+    this.initializeBuiltInHooks();
+
+    // Re-index workspace
+    await this.indexWorkspace();
+
+    this.onDidChangeEmitter.fire();
+  }
+
+  /**
+   * Dispose of resources
+   */
+  public dispose(): void {
+    this.fileWatcher?.dispose();
+    this.onDidChangeEmitter.dispose();
+    this.routes.clear();
+    this.components.clear();
+    this.hooks.clear();
+    this.stores.clear();
+    this.apis.clear();
+  }
+}
+
+/**
+ * Singleton index instance
+ */
+let indexInstance: EnzymeIndex | undefined;
+
+/**
+ * Get or create index instance
+ */
+export function getIndex(workspaceRoot?: string): EnzymeIndex {
+  if (!indexInstance && workspaceRoot) {
+    indexInstance = new EnzymeIndex(workspaceRoot);
+  }
+  if (!indexInstance) {
+    throw new Error('EnzymeIndex not initialized. Call with workspaceRoot first.');
+  }
+  return indexInstance;
+}
+
+/**
+ * Reset index instance (useful for testing)
+ */
+export function resetIndex(): void {
+  indexInstance?.dispose();
+  indexInstance = undefined;
+}
