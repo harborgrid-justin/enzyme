@@ -47,6 +47,16 @@
     "workspaceContains:**/.enzymerc.json"
   ],
   "main": "./out/extension.js",
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "In untrusted workspaces, Enzyme runs in restricted mode. Code generation, CLI execution, and file operations are disabled. Only documentation and help commands are available."
+    },
+    "virtualWorkspaces": {
+      "supported": "limited",
+      "description": "Some features may have reduced functionality in virtual workspaces."
+    }
+  },
   "contributes": {
     "commands": [
       {
@@ -191,6 +201,203 @@
         "title": "Detect Enzyme Project",
         "category": "Enzyme",
         "enablement": "workspaceFolderCount > 0"
+      },
+      {
+        "command": "enzyme.panel.showStateInspector",
+        "title": "Open State Inspector",
+        "category": "Enzyme",
+        "icon": "$(inspect)",
+        "enablement": "enzyme:isEnzymeProject"
+      },
+      {
+        "command": "enzyme.panel.showPerformance",
+        "title": "Open Performance Monitor",
+        "category": "Enzyme",
+        "icon": "$(dashboard)",
+        "enablement": "enzyme:isEnzymeProject"
+      },
+      {
+        "command": "enzyme.panel.showRouteVisualizer",
+        "title": "Open Route Visualizer",
+        "category": "Enzyme",
+        "icon": "$(type-hierarchy)",
+        "enablement": "enzyme:isEnzymeProject"
+      },
+      {
+        "command": "enzyme.panel.showAPIExplorer",
+        "title": "Open API Explorer",
+        "category": "Enzyme",
+        "icon": "$(globe)",
+        "enablement": "enzyme:isEnzymeProject"
+      },
+      {
+        "command": "enzyme.panel.showSetupWizard",
+        "title": "Open Setup Wizard",
+        "category": "Enzyme",
+        "icon": "$(rocket)"
+      },
+      {
+        "command": "enzyme.panel.showFeatureDashboard",
+        "title": "Open Feature Dashboard",
+        "category": "Enzyme",
+        "icon": "$(extensions)",
+        "enablement": "enzyme:isEnzymeProject"
+      },
+      {
+        "command": "enzyme.panel.showGeneratorWizard",
+        "title": "Open Generator Wizard",
+        "category": "Enzyme",
+        "icon": "$(wand)",
+        "enablement": "enzyme:isEnzymeProject"
+      },
+      {
+        "command": "enzyme.panel.showWelcome",
+        "title": "Show Welcome Page",
+        "category": "Enzyme",
+        "icon": "$(home)"
+      },
+      {
+        "command": "enzyme.cli.detect",
+        "title": "Detect Enzyme CLI",
+        "category": "Enzyme CLI",
+        "enablement": "workspaceFolderCount > 0"
+      },
+      {
+        "command": "enzyme.cli.install",
+        "title": "Install Enzyme CLI",
+        "category": "Enzyme CLI",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "enzyme.cli.version",
+        "title": "Show CLI Version",
+        "category": "Enzyme CLI"
+      },
+      {
+        "command": "enzyme.openSettings",
+        "title": "Open Extension Settings",
+        "category": "Enzyme",
+        "icon": "$(settings-gear)"
+      },
+      {
+        "command": "enzyme.createConfig",
+        "title": "Create Configuration File",
+        "category": "Enzyme",
+        "enablement": "workspaceFolderCount > 0"
+      },
+      {
+        "command": "enzyme.createConfigFromTemplate",
+        "title": "Create Config from Template",
+        "category": "Enzyme",
+        "enablement": "workspaceFolderCount > 0"
+      },
+      {
+        "command": "enzyme.validateSettings",
+        "title": "Validate Extension Settings",
+        "category": "Enzyme"
+      },
+      {
+        "command": "enzyme.generateEnvExample",
+        "title": "Generate Environment Example",
+        "category": "Enzyme",
+        "enablement": "enzyme:isEnzymeProject"
+      },
+      {
+        "command": "enzyme.toggleFeatureFlag",
+        "title": "Toggle Feature Flag",
+        "category": "Enzyme",
+        "enablement": "enzyme:isEnzymeProject"
+      },
+      {
+        "command": "enzyme.migrateConfig",
+        "title": "Migrate Configuration",
+        "category": "Enzyme",
+        "enablement": "enzyme:isEnzymeProject"
+      },
+      {
+        "command": "enzyme.extractFeature",
+        "title": "Extract to Feature Module",
+        "category": "Enzyme Refactor",
+        "enablement": "editorHasSelection && enzyme:isEnzymeProject"
+      },
+      {
+        "command": "enzyme.extractHook",
+        "title": "Extract to Custom Hook",
+        "category": "Enzyme Refactor",
+        "enablement": "editorHasSelection && enzyme:isEnzymeProject"
+      },
+      {
+        "command": "enzyme.extractComponent",
+        "title": "Extract to Component",
+        "category": "Enzyme Refactor",
+        "enablement": "editorHasSelection && enzyme:isEnzymeProject"
+      },
+      {
+        "command": "enzyme.splitComponent",
+        "title": "Split Component",
+        "category": "Enzyme Refactor",
+        "enablement": "enzyme:isEnzymeProject"
+      },
+      {
+        "command": "enzyme.splitStore",
+        "title": "Split Store",
+        "category": "Enzyme Refactor",
+        "enablement": "enzyme:isEnzymeProject"
+      },
+      {
+        "command": "enzyme.extractStoreSlice",
+        "title": "Extract Store Slice",
+        "category": "Enzyme Refactor",
+        "enablement": "editorHasSelection && enzyme:isEnzymeProject"
+      },
+      {
+        "command": "enzyme.removeUnusedImports",
+        "title": "Remove Unused Imports",
+        "category": "Enzyme",
+        "enablement": "enzyme:isEnzymeProject && (resourceLangId == typescript || resourceLangId == typescriptreact)"
+      },
+      {
+        "command": "enzyme.organizeImports",
+        "title": "Organize Imports",
+        "category": "Enzyme",
+        "enablement": "enzyme:isEnzymeProject && (resourceLangId == typescript || resourceLangId == typescriptreact)"
+      },
+      {
+        "command": "enzyme.refreshLanguageFeatures",
+        "title": "Refresh Language Features",
+        "category": "Enzyme",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "enzyme.showIndexStats",
+        "title": "Show Index Statistics",
+        "category": "Enzyme"
+      },
+      {
+        "command": "enzyme.showGuardDetails",
+        "title": "Show Route Guard Details",
+        "category": "Enzyme",
+        "enablement": "enzyme:isEnzymeProject"
+      },
+      {
+        "command": "enzyme.runComponentTests",
+        "title": "Run Component Tests",
+        "category": "Enzyme",
+        "icon": "$(testing-run-icon)",
+        "enablement": "enzyme:isEnzymeProject"
+      },
+      {
+        "command": "enzyme.editFeatureFlag",
+        "title": "Edit Feature Flag",
+        "category": "Enzyme",
+        "icon": "$(edit)",
+        "enablement": "enzyme:isEnzymeProject"
+      },
+      {
+        "command": "enzyme.openFeatureDashboard",
+        "title": "Open Feature in Dashboard",
+        "category": "Enzyme",
+        "enablement": "enzyme:isEnzymeProject"
       }
     ],
     "viewsContainers": {

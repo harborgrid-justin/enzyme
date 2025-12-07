@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { getIndex } from './enzyme-index';
+import { logger } from '../../core/logger';
 
 /**
  * EnzymeDefinitionProvider - Provides go-to-definition functionality
@@ -82,6 +83,7 @@ export class EnzymeDefinitionProvider implements vscode.DefinitionProvider {
         route.position
       );
     } catch (error) {
+      logger.debug('Error getting route definition:', error);
       return undefined;
     }
   }
@@ -103,6 +105,7 @@ export class EnzymeDefinitionProvider implements vscode.DefinitionProvider {
         component.position
       );
     } catch (error) {
+      logger.debug('Error getting component definition:', error);
       return undefined;
     }
   }
@@ -124,6 +127,7 @@ export class EnzymeDefinitionProvider implements vscode.DefinitionProvider {
         hook.position
       );
     } catch (error) {
+      logger.debug('Error getting hook definition:', error);
       return undefined;
     }
   }
@@ -145,6 +149,7 @@ export class EnzymeDefinitionProvider implements vscode.DefinitionProvider {
         store.position
       );
     } catch (error) {
+      logger.debug('Error getting store definition:', error);
       return undefined;
     }
   }

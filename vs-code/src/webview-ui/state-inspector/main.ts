@@ -144,6 +144,20 @@ function renderStateTree() {
 	container.appendChild(wrapper);
 }
 
+/**
+ * SECURITY: Escape a path string for safe use in JavaScript onclick handlers
+ * This prevents XSS attacks through malicious object keys
+ */
+function escapeJsString(str: string): string {
+	return str
+		.replace(/\\/g, '\\\\')
+		.replace(/'/g, "\\'")
+		.replace(/"/g, '\\"')
+		.replace(/</g, '\\x3c')
+		.replace(/>/g, '\\x3e')
+		.replace(/&/g, '\\x26');
+}
+
 function renderObject(obj: any, path: string, level: number = 0): string {
 	if (obj === null) {
 		return `<span class="state-value state-null">null</span>`;
@@ -160,12 +174,17 @@ function renderObject(obj: any, path: string, level: number = 0): string {
 	}
 
 	if (type === 'number') {
-		return `<span class="state-value state-number">${obj}</span>`;
+		// SECURITY: Numbers are safe but we still validate
+		const safeNum = Number.isFinite(obj) ? obj : 0;
+		return `<span class="state-value state-number">${safeNum}</span>`;
 	}
 
 	if (type === 'boolean') {
 		return `<span class="state-value state-boolean">${obj}</span>`;
 	}
+
+	// SECURITY: Escape path for use in onclick handlers
+	const escapedPath = escapeJsString(path);
 
 	if (Array.isArray(obj)) {
 		const isExpanded = expandedPaths.has(path);
@@ -177,7 +196,7 @@ function renderObject(obj: any, path: string, level: number = 0): string {
 
 		let html = `
 			<div class="state-node">
-				<div class="state-key-line" onclick="(window as any).togglePath('${path}')">
+				<div class="state-key-line" data-path="${webviewUtils.escapeHtml(path)}" onclick="(window as any).togglePath('${escapedPath}')">
 					<span class="codicon codicon-chevron-${isExpanded ? 'down' : 'right'}"></span>
 					<span class="state-bracket">[</span>
 					<span class="state-info">${length} items</span>
@@ -218,7 +237,7 @@ function renderObject(obj: any, path: string, level: number = 0): string {
 
 		let html = `
 			<div class="state-node">
-				<div class="state-key-line" onclick="(window as any).togglePath('${path}')">
+				<div class="state-key-line" data-path="${webviewUtils.escapeHtml(path)}" onclick="(window as any).togglePath('${escapedPath}')">
 					<span class="codicon codicon-chevron-${isExpanded ? 'down' : 'right'}"></span>
 					<span class="state-bracket">{</span>
 					<span class="state-info">${length} keys</span>
@@ -229,7 +248,9 @@ function renderObject(obj: any, path: string, level: number = 0): string {
 		if (isExpanded) {
 			html += '<div class="state-children">';
 			keys.forEach(key => {
-				const itemPath = `${path}.${key}`;
+				// SECURITY: Sanitize key for use in path
+				const safeKey = key.replace(/[^\w\-]/g, '_');
+				const itemPath = `${path}.${safeKey}`;
 				const shouldShow = !filterText || key.toLowerCase().includes(filterText) || itemPath.toLowerCase().includes(filterText);
 
 				if (shouldShow) {
@@ -248,7 +269,8 @@ function renderObject(obj: any, path: string, level: number = 0): string {
 		return html;
 	}
 
-	return `<span class="state-value">${String(obj)}</span>`;
+	// SECURITY: Always escape unknown types
+	return `<span class="state-value">${webviewUtils.escapeHtml(String(obj))}</span>`;
 }
 
 function renderActionHistory() {

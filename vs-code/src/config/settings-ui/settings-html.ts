@@ -352,27 +352,67 @@ function generateSettingHTML(
 }
 
 /**
+ * SECURITY: Escape HTML attribute values to prevent XSS
+ */
+function escapeHtmlAttr(value: unknown): string {
+  const str = String(value ?? '');
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+/**
+ * SECURITY: Escape values for use in JavaScript strings
+ */
+function escapeJsString(value: string): string {
+  return value
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/"/g, '\\"')
+    .replace(/</g, '\\x3c')
+    .replace(/>/g, '\\x3e');
+}
+
+/**
  * Generate control HTML based on type
+ * SECURITY: All values are properly escaped to prevent XSS
  */
 function generateControl(key: string, metadata: SettingMetadata, value: unknown): string {
+  // SECURITY: Escape the key for use in both HTML attributes and JS
+  const safeKey = escapeHtmlAttr(key);
+  const safeJsKey = escapeJsString(key);
+
   switch (metadata.type) {
     case 'boolean':
-      return `<input type="checkbox" id="${key}" ${value ? 'checked' : ''} onchange="updateSetting('${key}', this.checked)">`;
+      return `<input type="checkbox" id="${safeKey}" ${value ? 'checked' : ''} onchange="updateSetting('${safeJsKey}', this.checked)">`;
 
-    case 'number':
-      return `<input type="number" id="${key}" value="${value}" min="${metadata.min || ''}" max="${metadata.max || ''}" onchange="updateSetting('${key}', parseInt(this.value))">`;
+    case 'number': {
+      // SECURITY: Validate number is actually a number
+      const safeValue = typeof value === 'number' && Number.isFinite(value) ? value : 0;
+      const safeMin = typeof metadata.min === 'number' ? metadata.min : '';
+      const safeMax = typeof metadata.max === 'number' ? metadata.max : '';
+      return `<input type="number" id="${safeKey}" value="${safeValue}" min="${safeMin}" max="${safeMax}" onchange="updateSetting('${safeJsKey}', parseInt(this.value))">`;
+    }
 
     case 'select':
-      return `<select id="${key}" onchange="updateSetting('${key}', this.value)">
-        ${metadata.options?.map((opt) => `<option value="${opt}" ${value === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+      return `<select id="${safeKey}" onchange="updateSetting('${safeJsKey}', this.value)">
+        ${metadata.options?.map((opt) => {
+          const safeOpt = escapeHtmlAttr(opt);
+          return `<option value="${safeOpt}" ${value === opt ? 'selected' : ''}>${safeOpt}</option>`;
+        }).join('')}
       </select>`;
 
-    case 'array':
-      return `<input type="text" id="${key}" value="${Array.isArray(value) ? value.join(', ') : ''}" onchange="updateSetting('${key}', this.value.split(',').map(s => s.trim()).filter(Boolean))">`;
+    case 'array': {
+      const arrayValue = Array.isArray(value) ? value.map(v => String(v)).join(', ') : '';
+      return `<input type="text" id="${safeKey}" value="${escapeHtmlAttr(arrayValue)}" onchange="updateSetting('${safeJsKey}', this.value.split(',').map(s => s.trim()).filter(Boolean))">`;
+    }
 
     case 'string':
     default:
-      return `<input type="text" id="${key}" value="${value || ''}" onchange="updateSetting('${key}', this.value)">`;
+      return `<input type="text" id="${safeKey}" value="${escapeHtmlAttr(value)}" onchange="updateSetting('${safeJsKey}', this.value)">`;
   }
 }
 

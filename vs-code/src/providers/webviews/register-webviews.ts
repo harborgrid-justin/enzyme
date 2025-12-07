@@ -11,6 +11,10 @@ import {
   PerformancePanel,
   RouteVisualizerPanel,
   APIExplorerPanel,
+  SetupWizardPanel,
+  FeatureDashboardPanel,
+  GeneratorWizardPanel,
+  WelcomePanel,
 } from './index';
 
 /**
@@ -64,6 +68,46 @@ export function registerWebViewProviders(
     );
     disposables.push(apiExplorerCommand);
     logger.info('API Explorer panel command registered');
+
+    // Setup Wizard Panel - The incredible onboarding experience
+    const setupWizardCommand = vscode.commands.registerCommand(
+      'enzyme.panel.showSetupWizard',
+      () => {
+        SetupWizardPanel.show(context);
+      }
+    );
+    disposables.push(setupWizardCommand);
+    logger.info('Setup Wizard panel command registered');
+
+    // Feature Dashboard Panel
+    const featureDashboardCommand = vscode.commands.registerCommand(
+      'enzyme.panel.showFeatureDashboard',
+      () => {
+        FeatureDashboardPanel.show(context);
+      }
+    );
+    disposables.push(featureDashboardCommand);
+    logger.info('Feature Dashboard panel command registered');
+
+    // Generator Wizard Panel
+    const generatorWizardCommand = vscode.commands.registerCommand(
+      'enzyme.panel.showGeneratorWizard',
+      () => {
+        GeneratorWizardPanel.show(context);
+      }
+    );
+    disposables.push(generatorWizardCommand);
+    logger.info('Generator Wizard panel command registered');
+
+    // Welcome Panel
+    const welcomeCommand = vscode.commands.registerCommand(
+      'enzyme.panel.showWelcome',
+      () => {
+        WelcomePanel.show(context);
+      }
+    );
+    disposables.push(welcomeCommand);
+    logger.info('Welcome panel command registered');
 
     logger.success('All WebView providers registered successfully');
 
