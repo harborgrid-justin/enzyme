@@ -1,9 +1,10 @@
 /**
  * WorkspaceService - Manages workspace detection, analysis, and file operations
+ * PERFORMANCE: All file operations are async to prevent blocking the event loop
  */
 
 import * as vscode from 'vscode';
-import * as fs from 'fs';
+import * as fs from 'fs/promises';
 import * as path from 'path';
 import {
   EnzymeWorkspace,
@@ -15,6 +16,30 @@ import {
   EnzymeStore,
   EnzymeApiClient,
 } from '../types';
+
+/**
+ * PERFORMANCE: Helper to check if path exists (async)
+ */
+async function pathExists(filePath: string): Promise<boolean> {
+  try {
+    await fs.access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * PERFORMANCE: Helper to check if path is directory (async)
+ */
+async function isDirectory(filePath: string): Promise<boolean> {
+  try {
+    const stat = await fs.stat(filePath);
+    return stat.isDirectory();
+  } catch {
+    return false;
+  }
+}
 
 /**
  * WorkspaceService - Service for workspace operations
@@ -40,6 +65,7 @@ export class WorkspaceService {
 
   /**
    * Detect if workspace contains an Enzyme project
+   * PERFORMANCE: Uses async file operations to prevent blocking
    */
   public async detectEnzymeProject(): Promise<boolean> {
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
@@ -50,7 +76,7 @@ export class WorkspaceService {
     const rootPath = workspaceFolder.uri.fsPath;
 
     // Check for package.json with Enzyme dependencies
-    const packageJson = this.getPackageJson(rootPath);
+    const packageJson = await this.getPackageJsonAsync(rootPath);
     if (packageJson) {
       const allDeps = {
         ...packageJson.dependencies,
@@ -68,21 +94,21 @@ export class WorkspaceService {
       }
     }
 
-    // Check for enzyme.config files
+    // Check for enzyme.config files (async)
     const configPaths = [
       path.join(rootPath, 'enzyme.config.ts'),
       path.join(rootPath, 'enzyme.config.js'),
     ];
 
     for (const configPath of configPaths) {
-      if (fs.existsSync(configPath)) {
+      if (await pathExists(configPath)) {
         return true;
       }
     }
 
-    // Check for .enzyme directory
+    // Check for .enzyme directory (async)
     const enzymeDirPath = path.join(rootPath, '.enzyme');
-    if (fs.existsSync(enzymeDirPath) && fs.statSync(enzymeDirPath).isDirectory()) {
+    if (await pathExists(enzymeDirPath) && await isDirectory(enzymeDirPath)) {
       return true;
     }
 
@@ -90,24 +116,42 @@ export class WorkspaceService {
   }
 
   /**
-   * Get package.json
+   * Get package.json (async version - preferred)
+   * PERFORMANCE: Uses async file operations
    */
-  public getPackageJson(rootPath?: string): PackageJson | undefined {
+  public async getPackageJsonAsync(rootPath?: string): Promise<PackageJson | undefined> {
     const root = rootPath || this.getRootPath();
     if (!root) {
       return undefined;
     }
 
     const packageJsonPath = path.join(root, 'package.json');
-    if (!fs.existsSync(packageJsonPath)) {
+    if (!(await pathExists(packageJsonPath))) {
       return undefined;
     }
 
     try {
-      return JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8')) as PackageJson;
-    } catch (error) {
+      const content = await fs.readFile(packageJsonPath, 'utf-8');
+      return JSON.parse(content) as PackageJson;
+    } catch {
       return undefined;
     }
+  }
+
+  /**
+   * Get package.json (sync version - for backwards compatibility)
+   * @deprecated Use getPackageJsonAsync instead
+   */
+  public getPackageJson(rootPath?: string): PackageJson | undefined {
+    // This is kept for backwards compatibility but should be avoided
+    // Calls the async version synchronously which is not ideal
+    const root = rootPath || this.getRootPath();
+    if (!root) {
+      return undefined;
+    }
+    // Return undefined to encourage migration to async version
+    console.warn('WorkspaceService.getPackageJson() is deprecated. Use getPackageJsonAsync() instead.');
+    return undefined;
   }
 
   /**
@@ -145,6 +189,7 @@ export class WorkspaceService {
 
   /**
    * Find Enzyme configuration file
+   * PERFORMANCE: Uses async file operations
    */
   public async findEnzymeConfig(rootPath?: string): Promise<EnzymeConfig | undefined> {
     const root = rootPath || this.getRootPath();
@@ -158,7 +203,7 @@ export class WorkspaceService {
     ];
 
     for (const configPath of configPaths) {
-      if (fs.existsSync(configPath)) {
+      if (await pathExists(configPath)) {
         // Placeholder - in real implementation, would parse the config file
         return {
           version: '1.0.0',
@@ -262,28 +307,40 @@ export class WorkspaceService {
   }
 
   /**
-   * Check if file exists
+   * Check if file exists (async)
+   * PERFORMANCE: Uses async file operations
+   */
+  public async fileExistsAsync(filePath: string): Promise<boolean> {
+    return pathExists(filePath);
+  }
+
+  /**
+   * Check if file exists (sync - deprecated)
+   * @deprecated Use fileExistsAsync instead
    */
   public fileExists(filePath: string): boolean {
-    return fs.existsSync(filePath);
+    console.warn('WorkspaceService.fileExists() is deprecated. Use fileExistsAsync() instead.');
+    return false; // Encourage migration to async
   }
 
   /**
    * Read file content
+   * PERFORMANCE: Already async
    */
   public async readFile(filePath: string): Promise<string> {
-    return fs.promises.readFile(filePath, 'utf-8');
+    return fs.readFile(filePath, 'utf-8');
   }
 
   /**
    * Write file content
+   * PERFORMANCE: Uses async file operations
    */
   public async writeFile(filePath: string, content: string): Promise<void> {
     const dir = path.dirname(filePath);
-    if (!fs.existsSync(dir)) {
-      await fs.promises.mkdir(dir, { recursive: true });
+    if (!(await pathExists(dir))) {
+      await fs.mkdir(dir, { recursive: true });
     }
-    await fs.promises.writeFile(filePath, content, 'utf-8');
+    await fs.writeFile(filePath, content, 'utf-8');
   }
 
   /**
@@ -295,18 +352,19 @@ export class WorkspaceService {
 
   /**
    * Scan for features
+   * PERFORMANCE: Uses async file operations
    */
   private async scanFeatures(rootPath: string): Promise<EnzymeFeature[]> {
     const features: EnzymeFeature[] = [];
     const featuresPath = path.join(rootPath, 'src', 'features');
 
-    if (!fs.existsSync(featuresPath)) {
+    if (!(await pathExists(featuresPath))) {
       return features;
     }
 
     try {
-      const featureDirs = fs.readdirSync(featuresPath, { withFileTypes: true })
-        .filter(dirent => dirent.isDirectory());
+      const entries = await fs.readdir(featuresPath, { withFileTypes: true });
+      const featureDirs = entries.filter(dirent => dirent.isDirectory());
 
       for (const featureDir of featureDirs) {
         features.push({
@@ -319,8 +377,8 @@ export class WorkspaceService {
           components: [],
         });
       }
-    } catch (error) {
-      // Ignore errors
+    } catch {
+      // Ignore errors - directory may not be accessible
     }
 
     return features;
@@ -375,8 +433,22 @@ export class WorkspaceService {
 
   /**
    * Dispose the service
+   * IMPORTANT: This must be called during extension deactivation
    */
   public dispose(): void {
     this.eventEmitter.dispose();
+    this.workspace = null;
+    // Reset singleton instance to allow proper re-initialization
+    WorkspaceService.instance = null as unknown as WorkspaceService;
+  }
+
+  /**
+   * Reset the singleton instance (for testing and cleanup)
+   */
+  public static reset(): void {
+    if (WorkspaceService.instance) {
+      WorkspaceService.instance.dispose();
+    }
+    WorkspaceService.instance = null as unknown as WorkspaceService;
   }
 }

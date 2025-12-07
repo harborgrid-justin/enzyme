@@ -15,9 +15,21 @@
 
 import * as vscode from 'vscode';
 import * as path from 'path';
-import * as fs from 'fs';
+import * as fs from 'fs/promises';
 import { BaseWebViewPanel } from './base-webview-panel';
 import { Colors, Icons, Spacing, Typography, Animations, Shadows, BorderRadius } from '../../webview-ui/shared/design-system';
+
+/**
+ * PERFORMANCE: Helper to check if path exists (async)
+ */
+async function pathExists(filePath: string): Promise<boolean> {
+  try {
+    await fs.access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 // =============================================================================
 // TYPES
@@ -1006,32 +1018,33 @@ export class SetupWizardPanel extends BaseWebViewPanel {
     }
 
     try {
-      // Check for package.json
+      // Check for package.json (async)
       const packageJsonPath = path.join(workspaceRoot, 'package.json');
-      const hasPackageJson = fs.existsSync(packageJsonPath);
+      const hasPackageJson = await pathExists(packageJsonPath);
 
       let hasReact = false;
       let hasTypeScript = false;
       let packageManager: 'npm' | 'yarn' | 'pnpm' = 'npm';
 
       if (hasPackageJson) {
-        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+        const content = await fs.readFile(packageJsonPath, 'utf-8');
+        const packageJson = JSON.parse(content);
         const deps = { ...packageJson.dependencies, ...packageJson.devDependencies };
         hasReact = 'react' in deps;
         hasTypeScript = 'typescript' in deps;
       }
 
-      // Detect package manager
-      if (fs.existsSync(path.join(workspaceRoot, 'pnpm-lock.yaml'))) {
+      // Detect package manager (async)
+      if (await pathExists(path.join(workspaceRoot, 'pnpm-lock.yaml'))) {
         packageManager = 'pnpm';
-      } else if (fs.existsSync(path.join(workspaceRoot, 'yarn.lock'))) {
+      } else if (await pathExists(path.join(workspaceRoot, 'yarn.lock'))) {
         packageManager = 'yarn';
       }
 
-      // Check for enzyme config
+      // Check for enzyme config (async)
       const hasEnzymeConfig =
-        fs.existsSync(path.join(workspaceRoot, 'enzyme.config.ts')) ||
-        fs.existsSync(path.join(workspaceRoot, 'enzyme.config.js'));
+        (await pathExists(path.join(workspaceRoot, 'enzyme.config.ts'))) ||
+        (await pathExists(path.join(workspaceRoot, 'enzyme.config.js')));
 
       this.state.detectedEnvironment = {
         ...this.state.detectedEnvironment,
