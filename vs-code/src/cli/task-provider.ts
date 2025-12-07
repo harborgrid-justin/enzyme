@@ -1,16 +1,26 @@
 import * as vscode from 'vscode';
-import { CLIDetector } from './cli-detector';
+import type { CLIDetector } from './cli-detector';
 
+/**
+ *
+ */
 interface EnzymeTaskDefinition extends vscode.TaskDefinition {
   type: 'enzyme';
   command: string;
   args?: string[];
 }
 
+/**
+ *
+ */
 export class EnzymeTaskProvider implements vscode.TaskProvider {
   private tasks: vscode.Task[] = [];
 
-  constructor(private detector: CLIDetector) {}
+  /**
+   *
+   * @param detector
+   */
+  constructor(private readonly detector: CLIDetector) {}
 
   /**
    * Provide tasks for Enzyme commands
@@ -49,6 +59,8 @@ export class EnzymeTaskProvider implements vscode.TaskProvider {
 
   /**
    * Resolve a task definition
+   * SECURITY: Uses ProcessExecution instead of ShellExecution to prevent command injection
+   * @param task
    */
   async resolveTask(task: vscode.Task): Promise<vscode.Task | undefined> {
     const definition = task.definition as EnzymeTaskDefinition;
@@ -63,7 +75,10 @@ export class EnzymeTaskProvider implements vscode.TaskProvider {
     }
 
     const args = definition.args || [];
-    const execution = new vscode.ShellExecution(`${cliPath} ${definition.command} ${args.join(' ')}`);
+    const allArgs = [definition.command, ...args];
+
+    // SECURITY: Use ProcessExecution with args array to prevent shell injection
+    const execution = new vscode.ProcessExecution(cliPath, allArgs);
 
     return new vscode.Task(
       definition,
@@ -77,6 +92,12 @@ export class EnzymeTaskProvider implements vscode.TaskProvider {
 
   /**
    * Create a task
+   * SECURITY: Uses ProcessExecution instead of ShellExecution to prevent command injection
+   * @param name
+   * @param description
+   * @param cliPath
+   * @param args
+   * @param group
    */
   private createTask(
     name: string,
@@ -85,13 +106,15 @@ export class EnzymeTaskProvider implements vscode.TaskProvider {
     args: string[],
     group?: string
   ): vscode.Task {
+    const command = args[0] ?? '';
     const definition: EnzymeTaskDefinition = {
       type: 'enzyme',
-      command: args[0],
+      command,
       args: args.slice(1),
     };
 
-    const execution = new vscode.ShellExecution(`${cliPath} ${args.join(' ')}`);
+    // SECURITY: Use ProcessExecution with args array to prevent shell injection
+    const execution = new vscode.ProcessExecution(cliPath, args);
 
     const task = new vscode.Task(
       definition,
@@ -99,7 +122,7 @@ export class EnzymeTaskProvider implements vscode.TaskProvider {
       name,
       'enzyme',
       execution,
-      this.getProblemMatchers(args[0])
+      this.getProblemMatchers(command)
     );
 
     task.detail = description;
@@ -124,6 +147,7 @@ export class EnzymeTaskProvider implements vscode.TaskProvider {
 
   /**
    * Get problem matchers for a command
+   * @param command
    */
   private getProblemMatchers(command: string): string[] {
     const matchers: Record<string, string[]> = {
@@ -142,12 +166,14 @@ export class EnzymeTaskProvider implements vscode.TaskProvider {
    */
   private getWorkspaceRoot(): string | null {
     const folders = vscode.workspace.workspaceFolders;
-    return folders && folders.length > 0 ? folders[0].uri.fsPath : null;
+    const firstFolder = folders?.[0];
+    return firstFolder ? firstFolder.uri.fsPath : null;
   }
 }
 
 /**
  * Register custom problem matchers for Enzyme
+ * @param _context
  */
 export function registerProblemMatchers(_context: vscode.ExtensionContext): void {
   // Problem matcher for Enzyme build errors

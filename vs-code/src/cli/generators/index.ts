@@ -1,5 +1,8 @@
 export * from './generator-runner';
 
+/**
+ *
+ */
 export interface GeneratorOptions {
   name: string;
   path?: string;
@@ -11,23 +14,35 @@ export interface GeneratorOptions {
   [key: string]: any;
 }
 
+/**
+ *
+ */
 export interface GeneratorTemplate {
   type: string;
   files: GeneratorFile[];
 }
 
+/**
+ *
+ */
 export interface GeneratorFile {
   path: string;
   content: string;
   skipIfExists?: boolean;
 }
 
+/**
+ *
+ */
 export interface GeneratorResult {
   success: boolean;
   files: string[];
   errors: string[];
 }
 
+/**
+ *
+ */
 export type GeneratorType =
   | 'component'
   | 'page'

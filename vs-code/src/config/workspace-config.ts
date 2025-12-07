@@ -3,9 +3,9 @@
  * @description Manages workspace-specific settings and multi-root workspaces
  */
 
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
 import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs/promises';
 
 // =============================================================================
 // Types
@@ -93,10 +93,14 @@ const RECOMMENDED_SETTINGS: RecommendedSettings[] = [
  * Workspace configuration manager
  */
 export class WorkspaceConfig {
-  private settingsPath: string;
+  private readonly settingsPath: string;
   private watcher: vscode.FileSystemWatcher | null = null;
 
-  constructor(private workspaceFolder: vscode.WorkspaceFolder) {
+  /**
+   *
+   * @param workspaceFolder
+   */
+  constructor(private readonly workspaceFolder: vscode.WorkspaceFolder) {
     this.settingsPath = path.join(
       workspaceFolder.uri.fsPath,
       '.vscode',
@@ -140,6 +144,8 @@ export class WorkspaceConfig {
 
   /**
    * Set workspace setting
+   * @param key
+   * @param value
    */
   public async setSetting(key: string, value: unknown): Promise<void> {
     const settings = await this.getSettings();
@@ -150,6 +156,7 @@ export class WorkspaceConfig {
 
   /**
    * Remove workspace setting
+   * @param key
    */
   public async removeSetting(key: string): Promise<void> {
     const settings = await this.getSettings();
@@ -160,6 +167,7 @@ export class WorkspaceConfig {
 
   /**
    * Save settings to file
+   * @param settings
    */
   private async saveSettings(settings: Record<string, unknown>): Promise<void> {
     const content = JSON.stringify(settings, null, 2);
@@ -168,6 +176,7 @@ export class WorkspaceConfig {
 
   /**
    * Apply recommended settings
+   * @param categories
    */
   public async applyRecommendedSettings(
     categories?: string[]
@@ -254,6 +263,7 @@ export class WorkspaceConfig {
 
   /**
    * Sync settings with user settings
+   * @param keys
    */
   public async syncWithUserSettings(keys: string[]): Promise<void> {
     const userConfig = vscode.workspace.getConfiguration();
@@ -271,6 +281,7 @@ export class WorkspaceConfig {
 
   /**
    * Export settings
+   * @param filePath
    */
   public async exportSettings(filePath: string): Promise<void> {
     const settings = await this.getSettings();
@@ -280,6 +291,7 @@ export class WorkspaceConfig {
 
   /**
    * Import settings
+   * @param filePath
    */
   public async importSettings(filePath: string): Promise<void> {
     const content = await fs.readFile(filePath, 'utf-8');
@@ -324,9 +336,12 @@ export class WorkspaceConfig {
  * Manages configurations for multi-root workspaces
  */
 export class MultiRootWorkspaceManager {
-  private configs: Map<string, WorkspaceConfig> = new Map();
-  private disposables: vscode.Disposable[] = [];
+  private readonly configs = new Map<string, WorkspaceConfig>();
+  private readonly disposables: vscode.Disposable[] = [];
 
+  /**
+   *
+   */
   constructor() {
     this.initializeWorkspaces();
     this.watchWorkspaceChanges();
@@ -345,6 +360,7 @@ export class MultiRootWorkspaceManager {
 
   /**
    * Add workspace folder
+   * @param folder
    */
   private async addWorkspace(folder: vscode.WorkspaceFolder): Promise<void> {
     const config = new WorkspaceConfig(folder);
@@ -354,6 +370,7 @@ export class MultiRootWorkspaceManager {
 
   /**
    * Remove workspace folder
+   * @param folder
    */
   private removeWorkspace(folder: vscode.WorkspaceFolder): void {
     const config = this.configs.get(folder.uri.fsPath);
@@ -369,7 +386,7 @@ export class MultiRootWorkspaceManager {
   private watchWorkspaceChanges(): void {
     this.disposables.push(
       vscode.workspace.onDidChangeWorkspaceFolders((event) => {
-        event.added.forEach((folder) => this.addWorkspace(folder));
+        event.added.forEach(async (folder) => this.addWorkspace(folder));
         event.removed.forEach((folder) => this.removeWorkspace(folder));
       })
     );
@@ -377,6 +394,7 @@ export class MultiRootWorkspaceManager {
 
   /**
    * Get config for workspace folder
+   * @param folder
    */
   public getConfig(folder: vscode.WorkspaceFolder): WorkspaceConfig | undefined {
     return this.configs.get(folder.uri.fsPath);
@@ -403,16 +421,17 @@ export class MultiRootWorkspaceManager {
    * Get all configs
    */
   public getAllConfigs(): WorkspaceConfig[] {
-    return Array.from(this.configs.values());
+    return [...this.configs.values()];
   }
 
   /**
    * Apply settings to all workspaces
+   * @param callback
    */
   public async applyToAll(
     callback: (config: WorkspaceConfig) => Promise<void>
   ): Promise<void> {
-    const promises = Array.from(this.configs.values()).map(callback);
+    const promises = [...this.configs.values()].map(callback);
     await Promise.all(promises);
   }
 

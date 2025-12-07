@@ -9,6 +9,9 @@ import * as vscode from 'vscode';
 // Completion Data
 // =============================================================================
 
+/**
+ *
+ */
 interface ConfigProperty {
   name: string;
   type: string;
@@ -131,98 +134,106 @@ const CONFIG_PROPERTIES: Record<string, ConfigProperty[]> = {
 export class ConfigCompletionProvider implements vscode.CompletionItemProvider {
   /**
    * Provide completion items
+   * @param document
+   * @param position
+   * @param token
+   * @param context
    */
   public provideCompletionItems(
     document: vscode.TextDocument,
     position: vscode.Position,
-    token: vscode.CancellationToken,
+    _token: vscode.CancellationToken,
     context: vscode.CompletionContext
   ): vscode.ProviderResult<vscode.CompletionItem[] | vscode.CompletionList> {
-    const lineText = document.lineAt(position.line).text;
-    const prefix = lineText.substring(0, position.character);
-
     // Determine context (what object we're in)
     const contextType = this.getContextType(document, position);
 
     // Get properties for this context
-    const properties = CONFIG_PROPERTIES[contextType] || CONFIG_PROPERTIES.root;
+    const properties = CONFIG_PROPERTIES[contextType] || CONFIG_PROPERTIES['root'];
 
     // Create completion items
-    const items = properties.map((prop) => this.createCompletionItem(prop, context));
+    const items = properties?.map((property) => this.createCompletionItem(property, context)) || [];
 
     return new vscode.CompletionList(items, false);
   }
 
   /**
    * Create completion item from property
+   * @param prop
+   * @param property
+   * @param context
    */
   private createCompletionItem(
-    prop: ConfigProperty,
-    context: vscode.CompletionContext
+    property: ConfigProperty,
+    _context: vscode.CompletionContext
   ): vscode.CompletionItem {
-    const item = new vscode.CompletionItem(prop.name, vscode.CompletionItemKind.Property);
+    const item = new vscode.CompletionItem(property.name, vscode.CompletionItemKind.Property);
 
-    item.detail = prop.type;
-    item.documentation = new vscode.MarkdownString(this.buildDocumentation(prop));
+    item.detail = property.type;
+    item.documentation = new vscode.MarkdownString(this.buildDocumentation(property));
 
     // Insert text with snippet
-    if (prop.enum) {
-      item.insertText = new vscode.SnippetString(`${prop.name}: \${1|${prop.enum.join(',')}|}`);
-    } else if (prop.type.includes('[]')) {
-      item.insertText = new vscode.SnippetString(`${prop.name}: [$1]`);
-    } else if (prop.type.includes('Record') || prop.type.includes('Config')) {
-      item.insertText = new vscode.SnippetString(`${prop.name}: {\n  $1\n}`);
-    } else if (prop.type === 'string') {
-      const defaultValue = prop.default || '""';
-      item.insertText = new vscode.SnippetString(`${prop.name}: ${defaultValue}`);
+    if (property.enum) {
+      item.insertText = new vscode.SnippetString(`${property.name}: \${1|${property.enum.join(',')}|}`);
+    } else if (property.type.includes('[]')) {
+      item.insertText = new vscode.SnippetString(`${property.name}: [$1]`);
+    } else if (property.type.includes('Record') || property.type.includes('Config')) {
+      item.insertText = new vscode.SnippetString(`${property.name}: {\n  $1\n}`);
+    } else if (property.type === 'string') {
+      const defaultValue = property.default || '""';
+      item.insertText = new vscode.SnippetString(`${property.name}: ${defaultValue}`);
     } else {
-      const defaultValue = prop.default || '';
-      item.insertText = new vscode.SnippetString(`${prop.name}: ${defaultValue || '$1'}`);
+      const defaultValue = property.default || '';
+      item.insertText = new vscode.SnippetString(`${property.name}: ${defaultValue || '$1'}`);
     }
 
-    if (prop.deprecated) {
+    if (property.deprecated) {
       item.tags = [vscode.CompletionItemTag.Deprecated];
     }
 
-    item.sortText = prop.name;
+    item.sortText = property.name;
 
     return item;
   }
 
   /**
    * Build documentation for property
+   * @param prop
+   * @param property
    */
-  private buildDocumentation(prop: ConfigProperty): string {
-    let doc = prop.description;
+  private buildDocumentation(property: ConfigProperty): string {
+    let document = property.description;
 
-    if (prop.default) {
-      doc += `\n\n**Default:** \`${prop.default}\``;
+    if (property.default) {
+      document += `\n\n**Default:** \`${property.default}\``;
     }
 
-    if (prop.enum) {
-      doc += `\n\n**Valid values:** ${prop.enum.map(v => `\`${v}\``).join(', ')}`;
+    if (property.enum) {
+      document += `\n\n**Valid values:** ${property.enum.map(v => `\`${v}\``).join(', ')}`;
     }
 
-    if (prop.since) {
-      doc += `\n\n*Since version ${prop.since}*`;
+    if (property.since) {
+      document += `\n\n*Since version ${property.since}*`;
     }
 
-    if (prop.deprecated) {
-      doc += `\n\n⚠️ **Deprecated**`;
+    if (property.deprecated) {
+      document += `\n\n⚠️ **Deprecated**`;
     }
 
-    return doc;
+    return document;
   }
 
   /**
    * Get context type from cursor position
+   * @param document
+   * @param position
    */
   private getContextType(document: vscode.TextDocument, position: vscode.Position): string {
     const text = document.getText(new vscode.Range(0, 0, position.line, position.character));
 
     // Simple context detection
     if (text.includes('routes:') && !this.isInsideOtherObject(text, 'routes')) {
-      if (text.match(/routes:\s*{\s*routes:\s*\[/)) {
+      if (/routes:\s*{\s*routes:\s*\[/.exec(text)) {
         return 'route';
       }
       return 'routes';
@@ -261,12 +272,14 @@ export class ConfigCompletionProvider implements vscode.CompletionItemProvider {
 
   /**
    * Check if we're inside a different object
+   * @param text
+   * @param currentKey
    */
   private isInsideOtherObject(text: string, currentKey: string): boolean {
     const keyIndex = text.lastIndexOf(`${currentKey}:`);
-    if (keyIndex === -1) return true;
+    if (keyIndex === -1) {return true;}
 
-    const textAfterKey = text.substring(keyIndex);
+    const textAfterKey = text.slice(Math.max(0, keyIndex));
     const openBraces = (textAfterKey.match(/{/g) || []).length;
     const closeBraces = (textAfterKey.match(/}/g) || []).length;
 

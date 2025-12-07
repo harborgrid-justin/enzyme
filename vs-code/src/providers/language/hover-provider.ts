@@ -1,19 +1,62 @@
 import * as vscode from 'vscode';
+import { logger } from '../../core/logger';
 import { getIndex } from './enzyme-index';
 
 /**
- * EnzymeHoverProvider - Provides hover information for Enzyme entities
- * Shows documentation, signatures, and examples
+ * EnzymeHoverProvider - Provides rich hover information for Enzyme framework entities
+ *
+ * This provider displays comprehensive hover tooltips including:
+ * - Route definitions with path, parameters, guards, and components
+ * - Hook signatures with parameters, return types, and examples
+ * - Component props interfaces and JSX usage examples
+ * - Store state shapes, actions, and usage patterns
+ * - API endpoint details and request/response types
+ * - Configuration option documentation
+ *
+ * FEATURES:
+ * - Markdown-formatted documentation with syntax highlighting
+ * - Code examples and usage patterns
+ * - Links to definition files
+ * - Parameter and type information
+ *
+ * BEST PRACTICES:
+ * - Respects cancellation tokens for responsiveness
+ * - Efficient context detection to minimize computation
+ * - Error handling for missing or malformed data
+ *
+ * @implements {vscode.HoverProvider}
  */
 export class EnzymeHoverProvider implements vscode.HoverProvider {
   /**
-   * Provide hover information
+   * Provide hover information for the symbol at the given position
+   *
+   * Analyzes the context at the cursor position and returns rich hover content:
+   * - Routes: path, params, guards, component info
+   * - Hooks: signature, parameters, return type, examples
+   * - Components: props interface, usage examples
+   * - Store: state shape, actions, selectors
+   * - APIs: endpoint, method, request/response types
+   * - Config: option documentation and examples
+   *
+   * @param document - The document containing the symbol
+   * @param position - The position of the cursor in the document
+   * @param token - Cancellation token for long-running operations
+   * @returns Hover information or undefined if none available
+   *
+   * PERFORMANCE: Uses early returns and context detection to minimize work
+   * BEST PRACTICE: Properly handles cancellation for responsiveness
    */
   public async provideHover(
     document: vscode.TextDocument,
     position: vscode.Position,
-    _token: vscode.CancellationToken
+    token: vscode.CancellationToken
   ): Promise<vscode.Hover | undefined> {
+    // BEST PRACTICE: Check cancellation token
+    if (token.isCancellationRequested) {
+      return undefined;
+    }
+
+    try {
     const wordRange = document.getWordRangeAtPosition(position);
     if (!wordRange) {
       return undefined;
@@ -70,11 +113,30 @@ export class EnzymeHoverProvider implements vscode.HoverProvider {
       }
     }
 
-    return undefined;
+      return undefined;
+    } catch (error) {
+      logger.debug('Error providing hover:', error);
+      return undefined;
+    }
   }
 
   /**
-   * Get route hover information
+   * Get hover information for a route
+   *
+   * Creates rich markdown hover content including:
+   * - Route name and path
+   * - Path parameters
+   * - Route guards
+   * - Associated component
+   * - Usage examples with buildPath
+   * - Link to route definition file
+   *
+   * @param routeName - Name of the route
+   * @param range - Range of the route reference in the document
+   * @returns Hover object with markdown content or undefined
+   * @private
+   *
+   * ERROR HANDLING: Returns undefined if route not found or index unavailable
    */
   private getRouteHover(routeName: string, range: vscode.Range): vscode.Hover | undefined {
     try {
@@ -129,12 +191,28 @@ export class EnzymeHoverProvider implements vscode.HoverProvider {
 
       return new vscode.Hover(markdown, range);
     } catch (error) {
+      logger.debug(`Error getting route hover for ${routeName}:`, error);
       return undefined;
     }
   }
 
   /**
-   * Get hook hover information
+   * Get hover information for a React hook
+   *
+   * Creates comprehensive hover content including:
+   * - Hook signature with type information
+   * - Description of hook functionality
+   * - Parameter details with types and descriptions
+   * - Return type information
+   * - Code examples demonstrating usage
+   * - Link to documentation
+   *
+   * @param hookName - Name of the hook (e.g., 'useAuth', 'useStore')
+   * @param range - Range of the hook reference in the document
+   * @returns Hover object with markdown content or undefined
+   * @private
+   *
+   * ERROR HANDLING: Returns undefined if hook not found in index
    */
   private getHookHover(hookName: string, range: vscode.Range): vscode.Hover | undefined {
     try {
@@ -187,12 +265,26 @@ export class EnzymeHoverProvider implements vscode.HoverProvider {
 
       return new vscode.Hover(markdown, range);
     } catch (error) {
+      logger.debug(`Error getting hook hover for ${hookName}:`, error);
       return undefined;
     }
   }
 
   /**
-   * Get component hover information
+   * Get hover information for a React component
+   *
+   * Creates rich hover content including:
+   * - Component name and description
+   * - Props interface with types
+   * - JSX usage examples with sample prop values
+   * - Link to component source file
+   *
+   * @param componentName - Name of the component
+   * @param range - Range of the component reference in the document
+   * @returns Hover object with markdown content or undefined
+   * @private
+   *
+   * ERROR HANDLING: Returns undefined if component not found in index
    */
   private getComponentHover(componentName: string, range: vscode.Range): vscode.Hover | undefined {
     try {
@@ -234,9 +326,9 @@ export class EnzymeHoverProvider implements vscode.HoverProvider {
               return `${name}={42}`;
             } else if (type === 'boolean') {
               return name;
-            } else {
+            } 
               return `${name}={...}`;
-            }
+            
           })
           .join('\n  ');
 
@@ -253,7 +345,7 @@ export class EnzymeHoverProvider implements vscode.HoverProvider {
       markdown.appendMarkdown(`[View component source](${vscode.Uri.file(component.file)})\n`);
 
       return new vscode.Hover(markdown, range);
-    } catch (error) {
+    } catch {
       return undefined;
     }
   }
@@ -318,7 +410,7 @@ export class EnzymeHoverProvider implements vscode.HoverProvider {
       markdown.appendMarkdown(`[View store definition](${vscode.Uri.file(store.file)})\n`);
 
       return new vscode.Hover(markdown, range);
-    } catch (error) {
+    } catch {
       return undefined;
     }
   }
@@ -337,16 +429,20 @@ export class EnzymeHoverProvider implements vscode.HoverProvider {
 
       // Try to find API call at current position
       const line = document.lineAt(position.line).text;
-      const methodMatch = line.match(/\.(get|post|put|patch|delete|head|options)\s*\(/i);
+      const methodMatch = /\.(get|post|put|patch|delete|head|options)\s*\(/i.exec(line);
 
       if (!methodMatch) {
+        return undefined;
+      }
+
+      if (!methodMatch[1]) {
         return undefined;
       }
 
       const method = methodMatch[1].toUpperCase();
 
       // Extract endpoint from the line
-      const endpointMatch = line.match(/['"]([^'"]+)['"]/);
+      const endpointMatch = /["']([^"']+)["']/.exec(line);
       if (!endpointMatch) {
         return undefined;
       }
@@ -383,7 +479,7 @@ export class EnzymeHoverProvider implements vscode.HoverProvider {
       );
 
       return new vscode.Hover(markdown, range);
-    } catch (error) {
+    } catch {
       return undefined;
     }
   }
@@ -467,6 +563,14 @@ export class EnzymeHoverProvider implements vscode.HoverProvider {
 
   /**
    * Check if position is in JSX context
+   *
+   * Determines if the cursor is positioned within JSX code by looking for
+   * JSX opening tags (<Component) or closing tags (</Component>).
+   *
+   * @param document - The document to check
+   * @param position - Position to check for JSX context
+   * @returns True if position appears to be in JSX code
+   * @private
    */
   private isInJsxContext(document: vscode.TextDocument, position: vscode.Position): boolean {
     const line = document.lineAt(position.line).text;
@@ -474,7 +578,16 @@ export class EnzymeHoverProvider implements vscode.HoverProvider {
   }
 
   /**
-   * Check if in store context
+   * Check if in store/state context
+   *
+   * Determines if the line contains store-related code like:
+   * - useStore hook calls
+   * - State access (state.*)
+   * - Dispatch calls
+   *
+   * @param line - Line of text to check
+   * @returns True if line appears to be store-related
+   * @private
    */
   private isInStoreContext(line: string): boolean {
     return line.includes('useStore') || line.includes('state.') || line.includes('dispatch(');
@@ -482,6 +595,15 @@ export class EnzymeHoverProvider implements vscode.HoverProvider {
 
   /**
    * Check if in API context
+   *
+   * Determines if the line contains API-related code like:
+   * - apiClient method calls
+   * - RequestBuilder usage
+   * - HTTP method calls (get, post, etc.)
+   *
+   * @param line - Line of text to check
+   * @returns True if line appears to be API-related
+   * @private
    */
   private isInApiContext(line: string): boolean {
     return (
@@ -489,5 +611,16 @@ export class EnzymeHoverProvider implements vscode.HoverProvider {
       line.includes('RequestBuilder') ||
       /\.(get|post|put|patch|delete)\(/.test(line)
     );
+  }
+
+  /**
+   * Dispose the hover provider and clean up resources
+   *
+   * PERFORMANCE: Ensures proper cleanup to prevent memory leaks
+   *
+   * @public
+   */
+  public dispose(): void {
+    logger.debug('EnzymeHoverProvider disposed');
   }
 }

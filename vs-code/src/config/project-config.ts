@@ -3,10 +3,11 @@
  * @description Reads and manages enzyme.config.ts files
  */
 
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
 import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs/promises';
-import { EnzymeConfigSchema, validateEnzymeConfig, parseEnzymeConfig } from './config-schema';
+import { validateEnzymeConfig, parseEnzymeConfig } from './config-schema';
+import type { EnzymeConfigSchema} from './config-schema';
 
 // =============================================================================
 // Types
@@ -48,9 +49,13 @@ export class ProjectConfig {
   private configPath: string | null = null;
   private watcher: vscode.FileSystemWatcher | null = null;
   private listeners: Array<(event: ProjectConfigChangeEvent) => void> = [];
-  private disposables: vscode.Disposable[] = [];
+  private readonly disposables: vscode.Disposable[] = [];
 
-  constructor(private workspaceRoot: string) {}
+  /**
+   *
+   * @param workspaceRoot
+   */
+  constructor(private readonly workspaceRoot: string) {}
 
   /**
    * Initialize and load configuration
@@ -67,7 +72,7 @@ export class ProjectConfig {
     try {
       const configFile = await this.findConfigFile();
 
-      if (!configFile || !configFile.exists) {
+      if (!configFile?.exists) {
         this.config = null;
         this.configPath = null;
         return null;
@@ -85,11 +90,14 @@ export class ProjectConfig {
       this.configPath = configFile.path;
 
       // Notify listeners
-      this.notifyListeners({
+      const event: ProjectConfigChangeEvent = {
         config: this.config,
-        previousConfig: previousConfig ?? undefined,
         path: configFile.path,
-      });
+      };
+      if (previousConfig !== null) {
+        event.previousConfig = previousConfig;
+      }
+      this.notifyListeners(event);
 
       return this.config;
     } catch (error) {
@@ -152,6 +160,7 @@ export class ProjectConfig {
 
   /**
    * Read configuration file
+   * @param fileInfo
    */
   private async readConfigFile(fileInfo: ConfigFileInfo): Promise<unknown> {
     const content = await fs.readFile(fileInfo.path, 'utf-8');
@@ -169,33 +178,34 @@ export class ProjectConfig {
   /**
    * Parse TypeScript/JavaScript config file
    * Note: This is a simplified parser. In production, use proper TS parsing.
+   * @param content
    */
   private parseTypeScriptConfig(content: string): unknown {
     try {
       // Remove comments
-      content = content.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '');
+      content = content.replace(/\/\*[\S\s]*?\*\/|\/\/.*/g, '');
 
       // Find export default
-      const exportMatch = content.match(/export\s+default\s+({[\s\S]*?});?\s*$/m);
-      if (exportMatch) {
+      const exportMatch = /export\s+default\s+({[\S\s]*?});?\s*$/m.exec(content);
+      if (exportMatch && exportMatch[1]) {
         // Try to parse as JSON (with some cleanup)
-        const configStr = exportMatch[1]
-          .replace(/([{,]\s*)(\w+):/g, '$1"$2":') // Add quotes to keys
+        const configString = exportMatch[1]
+          .replace(/([,{]\s*)(\w+):/g, '$1"$2":') // Add quotes to keys
           .replace(/'/g, '"') // Replace single quotes
-          .replace(/,(\s*[}\]])/g, '$1'); // Remove trailing commas
+          .replace(/,(\s*[\]}])/g, '$1'); // Remove trailing commas
 
-        return JSON.parse(configStr);
+        return JSON.parse(configString);
       }
 
       // If export default not found, try to find defineConfig
-      const defineConfigMatch = content.match(/defineConfig\(([\s\S]*?)\)/);
-      if (defineConfigMatch) {
-        const configStr = defineConfigMatch[1]
-          .replace(/([{,]\s*)(\w+):/g, '$1"$2":')
+      const defineConfigMatch = /defineConfig\(([\S\s]*?)\)/.exec(content);
+      if (defineConfigMatch && defineConfigMatch[1]) {
+        const configString = defineConfigMatch[1]
+          .replace(/([,{]\s*)(\w+):/g, '$1"$2":')
           .replace(/'/g, '"')
-          .replace(/,(\s*[}\]])/g, '$1');
+          .replace(/,(\s*[\]}])/g, '$1');
 
-        return JSON.parse(configStr);
+        return JSON.parse(configString);
       }
 
       throw new Error('Could not parse config file');
@@ -216,8 +226,8 @@ export class ProjectConfig {
     this.watcher = vscode.workspace.createFileSystemWatcher(pattern);
 
     this.disposables.push(
-      this.watcher.onDidChange(() => this.loadConfig()),
-      this.watcher.onDidCreate(() => this.loadConfig()),
+      this.watcher.onDidChange(async () => this.loadConfig()),
+      this.watcher.onDidCreate(async () => this.loadConfig()),
       this.watcher.onDidDelete(() => {
         this.config = null;
         this.configPath = null;
@@ -227,6 +237,7 @@ export class ProjectConfig {
 
   /**
    * Subscribe to configuration changes
+   * @param callback
    */
   public onChange(callback: (event: ProjectConfigChangeEvent) => void): vscode.Disposable {
     this.listeners.push(callback);
@@ -241,6 +252,7 @@ export class ProjectConfig {
 
   /**
    * Notify listeners of config changes
+   * @param event
    */
   private notifyListeners(event: ProjectConfigChangeEvent): void {
     this.listeners.forEach((listener) => {
@@ -274,6 +286,7 @@ export class ProjectConfig {
 
   /**
    * Get configuration value by path
+   * @param path
    */
   public getValue<T = unknown>(path: string): T | undefined {
     if (!this.config) {
@@ -295,6 +308,7 @@ export class ProjectConfig {
 
   /**
    * Create default configuration file
+   * @param type
    */
   public async createDefaultConfig(type: ConfigFileType = 'typescript'): Promise<string> {
     const defaultConfig = parseEnzymeConfig({});
@@ -303,11 +317,7 @@ export class ProjectConfig {
 
     let content: string;
 
-    if (type === 'json') {
-      content = JSON.stringify(defaultConfig, null, 2);
-    } else {
-      content = this.generateTypeScriptConfig(defaultConfig);
-    }
+    content = type === 'json' ? JSON.stringify(defaultConfig, null, 2) : this.generateTypeScriptConfig(defaultConfig);
 
     await fs.writeFile(filePath, content, 'utf-8');
     await this.loadConfig();
@@ -317,6 +327,7 @@ export class ProjectConfig {
 
   /**
    * Generate TypeScript config file content
+   * @param config
    */
   private generateTypeScriptConfig(config: EnzymeConfigSchema): string {
     return `import { defineConfig } from '@missionfabric-js/enzyme';
@@ -343,10 +354,11 @@ export default defineConfig(${JSON.stringify(config, null, 2)});
  * Manager for multiple workspace configurations
  */
 export class WorkspaceConfigManager {
-  private configs: Map<string, ProjectConfig> = new Map();
+  private readonly configs = new Map<string, ProjectConfig>();
 
   /**
    * Get or create config for workspace folder
+   * @param workspaceFolder
    */
   public async getConfig(workspaceFolder: vscode.WorkspaceFolder): Promise<ProjectConfig> {
     const key = workspaceFolder.uri.fsPath;
@@ -381,7 +393,7 @@ export class WorkspaceConfigManager {
    * Get all configurations
    */
   public getAllConfigs(): ProjectConfig[] {
-    return Array.from(this.configs.values());
+    return [...this.configs.values()];
   }
 
   /**

@@ -8,6 +8,7 @@
  */
 
 import * as vscode from 'vscode';
+import { errorHandler } from '../core/error-handler';
 import {
   EnzymeError,
   FileSystemError,
@@ -16,14 +17,18 @@ import {
   WorkspaceError,
   CommandError,
   ErrorCode,
-  ErrorCategory,
-  ErrorSeverity,
+  ErrorCategory as _ErrorCategory,
+  ErrorSeverity as _ErrorSeverity,
   wrapError,
-  getUserMessage,
-  RecoveryAction,
+  getUserMessage as _getUserMessage
 } from '../core/errors';
-import { errorHandler } from '../core/error-handler';
 import { logger } from '../core/logger';
+
+/**
+ * Example 14: Decorator for Automatic Error Handling
+ */
+import type {
+  RecoveryAction} from '../core/errors';
 
 /**
  * Example 1: Basic Error Handling with Try-Catch
@@ -44,6 +49,7 @@ export async function example1_BasicErrorHandling(): Promise<void> {
 
 /**
  * Example 2: Creating and Throwing Custom Errors
+ * @param filePath
  */
 export async function example2_CustomErrors(filePath: string): Promise<void> {
   // Check if file exists
@@ -233,7 +239,7 @@ export async function example8_ChildLoggers(): Promise<void> {
  */
 export async function example9_PerformanceTracking(): Promise<void> {
   // Measure operation time
-  const result = await logger.measure('Heavy Computation', async () => {
+  await logger.measure('Heavy Computation', async () => {
     return await heavyComputation();
   });
 
@@ -286,7 +292,7 @@ export async function example11_ErrorAggregation(): Promise<void> {
   // Later, check aggregations
   const aggregations = errorHandler.getErrorAggregations();
 
-  for (const [key, agg] of aggregations) {
+  for (const [_key, agg] of aggregations) {
     if (agg.count > 10) {
       logger.warn(`Error occurred ${agg.count} times`, {
         error: agg.error.code,
@@ -308,11 +314,11 @@ export async function example12_CircuitBreaker(): Promise<void> {
   // After threshold failures, circuit opens and rejects calls
 
   try {
-    const result = await errorHandler.executeWithRetry(
+    await errorHandler.executeWithRetry(
       async () => await unreliableService(),
       'unreliableService'
     );
-  } catch (error) {
+  } catch {
     // Check circuit breaker status
     const breakers = errorHandler.getCircuitBreakers();
     const serviceBreaker = breakers.get('unreliableService');
@@ -360,15 +366,15 @@ export async function example13_ConfigurationErrors(): Promise<void> {
 }
 
 /**
- * Example 14: Decorator for Automatic Error Handling
+ *
  */
-import { handleErrors } from '../core/error-handler';
-
 export class CommandService {
   /**
    * Method with automatic error handling via decorator
+   * Note: Decorator disabled due to type compatibility issues
+   * @param commandId
    */
-  @handleErrors
+  // @handleErrors
   async executeCommand(commandId: string): Promise<void> {
     logger.info(`Executing command: ${commandId}`);
 
@@ -389,7 +395,7 @@ export class CommandService {
 export async function example15_ErrorContext(): Promise<void> {
   try {
     await processFile('src/features/auth/index.ts');
-  } catch (error) {
+  } catch {
     throw new FileSystemError(
       'Failed to process file',
       ErrorCode.FILE_READ_ERROR,
@@ -411,71 +417,125 @@ export async function example15_ErrorContext(): Promise<void> {
 }
 
 // Helper functions (simulated)
+/**
+ *
+ */
 async function someRiskyOperation(): Promise<string> {
   return 'success';
 }
 
+/**
+ *
+ */
 async function loadConfiguration(): Promise<any> {
   throw new Error('Config not found');
 }
 
+/**
+ *
+ */
 async function createDefaultConfiguration(): Promise<void> {
   // Implementation
 }
 
+/**
+ *
+ */
 async function fetchDataFromAPI(): Promise<any> {
   return { data: 'example' };
 }
 
+/**
+ *
+ */
 async function performLongOperation(): Promise<any> {
   return new Promise(resolve => setTimeout(() => resolve('done'), 3000));
 }
 
-async function detectEnzymeProject(folder: vscode.WorkspaceFolder): Promise<boolean> {
+/**
+ *
+ * @param _folder
+ */
+async function detectEnzymeProject(_folder: vscode.WorkspaceFolder): Promise<boolean> {
   return true;
 }
 
+/**
+ *
+ */
 async function performOperation(): Promise<void> {
   // Implementation
 }
 
+/**
+ *
+ */
 async function runCommand(): Promise<void> {
   // Implementation
 }
 
+/**
+ *
+ */
 async function heavyComputation(): Promise<number> {
   return 42;
 }
 
+/**
+ *
+ */
 async function anotherOperation(): Promise<void> {
   // Implementation
 }
 
+/**
+ *
+ */
 async function thirdPartyLibrary(): Promise<void> {
   // Placeholder
 }
 thirdPartyLibrary.doSomething = async () => {};
 
+/**
+ *
+ */
 async function failingOperation(): Promise<void> {
   throw new Error('Operation failed');
 }
 
+/**
+ *
+ */
 async function unreliableService(): Promise<any> {
   return {};
 }
 
+/**
+ *
+ */
 async function loadConfig(): Promise<any> {
   return { features: [] };
 }
 
+/**
+ *
+ */
 async function showExampleConfiguration(): Promise<void> {
   // Implementation
 }
 
-async function performCommandAction(commandId: string): Promise<void> {
+/**
+ *
+ * @param _commandId
+ */
+async function performCommandAction(_commandId: string): Promise<void> {
   // Implementation
 }
 
-async function processFile(path: string): Promise<void> {
+/**
+ *
+ * @param _path
+ */
+async function processFile(_path: string): Promise<void> {
   // Implementation
 }

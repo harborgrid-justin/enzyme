@@ -1,12 +1,20 @@
+import * as path from 'node:path';
 import * as vscode from 'vscode';
-import * as path from 'path';
-import { CLIRunner } from './cli-runner';
+import type { CLIRunner } from './cli-runner';
 
+/**
+ *
+ */
 export class EnzymeTerminalProvider {
   private terminal: vscode.Terminal | null = null;
   private linkProvider: vscode.Disposable | null = null;
 
-  constructor(private cliRunner: CLIRunner) {
+  /**
+   *
+   * @param _cliRunner
+   */
+  constructor(_cliRunner: CLIRunner) {
+    // _cliRunner parameter reserved for future use
     this.registerLinkProvider();
   }
 
@@ -15,17 +23,21 @@ export class EnzymeTerminalProvider {
    */
   createTerminalProfile(): vscode.TerminalProfile {
     const workspaceRoot = this.getWorkspaceRoot();
-
-    return new vscode.TerminalProfile({
+    const options: any = {
       name: 'Enzyme Terminal',
       iconPath: new vscode.ThemeIcon('beaker'),
       color: new vscode.ThemeColor('terminal.ansiCyan'),
-      cwd: workspaceRoot || undefined,
       env: {
         ENZYME_TERMINAL: 'true',
         FORCE_COLOR: '1',
       },
-    });
+    };
+
+    if (workspaceRoot !== null) {
+      options.cwd = workspaceRoot;
+    }
+
+    return new vscode.TerminalProfile(options);
   }
 
   /**
@@ -33,16 +45,22 @@ export class EnzymeTerminalProvider {
    */
   getOrCreateTerminal(): vscode.Terminal {
     if (!this.terminal || this.isTerminalClosed(this.terminal)) {
-      this.terminal = vscode.window.createTerminal({
+      const workspaceRoot = this.getWorkspaceRoot();
+      const options: any = {
         name: 'Enzyme',
         iconPath: new vscode.ThemeIcon('beaker'),
         color: new vscode.ThemeColor('terminal.ansiCyan'),
-        cwd: this.getWorkspaceRoot() || undefined,
         env: {
           ENZYME_TERMINAL: 'true',
           FORCE_COLOR: '1',
         },
-      });
+      };
+
+      if (workspaceRoot !== null) {
+        options.cwd = workspaceRoot;
+      }
+
+      this.terminal = vscode.window.createTerminal(options);
 
       // Clean up when terminal is closed
       vscode.window.onDidCloseTerminal((closedTerminal) => {
@@ -58,6 +76,8 @@ export class EnzymeTerminalProvider {
   /**
    * Run a command in the Enzyme terminal
    * SECURITY: Validates command before execution
+   * @param command
+   * @param show
    */
   runCommand(command: string, show = true): void {
     // SECURITY: Basic validation - reject obviously malicious patterns
@@ -76,6 +96,7 @@ export class EnzymeTerminalProvider {
 
   /**
    * Check for malicious command patterns
+   * @param command
    */
   private containsMaliciousPatterns(command: string): boolean {
     // Check for command chaining that could be used for injection
@@ -95,6 +116,8 @@ export class EnzymeTerminalProvider {
 
   /**
    * Run an enzyme CLI command
+   * @param args
+   * @param show
    */
   runEnzymeCommand(args: string[], show = true): void {
     const command = `enzyme ${args.join(' ')}`;
@@ -103,6 +126,9 @@ export class EnzymeTerminalProvider {
 
   /**
    * Generate code and navigate to file
+   * @param type
+   * @param name
+   * @param options
    */
   async generateAndNavigate(type: string, name: string, options: Record<string, any> = {}): Promise<void> {
     const terminal = this.getOrCreateTerminal();
@@ -128,8 +154,8 @@ export class EnzymeTerminalProvider {
     setTimeout(async () => {
       const generatedFile = await this.findGeneratedFile(type, name);
       if (generatedFile) {
-        const doc = await vscode.workspace.openTextDocument(generatedFile);
-        await vscode.window.showTextDocument(doc);
+        const document = await vscode.workspace.openTextDocument(generatedFile);
+        await vscode.window.showTextDocument(document);
       }
     }, 2000);
   }
@@ -172,8 +198,8 @@ export class EnzymeTerminalProvider {
 
         // Match file paths in terminal output
         // Patterns: src/components/Button.tsx, ./src/pages/Home.tsx, etc.
-        const filePathRegex = /(?:\.\/)?(?:src|pages|components|hooks|services|features|store|api)\/[\w\-\/]+\.\w+/g;
-        const line = context.line;
+        const filePathRegex = /(?:\.\/)?(?:src|pages|components|hooks|services|features|store|api)\/[\w/\-]+\.\w+/g;
+        const {line} = context;
 
         let match;
         while ((match = filePathRegex.exec(line)) !== null) {
@@ -183,7 +209,7 @@ export class EnzymeTerminalProvider {
           links.push({
             startIndex: match.index,
             length: match[0].length,
-            tooltip: 'Open file',
+            tooltip: fullPath,
           } as vscode.TerminalLink & { data?: string });
         }
 
@@ -192,9 +218,9 @@ export class EnzymeTerminalProvider {
       handleTerminalLink: async (link: vscode.TerminalLink) => {
         // Use the tooltip to store the file path info
         try {
-          const doc = await vscode.workspace.openTextDocument(link.tooltip || '');
-          await vscode.window.showTextDocument(doc);
-        } catch (error) {
+          const document = await vscode.workspace.openTextDocument(link.tooltip || '');
+          await vscode.window.showTextDocument(document);
+        } catch {
           vscode.window.showErrorMessage(`Could not open file`);
         }
       },
@@ -203,6 +229,8 @@ export class EnzymeTerminalProvider {
 
   /**
    * Find generated file based on type and name
+   * @param type
+   * @param name
    */
   private async findGeneratedFile(type: string, name: string): Promise<string | null> {
     const workspaceRoot = this.getWorkspaceRoot();
@@ -237,9 +265,10 @@ export class EnzymeTerminalProvider {
 
   /**
    * Check if terminal is closed
+   * @param terminal
    */
   private isTerminalClosed(terminal: vscode.Terminal): boolean {
-    return vscode.window.terminals.indexOf(terminal) === -1;
+    return !vscode.window.terminals.includes(terminal);
   }
 
   /**
@@ -247,6 +276,7 @@ export class EnzymeTerminalProvider {
    */
   private getWorkspaceRoot(): string | null {
     const folders = vscode.workspace.workspaceFolders;
-    return folders && folders.length > 0 ? folders[0].uri.fsPath : null;
+    const firstFolder = folders?.[0];
+    return firstFolder ? firstFolder.uri.fsPath : null;
   }
 }

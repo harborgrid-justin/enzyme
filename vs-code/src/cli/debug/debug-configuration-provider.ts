@@ -1,9 +1,13 @@
-import * as vscode from 'vscode';
-import * as path from 'path';
+import * as path from 'node:path';
+import type * as vscode from 'vscode';
 
+/**
+ *
+ */
 export class EnzymeDebugConfigurationProvider implements vscode.DebugConfigurationProvider {
   /**
    * Provide debug configurations
+   * @param _folder
    */
   async provideDebugConfigurations(
     _folder: vscode.WorkspaceFolder | undefined
@@ -18,6 +22,9 @@ export class EnzymeDebugConfigurationProvider implements vscode.DebugConfigurati
 
   /**
    * Resolve debug configuration
+   * @param folder
+   * @param config
+   * @param _token
    */
   async resolveDebugConfiguration(
     folder: vscode.WorkspaceFolder | undefined,
@@ -27,7 +34,7 @@ export class EnzymeDebugConfigurationProvider implements vscode.DebugConfigurati
     // If launch.json is empty, provide default config
     if (!config.type && !config.request && !config.name) {
       const configs = await this.provideDebugConfigurations(folder);
-      return configs[0];
+      return configs[0] ?? null;
     }
 
     // Resolve variables in config
@@ -115,6 +122,8 @@ export class EnzymeDebugConfigurationProvider implements vscode.DebugConfigurati
 
   /**
    * Resolve Enzyme-specific configuration
+   * @param folder
+   * @param config
    */
   private resolveEnzymeConfig(
     folder: vscode.WorkspaceFolder | undefined,

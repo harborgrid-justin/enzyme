@@ -1,7 +1,14 @@
 import * as vscode from 'vscode';
 import { createDiagnostic } from '../enzyme-diagnostics';
 
+/**
+ *
+ */
 export class PerformanceRules {
+  /**
+   *
+   * @param document
+   */
   public async analyze(document: vscode.TextDocument): Promise<vscode.Diagnostic[]> {
     const diagnostics: vscode.Diagnostic[] = [];
     const text = document.getText();
@@ -26,6 +33,10 @@ export class PerformanceRules {
     return diagnostics;
   }
 
+  /**
+   *
+   * @param document
+   */
   private isReactFile(document: vscode.TextDocument): boolean {
     return (
       document.languageId === 'typescriptreact' ||
@@ -35,6 +46,11 @@ export class PerformanceRules {
     );
   }
 
+  /**
+   *
+   * @param document
+   * @param text
+   */
   private checkInlineFunctionsInJSX(
     document: vscode.TextDocument,
     text: string
@@ -42,15 +58,15 @@ export class PerformanceRules {
     const diagnostics: vscode.Diagnostic[] = [];
 
     // Find inline arrow functions in JSX props
-    const inlineFunctionPattern = /(\w+)=\{(\([^)]*\)\s*=>|=>\s*)/g;
+    const inlineFunctionPattern = /(\w+)={(\([^)]*\)\s*=>|=>\s*)/g;
     let match;
 
     while ((match = inlineFunctionPattern.exec(text)) !== null) {
-      const propName = match[1];
+      const propertyName = match[1];
       const position = document.positionAt(match.index);
 
       // Skip certain props that commonly use inline functions
-      if (['children', 'render', 'component'].includes(propName)) {
+      if (!propertyName || ['children', 'render', 'component'].includes(propertyName)) {
         continue;
       }
 
@@ -61,7 +77,7 @@ export class PerformanceRules {
         diagnostics.push(
           createDiagnostic(
             range,
-            `Inline function in JSX prop '${propName}' creates a new function on every render. Consider using useCallback.`,
+            `Inline function in JSX prop '${propertyName}' creates a new function on every render. Consider using useCallback.`,
             vscode.DiagnosticSeverity.Warning,
             'inline-function-jsx'
           )
@@ -72,6 +88,11 @@ export class PerformanceRules {
     return diagnostics;
   }
 
+  /**
+   *
+   * @param document
+   * @param text
+   */
   private checkMissingUseCallback(
     document: vscode.TextDocument,
     text: string
@@ -87,13 +108,13 @@ export class PerformanceRules {
       const position = document.positionAt(match.index);
 
       // Check if this function is passed as a prop
-      const isProp = new RegExp(`${functionName}\\s*[}=]`).test(text);
+      const isProperty = new RegExp(`${functionName}\\s*[}=]`).test(text);
 
       // Check if it's already wrapped in useCallback
       const beforeContext = text.substring(Math.max(0, match.index - 100), match.index);
       const isWrapped = beforeContext.includes('useCallback');
 
-      if (isProp && !isWrapped && this.isInsideComponent(text, match.index)) {
+      if (functionName && isProperty && !isWrapped && this.isInsideComponent(text, match.index)) {
         const range = new vscode.Range(position, position.translate(0, functionName.length + 10));
 
         diagnostics.push(
@@ -110,6 +131,11 @@ export class PerformanceRules {
     return diagnostics;
   }
 
+  /**
+   *
+   * @param document
+   * @param text
+   */
   private checkLargeBundleImports(
     document: vscode.TextDocument,
     text: string
@@ -119,9 +145,9 @@ export class PerformanceRules {
     // Check for barrel imports from large libraries
     const largeLibraries = ['lodash', 'moment', 'rxjs', '@material-ui/icons'];
 
-    for (const lib of largeLibraries) {
+    for (const library of largeLibraries) {
       const barrelImportPattern = new RegExp(
-        `import\\s+{([^}]+)}\\s+from\\s+['"]${lib}['"]`,
+        `import\\s+{([^}]+)}\\s+from\\s+['"]${library}['"]`,
         'g'
       );
       let match;
@@ -134,7 +160,7 @@ export class PerformanceRules {
         diagnostics.push(
           createDiagnostic(
             range,
-            `Importing from '${lib}' barrel export increases bundle size. Use submodule imports: import ${imports.trim()} from '${lib}/...'`,
+            `Importing from '${library}' barrel export increases bundle size. Use submodule imports: import ${imports?.trim() ?? ''} from '${library}/...'`,
             vscode.DiagnosticSeverity.Warning,
             'large-bundle-import'
           )
@@ -143,10 +169,10 @@ export class PerformanceRules {
     }
 
     // Check for importing entire libraries
-    const entireLibPattern = /import\s+\*\s+as\s+(\w+)\s+from\s+['"]([^'"]+)['"]/g;
+    const entireLibraryPattern = /import\s+\*\s+as\s+(\w+)\s+from\s+["']([^"']+)["']/g;
     let match;
 
-    while ((match = entireLibPattern.exec(text)) !== null) {
+    while ((match = entireLibraryPattern.exec(text)) !== null) {
       const alias = match[1];
       const library = match[2];
       const position = document.positionAt(match.index);
@@ -165,6 +191,11 @@ export class PerformanceRules {
     return diagnostics;
   }
 
+  /**
+   *
+   * @param document
+   * @param text
+   */
   private checkUnnecessaryReRenders(
     document: vscode.TextDocument,
     text: string
@@ -172,27 +203,27 @@ export class PerformanceRules {
     const diagnostics: vscode.Diagnostic[] = [];
 
     // Check for object/array literals in JSX
-    const literalInJSXPattern = /<\w+[^>]*\s+(\w+)=\{(\[|\{)/g;
+    const literalInJSXPattern = /<\w+[^>]*\s+(\w+)={([[{])/g;
     let match;
 
     while ((match = literalInJSXPattern.exec(text)) !== null) {
-      const propName = match[1];
+      const propertyName = match[1];
       const position = document.positionAt(match.index);
 
       // Skip style prop as it's commonly an object
-      if (propName === 'style') {
+      if (!propertyName || propertyName === 'style') {
         continue;
       }
 
       const range = new vscode.Range(
         position,
-        position.translate(0, propName.length + 3)
+        position.translate(0, propertyName.length + 3)
       );
 
       diagnostics.push(
         createDiagnostic(
           range,
-          `Object/array literal in JSX prop '${propName}' creates a new reference on every render. Consider using useMemo.`,
+          `Object/array literal in JSX prop '${propertyName}' creates a new reference on every render. Consider using useMemo.`,
           vscode.DiagnosticSeverity.Hint,
           'unnecessary-rerender'
         )
@@ -208,7 +239,7 @@ export class PerformanceRules {
       const componentPattern = /(?:export\s+)?(?:const|function)\s+([A-Z]\w+)/;
       const componentMatch = componentPattern.exec(text);
 
-      if (componentMatch) {
+      if (componentMatch?.[1]) {
         const position = document.positionAt(componentMatch.index);
         const range = new vscode.Range(
           position,
@@ -229,6 +260,11 @@ export class PerformanceRules {
     return diagnostics;
   }
 
+  /**
+   *
+   * @param text
+   * @param position
+   */
   private isInsideJSX(text: string, position: number): boolean {
     // Simple heuristic: check for < before and > after
     const before = text.substring(Math.max(0, position - 200), position);
@@ -240,9 +276,14 @@ export class PerformanceRules {
     return hasJSXBefore && hasJSXAfter;
   }
 
+  /**
+   *
+   * @param text
+   * @param position
+   */
   private isInsideComponent(text: string, position: number): boolean {
     // Check if we're inside a component function
-    const before = text.substring(0, position);
+    const before = text.slice(0, Math.max(0, position));
     const componentPattern = /(?:export\s+)?(?:const|function)\s+([A-Z]\w+)/g;
 
     let lastComponentStart = -1;

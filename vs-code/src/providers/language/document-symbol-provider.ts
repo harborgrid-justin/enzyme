@@ -8,10 +8,12 @@ import { getParser } from './parser';
 export class EnzymeDocumentSymbolProvider implements vscode.DocumentSymbolProvider {
   /**
    * Provide document symbols
+   * @param document
+   * @param token
    */
   public async provideDocumentSymbols(
     document: vscode.TextDocument,
-    token: vscode.CancellationToken
+    _token: vscode.CancellationToken
   ): Promise<vscode.DocumentSymbol[] | undefined> {
     const parser = getParser();
     const result = parser.parseDocument(document);
@@ -73,14 +75,14 @@ export class EnzymeDocumentSymbolProvider implements vscode.DocumentSymbolProvid
       // Add props as children
       if (component.props) {
         Object.entries(component.props).forEach(([name, type]) => {
-          const propSymbol = new vscode.DocumentSymbol(
+          const propertySymbol = new vscode.DocumentSymbol(
             name,
             type,
             vscode.SymbolKind.Property,
             component.range,
             component.range
           );
-          symbol.children.push(propSymbol);
+          symbol.children.push(propertySymbol);
         });
       }
 

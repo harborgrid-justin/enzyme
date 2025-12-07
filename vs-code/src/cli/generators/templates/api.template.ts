@@ -1,5 +1,9 @@
-import { GeneratorOptions, GeneratorTemplate } from '../index';
+import type { GeneratorOptions, GeneratorTemplate } from '../index';
 
+/**
+ *
+ * @param options
+ */
 export function apiTemplate(options: GeneratorOptions): GeneratorTemplate {
   const { name, path: basePath = 'src/api' } = options;
   const apiPath = `${basePath}/${name}`;
@@ -48,6 +52,10 @@ export function apiTemplate(options: GeneratorOptions): GeneratorTemplate {
   };
 }
 
+/**
+ *
+ * @param name
+ */
 function generateAPI(name: string): string {
   return `import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { ${name}Endpoints } from './${name}.endpoints';
@@ -174,6 +182,10 @@ export const ${name.toLowerCase()}API = new ${name}API();
 `;
 }
 
+/**
+ *
+ * @param name
+ */
 function generateTypes(name: string): string {
   return `// Entity types
 export interface ${name}Entity {
@@ -247,6 +259,10 @@ export interface ${name}ErrorResponse {
 `;
 }
 
+/**
+ *
+ * @param name
+ */
 function generateEndpoints(name: string): string {
   return `export class ${name}Endpoints {
   private readonly basePath = '/${name.toLowerCase()}';
@@ -283,6 +299,10 @@ function generateEndpoints(name: string): string {
 `;
 }
 
+/**
+ *
+ * @param name
+ */
 function generateMock(name: string): string {
   return `import { ${name}Entity, ${name}ListResponse, ${name}GetResponse } from './${name}.types';
 
@@ -327,6 +347,10 @@ export const ${name}MockHandlers = {
 `;
 }
 
+/**
+ *
+ * @param name
+ */
 function generateTest(name: string): string {
   return `import { ${name}API } from './${name}.api';
 import { mock${name}Entity, mock${name}List } from './${name}.mock';
@@ -435,6 +459,10 @@ describe('${name}API', () => {
 `;
 }
 
+/**
+ *
+ * @param name
+ */
 function generateIndex(name: string): string {
   return `export { ${name}API, ${name.toLowerCase()}API } from './${name}.api';
 export { ${name}Endpoints } from './${name}.endpoints';

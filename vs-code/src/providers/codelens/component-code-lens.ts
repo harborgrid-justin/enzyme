@@ -1,13 +1,20 @@
 import * as vscode from 'vscode';
-import * as path from 'path';
 
+/**
+ *
+ */
 export class ComponentCodeLensProvider implements vscode.CodeLensProvider {
-  private _onDidChangeCodeLenses = new vscode.EventEmitter<void>();
+  private readonly _onDidChangeCodeLenses = new vscode.EventEmitter<void>();
   public readonly onDidChangeCodeLenses = this._onDidChangeCodeLenses.event;
 
+  /**
+   *
+   * @param document
+   * @param token
+   */
   public provideCodeLenses(
     document: vscode.TextDocument,
-    token: vscode.CancellationToken
+    _token: vscode.CancellationToken
   ): vscode.ProviderResult<vscode.CodeLens[]> {
     const codeLenses: vscode.CodeLens[] = [];
     const text = document.getText();
@@ -23,6 +30,8 @@ export class ComponentCodeLensProvider implements vscode.CodeLensProvider {
       let match;
       while ((match = pattern.exec(text)) !== null) {
         const componentName = match[1];
+        if (!componentName) continue;
+
         const position = document.positionAt(match.index);
         const range = new vscode.Range(position, position);
 
@@ -73,41 +82,30 @@ export class ComponentCodeLensProvider implements vscode.CodeLensProvider {
     return codeLenses;
   }
 
-  private getStoryPath(componentUri: vscode.Uri, componentName: string): string | null {
-    const dir = path.dirname(componentUri.fsPath);
-    const baseName = path.basename(componentUri.fsPath, path.extname(componentUri.fsPath));
-
-    // Common story file patterns
-    const storyPatterns = [
-      path.join(dir, `${baseName}.stories.tsx`),
-      path.join(dir, `${baseName}.stories.ts`),
-      path.join(dir, `${componentName}.stories.tsx`),
-      path.join(dir, `${componentName}.stories.ts`),
-      path.join(dir, '__stories__', `${baseName}.stories.tsx`),
-    ];
-
+  /**
+   *
+   * @param componentUri
+   * @param componentName
+   */
+  private getStoryPath(_componentUri: vscode.Uri, _componentName: string): string | null {
     // Check if any of these files exist (simplified - in real implementation, use fs)
     // For now, return null as we can't sync check file existence
     return null;
   }
 
-  private getTestPath(componentUri: vscode.Uri, componentName: string): string | null {
-    const dir = path.dirname(componentUri.fsPath);
-    const baseName = path.basename(componentUri.fsPath, path.extname(componentUri.fsPath));
-
-    // Common test file patterns
-    const testPatterns = [
-      path.join(dir, `${baseName}.test.tsx`),
-      path.join(dir, `${baseName}.test.ts`),
-      path.join(dir, `${baseName}.spec.tsx`),
-      path.join(dir, `${componentName}.test.tsx`),
-      path.join(dir, '__tests__', `${baseName}.test.tsx`),
-    ];
-
+  /**
+   *
+   * @param componentUri
+   * @param componentName
+   */
+  private getTestPath(_componentUri: vscode.Uri, _componentName: string): string | null {
     // Check if any of these files exist (simplified)
     return null;
   }
 
+  /**
+   *
+   */
   public refresh(): void {
     this._onDidChangeCodeLenses.fire();
   }

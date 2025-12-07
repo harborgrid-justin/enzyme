@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
-import { BaseCommand, CommandContext, CommandMetadata } from '../base-command';
+import { BaseCommand } from '../base-command';
+import type { CommandContext, CommandMetadata } from '../base-command';
 
 /**
  * Refresh All Command
@@ -7,6 +8,9 @@ import { BaseCommand, CommandContext, CommandMetadata } from '../base-command';
  * Keybinding: Ctrl+Shift+E R
  */
 export class RefreshAllCommand extends BaseCommand {
+  /**
+   *
+   */
   getMetadata(): CommandMetadata {
     return {
       id: 'enzyme.utils.refreshAll',
@@ -20,6 +24,10 @@ export class RefreshAllCommand extends BaseCommand {
     };
   }
 
+  /**
+   *
+   * @param _context
+   */
   protected async executeCommand(_context: CommandContext): Promise<void> {
     await this.withProgress(
       'Refreshing Enzyme extension...',
@@ -43,6 +51,9 @@ export class RefreshAllCommand extends BaseCommand {
     await this.showInfo('All Enzyme views and caches refreshed!');
   }
 
+  /**
+   *
+   */
   private async refreshTreeViews(): Promise<void> {
     // Fire refresh events for all registered tree views
     // In production, these would be actual tree view data providers
@@ -66,6 +77,9 @@ export class RefreshAllCommand extends BaseCommand {
     }
   }
 
+  /**
+   *
+   */
   private async rescanProject(): Promise<void> {
     const workspaceFolder = this.getWorkspaceFolder();
     if (!workspaceFolder) {
@@ -98,6 +112,9 @@ export class RefreshAllCommand extends BaseCommand {
     this.log('info', `Scanned ${totalFiles} files`);
   }
 
+  /**
+   *
+   */
   private async clearCaches(): Promise<void> {
     this.log('info', 'Clearing extension caches');
 

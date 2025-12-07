@@ -13,14 +13,65 @@
  * @version 1.0.0
  */
 
+import { spawn } from 'node:child_process';
+import * as path from 'node:path';
 import * as vscode from 'vscode';
-import * as path from 'path';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-import { LoggerService } from './logger-service';
-import { EventBus } from '../orchestration/event-bus';
+import type { LoggerService } from './logger-service';
+import type { EventBus } from '../orchestration/event-bus';
 
-const execAsync = promisify(exec);
+/**
+ * SECURITY: Execute command safely using spawn with shell: false
+ * This prevents command injection attacks by not using shell interpolation
+ * @param command - Command to execute
+ * @param args - Command arguments (passed separately for security)
+ * @param options - Spawn options
+ * @param options.cwd
+ * @param options.timeout
+ * @returns Promise resolving to stdout and stderr
+ */
+async function execSafe(
+  command: string,
+  args: string[],
+  options?: { cwd?: string; timeout?: number }
+): Promise<{ stdout: string; stderr: string }> {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, {
+      shell: false, // SECURITY: Never use shell to prevent injection
+      cwd: options?.cwd,
+    });
+
+    let stdout = '';
+    let stderr = '';
+
+    child.stdout?.on('data', (data) => {
+      stdout += data.toString();
+    });
+
+    child.stderr?.on('data', (data) => {
+      stderr += data.toString();
+    });
+
+    child.on('error', (error) => {
+      reject(error);
+    });
+
+    child.on('close', (code) => {
+      if (code === 0) {
+        resolve({ stdout, stderr });
+      } else {
+        reject(new Error(`Command exited with code ${code}: ${stderr || stdout}`));
+      }
+    });
+
+    // Handle timeout
+    if (options?.timeout) {
+      setTimeout(() => {
+        child.kill();
+        reject(new Error('Command timed out'));
+      }, options.timeout);
+    }
+  });
+}
 
 /**
  * CLI installation method
@@ -78,6 +129,8 @@ export class EnzymeCliManager {
 
   /**
    * Private constructor for singleton pattern
+   * @param logger
+   * @param eventBus
    */
   private constructor(logger: LoggerService, eventBus: EventBus) {
     this.logger = logger;
@@ -208,9 +261,9 @@ export class EnzymeCliManager {
             return success;
           }
         );
-      } else {
+      } 
         return await this.executeInstall(packageManager, packageName, isGlobal);
-      }
+      
     } catch (error) {
       this.logger.error('Error installing Enzyme CLI', error);
       await vscode.window.showErrorMessage(
@@ -236,23 +289,37 @@ export class EnzymeCliManager {
     isGlobal: boolean,
     progress?: vscode.Progress<{ message?: string; increment?: number }>
   ): Promise<boolean> {
-    const commands: Record<PackageManager, string> = {
-      npm: `npm install ${isGlobal ? '-g' : '--save-dev'} ${packageName}`,
-      yarn: `yarn ${isGlobal ? 'global add' : 'add -D'} ${packageName}`,
-      pnpm: `pnpm ${isGlobal ? 'add -g' : 'add -D'} ${packageName}`,
-      bun: `bun ${isGlobal ? 'add -g' : 'add -D'} ${packageName}`,
+    // SECURITY: Build command and args separately to prevent injection
+    const commandArgs: Record<PackageManager, { cmd: string; args: string[] }> = {
+      npm: {
+        cmd: 'npm',
+        args: ['install', isGlobal ? '-g' : '--save-dev', packageName],
+      },
+      yarn: {
+        cmd: 'yarn',
+        args: isGlobal ? ['global', 'add', packageName] : ['add', '-D', packageName],
+      },
+      pnpm: {
+        cmd: 'pnpm',
+        args: isGlobal ? ['add', '-g', packageName] : ['add', '-D', packageName],
+      },
+      bun: {
+        cmd: 'bun',
+        args: isGlobal ? ['add', '-g', packageName] : ['add', '-D', packageName],
+      },
     };
 
-    const command = commands[packageManager];
-    this.logger.info(`Executing: ${command}`);
+    const { cmd, args } = commandArgs[packageManager];
+    this.logger.info(`Executing: ${cmd} ${args.join(' ')}`);
 
     if (progress) {
       progress.report({ message: `Using ${packageManager}...`, increment: 20 });
     }
 
     try {
-      const { stdout, stderr } = await execAsync(command, {
-        cwd: this.getWorkspacePath(),
+      const workspacePath = this.getWorkspacePath();
+      const { stdout, stderr } = await execSafe(cmd, args, {
+        ...(workspacePath ? { cwd: workspacePath } : {}),
       });
 
       if (progress) {
@@ -270,7 +337,7 @@ export class EnzymeCliManager {
 
       if (detection.installed) {
         this.logger.success(`Enzyme CLI installed successfully (version ${detection.version})`);
-        this.eventBus.emit('cli:installed', detection);
+        this.eventBus.emit({ type: 'cli:installed', payload: detection });
 
         await vscode.window.showInformationMessage(
           `🎉 Enzyme CLI v${detection.version} installed successfully!`,
@@ -282,9 +349,9 @@ export class EnzymeCliManager {
         });
 
         return true;
-      } else {
+      } 
         throw new Error('Installation completed but CLI not detected');
-      }
+      
     } catch (error) {
       this.logger.error('Installation failed', error);
       throw error;
@@ -317,6 +384,7 @@ export class EnzymeCliManager {
 
   /**
    * Execute a CLI command
+   * SECURITY: Uses spawn with shell: false to prevent command injection
    *
    * @param args - Command arguments
    * @param cwd - Working directory
@@ -329,14 +397,16 @@ export class EnzymeCliManager {
       throw new Error('Enzyme CLI is not installed');
     }
 
-    const cliCommand = this.buildCliCommand(detection);
-    const command = `${cliCommand} ${args.join(' ')}`;
+    // SECURITY: Build command and args separately
+    const { cmd, cmdArgs } = this.buildCliCommandArgs(detection);
+    const allArgs = [...cmdArgs, ...args];
 
-    this.logger.info(`Executing CLI command: ${command}`);
+    this.logger.info(`Executing CLI command: ${cmd} ${allArgs.join(' ')}`);
 
     try {
-      const result = await execAsync(command, {
-        cwd: cwd || this.getWorkspacePath(),
+      const workDir = cwd || this.getWorkspacePath();
+      const result = await execSafe(cmd, allArgs, {
+        ...(workDir ? { cwd: workDir } : {}),
       });
 
       this.logger.info('CLI command output:', result.stdout);
@@ -382,6 +452,7 @@ Enzyme CLI Information:
 
   /**
    * Detect local CLI installation
+   * SECURITY: Uses spawn with shell: false to prevent command injection
    *
    * @returns Promise resolving to detection result
    * @private
@@ -395,7 +466,11 @@ Enzyme CLI Information:
     const localPath = path.join(workspacePath, 'node_modules', '.bin', 'enzyme');
 
     try {
-      const { stdout } = await execAsync(`"${localPath}" --version`, { cwd: workspacePath });
+      // SECURITY: Pass path and args separately
+      const { stdout } = await execSafe(localPath, ['--version'], {
+        cwd: workspacePath,
+        timeout: 5000,
+      });
       const version = stdout.trim();
 
       this.logger.info(`Local CLI detected: v${version}`);
@@ -414,29 +489,40 @@ Enzyme CLI Information:
 
   /**
    * Detect global CLI installation
+   * SECURITY: Uses spawn with shell: false to prevent command injection
    *
    * @returns Promise resolving to detection result
    * @private
    */
   private async detectGlobal(): Promise<CLIDetectionResult> {
     try {
-      const { stdout: versionOutput } = await execAsync('enzyme --version');
+      // SECURITY: Pass command and args separately
+      const { stdout: versionOutput } = await execSafe('enzyme', ['--version'], {
+        timeout: 5000,
+      });
       const version = versionOutput.trim();
 
-      const { stdout: pathOutput } = await execAsync(
-        process.platform === 'win32' ? 'where enzyme' : 'which enzyme'
-      );
+      // SECURITY: Use platform-specific command with separate args
+      const whichCmd = process.platform === 'win32' ? 'where' : 'which';
+      const { stdout: pathOutput } = await execSafe(whichCmd, ['enzyme'], {
+        timeout: 5000,
+      });
       const cliPath = pathOutput.trim().split('\n')[0];
 
-      this.logger.info(`Global CLI detected: v${version} at ${cliPath}`);
+      this.logger.info(`Global CLI detected: v${version} at ${cliPath ?? 'unknown'}`);
 
-      return {
+      const result: CLIDetectionResult = {
         installed: true,
         type: 'global',
         version,
-        path: cliPath,
         packageManager: await this.detectPackageManager(),
       };
+
+      if (cliPath) {
+        result.path = cliPath;
+      }
+
+      return result;
     } catch {
       return { installed: false };
     }
@@ -444,13 +530,15 @@ Enzyme CLI Information:
 
   /**
    * Detect npx availability
+   * SECURITY: Uses spawn with shell: false to prevent command injection
    *
    * @returns Promise resolving to detection result
    * @private
    */
   private async detectNpx(): Promise<CLIDetectionResult> {
     try {
-      await execAsync('npx --version');
+      // SECURITY: Pass command and args separately
+      await execSafe('npx', ['--version'], { timeout: 5000 });
 
       this.logger.info('npx detected, Enzyme CLI can be run via npx');
 
@@ -467,6 +555,7 @@ Enzyme CLI Information:
 
   /**
    * Detect available package manager
+   * SECURITY: Uses spawn with shell: false to prevent command injection
    *
    * Checks in order: bun, pnpm, yarn, npm
    *
@@ -478,7 +567,8 @@ Enzyme CLI Information:
 
     for (const manager of managers) {
       try {
-        await execAsync(`${manager} --version`);
+        // SECURITY: Pass command and args separately
+        await execSafe(manager, ['--version'], { timeout: 5000 });
         this.logger.info(`Package manager detected: ${manager}`);
         return manager;
       } catch {
@@ -491,18 +581,25 @@ Enzyme CLI Information:
   }
 
   /**
-   * Build CLI command based on detection result
+   * Build CLI command and args separately for secure execution
+   * SECURITY: Returns command and args separately to prevent shell injection
    *
    * @param detection - Detection result
-   * @returns CLI command string
+   * @returns Object with cmd and args array
    * @private
    */
-  private buildCliCommand(detection: CLIDetectionResult): string {
+  private buildCliCommandArgs(detection: CLIDetectionResult): { cmd: string; cmdArgs: string[] } {
     if (detection.type === 'npx') {
-      return 'npx @enzymejs/cli';
+      return {
+        cmd: 'npx',
+        cmdArgs: ['@enzymejs/cli'],
+      };
     }
 
-    return detection.path || 'enzyme';
+    return {
+      cmd: detection.path || 'enzyme',
+      cmdArgs: [],
+    };
   }
 
   /**

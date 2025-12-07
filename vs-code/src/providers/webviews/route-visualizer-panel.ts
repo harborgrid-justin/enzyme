@@ -1,6 +1,9 @@
 import * as vscode from 'vscode';
 import { BaseWebViewPanel } from './base-webview-panel';
 
+/**
+ *
+ */
 interface RouteNode {
 	path: string;
 	name?: string;
@@ -13,6 +16,9 @@ interface RouteNode {
 	hasConflict?: boolean;
 }
 
+/**
+ *
+ */
 interface RouteVisualizerMessage {
 	type: 'getRoutes' | 'navigateTo' | 'editRoute' | 'exportDiagram' | 'refreshRoutes' | 'simulateNavigation';
 	payload?: any;
@@ -27,6 +33,10 @@ export class RouteVisualizerPanel extends BaseWebViewPanel {
 	private routes: RouteNode[] = [];
 	private selectedRoute: RouteNode | null = null;
 
+	/**
+	 *
+	 * @param context
+	 */
 	private constructor(context: vscode.ExtensionContext) {
 		super(context, 'enzyme.routeVisualizer', 'Enzyme Route Visualizer');
 		this.loadRoutes();
@@ -34,6 +44,7 @@ export class RouteVisualizerPanel extends BaseWebViewPanel {
 
 	/**
 	 * Get or create the singleton instance
+	 * @param context
 	 */
 	public static getInstance(context: vscode.ExtensionContext): RouteVisualizerPanel {
 		if (!RouteVisualizerPanel.instance) {
@@ -44,12 +55,16 @@ export class RouteVisualizerPanel extends BaseWebViewPanel {
 
 	/**
 	 * Show the route visualizer panel
+	 * @param context
 	 */
 	public static show(context: vscode.ExtensionContext): void {
 		const panel = RouteVisualizerPanel.getInstance(context);
 		panel.show();
 	}
 
+	/**
+	 *
+	 */
 	protected override getIconPath(): vscode.Uri | { light: vscode.Uri; dark: vscode.Uri } | undefined {
 		return {
 			light: vscode.Uri.file(this.context.asAbsolutePath('resources/icons/route-light.svg')),
@@ -57,6 +72,10 @@ export class RouteVisualizerPanel extends BaseWebViewPanel {
 		};
 	}
 
+	/**
+	 *
+	 * @param _webview
+	 */
 	protected getBodyContent(_webview: vscode.Webview): string {
 		return `
 			<div class="container">
@@ -236,11 +255,20 @@ export class RouteVisualizerPanel extends BaseWebViewPanel {
 		`;
 	}
 
+	/**
+	 *
+	 * @param webview
+	 * @param nonce
+	 */
 	protected getScripts(webview: vscode.Webview, nonce: string): string {
 		const scriptUri = this.getWebviewUri(webview, ['src', 'webview-ui', 'route-visualizer', 'main.js']);
 		return `<script nonce="${nonce}" src="${scriptUri}"></script>`;
 	}
 
+	/**
+	 *
+	 * @param message
+	 */
 	protected async handleMessage(message: RouteVisualizerMessage): Promise<void> {
 		switch (message.type) {
 			case 'getRoutes':
@@ -270,16 +298,23 @@ export class RouteVisualizerPanel extends BaseWebViewPanel {
 		}
 	}
 
+	/**
+	 *
+	 */
 	protected override onPanelCreated(): void {
 		this.sendRoutesUpdate();
 	}
 
+	/**
+	 *
+	 */
 	protected override onPanelVisible(): void {
 		this.sendRoutesUpdate();
 	}
 
 	/**
 	 * Update routes from the application
+	 * @param routes
 	 */
 	public updateRoutes(routes: RouteNode[]): void {
 		this.routes = routes;
@@ -288,6 +323,9 @@ export class RouteVisualizerPanel extends BaseWebViewPanel {
 		this.persistRoutes();
 	}
 
+	/**
+	 *
+	 */
 	private async loadRoutes(): Promise<void> {
 		// In a real implementation, this would parse route files
 		// For now, load from persisted state
@@ -295,11 +333,14 @@ export class RouteVisualizerPanel extends BaseWebViewPanel {
 		this.detectConflicts();
 	}
 
+	/**
+	 *
+	 */
 	private detectConflicts(): void {
 		const paths = new Set<string>();
 		const conflicts: string[] = [];
 
-		const checkNode = (node: RouteNode, parentPath: string = '') => {
+		const checkNode = (node: RouteNode, parentPath = '') => {
 			const fullPath = this.normalizePath(parentPath + node.path);
 
 			if (paths.has(fullPath)) {
@@ -328,10 +369,18 @@ export class RouteVisualizerPanel extends BaseWebViewPanel {
 		}
 	}
 
+	/**
+	 *
+	 * @param path
+	 */
 	private normalizePath(path: string): string {
 		return path.replace(/\/+/g, '/').replace(/\/$/, '') || '/';
 	}
 
+	/**
+	 *
+	 * @param payload
+	 */
 	private async handleNavigateTo(payload: any): Promise<void> {
 		const route = this.findRoute(payload.path);
 		if (route) {
@@ -349,11 +398,19 @@ export class RouteVisualizerPanel extends BaseWebViewPanel {
 		}
 	}
 
+	/**
+	 *
+	 * @param payload
+	 */
 	private async handleEditRoute(payload: any): Promise<void> {
 		// In a real implementation, this would open the route configuration file
 		vscode.window.showInformationMessage(`Editing route: ${payload.path}`);
 	}
 
+	/**
+	 *
+	 * @param payload
+	 */
 	private async handleExportDiagram(payload: any): Promise<void> {
 		const format = payload?.format || 'svg';
 		const uri = await vscode.window.showSaveDialog({
@@ -370,6 +427,10 @@ export class RouteVisualizerPanel extends BaseWebViewPanel {
 		}
 	}
 
+	/**
+	 *
+	 * @param payload
+	 */
 	private async handleSimulateNavigation(payload: any): Promise<void> {
 		const { path, params } = payload;
 		const route = this.findRoute(path);
@@ -400,6 +461,11 @@ export class RouteVisualizerPanel extends BaseWebViewPanel {
 		});
 	}
 
+	/**
+	 *
+	 * @param path
+	 * @param routes
+	 */
 	private findRoute(path: string, routes: RouteNode[] = this.routes): RouteNode | null {
 		for (const route of routes) {
 			const fullPath = this.normalizePath(route.path);
@@ -417,6 +483,10 @@ export class RouteVisualizerPanel extends BaseWebViewPanel {
 		return null;
 	}
 
+	/**
+	 *
+	 * @param componentName
+	 */
 	private async findComponentFile(componentName: string): Promise<vscode.Uri | null> {
 		// Search for component files in the workspace
 		const files = await vscode.workspace.findFiles(
@@ -427,6 +497,9 @@ export class RouteVisualizerPanel extends BaseWebViewPanel {
 		return files.length > 0 ? files[0]! : null;
 	}
 
+	/**
+	 *
+	 */
 	private sendRoutesUpdate(): void {
 		const stats = this.calculateRouteStats();
 
@@ -441,6 +514,9 @@ export class RouteVisualizerPanel extends BaseWebViewPanel {
 		});
 	}
 
+	/**
+	 *
+	 */
 	private calculateRouteStats() {
 		let totalRoutes = 0;
 		let lazyRoutes = 0;
@@ -477,10 +553,16 @@ export class RouteVisualizerPanel extends BaseWebViewPanel {
 		};
 	}
 
+	/**
+	 *
+	 */
 	private async persistRoutes(): Promise<void> {
 		await this.persistState('routes', this.routes);
 	}
 
+	/**
+	 *
+	 */
 	public override dispose(): void {
 		super.dispose();
 		RouteVisualizerPanel.instance = undefined;

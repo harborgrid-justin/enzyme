@@ -1,12 +1,20 @@
 import * as vscode from 'vscode';
 
+/**
+ *
+ */
 export class HookCodeLensProvider implements vscode.CodeLensProvider {
-  private _onDidChangeCodeLenses = new vscode.EventEmitter<void>();
+  private readonly _onDidChangeCodeLenses = new vscode.EventEmitter<void>();
   public readonly onDidChangeCodeLenses = this._onDidChangeCodeLenses.event;
 
+  /**
+   *
+   * @param document
+   * @param token
+   */
   public provideCodeLenses(
     document: vscode.TextDocument,
-    token: vscode.CancellationToken
+    _token: vscode.CancellationToken
   ): vscode.ProviderResult<vscode.CodeLens[]> {
     const codeLenses: vscode.CodeLens[] = [];
     const text = document.getText();
@@ -67,6 +75,11 @@ export class HookCodeLensProvider implements vscode.CodeLensProvider {
     return codeLenses;
   }
 
+  /**
+   *
+   * @param document
+   * @param position
+   */
   private extractHookInfo(
     document: vscode.TextDocument,
     position: vscode.Position
@@ -82,14 +95,14 @@ export class HookCodeLensProvider implements vscode.CodeLensProvider {
 
     while (currentLine < document.lineCount && currentLine < position.line + 100) {
       const line = document.lineAt(currentLine);
-      hookText += line.text + '\n';
+      hookText += `${line.text  }\n`;
 
       for (const char of line.text) {
         if (char === '{') {
           braceCount++;
           startedBody = true;
         }
-        if (char === '}') braceCount--;
+        if (char === '}') {braceCount--;}
       }
 
       if (startedBody && braceCount === 0) {
@@ -101,15 +114,17 @@ export class HookCodeLensProvider implements vscode.CodeLensProvider {
 
     // Extract dependencies from useEffect, useCallback, useMemo
     const dependencies = new Set<string>();
-    const depPattern = /\[([^\]]*)\]/g;
+    const depPattern = /\[([^\]]*)]/g;
     let depMatch;
 
     while ((depMatch = depPattern.exec(hookText)) !== null) {
-      const deps = depMatch[1]
-        .split(',')
-        .map((d) => d.trim())
-        .filter((d) => d.length > 0);
-      deps.forEach((dep) => dependencies.add(dep));
+      if (depMatch[1]) {
+        const deps = depMatch[1]
+          .split(',')
+          .map((d) => d.trim())
+          .filter((d) => d.length > 0);
+        deps.forEach((dep) => dependencies.add(dep));
+      }
     }
 
     // Calculate complexity (simplified)
@@ -118,11 +133,14 @@ export class HookCodeLensProvider implements vscode.CodeLensProvider {
       (hookText.match(/if\s*\(|while\s*\(|for\s*\(/g) || []).length;
 
     return {
-      dependencies: Array.from(dependencies),
+      dependencies: [...dependencies],
       complexity,
     };
   }
 
+  /**
+   *
+   */
   public refresh(): void {
     this._onDidChangeCodeLenses.fire();
   }

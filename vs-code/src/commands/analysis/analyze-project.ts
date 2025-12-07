@@ -1,8 +1,12 @@
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
 import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs/promises';
-import { BaseCommand, CommandContext, CommandMetadata } from '../base-command';
+import { BaseCommand } from '../base-command';
+import type { CommandContext, CommandMetadata } from '../base-command';
 
+/**
+ *
+ */
 interface ProjectAnalysis {
   summary: {
     totalFiles: number;
@@ -16,6 +20,9 @@ interface ProjectAnalysis {
   recommendations: string[];
 }
 
+/**
+ *
+ */
 interface AnalysisIssue {
   severity: 'error' | 'warning' | 'info';
   message: string;
@@ -29,6 +36,9 @@ interface AnalysisIssue {
  * Keybinding: Ctrl+Shift+A P
  */
 export class AnalyzeProjectCommand extends BaseCommand {
+  /**
+   *
+   */
   getMetadata(): CommandMetadata {
     return {
       id: 'enzyme.analysis.analyzeProject',
@@ -42,6 +52,10 @@ export class AnalyzeProjectCommand extends BaseCommand {
     };
   }
 
+  /**
+   *
+   * @param _context
+   */
   protected async executeCommand(_context: CommandContext): Promise<void> {
     const workspaceFolder = await this.ensureWorkspaceFolder();
 
@@ -84,6 +98,12 @@ export class AnalyzeProjectCommand extends BaseCommand {
     }
   }
 
+  /**
+   *
+   * @param workspaceFolder
+   * @param progress
+   * @param token
+   */
   private async analyzeProject(
     workspaceFolder: vscode.WorkspaceFolder,
     progress: vscode.Progress<{ message?: string; increment?: number }>,
@@ -102,13 +122,13 @@ export class AnalyzeProjectCommand extends BaseCommand {
       recommendations: [],
     };
 
-    const srcPath = path.join(workspaceFolder.uri.fsPath, 'src');
+    const sourcePath = path.join(workspaceFolder.uri.fsPath, 'src');
 
     try {
       // Count files
       progress.report({ message: 'Counting files...', increment: 20 });
       const files = await vscode.workspace.findFiles(
-        new vscode.RelativePattern(srcPath, '**/*.{ts,tsx,js,jsx}'),
+        new vscode.RelativePattern(sourcePath, '**/*.{ts,tsx,js,jsx}'),
         '**/node_modules/**'
       );
       analysis.summary.totalFiles = files.length;
@@ -119,7 +139,7 @@ export class AnalyzeProjectCommand extends BaseCommand {
 
       // Analyze components
       progress.report({ message: 'Analyzing components...', increment: 30 });
-      await this.analyzeComponents(srcPath, analysis);
+      await this.analyzeComponents(sourcePath, analysis);
 
       if (token.isCancellationRequested) {
         return undefined;
@@ -127,7 +147,7 @@ export class AnalyzeProjectCommand extends BaseCommand {
 
       // Analyze routes
       progress.report({ message: 'Analyzing routes...', increment: 40 });
-      await this.analyzeRoutes(srcPath, analysis);
+      await this.analyzeRoutes(sourcePath, analysis);
 
       if (token.isCancellationRequested) {
         return undefined;
@@ -135,7 +155,7 @@ export class AnalyzeProjectCommand extends BaseCommand {
 
       // Analyze stores
       progress.report({ message: 'Analyzing stores...', increment: 50 });
-      await this.analyzeStores(srcPath, analysis);
+      await this.analyzeStores(sourcePath, analysis);
 
       if (token.isCancellationRequested) {
         return undefined;
@@ -143,7 +163,7 @@ export class AnalyzeProjectCommand extends BaseCommand {
 
       // Analyze features
       progress.report({ message: 'Analyzing features...', increment: 60 });
-      await this.analyzeFeatures(srcPath, analysis);
+      await this.analyzeFeatures(sourcePath, analysis);
 
       if (token.isCancellationRequested) {
         return undefined;
@@ -151,7 +171,7 @@ export class AnalyzeProjectCommand extends BaseCommand {
 
       // Analyze hooks
       progress.report({ message: 'Analyzing hooks...', increment: 70 });
-      await this.analyzeHooks(srcPath, analysis);
+      await this.analyzeHooks(sourcePath, analysis);
 
       if (token.isCancellationRequested) {
         return undefined;
@@ -168,12 +188,17 @@ export class AnalyzeProjectCommand extends BaseCommand {
     }
   }
 
+  /**
+   *
+   * @param sourcePath
+   * @param analysis
+   */
   private async analyzeComponents(
-    srcPath: string,
+    sourcePath: string,
     analysis: ProjectAnalysis
   ): Promise<void> {
     const componentFiles = await vscode.workspace.findFiles(
-      new vscode.RelativePattern(srcPath, '**/components/**/*.{tsx,jsx}'),
+      new vscode.RelativePattern(sourcePath, '**/components/**/*.{tsx,jsx}'),
       '**/node_modules/**'
     );
 
@@ -204,12 +229,17 @@ export class AnalyzeProjectCommand extends BaseCommand {
     }
   }
 
+  /**
+   *
+   * @param sourcePath
+   * @param analysis
+   */
   private async analyzeRoutes(
-    srcPath: string,
+    sourcePath: string,
     analysis: ProjectAnalysis
   ): Promise<void> {
     const routeFiles = await vscode.workspace.findFiles(
-      new vscode.RelativePattern(srcPath, '**/routes/**/*.{ts,tsx}'),
+      new vscode.RelativePattern(sourcePath, '**/routes/**/*.{ts,tsx}'),
       '**/node_modules/**'
     );
 
@@ -219,7 +249,7 @@ export class AnalyzeProjectCommand extends BaseCommand {
       const document = await vscode.workspace.openTextDocument(file);
       const text = document.getText();
 
-      const pathMatches = text.match(/path:\s*['"`][^'"`]+['"`]/g);
+      const pathMatches = text.match(/path:\s*["'`][^"'`]+["'`]/g);
       if (pathMatches) {
         routeCount += pathMatches.length;
       }
@@ -228,12 +258,17 @@ export class AnalyzeProjectCommand extends BaseCommand {
     analysis.summary.totalRoutes = routeCount;
   }
 
+  /**
+   *
+   * @param sourcePath
+   * @param analysis
+   */
   private async analyzeStores(
-    srcPath: string,
+    sourcePath: string,
     analysis: ProjectAnalysis
   ): Promise<void> {
     const storeFiles = await vscode.workspace.findFiles(
-      new vscode.RelativePattern(srcPath, '**/store/**/*.{ts,tsx}'),
+      new vscode.RelativePattern(sourcePath, '**/store/**/*.{ts,tsx}'),
       '**/node_modules/**'
     );
 
@@ -261,20 +296,25 @@ export class AnalyzeProjectCommand extends BaseCommand {
     analysis.summary.totalStores = storeCount;
   }
 
+  /**
+   *
+   * @param sourcePath
+   * @param analysis
+   */
   private async analyzeFeatures(
-    srcPath: string,
+    sourcePath: string,
     analysis: ProjectAnalysis
   ): Promise<void> {
-    const featuresPath = path.join(srcPath, 'features');
+    const featuresPath = path.join(sourcePath, 'features');
 
     try {
       const entries = await fs.readdir(featuresPath, { withFileTypes: true });
-      const featureDirs = entries.filter((entry) => entry.isDirectory());
+      const featureDirectories = entries.filter((entry) => entry.isDirectory());
 
-      analysis.summary.totalFeatures = featureDirs.length;
+      analysis.summary.totalFeatures = featureDirectories.length;
 
       // Check feature structure
-      for (const dir of featureDirs) {
+      for (const dir of featureDirectories) {
         const featurePath = path.join(featuresPath, dir.name);
         const hasIndex = await this.fileExists(path.join(featurePath, 'index.ts'));
 
@@ -291,12 +331,17 @@ export class AnalyzeProjectCommand extends BaseCommand {
     }
   }
 
+  /**
+   *
+   * @param sourcePath
+   * @param analysis
+   */
   private async analyzeHooks(
-    srcPath: string,
+    sourcePath: string,
     analysis: ProjectAnalysis
   ): Promise<void> {
     const hookFiles = await vscode.workspace.findFiles(
-      new vscode.RelativePattern(srcPath, '**/hooks/**/*.{ts,tsx}'),
+      new vscode.RelativePattern(sourcePath, '**/hooks/**/*.{ts,tsx}'),
       '**/node_modules/**'
     );
 
@@ -315,6 +360,10 @@ export class AnalyzeProjectCommand extends BaseCommand {
     analysis.summary.totalHooks = hookCount;
   }
 
+  /**
+   *
+   * @param analysis
+   */
   private generateRecommendations(analysis: ProjectAnalysis): void {
     const { summary } = analysis;
 
@@ -343,6 +392,10 @@ export class AnalyzeProjectCommand extends BaseCommand {
     }
   }
 
+  /**
+   *
+   * @param analysis
+   */
   private displayAnalysisResults(analysis: ProjectAnalysis): void {
     this.outputChannel.appendLine('='.repeat(80));
     this.outputChannel.appendLine('ENZYME PROJECT ANALYSIS');
@@ -393,6 +446,11 @@ export class AnalyzeProjectCommand extends BaseCommand {
     this.outputChannel.appendLine('='.repeat(80));
   }
 
+  /**
+   *
+   * @param workspaceFolder
+   * @param analysis
+   */
   private async generateAnalysisReport(
     workspaceFolder: vscode.WorkspaceFolder,
     analysis: ProjectAnalysis
@@ -412,6 +470,10 @@ export class AnalyzeProjectCommand extends BaseCommand {
     await this.showInfo('Analysis report generated successfully!');
   }
 
+  /**
+   *
+   * @param analysis
+   */
   private formatAnalysisAsMarkdown(analysis: ProjectAnalysis): string {
     const timestamp = new Date().toLocaleString();
 
@@ -448,6 +510,10 @@ _Generated by Enzyme VS Code Extension_
 `;
   }
 
+  /**
+   *
+   * @param filePath
+   */
   private async fileExists(filePath: string): Promise<boolean> {
     try {
       await fs.access(filePath);

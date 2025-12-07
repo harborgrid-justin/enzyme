@@ -1,5 +1,9 @@
-import { GeneratorOptions, GeneratorTemplate } from '../index';
+import type { GeneratorOptions, GeneratorTemplate } from '../index';
 
+/**
+ *
+ * @param options
+ */
 export function componentTemplate(options: GeneratorOptions): GeneratorTemplate {
   const { name, path: basePath = 'src/components', skipTests, skipStories, skipStyles } = options;
   const componentPath = `${basePath}/${name}`;
@@ -54,6 +58,10 @@ export function componentTemplate(options: GeneratorOptions): GeneratorTemplate 
   };
 }
 
+/**
+ *
+ * @param name
+ */
 function generateComponent(name: string): string {
   return `import React from 'react';
 import { ${name}Props } from './${name}.types';
@@ -71,6 +79,10 @@ ${name}.displayName = '${name}';
 `;
 }
 
+/**
+ *
+ * @param name
+ */
 function generateTypes(name: string): string {
   return `export interface ${name}Props {
   children?: React.ReactNode;
@@ -79,6 +91,10 @@ function generateTypes(name: string): string {
 `;
 }
 
+/**
+ *
+ * @param _name
+ */
 function generateStyles(_name: string): string {
   return `import styled from 'styled-components';
 
@@ -88,6 +104,10 @@ export const Container = styled.div\`
 `;
 }
 
+/**
+ *
+ * @param name
+ */
 function generateTest(name: string): string {
   return `import React from 'react';
 import { render, screen } from '@testing-library/react';
@@ -107,6 +127,10 @@ describe('${name}', () => {
 `;
 }
 
+/**
+ *
+ * @param name
+ */
 function generateStory(name: string): string {
   return `import type { Meta, StoryObj } from '@storybook/react';
 import { ${name} } from './${name}';
@@ -139,6 +163,10 @@ export const WithCustomContent: Story = {
 `;
 }
 
+/**
+ *
+ * @param name
+ */
 function generateIndex(name: string): string {
   return `export { ${name} } from './${name}';
 export type { ${name}Props } from './${name}.types';

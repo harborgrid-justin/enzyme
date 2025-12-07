@@ -1,8 +1,12 @@
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
 import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs/promises';
-import { BaseCommand, CommandContext, CommandMetadata } from '../base-command';
+import { BaseCommand } from '../base-command';
+import type { CommandContext, CommandMetadata } from '../base-command';
 
+/**
+ *
+ */
 interface HookOptions {
   name: string;
   category: 'state' | 'effect' | 'data' | 'ui' | 'utility';
@@ -17,6 +21,9 @@ interface HookOptions {
  * Keybinding: Ctrl+Shift+G H
  */
 export class GenerateHookCommand extends BaseCommand {
+  /**
+   *
+   */
   getMetadata(): CommandMetadata {
     return {
       id: 'enzyme.generate.hook',
@@ -31,6 +38,10 @@ export class GenerateHookCommand extends BaseCommand {
     };
   }
 
+  /**
+   *
+   * @param _context
+   */
   protected async executeCommand(_context: CommandContext): Promise<void> {
     const workspaceFolder = await this.ensureWorkspaceFolder();
 
@@ -65,6 +76,9 @@ export class GenerateHookCommand extends BaseCommand {
     await this.showInfo(`Hook "${options.name}" created successfully!`);
   }
 
+  /**
+   *
+   */
   private async gatherHookOptions(): Promise<HookOptions | undefined> {
     // Get hook name (auto-prefix with 'use')
     const rawName = await this.showInputBox({
@@ -75,7 +89,7 @@ export class GenerateHookCommand extends BaseCommand {
           return 'Hook name is required';
         }
         const hookName = value.startsWith('use') ? value : `use${value}`;
-        if (!/^use[A-Z][a-zA-Z0-9]*$/.test(hookName)) {
+        if (!/^use[A-Z][\dA-Za-z]*$/.test(hookName)) {
           return 'Hook name must follow the pattern use + PascalCase (e.g., useCounter)';
         }
         return undefined;
@@ -177,13 +191,19 @@ export class GenerateHookCommand extends BaseCommand {
     };
   }
 
+  /**
+   *
+   * @param workspaceFolder
+   * @param options
+   * @param token
+   */
   private async generateHook(
     workspaceFolder: vscode.WorkspaceFolder,
     options: HookOptions,
     token: vscode.CancellationToken
   ): Promise<string> {
-    const srcPath = path.join(workspaceFolder.uri.fsPath, 'src');
-    const hooksPath = path.join(srcPath, 'hooks', options.category);
+    const sourcePath = path.join(workspaceFolder.uri.fsPath, 'src');
+    const hooksPath = path.join(sourcePath, 'hooks', options.category);
 
     // Create directory
     await fs.mkdir(hooksPath, { recursive: true });
@@ -210,6 +230,10 @@ export class GenerateHookCommand extends BaseCommand {
     return hookPath;
   }
 
+  /**
+   *
+   * @param options
+   */
   private generateHookContent(options: HookOptions): string {
     const { name, dependencies, returnType, category } = options;
 
@@ -306,6 +330,10 @@ export function ${name}(): ${returnType} {
     return `${imports}\n${hookImplementation}`;
   }
 
+  /**
+   *
+   * @param options
+   */
   private generateTestContent(options: HookOptions): string {
     const { name } = options;
 
@@ -331,6 +359,11 @@ describe('${name}', () => {
 `;
   }
 
+  /**
+   *
+   * @param hooksPath
+   * @param hookName
+   */
   private async updateIndexFile(
     hooksPath: string,
     hookName: string

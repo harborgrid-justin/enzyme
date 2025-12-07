@@ -7,6 +7,9 @@
 // Types
 // ============================================================================
 
+/**
+ *
+ */
 export interface NetworkRequest {
   id: string;
   url: string;
@@ -23,6 +26,9 @@ export interface NetworkRequest {
   metadata?: Record<string, unknown>;
 }
 
+/**
+ *
+ */
 export interface RequestTiming {
   start: number;
   dns?: number;
@@ -33,6 +39,9 @@ export interface RequestTiming {
   total?: number;
 }
 
+/**
+ *
+ */
 export interface RequestMock {
   pattern: RegExp | string;
   response: unknown;
@@ -41,6 +50,9 @@ export interface RequestMock {
   errorRate?: number; // 0-1
 }
 
+/**
+ *
+ */
 export interface InspectorOptions {
   /** Enable request interception */
   intercept?: boolean;
@@ -93,6 +105,9 @@ const DEFAULT_SENSITIVE_FIELDS = [
   'social_security_number',
 ];
 
+/**
+ *
+ */
 export interface NetworkStats {
   total: number;
   successful: number;
@@ -107,18 +122,25 @@ export interface NetworkStats {
 // Network Inspector
 // ============================================================================
 
+/**
+ *
+ */
 export class NetworkInspector {
-  private options: Required<InspectorOptions>;
+  private readonly options: Required<InspectorOptions>;
   private requests: NetworkRequest[] = [];
-  private activeRequests = new Map<string, NetworkRequest>();
+  private readonly activeRequests = new Map<string, NetworkRequest>();
   private mocks: RequestMock[] = [];
   private requestIdCounter = 0;
   private isInspecting = false;
   private originalFetch: typeof fetch | null = null;
   private originalXHR: typeof XMLHttpRequest | null = null;
-  private sensitiveHeadersSet: Set<string>;
-  private sensitiveFieldsSet: Set<string>;
+  private readonly sensitiveHeadersSet: Set<string>;
+  private readonly sensitiveFieldsSet: Set<string>;
 
+  /**
+   *
+   * @param options
+   */
   constructor(options: InspectorOptions = {}) {
     this.options = {
       intercept: options.intercept ?? true,
@@ -144,6 +166,7 @@ export class NetworkInspector {
 
   /**
    * SECURITY: Sanitize headers to redact sensitive values
+   * @param headers
    */
   private sanitizeHeaders(headers: Record<string, string>): Record<string, string> {
     if (!this.options.sanitizeSensitiveData) {
@@ -152,17 +175,14 @@ export class NetworkInspector {
 
     const sanitized: Record<string, string> = {};
     for (const [key, value] of Object.entries(headers)) {
-      if (this.sensitiveHeadersSet.has(key.toLowerCase())) {
-        sanitized[key] = '[REDACTED]';
-      } else {
-        sanitized[key] = value;
-      }
+      sanitized[key] = this.sensitiveHeadersSet.has(key.toLowerCase()) ? '[REDACTED]' : value;
     }
     return sanitized;
   }
 
   /**
    * SECURITY: Sanitize body to redact sensitive fields
+   * @param body
    */
   private sanitizeBody(body: unknown): unknown {
     if (!this.options.sanitizeSensitiveData || body === null || body === undefined) {
@@ -189,10 +209,12 @@ export class NetworkInspector {
 
   /**
    * SECURITY: Recursively sanitize object fields
+   * @param obj
+   * @param object
    */
-  private sanitizeObject(obj: Record<string, unknown> | unknown[]): unknown {
-    if (Array.isArray(obj)) {
-      return obj.map(item => {
+  private sanitizeObject(object: Record<string, unknown> | unknown[]): unknown {
+    if (Array.isArray(object)) {
+      return object.map(item => {
         if (typeof item === 'object' && item !== null) {
           return this.sanitizeObject(item as Record<string, unknown>);
         }
@@ -201,7 +223,7 @@ export class NetworkInspector {
     }
 
     const sanitized: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(obj)) {
+    for (const [key, value] of Object.entries(object)) {
       if (this.sensitiveFieldsSet.has(key)) {
         sanitized[key] = '[REDACTED]';
       } else if (typeof value === 'object' && value !== null) {
@@ -245,6 +267,10 @@ export class NetworkInspector {
   /**
    * Record a network request
    * SECURITY: Automatically sanitizes sensitive headers and body fields
+   * @param url
+   * @param method
+   * @param headers
+   * @param body
    */
   recordRequest(
     url: string,
@@ -278,6 +304,11 @@ export class NetworkInspector {
   /**
    * Record request response
    * SECURITY: Automatically sanitizes sensitive headers and body fields
+   * @param requestId
+   * @param status
+   * @param statusText
+   * @param headers
+   * @param response
    */
   recordResponse(
     requestId: string,
@@ -295,8 +326,12 @@ export class NetworkInspector {
     request.statusText = statusText;
 
     // SECURITY: Sanitize response headers and body before storing
-    request.responseHeaders = headers ? this.sanitizeHeaders(headers) : undefined;
-    request.response = this.options.recordBodies ? this.sanitizeBody(response) : undefined;
+    if (headers) {
+      request.responseHeaders = this.sanitizeHeaders(headers);
+    }
+    if (this.options.recordBodies) {
+      request.response = this.sanitizeBody(response);
+    }
     request.duration = Date.now() - request.timestamp;
 
     this.requests.push(request);
@@ -310,6 +345,8 @@ export class NetworkInspector {
 
   /**
    * Record request error
+   * @param requestId
+   * @param error
    */
   recordError(requestId: string, error: string): void {
     const request = this.activeRequests.get(requestId);
@@ -326,6 +363,10 @@ export class NetworkInspector {
 
   /**
    * Get all requests
+   * @param filter
+   * @param filter.method
+   * @param filter.status
+   * @param filter.url
    */
   getRequests(filter?: {
     method?: string;
@@ -335,7 +376,8 @@ export class NetworkInspector {
     let filtered = [...this.requests];
 
     if (filter?.method) {
-      filtered = filtered.filter((r) => r.method === filter.method.toUpperCase());
+      const method = filter.method;
+      filtered = filtered.filter((r) => r.method === method.toUpperCase());
     }
 
     if (filter?.status) {
@@ -343,7 +385,8 @@ export class NetworkInspector {
     }
 
     if (filter?.url) {
-      filtered = filtered.filter((r) => r.url.includes(filter.url));
+      const url = filter.url;
+      filtered = filtered.filter((r) => r.url.includes(url));
     }
 
     return filtered;
@@ -351,6 +394,7 @@ export class NetworkInspector {
 
   /**
    * Get request by ID
+   * @param id
    */
   getRequest(id: string): NetworkRequest | undefined {
     return this.requests.find((r) => r.id === id);
@@ -365,6 +409,7 @@ export class NetworkInspector {
 
   /**
    * Get slow requests
+   * @param thresholdMs
    */
   getSlowRequests(thresholdMs = 1000): NetworkRequest[] {
     return this.requests
@@ -427,6 +472,7 @@ export class NetworkInspector {
 
   /**
    * Add request mock
+   * @param mock
    */
   addMock(mock: RequestMock): void {
     this.mocks.push(mock);
@@ -434,6 +480,7 @@ export class NetworkInspector {
 
   /**
    * Remove request mock
+   * @param pattern
    */
   removeMock(pattern: RegExp | string): boolean {
     const index = this.mocks.findIndex((m) => {
@@ -463,6 +510,7 @@ export class NetworkInspector {
 
   /**
    * Find matching mock
+   * @param url
    */
   findMock(url: string): RequestMock | undefined {
     return this.mocks.find((mock) => {
@@ -594,12 +642,25 @@ export class NetworkInspector {
     window.XMLHttpRequest = class extends self.originalXHR! {
       private requestId = '';
 
-      open(method: string, url: string | URL, ...args: unknown[]): void {
+      /**
+       *
+       * @param method
+       * @param url
+       * @param {...any} args
+       */
+      override open(method: string, url: string | URL, ...args: unknown[]): void {
         this.requestId = self.recordRequest(url.toString(), method);
-        super.open(method, url as string, ...(args as [boolean?, string?, string?]));
+        const async = args[0] !== undefined ? Boolean(args[0]) : true;
+        const username = args[1] !== undefined ? String(args[1]) : undefined;
+        const password = args[2] !== undefined ? String(args[2]) : undefined;
+        super.open(method, url as string, async, username, password);
       }
 
-      send(body?: Document | XMLHttpRequestBodyInit | null): void {
+      /**
+       *
+       * @param body
+       */
+      override send(body?: Document | XMLHttpRequestBodyInit | null): void {
         this.addEventListener('load', () => {
           const responseHeaders: Record<string, string> = {};
           const headersString = this.getAllResponseHeaders();
@@ -649,6 +710,9 @@ export class NetworkInspector {
 
   /**
    * Handle mock response
+   * @param url
+   * @param method
+   * @param mock
    */
   private async handleMockResponse(
     url: string,
@@ -682,6 +746,7 @@ export class NetworkInspector {
 
   /**
    * Check if URL should be ignored
+   * @param url
    */
   private shouldIgnore(url: string): boolean {
     return this.options.ignorePatterns.some((pattern) => pattern.test(url));
@@ -703,6 +768,7 @@ let globalInspector: NetworkInspector | null = null;
 
 /**
  * Get or create global inspector instance
+ * @param options
  */
 export function getGlobalInspector(options?: InspectorOptions): NetworkInspector {
   if (!globalInspector) {

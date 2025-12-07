@@ -2,9 +2,9 @@
  * ProviderRegistry - Manages all VS Code providers
  */
 
-import * as vscode from 'vscode';
-import { EventBus } from './event-bus';
-import { LoggerService } from '../services/logger-service';
+import type { EventBus } from './event-bus';
+import type { LoggerService } from '../services/logger-service';
+import type * as vscode from 'vscode';
 
 /**
  * Provider type
@@ -64,11 +64,16 @@ export interface ProviderRegistration {
  */
 export class ProviderRegistry {
   private static instance: ProviderRegistry;
-  private providers: Map<string, ProviderRegistration> = new Map();
-  private eventBus: EventBus;
-  private logger: LoggerService;
+  private readonly providers = new Map<string, ProviderRegistration>();
+  private readonly eventBus: EventBus;
+  private readonly logger: LoggerService;
   private disposables: vscode.Disposable[] = [];
 
+  /**
+   *
+   * @param eventBus
+   * @param logger
+   */
   private constructor(eventBus: EventBus, logger: LoggerService) {
     this.eventBus = eventBus;
     this.logger = logger;
@@ -76,6 +81,8 @@ export class ProviderRegistry {
 
   /**
    * Create the provider registry
+   * @param eventBus
+   * @param logger
    */
   public static create(eventBus: EventBus, logger: LoggerService): ProviderRegistry {
     if (!ProviderRegistry.instance) {
@@ -96,6 +103,8 @@ export class ProviderRegistry {
 
   /**
    * Register a provider
+   * @param metadata
+   * @param disposable
    */
   public register(
     metadata: ProviderMetadata,
@@ -120,6 +129,7 @@ export class ProviderRegistry {
 
   /**
    * Unregister a provider
+   * @param id
    */
   public unregister(id: string): void {
     const registration = this.providers.get(id);
@@ -135,6 +145,7 @@ export class ProviderRegistry {
 
   /**
    * Enable a provider
+   * @param id
    */
   public enable(id: string): void {
     const registration = this.providers.get(id);
@@ -150,6 +161,7 @@ export class ProviderRegistry {
 
   /**
    * Disable a provider
+   * @param id
    */
   public disable(id: string): void {
     const registration = this.providers.get(id);
@@ -169,6 +181,7 @@ export class ProviderRegistry {
 
   /**
    * Get provider status
+   * @param id
    */
   public getStatus(id: string): ProviderStatus | undefined {
     return this.providers.get(id)?.status;
@@ -176,6 +189,7 @@ export class ProviderRegistry {
 
   /**
    * Get provider registration
+   * @param id
    */
   public getRegistration(id: string): ProviderRegistration | undefined {
     return this.providers.get(id);
@@ -190,9 +204,10 @@ export class ProviderRegistry {
 
   /**
    * Get providers by type
+   * @param type
    */
   public getProvidersByType(type: ProviderType): ProviderRegistration[] {
-    return Array.from(this.providers.values()).filter(
+    return [...this.providers.values()].filter(
       reg => reg.metadata.type === type
     );
   }
@@ -201,23 +216,24 @@ export class ProviderRegistry {
    * Get enabled providers
    */
   public getEnabledProviders(): ProviderRegistration[] {
-    return Array.from(this.providers.values()).filter(
+    return [...this.providers.values()].filter(
       reg => reg.metadata.enabled
     );
   }
 
   /**
    * Check dependencies
+   * @param id
    */
   public checkDependencies(id: string): boolean {
     const registration = this.providers.get(id);
-    if (!registration || !registration.metadata.dependencies) {
+    if (!registration?.metadata.dependencies) {
       return true;
     }
 
     for (const dep of registration.metadata.dependencies) {
       const depReg = this.providers.get(dep);
-      if (!depReg || !depReg.metadata.enabled) {
+      if (!depReg?.metadata.enabled) {
         return false;
       }
     }
@@ -227,6 +243,8 @@ export class ProviderRegistry {
 
   /**
    * Record provider error
+   * @param id
+   * @param error
    */
   public recordError(id: string, error: Error): void {
     const registration = this.providers.get(id);
@@ -266,7 +284,7 @@ export class ProviderRegistry {
         stats.errors++;
       }
 
-      const type = registration.metadata.type;
+      const {type} = registration.metadata;
       stats.byType[type] = (stats.byType[type] || 0) + 1;
     }
 

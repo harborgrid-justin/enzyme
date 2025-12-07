@@ -3,8 +3,8 @@
  */
 
 import * as vscode from 'vscode';
-import { EventBus } from './event-bus';
-import { LoggerService } from '../services/logger-service';
+import type { EventBus } from './event-bus';
+import type { LoggerService } from '../services/logger-service';
 
 /**
  * View type
@@ -51,19 +51,24 @@ export interface WebViewRegistration {
  */
 export class ViewOrchestrator {
   private static instance: ViewOrchestrator;
-  private eventBus: EventBus;
-  private logger: LoggerService;
-  private treeViews: Map<string, TreeViewRegistration> = new Map();
-  private webViews: Map<string, WebViewRegistration> = new Map();
-  private layoutState: Map<string, unknown> = new Map();
+  private readonly logger: LoggerService;
+  private readonly treeViews = new Map<string, TreeViewRegistration>();
+  private readonly webViews = new Map<string, WebViewRegistration>();
+  private readonly layoutState = new Map<string, unknown>();
 
-  private constructor(eventBus: EventBus, logger: LoggerService) {
-    this.eventBus = eventBus;
+  /**
+   *
+   * @param _eventBus
+   * @param logger
+   */
+  private constructor(_eventBus: EventBus, logger: LoggerService) {
     this.logger = logger;
   }
 
   /**
    * Create the view orchestrator
+   * @param eventBus
+   * @param logger
    */
   public static create(eventBus: EventBus, logger: LoggerService): ViewOrchestrator {
     if (!ViewOrchestrator.instance) {
@@ -84,6 +89,9 @@ export class ViewOrchestrator {
 
   /**
    * Register a TreeView
+   * @param id
+   * @param viewId
+   * @param provider
    */
   public registerTreeView(
     id: string,
@@ -125,6 +133,12 @@ export class ViewOrchestrator {
 
   /**
    * Register a WebView
+   * @param id
+   * @param viewType
+   * @param title
+   * @param column
+   * @param options
+   * @param messageHandler
    */
   public registerWebView(
     id: string,
@@ -149,7 +163,7 @@ export class ViewOrchestrator {
         visible: panel.visible,
         focused: panel.active,
       },
-      messageHandler,
+      ...(messageHandler ? { messageHandler } : {}),
     };
 
     // Handle messages
@@ -181,6 +195,7 @@ export class ViewOrchestrator {
 
   /**
    * Get TreeView by ID
+   * @param id
    */
   public getTreeView(id: string): vscode.TreeView<unknown> | undefined {
     return this.treeViews.get(id)?.view;
@@ -188,6 +203,7 @@ export class ViewOrchestrator {
 
   /**
    * Get WebView by ID
+   * @param id
    */
   public getWebView(id: string): vscode.WebviewPanel | undefined {
     return this.webViews.get(id)?.panel;
@@ -195,6 +211,7 @@ export class ViewOrchestrator {
 
   /**
    * Refresh TreeView
+   * @param id
    */
   public refreshTreeView(id: string): void {
     const registration = this.treeViews.get(id);
@@ -227,6 +244,8 @@ export class ViewOrchestrator {
 
   /**
    * Update WebView content
+   * @param id
+   * @param html
    */
   public updateWebView(id: string, html: string): void {
     const registration = this.webViews.get(id);
@@ -239,6 +258,8 @@ export class ViewOrchestrator {
 
   /**
    * Post message to WebView
+   * @param id
+   * @param message
    */
   public postMessage(id: string, message: unknown): void {
     const registration = this.webViews.get(id);
@@ -250,6 +271,7 @@ export class ViewOrchestrator {
 
   /**
    * Focus view
+   * @param id
    */
   public focusView(id: string): void {
     const treeView = this.treeViews.get(id);
@@ -268,6 +290,7 @@ export class ViewOrchestrator {
 
   /**
    * Get view state
+   * @param id
    */
   public getViewState(id: string): ViewState | undefined {
     const treeView = this.treeViews.get(id);
@@ -285,6 +308,9 @@ export class ViewOrchestrator {
 
   /**
    * Synchronize view states
+   * @param sourceId
+   * @param targetIds
+   * @param data
    */
   public synchronizeViews(sourceId: string, targetIds: string[], data: unknown): void {
     this.logger.debug(`Synchronizing views from ${sourceId}`, { targetIds });
@@ -299,6 +325,7 @@ export class ViewOrchestrator {
 
   /**
    * Save layout state
+   * @param context
    */
   public saveLayout(context: vscode.ExtensionContext): void {
     const layout: Record<string, unknown> = {};
@@ -317,6 +344,7 @@ export class ViewOrchestrator {
 
   /**
    * Restore layout state
+   * @param context
    */
   public restoreLayout(context: vscode.ExtensionContext): void {
     const layout = context.globalState.get<Record<string, ViewState>>('enzyme.viewLayout', {});

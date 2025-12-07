@@ -1,7 +1,19 @@
 import * as vscode from 'vscode';
 
 /**
- * Command execution context with optional arguments
+ * Command execution context with optional arguments and cancellation support
+ *
+ * @interface CommandContext
+ * @property {unknown[]} [args] - Optional array of arguments passed to the command
+ * @property {vscode.CancellationToken} [cancellationToken] - Optional cancellation token for long-running operations
+ *
+ * @example
+ * ```typescript
+ * const context: CommandContext = {
+ *   args: ['arg1', 'arg2'],
+ *   cancellationToken: token
+ * };
+ * ```
  */
 export interface CommandContext {
   args?: unknown[];
@@ -9,7 +21,34 @@ export interface CommandContext {
 }
 
 /**
- * Command metadata for registration
+ * Command metadata for VS Code command registration
+ *
+ * @interface CommandMetadata
+ * @property {string} id - Unique command identifier (e.g., 'enzyme.generate.component')
+ * @property {string} title - Human-readable command title shown in command palette
+ * @property {string} [category] - Optional command category for grouping in UI
+ * @property {string} [icon] - Optional icon identifier using $(icon-name) syntax
+ * @property {string} [enablement] - Optional when clause for conditional command availability
+ * @property {object} [keybinding] - Optional keyboard shortcut configuration
+ * @property {string} keybinding.key - Key combination for Windows/Linux
+ * @property {string} [keybinding.mac] - Optional macOS-specific key combination
+ * @property {string} [keybinding.when] - Optional context for keybinding activation
+ *
+ * @example
+ * ```typescript
+ * const metadata: CommandMetadata = {
+ *   id: 'enzyme.generate.component',
+ *   title: 'Generate Component',
+ *   category: 'Enzyme',
+ *   icon: '$(symbol-class)',
+ *   enablement: 'enzyme:isEnzymeProject',
+ *   keybinding: {
+ *     key: 'ctrl+shift+g c',
+ *     mac: 'cmd+shift+g c',
+ *     when: 'editorTextFocus'
+ *   }
+ * };
+ * ```
  */
 export interface CommandMetadata {
   id: string;
@@ -25,7 +64,26 @@ export interface CommandMetadata {
 }
 
 /**
- * Telemetry event data
+ * Telemetry event data structure for analytics and monitoring
+ *
+ * @interface TelemetryEvent
+ * @property {string} eventName - Name of the telemetry event
+ * @property {Record<string, string | number | boolean>} [properties] - Optional event properties
+ * @property {Record<string, number>} [measurements] - Optional numeric measurements (e.g., duration, count)
+ *
+ * @example
+ * ```typescript
+ * const event: TelemetryEvent = {
+ *   eventName: 'command.executed',
+ *   properties: {
+ *     commandId: 'enzyme.generate.component',
+ *     status: 'success'
+ *   },
+ *   measurements: {
+ *     duration: 1234
+ *   }
+ * };
+ * ```
  */
 export interface TelemetryEvent {
   eventName: string;
@@ -34,12 +92,52 @@ export interface TelemetryEvent {
 }
 
 /**
- * Abstract base class for all VS Code commands
- * Provides error handling, telemetry, and progress notification support
+ * Abstract base class for all VS Code commands in the Enzyme extension
+ *
+ * Provides a robust foundation for command implementations with:
+ * - Automatic error handling and user-friendly error messages
+ * - Integrated telemetry for usage tracking
+ * - Progress reporting for long-running operations
+ * - Logging to output channel
+ * - Helper methods for common VS Code interactions
+ *
+ * @abstract
+ * @class BaseCommand
+ *
+ * @example
+ * ```typescript
+ * export class MyCommand extends BaseCommand {
+ *   getMetadata(): CommandMetadata {
+ *     return {
+ *       id: 'enzyme.myCommand',
+ *       title: 'My Command',
+ *       category: 'Enzyme'
+ *     };
+ *   }
+ *
+ *   protected async executeCommand(context: CommandContext): Promise<void> {
+ *     await this.showInfo('Command executed!');
+ *   }
+ * }
+ * ```
  */
 export abstract class BaseCommand {
   protected readonly outputChannel: vscode.OutputChannel;
 
+  /**
+   * Creates a new BaseCommand instance
+   *
+   * @param {vscode.ExtensionContext} context - The VS Code extension context
+   * @param {vscode.OutputChannel} [outputChannel] - Optional output channel for logging.
+   *                                                   If not provided, a new one will be created.
+   *
+   * @example
+   * ```typescript
+   * constructor(context: vscode.ExtensionContext, outputChannel?: vscode.OutputChannel) {
+   *   super(context, outputChannel);
+   * }
+   * ```
+   */
   constructor(
     protected readonly context: vscode.ExtensionContext,
     outputChannel?: vscode.OutputChannel
@@ -50,18 +148,68 @@ export abstract class BaseCommand {
   }
 
   /**
-   * Get command metadata for registration
+   * Get command metadata for registration with VS Code
+   *
+   * This method must be implemented by all command classes to provide
+   * registration information including command ID, title, category, and keybindings.
+   *
+   * @abstract
+   * @returns {CommandMetadata} The command metadata object
+   *
+   * @example
+   * ```typescript
+   * getMetadata(): CommandMetadata {
+   *   return {
+   *     id: 'enzyme.generate.component',
+   *     title: 'Generate Component',
+   *     category: 'Enzyme',
+   *     icon: '$(symbol-class)'
+   *   };
+   * }
+   * ```
    */
   abstract getMetadata(): CommandMetadata;
 
   /**
    * Execute the command logic
-   * Implementations should focus on business logic, error handling is managed by the base class
+   *
+   * This is the main method that implementations override to provide
+   * command-specific functionality. Error handling, telemetry, and
+   * progress reporting are managed by the base class.
+   *
+   * @abstract
+   * @protected
+   * @param {CommandContext} context - The command execution context with arguments
+   * @returns {Promise<void>} A promise that resolves when the command completes
+   * @throws {Error} May throw errors which will be caught and handled by the base class
+   *
+   * @example
+   * ```typescript
+   * protected async executeCommand(context: CommandContext): Promise<void> {
+   *   const workspaceFolder = await this.ensureWorkspaceFolder();
+   *   await this.showInfo('Command executed successfully!');
+   * }
+   * ```
    */
   protected abstract executeCommand(context: CommandContext): Promise<void>;
 
   /**
-   * Public execute method with error handling and telemetry
+   * Public execute method with comprehensive error handling and telemetry
+   *
+   * This method wraps the executeCommand implementation with:
+   * - Telemetry events for command start, success, and failure
+   * - Automatic error handling and user-friendly error messages
+   * - Execution duration tracking
+   * - Detailed logging
+   *
+   * @param {...unknown[]} args - Variable arguments passed to the command
+   * @returns {Promise<void>} A promise that resolves when command execution completes
+   *
+   * @example
+   * ```typescript
+   * // Called automatically by VS Code when command is invoked
+   * await command.execute('arg1', 'arg2');
+   * ```
    */
   async execute(...args: unknown[]): Promise<void> {
     const metadata = this.getMetadata();
@@ -124,6 +272,32 @@ export abstract class BaseCommand {
 
   /**
    * Execute command with progress notification
+   *
+   * Wraps a long-running operation with VS Code's progress UI, showing
+   * progress updates to the user and supporting cancellation.
+   *
+   * @template T - The return type of the task
+   * @protected
+   * @param {string} title - The title shown in the progress notification
+   * @param {Function} task - The async task to execute with progress updates
+   * @param {object} [options] - Optional progress configuration
+   * @param {vscode.ProgressLocation} [options.location=Notification] - Where to show progress
+   * @param {boolean} [options.cancellable=true] - Whether the operation can be cancelled
+   * @returns {Promise<T>} The result of the task execution
+   *
+   * @example
+   * ```typescript
+   * const result = await this.withProgress(
+   *   'Generating component...',
+   *   async (progress, token) => {
+   *     progress.report({ message: 'Creating files...', increment: 50 });
+   *     const path = await this.generateFiles();
+   *     progress.report({ message: 'Done!', increment: 100 });
+   *     return path;
+   *   },
+   *   { cancellable: true }
+   * );
+   * ```
    */
   protected async withProgress<T>(
     title: string,
@@ -148,6 +322,21 @@ export abstract class BaseCommand {
 
   /**
    * Show information message to user
+   *
+   * Displays an information message notification with optional action buttons.
+   *
+   * @protected
+   * @param {string} message - The information message to display
+   * @param {...string[]} items - Optional action button labels
+   * @returns {Promise<string | undefined>} The label of the clicked button, or undefined if dismissed
+   *
+   * @example
+   * ```typescript
+   * const action = await this.showInfo('File created!', 'Open', 'Close');
+   * if (action === 'Open') {
+   *   await this.openFile(fileUri);
+   * }
+   * ```
    */
   protected async showInfo(
     message: string,
@@ -158,6 +347,21 @@ export abstract class BaseCommand {
 
   /**
    * Show warning message to user
+   *
+   * Displays a warning message notification with optional action buttons.
+   *
+   * @protected
+   * @param {string} message - The warning message to display
+   * @param {...string[]} items - Optional action button labels
+   * @returns {Promise<string | undefined>} The label of the clicked button, or undefined if dismissed
+   *
+   * @example
+   * ```typescript
+   * const action = await this.showWarning('No workspace found', 'Open Folder');
+   * if (action === 'Open Folder') {
+   *   await vscode.commands.executeCommand('vscode.openFolder');
+   * }
+   * ```
    */
   protected async showWarning(
     message: string,
@@ -167,7 +371,25 @@ export abstract class BaseCommand {
   }
 
   /**
-   * Show error message to user with details
+   * Show error message to user with optional details
+   *
+   * Displays an error message notification with automatic "Show Details" button
+   * that opens the output channel when clicked.
+   *
+   * @protected
+   * @param {string} message - The error message to display
+   * @param {unknown} [error] - Optional error object for detailed logging
+   * @param {...string[]} items - Optional additional action button labels
+   * @returns {Promise<string | undefined>} The label of the clicked button, or undefined if dismissed
+   *
+   * @example
+   * ```typescript
+   * try {
+   *   await this.performOperation();
+   * } catch (error) {
+   *   await this.showError('Operation failed', error, 'Retry');
+   * }
+   * ```
    */
   protected async showError(
     message: string,
@@ -196,6 +418,8 @@ export abstract class BaseCommand {
 
   /**
    * Show quick pick selection
+   * @param items
+   * @param options
    */
   protected async showQuickPick<T extends vscode.QuickPickItem>(
     items: T[] | Promise<T[]>,
@@ -209,6 +433,7 @@ export abstract class BaseCommand {
 
   /**
    * Show input box
+   * @param options
    */
   protected async showInputBox(
     options?: vscode.InputBoxOptions
@@ -256,6 +481,8 @@ export abstract class BaseCommand {
 
   /**
    * Open file in editor
+   * @param uri
+   * @param options
    */
   protected async openFile(
     uri: vscode.Uri,
@@ -267,6 +494,9 @@ export abstract class BaseCommand {
 
   /**
    * Log message to output channel
+   * @param level
+   * @param message
+   * @param data
    */
   protected log(
     level: 'info' | 'warn' | 'error' | 'debug',
@@ -294,6 +524,7 @@ export abstract class BaseCommand {
   /**
    * Send telemetry event
    * Override this method to integrate with your telemetry provider
+   * @param event
    */
   protected sendTelemetry(event: TelemetryEvent): void {
     // Log telemetry event for debugging

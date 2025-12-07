@@ -10,8 +10,8 @@
  */
 
 import * as vscode from 'vscode';
-import { getShortcutForCommand, formatShortcutForDisplay } from './keyboard-shortcuts';
 import { URLS } from './constants';
+import { getShortcutForCommand, formatShortcutForDisplay } from './keyboard-shortcuts';
 
 /**
  * Tooltip context - additional information for generating tooltips
@@ -50,7 +50,7 @@ export interface TooltipContext {
  * ```
  */
 export class TooltipProvider {
-  private commandDescriptions: Map<string, string> = new Map([
+  private readonly commandDescriptions = new Map<string, string>([
     // Generation Commands
     ['enzyme.generate.component', 'Generate a new React component with TypeScript, tests, and styles'],
     ['enzyme.generate.feature', 'Scaffold a complete feature module with routes, components, and state'],
@@ -109,7 +109,7 @@ export class TooltipProvider {
   ): vscode.MarkdownString {
     const {
       showShortcut = true,
-      showDocLink = false,
+      showDocLink: showDocumentLink = false,
       context: additionalContext,
       severity = 'info'
     } = context;
@@ -145,7 +145,7 @@ export class TooltipProvider {
     }
 
     // Add documentation link
-    if (showDocLink) {
+    if (showDocumentLink) {
       const commandSlug = command.replace('enzyme.', '').replace(/\./g, '/');
       tooltip.appendMarkdown(
         `\n[📚 View Documentation](${URLS.DOCUMENTATION}/commands/${commandSlug})`

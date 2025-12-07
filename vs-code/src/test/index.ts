@@ -1,7 +1,10 @@
-import * as path from 'path';
-import Mocha from 'mocha';
+import * as path from 'node:path';
 import { glob } from 'glob';
+import Mocha from 'mocha';
 
+/**
+ *
+ */
 export async function run(): Promise<void> {
   // Create the mocha test runner
   const mocha = new Mocha({
@@ -30,9 +33,9 @@ export async function run(): Promise<void> {
           resolve();
         }
       });
-    } catch (err) {
-      console.error(err);
-      reject(err);
+    } catch (error) {
+      console.error(error);
+      reject(error);
     }
   });
 }

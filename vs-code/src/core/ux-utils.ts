@@ -11,9 +11,9 @@
  */
 
 import * as vscode from 'vscode';
-import { EnzymeExtensionContext } from './context';
-import { logger } from './logger';
 import { URLS } from './constants';
+import { logger } from './logger';
+import type { EnzymeExtensionContext } from './context';
 
 /**
  * Progress options for long-running operations
@@ -71,7 +71,11 @@ export interface ActionableError {
  * ```
  */
 export class FirstRunExperience {
-  constructor(private context: EnzymeExtensionContext) {}
+  /**
+   *
+   * @param context
+   */
+  constructor(private readonly context: EnzymeExtensionContext) {}
 
   /**
    * Check if this is the first time the extension has been activated
@@ -114,7 +118,7 @@ export class FirstRunExperience {
    *
    * @param showWelcomePanel - Whether to automatically show welcome panel
    */
-  public async showWelcomeExperience(showWelcomePanel: boolean = true): Promise<void> {
+  public async showWelcomeExperience(showWelcomePanel = true): Promise<void> {
     logger.info('Starting first-run welcome experience');
 
     // Show welcome notification with actions
@@ -248,7 +252,11 @@ export class FirstRunExperience {
  * ```
  */
 export class ProgressUtils {
-  constructor(private context: EnzymeExtensionContext) {}
+  /**
+   *
+   * @param context
+   */
+  constructor(private readonly context: EnzymeExtensionContext) {}
 
   /**
    * Execute a task with progress indicator
@@ -377,7 +385,14 @@ export class ProgressUtils {
  * ```
  */
 export class ErrorHandler {
-  constructor(private context: EnzymeExtensionContext) {}
+  /**
+   *
+   * @param context
+   */
+  constructor(context: EnzymeExtensionContext) {
+    // Context parameter used for potential future expansion
+    void context;
+  }
 
   /**
    * Show an error message with actionable buttons and guidance
@@ -434,11 +449,7 @@ export class ErrorHandler {
       // Find and execute action
       const selectedAction = actions.find(a => a.label === selection);
       if (selectedAction) {
-        if (typeof selectedAction.action === 'string') {
-          await vscode.commands.executeCommand(selectedAction.action);
-        } else {
-          await selectedAction.action();
-        }
+        await (typeof selectedAction.action === 'string' ? vscode.commands.executeCommand(selectedAction.action) : selectedAction.action());
       }
     }
   }
@@ -462,11 +473,7 @@ export class ErrorHandler {
     if (selection) {
       const selectedAction = actions.find(a => a.label === selection);
       if (selectedAction) {
-        if (typeof selectedAction.action === 'string') {
-          await vscode.commands.executeCommand(selectedAction.action);
-        } else {
-          await selectedAction.action();
-        }
+        await (typeof selectedAction.action === 'string' ? vscode.commands.executeCommand(selectedAction.action) : selectedAction.action());
       }
     }
   }
@@ -521,7 +528,7 @@ export class ErrorHandler {
       message: `${context} failed`,
       details: errorMessage,
       actions,
-      docsUrl
+      ...(docsUrl ? { docsUrl } : {})
     });
   }
 }
@@ -538,9 +545,13 @@ export class ErrorHandler {
  * ```
  */
 export class ContextualHelp {
-  private shownTips: Set<string> = new Set();
+  private readonly shownTips = new Set<string>();
 
-  constructor(private context: EnzymeExtensionContext) {
+  /**
+   *
+   * @param context
+   */
+  constructor(private readonly context: EnzymeExtensionContext) {
     // Load previously shown tips
     const shown = context.getGlobalState().get<string[]>('enzyme.shownTips', []);
     this.shownTips = new Set(shown);
@@ -559,7 +570,7 @@ export class ContextualHelp {
   public async showQuickTip(
     tipId: string,
     message: string,
-    actions: { label: string; action: () => Promise<void> }[] = []
+    actions: Array<{ label: string; action: () => Promise<void> }> = []
   ): Promise<void> {
     // Skip if tip was already shown
     if (this.shownTips.has(tipId)) {
@@ -576,7 +587,7 @@ export class ContextualHelp {
     this.shownTips.add(tipId);
     await this.context.getGlobalState().update(
       'enzyme.shownTips',
-      Array.from(this.shownTips)
+      [...this.shownTips]
     );
 
     // Execute action if selected
@@ -641,6 +652,10 @@ export class UXUtils {
   /** Contextual help utilities */
   public readonly help: ContextualHelp;
 
+  /**
+   *
+   * @param context
+   */
   constructor(context: EnzymeExtensionContext) {
     this.firstRun = new FirstRunExperience(context);
     this.progress = new ProgressUtils(context);

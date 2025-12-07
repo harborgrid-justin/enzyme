@@ -2,11 +2,11 @@
  * HealthMonitor - Monitors extension health and performs automatic recovery
  */
 
-import * as vscode from 'vscode';
-import { EventBus } from './event-bus';
-import { LoggerService } from '../services/logger-service';
-import { ServiceRegistry, ServiceHealth } from './service-registry';
-import { ProviderRegistry } from './provider-registry';
+import { ServiceHealth } from './service-registry';
+import type { EventBus } from './event-bus';
+import type { ProviderRegistry } from './provider-registry';
+import type { ServiceRegistry} from './service-registry';
+import type { LoggerService } from '../services/logger-service';
 
 /**
  * Health check result
@@ -34,19 +34,22 @@ export interface HealthMetrics {
  */
 export class HealthMonitor {
   private static instance: HealthMonitor;
-  private eventBus: EventBus;
-  private logger: LoggerService;
+  private readonly logger: LoggerService;
   private serviceRegistry?: ServiceRegistry;
   private providerRegistry?: ProviderRegistry;
   private healthCheckInterval?: NodeJS.Timeout;
-  private checkIntervalMs: number = 60000; // 1 minute
-  private metrics: HealthMetrics;
-  private startTime: number;
-  private errorCount: number = 0;
-  private totalChecks: number = 0;
+  private readonly checkIntervalMs = 60000; // 1 minute
+  private readonly metrics: HealthMetrics;
+  private readonly startTime: number;
+  private errorCount = 0;
+  private totalChecks = 0;
 
-  private constructor(eventBus: EventBus, logger: LoggerService) {
-    this.eventBus = eventBus;
+  /**
+   *
+   * @param _eventBus
+   * @param logger
+   */
+  private constructor(_eventBus: EventBus, logger: LoggerService) {
     this.logger = logger;
     this.startTime = Date.now();
     this.metrics = {
@@ -59,6 +62,8 @@ export class HealthMonitor {
 
   /**
    * Create the health monitor
+   * @param eventBus
+   * @param logger
    */
   public static create(eventBus: EventBus, logger: LoggerService): HealthMonitor {
     if (!HealthMonitor.instance) {
@@ -79,6 +84,7 @@ export class HealthMonitor {
 
   /**
    * Set service registry
+   * @param registry
    */
   public setServiceRegistry(registry: ServiceRegistry): void {
     this.serviceRegistry = registry;
@@ -86,6 +92,7 @@ export class HealthMonitor {
 
   /**
    * Set provider registry
+   * @param registry
    */
   public setProviderRegistry(registry: ProviderRegistry): void {
     this.providerRegistry = registry;
@@ -116,7 +123,7 @@ export class HealthMonitor {
   public stop(): void {
     if (this.healthCheckInterval) {
       clearInterval(this.healthCheckInterval);
-      this.healthCheckInterval = undefined;
+      delete this.healthCheckInterval;
       this.logger.info('Health monitoring stopped');
     }
   }
@@ -195,7 +202,7 @@ export class HealthMonitor {
 
       if (!healthy) {
         this.logger.warn('Health check failed', {
-          failedChecks: Array.from(checks.entries())
+          failedChecks: [...checks.entries()]
             .filter(([_, passed]) => !passed)
             .map(([check]) => check),
         });
@@ -240,6 +247,7 @@ export class HealthMonitor {
 
   /**
    * Attempt automatic recovery
+   * @param result
    */
   private async attemptRecovery(result: HealthCheckResult): Promise<void> {
     this.logger.info('Attempting automatic recovery');

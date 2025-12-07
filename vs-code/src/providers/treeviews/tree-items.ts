@@ -19,6 +19,19 @@ export interface EnzymeTreeItemData {
  * Feature tree item
  */
 export class EnzymeFeatureItem extends vscode.TreeItem {
+  /**
+   *
+   * @param featureName
+   * @param filePath
+   * @param metadata
+   * @param metadata.description
+   * @param metadata.version
+   * @param metadata.enabled
+   * @param metadata.routes
+   * @param metadata.components
+   * @param metadata.stores
+   * @param collapsibleState
+   */
   constructor(
     public readonly featureName: string,
     public readonly filePath: string,
@@ -47,6 +60,9 @@ export class EnzymeFeatureItem extends vscode.TreeItem {
     };
   }
 
+  /**
+   *
+   */
   private buildTooltip(): string {
     const parts = [`Feature: ${this.featureName}`];
 
@@ -69,6 +85,21 @@ export class EnzymeFeatureItem extends vscode.TreeItem {
  * Route tree item
  */
 export class EnzymeRouteItem extends vscode.TreeItem {
+  /**
+   *
+   * @param routePath
+   * @param filePath
+   * @param metadata
+   * @param metadata.isProtected
+   * @param metadata.hasLoader
+   * @param metadata.hasAction
+   * @param metadata.hasGuard
+   * @param metadata.isLazy
+   * @param metadata.hasConflict
+   * @param metadata.feature
+   * @param metadata.params
+   * @param collapsibleState
+   */
   constructor(
     public readonly routePath: string,
     public readonly filePath: string,
@@ -103,6 +134,9 @@ export class EnzymeRouteItem extends vscode.TreeItem {
     };
   }
 
+  /**
+   *
+   */
   private getIcon(): vscode.ThemeIcon {
     if (this.metadata?.hasConflict) {
       return new vscode.ThemeIcon('warning', new vscode.ThemeColor('errorForeground'));
@@ -116,18 +150,24 @@ export class EnzymeRouteItem extends vscode.TreeItem {
     return new vscode.ThemeIcon('symbol-file');
   }
 
+  /**
+   *
+   */
   private buildDescription(): string {
     const badges: string[] = [];
 
-    if (this.metadata?.isProtected) badges.push('[Protected]');
-    if (this.metadata?.hasLoader) badges.push('[Loader]');
-    if (this.metadata?.hasAction) badges.push('[Action]');
-    if (this.metadata?.isLazy) badges.push('[Lazy]');
-    if (this.metadata?.feature) badges.push(`[${this.metadata.feature}]`);
+    if (this.metadata?.isProtected) {badges.push('[Protected]');}
+    if (this.metadata?.hasLoader) {badges.push('[Loader]');}
+    if (this.metadata?.hasAction) {badges.push('[Action]');}
+    if (this.metadata?.isLazy) {badges.push('[Lazy]');}
+    if (this.metadata?.feature) {badges.push(`[${this.metadata.feature}]`);}
 
     return badges.join(' ');
   }
 
+  /**
+   *
+   */
   private buildTooltip(): string {
     const parts = [`Route: ${this.routePath}`];
 
@@ -162,6 +202,20 @@ export class EnzymeRouteItem extends vscode.TreeItem {
  * Component tree item
  */
 export class EnzymeComponentItem extends vscode.TreeItem {
+  /**
+   *
+   * @param componentName
+   * @param filePath
+   * @param metadata
+   * @param metadata.category
+   * @param metadata.isUIComponent
+   * @param metadata.isFeatureComponent
+   * @param metadata.usageCount
+   * @param metadata.hasProps
+   * @param metadata.hasStory
+   * @param metadata.hasTests
+   * @param collapsibleState
+   */
   constructor(
     public readonly componentName: string,
     public readonly filePath: string,
@@ -190,6 +244,9 @@ export class EnzymeComponentItem extends vscode.TreeItem {
     };
   }
 
+  /**
+   *
+   */
   private buildDescription(): string {
     const parts: string[] = [];
 
@@ -203,6 +260,9 @@ export class EnzymeComponentItem extends vscode.TreeItem {
     return parts.join(' ');
   }
 
+  /**
+   *
+   */
   private buildTooltip(): string {
     const parts = [`Component: ${this.componentName}`];
 
@@ -236,6 +296,18 @@ export class EnzymeComponentItem extends vscode.TreeItem {
  * State store tree item
  */
 export class EnzymeStoreItem extends vscode.TreeItem {
+  /**
+   *
+   * @param storeName
+   * @param filePath
+   * @param metadata
+   * @param metadata.slices
+   * @param metadata.isPersisted
+   * @param metadata.hasDevTools
+   * @param metadata.hasMiddleware
+   * @param metadata.stateShape
+   * @param collapsibleState
+   */
   constructor(
     public readonly storeName: string,
     public readonly filePath: string,
@@ -262,16 +334,22 @@ export class EnzymeStoreItem extends vscode.TreeItem {
     };
   }
 
+  /**
+   *
+   */
   private buildDescription(): string {
     const badges: string[] = [];
 
-    if (this.metadata?.isPersisted) badges.push('[Persisted]');
-    if (this.metadata?.hasDevTools) badges.push('[DevTools]');
-    if (this.metadata?.slices?.length) badges.push(`${this.metadata.slices.length} slices`);
+    if (this.metadata?.isPersisted) {badges.push('[Persisted]');}
+    if (this.metadata?.hasDevTools) {badges.push('[DevTools]');}
+    if (this.metadata?.slices?.length) {badges.push(`${this.metadata.slices.length} slices`);}
 
     return badges.join(' ');
   }
 
+  /**
+   *
+   */
   private buildTooltip(): string {
     const parts = [`Store: ${this.storeName}`];
 
@@ -303,6 +381,18 @@ export class EnzymeStoreItem extends vscode.TreeItem {
  * Hook tree item
  */
 export class EnzymeHookItem extends vscode.TreeItem {
+  /**
+   *
+   * @param hookName
+   * @param filePath
+   * @param metadata
+   * @param metadata.category
+   * @param metadata.parameters
+   * @param metadata.returnType
+   * @param metadata.dependencies
+   * @param metadata.isAsync
+   * @param collapsibleState
+   */
   constructor(
     public readonly hookName: string,
     public readonly filePath: string,
@@ -329,6 +419,9 @@ export class EnzymeHookItem extends vscode.TreeItem {
     };
   }
 
+  /**
+   *
+   */
   private buildTooltip(): string {
     const parts = [`Hook: ${this.hookName}`];
 
@@ -357,6 +450,20 @@ export class EnzymeHookItem extends vscode.TreeItem {
  * API endpoint tree item
  */
 export class EnzymeAPIItem extends vscode.TreeItem {
+  /**
+   *
+   * @param endpointName
+   * @param filePath
+   * @param metadata
+   * @param metadata.method
+   * @param metadata.path
+   * @param metadata.resource
+   * @param metadata.requestType
+   * @param metadata.responseType
+   * @param metadata.isMocked
+   * @param metadata.hasAuth
+   * @param collapsibleState
+   */
   constructor(
     public readonly endpointName: string,
     public readonly filePath: string,
@@ -385,9 +492,12 @@ export class EnzymeAPIItem extends vscode.TreeItem {
     };
   }
 
+  /**
+   *
+   */
   private getIcon(): vscode.ThemeIcon {
     const method = this.metadata?.method;
-    if (!method) return new vscode.ThemeIcon('globe');
+    if (!method) {return new vscode.ThemeIcon('globe');}
 
     const colorMap: Record<string, string> = {
       GET: 'terminal.ansiGreen',
@@ -400,6 +510,9 @@ export class EnzymeAPIItem extends vscode.TreeItem {
     return new vscode.ThemeIcon('globe', new vscode.ThemeColor(colorMap[method] || 'foreground'));
   }
 
+  /**
+   *
+   */
   private buildDescription(): string {
     const parts: string[] = [];
 
@@ -416,6 +529,9 @@ export class EnzymeAPIItem extends vscode.TreeItem {
     return parts.join(' ');
   }
 
+  /**
+   *
+   */
   private buildTooltip(): string {
     const parts = [`Endpoint: ${this.endpointName}`];
 
@@ -447,9 +563,15 @@ export class EnzymeAPIItem extends vscode.TreeItem {
  * Category/Group tree item for organizing other items
  */
 export class EnzymeCategoryItem extends vscode.TreeItem {
+  /**
+   *
+   * @param categoryName
+   * @param itemCount
+   * @param collapsibleState
+   */
   constructor(
     public readonly categoryName: string,
-    public readonly itemCount: number = 0,
+    public readonly itemCount = 0,
     public override readonly collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Expanded
   ) {
     super(categoryName, collapsibleState);

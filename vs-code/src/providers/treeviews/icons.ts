@@ -3,8 +3,8 @@
  * @description Centralized icon management for TreeView items
  */
 
+import * as path from 'node:path';
 import * as vscode from 'vscode';
-import * as path from 'path';
 
 /**
  * Icon type for Enzyme entities
@@ -76,6 +76,7 @@ const ICON_COLOR_MAP: Partial<Record<EnzymeIconType, string>> = {
 
 /**
  * Get icon for a specific type
+ * @param type
  */
 export function getIconForType(type: EnzymeIconType): vscode.ThemeIcon {
   const iconId = THEME_ICON_MAP[type];
@@ -90,6 +91,7 @@ export function getIconForType(type: EnzymeIconType): vscode.ThemeIcon {
 
 /**
  * Get icon for HTTP method
+ * @param method
  */
 export function getIconForHttpMethod(method: string): vscode.ThemeIcon {
   const normalizedMethod = method.toUpperCase();
@@ -104,9 +106,10 @@ export function getIconForHttpMethod(method: string): vscode.ThemeIcon {
 
 /**
  * Get icon for file type based on extension
+ * @param filePath
  */
 export function getIconForFileType(filePath: string): vscode.ThemeIcon {
-  const ext = path.extname(filePath).toLowerCase();
+  const extension = path.extname(filePath).toLowerCase();
 
   const fileTypeMap: Record<string, string> = {
     '.tsx': 'symbol-class',
@@ -119,12 +122,15 @@ export function getIconForFileType(filePath: string): vscode.ThemeIcon {
     '.md': 'markdown',
   };
 
-  const iconId = fileTypeMap[ext] || 'file';
+  const iconId = fileTypeMap[extension] || 'file';
   return new vscode.ThemeIcon(iconId);
 }
 
 /**
  * Get custom icon path (for extension-specific icons)
+ * @param context
+ * @param iconName
+ * @param theme
  */
 export function getCustomIconPath(
   context: vscode.ExtensionContext,
@@ -138,6 +144,7 @@ export function getCustomIconPath(
 
 /**
  * Get icon for feature status
+ * @param enabled
  */
 export function getIconForFeatureStatus(enabled: boolean): vscode.ThemeIcon {
   return getIconForType(enabled ? 'feature-enabled' : 'feature-disabled');
@@ -145,6 +152,10 @@ export function getIconForFeatureStatus(enabled: boolean): vscode.ThemeIcon {
 
 /**
  * Get icon for route type
+ * @param options
+ * @param options.isProtected
+ * @param options.isLazy
+ * @param options.hasConflict
  */
 export function getIconForRoute(options: {
   isProtected?: boolean;
@@ -165,6 +176,9 @@ export function getIconForRoute(options: {
 
 /**
  * Get icon for component type
+ * @param options
+ * @param options.isUI
+ * @param options.isFeature
  */
 export function getIconForComponent(options: {
   isUI?: boolean;
@@ -181,6 +195,7 @@ export function getIconForComponent(options: {
 
 /**
  * Get icon for store
+ * @param isPersisted
  */
 export function getIconForStore(isPersisted?: boolean): vscode.ThemeIcon {
   return getIconForType(isPersisted ? 'store-persisted' : 'store');
@@ -188,6 +203,7 @@ export function getIconForStore(isPersisted?: boolean): vscode.ThemeIcon {
 
 /**
  * Get icon for hook
+ * @param isAsync
  */
 export function getIconForHook(isAsync?: boolean): vscode.ThemeIcon {
   return getIconForType(isAsync ? 'hook-async' : 'hook');
@@ -195,6 +211,8 @@ export function getIconForHook(isAsync?: boolean): vscode.ThemeIcon {
 
 /**
  * Create a badge icon with text
+ * @param _text
+ * @param color
  */
 export function createBadgeIcon(_text: string, color?: string): vscode.ThemeIcon {
   return new vscode.ThemeIcon(
@@ -205,6 +223,7 @@ export function createBadgeIcon(_text: string, color?: string): vscode.ThemeIcon
 
 /**
  * Get status icon
+ * @param status
  */
 export function getStatusIcon(status: 'success' | 'warning' | 'error' | 'info'): vscode.ThemeIcon {
   const iconMap = {

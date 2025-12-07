@@ -15,6 +15,9 @@ export enum AdapterMode {
   SERVER = 'server',
 }
 
+/**
+ *
+ */
 export interface AdapterDescriptor {
   type: string;
   mode: AdapterMode;
@@ -22,6 +25,9 @@ export interface AdapterDescriptor {
   host?: string;
 }
 
+/**
+ *
+ */
 export interface AdapterFactoryOptions {
   mode?: AdapterMode;
   port?: number;
@@ -33,11 +39,18 @@ export interface AdapterFactoryOptions {
 // Debug Adapter Descriptor Factory
 // ============================================================================
 
+/**
+ *
+ */
 export class DebugAdapterDescriptorFactory {
-  private adapters = new Map<string, EnzymeDebugAdapter>();
-  private sessions = new Map<string, EnzymeDebugSession>();
-  private options: Required<AdapterFactoryOptions>;
+  private readonly adapters = new Map<string, EnzymeDebugAdapter>();
+  private readonly sessions = new Map<string, EnzymeDebugSession>();
+  private readonly options: Required<AdapterFactoryOptions>;
 
+  /**
+   *
+   * @param options
+   */
   constructor(options: AdapterFactoryOptions = {}) {
     this.options = {
       mode: options.mode ?? AdapterMode.INLINE,
@@ -49,8 +62,9 @@ export class DebugAdapterDescriptorFactory {
 
   /**
    * Create debug adapter descriptor
+   * @param _sessionId
    */
-  createDescriptor(sessionId: string): AdapterDescriptor {
+  createDescriptor(_sessionId: string): AdapterDescriptor {
     return {
       type: 'enzyme',
       mode: this.options.mode,
@@ -61,6 +75,7 @@ export class DebugAdapterDescriptorFactory {
 
   /**
    * Create debug adapter
+   * @param sessionId
    */
   createAdapter(sessionId: string): EnzymeDebugAdapter {
     let adapter = this.adapters.get(sessionId);
@@ -75,6 +90,7 @@ export class DebugAdapterDescriptorFactory {
 
   /**
    * Create debug session
+   * @param sessionId
    */
   createSession(sessionId: string): EnzymeDebugSession {
     let session = this.sessions.get(sessionId);
@@ -89,6 +105,7 @@ export class DebugAdapterDescriptorFactory {
 
   /**
    * Get adapter for session
+   * @param sessionId
    */
   getAdapter(sessionId: string): EnzymeDebugAdapter | undefined {
     return this.adapters.get(sessionId);
@@ -96,6 +113,7 @@ export class DebugAdapterDescriptorFactory {
 
   /**
    * Get session
+   * @param sessionId
    */
   getSession(sessionId: string): EnzymeDebugSession | undefined {
     return this.sessions.get(sessionId);
@@ -103,6 +121,7 @@ export class DebugAdapterDescriptorFactory {
 
   /**
    * Dispose adapter
+   * @param sessionId
    */
   disposeAdapter(sessionId: string): void {
     const adapter = this.adapters.get(sessionId);
@@ -114,6 +133,7 @@ export class DebugAdapterDescriptorFactory {
 
   /**
    * Dispose session
+   * @param sessionId
    */
   async disposeSession(sessionId: string): Promise<void> {
     const session = this.sessions.get(sessionId);
@@ -129,7 +149,7 @@ export class DebugAdapterDescriptorFactory {
    * Dispose all adapters and sessions
    */
   async disposeAll(): Promise<void> {
-    const disposePromises: Promise<void>[] = [];
+    const disposePromises: Array<Promise<void>> = [];
 
     for (const sessionId of this.sessions.keys()) {
       disposePromises.push(this.disposeSession(sessionId));
@@ -149,7 +169,7 @@ export class DebugAdapterDescriptorFactory {
    * Get all session IDs
    */
   getSessionIds(): string[] {
-    return Array.from(this.sessions.keys());
+    return [...this.sessions.keys()];
   }
 }
 
@@ -161,6 +181,7 @@ let globalFactory: DebugAdapterDescriptorFactory | null = null;
 
 /**
  * Get or create global factory instance
+ * @param options
  */
 export function getGlobalAdapterFactory(
   options?: AdapterFactoryOptions

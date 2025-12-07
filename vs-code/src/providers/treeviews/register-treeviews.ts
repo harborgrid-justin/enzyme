@@ -4,9 +4,8 @@
  */
 
 import * as vscode from 'vscode';
-import { EnzymeExtensionContext } from '../../core/context';
-import { ViewOrchestrator } from '../../orchestration/view-orchestrator';
 import { logger } from '../../core/logger';
+import { ViewOrchestrator } from '../../orchestration/view-orchestrator';
 import {
   EnzymeFeaturesTreeProvider,
   EnzymeRoutesTreeProvider,
@@ -14,25 +13,43 @@ import {
   EnzymeStateTreeProvider,
   EnzymeAPITreeProvider,
 } from './index';
+import type { EnzymeExtensionContext } from '../../core/context';
 
 /**
  * Performance TreeView provider placeholder
  * TODO: Implement full performance metrics tree
  */
 class EnzymePerformanceTreeProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
-  private _onDidChangeTreeData = new vscode.EventEmitter<vscode.TreeItem | undefined | null | void>();
+  private readonly _onDidChangeTreeData = new vscode.EventEmitter<vscode.TreeItem | undefined | null | void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
-  constructor(private _context: vscode.ExtensionContext) {}
+  /**
+   *
+   * @param _context
+   */
+  constructor(_context: vscode.ExtensionContext) {
+    // Context parameter reserved for future use
+  }
 
+  /**
+   *
+   */
   refresh(): void {
     this._onDidChangeTreeData.fire();
   }
 
+  /**
+   *
+   * @param element
+   */
   getTreeItem(element: vscode.TreeItem): vscode.TreeItem {
     return element;
   }
 
+  /**
+   *
+   * @param element
+   */
   async getChildren(element?: vscode.TreeItem): Promise<vscode.TreeItem[]> {
     if (!element) {
       // Root items - placeholder for now
@@ -47,6 +64,7 @@ class EnzymePerformanceTreeProvider implements vscode.TreeDataProvider<vscode.Tr
 
 /**
  * Register all TreeView providers
+ * @param enzymeContext
  */
 export function registerTreeViewProviders(
   enzymeContext: EnzymeExtensionContext

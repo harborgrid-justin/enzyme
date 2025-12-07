@@ -8,6 +8,9 @@ import { getIndex } from './enzyme-index';
 export class EnzymeInlayHintsProvider implements vscode.InlayHintsProvider {
   /**
    * Provide inlay hints
+   * @param document
+   * @param range
+   * @param _token
    */
   public async provideInlayHints(
     document: vscode.TextDocument,
@@ -52,6 +55,11 @@ export class EnzymeInlayHintsProvider implements vscode.InlayHintsProvider {
 
   /**
    * Add hook return type hints
+   * @param document
+   * @param _range
+   * @param text
+   * @param startOffset
+   * @param hints
    */
   private addHookReturnTypeHints(
     document: vscode.TextDocument,
@@ -68,11 +76,13 @@ export class EnzymeInlayHintsProvider implements vscode.InlayHintsProvider {
       let match: RegExpExecArray | null;
 
       while ((match = hookPattern.exec(text)) !== null) {
-        const varName = match[1];
+        const variableName = match[1];
         const hookName = match[2];
+        if (!hookName) continue;
+
         const hook = index.getHook(hookName);
 
-        if (hook && hook.returnType && varName !== hookName) {
+        if (hook?.returnType && variableName !== hookName) {
           const position = document.positionAt(startOffset + match.index + match[0].indexOf('='));
 
           const hint = new vscode.InlayHint(
@@ -91,9 +101,11 @@ export class EnzymeInlayHintsProvider implements vscode.InlayHintsProvider {
       const destructurePattern = /const\s*{\s*([^}]+)\s*}\s*=\s*(use[A-Z]\w*)\s*\(/g;
       while ((match = destructurePattern.exec(text)) !== null) {
         const hookName = match[2];
+        if (!hookName) continue;
+
         const hook = index.getHook(hookName);
 
-        if (hook && hook.returnType) {
+        if (hook?.returnType) {
           const position = document.positionAt(startOffset + match.index + match[0].indexOf('='));
 
           const hint = new vscode.InlayHint(
@@ -107,17 +119,22 @@ export class EnzymeInlayHintsProvider implements vscode.InlayHintsProvider {
           hints.push(hint);
         }
       }
-    } catch (error) {
+    } catch {
       // Index not available
     }
   }
 
   /**
    * Add route parameter type hints
+   * @param document
+   * @param range
+   * @param text
+   * @param startOffset
+   * @param hints
    */
   private addRouteParameterHints(
     document: vscode.TextDocument,
-    range: vscode.Range,
+    _range: vscode.Range,
     text: string,
     startOffset: number,
     hints: vscode.InlayHint[]
@@ -131,15 +148,19 @@ export class EnzymeInlayHintsProvider implements vscode.InlayHintsProvider {
 
       while ((match = buildPathPattern.exec(text)) !== null) {
         const routeName = match[1];
+        if (!routeName) continue;
+
         const route = index.getRoute(routeName);
 
-        if (route && route.params && route.params.length > 0) {
+        if (route?.params && route.params.length > 0) {
           const paramsText = match[2];
+          if (!paramsText) continue;
+
           const params = paramsText.split(',');
 
           params.forEach(param => {
-            const paramMatch = param.match(/(\w+)\s*:/);
-            if (paramMatch) {
+            const paramMatch = /(\w+)\s*:/.exec(param);
+            if (paramMatch && paramMatch[1] && match) {
               const paramName = paramMatch[1].trim();
               const paramIndex = text.indexOf(paramName, match.index);
 
@@ -160,17 +181,22 @@ export class EnzymeInlayHintsProvider implements vscode.InlayHintsProvider {
           });
         }
       }
-    } catch (error) {
+    } catch {
       // Index not available
     }
   }
 
   /**
    * Add API response type hints
+   * @param document
+   * @param range
+   * @param text
+   * @param startOffset
+   * @param hints
    */
   private addApiResponseHints(
     document: vscode.TextDocument,
-    range: vscode.Range,
+    _range: vscode.Range,
     text: string,
     startOffset: number,
     hints: vscode.InlayHint[]
@@ -180,10 +206,11 @@ export class EnzymeInlayHintsProvider implements vscode.InlayHintsProvider {
     let match: RegExpExecArray | null;
 
     while ((match = apiPattern.exec(text)) !== null) {
-      const varName = match[1];
+      const variableName = match[1];
       const method = match[2];
+      if (!method) continue;
 
-      if (varName !== 'response' && varName !== 'result') {
+      if (variableName !== 'response' && variableName !== 'result') {
         const position = document.positionAt(startOffset + match.index + match[0].indexOf('='));
 
         const hint = new vscode.InlayHint(
@@ -201,10 +228,15 @@ export class EnzymeInlayHintsProvider implements vscode.InlayHintsProvider {
 
   /**
    * Add store selector type hints
+   * @param document
+   * @param range
+   * @param text
+   * @param startOffset
+   * @param hints
    */
   private addStoreSelectorHints(
     document: vscode.TextDocument,
-    range: vscode.Range,
+    _range: vscode.Range,
     text: string,
     startOffset: number,
     hints: vscode.InlayHint[]
@@ -217,11 +249,12 @@ export class EnzymeInlayHintsProvider implements vscode.InlayHintsProvider {
       let match: RegExpExecArray | null;
 
       while ((match = selectorPattern.exec(text)) !== null) {
-        const varName = match[1];
         const sliceName = match[2];
+        if (!sliceName) continue;
+
         const store = index.getStore(sliceName);
 
-        if (store && store.state) {
+        if (store?.state) {
           // Infer type from store state
           const stateType = Object.entries(store.state)
             .map(([key, type]) => `${key}: ${type}`)
@@ -240,17 +273,22 @@ export class EnzymeInlayHintsProvider implements vscode.InlayHintsProvider {
           hints.push(hint);
         }
       }
-    } catch (error) {
+    } catch {
       // Index not available
     }
   }
 
   /**
    * Add component props type hints
+   * @param document
+   * @param range
+   * @param text
+   * @param startOffset
+   * @param hints
    */
   private addComponentPropsHints(
     document: vscode.TextDocument,
-    range: vscode.Range,
+    _range: vscode.Range,
     text: string,
     startOffset: number,
     hints: vscode.InlayHint[]
@@ -264,28 +302,34 @@ export class EnzymeInlayHintsProvider implements vscode.InlayHintsProvider {
 
       while ((match = componentPattern.exec(text)) !== null) {
         const componentName = match[1];
+        if (!componentName) continue;
+
         const component = index.getComponent(componentName);
 
-        if (component && component.props) {
+        if (component?.props) {
           const propsText = match[2];
-          const propMatches = propsText.matchAll(/(\w+)=/g);
+          if (!propsText) continue;
 
-          for (const propMatch of propMatches) {
-            const propName = propMatch[1];
-            const propType = component.props[propName];
+          const propertyMatches = propsText.matchAll(/(\w+)=/g);
 
-            if (propType) {
-              const propIndex = text.indexOf(propName, match.index);
-              if (propIndex !== -1) {
-                const position = document.positionAt(startOffset + propIndex + propName.length);
+          for (const propertyMatch of propertyMatches) {
+            const propertyName = propertyMatch[1];
+            if (!propertyName) continue;
+
+            const propertyType = component.props[propertyName];
+
+            if (propertyType) {
+              const propertyIndex = text.indexOf(propertyName, match.index);
+              if (propertyIndex !== -1) {
+                const position = document.positionAt(startOffset + propertyIndex + propertyName.length);
 
                 const hint = new vscode.InlayHint(
                   position,
-                  `: ${propType}`,
+                  `: ${propertyType}`,
                   vscode.InlayHintKind.Type
                 );
 
-                hint.tooltip = `Prop type for ${componentName}.${propName}`;
+                hint.tooltip = `Prop type for ${componentName}.${propertyName}`;
                 hint.paddingLeft = true;
                 hints.push(hint);
               }
@@ -293,17 +337,19 @@ export class EnzymeInlayHintsProvider implements vscode.InlayHintsProvider {
           }
         }
       }
-    } catch (error) {
+    } catch {
       // Index not available
     }
   }
 
   /**
    * Resolve inlay hint (optional, for lazy loading)
+   * @param hint
+   * @param token
    */
   public async resolveInlayHint(
     hint: vscode.InlayHint,
-    token: vscode.CancellationToken
+    _token: vscode.CancellationToken
   ): Promise<vscode.InlayHint> {
     return hint;
   }

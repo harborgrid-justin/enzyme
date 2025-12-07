@@ -1,6 +1,9 @@
 import * as vscode from 'vscode';
 import { BaseWebViewPanel } from './base-webview-panel';
 
+/**
+ *
+ */
 interface WebVitalMetric {
 	name: string;
 	value: number;
@@ -8,6 +11,9 @@ interface WebVitalMetric {
 	timestamp: number;
 }
 
+/**
+ *
+ */
 interface PerformanceMetrics {
 	webVitals: {
 		LCP?: WebVitalMetric; // Largest Contentful Paint
@@ -17,25 +23,25 @@ interface PerformanceMetrics {
 		TTFB?: WebVitalMetric; // Time to First Byte
 		INP?: WebVitalMetric; // Interaction to Next Paint
 	};
-	componentMetrics: {
+	componentMetrics: Array<{
 		name: string;
 		renderTime: number;
 		renderCount: number;
-	}[];
+	}>;
 	bundleSize: {
 		total: number;
-		chunks: { name: string; size: number }[];
+		chunks: Array<{ name: string; size: number }>;
 	};
 	networkMetrics: {
 		requests: number;
 		totalSize: number;
 		totalTime: number;
 	};
-	memoryUsage: {
+	memoryUsage: Array<{
 		used: number;
 		limit: number;
 		timestamp: number;
-	}[];
+	}>;
 }
 
 /**
@@ -48,6 +54,10 @@ export class PerformancePanel extends BaseWebViewPanel {
 	private metricsHistory: PerformanceMetrics[] = [];
 	private readonly maxHistorySize = 100;
 
+	/**
+	 *
+	 * @param context
+	 */
 	private constructor(context: vscode.ExtensionContext) {
 		super(context, 'enzyme.performance', 'Enzyme Performance Monitor');
 		this.metrics = this.getEmptyMetrics();
@@ -56,6 +66,7 @@ export class PerformancePanel extends BaseWebViewPanel {
 
 	/**
 	 * Get or create the singleton instance
+	 * @param context
 	 */
 	public static getInstance(context: vscode.ExtensionContext): PerformancePanel {
 		if (!PerformancePanel.instance) {
@@ -66,12 +77,16 @@ export class PerformancePanel extends BaseWebViewPanel {
 
 	/**
 	 * Show the performance panel
+	 * @param context
 	 */
 	public static show(context: vscode.ExtensionContext): void {
 		const panel = PerformancePanel.getInstance(context);
 		panel.show();
 	}
 
+	/**
+	 *
+	 */
 	protected override getIconPath(): vscode.Uri | { light: vscode.Uri; dark: vscode.Uri } | undefined {
 		return {
 			light: vscode.Uri.file(this.context.asAbsolutePath('resources/icons/performance-light.svg')),
@@ -79,6 +94,10 @@ export class PerformancePanel extends BaseWebViewPanel {
 		};
 	}
 
+	/**
+	 *
+	 * @param _webview
+	 */
 	protected getBodyContent(_webview: vscode.Webview): string {
 		return `
 			<div class="container">
@@ -303,11 +322,20 @@ export class PerformancePanel extends BaseWebViewPanel {
 		`;
 	}
 
+	/**
+	 *
+	 * @param webview
+	 * @param nonce
+	 */
 	protected getScripts(webview: vscode.Webview, nonce: string): string {
 		const scriptUri = this.getWebviewUri(webview, ['src', 'webview-ui', 'performance', 'main.js']);
 		return `<script nonce="${nonce}" src="${scriptUri}"></script>`;
 	}
 
+	/**
+	 *
+	 * @param message
+	 */
 	protected async handleMessage(message: any): Promise<void> {
 		switch (message.type) {
 			case 'getMetrics':
@@ -329,16 +357,23 @@ export class PerformancePanel extends BaseWebViewPanel {
 		}
 	}
 
+	/**
+	 *
+	 */
 	protected override onPanelCreated(): void {
 		this.sendMetricsUpdate();
 	}
 
+	/**
+	 *
+	 */
 	protected override onPanelVisible(): void {
 		this.sendMetricsUpdate();
 	}
 
 	/**
 	 * Update metrics from the application
+	 * @param metrics
 	 */
 	public updateMetrics(metrics: Partial<PerformanceMetrics>): void {
 		this.metrics = {
@@ -358,6 +393,8 @@ export class PerformancePanel extends BaseWebViewPanel {
 
 	/**
 	 * Update a specific Web Vital metric
+	 * @param name
+	 * @param value
 	 */
 	public updateWebVital(name: keyof PerformanceMetrics['webVitals'], value: number): void {
 		const rating = this.getMetricRating(name, value);
@@ -372,6 +409,11 @@ export class PerformancePanel extends BaseWebViewPanel {
 		this.persistMetrics();
 	}
 
+	/**
+	 *
+	 * @param metric
+	 * @param value
+	 */
 	private getMetricRating(metric: string, value: number): 'good' | 'needs-improvement' | 'poor' {
 		const thresholds: Record<string, { good: number; poor: number }> = {
 			LCP: { good: 2500, poor: 4000 },
@@ -391,11 +433,14 @@ export class PerformancePanel extends BaseWebViewPanel {
 			return 'good';
 		} else if (value <= threshold.poor) {
 			return 'needs-improvement';
-		} else {
+		} 
 			return 'poor';
-		}
+		
 	}
 
+	/**
+	 *
+	 */
 	private calculatePerformanceScore(): number {
 		const vitals = this.metrics.webVitals;
 		let score = 0;
@@ -417,6 +462,9 @@ export class PerformancePanel extends BaseWebViewPanel {
 		return count > 0 ? Math.round(score / count) : 0;
 	}
 
+	/**
+	 *
+	 */
 	private sendMetricsUpdate(): void {
 		const performanceScore = this.calculatePerformanceScore();
 
@@ -431,6 +479,9 @@ export class PerformancePanel extends BaseWebViewPanel {
 		});
 	}
 
+	/**
+	 *
+	 */
 	private async exportReport(): Promise<void> {
 		const uri = await vscode.window.showSaveDialog({
 			filters: {
@@ -454,6 +505,9 @@ export class PerformancePanel extends BaseWebViewPanel {
 		}
 	}
 
+	/**
+	 *
+	 */
 	private async clearMetrics(): Promise<void> {
 		const answer = await vscode.window.showWarningMessage(
 			'Are you sure you want to clear all performance metrics?',
@@ -470,6 +524,9 @@ export class PerformancePanel extends BaseWebViewPanel {
 		}
 	}
 
+	/**
+	 *
+	 */
 	private getEmptyMetrics(): PerformanceMetrics {
 		return {
 			webVitals: {},
@@ -487,11 +544,17 @@ export class PerformancePanel extends BaseWebViewPanel {
 		};
 	}
 
+	/**
+	 *
+	 */
 	private async persistMetrics(): Promise<void> {
 		await this.persistState('metrics', this.metrics);
 		await this.persistState('metricsHistory', this.metricsHistory.slice(-20));
 	}
 
+	/**
+	 *
+	 */
 	private loadPersistedMetrics(): void {
 		const metrics = this.getPersistedState<PerformanceMetrics>('metrics', this.getEmptyMetrics());
 		const history = this.getPersistedState<PerformanceMetrics[]>('metricsHistory', []);
@@ -500,6 +563,9 @@ export class PerformancePanel extends BaseWebViewPanel {
 		this.metricsHistory = history;
 	}
 
+	/**
+	 *
+	 */
 	public override dispose(): void {
 		super.dispose();
 		PerformancePanel.instance = undefined;

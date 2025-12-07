@@ -3,8 +3,8 @@
  * @description Debug session management for Enzyme applications
  */
 
-import type { DebugConfiguration } from './enzyme-debug-adapter';
 import { EnzymeDebugAdapter } from './enzyme-debug-adapter';
+import type { DebugConfiguration } from './enzyme-debug-adapter';
 
 // ============================================================================
 // Types
@@ -18,6 +18,9 @@ export enum SessionState {
   STOPPED = 'stopped',
 }
 
+/**
+ *
+ */
 export interface SessionOptions {
   /** Enable state inspection */
   enableStateInspection?: boolean;
@@ -33,24 +36,26 @@ export interface SessionOptions {
 // Enzyme Debug Session
 // ============================================================================
 
+/**
+ *
+ */
 export class EnzymeDebugSession {
-  private adapter: EnzymeDebugAdapter;
+  private readonly adapter: EnzymeDebugAdapter;
   private state: SessionState = SessionState.NOT_STARTED;
   private configuration: DebugConfiguration | null = null;
-  private options: Required<SessionOptions>;
 
-  constructor(options: SessionOptions = {}) {
+  /**
+   *
+   */
+  constructor(_options: SessionOptions = {}) {
     this.adapter = new EnzymeDebugAdapter();
-    this.options = {
-      enableStateInspection: options.enableStateInspection ?? true,
-      enableActionRecording: options.enableActionRecording ?? true,
-      enableProfiling: options.enableProfiling ?? false,
-      bridgePort: options.bridgePort ?? 3001,
-    };
+    // Options are initialized but not currently used in the session
+    // They are available for future use if needed
   }
 
   /**
    * Initialize debug session
+   * @param configuration
    */
   async initialize(configuration: DebugConfiguration): Promise<void> {
     if (this.state !== SessionState.NOT_STARTED) {
@@ -71,6 +76,7 @@ export class EnzymeDebugSession {
 
   /**
    * Launch debug session
+   * @param configuration
    */
   async launch(configuration: DebugConfiguration): Promise<void> {
     await this.initialize(configuration);
@@ -79,6 +85,7 @@ export class EnzymeDebugSession {
 
   /**
    * Attach to running process
+   * @param configuration
    */
   async attach(configuration: DebugConfiguration): Promise<void> {
     await this.initialize(configuration);
@@ -87,14 +94,17 @@ export class EnzymeDebugSession {
 
   /**
    * Set breakpoint
+   * @param file
+   * @param line
    */
   setBreakpoint(file: string, line: number): { verified: boolean; line: number } {
     const breakpoints = this.adapter.setBreakpoints(file, [line]);
-    return breakpoints[0];
+    return breakpoints[0] ?? { verified: false, line };
   }
 
   /**
    * Clear breakpoints
+   * @param file
    */
   clearBreakpoints(file: string): void {
     this.adapter.clearBreakpoints(file);
@@ -149,6 +159,7 @@ export class EnzymeDebugSession {
 
   /**
    * Evaluate expression
+   * @param expression
    */
   evaluate(expression: string): { result: string; type?: string } {
     return this.adapter.evaluate(expression);
@@ -163,6 +174,7 @@ export class EnzymeDebugSession {
 
   /**
    * Get variable scopes
+   * @param frameId
    */
   getScopes(frameId: number) {
     return this.adapter.getScopes(frameId);
@@ -170,6 +182,7 @@ export class EnzymeDebugSession {
 
   /**
    * Get variables
+   * @param variablesReference
    */
   getVariables(variablesReference: number) {
     return this.adapter.getVariables(variablesReference);
@@ -219,6 +232,7 @@ let globalSession: EnzymeDebugSession | null = null;
 
 /**
  * Get or create global session instance
+ * @param options
  */
 export function getGlobalDebugSession(options?: SessionOptions): EnzymeDebugSession {
   if (!globalSession) {

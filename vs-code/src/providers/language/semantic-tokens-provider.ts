@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { getIndex } from './enzyme-index';
 import { getParser } from './parser';
 
 /**
@@ -28,6 +27,9 @@ export enum EnzymeSemanticTokenModifiers {
 export class EnzymeSemanticTokensProvider implements vscode.DocumentSemanticTokensProvider {
   private readonly legend: vscode.SemanticTokensLegend;
 
+  /**
+   *
+   */
   constructor() {
     // Define token types and modifiers
     const tokenTypes = [
@@ -55,6 +57,8 @@ export class EnzymeSemanticTokensProvider implements vscode.DocumentSemanticToke
 
   /**
    * Provide semantic tokens for a document
+   * @param document
+   * @param _token
    */
   public async provideDocumentSemanticTokens(
     document: vscode.TextDocument,
@@ -119,6 +123,10 @@ export class EnzymeSemanticTokensProvider implements vscode.DocumentSemanticToke
 
   /**
    * Add a semantic token
+   * @param builder
+   * @param range
+   * @param tokenType
+   * @param tokenModifiers
    */
   private addToken(
     builder: vscode.SemanticTokensBuilder,
@@ -139,6 +147,7 @@ export class EnzymeSemanticTokensProvider implements vscode.DocumentSemanticToke
 
   /**
    * Encode token modifiers as bitset
+   * @param modifiers
    */
   private encodeModifiers(modifiers: string[]): number {
     let result = 0;
@@ -153,6 +162,8 @@ export class EnzymeSemanticTokensProvider implements vscode.DocumentSemanticToke
 
   /**
    * Add tokens based on text analysis
+   * @param document
+   * @param builder
    */
   private addTextBasedTokens(
     document: vscode.TextDocument,
@@ -165,7 +176,7 @@ export class EnzymeSemanticTokensProvider implements vscode.DocumentSemanticToke
       // Highlight routes.* references
       const routeMatches = line.matchAll(/routes\.(\w+)/g);
       for (const match of routeMatches) {
-        if (match.index !== undefined) {
+        if (match.index !== undefined && match[1]) {
           builder.push(
             lineIndex,
             match.index + 'routes.'.length,
@@ -179,7 +190,7 @@ export class EnzymeSemanticTokensProvider implements vscode.DocumentSemanticToke
       // Highlight use* hook calls
       const hookMatches = line.matchAll(/\b(use[A-Z]\w*)\s*\(/g);
       for (const match of hookMatches) {
-        if (match.index !== undefined) {
+        if (match.index !== undefined && match[1]) {
           builder.push(
             lineIndex,
             match.index,
@@ -193,7 +204,7 @@ export class EnzymeSemanticTokensProvider implements vscode.DocumentSemanticToke
       // Highlight state.* references
       const storeMatches = line.matchAll(/state\.(\w+)/g);
       for (const match of storeMatches) {
-        if (match.index !== undefined) {
+        if (match.index !== undefined && match[1]) {
           builder.push(
             lineIndex,
             match.index + 'state.'.length,
@@ -207,7 +218,7 @@ export class EnzymeSemanticTokensProvider implements vscode.DocumentSemanticToke
       // Highlight API method calls
       const apiMatches = line.matchAll(/\.(get|post|put|patch|delete)\s*\(/g);
       for (const match of apiMatches) {
-        if (match.index !== undefined) {
+        if (match.index !== undefined && match[1]) {
           builder.push(
             lineIndex,
             match.index + 1, // Skip the '.'

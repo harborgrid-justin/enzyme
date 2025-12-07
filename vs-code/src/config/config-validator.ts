@@ -4,13 +4,13 @@
  */
 
 import * as vscode from 'vscode';
-import { z } from 'zod';
 import {
   enzymeConfigSchema,
   schemaRegistry,
   type SchemaKey,
   type EnzymeConfigSchema,
 } from './config-schema';
+import type { z } from 'zod';
 
 // =============================================================================
 // Types
@@ -57,9 +57,12 @@ export interface SchemaVersion {
  * Configuration validator with real-time support
  */
 export class ConfigValidator {
-  private diagnosticCollection: vscode.DiagnosticCollection;
-  private schemaVersions: Map<string, SchemaVersion> = new Map();
+  private readonly diagnosticCollection: vscode.DiagnosticCollection;
+  private readonly schemaVersions = new Map<string, SchemaVersion>();
 
+  /**
+   *
+   */
   constructor() {
     this.diagnosticCollection = vscode.languages.createDiagnosticCollection('enzyme-config');
     this.initializeSchemaVersions();
@@ -83,6 +86,7 @@ export class ConfigValidator {
 
   /**
    * Validate configuration object
+   * @param config
    */
   public validate(config: unknown): ValidationResult {
     const errors: ValidationError[] = [];
@@ -93,11 +97,12 @@ export class ConfigValidator {
 
       if (!result.success) {
         for (const error of result.error.issues) {
+          const suggestion = this.getSuggestion(error);
           const validationError: ValidationError = {
             message: error.message,
             path: error.path.map(String),
             severity: vscode.DiagnosticSeverity.Error,
-            suggestion: this.getSuggestion(error),
+            ...(suggestion !== undefined && { suggestion }),
           };
           errors.push(validationError);
         }
@@ -130,6 +135,7 @@ export class ConfigValidator {
 
   /**
    * Validate document content
+   * @param document
    */
   public async validateDocument(document: vscode.TextDocument): Promise<ValidationResult> {
     try {
@@ -162,22 +168,23 @@ export class ConfigValidator {
 
   /**
    * Parse document text to config object
+   * @param text
    */
   private parseDocument(text: string): unknown {
     // Remove comments
-    const cleanText = text.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '');
+    const cleanText = text.replace(/\/\*[\S\s]*?\*\/|\/\/.*/g, '');
 
     // Try to extract config object
-    const exportMatch = cleanText.match(/export\s+default\s+([\s\S]*?)(?:;|\n|$)/);
-    if (exportMatch) {
+    const exportMatch = /export\s+default\s+([\S\s]*?)(?:;|\n|$)/.exec(cleanText);
+    if (exportMatch && exportMatch[1]) {
       // Simple JSON parse (in production, use proper TS parser)
-      const configStr = exportMatch[1]
-        .replace(/([{,]\s*)(\w+):/g, '$1"$2":')
+      const configString = exportMatch[1]
+        .replace(/([,{]\s*)(\w+):/g, '$1"$2":')
         .replace(/'/g, '"')
-        .replace(/,(\s*[}\]])/g, '$1')
-        .replace(/defineConfig\(([\s\S]*)\)/, '$1');
+        .replace(/,(\s*[\]}])/g, '$1')
+        .replace(/defineConfig\(([\S\s]*)\)/, '$1');
 
-      return JSON.parse(configStr);
+      return JSON.parse(configString);
     }
 
     // Try as pure JSON
@@ -186,20 +193,28 @@ export class ConfigValidator {
 
   /**
    * Add line/column information to error
+   * @param error
+   * @param text
    */
   private addLocationInfo(error: ValidationError, text: string): ValidationError {
-    if (!error.path.length) {
+    if (error.path.length === 0) {
       return error;
     }
 
-    const pathStr = error.path.join('.');
-    const regex = new RegExp(`["']?${error.path[error.path.length - 1]}["']?\\s*:`, 'g');
+    const lastPath = error.path[error.path.length - 1];
+    if (!lastPath) {
+      return error;
+    }
+    const regex = new RegExp(`["']?${lastPath}["']?\\s*:`, 'g');
     const match = regex.exec(text);
 
-    if (match) {
-      const lines = text.substring(0, match.index).split('\n');
-      error.line = lines.length - 1;
-      error.column = lines[lines.length - 1].length;
+    if (match && match.index !== undefined) {
+      const lines = text.slice(0, Math.max(0, match.index)).split('\n');
+      const lastLine = lines[lines.length - 1];
+      if (lastLine !== undefined) {
+        error.line = lines.length - 1;
+        error.column = lastLine.length;
+      }
     }
 
     return error;
@@ -207,6 +222,8 @@ export class ConfigValidator {
 
   /**
    * Update VS Code diagnostics
+   * @param document
+   * @param result
    */
   private updateDiagnostics(document: vscode.TextDocument, result: ValidationResult): void {
     const diagnostics: vscode.Diagnostic[] = [];
@@ -248,6 +265,7 @@ export class ConfigValidator {
 
   /**
    * Get suggestion for error
+   * @param error
    */
   private getSuggestion(error: z.ZodIssue): string | undefined {
     switch (error.code) {
@@ -270,6 +288,7 @@ export class ConfigValidator {
 
   /**
    * Validate additional business rules
+   * @param config
    */
   private validateAdditionalRules(config: EnzymeConfigSchema): {
     errors: ValidationError[];
@@ -325,7 +344,7 @@ export class ConfigValidator {
     if (config.routes?.routes) {
       for (let i = 0; i < config.routes.routes.length; i++) {
         const route = config.routes.routes[i];
-        if (!route.path.startsWith('/')) {
+        if (route && route.path && !route.path.startsWith('/')) {
           errors.push({
             message: 'Route path must start with /',
             path: ['routes', 'routes', i.toString(), 'path'],
@@ -341,6 +360,8 @@ export class ConfigValidator {
 
   /**
    * Validate specific schema
+   * @param key
+   * @param config
    */
   public validateWithSchema<K extends SchemaKey>(
     key: K,
@@ -353,11 +374,12 @@ export class ConfigValidator {
 
     if (!result.success) {
       for (const error of result.error.issues) {
+        const suggestion = this.getSuggestion(error);
         errors.push({
           message: error.message,
           path: error.path.map(String),
           severity: vscode.DiagnosticSeverity.Error,
-          suggestion: this.getSuggestion(error),
+          ...(suggestion !== undefined && { suggestion }),
         });
       }
     }
@@ -371,6 +393,7 @@ export class ConfigValidator {
 
   /**
    * Clear diagnostics for document
+   * @param document
    */
   public clearDiagnostics(document: vscode.TextDocument): void {
     this.diagnosticCollection.delete(document.uri);
@@ -399,9 +422,12 @@ export class ConfigValidator {
  * Provides real-time validation for config files
  */
 export class ConfigValidatorProvider {
-  private validator: ConfigValidator;
-  private disposables: vscode.Disposable[] = [];
+  private readonly validator: ConfigValidator;
+  private readonly disposables: vscode.Disposable[] = [];
 
+  /**
+   *
+   */
   constructor() {
     this.validator = new ConfigValidator();
     this.registerValidation();
@@ -448,6 +474,7 @@ export class ConfigValidatorProvider {
 
   /**
    * Check if document is a config file
+   * @param document
    */
   private isConfigFile(document: vscode.TextDocument): boolean {
     const fileName = document.fileName.toLowerCase();

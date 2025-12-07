@@ -11,8 +11,8 @@
  */
 
 import * as vscode from 'vscode';
-import { EnzymeExtensionContext } from '../core/context';
 import { logger } from '../core/logger';
+import type { EnzymeExtensionContext } from '../core/context';
 
 /**
  * Status bar item identifiers
@@ -83,9 +83,9 @@ export interface StatusBarItemConfiguration {
  * ```
  */
 export class StatusBarManager {
-  private items: Map<StatusBarItemId, vscode.StatusBarItem> = new Map();
-  private context: EnzymeExtensionContext;
-  private stateIcons: Map<StatusBarState, string> = new Map([
+  private readonly items = new Map<StatusBarItemId, vscode.StatusBarItem>();
+  private readonly context: EnzymeExtensionContext;
+  private readonly stateIcons = new Map<StatusBarState, string>([
     [StatusBarState.IDLE, '$(circle-outline)'],
     [StatusBarState.LOADING, '$(loading~spin)'],
     [StatusBarState.SUCCESS, '$(pass)'],
@@ -128,12 +128,13 @@ export class StatusBarManager {
     }
 
     // Create the item using the context's helper
+    const tooltipValue = typeof config.tooltip === 'string' ? config.tooltip : undefined;
     const item = this.context.getStatusBarItem(config.id, {
-      alignment: config.alignment,
-      priority: config.priority,
       text: config.text,
-      tooltip: config.tooltip,
-      command: config.command,
+      ...(tooltipValue ? { tooltip: tooltipValue } : {}),
+      ...(config.command ? { command: config.command } : {}),
+      ...(config.alignment !== undefined ? { alignment: config.alignment } : {}),
+      ...(config.priority !== undefined ? { priority: config.priority } : {}),
     });
 
     // Apply state if provided
@@ -324,7 +325,7 @@ export class StatusBarManager {
   public showTemporaryMessage(
     id: StatusBarItemId,
     message: string,
-    duration: number = 3000,
+    duration = 3000,
     state?: StatusBarState
   ): void {
     const item = this.items.get(id);
@@ -398,8 +399,9 @@ export class StatusBarManager {
    *
    * @param enzymeVersion - The version of Enzyme installed
    * @param hasDevServer - Whether a dev server is available
+   * @param hasDevelopmentServer
    */
-  public initializeDefaultItems(enzymeVersion?: string, hasDevServer: boolean = false): void {
+  public initializeDefaultItems(enzymeVersion?: string, hasDevelopmentServer = false): void {
     // Main Enzyme status
     this.createItem({
       id: StatusBarItemId.ENZYME_STATUS,
@@ -426,7 +428,7 @@ export class StatusBarManager {
     }
 
     // Dev server status (if available)
-    if (hasDevServer) {
+    if (hasDevelopmentServer) {
       this.createItem({
         id: StatusBarItemId.DEV_SERVER,
         text: '$(server) Dev Server',

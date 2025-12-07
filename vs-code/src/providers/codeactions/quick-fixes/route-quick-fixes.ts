@@ -1,9 +1,18 @@
 import * as vscode from 'vscode';
 
+/**
+ *
+ */
 export class RouteQuickFixes {
+  /**
+   *
+   * @param document
+   * @param range
+   * @param context
+   */
   public provideQuickFixes(
     document: vscode.TextDocument,
-    range: vscode.Range | vscode.Selection,
+    _range: vscode.Range | vscode.Selection,
     context: vscode.CodeActionContext
   ): vscode.CodeAction[] {
     const actions: vscode.CodeAction[] = [];
@@ -32,6 +41,11 @@ export class RouteQuickFixes {
     return actions;
   }
 
+  /**
+   *
+   * @param document
+   * @param diagnostic
+   */
   private createRouteConflictFixes(
     document: vscode.TextDocument,
     diagnostic: vscode.Diagnostic
@@ -47,15 +61,15 @@ export class RouteQuickFixes {
     renameAction.edit = new vscode.WorkspaceEdit();
 
     const line = document.lineAt(diagnostic.range.start.line);
-    const pathMatch = line.text.match(/path:\s*['"]([^'"]+)['"]/);
-    if (pathMatch) {
+    const pathMatch = /path:\s*["']([^"']+)["']/.exec(line.text);
+    if (pathMatch && pathMatch[1]) {
       const currentPath = pathMatch[1];
       const newPath = this.generateUniquePath(currentPath);
       renameAction.edit.replace(
         document.uri,
         new vscode.Range(
-          new vscode.Position(diagnostic.range.start.line, pathMatch.index! + pathMatch[0].indexOf(currentPath)),
-          new vscode.Position(diagnostic.range.start.line, pathMatch.index! + pathMatch[0].indexOf(currentPath) + currentPath.length)
+          new vscode.Position(diagnostic.range.start.line, pathMatch.index + pathMatch[0].indexOf(currentPath)),
+          new vscode.Position(diagnostic.range.start.line, pathMatch.index + pathMatch[0].indexOf(currentPath) + currentPath.length)
         ),
         newPath
       );
@@ -82,6 +96,11 @@ export class RouteQuickFixes {
     return actions;
   }
 
+  /**
+   *
+   * @param document
+   * @param diagnostic
+   */
   private createMissingGuardFixes(
     document: vscode.TextDocument,
     diagnostic: vscode.Diagnostic
@@ -97,7 +116,7 @@ export class RouteQuickFixes {
     authGuardAction.edit = new vscode.WorkspaceEdit();
 
     const line = document.lineAt(diagnostic.range.start.line);
-    const routeMatch = line.text.match(/(\s*)(\w+):\s*{/);
+    const routeMatch = /(\s*)(\w+):\s*{/.exec(line.text);
     if (routeMatch) {
       const indent = routeMatch[1];
       const insertPosition = new vscode.Position(diagnostic.range.start.line + 1, 0);
@@ -129,6 +148,11 @@ export class RouteQuickFixes {
     return actions;
   }
 
+  /**
+   *
+   * @param document
+   * @param diagnostic
+   */
   private createErrorBoundaryFixes(
     document: vscode.TextDocument,
     diagnostic: vscode.Diagnostic
@@ -143,14 +167,14 @@ export class RouteQuickFixes {
     addBoundaryAction.edit = new vscode.WorkspaceEdit();
 
     const line = document.lineAt(diagnostic.range.start.line);
-    const componentMatch = line.text.match(/component:\s*(\w+)/);
+    const componentMatch = /component:\s*(\w+)/.exec(line.text);
     if (componentMatch) {
       const component = componentMatch[1];
       const replaceRange = new vscode.Range(
-        new vscode.Position(diagnostic.range.start.line, componentMatch.index!),
+        new vscode.Position(diagnostic.range.start.line, componentMatch.index),
         new vscode.Position(
           diagnostic.range.start.line,
-          componentMatch.index! + componentMatch[0].length
+          componentMatch.index + componentMatch[0].length
         )
       );
       addBoundaryAction.edit.replace(
@@ -165,6 +189,11 @@ export class RouteQuickFixes {
     return actions;
   }
 
+  /**
+   *
+   * @param document
+   * @param diagnostic
+   */
   private createParamTypesFixes(
     document: vscode.TextDocument,
     diagnostic: vscode.Diagnostic
@@ -180,8 +209,8 @@ export class RouteQuickFixes {
 
     // Extract route params from path
     const line = document.lineAt(diagnostic.range.start.line);
-    const pathMatch = line.text.match(/path:\s*['"]([^'"]+)['"]/);
-    if (pathMatch) {
+    const pathMatch = /path:\s*["']([^"']+)["']/.exec(line.text);
+    if (pathMatch && pathMatch[1]) {
       const path = pathMatch[1];
       const params = this.extractRouteParams(path);
       if (params.length > 0) {
@@ -200,26 +229,40 @@ export class RouteQuickFixes {
     return actions;
   }
 
+  /**
+   *
+   * @param currentPath
+   */
   private generateUniquePath(currentPath: string): string {
-    const match = currentPath.match(/^(.+?)(\d+)?$/);
+    const match = /^(.+?)(\d+)?$/.exec(currentPath);
     if (match) {
       const base = match[1];
-      const num = match[2] ? parseInt(match[2], 10) + 1 : 2;
-      return `${base}${num}`;
+      const number_ = match[2] ? Number.parseInt(match[2], 10) + 1 : 2;
+      return `${base}${number_}`;
     }
     return `${currentPath}2`;
   }
 
+  /**
+   *
+   * @param path
+   */
   private extractRouteParams(path: string): string[] {
     const params: string[] = [];
     const paramRegex = /:(\w+)/g;
     let match;
     while ((match = paramRegex.exec(path)) !== null) {
-      params.push(match[1]);
+      if (match[1]) {
+        params.push(match[1]);
+      }
     }
     return params;
   }
 
+  /**
+   *
+   * @param params
+   */
   private generateParamTypes(params: string[]): string {
     const fields = params.map((param) => `${param}: string`).join('; ');
     return `{ ${fields} }`;

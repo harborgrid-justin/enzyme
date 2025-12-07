@@ -3,16 +3,19 @@
  */
 
 import * as vscode from 'vscode';
-import { AnalysisResult } from '../types';
+import type { AnalysisResult } from '../types';
 
 /**
  * AnalysisService - Service for code analysis
  */
 export class AnalysisService {
   private static instance: AnalysisService;
-  private analysisCache: Map<string, AnalysisResult> = new Map();
-  private eventEmitter: vscode.EventEmitter<AnalysisResult>;
+  private readonly analysisCache = new Map<string, AnalysisResult>();
+  private readonly eventEmitter: vscode.EventEmitter<AnalysisResult>;
 
+  /**
+   *
+   */
   private constructor() {
     this.eventEmitter = new vscode.EventEmitter<AnalysisResult>();
   }
@@ -29,6 +32,7 @@ export class AnalysisService {
 
   /**
    * Analyze performance
+   * @param rootPath
    */
   public async analyzePerformance(rootPath: string): Promise<AnalysisResult> {
     const result: AnalysisResult = {
@@ -51,6 +55,7 @@ export class AnalysisService {
 
   /**
    * Analyze security
+   * @param rootPath
    */
   public async analyzeSecurity(rootPath: string): Promise<AnalysisResult> {
     const result: AnalysisResult = {
@@ -73,6 +78,7 @@ export class AnalysisService {
 
   /**
    * Analyze dependencies
+   * @param rootPath
    */
   public async analyzeDependencies(rootPath: string): Promise<AnalysisResult> {
     const result: AnalysisResult = {
@@ -95,6 +101,7 @@ export class AnalysisService {
 
   /**
    * Get code quality metrics
+   * @param _rootPath
    */
   public async getCodeQualityMetrics(_rootPath: string): Promise<{
     complexity: number;
@@ -113,6 +120,7 @@ export class AnalysisService {
 
   /**
    * Get bundle analysis
+   * @param _rootPath
    */
   public async getBundleAnalysis(_rootPath: string): Promise<{
     totalSize: number;
@@ -135,6 +143,7 @@ export class AnalysisService {
 
   /**
    * Generate analysis report
+   * @param rootPath
    */
   public async generateReport(rootPath: string): Promise<string> {
     const performance = await this.analyzePerformance(rootPath);
@@ -142,7 +151,7 @@ export class AnalysisService {
     const dependencies = await this.analyzeDependencies(rootPath);
     const metrics = await this.getCodeQualityMetrics(rootPath);
 
-    const report = `
+    return `
 # Enzyme Project Analysis Report
 
 Generated: ${new Date().toISOString()}
@@ -165,12 +174,11 @@ ${security.recommendations.map(r => `- ${r}`).join('\n')}
 ${dependencies.summary}
 ${dependencies.recommendations.map(r => `- ${r}`).join('\n')}
 `;
-
-    return report;
   }
 
   /**
    * Get cached analysis result
+   * @param key
    */
   public getCachedResult(key: string): AnalysisResult | undefined {
     return this.analysisCache.get(key);
@@ -185,6 +193,7 @@ ${dependencies.recommendations.map(r => `- ${r}`).join('\n')}
 
   /**
    * Subscribe to analysis events
+   * @param listener
    */
   public onAnalysisCompleted(listener: (result: AnalysisResult) => void): vscode.Disposable {
     return this.eventEmitter.event(listener);

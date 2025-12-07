@@ -3,11 +3,15 @@
  * @description Displays all registered Enzyme features with metadata
  */
 
+import * as path from 'node:path';
 import * as vscode from 'vscode';
-import * as path from 'path';
-import { BaseTreeProvider, TreeProviderOptions } from './base-tree-provider';
+import { BaseTreeProvider } from './base-tree-provider';
 import { EnzymeFeatureItem, EnzymeCategoryItem, EnzymeRouteItem } from './tree-items';
+import type { TreeProviderOptions } from './base-tree-provider';
 
+/**
+ *
+ */
 interface FeatureMetadata {
   name: string;
   description?: string;
@@ -25,10 +29,26 @@ interface FeatureMetadata {
 
 /**
  * TreeView provider for Enzyme features
+ *
+ * @description Displays all registered Enzyme features with comprehensive metadata including
+ * routes, components, stores, and feature status. Supports hierarchical navigation through
+ * feature architecture with automatic discovery and categorization.
+ *
+ * @example
+ * ```typescript
+ * const provider = new EnzymeFeaturesTreeProvider(context);
+ * const features = provider.getFeatures();
+ * await provider.refreshFeatures();
+ * ```
  */
 export class EnzymeFeaturesTreeProvider extends BaseTreeProvider<EnzymeFeatureItem | EnzymeCategoryItem | EnzymeRouteItem> {
   private features: FeatureMetadata[] = [];
 
+  /**
+   *
+   * @param context
+   * @param options
+   */
   constructor(context: vscode.ExtensionContext, options?: TreeProviderOptions) {
     super(context, options);
   }
@@ -60,12 +80,12 @@ export class EnzymeFeaturesTreeProvider extends BaseTreeProvider<EnzymeFeatureIt
         feature.name,
         feature.filePath,
         {
-          description: feature.description,
-          version: feature.version,
-          enabled: feature.enabled,
           routes: feature.routes.length,
           components: feature.components.length,
           stores: feature.stores.length,
+          ...(feature.description && { description: feature.description }),
+          ...(feature.version && { version: feature.version }),
+          ...(feature.enabled !== undefined && { enabled: feature.enabled }),
         },
         vscode.TreeItemCollapsibleState.Collapsed
       ));
@@ -74,6 +94,7 @@ export class EnzymeFeaturesTreeProvider extends BaseTreeProvider<EnzymeFeatureIt
 
   /**
    * Get child items for a feature
+   * @param element
    */
   protected async getChildItems(
     element: EnzymeFeatureItem | EnzymeCategoryItem | EnzymeRouteItem
@@ -91,10 +112,11 @@ export class EnzymeFeaturesTreeProvider extends BaseTreeProvider<EnzymeFeatureIt
 
   /**
    * Get children for a feature item
+   * @param feature
    */
   private async getFeatureChildren(
     feature: EnzymeFeatureItem
-  ): Promise<Array<EnzymeCategoryItem>> {
+  ): Promise<EnzymeCategoryItem[]> {
     const featureData = this.features.find(f => f.name === feature.featureName);
     if (!featureData) {
       return [];
@@ -134,13 +156,14 @@ export class EnzymeFeaturesTreeProvider extends BaseTreeProvider<EnzymeFeatureIt
 
   /**
    * Get children for a category item
+   * @param category
    */
   private async getCategoryChildren(
     category: EnzymeCategoryItem
-  ): Promise<Array<EnzymeRouteItem>> {
+  ): Promise<EnzymeRouteItem[]> {
     // Find the parent feature
     // This is a simplified implementation - in production you'd need proper parent tracking
-    const categoryName = category.categoryName;
+    const {categoryName} = category;
 
     if (categoryName === 'Routes') {
       // Return route items
@@ -151,8 +174,8 @@ export class EnzymeFeaturesTreeProvider extends BaseTreeProvider<EnzymeFeatureIt
             route.path,
             route.filePath,
             {
-              isProtected: route.isProtected,
               feature: feature.name,
+              ...(route.isProtected !== undefined && { isProtected: route.isProtected }),
             }
           ));
         }
@@ -195,6 +218,7 @@ export class EnzymeFeaturesTreeProvider extends BaseTreeProvider<EnzymeFeatureIt
 
   /**
    * Parse a feature file to extract metadata
+   * @param filePath
    */
   private async parseFeatureFile(filePath: string): Promise<FeatureMetadata | null> {
     try {
@@ -204,15 +228,19 @@ export class EnzymeFeaturesTreeProvider extends BaseTreeProvider<EnzymeFeatureIt
       const featureName = this.extractFeatureName(filePath);
 
       // Parse feature metadata from file content
+      const description = this.extractDescription(content);
+      const version = this.extractVersion(content);
+      const enabled = this.extractEnabled(content);
+
       const metadata: FeatureMetadata = {
         name: featureName,
-        description: this.extractDescription(content),
-        version: this.extractVersion(content),
-        enabled: this.extractEnabled(content),
         filePath,
         routes: await this.findFeatureRoutes(filePath),
         components: await this.findFeatureComponents(filePath),
         stores: await this.findFeatureStores(filePath),
+        ...(description && { description }),
+        ...(version && { version }),
+        enabled,
       };
 
       return metadata;
@@ -224,27 +252,32 @@ export class EnzymeFeaturesTreeProvider extends BaseTreeProvider<EnzymeFeatureIt
 
   /**
    * Extract feature name from file path
+   * @param filePath
    */
   private extractFeatureName(filePath: string): string {
     const parts = filePath.split(path.sep);
     const featuresIndex = parts.findIndex(p => p === 'features');
     if (featuresIndex !== -1 && featuresIndex + 1 < parts.length) {
-      return parts[featuresIndex + 1];
+      const featureName = parts[featuresIndex + 1];
+      if (featureName) {
+        return featureName;
+      }
     }
     return path.basename(path.dirname(filePath));
   }
 
   /**
    * Extract description from file content
+   * @param content
    */
   private extractDescription(content: string): string | undefined {
     // Look for JSDoc description or exported description
-    const descMatch = content.match(/\/\*\*\s*\n\s*\*\s*(.+?)\s*\n/);
+    const descMatch = /\/\*\*\s*\n\s*\*\s*(.+?)\s*\n/.exec(content);
     if (descMatch) {
       return descMatch[1];
     }
 
-    const exportDescMatch = content.match(/export\s+const\s+description\s*=\s*['"`](.+?)['"`]/);
+    const exportDescMatch = /export\s+const\s+description\s*=\s*["'`](.+?)["'`]/.exec(content);
     if (exportDescMatch) {
       return exportDescMatch[1];
     }
@@ -254,18 +287,20 @@ export class EnzymeFeaturesTreeProvider extends BaseTreeProvider<EnzymeFeatureIt
 
   /**
    * Extract version from file content
+   * @param content
    */
   private extractVersion(content: string): string | undefined {
-    const versionMatch = content.match(/version:\s*['"`](.+?)['"`]/);
+    const versionMatch = /version:\s*["'`](.+?)["'`]/.exec(content);
     return versionMatch ? versionMatch[1] : undefined;
   }
 
   /**
    * Extract enabled status from file content
+   * @param content
    */
   private extractEnabled(content: string): boolean {
     // Check for feature flag or enabled property
-    const enabledMatch = content.match(/enabled:\s*(true|false)/);
+    const enabledMatch = /enabled:\s*(true|false)/.exec(content);
     if (enabledMatch) {
       return enabledMatch[1] === 'true';
     }
@@ -275,6 +310,7 @@ export class EnzymeFeaturesTreeProvider extends BaseTreeProvider<EnzymeFeatureIt
 
   /**
    * Find all routes belonging to a feature
+   * @param featurePath
    */
   private async findFeatureRoutes(featurePath: string): Promise<Array<{
     path: string;
@@ -312,19 +348,21 @@ export class EnzymeFeaturesTreeProvider extends BaseTreeProvider<EnzymeFeatureIt
 
   /**
    * Extract route path from file path
+   * @param filePath
+   * @param routesDir
    */
   private extractRoutePath(filePath: string, routesDir: string): string {
     const relativePath = path.relative(routesDir, filePath);
     const segments = relativePath.split(path.sep);
 
     // Convert file-system path to URL path
-    let urlPath = segments
+    const urlPath = segments
       .map(segment => {
         // Remove file extension
         segment = segment.replace(/\.(tsx?|jsx?)$/, '');
 
         // Convert [param] to :param
-        segment = segment.replace(/\[([^\]]+)\]/g, ':$1');
+        segment = segment.replace(/\[([^\]]+)]/g, ':$1');
 
         // Handle index files
         if (segment === 'index') {
@@ -336,11 +374,12 @@ export class EnzymeFeaturesTreeProvider extends BaseTreeProvider<EnzymeFeatureIt
       .filter(Boolean)
       .join('/');
 
-    return '/' + urlPath;
+    return `/${  urlPath}`;
   }
 
   /**
    * Find all components belonging to a feature
+   * @param featurePath
    */
   private async findFeatureComponents(featurePath: string): Promise<string[]> {
     const featureDir = path.dirname(featurePath);
@@ -360,6 +399,7 @@ export class EnzymeFeaturesTreeProvider extends BaseTreeProvider<EnzymeFeatureIt
 
   /**
    * Find all stores belonging to a feature
+   * @param featurePath
    */
   private async findFeatureStores(featurePath: string): Promise<string[]> {
     const featureDir = path.dirname(featurePath);

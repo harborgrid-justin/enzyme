@@ -1,18 +1,26 @@
 import * as vscode from 'vscode';
 
+/**
+ *
+ */
 export class FeatureCodeLensProvider implements vscode.CodeLensProvider {
-  private _onDidChangeCodeLenses = new vscode.EventEmitter<void>();
+  private readonly _onDidChangeCodeLenses = new vscode.EventEmitter<void>();
   public readonly onDidChangeCodeLenses = this._onDidChangeCodeLenses.event;
 
+  /**
+   *
+   * @param document
+   * @param token
+   */
   public provideCodeLenses(
     document: vscode.TextDocument,
-    token: vscode.CancellationToken
+    _token: vscode.CancellationToken
   ): vscode.ProviderResult<vscode.CodeLens[]> {
     const codeLenses: vscode.CodeLens[] = [];
     const text = document.getText();
 
     // Find feature definitions
-    const featurePattern = /createFeature\s*\(\s*\{/g;
+    const featurePattern = /createFeature\s*\(\s*{/g;
     let match;
 
     while ((match = featurePattern.exec(text)) !== null) {
@@ -71,6 +79,11 @@ export class FeatureCodeLensProvider implements vscode.CodeLensProvider {
     return codeLenses;
   }
 
+  /**
+   *
+   * @param document
+   * @param position
+   */
   private extractFeatureInfo(
     document: vscode.TextDocument,
     position: vscode.Position
@@ -87,11 +100,11 @@ export class FeatureCodeLensProvider implements vscode.CodeLensProvider {
 
     while (currentLine < document.lineCount && currentLine < position.line + 100) {
       const line = document.lineAt(currentLine);
-      featureText += line.text + '\n';
+      featureText += `${line.text  }\n`;
 
       for (const char of line.text) {
-        if (char === '{') braceCount++;
-        if (char === '}') braceCount--;
+        if (char === '{') {braceCount++;}
+        if (char === '}') {braceCount--;}
       }
 
       if (braceCount === 0 && currentLine > position.line) {
@@ -102,31 +115,44 @@ export class FeatureCodeLensProvider implements vscode.CodeLensProvider {
     }
 
     // Extract name
-    const nameMatch = featureText.match(/name:\s*['"]([^'"]+)['"]/);
+    const nameMatch = /name:\s*["']([^"']+)["']/.exec(featureText);
     const name = nameMatch ? nameMatch[1] : 'Unknown';
 
     // Extract enabled status
-    const enabledMatch = featureText.match(/enabled:\s*(true|false)/);
+    const enabledMatch = /enabled:\s*(true|false)/.exec(featureText);
     const enabled = enabledMatch ? enabledMatch[1] === 'true' : true;
 
     // Extract feature flag
-    const flagMatch = featureText.match(/flag:\s*['"]([^'"]+)['"]/);
+    const flagMatch = /flag:\s*["']([^"']+)["']/.exec(featureText);
     const flag = flagMatch ? flagMatch[1] : undefined;
 
     // Count routes
-    const routesMatch = featureText.match(/routes:\s*\[([^\]]*)\]/);
-    const routeCount = routesMatch
+    const routesMatch = /routes:\s*\[([^\]]*)]/.exec(featureText);
+    const routeCount = routesMatch && routesMatch[1]
       ? (routesMatch[1].match(/createRoute/g) || []).length
       : 0;
 
-    return {
-      name,
+    const result: {
+      name: string;
+      enabled: boolean;
+      flag?: string;
+      routeCount: number;
+    } = {
+      name: name || 'Unknown',
       enabled,
-      flag,
       routeCount,
     };
+
+    if (flag !== undefined) {
+      result.flag = flag;
+    }
+
+    return result;
   }
 
+  /**
+   *
+   */
   public refresh(): void {
     this._onDidChangeCodeLenses.fire();
   }

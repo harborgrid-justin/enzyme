@@ -20,7 +20,7 @@
  * @module security-utils
  */
 
-import * as crypto from 'crypto';
+import * as crypto from 'node:crypto';
 
 /**
  * HTML entity map for escaping
@@ -39,25 +39,27 @@ const HTML_ENTITIES: Record<string, string> = {
 /**
  * Escape HTML special characters to prevent XSS attacks
  * @param str - String to escape
+ * @param string_
  * @returns Escaped string safe for HTML insertion
  */
-export function escapeHtml(str: string): string {
-  if (typeof str !== 'string') {
+export function escapeHtml(string_: string): string {
+  if (typeof string_ !== 'string') {
     return '';
   }
-  return str.replace(/[&<>"'`=/]/g, (char) => HTML_ENTITIES[char] || char);
+  return string_.replace(/["&'/<=>`]/g, (char) => HTML_ENTITIES[char] || char);
 }
 
 /**
  * Escape a string for use in JavaScript string literals
  * @param str - String to escape
+ * @param string_
  * @returns Escaped string safe for JS string literals
  */
-export function escapeJs(str: string): string {
-  if (typeof str !== 'string') {
+export function escapeJs(string_: string): string {
+  if (typeof string_ !== 'string') {
     return '';
   }
-  return str
+  return string_
     .replace(/\\/g, '\\\\')
     .replace(/'/g, "\\'")
     .replace(/"/g, '\\"')
@@ -82,6 +84,9 @@ export function generateNonce(): string {
  * @param webviewCspSource - The webview's CSP source from VS Code
  * @param nonce - The nonce for inline scripts and styles
  * @param options - Additional CSP options
+ * @param options.allowImages
+ * @param options.allowFonts
+ * @param options.allowConnections
  * @returns CSP string
  */
 export function buildCsp(
@@ -138,7 +143,7 @@ export function buildCsp(
  * @param maxLength - Maximum allowed length (default: 1000)
  * @returns Sanitized string
  */
-export function sanitizeInput(input: string, maxLength: number = 1000): string {
+export function sanitizeInput(input: string, maxLength = 1000): string {
   if (typeof input !== 'string') {
     return '';
   }
@@ -194,7 +199,7 @@ export function sanitizePath(path: string, allowedBase?: string): string | null 
   }
 
   // Validate characters - only allow safe path characters
-  if (!/^[a-zA-Z0-9\-_./]+$/.test(sanitized)) {
+  if (!/^[\w./\-]+$/.test(sanitized)) {
     return null;
   }
 
@@ -203,13 +208,13 @@ export function sanitizePath(path: string, allowedBase?: string): string | null 
     const normalizedBase = allowedBase.replace(/\\/g, '/').replace(/\/+$/, '');
 
     // Ensure the path starts with the base or is relative
-    if (!sanitized.startsWith(normalizedBase + '/') && sanitized !== normalizedBase) {
+    if (!sanitized.startsWith(`${normalizedBase  }/`) && sanitized !== normalizedBase) {
       // For relative paths, prepend the base
-      sanitized = normalizedBase + '/' + sanitized;
+      sanitized = `${normalizedBase  }/${  sanitized}`;
     }
 
     // Verify the final path is still within the allowed base
-    if (!sanitized.startsWith(normalizedBase + '/') && sanitized !== normalizedBase) {
+    if (!sanitized.startsWith(`${normalizedBase  }/`) && sanitized !== normalizedBase) {
       return null;
     }
   }

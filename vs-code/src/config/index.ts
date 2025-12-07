@@ -5,6 +5,14 @@
 
 import * as vscode from 'vscode';
 
+// Imports for internal use
+import { registerConfigCompletionProvider } from './config-completion-provider';
+import { registerConfigHoverProvider } from './config-hover-provider';
+import { getValidatorProvider, getValidator } from './config-validator';
+import { getWorkspaceEnvManager as getWorkspaceEnvironmentManager } from './env-manager';
+import { getWorkspaceFeatureFlagsManager } from './feature-flags-manager';
+import { getWorkspaceConfigManager } from './project-config';
+
 // =============================================================================
 // Extension Configuration
 // =============================================================================
@@ -105,9 +113,10 @@ export {
   WorkspaceEnvManager,
   getWorkspaceEnvManager,
   type EnvFileType,
-  type EnvVariable,
-  type EnvFileInfo,
-  type SecurityWarning as Env} from './env-manager';
+  type EnvironmentVariable,
+  type EnvironmentFileInfo,
+  type SecurityWarning,
+} from './env-manager';
 
 // =============================================================================
 // Feature Flags
@@ -184,20 +193,13 @@ export {
   type ConfigTemplate,
 } from './templates/config-templates';
 
-// Imports for internal use
-import { registerConfigCompletionProvider } from './config-completion-provider';
-import { registerConfigHoverProvider } from './config-hover-provider';
-import { getValidatorProvider, getValidator } from './config-validator';
-import { getWorkspaceEnvManager } from './env-manager';
-import { getWorkspaceFeatureFlagsManager } from './feature-flags-manager';
-import { getWorkspaceConfigManager } from './project-config';
-
 // =============================================================================
 // Configuration Features Registration
 // =============================================================================
 
 /**
  * Register all configuration features
+ * @param context
  */
 export function registerConfigFeatures(context: vscode.ExtensionContext): vscode.Disposable[] {
   const disposables: vscode.Disposable[] = [];
@@ -245,6 +247,7 @@ export function registerConfigFeatures(context: vscode.ExtensionContext): vscode
 
 /**
  * Register configuration commands
+ * @param context
  */
 function registerConfigCommands(context: vscode.ExtensionContext): vscode.Disposable {
   const disposables: vscode.Disposable[] = [];
@@ -281,7 +284,7 @@ function registerConfigCommands(context: vscode.ExtensionContext): vscode.Dispos
   // Generate .env.example
   disposables.push(
     vscode.commands.registerCommand('enzyme.generateEnvExample', async () => {
-      await generateEnvExample();
+      await generateEnvironmentExample();
     })
   );
 
@@ -344,8 +347,8 @@ async function createConfigFile(): Promise<void> {
     await vscode.workspace.fs.writeFile(filePath, Buffer.from(defaultContent, 'utf-8'));
     vscode.window.showInformationMessage(`Created ${filePath.fsPath}`);
 
-    const doc = await vscode.workspace.openTextDocument(filePath);
-    await vscode.window.showTextDocument(doc);
+    const document = await vscode.workspace.openTextDocument(filePath);
+    await vscode.window.showTextDocument(document);
   } catch (error) {
     vscode.window.showErrorMessage(
       `Failed to create config: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -385,8 +388,8 @@ async function createConfigFromTemplate(): Promise<void> {
     await vscode.workspace.fs.writeFile(filePath, Buffer.from(content, 'utf-8'));
     vscode.window.showInformationMessage(`Created config from ${(selected as any).label} template`);
 
-    const doc = await vscode.workspace.openTextDocument(filePath);
-    await vscode.window.showTextDocument(doc);
+    const document = await vscode.workspace.openTextDocument(filePath);
+    await vscode.window.showTextDocument(document);
   } catch (error) {
     vscode.window.showErrorMessage(
       `Failed to create config: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -407,8 +410,8 @@ async function validateConfig(): Promise<void> {
   try {
     const validator = getValidator();
     const configPath = vscode.Uri.joinPath(workspaceFolder.uri, 'enzyme.config.ts');
-    const doc = await vscode.workspace.openTextDocument(configPath);
-    const result = await validator.validateDocument(doc);
+    const document = await vscode.workspace.openTextDocument(configPath);
+    const result = await validator.validateDocument(document);
 
     if (result.valid) {
       vscode.window.showInformationMessage('Configuration is valid');
@@ -417,7 +420,7 @@ async function validateConfig(): Promise<void> {
         `Configuration has ${result.errors.length} error(s)`
       );
     }
-  } catch (error) {
+  } catch {
     vscode.window.showErrorMessage('No Enzyme project config found');
   }
 }
@@ -425,7 +428,7 @@ async function validateConfig(): Promise<void> {
 /**
  * Generate .env.example
  */
-async function generateEnvExample(): Promise<void> {
+async function generateEnvironmentExample(): Promise<void> {
   const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
   if (!workspaceFolder) {
     vscode.window.showErrorMessage('No workspace folder open');
@@ -433,8 +436,8 @@ async function generateEnvExample(): Promise<void> {
   }
 
   try {
-    const envManager = getWorkspaceEnvManager();
-    const manager = await envManager.getManager(workspaceFolder);
+    const environmentManager = getWorkspaceEnvironmentManager();
+    const manager = await environmentManager.getManager(workspaceFolder);
     const examplePath = await manager.generateEnvExample();
     vscode.window.showInformationMessage(`Generated ${examplePath}`);
   } catch (error) {
@@ -458,7 +461,7 @@ async function toggleFeatureFlag(): Promise<void> {
     const flagsManager = getWorkspaceFeatureFlagsManager();
     const manager = await flagsManager.getManager(workspaceFolder);
 
-    const flags = Array.from(manager.getFlags().values());
+    const flags = [...manager.getFlags().values()];
     if (flags.length === 0) {
       vscode.window.showInformationMessage('No feature flags configured');
       return;
@@ -479,7 +482,7 @@ async function toggleFeatureFlag(): Promise<void> {
 
     await manager.toggleOverride((selected as any).flag.key);
     vscode.window.showInformationMessage(`Toggled ${(selected as any).flag.key}`);
-  } catch (error) {
+  } catch {
     vscode.window.showErrorMessage('Feature flags manager not available');
   }
 }
@@ -497,7 +500,7 @@ async function migrateConfig(): Promise<void> {
   try {
     const { promptMigration } = require('./migration/config-migrator');
     await promptMigration(workspaceFolder, {});
-  } catch (error) {
+  } catch {
     vscode.window.showErrorMessage('No Enzyme project config found');
   }
 }

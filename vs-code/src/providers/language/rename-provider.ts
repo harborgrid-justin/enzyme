@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { getIndex } from './enzyme-index';
 
 /**
  * EnzymeRenameProvider - Provides rename refactoring
@@ -8,6 +7,9 @@ import { getIndex } from './enzyme-index';
 export class EnzymeRenameProvider implements vscode.RenameProvider {
   /**
    * Prepare rename - validate that rename is allowed
+   * @param document
+   * @param position
+   * @param _token
    */
   public async prepareRename(
     document: vscode.TextDocument,
@@ -35,6 +37,10 @@ export class EnzymeRenameProvider implements vscode.RenameProvider {
 
   /**
    * Provide rename edits
+   * @param document
+   * @param position
+   * @param newName
+   * @param _token
    */
   public async provideRenameEdits(
     document: vscode.TextDocument,
@@ -70,6 +76,8 @@ export class EnzymeRenameProvider implements vscode.RenameProvider {
 
   /**
    * Rename a route across the workspace
+   * @param oldName
+   * @param newName
    */
   private async renameRoute(oldName: string, newName: string): Promise<vscode.WorkspaceEdit> {
     const edit = new vscode.WorkspaceEdit();
@@ -121,6 +129,8 @@ export class EnzymeRenameProvider implements vscode.RenameProvider {
 
   /**
    * Rename a component across the workspace
+   * @param oldName
+   * @param newName
    */
   private async renameComponent(oldName: string, newName: string): Promise<vscode.WorkspaceEdit> {
     const edit = new vscode.WorkspaceEdit();
@@ -190,10 +200,10 @@ export class EnzymeRenameProvider implements vscode.RenameProvider {
       );
 
       if (componentFile) {
-        const ext = componentFile.fsPath.substring(componentFile.fsPath.lastIndexOf('.'));
+        const extension = componentFile.fsPath.slice(Math.max(0, componentFile.fsPath.lastIndexOf('.')));
         const newPath = componentFile.fsPath.replace(
-          new RegExp(`${oldName}${ext}$`),
-          `${newName}${ext}`
+          new RegExp(`${oldName}${extension}$`),
+          `${newName}${extension}`
         );
         edit.renameFile(componentFile, vscode.Uri.file(newPath));
       }
@@ -206,6 +216,8 @@ export class EnzymeRenameProvider implements vscode.RenameProvider {
 
   /**
    * Rename a store slice across the workspace
+   * @param oldName
+   * @param newName
    */
   private async renameStore(oldName: string, newName: string): Promise<vscode.WorkspaceEdit> {
     const edit = new vscode.WorkspaceEdit();
@@ -236,8 +248,7 @@ export class EnzymeRenameProvider implements vscode.RenameProvider {
         // Store name in createSlice
         const createSlicePattern = new RegExp(`name:\\s*['"]${oldName}['"]`, 'g');
         while ((match = createSlicePattern.exec(text)) !== null) {
-          const quoteIndex = match[0].indexOf("'") !== -1 ? match[0].indexOf("'") : match[0].indexOf('"');
-          const quote = match[0][quoteIndex];
+          const quoteIndex = match[0].includes("'") ? match[0].indexOf("'") : match[0].indexOf('"');
           const start = document.positionAt(match.index + quoteIndex + 1);
           const end = document.positionAt(match.index + quoteIndex + 1 + oldName.length);
           edits.push(vscode.TextEdit.replace(new vscode.Range(start, end), newName));
@@ -256,6 +267,7 @@ export class EnzymeRenameProvider implements vscode.RenameProvider {
 
   /**
    * Check if line contains route reference
+   * @param line
    */
   private isRouteReference(line: string): boolean {
     return line.includes('routes.');
@@ -263,6 +275,8 @@ export class EnzymeRenameProvider implements vscode.RenameProvider {
 
   /**
    * Check if word is a component reference
+   * @param word
+   * @param line
    */
   private isComponentReference(word: string, line: string): boolean {
     return /^[A-Z]/.test(word) && (line.includes('<') || line.includes('/>') || line.includes('</'));
@@ -270,6 +284,7 @@ export class EnzymeRenameProvider implements vscode.RenameProvider {
 
   /**
    * Check if line contains store reference
+   * @param line
    */
   private isStoreReference(line: string): boolean {
     return line.includes('state.') || line.includes('createSlice');

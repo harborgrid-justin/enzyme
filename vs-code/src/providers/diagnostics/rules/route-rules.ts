@@ -1,7 +1,14 @@
 import * as vscode from 'vscode';
 import { createDiagnostic } from '../enzyme-diagnostics';
 
+/**
+ *
+ */
 export class RouteRules {
+  /**
+   *
+   * @param document
+   */
   public async analyze(document: vscode.TextDocument): Promise<vscode.Diagnostic[]> {
     const diagnostics: vscode.Diagnostic[] = [];
     const text = document.getText();
@@ -21,6 +28,11 @@ export class RouteRules {
     return diagnostics;
   }
 
+  /**
+   *
+   * @param document
+   * @param text
+   */
   private checkConflictingRoutes(
     document: vscode.TextDocument,
     text: string
@@ -29,11 +41,13 @@ export class RouteRules {
     const routes = new Map<string, vscode.Position[]>();
 
     // Find all route definitions
-    const routePattern = /path:\s*['"]([^'"]+)['"]/g;
+    const routePattern = /path:\s*["']([^"']+)["']/g;
     let match;
 
     while ((match = routePattern.exec(text)) !== null) {
       const path = match[1];
+      if (!path) {continue;}
+
       const position = document.positionAt(match.index);
 
       if (!routes.has(path)) {
@@ -73,6 +87,11 @@ export class RouteRules {
     return diagnostics;
   }
 
+  /**
+   *
+   * @param document
+   * @param text
+   */
   private checkMissingRouteGuards(
     document: vscode.TextDocument,
     text: string
@@ -81,10 +100,10 @@ export class RouteRules {
 
     // Find routes that should have guards (protected paths)
     const protectedPatterns = [
-      /path:\s*['"]\/admin[^'"]*['"]/g,
-      /path:\s*['"]\/dashboard[^'"]*['"]/g,
-      /path:\s*['"]\/profile[^'"]*['"]/g,
-      /path:\s*['"]\/settings[^'"]*['"]/g,
+      /path:\s*["']\/admin[^"']*["']/g,
+      /path:\s*["']\/dashboard[^"']*["']/g,
+      /path:\s*["']\/profile[^"']*["']/g,
+      /path:\s*["']\/settings[^"']*["']/g,
     ];
 
     for (const pattern of protectedPatterns) {
@@ -111,6 +130,11 @@ export class RouteRules {
     return diagnostics;
   }
 
+  /**
+   *
+   * @param document
+   * @param text
+   */
   private checkUnusedRoutes(document: vscode.TextDocument, text: string): vscode.Diagnostic[] {
     const diagnostics: vscode.Diagnostic[] = [];
 
@@ -120,6 +144,8 @@ export class RouteRules {
 
     while ((match = routePattern.exec(text)) !== null) {
       const routeName = match[1];
+      if (!routeName) {continue;}
+
       const position = document.positionAt(match.index);
 
       // Check if route is referenced elsewhere (simplified)
@@ -142,6 +168,11 @@ export class RouteRules {
     return diagnostics;
   }
 
+  /**
+   *
+   * @param document
+   * @param text
+   */
   private checkRoutesWithoutErrorBoundary(
     document: vscode.TextDocument,
     text: string
@@ -153,7 +184,6 @@ export class RouteRules {
     let match;
 
     while ((match = routePattern.exec(text)) !== null) {
-      const componentName = match[1];
       const position = document.positionAt(match.index);
 
       // Check if route has error boundary
@@ -175,6 +205,11 @@ export class RouteRules {
     return diagnostics;
   }
 
+  /**
+   *
+   * @param document
+   * @param position
+   */
   private getRouteContext(
     document: vscode.TextDocument,
     position: vscode.Position
@@ -191,7 +226,7 @@ export class RouteRules {
     // Scan backwards to find route start
     while (currentLine >= Math.max(0, position.line - 20)) {
       const line = document.lineAt(currentLine);
-      if (line.text.includes('createRoute') || line.text.match(/\w+:\s*{/)) {
+      if (line.text.includes('createRoute') || (/\w+:\s*{/.exec(line.text))) {
         break;
       }
       currentLine--;
@@ -200,14 +235,14 @@ export class RouteRules {
     // Scan forward to get complete route
     while (currentLine < document.lineCount && currentLine < position.line + 50) {
       const line = document.lineAt(currentLine);
-      routeText += line.text + '\n';
+      routeText += `${line.text  }\n`;
 
       for (const char of line.text) {
         if (char === '{') {
           braceCount++;
           startedRoute = true;
         }
-        if (char === '}') braceCount--;
+        if (char === '}') {braceCount--;}
       }
 
       if (startedRoute && braceCount === 0) {

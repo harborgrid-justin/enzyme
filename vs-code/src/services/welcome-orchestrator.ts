@@ -14,10 +14,10 @@
  */
 
 import * as vscode from 'vscode';
-import { LoggerService } from './logger-service';
-import { WorkspaceService } from './workspace-service';
-import { EnzymeCliManager } from './enzyme-cli-manager';
-import { EventBus } from '../orchestration/event-bus';
+import type { EnzymeCliManager } from './enzyme-cli-manager';
+import type { LoggerService } from './logger-service';
+import type { WorkspaceService } from './workspace-service';
+import type { EventBus } from '../orchestration/event-bus';
 
 /**
  * Onboarding state for tracking user progress
@@ -86,6 +86,11 @@ export class WelcomeOrchestrator {
 
   /**
    * Private constructor for singleton pattern
+   * @param context
+   * @param logger
+   * @param workspaceService
+   * @param cliManager
+   * @param eventBus
    */
   private constructor(
     context: vscode.ExtensionContext,
@@ -170,12 +175,10 @@ export class WelcomeOrchestrator {
       lastInteractionTimestamp: Date.now(),
     };
 
-    const state = this.context.globalState.get<OnboardingState>(
+    return this.context.globalState.get<OnboardingState>(
       this.stateKey,
       defaultState
     );
-
-    return state;
   }
 
   /**
@@ -195,7 +198,7 @@ export class WelcomeOrchestrator {
     this.logger.info('Onboarding state updated', updates);
 
     // Emit event for tracking
-    this.eventBus.emit('onboarding:stateChanged', newState);
+    this.eventBus.emit({ type: 'onboarding:stateChanged', payload: newState });
   }
 
   /**
@@ -223,7 +226,7 @@ export class WelcomeOrchestrator {
       await this.updateOnboardingState({ welcomeCompleted: true });
 
       this.logger.info('Welcome experience completed');
-      this.eventBus.emit('onboarding:completed');
+      this.eventBus.emit({ type: 'onboarding:completed' });
 
     } catch (error) {
       this.logger.error('Error during welcome experience', error);
@@ -240,7 +243,7 @@ export class WelcomeOrchestrator {
   private async getContextualWelcomeSteps(): Promise<WelcomeStep[]> {
     const steps: WelcomeStep[] = [];
     const cliDetected = await this.cliManager.isInstalled();
-    const isEnzymeWorkspace = await this.workspaceService.isEnzymeProject();
+    const isEnzymeWorkspace = await this.workspaceService.detectEnzymeProject();
 
     // Step: CLI Installation (if not detected)
     if (!cliDetected) {
@@ -326,6 +329,9 @@ export class WelcomeOrchestrator {
 
     // Show primary action (first step)
     const primaryStep = steps[0];
+    if (!primaryStep) {
+      return;
+    }
     const otherSteps = steps.slice(1);
 
     const actions = [
@@ -391,7 +397,7 @@ export class WelcomeOrchestrator {
    */
   private setupEventListeners(): void {
     // Listen for component generation
-    this.eventBus.on('command:generate.component:success', async () => {
+    this.eventBus.onType('cli:installed' as any, async () => {
       const state = await this.getOnboardingState();
       if (!state.firstComponentGenerated) {
         await this.updateOnboardingState({ firstComponentGenerated: true });
@@ -400,12 +406,12 @@ export class WelcomeOrchestrator {
     });
 
     // Listen for CLI installation
-    this.eventBus.on('cli:installed', async () => {
+    this.eventBus.onType('cli:installed', async () => {
       await this.updateOnboardingState({ cliInstalled: true });
     });
 
     // Listen for project initialization
-    this.eventBus.on('project:initialized', async () => {
+    this.eventBus.onType('workspace:detected' as any, async () => {
       await this.updateOnboardingState({ projectInitialized: true });
     });
   }
@@ -435,7 +441,7 @@ export class WelcomeOrchestrator {
     const celebration = celebrations[milestone];
     if (celebration) {
       await vscode.window.showInformationMessage(celebration.message);
-      this.eventBus.emit('onboarding:milestone', { milestone, timestamp: Date.now() });
+      this.eventBus.emit({ type: 'onboarding:milestone', payload: { milestone, timestamp: Date.now() } });
     }
   }
 

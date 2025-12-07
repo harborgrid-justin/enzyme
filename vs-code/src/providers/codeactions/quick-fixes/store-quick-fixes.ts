@@ -1,9 +1,18 @@
 import * as vscode from 'vscode';
 
+/**
+ *
+ */
 export class StoreQuickFixes {
+  /**
+   *
+   * @param document
+   * @param range
+   * @param context
+   */
   public provideQuickFixes(
     document: vscode.TextDocument,
-    range: vscode.Range | vscode.Selection,
+    _range: vscode.Range | vscode.Selection,
     context: vscode.CodeActionContext
   ): vscode.CodeAction[] {
     const actions: vscode.CodeAction[] = [];
@@ -32,6 +41,11 @@ export class StoreQuickFixes {
     return actions;
   }
 
+  /**
+   *
+   * @param document
+   * @param diagnostic
+   */
   private createPersistenceFixes(
     document: vscode.TextDocument,
     diagnostic: vscode.Diagnostic
@@ -47,7 +61,7 @@ export class StoreQuickFixes {
 
     // Find the store creation
     const text = document.getText(diagnostic.range);
-    const storeMatch = text.match(/createStore\s*<([^>]+)>\s*\(/);
+    const storeMatch = /createStore\s*<([^>]+)>\s*\(/.exec(text);
 
     if (storeMatch) {
       // Find the closing parenthesis of createStore
@@ -89,29 +103,34 @@ const persistedStore = persist(store, {
     return actions;
   }
 
+  /**
+   *
+   * @param document
+   * @param diagnostic
+   */
   private createDevToolsFixes(
     document: vscode.TextDocument,
     diagnostic: vscode.Diagnostic
   ): vscode.CodeAction[] {
     const actions: vscode.CodeAction[] = [];
 
-    const addDevToolsAction = new vscode.CodeAction(
+    const addDevelopmentToolsAction = new vscode.CodeAction(
       'Add DevTools name',
       vscode.CodeActionKind.QuickFix
     );
-    addDevToolsAction.diagnostics = [diagnostic];
-    addDevToolsAction.edit = new vscode.WorkspaceEdit();
+    addDevelopmentToolsAction.diagnostics = [diagnostic];
+    addDevelopmentToolsAction.edit = new vscode.WorkspaceEdit();
 
     // Extract store name from variable or file
     const line = document.lineAt(diagnostic.range.start.line);
-    const storeNameMatch = line.text.match(/(?:export\s+)?(?:const|let|var)\s+(\w+)/);
+    const storeNameMatch = /(?:export\s+)?(?:const|let|var)\s+(\w+)/.exec(line.text);
     const storeName = storeNameMatch ? storeNameMatch[1] : 'Store';
 
     // Find createStore call options
     const text = document.getText(diagnostic.range);
-    const optionsMatch = text.match(/createStore\s*<[^>]+>\s*\([^,]+,\s*(\{[^}]*\})\s*\)/);
+    const optionsMatch = /createStore\s*<[^>]+>\s*\([^,]+,\s*({[^}]*})\s*\)/.exec(text);
 
-    if (optionsMatch) {
+    if (optionsMatch && optionsMatch[1]) {
       // Add to existing options
       const optionsText = optionsMatch[1];
       const updatedOptions = optionsText.replace('}', `,\n  name: '${storeName}',\n}`);
@@ -127,11 +146,11 @@ const persistedStore = persist(store, {
         )
       );
 
-      addDevToolsAction.edit.replace(document.uri, optionsRange, updatedOptions);
+      addDevelopmentToolsAction.edit.replace(document.uri, optionsRange, updatedOptions);
     } else {
       // Add options object
-      const callMatch = text.match(/createStore\s*<[^>]+>\s*\(([^)]+)\)/);
-      if (callMatch) {
+      const callMatch = /createStore\s*<[^>]+>\s*\(([^)]+)\)/.exec(text);
+      if (callMatch && callMatch[1]) {
         const args = callMatch[1];
         const updatedCall = `${args}, { name: '${storeName}' }`;
 
@@ -146,16 +165,21 @@ const persistedStore = persist(store, {
           )
         );
 
-        addDevToolsAction.edit.replace(document.uri, argsRange, updatedCall);
+        addDevelopmentToolsAction.edit.replace(document.uri, argsRange, updatedCall);
       }
     }
 
-    addDevToolsAction.isPreferred = true;
-    actions.push(addDevToolsAction);
+    addDevelopmentToolsAction.isPreferred = true;
+    actions.push(addDevelopmentToolsAction);
 
     return actions;
   }
 
+  /**
+   *
+   * @param document
+   * @param diagnostic
+   */
   private createSelectorMemoizationFixes(
     document: vscode.TextDocument,
     diagnostic: vscode.Diagnostic
@@ -170,7 +194,7 @@ const persistedStore = persist(store, {
     memoizeAction.edit = new vscode.WorkspaceEdit();
 
     const text = document.getText(diagnostic.range);
-    const selectorMatch = text.match(/const\s+(\w+)\s*=\s*\(state:\s*\w+\)\s*=>\s*(.+);/);
+    const selectorMatch = /const\s+(\w+)\s*=\s*\(state:\s*\w+\)\s*=>\s*(.+);/.exec(text);
 
     if (selectorMatch) {
       const selectorName = selectorMatch[1];
@@ -199,6 +223,11 @@ const persistedStore = persist(store, {
     return actions;
   }
 
+  /**
+   *
+   * @param document
+   * @param diagnostic
+   */
   private createSplitStoreFixes(
     document: vscode.TextDocument,
     diagnostic: vscode.Diagnostic

@@ -3,10 +3,9 @@
  * @description Handles configuration migrations between versions
  */
 
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
 import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs/promises';
-import type { EnzymeConfigSchema } from '../config-schema';
 
 // =============================================================================
 // Types
@@ -129,14 +128,19 @@ const MIGRATIONS: Migration[] = [
  * Configuration migrator
  */
 export class ConfigMigrator {
-  private workspaceRoot: string;
+  private readonly workspaceRoot: string;
 
+  /**
+   *
+   * @param workspaceRoot
+   */
   constructor(workspaceRoot: string) {
     this.workspaceRoot = workspaceRoot;
   }
 
   /**
    * Detect configuration version
+   * @param config
    */
   public async detectVersion(config: any): Promise<string> {
     // Check for explicit version field
@@ -166,9 +170,12 @@ export class ConfigMigrator {
 
   /**
    * Get required migrations
+   * @param fromVersion
+   * @param toVersion
    */
   private getRequiredMigrations(fromVersion: string, toVersion?: string): Migration[] {
-    const targetVersion = toVersion || MIGRATIONS[MIGRATIONS.length - 1].version;
+    const lastMigration = MIGRATIONS[MIGRATIONS.length - 1];
+    const targetVersion = toVersion || (lastMigration?.version ?? '1.0.0');
 
     const fromIndex = MIGRATIONS.findIndex((m) => m.version === fromVersion);
     const toIndex = MIGRATIONS.findIndex((m) => m.version === targetVersion);
@@ -182,6 +189,8 @@ export class ConfigMigrator {
 
   /**
    * Migrate configuration
+   * @param config
+   * @param toVersion
    */
   public async migrate(
     config: any,
@@ -189,7 +198,8 @@ export class ConfigMigrator {
   ): Promise<MigrationResult> {
     try {
       const fromVersion = await this.detectVersion(config);
-      const targetVersion = toVersion || MIGRATIONS[MIGRATIONS.length - 1].version;
+      const lastMigration = MIGRATIONS[MIGRATIONS.length - 1];
+      const targetVersion = toVersion || (lastMigration?.version ?? '1.0.0');
 
       // Check if migration is needed
       if (fromVersion === targetVersion) {
@@ -254,6 +264,7 @@ export class ConfigMigrator {
 
   /**
    * Rollback migration
+   * @param backupPath
    */
   public async rollback(backupPath: string): Promise<boolean> {
     try {
@@ -271,9 +282,11 @@ export class ConfigMigrator {
 
   /**
    * Backup configuration
+   * @param config
+   * @param version
    */
   private async backupConfig(config: any, version: string): Promise<string> {
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const timestamp = new Date().toISOString().replace(/[.:]/g, '-');
     const backupDir = path.join(this.workspaceRoot, '.enzyme-backups');
 
     await fs.mkdir(backupDir, { recursive: true });
@@ -286,6 +299,7 @@ export class ConfigMigrator {
 
   /**
    * Save configuration
+   * @param config
    */
   private async saveConfig(config: any): Promise<void> {
     const configPath = path.join(this.workspaceRoot, 'enzyme.config.ts');
@@ -300,6 +314,7 @@ export default defineConfig(${JSON.stringify(config, null, 2)});
 
   /**
    * Validate configuration
+   * @param config
    */
   private async validateConfig(config: any): Promise<{ valid: boolean; errors: string[] }> {
     const errors: string[] = [];
@@ -325,16 +340,20 @@ export default defineConfig(${JSON.stringify(config, null, 2)});
 
   /**
    * Check if migration is needed
+   * @param config
    */
   public async needsMigration(config: any): Promise<boolean> {
     const currentVersion = await this.detectVersion(config);
-    const latestVersion = MIGRATIONS[MIGRATIONS.length - 1].version;
+    const lastMigration = MIGRATIONS[MIGRATIONS.length - 1];
+    const latestVersion = lastMigration?.version ?? '1.0.0';
 
     return this.compareVersions(currentVersion, latestVersion) < 0;
   }
 
   /**
    * Compare versions
+   * @param v1
+   * @param v2
    */
   private compareVersions(v1: string, v2: string): number {
     const parts1 = v1.split('.').map(Number);
@@ -344,8 +363,8 @@ export default defineConfig(${JSON.stringify(config, null, 2)});
       const p1 = parts1[i] || 0;
       const p2 = parts2[i] || 0;
 
-      if (p1 > p2) return 1;
-      if (p1 < p2) return -1;
+      if (p1 > p2) {return 1;}
+      if (p1 < p2) {return -1;}
     }
 
     return 0;
@@ -353,9 +372,12 @@ export default defineConfig(${JSON.stringify(config, null, 2)});
 
   /**
    * Get migration guide
+   * @param fromVersion
+   * @param toVersion
    */
   public getMigrationGuide(fromVersion: string, toVersion?: string): string {
-    const targetVersion = toVersion || MIGRATIONS[MIGRATIONS.length - 1].version;
+    const lastMigration = MIGRATIONS[MIGRATIONS.length - 1];
+    const targetVersion = toVersion || (lastMigration?.version ?? '1.0.0');
     const migrations = this.getRequiredMigrations(fromVersion, targetVersion);
 
     if (migrations.length === 0) {
@@ -381,6 +403,8 @@ export default defineConfig(${JSON.stringify(config, null, 2)});
 
 /**
  * Show migration prompt
+ * @param workspaceFolder
+ * @param config
  */
 export async function promptMigration(
   workspaceFolder: vscode.WorkspaceFolder,
@@ -394,7 +418,8 @@ export async function promptMigration(
   }
 
   const currentVersion = await migrator.detectVersion(config);
-  const latestVersion = MIGRATIONS[MIGRATIONS.length - 1].version;
+  const lastMigration = MIGRATIONS[MIGRATIONS.length - 1];
+  const latestVersion = lastMigration?.version ?? '1.0.0';
 
   const result = await vscode.window.showInformationMessage(
     `Your Enzyme configuration is version ${currentVersion}. Migrate to ${latestVersion}?`,
@@ -406,11 +431,11 @@ export async function promptMigration(
 
   if (result === 'View Changes') {
     const guide = migrator.getMigrationGuide(currentVersion);
-    const doc = await vscode.workspace.openTextDocument({
+    const document = await vscode.workspace.openTextDocument({
       content: guide,
       language: 'markdown',
     });
-    await vscode.window.showTextDocument(doc);
+    await vscode.window.showTextDocument(document);
   } else if (result === 'Migrate') {
     await executeMigration(migrator, config);
   }
@@ -418,6 +443,8 @@ export async function promptMigration(
 
 /**
  * Execute migration with progress
+ * @param migrator
+ * @param config
  */
 async function executeMigration(
   migrator: ConfigMigrator,

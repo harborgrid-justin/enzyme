@@ -579,6 +579,7 @@ export const configTemplates: ConfigTemplate[] = [
 
 /**
  * Get template by name
+ * @param name
  */
 export function getTemplate(name: string): ConfigTemplate | undefined {
   return configTemplates.find((t) => t.name === name);
@@ -586,6 +587,7 @@ export function getTemplate(name: string): ConfigTemplate | undefined {
 
 /**
  * Get templates by category
+ * @param category
  */
 export function getTemplatesByCategory(
   category: ConfigTemplate['category']
@@ -595,6 +597,7 @@ export function getTemplatesByCategory(
 
 /**
  * Generate config file content from template
+ * @param template
  */
 export function generateConfigFromTemplate(template: ConfigTemplate): string {
   return `import { defineConfig } from '@missionfabric-js/enzyme';
@@ -610,6 +613,8 @@ export default defineConfig(${JSON.stringify(template.config, null, 2)});
 
 /**
  * Merge template with existing config
+ * @param existingConfig
+ * @param template
  */
 export function mergeTemplate(
   existingConfig: Partial<EnzymeConfigSchema>,

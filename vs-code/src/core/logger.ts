@@ -15,26 +15,35 @@
  */
 
 import * as vscode from 'vscode';
+import { getExtensionConfig, onSettingChange } from '../config/extension-config';
 import { LogLevel } from '../types';
-import { OUTPUT_CHANNELS, CONFIG_KEYS, TELEMETRY_EVENTS } from './constants';
+import { OUTPUT_CHANNELS, CONFIG_KEYS as _CONFIG_KEYS, TELEMETRY_EVENTS as _TELEMETRY_EVENTS } from './constants';
 import type { EnzymeError } from './errors';
 
 /**
  * Logger class for structured logging with multiple severity levels
+ * Uses ExtensionConfig for type-safe configuration access
  */
 export class Logger {
   private static instance: Logger;
-  private outputChannel: vscode.OutputChannel;
+  private readonly outputChannel: vscode.OutputChannel;
   private logLevel: LogLevel = LogLevel.INFO;
-  private telemetryEnabled: boolean = false;
+  private telemetryEnabled = false;
+  private configDisposable?: vscode.Disposable;
 
+  /**
+   *
+   * @param channelName
+   */
   private constructor(channelName: string = OUTPUT_CHANNELS.MAIN) {
     this.outputChannel = vscode.window.createOutputChannel(channelName);
     this.loadConfiguration();
+    this.watchConfiguration();
   }
 
   /**
    * Get the singleton instance of the Logger
+   * @param channelName
    */
   public static getInstance(channelName?: string): Logger {
     if (!Logger.instance) {
@@ -45,23 +54,38 @@ export class Logger {
 
   /**
    * Create a new logger instance with a specific channel name
+   * @param channelName
    */
   public static createLogger(channelName: string): Logger {
     return new Logger(channelName);
   }
 
   /**
-   * Load configuration from VS Code settings
+   * Load configuration from VS Code settings using ExtensionConfig
+   * Provides type-safe access to logging settings
    */
   private loadConfiguration(): void {
-    const config = vscode.workspace.getConfiguration();
-    const levelString = config.get<string>(CONFIG_KEYS.LOGGING_LEVEL, 'info');
+    const config = getExtensionConfig();
+    const levelString = config.get('enzyme.logging.level');
     this.logLevel = this.parseLogLevel(levelString);
-    this.telemetryEnabled = config.get<boolean>(CONFIG_KEYS.TELEMETRY_ENABLED, false);
+    this.telemetryEnabled = config.get('enzyme.telemetry.enabled');
+  }
+
+  /**
+   * Watch for configuration changes and reload automatically
+   * Ensures logger stays in sync with user settings
+   */
+  private watchConfiguration(): void {
+    this.configDisposable = onSettingChange('*', (event) => {
+      if (event.key === 'enzyme.logging.level' || event.key === 'enzyme.telemetry.enabled') {
+        this.loadConfiguration();
+      }
+    });
   }
 
   /**
    * Parse log level string to LogLevel enum
+   * @param level
    */
   private parseLogLevel(level: string): LogLevel {
     switch (level.toLowerCase()) {
@@ -80,6 +104,7 @@ export class Logger {
 
   /**
    * Check if a log level should be logged based on current log level
+   * @param level
    */
   private shouldLog(level: LogLevel): boolean {
     const levels = [LogLevel.DEBUG, LogLevel.INFO, LogLevel.WARN, LogLevel.ERROR];
@@ -90,16 +115,19 @@ export class Logger {
 
   /**
    * Format a log message with timestamp and level
+   * @param level
+   * @param message
+   * @param data
    */
   private formatMessage(level: LogLevel, message: string, data?: unknown): string {
     const timestamp = new Date().toISOString();
-    const levelStr = level.toUpperCase().padEnd(5);
-    let formatted = `[${timestamp}] [${levelStr}] ${message}`;
+    const levelString = level.toUpperCase().padEnd(5);
+    let formatted = `[${timestamp}] [${levelString}] ${message}`;
 
     if (data !== undefined) {
       try {
-        const dataStr = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
-        formatted += `\n${dataStr}`;
+        const dataString = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+        formatted += `\n${dataString}`;
       } catch (error) {
         formatted += `\n[Unable to stringify data: ${String(error)}]`;
       }
@@ -110,6 +138,9 @@ export class Logger {
 
   /**
    * Write a log message to the output channel
+   * @param level
+   * @param message
+   * @param data
    */
   private write(level: LogLevel, message: string, data?: unknown): void {
     if (!this.shouldLog(level)) {
@@ -127,6 +158,9 @@ export class Logger {
 
   /**
    * Send telemetry event (placeholder for actual telemetry implementation)
+   * @param eventType
+   * @param message
+   * @param data
    */
   private sendTelemetry(eventType: string, message: string, data?: unknown): void {
     // TODO: Implement actual telemetry sending
@@ -138,6 +172,8 @@ export class Logger {
 
   /**
    * Log a debug message
+   * @param message
+   * @param data
    */
   public debug(message: string, data?: unknown): void {
     this.write(LogLevel.DEBUG, message, data);
@@ -145,6 +181,8 @@ export class Logger {
 
   /**
    * Log an info message
+   * @param message
+   * @param data
    */
   public info(message: string, data?: unknown): void {
     this.write(LogLevel.INFO, message, data);
@@ -152,6 +190,8 @@ export class Logger {
 
   /**
    * Log a warning message
+   * @param message
+   * @param data
    */
   public warn(message: string, data?: unknown): void {
     this.write(LogLevel.WARN, message, data);
@@ -159,6 +199,8 @@ export class Logger {
 
   /**
    * Log an error message
+   * @param message
+   * @param error
    */
   public error(message: string, error?: Error | unknown): void {
     let errorData: unknown = error;
@@ -176,6 +218,8 @@ export class Logger {
 
   /**
    * Log a success message (info level with green checkmark)
+   * @param message
+   * @param data
    */
   public success(message: string, data?: unknown): void {
     this.info(`✓ ${message}`, data);
@@ -183,6 +227,8 @@ export class Logger {
 
   /**
    * Log the start of an operation
+   * @param operationName
+   * @param context
    */
   public startOperation(operationName: string, context?: unknown): void {
     this.info(`Starting: ${operationName}`, context);
@@ -190,6 +236,9 @@ export class Logger {
 
   /**
    * Log the end of an operation with elapsed time
+   * @param operationName
+   * @param startTime
+   * @param result
    */
   public endOperation(operationName: string, startTime: number, result?: unknown): void {
     const elapsed = Date.now() - startTime;
@@ -198,6 +247,9 @@ export class Logger {
 
   /**
    * Log an operation with automatic timing
+   * @param operationName
+   * @param operation
+   * @param context
    */
   public async logOperation<T>(
     operationName: string,
@@ -220,8 +272,9 @@ export class Logger {
 
   /**
    * Show the output channel
+   * @param preserveFocus
    */
-  public show(preserveFocus: boolean = true): void {
+  public show(preserveFocus = true): void {
     this.outputChannel.show(preserveFocus);
   }
 
@@ -244,6 +297,11 @@ export class Logger {
    * FIXED: Now properly resets singleton instance to prevent memory leaks
    */
   public dispose(): void {
+    // Dispose configuration watcher
+    if (this.configDisposable) {
+      this.configDisposable.dispose();
+    }
+
     this.outputChannel.dispose();
     // Reset singleton instance
     if (Logger.instance === this) {
@@ -253,6 +311,7 @@ export class Logger {
 
   /**
    * Set the log level
+   * @param level
    */
   public setLogLevel(level: LogLevel): void {
     this.logLevel = level;
@@ -261,6 +320,7 @@ export class Logger {
 
   /**
    * Enable or disable telemetry
+   * @param enabled
    */
   public setTelemetry(enabled: boolean): void {
     this.telemetryEnabled = enabled;
@@ -290,6 +350,7 @@ export class Logger {
 
   /**
    * Log a header
+   * @param title
    */
   public header(title: string): void {
     this.divider();
@@ -511,31 +572,65 @@ export class Logger {
  * Child Logger with prefix support
  */
 export class ChildLogger {
+  /**
+   *
+   * @param parent
+   * @param prefix
+   */
   constructor(
-    private parent: Logger,
-    private prefix: string
+    private readonly parent: Logger,
+    private readonly prefix: string
   ) {}
 
+  /**
+   *
+   * @param message
+   */
   private formatMessage(message: string): string {
     return `[${this.prefix}] ${message}`;
   }
 
+  /**
+   *
+   * @param message
+   * @param data
+   */
   public debug(message: string, data?: unknown): void {
     this.parent.debug(this.formatMessage(message), data);
   }
 
+  /**
+   *
+   * @param message
+   * @param data
+   */
   public info(message: string, data?: unknown): void {
     this.parent.info(this.formatMessage(message), data);
   }
 
+  /**
+   *
+   * @param message
+   * @param data
+   */
   public warn(message: string, data?: unknown): void {
     this.parent.warn(this.formatMessage(message), data);
   }
 
+  /**
+   *
+   * @param message
+   * @param error
+   */
   public error(message: string, error?: Error | unknown): void {
     this.parent.error(this.formatMessage(message), error);
   }
 
+  /**
+   *
+   * @param message
+   * @param data
+   */
   public success(message: string, data?: unknown): void {
     this.parent.success(this.formatMessage(message), data);
   }

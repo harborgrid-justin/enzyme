@@ -9,6 +9,9 @@ import type { EnzymeExtensionSettings } from '../extension-config';
 // Types
 // =============================================================================
 
+/**
+ *
+ */
 interface SettingsHTMLOptions {
   settings: Partial<EnzymeExtensionSettings>;
   defaultSettings: EnzymeExtensionSettings;
@@ -20,6 +23,9 @@ interface SettingsHTMLOptions {
 // Setting Metadata
 // =============================================================================
 
+/**
+ *
+ */
 interface SettingMetadata {
   label: string;
   description: string;
@@ -251,6 +257,7 @@ const SETTINGS_METADATA: Record<string, SettingMetadata> = {
 
 /**
  * Generate settings HTML
+ * @param options
  */
 export function generateSettingsHTML(options: SettingsHTMLOptions): string {
   const { settings, defaultSettings, nonce, cspSource } = options;
@@ -304,10 +311,12 @@ export function generateSettingsHTML(options: SettingsHTMLOptions): string {
 
 /**
  * Group settings by category
+ * @param settings
+ * @param defaultSettings
  */
 function groupSettings(
-  settings: Partial<EnzymeExtensionSettings>,
-  defaultSettings: EnzymeExtensionSettings
+  _settings: Partial<EnzymeExtensionSettings>,
+  _defaultSettings: EnzymeExtensionSettings
 ): Record<string, Array<{ key: string; metadata: SettingMetadata }>> {
   const groups: Record<string, Array<{ key: string; metadata: SettingMetadata }>> = {};
 
@@ -316,7 +325,10 @@ function groupSettings(
       groups[metadata.group] = [];
     }
 
-    groups[metadata.group].push({ key, metadata });
+    const groupArray = groups[metadata.group];
+    if (groupArray) {
+      groupArray.push({ key, metadata });
+    }
   }
 
   return groups;
@@ -324,6 +336,11 @@ function groupSettings(
 
 /**
  * Generate HTML for single setting
+ * @param setting
+ * @param setting.key
+ * @param setting.metadata
+ * @param currentSettings
+ * @param defaultSettings
  */
 function generateSettingHTML(
   setting: { key: string; metadata: SettingMetadata },
@@ -353,10 +370,11 @@ function generateSettingHTML(
 
 /**
  * SECURITY: Escape HTML attribute values to prevent XSS
+ * @param value
  */
-function escapeHtmlAttr(value: unknown): string {
-  const str = String(value ?? '');
-  return str
+function escapeHtmlAttribute(value: unknown): string {
+  const string_ = String(value ?? '');
+  return string_
     .replace(/&/g, '&amp;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#x27;')
@@ -366,6 +384,7 @@ function escapeHtmlAttr(value: unknown): string {
 
 /**
  * SECURITY: Escape values for use in JavaScript strings
+ * @param value
  */
 function escapeJsString(value: string): string {
   return value
@@ -379,10 +398,13 @@ function escapeJsString(value: string): string {
 /**
  * Generate control HTML based on type
  * SECURITY: All values are properly escaped to prevent XSS
+ * @param key
+ * @param metadata
+ * @param value
  */
 function generateControl(key: string, metadata: SettingMetadata, value: unknown): string {
   // SECURITY: Escape the key for use in both HTML attributes and JS
-  const safeKey = escapeHtmlAttr(key);
+  const safeKey = escapeHtmlAttribute(key);
   const safeJsKey = escapeJsString(key);
 
   switch (metadata.type) {
@@ -400,19 +422,19 @@ function generateControl(key: string, metadata: SettingMetadata, value: unknown)
     case 'select':
       return `<select id="${safeKey}" onchange="updateSetting('${safeJsKey}', this.value)">
         ${metadata.options?.map((opt) => {
-          const safeOpt = escapeHtmlAttr(opt);
+          const safeOpt = escapeHtmlAttribute(opt);
           return `<option value="${safeOpt}" ${value === opt ? 'selected' : ''}>${safeOpt}</option>`;
         }).join('')}
       </select>`;
 
     case 'array': {
       const arrayValue = Array.isArray(value) ? value.map(v => String(v)).join(', ') : '';
-      return `<input type="text" id="${safeKey}" value="${escapeHtmlAttr(arrayValue)}" onchange="updateSetting('${safeJsKey}', this.value.split(',').map(s => s.trim()).filter(Boolean))">`;
+      return `<input type="text" id="${safeKey}" value="${escapeHtmlAttribute(arrayValue)}" onchange="updateSetting('${safeJsKey}', this.value.split(',').map(s => s.trim()).filter(Boolean))">`;
     }
 
     case 'string':
     default:
-      return `<input type="text" id="${safeKey}" value="${escapeHtmlAttr(value)}" onchange="updateSetting('${safeJsKey}', this.value)">`;
+      return `<input type="text" id="${safeKey}" value="${escapeHtmlAttribute(value)}" onchange="updateSetting('${safeJsKey}', this.value)">`;
   }
 }
 

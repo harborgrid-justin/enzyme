@@ -9,6 +9,9 @@ import { StateDiff, type DiffNode } from '../state-diff';
 // Types
 // ============================================================================
 
+/**
+ *
+ */
 export interface Snapshot {
   id: string;
   name: string;
@@ -19,6 +22,9 @@ export interface Snapshot {
   metadata?: Record<string, unknown>;
 }
 
+/**
+ *
+ */
 export interface SnapshotComparison {
   snapshot1: Snapshot;
   snapshot2: Snapshot;
@@ -30,6 +36,9 @@ export interface SnapshotComparison {
   };
 }
 
+/**
+ *
+ */
 export interface SnapshotOptions {
   /** Maximum snapshots to keep */
   maxSnapshots?: number;
@@ -43,13 +52,20 @@ export interface SnapshotOptions {
 // Snapshot Manager
 // ============================================================================
 
+/**
+ *
+ */
 export class SnapshotManager {
-  private options: Required<SnapshotOptions>;
+  private readonly options: Required<SnapshotOptions>;
   private snapshots: Snapshot[] = [];
   private snapshotIdCounter = 0;
   private autoSaveTimer: NodeJS.Timeout | null = null;
-  private differ: StateDiff;
+  private readonly differ: StateDiff;
 
+  /**
+   *
+   * @param options
+   */
   constructor(options: SnapshotOptions = {}) {
     this.options = {
       maxSnapshots: options.maxSnapshots ?? 50,
@@ -72,6 +88,10 @@ export class SnapshotManager {
 
   /**
    * Save a snapshot
+   * @param state
+   * @param name
+   * @param storeName
+   * @param tags
    */
   save(state: unknown, name: string, storeName?: string, tags?: string[]): Snapshot {
     const snapshot: Snapshot = {
@@ -79,8 +99,8 @@ export class SnapshotManager {
       name,
       timestamp: Date.now(),
       state: this.deepClone(state),
-      storeName,
-      tags,
+      ...(storeName !== undefined && { storeName }),
+      ...(tags !== undefined && { tags }),
     };
 
     this.snapshots.push(snapshot);
@@ -98,6 +118,7 @@ export class SnapshotManager {
 
   /**
    * Get snapshot by ID
+   * @param id
    */
   get(id: string): Snapshot | undefined {
     return this.snapshots.find((s) => s.id === id);
@@ -105,6 +126,11 @@ export class SnapshotManager {
 
   /**
    * Get all snapshots
+   * @param filter
+   * @param filter.storeName
+   * @param filter.tags
+   * @param filter.fromTime
+   * @param filter.toTime
    */
   getAll(filter?: {
     storeName?: string;
@@ -137,6 +163,7 @@ export class SnapshotManager {
 
   /**
    * Get latest snapshot
+   * @param storeName
    */
   getLatest(storeName?: string): Snapshot | undefined {
     const filtered = storeName
@@ -148,6 +175,7 @@ export class SnapshotManager {
 
   /**
    * Restore snapshot (returns the state)
+   * @param id
    */
   restore(id: string): unknown | undefined {
     const snapshot = this.get(id);
@@ -160,6 +188,7 @@ export class SnapshotManager {
 
   /**
    * Delete snapshot
+   * @param id
    */
   delete(id: string): boolean {
     const index = this.snapshots.findIndex((s) => s.id === id);
@@ -174,19 +203,18 @@ export class SnapshotManager {
 
   /**
    * Clear all snapshots
+   * @param storeName
    */
   clear(storeName?: string): void {
-    if (storeName) {
-      this.snapshots = this.snapshots.filter((s) => s.storeName !== storeName);
-    } else {
-      this.snapshots = [];
-    }
+    this.snapshots = storeName ? this.snapshots.filter((s) => s.storeName !== storeName) : [];
 
     this.saveToStorage();
   }
 
   /**
    * Compare two snapshots
+   * @param id1
+   * @param id2
    */
   compare(id1: string, id2: string): SnapshotComparison | null {
     const snapshot1 = this.get(id1);
@@ -213,6 +241,7 @@ export class SnapshotManager {
 
   /**
    * Export snapshots as JSON
+   * @param ids
    */
   export(ids?: string[]): string {
     const snapshots = ids
@@ -232,6 +261,8 @@ export class SnapshotManager {
 
   /**
    * Import snapshots from JSON
+   * @param json
+   * @param merge
    */
   import(json: string, merge = false): void {
     try {
@@ -262,6 +293,8 @@ export class SnapshotManager {
 
   /**
    * Update snapshot metadata
+   * @param id
+   * @param metadata
    */
   updateMetadata(id: string, metadata: Record<string, unknown>): boolean {
     const snapshot = this.get(id);
@@ -280,6 +313,8 @@ export class SnapshotManager {
 
   /**
    * Add tags to snapshot
+   * @param id
+   * @param tags
    */
   addTags(id: string, tags: string[]): boolean {
     const snapshot = this.get(id);
@@ -294,6 +329,8 @@ export class SnapshotManager {
 
   /**
    * Remove tags from snapshot
+   * @param id
+   * @param tags
    */
   removeTags(id: string, tags: string[]): boolean {
     const snapshot = this.get(id);
@@ -301,13 +338,16 @@ export class SnapshotManager {
       return false;
     }
 
-    snapshot.tags = snapshot.tags?.filter((t) => !tags.includes(t));
+    if (snapshot.tags !== undefined) {
+      snapshot.tags = snapshot.tags.filter((t) => !tags.includes(t));
+    }
     this.saveToStorage();
     return true;
   }
 
   /**
    * Get snapshot history for a store
+   * @param storeName
    */
   getHistory(storeName: string): Snapshot[] {
     return this.snapshots
@@ -383,6 +423,7 @@ export class SnapshotManager {
 
   /**
    * Deep clone value
+   * @param value
    */
   private deepClone<T>(value: T): T {
     return JSON.parse(JSON.stringify(value));
@@ -412,6 +453,7 @@ let globalManager: SnapshotManager | null = null;
 
 /**
  * Get or create global manager instance
+ * @param options
  */
 export function getGlobalSnapshotManager(options?: SnapshotOptions): SnapshotManager {
   if (!globalManager) {

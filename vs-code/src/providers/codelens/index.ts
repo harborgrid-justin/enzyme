@@ -1,9 +1,13 @@
 import * as vscode from 'vscode';
-import { RouteCodeLensProvider } from './route-code-lens';
 import { ComponentCodeLensProvider } from './component-code-lens';
-import { HookCodeLensProvider } from './hook-code-lens';
 import { FeatureCodeLensProvider } from './feature-code-lens';
+import { HookCodeLensProvider } from './hook-code-lens';
+import { RouteCodeLensProvider } from './route-code-lens';
 
+/**
+ *
+ * @param context
+ */
 export function registerCodeLensProviders(context: vscode.ExtensionContext): void {
   const config = vscode.workspace.getConfiguration('enzyme');
   const enableCodeLens = config.get<boolean>('codeLens.enabled', true);
@@ -98,21 +102,25 @@ export function registerCodeLensProviders(context: vscode.ExtensionContext): voi
   registerCodeLensCommands(context);
 }
 
+/**
+ *
+ * @param context
+ */
 function registerCodeLensCommands(context: vscode.ExtensionContext): void {
   // Route commands
   context.subscriptions.push(
     vscode.commands.registerCommand(
       'enzyme.navigateToComponent',
-      async (componentName: string, uri: vscode.Uri) => {
+      async (componentName: string, _uri: vscode.Uri) => {
         // Find and open component file
         const files = await vscode.workspace.findFiles(
           `**/${componentName}.{tsx,ts,jsx,js}`,
           '**/node_modules/**'
         );
 
-        if (files.length > 0) {
-          const document = await vscode.workspace.openTextDocument(files[0]);
-          await vscode.window.showTextDocument(document);
+        const firstFile = files[0];
+        if (firstFile) {
+          await vscode.window.showTextDocument(firstFile);
         } else {
           vscode.window.showWarningMessage(`Component ${componentName} not found`);
         }
@@ -139,7 +147,7 @@ function registerCodeLensCommands(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.commands.registerCommand(
       'enzyme.showComponentMetrics',
-      async (componentName: string, uri: vscode.Uri) => {
+      async (componentName: string, _uri: vscode.Uri) => {
         vscode.window.showInformationMessage(
           `Performance metrics for ${componentName} - Coming soon!`
         );
@@ -171,7 +179,7 @@ function registerCodeLensCommands(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.commands.registerCommand(
       'enzyme.debugHook',
-      async (hookName: string, uri: vscode.Uri) => {
+      async (hookName: string, _uri: vscode.Uri) => {
         vscode.window.showInformationMessage(`Debug hook: ${hookName} - Coming soon!`);
       }
     )
@@ -181,7 +189,7 @@ function registerCodeLensCommands(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.commands.registerCommand(
       'enzyme.toggleFeature',
-      async (featureName: string, uri: vscode.Uri) => {
+      async (featureName: string, _uri: vscode.Uri) => {
         vscode.window.showInformationMessage(`Toggle feature: ${featureName} - Coming soon!`);
       }
     )
@@ -196,7 +204,7 @@ function registerCodeLensCommands(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.commands.registerCommand(
       'enzyme.showFeatureRoutes',
-      async (featureName: string, uri: vscode.Uri) => {
+      async (featureName: string, _uri: vscode.Uri) => {
         vscode.window.showInformationMessage(`Show routes for: ${featureName} - Coming soon!`);
       }
     )

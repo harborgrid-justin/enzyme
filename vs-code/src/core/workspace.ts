@@ -3,11 +3,11 @@
  * Provides functions to detect, analyze, and monitor Enzyme projects
  */
 
+import * as path from 'node:path';
 import * as vscode from 'vscode';
-import * as path from 'path';
-import { logger } from './logger';
 import { FILE_PATTERNS, TIMEOUTS } from './constants';
-import {
+import { logger } from './logger';
+import type {
   EnzymeWorkspace,
   EnzymeConfig,
   PackageJson,
@@ -54,7 +54,7 @@ export async function detectEnzymeProject(): Promise<boolean> {
         logger.info('Enzyme project detected via package.json');
         return true;
       }
-    } catch (error) {
+    } catch {
       // package.json doesn't exist or failed to parse
       logger.debug('No package.json or parse error');
     }
@@ -94,6 +94,7 @@ export async function detectEnzymeProject(): Promise<boolean> {
 
 /**
  * PERFORMANCE: Get Enzyme version from package.json (async)
+ * @param rootPath
  */
 export async function getEnzymeVersion(rootPath: string): Promise<string | undefined> {
   try {
@@ -113,9 +114,9 @@ export async function getEnzymeVersion(rootPath: string): Promise<string | undef
       'enzyme',
     ];
 
-    for (const pkg of enzymePackages) {
-      if (allDeps[pkg]) {
-        return allDeps[pkg];
+    for (const package_ of enzymePackages) {
+      if (allDeps[package_]) {
+        return allDeps[package_];
       }
     }
 
@@ -133,6 +134,7 @@ export async function getEnzymeVersion(rootPath: string): Promise<string | undef
 
 /**
  * PERFORMANCE: Find Enzyme configuration file (async)
+ * @param rootPath
  */
 export async function findEnzymeConfig(rootPath: string): Promise<EnzymeConfig | undefined> {
   const configFiles = ['enzyme.config.ts', 'enzyme.config.js'];
@@ -160,6 +162,7 @@ export async function findEnzymeConfig(rootPath: string): Promise<EnzymeConfig |
 
 /**
  * PERFORMANCE: Get package.json (async)
+ * @param rootPath
  */
 export async function getPackageJson(rootPath: string): Promise<PackageJson | undefined> {
   try {
@@ -229,10 +232,10 @@ export async function getProjectStructure(): Promise<EnzymeWorkspace> {
 
   const workspace: EnzymeWorkspace = {
     rootPath,
-    packageJson,
-    enzymeConfig,
+    ...(packageJson ? { packageJson } : {}),
+    ...(enzymeConfig ? { enzymeConfig } : {}),
     isEnzymeProject,
-    enzymeVersion,
+    ...(enzymeVersion ? { enzymeVersion } : {}),
     features,
     routes,
     components,
@@ -248,6 +251,7 @@ export async function getProjectStructure(): Promise<EnzymeWorkspace> {
 
 /**
  * PERFORMANCE: Load cached workspace structure if valid
+ * @param rootPath
  */
 async function loadCachedWorkspaceStructure(rootPath: string): Promise<EnzymeWorkspace | null> {
   try {
@@ -284,6 +288,8 @@ async function loadCachedWorkspaceStructure(rootPath: string): Promise<EnzymeWor
 
 /**
  * PERFORMANCE: Cache workspace structure
+ * @param rootPath
+ * @param workspace
  */
 async function cacheWorkspaceStructure(rootPath: string, workspace: EnzymeWorkspace): Promise<void> {
   try {
@@ -332,6 +338,7 @@ export async function invalidateWorkspaceCache(): Promise<void> {
 /**
  * PERFORMANCE: Scan for Enzyme features (async with limit)
  * Uses workspace.findFiles with max results to prevent blocking
+ * @param rootPath
  */
 async function scanFeatures(rootPath: string): Promise<EnzymeFeature[]> {
   const features: EnzymeFeature[] = [];
@@ -357,7 +364,7 @@ async function scanFeatures(rootPath: string): Promise<EnzymeFeature[]> {
 
     const featureResults = await Promise.all(featurePromises);
     features.push(...featureResults.filter((f): f is EnzymeFeature => f !== null));
-  } catch (error) {
+  } catch {
     // Features directory doesn't exist or error scanning
     logger.debug('No features directory or scan error');
   }
@@ -367,6 +374,8 @@ async function scanFeatures(rootPath: string): Promise<EnzymeFeature[]> {
 
 /**
  * Analyze a single feature directory
+ * @param featurePath
+ * @param featureId
  */
 async function analyzeFeature(featurePath: string, featureId: string): Promise<EnzymeFeature | null> {
   try {
@@ -387,6 +396,7 @@ async function analyzeFeature(featurePath: string, featureId: string): Promise<E
 
 /**
  * PERFORMANCE: Scan for routes (async with limit)
+ * @param rootPath
  */
 async function scanRoutes(rootPath: string): Promise<EnzymeRoute[]> {
   const routes: EnzymeRoute[] = [];
@@ -412,6 +422,7 @@ async function scanRoutes(rootPath: string): Promise<EnzymeRoute[]> {
 
 /**
  * PERFORMANCE: Scan for components (async with limit)
+ * @param rootPath
  */
 async function scanComponents(rootPath: string): Promise<EnzymeComponent[]> {
   const components: EnzymeComponent[] = [];
@@ -437,6 +448,7 @@ async function scanComponents(rootPath: string): Promise<EnzymeComponent[]> {
 
 /**
  * PERFORMANCE: Scan for stores (async with limit)
+ * @param rootPath
  */
 async function scanStores(rootPath: string): Promise<EnzymeStore[]> {
   const stores: EnzymeStore[] = [];
@@ -462,6 +474,7 @@ async function scanStores(rootPath: string): Promise<EnzymeStore[]> {
 
 /**
  * PERFORMANCE: Scan for API clients (async with limit)
+ * @param rootPath
  */
 async function scanApiClients(rootPath: string): Promise<EnzymeApiClient[]> {
   const apiClients: EnzymeApiClient[] = [];
@@ -491,10 +504,15 @@ async function scanApiClients(rootPath: string): Promise<EnzymeApiClient[]> {
 export class FileWatcher {
   private watcher: vscode.FileSystemWatcher | null = null;
   private debounceTimer: NodeJS.Timeout | null = null;
-  private eventEmitter: vscode.EventEmitter<FileWatcherEvent>;
+  private readonly eventEmitter: vscode.EventEmitter<FileWatcherEvent>;
   private disposables: vscode.Disposable[] = [];
 
-  constructor(private pattern: string, private debounceDelay: number = TIMEOUTS.FILE_WATCHER_DEBOUNCE) {
+  /**
+   *
+   * @param pattern
+   * @param debounceDelay
+   */
+  constructor(private readonly pattern: string, private readonly debounceDelay: number = TIMEOUTS.FILE_WATCHER_DEBOUNCE) {
     this.eventEmitter = new vscode.EventEmitter<FileWatcherEvent>();
     this.disposables.push(this.eventEmitter);
   }
@@ -544,6 +562,8 @@ export class FileWatcher {
 
   /**
    * Handle file system events with debouncing
+   * @param type
+   * @param uri
    */
   private handleFileEvent(type: 'created' | 'changed' | 'deleted', uri: vscode.Uri): void {
     if (this.debounceTimer) {
@@ -564,6 +584,7 @@ export class FileWatcher {
 
   /**
    * Subscribe to file watcher events
+   * @param listener
    */
   public onEvent(listener: (event: FileWatcherEvent) => void): vscode.Disposable {
     return this.eventEmitter.event(listener);
@@ -580,7 +601,7 @@ export class FileWatcher {
     this.disposables.forEach(d => {
       try {
         d.dispose();
-      } catch (error) {
+      } catch {
         // Silently handle dispose errors
       }
     });

@@ -2,10 +2,10 @@
  * IndexingCoordinator - Coordinates indexing across all providers
  */
 
-import * as vscode from 'vscode';
-import { EventBus } from './event-bus';
-import { LoggerService } from '../services/logger-service';
-import { WorkspaceService } from '../services/workspace-service';
+import type { EventBus } from './event-bus';
+import type { LoggerService } from '../services/logger-service';
+import type { WorkspaceService } from '../services/workspace-service';
+import type * as vscode from 'vscode';
 
 /**
  * Index entry
@@ -35,28 +35,34 @@ export interface IndexingTask {
  */
 export class IndexingCoordinator {
   private static instance: IndexingCoordinator;
-  private eventBus: EventBus;
-  private logger: LoggerService;
-  private workspaceService: WorkspaceService;
-  private index: Map<string, IndexEntry> = new Map();
+  private readonly eventBus: EventBus;
+  private readonly logger: LoggerService;
+  private readonly index = new Map<string, IndexEntry>();
   private taskQueue: IndexingTask[] = [];
-  private isIndexing: boolean = false;
+  private isIndexing = false;
   private indexingPromise?: Promise<void>;
-  private cache: Map<string, IndexEntry[]> = new Map();
-  private cacheExpiry: number = 5 * 60 * 1000; // 5 minutes
+  private readonly cache = new Map<string, IndexEntry[]>();
 
+  /**
+   *
+   * @param eventBus
+   * @param logger
+   * @param _workspaceService
+   */
   private constructor(
     eventBus: EventBus,
     logger: LoggerService,
-    workspaceService: WorkspaceService
+    _workspaceService: WorkspaceService
   ) {
     this.eventBus = eventBus;
     this.logger = logger;
-    this.workspaceService = workspaceService;
   }
 
   /**
    * Create the indexing coordinator
+   * @param eventBus
+   * @param logger
+   * @param workspaceService
    */
   public static create(
     eventBus: EventBus,
@@ -85,6 +91,7 @@ export class IndexingCoordinator {
 
   /**
    * Add indexing task
+   * @param task
    */
   public addTask(task: IndexingTask): void {
     this.taskQueue.push(task);
@@ -125,7 +132,7 @@ export class IndexingCoordinator {
       throw error;
     } finally {
       this.isIndexing = false;
-      this.indexingPromise = undefined;
+      delete this.indexingPromise;
     }
   }
 
@@ -157,13 +164,15 @@ export class IndexingCoordinator {
 
   /**
    * Get indexed entries by type
+   * @param type
    */
   public getByType(type: IndexEntry['type']): IndexEntry[] {
-    return Array.from(this.index.values()).filter(entry => entry.type === type);
+    return [...this.index.values()].filter(entry => entry.type === type);
   }
 
   /**
    * Get entry by ID
+   * @param id
    */
   public getById(id: string): IndexEntry | undefined {
     return this.index.get(id);
@@ -171,10 +180,11 @@ export class IndexingCoordinator {
 
   /**
    * Search index
+   * @param query
    */
   public search(query: string): IndexEntry[] {
     const lowerQuery = query.toLowerCase();
-    return Array.from(this.index.values()).filter(entry =>
+    return [...this.index.values()].filter(entry =>
       entry.name.toLowerCase().includes(lowerQuery) ||
       entry.filePath.toLowerCase().includes(lowerQuery)
     );
@@ -182,6 +192,7 @@ export class IndexingCoordinator {
 
   /**
    * Update entry
+   * @param entry
    */
   public updateEntry(entry: IndexEntry): void {
     this.index.set(entry.id, {
@@ -192,6 +203,7 @@ export class IndexingCoordinator {
 
   /**
    * Remove entry
+   * @param id
    */
   public removeEntry(id: string): void {
     this.index.delete(id);
@@ -223,18 +235,16 @@ export class IndexingCoordinator {
     oldestEntry?: number;
     newestEntry?: number;
   } {
-    const stats = {
+    const baseStats = {
       total: this.index.size,
       byType: {} as Record<string, number>,
-      oldestEntry: undefined as number | undefined,
-      newestEntry: undefined as number | undefined,
     };
 
     let oldest = Number.MAX_SAFE_INTEGER;
     let newest = 0;
 
     for (const entry of this.index.values()) {
-      stats.byType[entry.type] = (stats.byType[entry.type] || 0) + 1;
+      baseStats.byType[entry.type] = (baseStats.byType[entry.type] || 0) + 1;
 
       if (entry.timestamp < oldest) {
         oldest = entry.timestamp;
@@ -245,11 +255,14 @@ export class IndexingCoordinator {
     }
 
     if (this.index.size > 0) {
-      stats.oldestEntry = oldest;
-      stats.newestEntry = newest;
+      return {
+        ...baseStats,
+        oldestEntry: oldest,
+        newestEntry: newest,
+      };
     }
 
-    return stats;
+    return baseStats;
   }
 
   /**
@@ -272,15 +285,17 @@ export class IndexingCoordinator {
 
   /**
    * Persist index
+   * @param context
    */
   public async persistIndex(context: vscode.ExtensionContext): Promise<void> {
-    const data = Array.from(this.index.values());
+    const data = [...this.index.values()];
     await context.globalState.update('enzyme.index', data);
     this.logger.debug('Index persisted');
   }
 
   /**
    * Restore index
+   * @param context
    */
   public async restoreIndex(context: vscode.ExtensionContext): Promise<void> {
     const data = context.globalState.get<IndexEntry[]>('enzyme.index', []);
@@ -294,9 +309,15 @@ export class IndexingCoordinator {
 
   /**
    * Dispose the coordinator
+   * PERFORMANCE: Properly cleans up all resources to prevent memory leaks
    */
   public dispose(): void {
     this.clearIndex();
     this.taskQueue = [];
+
+    // Reset singleton instance to prevent memory leaks
+    if (IndexingCoordinator.instance === this) {
+      IndexingCoordinator.instance = null as any;
+    }
   }
 }

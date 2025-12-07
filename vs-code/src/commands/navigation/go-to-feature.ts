@@ -1,8 +1,12 @@
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
 import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs/promises';
-import { BaseCommand, CommandContext, CommandMetadata } from '../base-command';
+import { BaseCommand } from '../base-command';
+import type { CommandContext, CommandMetadata } from '../base-command';
 
+/**
+ *
+ */
 interface FeatureInfo {
   name: string;
   path: string;
@@ -18,6 +22,9 @@ interface FeatureInfo {
  * Keybinding: Ctrl+Shift+F
  */
 export class GoToFeatureCommand extends BaseCommand {
+  /**
+   *
+   */
   getMetadata(): CommandMetadata {
     return {
       id: 'enzyme.navigation.goToFeature',
@@ -31,6 +38,10 @@ export class GoToFeatureCommand extends BaseCommand {
     };
   }
 
+  /**
+   *
+   * @param _context
+   */
   protected async executeCommand(_context: CommandContext): Promise<void> {
     const workspaceFolder = await this.ensureWorkspaceFolder();
 
@@ -92,12 +103,16 @@ export class GoToFeatureCommand extends BaseCommand {
     }
   }
 
+  /**
+   *
+   * @param workspaceFolder
+   */
   private async findFeatures(
     workspaceFolder: vscode.WorkspaceFolder
   ): Promise<FeatureInfo[]> {
     const features: FeatureInfo[] = [];
-    const srcPath = path.join(workspaceFolder!.uri.fsPath, 'src');
-    const featuresPath = path.join(srcPath, 'features');
+    const sourcePath = path.join(workspaceFolder.uri.fsPath, 'src');
+    const featuresPath = path.join(sourcePath, 'features');
 
     try {
       // Check if features directory exists
@@ -108,10 +123,10 @@ export class GoToFeatureCommand extends BaseCommand {
 
       // Read feature directories
       const entries = await fs.readdir(featuresPath, { withFileTypes: true });
-      const featureDirs = entries.filter((entry) => entry.isDirectory());
+      const featureDirectories = entries.filter((entry) => entry.isDirectory());
 
       // Analyze each feature
-      for (const dir of featureDirs) {
+      for (const dir of featureDirectories) {
         const featurePath = path.join(featuresPath, dir.name);
         const feature = await this.analyzeFeature(dir.name, featurePath);
         features.push(feature);
@@ -127,6 +142,11 @@ export class GoToFeatureCommand extends BaseCommand {
     }
   }
 
+  /**
+   *
+   * @param name
+   * @param featurePath
+   */
   private async analyzeFeature(
     name: string,
     featurePath: string
@@ -162,9 +182,10 @@ export class GoToFeatureCommand extends BaseCommand {
       try {
         const readmeContent = await fs.readFile(readmePath, 'utf-8');
         // Extract first paragraph after title
-        const match = readmeContent.match(/^#\s+.+?\n\n(.+?)(?:\n\n|$)/m);
-        if (match) {
-          feature.description = match[1].trim();
+        const match = /^#\s+.+?\n\n(.+?)(?:\n\n|$)/m.exec(readmeContent);
+        const description = match?.[1];
+        if (description) {
+          feature.description = description.trim();
         }
       } catch {
         // README doesn't exist
@@ -176,6 +197,10 @@ export class GoToFeatureCommand extends BaseCommand {
     return feature;
   }
 
+  /**
+   *
+   * @param feature
+   */
   private getFeatureBadges(feature: FeatureInfo): string {
     const badges: string[] = [];
 

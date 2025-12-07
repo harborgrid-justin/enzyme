@@ -17,16 +17,16 @@
  */
 
 import * as vscode from 'vscode';
-import { EventBus } from './event-bus';
-import { Container } from './container';
-import { ServiceRegistry } from './service-registry';
-import { ProviderRegistry } from './provider-registry';
-import { CommandRegistry } from './command-registry';
-import { LoggerService } from '../services/logger-service';
-import { WorkspaceService } from '../services/workspace-service';
-import { AnalysisService } from '../services/analysis-service';
-import { WelcomeOrchestrator } from '../services/welcome-orchestrator';
 import { EnzymeCliManager } from '../services/enzyme-cli-manager';
+import { WelcomeOrchestrator } from '../services/welcome-orchestrator';
+import type { CommandRegistry } from './command-registry';
+import type { Container } from './container';
+import type { EventBus } from './event-bus';
+import type { ProviderRegistry } from './provider-registry';
+import type { ServiceRegistry } from './service-registry';
+import type { AnalysisService } from '../services/analysis-service';
+import type { LoggerService } from '../services/logger-service';
+import type { WorkspaceService } from '../services/workspace-service';
 
 /**
  * Integration phase for startup sequence
@@ -85,15 +85,19 @@ export class IntegrationCoordinator {
 
   // Component references
   private serviceRegistry?: ServiceRegistry;
-  private providerRegistry?: ProviderRegistry;
-  private commandRegistry?: CommandRegistry;
+  private _providerRegistry?: ProviderRegistry;
+  private _commandRegistry?: CommandRegistry;
   private workspaceService?: WorkspaceService;
-  private analysisService?: AnalysisService;
+  private _analysisService?: AnalysisService;
   private welcomeOrchestrator?: WelcomeOrchestrator;
   private cliManager?: EnzymeCliManager;
 
   /**
    * Private constructor for singleton pattern
+   * @param context
+   * @param eventBus
+   * @param container
+   * @param logger
    */
   private constructor(
     context: vscode.ExtensionContext,
@@ -192,12 +196,12 @@ export class IntegrationCoordinator {
       this.isComplete = true;
 
       this.logger.success('Integration sequence completed successfully');
-      this.eventBus.emit('integration:complete', this.getStatus());
+      (this.eventBus.emit as any)('integration:complete', this.getStatus());
 
     } catch (error) {
       this.integrationError = error instanceof Error ? error : new Error(String(error));
       this.logger.error('Integration sequence failed', this.integrationError);
-      this.eventBus.emit('integration:failed', { error: this.integrationError });
+      (this.eventBus.emit as any)('integration:failed', { error: this.integrationError });
       throw this.integrationError;
     }
   }
@@ -215,11 +219,11 @@ export class IntegrationCoordinator {
   ): Promise<void> {
     this.logger.info(`Integration phase: ${phase}`);
     this.currentPhase = phase;
-    this.eventBus.emit('integration:phaseStarted', { phase });
+    (this.eventBus.emit as any)('integration:phaseStarted', { phase });
 
     try {
       await handler();
-      this.eventBus.emit('integration:phaseCompleted', { phase });
+      (this.eventBus.emit as any)('integration:phaseCompleted', { phase });
     } catch (error) {
       this.logger.error(`Integration phase ${phase} failed`, error);
       throw error;
@@ -302,7 +306,7 @@ export class IntegrationCoordinator {
 
     // Resolve core services
     this.workspaceService = this.container.resolve<WorkspaceService>('WorkspaceService');
-    this.analysisService = this.container.resolve<AnalysisService>('AnalysisService');
+    this._analysisService = this.container.resolve<AnalysisService>('AnalysisService');
 
     // Initialize CLI manager
     this.cliManager = EnzymeCliManager.create(this.logger, this.eventBus);
@@ -334,7 +338,7 @@ export class IntegrationCoordinator {
   private async initializeProviders(): Promise<void> {
     this.logger.info('Initializing providers');
 
-    this.providerRegistry = this.container.resolve<ProviderRegistry>('ProviderRegistry');
+    this._providerRegistry = this.container.resolve<ProviderRegistry>('ProviderRegistry');
 
     // Providers are registered via extension.ts registration functions
     // This phase just ensures the registry is ready
@@ -357,7 +361,7 @@ export class IntegrationCoordinator {
   private async initializeCommands(): Promise<void> {
     this.logger.info('Initializing commands');
 
-    this.commandRegistry = this.container.resolve<CommandRegistry>('CommandRegistry');
+    this._commandRegistry = this.container.resolve<CommandRegistry>('CommandRegistry');
 
     // Commands are registered via extension.ts registration functions
     // This phase just ensures the registry is ready
@@ -392,22 +396,22 @@ export class IntegrationCoordinator {
    */
   private setupGlobalEventListeners(): void {
     // Command execution logging
-    this.eventBus.on('command:*', (event) => {
+    (this.eventBus.on as any)('command:*', (event: any) => {
       this.logger.debug('Command event:', event);
     });
 
     // Service lifecycle logging
-    this.eventBus.on('service:*', (event) => {
+    (this.eventBus.on as any)('service:*', (event: any) => {
       this.logger.debug('Service event:', event);
     });
 
     // Provider lifecycle logging
-    this.eventBus.on('provider:*', (event) => {
+    (this.eventBus.on as any)('provider:*', (event: any) => {
       this.logger.debug('Provider event:', event);
     });
 
     // Error coordination
-    this.eventBus.on('error:*', (event) => {
+    (this.eventBus.on as any)('error:*', (event: any) => {
       this.logger.error('Component error:', event);
       this.handleComponentError(event);
     });
@@ -428,13 +432,13 @@ export class IntegrationCoordinator {
     // Attempt recovery based on error type
     if (event.recoverable) {
       this.logger.info('Attempting error recovery...');
-      this.eventBus.emit('recovery:attempt', event);
+      (this.eventBus.emit as any)('recovery:attempt', event);
     } else {
       this.logger.warn('Error is not recoverable');
     }
 
     // Update health status
-    this.eventBus.emit('health:degraded', { reason: event });
+    (this.eventBus.emit as any)('health:degraded', { reason: event });
   }
 
   /**
@@ -443,13 +447,14 @@ export class IntegrationCoordinator {
    * @returns Current integration status
    */
   public getStatus(): IntegrationStatus {
+    const servicesCount = this.serviceRegistry?.getServiceNames().length;
     return {
       phase: this.currentPhase,
       complete: this.isComplete,
-      error: this.integrationError,
+      ...(this.integrationError ? { error: this.integrationError } : {}),
       timestamp: Date.now(),
       metadata: {
-        servicesCount: this.serviceRegistry?.getServiceNames().length,
+        ...(servicesCount !== undefined ? { servicesCount } : {}),
         contextReady: !!this.context,
         containerReady: !!this.container,
       },
@@ -489,7 +494,7 @@ export class IntegrationCoordinator {
     steps: Array<() => Promise<T>>
   ): Promise<T[]> {
     this.logger.info(`Coordinating operation: ${name}`);
-    this.eventBus.emit('operation:started', { name });
+    (this.eventBus.emit as any)('operation:started', { name });
 
     const results: T[] = [];
     const startTime = Date.now();
@@ -497,22 +502,26 @@ export class IntegrationCoordinator {
     try {
       for (let i = 0; i < steps.length; i++) {
         this.logger.debug(`Executing step ${i + 1}/${steps.length}`);
-        this.eventBus.emit('operation:step', { name, step: i + 1, total: steps.length });
+        (this.eventBus.emit as any)('operation:step', { name, step: i + 1, total: steps.length });
 
-        const result = await steps[i]();
+        const step = steps[i];
+        if (!step) {
+          continue;
+        }
+        const result = await step();
         results.push(result);
       }
 
       const duration = Date.now() - startTime;
       this.logger.success(`Operation ${name} completed in ${duration}ms`);
-      this.eventBus.emit('operation:completed', { name, duration, results });
+      (this.eventBus.emit as any)('operation:completed', { name, duration, results });
 
       return results;
 
     } catch (error) {
       const duration = Date.now() - startTime;
       this.logger.error(`Operation ${name} failed after ${duration}ms`, error);
-      this.eventBus.emit('operation:failed', { name, duration, error });
+      (this.eventBus.emit as any)('operation:failed', { name, duration, error });
       throw error;
     }
   }
@@ -524,13 +533,13 @@ export class IntegrationCoordinator {
     this.logger.info('Disposing IntegrationCoordinator');
 
     // Cleanup component references
-    this.serviceRegistry = undefined;
-    this.providerRegistry = undefined;
-    this.commandRegistry = undefined;
-    this.workspaceService = undefined;
-    this.analysisService = undefined;
-    this.welcomeOrchestrator = undefined;
-    this.cliManager = undefined;
+    delete this.serviceRegistry;
+    delete this._providerRegistry;
+    delete this._commandRegistry;
+    delete this.workspaceService;
+    delete this._analysisService;
+    delete this.welcomeOrchestrator;
+    delete this.cliManager;
 
     this.isComplete = false;
     this.currentPhase = IntegrationPhase.PRE_INIT;

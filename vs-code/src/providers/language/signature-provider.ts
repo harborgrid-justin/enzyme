@@ -8,6 +8,10 @@ import { getIndex } from './enzyme-index';
 export class EnzymeSignatureProvider implements vscode.SignatureHelpProvider {
   /**
    * Provide signature help
+   * @param document
+   * @param position
+   * @param _token
+   * @param _context
    */
   public async provideSignatureHelp(
     document: vscode.TextDocument,
@@ -16,7 +20,7 @@ export class EnzymeSignatureProvider implements vscode.SignatureHelpProvider {
     _context: vscode.SignatureHelpContext
   ): Promise<vscode.SignatureHelp | undefined> {
     const line = document.lineAt(position.line).text;
-    const textBeforeCursor = line.substring(0, position.character);
+    const textBeforeCursor = line.slice(0, Math.max(0, position.character));
 
     // Hook signature help
     if (this.isHookCall(textBeforeCursor)) {
@@ -43,6 +47,7 @@ export class EnzymeSignatureProvider implements vscode.SignatureHelpProvider {
 
   /**
    * Check if current position is a hook call
+   * @param text
    */
   private isHookCall(text: string): boolean {
     return /use[A-Z]\w*\s*\($/.test(text);
@@ -50,11 +55,13 @@ export class EnzymeSignatureProvider implements vscode.SignatureHelpProvider {
 
   /**
    * Get hook signature help
+   * @param text
+   * @param _position
    */
-  private getHookSignature(text: string, position: vscode.Position): vscode.SignatureHelp | undefined {
+  private getHookSignature(text: string, _position: vscode.Position): vscode.SignatureHelp | undefined {
     try {
       // Extract hook name
-      const match = text.match(/use[A-Z]\w*(?=\s*\($)/);
+      const match = /use[A-Z]\w*(?=\s*\($)/.exec(text);
       if (!match) {
         return undefined;
       }
@@ -63,7 +70,7 @@ export class EnzymeSignatureProvider implements vscode.SignatureHelpProvider {
       const index = getIndex();
       const hook = index.getHook(hookName);
 
-      if (!hook || !hook.parameters) {
+      if (!hook?.parameters) {
         return undefined;
       }
 
@@ -92,13 +99,14 @@ export class EnzymeSignatureProvider implements vscode.SignatureHelpProvider {
       signatureHelp.activeParameter = Math.min(commaCount, hook.parameters.length - 1);
 
       return signatureHelp;
-    } catch (error) {
+    } catch {
       return undefined;
     }
   }
 
   /**
    * Check if current position is an API call
+   * @param text
    */
   private isApiCall(text: string): boolean {
     return /\.(get|post|put|patch|delete|head|options)\s*\($/.test(text);
@@ -106,10 +114,11 @@ export class EnzymeSignatureProvider implements vscode.SignatureHelpProvider {
 
   /**
    * Get API signature help
+   * @param text
    */
   private getApiSignature(text: string): vscode.SignatureHelp | undefined {
-    const match = text.match(/\.(get|post|put|patch|delete|head|options)\s*\($/);
-    if (!match) {
+    const match = /\.(get|post|put|patch|delete|head|options)\s*\($/.exec(text);
+    if (!match || !match[1]) {
       return undefined;
     }
 
@@ -155,7 +164,10 @@ export class EnzymeSignatureProvider implements vscode.SignatureHelpProvider {
 
     // Determine active parameter
     const commaCount = (text.match(/,/g) || []).length;
-    signatureHelp.activeParameter = Math.min(commaCount, signatureHelp.signatures[0].parameters.length - 1);
+    const firstSignature = signatureHelp.signatures[0];
+    if (firstSignature) {
+      signatureHelp.activeParameter = Math.min(commaCount, firstSignature.parameters.length - 1);
+    }
 
     return signatureHelp;
   }
@@ -188,6 +200,7 @@ export class EnzymeSignatureProvider implements vscode.SignatureHelpProvider {
 
   /**
    * Check if current position is component props
+   * @param text
    */
   private isComponentProps(text: string): boolean {
     return /<[A-Z]\w+\s+\w+=$/.test(text);
@@ -195,12 +208,13 @@ export class EnzymeSignatureProvider implements vscode.SignatureHelpProvider {
 
   /**
    * Get component props signature help
+   * @param text
    */
   private getComponentPropsSignature(text: string): vscode.SignatureHelp | undefined {
     try {
       // Extract component name
-      const match = text.match(/<([A-Z]\w+)/);
-      if (!match) {
+      const match = /<([A-Z]\w+)/.exec(text);
+      if (!match || !match[1]) {
         return undefined;
       }
 
@@ -208,19 +222,19 @@ export class EnzymeSignatureProvider implements vscode.SignatureHelpProvider {
       const index = getIndex();
       const component = index.getComponent(componentName);
 
-      if (!component || !component.props) {
+      if (!component?.props) {
         return undefined;
       }
 
       const signatureHelp = new vscode.SignatureHelp();
 
       // Build props signature
-      const propsStr = Object.entries(component.props)
+      const propsString = Object.entries(component.props)
         .map(([name, type]) => `${name}: ${type}`)
         .join(', ');
 
       const signature = new vscode.SignatureInformation(
-        `${componentName}({ ${propsStr} })`
+        `${componentName}({ ${propsString} })`
       );
 
       signature.documentation = new vscode.MarkdownString(
@@ -239,7 +253,7 @@ export class EnzymeSignatureProvider implements vscode.SignatureHelpProvider {
       signatureHelp.activeParameter = 0;
 
       return signatureHelp;
-    } catch (error) {
+    } catch {
       return undefined;
     }
   }

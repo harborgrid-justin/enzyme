@@ -3,9 +3,9 @@
  * @description Manages .env files and environment variables
  */
 
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
 import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs/promises';
 
 // =============================================================================
 // Types
@@ -29,7 +29,7 @@ export type EnvFileType =
 /**
  * Environment variable
  */
-export interface EnvVariable {
+export interface EnvironmentVariable {
   key: string;
   value: string;
   file: string;
@@ -41,11 +41,11 @@ export interface EnvVariable {
 /**
  * Env file info
  */
-export interface EnvFileInfo {
+export interface EnvironmentFileInfo {
   path: string;
   type: EnvFileType;
   exists: boolean;
-  variables: EnvVariable[];
+  variables: EnvironmentVariable[];
 }
 
 /**
@@ -101,11 +101,15 @@ const ENV_FILE_ORDER: EnvFileType[] = [
  * Environment manager
  */
 export class EnvManager {
-  private variables: Map<string, EnvVariable> = new Map();
+  private readonly variables = new Map<string, EnvironmentVariable>();
   private watchers: vscode.FileSystemWatcher[] = [];
-  private listeners: Array<(variables: Map<string, EnvVariable>) => void> = [];
+  private listeners: Array<(variables: Map<string, EnvironmentVariable>) => void> = [];
 
-  constructor(private workspaceRoot: string) {}
+  /**
+   *
+   * @param workspaceRoot
+   */
+  constructor(private readonly workspaceRoot: string) {}
 
   /**
    * Initialize and load all env files
@@ -139,14 +143,20 @@ export class EnvManager {
 
   /**
    * Parse environment file
+   * @param filePath
+   * @param fileType
    */
-  private async parseEnvFile(filePath: string, fileType: EnvFileType): Promise<EnvVariable[]> {
+  private async parseEnvFile(filePath: string, fileType: EnvFileType): Promise<EnvironmentVariable[]> {
     const content = await fs.readFile(filePath, 'utf-8');
     const lines = content.split('\n');
-    const variables: EnvVariable[] = [];
+    const variables: EnvironmentVariable[] = [];
 
     for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim();
+      const currentLine = lines[i];
+      if (!currentLine) {
+        continue;
+      }
+      const line = currentLine.trim();
 
       // Skip comments and empty lines
       if (!line || line.startsWith('#')) {
@@ -154,15 +164,19 @@ export class EnvManager {
       }
 
       // Parse key=value
-      const match = line.match(/^([A-Z_][A-Z0-9_]*)\s*=\s*(.*)$/);
-      if (match) {
+      const match = /^([A-Z_][\dA-Z_]*)\s*=\s*(.*)$/.exec(line);
+      if (match && match[1]) {
         const key = match[1];
         let value = match[2];
 
         // Remove quotes
-        value = value.replace(/^["'](.*)["']$/, '$1');
+        if (value) {
+          value = value.replace(/^["'](.*)["']$/, '$1');
+        } else {
+          value = '';
+        }
 
-        const variable: EnvVariable = {
+        const variable: EnvironmentVariable = {
           key,
           value,
           file: fileType,
@@ -180,6 +194,7 @@ export class EnvManager {
 
   /**
    * Check if variable name suggests it's a secret
+   * @param key
    */
   private isSecretVariable(key: string): boolean {
     return SECRET_PATTERNS.some((pattern) => pattern.test(key));
@@ -188,29 +203,31 @@ export class EnvManager {
   /**
    * Get all variables
    */
-  public getVariables(): Map<string, EnvVariable> {
+  public getVariables(): Map<string, EnvironmentVariable> {
     return new Map(this.variables);
   }
 
   /**
    * Get variable by key
+   * @param key
    */
-  public getVariable(key: string): EnvVariable | undefined {
+  public getVariable(key: string): EnvironmentVariable | undefined {
     return this.variables.get(key);
   }
 
   /**
    * Get variables from specific file
+   * @param fileType
    */
-  public getVariablesFromFile(fileType: EnvFileType): EnvVariable[] {
-    return Array.from(this.variables.values()).filter((v) => v.file === fileType);
+  public getVariablesFromFile(fileType: EnvFileType): EnvironmentVariable[] {
+    return [...this.variables.values()].filter((v) => v.file === fileType);
   }
 
   /**
    * Get all secret variables
    */
-  public getSecretVariables(): EnvVariable[] {
-    return Array.from(this.variables.values()).filter((v) => v.isSecret);
+  public getSecretVariables(): EnvironmentVariable[] {
+    return [...this.variables.values()].filter((v) => v.isSecret);
   }
 
   /**
@@ -259,9 +276,10 @@ export class EnvManager {
 
   /**
    * Resolve variable references (e.g., ${VAR_NAME})
+   * @param value
    */
   public resolveReferences(value: string): string {
-    return value.replace(/\$\{([A-Z_][A-Z0-9_]*)\}/g, (match, key) => {
+    return value.replace(/\${([A-Z_][\dA-Z_]*)}/g, (match, key) => {
       const variable = this.variables.get(key);
       if (variable) {
         variable.isReferenced = true;
@@ -305,9 +323,10 @@ export class EnvManager {
 
   /**
    * Group variables by prefix
+   * @param variables
    */
-  private groupVariables(variables: EnvVariable[]): Record<string, EnvVariable[]> {
-    const groups: Record<string, EnvVariable[]> = {
+  private groupVariables(variables: EnvironmentVariable[]): Record<string, EnvironmentVariable[]> {
+    const groups: Record<string, EnvironmentVariable[]> = {
       App: [],
       API: [],
       Auth: [],
@@ -317,31 +336,34 @@ export class EnvManager {
     };
 
     for (const variable of variables) {
-      const key = variable.key;
+      const {key} = variable;
 
       if (key.startsWith('VITE_APP_') || key.startsWith('APP_')) {
-        groups['App'].push(variable);
+        groups['App']?.push(variable);
       } else if (key.startsWith('VITE_API_') || key.startsWith('API_')) {
-        groups['API'].push(variable);
+        groups['API']?.push(variable);
       } else if (key.startsWith('VITE_AUTH_') || key.startsWith('AUTH_')) {
-        groups['Auth'].push(variable);
+        groups['Auth']?.push(variable);
       } else if (key.startsWith('DB_') || key.startsWith('DATABASE_')) {
-        groups['Database'].push(variable);
+        groups['Database']?.push(variable);
       } else if (key.startsWith('SENTRY_') || key.startsWith('ANALYTICS_')) {
-        groups['Monitoring'].push(variable);
+        groups['Monitoring']?.push(variable);
       } else {
-        groups['Other'].push(variable);
+        groups['Other']?.push(variable);
       }
     }
 
     // Remove empty groups
     return Object.fromEntries(
-      Object.entries(groups).filter(([_, vars]) => vars.length > 0)
+      Object.entries(groups).filter(([_, variables_]) => variables_.length > 0)
     );
   }
 
   /**
    * Add or update variable
+   * @param key
+   * @param value
+   * @param fileType
    */
   public async setVariable(
     key: string,
@@ -363,11 +385,14 @@ export class EnvManager {
 
     // Update existing variable
     for (let i = 0; i < lines.length; i++) {
-      const match = lines[i].match(/^([A-Z_][A-Z0-9_]*)\s*=/);
-      if (match && match[1] === key) {
-        lines[i] = `${key}=${value}`;
-        found = true;
-        break;
+      const currentLine = lines[i];
+      if (currentLine !== undefined) {
+        const match = /^([A-Z_][\dA-Z_]*)\s*=/.exec(currentLine);
+        if (match?.[1] === key) {
+          lines[i] = `${key}=${value}`;
+          found = true;
+          break;
+        }
       }
     }
 
@@ -382,6 +407,8 @@ export class EnvManager {
 
   /**
    * Remove variable
+   * @param key
+   * @param fileType
    */
   public async removeVariable(key: string, fileType: EnvFileType): Promise<void> {
     const filePath = path.join(this.workspaceRoot, fileType);
@@ -390,8 +417,8 @@ export class EnvManager {
     const lines = content.split('\n');
 
     const filtered = lines.filter((line) => {
-      const match = line.match(/^([A-Z_][A-Z0-9_]*)\s*=/);
-      return !match || match[1] !== key;
+      const match = /^([A-Z_][\dA-Z_]*)\s*=/.exec(line);
+      return match?.[1] !== key;
     });
 
     await fs.writeFile(filePath, filtered.join('\n'), 'utf-8');
@@ -409,17 +436,18 @@ export class EnvManager {
 
     const watcher = vscode.workspace.createFileSystemWatcher(pattern);
 
-    watcher.onDidChange(() => this.loadAllEnvFiles());
-    watcher.onDidCreate(() => this.loadAllEnvFiles());
-    watcher.onDidDelete(() => this.loadAllEnvFiles());
+    watcher.onDidChange(async () => this.loadAllEnvFiles());
+    watcher.onDidCreate(async () => this.loadAllEnvFiles());
+    watcher.onDidDelete(async () => this.loadAllEnvFiles());
 
     this.watchers.push(watcher);
   }
 
   /**
    * Subscribe to variable changes
+   * @param callback
    */
-  public onChange(callback: (variables: Map<string, EnvVariable>) => void): vscode.Disposable {
+  public onChange(callback: (variables: Map<string, EnvironmentVariable>) => void): vscode.Disposable {
     this.listeners.push(callback);
 
     return new vscode.Disposable(() => {
@@ -462,10 +490,11 @@ export class EnvManager {
  * Manages env for multiple workspace folders
  */
 export class WorkspaceEnvManager {
-  private managers: Map<string, EnvManager> = new Map();
+  private readonly managers = new Map<string, EnvManager>();
 
   /**
    * Get or create manager for workspace folder
+   * @param workspaceFolder
    */
   public async getManager(workspaceFolder: vscode.WorkspaceFolder): Promise<EnvManager> {
     const key = workspaceFolder.uri.fsPath;
@@ -509,14 +538,14 @@ export class WorkspaceEnvManager {
 // Convenience Functions
 // =============================================================================
 
-let workspaceEnvManager: WorkspaceEnvManager | null = null;
+let workspaceEnvironmentManager: WorkspaceEnvManager | null = null;
 
 /**
  * Get workspace env manager
  */
 export function getWorkspaceEnvManager(): WorkspaceEnvManager {
-  if (!workspaceEnvManager) {
-    workspaceEnvManager = new WorkspaceEnvManager();
+  if (!workspaceEnvironmentManager) {
+    workspaceEnvironmentManager = new WorkspaceEnvManager();
   }
-  return workspaceEnvManager;
+  return workspaceEnvironmentManager;
 }

@@ -1,11 +1,20 @@
+import * as path from 'node:path';
 import * as vscode from 'vscode';
-import * as path from 'path';
 
+/**
+ *
+ */
 export class ExtractHookRefactoring {
+  /**
+   *
+   * @param document
+   * @param range
+   * @param context
+   */
   public provideRefactorings(
     document: vscode.TextDocument,
     range: vscode.Range | vscode.Selection,
-    context: vscode.CodeActionContext
+    _context: vscode.CodeActionContext
   ): vscode.CodeAction[] {
     const actions: vscode.CodeAction[] = [];
 
@@ -36,6 +45,11 @@ export class ExtractHookRefactoring {
     return actions;
   }
 
+  /**
+   *
+   * @param document
+   * @param range
+   */
   private isValidSelectionForHook(document: vscode.TextDocument, range: vscode.Range): boolean {
     const text = document.getText(range);
 
@@ -49,29 +63,45 @@ export class ExtractHookRefactoring {
     return hasHooks && lineCount >= 3;
   }
 
+  /**
+   *
+   * @param document
+   * @param range
+   */
   private suggestHookName(document: vscode.TextDocument, range: vscode.Range): string {
     const text = document.getText(range);
 
     // Try to extract from state variable names
-    const stateMatch = text.match(/const\s+\[(\w+),\s*set\w+\]\s*=\s*useState/);
-    if (stateMatch) {
+    const stateMatch = /const\s+\[(\w+),\s*set\w+]\s*=\s*useState/.exec(text);
+    if (stateMatch && stateMatch[1]) {
       return `use${this.toPascalCase(stateMatch[1])}`;
     }
 
     // Try to extract from function context
-    const functionMatch = text.match(/(?:const|function)\s+(\w+)/);
-    if (functionMatch) {
+    const functionMatch = /(?:const|function)\s+(\w+)/.exec(text);
+    if (functionMatch && functionMatch[1]) {
       return `use${this.toPascalCase(functionMatch[1])}`;
     }
 
     return 'useCustom';
   }
 
-  private toPascalCase(str: string): string {
-    return str.charAt(0).toUpperCase() + str.slice(1);
+  /**
+   *
+   * @param string_
+   */
+  private toPascalCase(string_: string): string {
+    return string_.charAt(0).toUpperCase() + string_.slice(1);
   }
 }
 
+/**
+ *
+ * @param args
+ * @param args.uri
+ * @param args.range
+ * @param args.hookName
+ */
 export async function executeExtractHook(args: {
   uri: vscode.Uri;
   range: vscode.Range;
@@ -87,7 +117,7 @@ export async function executeExtractHook(args: {
       if (!value || value.trim().length === 0) {
         return 'Hook name is required';
       }
-      if (!/^use[A-Z][a-zA-Z0-9]*$/.test(value)) {
+      if (!/^use[A-Z][\dA-Za-z]*$/.test(value)) {
         return 'Hook name must start with "use" and be camelCase';
       }
       return null;
@@ -156,22 +186,31 @@ export async function executeExtractHook(args: {
   vscode.window.showInformationMessage(`Custom hook '${inputHookName}' created successfully!`);
 }
 
+/**
+ *
+ */
 interface HookAnalysis {
   dependencies: string[];
   returnValues: string[];
   imports: string[];
 }
 
+/**
+ *
+ * @param code
+ */
 function analyzeHookCode(code: string): HookAnalysis {
-  const dependencies: Set<string> = new Set();
+  const dependencies = new Set<string>();
   const returnValues: string[] = [];
-  const imports: Set<string> = new Set();
+  const imports = new Set<string>();
 
   // Extract useState declarations
-  const stateMatches = code.matchAll(/const\s+\[(\w+),\s*(\w+)\]\s*=\s*useState/g);
+  const stateMatches = code.matchAll(/const\s+\[(\w+),\s*(\w+)]\s*=\s*useState/g);
   for (const match of stateMatches) {
-    returnValues.push(`{ ${match[1]}, ${match[2]} }`);
-    imports.add('useState');
+    if (match[1] && match[2]) {
+      returnValues.push(`{ ${match[1]}, ${match[2]} }`);
+      imports.add('useState');
+    }
   }
 
   // Extract useEffect
@@ -182,24 +221,36 @@ function analyzeHookCode(code: string): HookAnalysis {
   // Extract useCallback
   const callbackMatches = code.matchAll(/const\s+(\w+)\s*=\s*useCallback/g);
   for (const match of callbackMatches) {
-    returnValues.push(match[1]);
-    imports.add('useCallback');
+    if (match[1]) {
+      returnValues.push(match[1]);
+      imports.add('useCallback');
+    }
   }
 
   // Extract dependencies from function parameters
-  const paramMatches = code.match(/^\s*(?:const|function)\s+\w+\s*\(([^)]*)\)/m);
+  const paramMatches = /^\s*(?:const|function)\s+\w+\s*\(([^)]*)\)/m.exec(code);
   if (paramMatches && paramMatches[1]) {
-    const params = paramMatches[1].split(',').map((p) => p.trim().split(':')[0].trim());
-    params.forEach((p) => dependencies.add(p));
+    const params = paramMatches[1].split(',').map((p) => p.trim().split(':')[0]?.trim() ?? '');
+    params.forEach((p) => {
+      if (p) {
+        dependencies.add(p);
+      }
+    });
   }
 
   return {
-    dependencies: Array.from(dependencies),
+    dependencies: [...dependencies],
     returnValues,
-    imports: Array.from(imports),
+    imports: [...imports],
   };
 }
 
+/**
+ *
+ * @param hookName
+ * @param code
+ * @param analysis
+ */
 function generateHookCode(hookName: string, code: string, analysis: HookAnalysis): string {
   const params =
     analysis.dependencies.length > 0 ? analysis.dependencies.join(', ') : '';
@@ -209,17 +260,28 @@ function generateHookCode(hookName: string, code: string, analysis: HookAnalysis
       : '';
 
   return `function ${hookName}(${params}) {
-${code.split('\n').map((line) => '  ' + line).join('\n')}${returnStatement}
+${code.split('\n').map((line) => `  ${  line}`).join('\n')}${returnStatement}
 }`;
 }
 
-function generateHookFile(hookName: string, hookCode: string, analysis: HookAnalysis): string {
+/**
+ *
+ * @param hookName
+ * @param hookCode
+ * @param analysis
+ */
+function generateHookFile(_hookName: string, hookCode: string, analysis: HookAnalysis): string {
   const imports = analysis.imports.length > 0 ? `import { ${analysis.imports.join(', ')} } from 'react';\n\n` : '';
 
   return `${imports}export ${hookCode}
 `;
 }
 
+/**
+ *
+ * @param hookName
+ * @param analysis
+ */
 function generateHookUsage(hookName: string, analysis: HookAnalysis): string {
   const args =
     analysis.dependencies.length > 0 ? analysis.dependencies.join(', ') : '';
@@ -235,13 +297,17 @@ function generateHookUsage(hookName: string, analysis: HookAnalysis): string {
   return `const { ${analysis.returnValues.join(', ')} } = ${hookName}(${args});`;
 }
 
+/**
+ *
+ * @param document
+ */
 function findBestInsertPosition(document: vscode.TextDocument): vscode.Position {
   // Find the last import statement
   let lastImportLine = -1;
 
   for (let i = 0; i < Math.min(50, document.lineCount); i++) {
     const line = document.lineAt(i);
-    if (line.text.match(/^import\s+/)) {
+    if (/^import\s+/.exec(line.text)) {
       lastImportLine = i;
     }
   }

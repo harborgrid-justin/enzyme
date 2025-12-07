@@ -12,18 +12,19 @@
  */
 
 import * as vscode from 'vscode';
-import { logger } from './logger';
 import {
   EnzymeError,
   ErrorSeverity,
   ErrorCategory,
   ErrorCode,
-  RecoveryAction,
   wrapError,
   getUserMessage,
   getRecoverySuggestions,
   formatErrorForLogging,
 } from './errors';
+import { logger } from './logger';
+import type {
+  RecoveryAction} from './errors';
 
 /**
  * Error handler configuration
@@ -119,10 +120,14 @@ interface ErrorAggregation {
 export class ErrorHandler {
   private static instance: ErrorHandler;
   private config: ErrorHandlerConfig;
-  private circuitBreakers: Map<string, CircuitBreaker>;
-  private errorAggregations: Map<string, ErrorAggregation>;
+  private readonly circuitBreakers: Map<string, CircuitBreaker>;
+  private readonly errorAggregations: Map<string, ErrorAggregation>;
   private telemetryService: any; // Will be injected
 
+  /**
+   *
+   * @param config
+   */
   private constructor(config: Partial<ErrorHandlerConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
     this.circuitBreakers = new Map();
@@ -166,6 +171,13 @@ export class ErrorHandler {
    * @param error - Error to handle
    * @param context - Additional context
    * @param options - Handling options
+   * @param context.component
+   * @param context.operation
+   * @param options.showNotification
+   * @param options.logError
+   * @param options.reportToTelemetry
+   * @param options.userMessage
+   * @param options.recoveryActions
    * @returns Promise that resolves when error is handled
    *
    * @example
@@ -585,7 +597,7 @@ export class ErrorHandler {
       breaker.state = CircuitState.CLOSED;
       if (breaker.resetTimer) {
         clearTimeout(breaker.resetTimer);
-        breaker.resetTimer = undefined;
+        delete breaker.resetTimer;
       }
     }
   }
@@ -644,7 +656,7 @@ export class ErrorHandler {
    *
    * @param ms - Duration in milliseconds
    */
-  private sleep(ms: number): Promise<void> {
+  private async sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
@@ -660,7 +672,7 @@ export class ErrorHandler {
       breaker.failureCount = 0;
       if (breaker.resetTimer) {
         clearTimeout(breaker.resetTimer);
-        breaker.resetTimer = undefined;
+        delete breaker.resetTimer;
       }
     }
   }
@@ -675,17 +687,86 @@ export class ErrorHandler {
   }
 
   /**
+   * Execute an operation with performance monitoring
+   *
+   * PERFORMANCE: Tracks operation duration and logs warnings for slow operations
+   *
+   * @param operation - Operation to execute
+   * @param operationName - Name for logging
+   * @param performanceThreshold - Threshold in ms for slow operation warning (default: 1000ms)
+   * @returns Result of the operation
+   *
+   * ERROR HANDLING: Automatically handles and logs errors with full context
+   *
+   * @example
+   * ```typescript
+   * const result = await errorHandler.executeWithPerformanceMonitoring(
+   *   async () => await expensiveOperation(),
+   *   'expensiveOperation',
+   *   500 // Warn if takes longer than 500ms
+   * );
+   * ```
+   */
+  public async executeWithPerformanceMonitoring<T>(
+    operation: () => Promise<T>,
+    operationName: string,
+    performanceThreshold = 1000
+  ): Promise<T> {
+    const startTime = Date.now();
+
+    try {
+      const result = await operation();
+      const duration = Date.now() - startTime;
+
+      // Log performance warning if operation is slow
+      if (duration > performanceThreshold) {
+        logger.warn(
+          `PERFORMANCE WARNING: ${operationName} took ${duration}ms (threshold: ${performanceThreshold}ms)`,
+          { operation: operationName, duration, threshold: performanceThreshold }
+        );
+      } else {
+        logger.debug(`${operationName} completed in ${duration}ms`);
+      }
+
+      return result;
+    } catch (error) {
+      await this.handleError(error, {
+        component: 'PerformanceMonitoring',
+        operation: operationName,
+      }, {
+        showNotification: true,
+        logError: true,
+        reportToTelemetry: true,
+      });
+      throw error;
+    }
+  }
+
+  /**
    * Dispose error handler and clean up resources
+   *
+   * PERFORMANCE: Critical for preventing memory leaks
+   * - Clears all circuit breaker timers
+   * - Clears error aggregations
+   * - Ensures no memory is retained
+   *
+   * ERROR HANDLING: Catches and logs any disposal errors
    */
   public dispose(): void {
-    // Clear all circuit breaker timers
-    for (const breaker of this.circuitBreakers.values()) {
-      if (breaker.resetTimer) {
-        clearTimeout(breaker.resetTimer);
+    try {
+      // Clear all circuit breaker timers
+      for (const breaker of this.circuitBreakers.values()) {
+        if (breaker.resetTimer) {
+          clearTimeout(breaker.resetTimer);
+        }
       }
+      this.circuitBreakers.clear();
+      this.errorAggregations.clear();
+
+      logger.debug('ErrorHandler disposed successfully');
+    } catch (error) {
+      logger.error('Error disposing ErrorHandler', error);
     }
-    this.circuitBreakers.clear();
-    this.errorAggregations.clear();
   }
 }
 

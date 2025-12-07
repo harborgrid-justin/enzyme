@@ -17,7 +17,7 @@ const portSchema = z.number().int().min(1024).max(65535);
 /**
  * URL schema with validation
  */
-const urlSchema = z.string().url().or(z.string().regex(/^\/[a-zA-Z0-9/_-]*$/));
+// const urlSchema = z.string().url().or(z.string().regex(/^\/[\w/-]*$/));
 
 /**
  * File path schema
@@ -62,7 +62,7 @@ export const routeMetadataSchema = z.object({
 /**
  * Single route configuration
  */
-export const routeConfigSchema = z.object({
+export const routeConfigSchema: any = z.object({
   path: z.string(),
   component: filePathSchema.optional(),
   lazy: z.boolean().optional(),
@@ -84,7 +84,13 @@ export const routesConfigSchema = z.object({
   error: filePathSchema.optional(),
 });
 
+/**
+ *
+ */
 export type RouteConfig = z.infer<typeof routeConfigSchema>;
+/**
+ *
+ */
 export type RoutesConfig = z.infer<typeof routesConfigSchema>;
 
 // =============================================================================
@@ -121,6 +127,9 @@ export const authConfigSchema = z.object({
   secureCookies: z.boolean().default(true),
 });
 
+/**
+ *
+ */
 export type AuthConfig = z.infer<typeof authConfigSchema>;
 
 // =============================================================================
@@ -153,6 +162,9 @@ export const apiConfigSchema = z.object({
   mockDelay: z.number().int().min(0).default(500),
 });
 
+/**
+ *
+ */
 export type ApiConfig = z.infer<typeof apiConfigSchema>;
 
 // =============================================================================
@@ -182,7 +194,13 @@ export const featureFlagsConfigSchema = z.object({
   localOverrides: z.record(z.string(), z.boolean()).optional(),
 });
 
+/**
+ *
+ */
 export type FeatureConfig = z.infer<typeof featureFlagSchema>;
+/**
+ *
+ */
 export type FeatureFlagsConfig = z.infer<typeof featureFlagsConfigSchema>;
 
 // =============================================================================
@@ -203,6 +221,9 @@ export const performanceConfigSchema = z.object({
   minify: z.boolean().default(true),
 });
 
+/**
+ *
+ */
 export type PerformanceConfig = z.infer<typeof performanceConfigSchema>;
 
 // =============================================================================
@@ -226,6 +247,9 @@ export const devServerConfigSchema = z.object({
   cors: z.boolean().default(true),
 });
 
+/**
+ *
+ */
 export type DevServerConfig = z.infer<typeof devServerConfigSchema>;
 
 // =============================================================================
@@ -245,6 +269,9 @@ export const buildConfigSchema = z.object({
   cssCodeSplit: z.boolean().default(true),
 });
 
+/**
+ *
+ */
 export type BuildConfig = z.infer<typeof buildConfigSchema>;
 
 // =============================================================================
@@ -271,6 +298,9 @@ export const monitoringConfigSchema = z.object({
   errorReporting: z.boolean().default(true),
 });
 
+/**
+ *
+ */
 export type MonitoringConfig = z.infer<typeof monitoringConfigSchema>;
 
 // =============================================================================
@@ -324,6 +354,9 @@ export const enzymeConfigSchema = z.object({
   }).optional(),
 });
 
+/**
+ *
+ */
 export type EnzymeConfigSchema = z.infer<typeof enzymeConfigSchema>;
 
 // =============================================================================
@@ -332,6 +365,7 @@ export type EnzymeConfigSchema = z.infer<typeof enzymeConfigSchema>;
 
 /**
  * Validate configuration against schema
+ * @param config
  */
 export function validateEnzymeConfig(config: unknown) {
   return enzymeConfigSchema.safeParse(config);
@@ -339,6 +373,7 @@ export function validateEnzymeConfig(config: unknown) {
 
 /**
  * Parse and validate configuration with defaults
+ * @param config
  */
 export function parseEnzymeConfig(config: unknown): EnzymeConfigSchema {
   return enzymeConfigSchema.parse(config);
@@ -353,6 +388,7 @@ export function getDefaultEnzymeConfig(): EnzymeConfigSchema {
 
 /**
  * Validate partial configuration
+ * @param config
  */
 export function validatePartialConfig(config: unknown) {
   return enzymeConfigSchema.partial().safeParse(config);
@@ -373,10 +409,14 @@ export const schemaRegistry = {
   monitoring: monitoringConfigSchema,
 } as const;
 
+/**
+ *
+ */
 export type SchemaKey = keyof typeof schemaRegistry;
 
 /**
  * Get schema by key
+ * @param key
  */
 export function getSchema(key: SchemaKey) {
   return schemaRegistry[key];
@@ -384,6 +424,8 @@ export function getSchema(key: SchemaKey) {
 
 /**
  * Validate against specific schema
+ * @param key
+ * @param config
  */
 export function validateWithSchema<K extends SchemaKey>(
   key: K,

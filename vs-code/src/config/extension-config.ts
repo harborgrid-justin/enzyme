@@ -222,9 +222,12 @@ export interface ConfigChangeEvent {
  */
 export class ExtensionConfig {
   private static instance: ExtensionConfig;
-  private listeners: Map<string, Array<(event: ConfigChangeEvent) => void>> = new Map();
-  private disposables: vscode.Disposable[] = [];
+  private readonly listeners = new Map<string, Array<(event: ConfigChangeEvent) => void>>();
+  private readonly disposables: vscode.Disposable[] = [];
 
+  /**
+   *
+   */
   private constructor() {
     // Listen for configuration changes
     this.disposables.push(
@@ -235,7 +238,15 @@ export class ExtensionConfig {
   }
 
   /**
-   * Get singleton instance
+   * Get singleton instance of ExtensionConfig
+   *
+   * @returns The singleton ExtensionConfig instance
+   *
+   * @example
+   * ```typescript
+   * const config = ExtensionConfig.getInstance();
+   * const level = config.get('enzyme.logging.level');
+   * ```
    */
   public static getInstance(): ExtensionConfig {
     if (!ExtensionConfig.instance) {
@@ -245,7 +256,19 @@ export class ExtensionConfig {
   }
 
   /**
-   * Get configuration value
+   * Get configuration value with type safety
+   *
+   * @template K - The extension setting key type
+   * @param key - The configuration key to retrieve (e.g., 'enzyme.logging.level')
+   * @param scope - Optional configuration scope (resource, workspace, or global)
+   * @returns The configuration value with proper type, or default if not set
+   *
+   * @example
+   * ```typescript
+   * const config = ExtensionConfig.getInstance();
+   * const level = config.get('enzyme.logging.level'); // Returns 'debug' | 'info' | 'warn' | 'error'
+   * const port = config.get('enzyme.devServer.port', document.uri); // Resource-scoped
+   * ```
    */
   public get<K extends ExtensionSettingKey>(
     key: K,
@@ -259,6 +282,19 @@ export class ExtensionConfig {
 
   /**
    * Set configuration value
+   *
+   * @template K - The extension setting key type
+   * @param key - The configuration key to set (e.g., 'enzyme.logging.level')
+   * @param value - The value to set (type-checked against the key)
+   * @param configTarget - Where to save: Global, Workspace, or WorkspaceFolder
+   * @returns Promise that resolves when the setting is saved
+   *
+   * @example
+   * ```typescript
+   * const config = ExtensionConfig.getInstance();
+   * await config.set('enzyme.logging.level', 'debug'); // Set to debug
+   * await config.set('enzyme.devServer.port', 3000, vscode.ConfigurationTarget.Global);
+   * ```
    */
   public async set<K extends ExtensionSettingKey>(
     key: K,
@@ -271,7 +307,17 @@ export class ExtensionConfig {
   }
 
   /**
-   * Get all settings
+   * Get all current extension settings
+   *
+   * @param scope - Optional configuration scope to read from
+   * @returns Partial settings object containing only defined values
+   *
+   * @example
+   * ```typescript
+   * const config = ExtensionConfig.getInstance();
+   * const allSettings = config.getAll();
+   * console.log(allSettings['enzyme.logging.level']); // 'info'
+   * ```
    */
   public getAll(scope?: vscode.ConfigurationScope): Partial<EnzymeExtensionSettings> {
     const config = vscode.workspace.getConfiguration('enzyme', scope);
@@ -289,7 +335,17 @@ export class ExtensionConfig {
   }
 
   /**
-   * Reset to default settings
+   * Reset all settings to their default values
+   *
+   * @param configTarget - Where to reset: Global, Workspace, or WorkspaceFolder
+   * @returns Promise that resolves when all settings are reset
+   *
+   * @example
+   * ```typescript
+   * const config = ExtensionConfig.getInstance();
+   * await config.resetToDefaults(); // Reset workspace settings
+   * await config.resetToDefaults(vscode.ConfigurationTarget.Global); // Reset global settings
+   * ```
    */
   public async resetToDefaults(
     configTarget: vscode.ConfigurationTarget = vscode.ConfigurationTarget.Workspace
@@ -303,7 +359,19 @@ export class ExtensionConfig {
   }
 
   /**
-   * Check if setting exists
+   * Check if a setting has been explicitly configured
+   *
+   * @param key - The setting key to check
+   * @param scope - Optional configuration scope
+   * @returns True if the setting exists in configuration
+   *
+   * @example
+   * ```typescript
+   * const config = ExtensionConfig.getInstance();
+   * if (config.has('enzyme.logging.level')) {
+   *   console.log('Logging level has been configured');
+   * }
+   * ```
    */
   public has(key: ExtensionSettingKey, scope?: vscode.ConfigurationScope): boolean {
     const config = vscode.workspace.getConfiguration('enzyme', scope);
@@ -312,7 +380,21 @@ export class ExtensionConfig {
   }
 
   /**
-   * Inspect setting across all scopes
+   * Inspect a setting across all configuration scopes
+   * Returns default, global, workspace, and workspaceFolder values
+   *
+   * @template K - The extension setting key type
+   * @param key - The setting key to inspect
+   * @returns Inspection result showing values across all scopes
+   *
+   * @example
+   * ```typescript
+   * const config = ExtensionConfig.getInstance();
+   * const inspection = config.inspect('enzyme.logging.level');
+   * console.log('Default:', inspection?.defaultValue);
+   * console.log('Global:', inspection?.globalValue);
+   * console.log('Workspace:', inspection?.workspaceValue);
+   * ```
    */
   public inspect<K extends ExtensionSettingKey>(
     key: K
@@ -324,6 +406,19 @@ export class ExtensionConfig {
 
   /**
    * Subscribe to configuration changes
+   *
+   * @param key - Setting key to watch, or '*' for all settings
+   * @param callback - Function called when the setting changes
+   * @returns Disposable to unsubscribe from changes
+   *
+   * @example
+   * ```typescript
+   * const config = ExtensionConfig.getInstance();
+   * const disposable = config.onChange('enzyme.logging.level', (event) => {
+   *   console.log('Log level changed to:', event.newValue);
+   * });
+   * // Later: disposable.dispose();
+   * ```
    */
   public onChange(
     key: ExtensionSettingKey | '*',
@@ -344,6 +439,7 @@ export class ExtensionConfig {
 
   /**
    * Handle configuration change events
+   * @param e
    */
   private handleConfigChange(e: vscode.ConfigurationChangeEvent): void {
     if (!e.affectsConfiguration('enzyme')) {
@@ -372,7 +468,17 @@ export class ExtensionConfig {
   }
 
   /**
-   * Export settings as JSON
+   * Export all settings as JSON string
+   *
+   * @param scope - Optional configuration scope to export from
+   * @returns JSON string containing all current settings
+   *
+   * @example
+   * ```typescript
+   * const config = ExtensionConfig.getInstance();
+   * const json = config.exportSettings();
+   * await fs.writeFile('enzyme-settings.json', json);
+   * ```
    */
   public exportSettings(scope?: vscode.ConfigurationScope): string {
     const settings = this.getAll(scope);
@@ -380,7 +486,19 @@ export class ExtensionConfig {
   }
 
   /**
-   * Import settings from JSON
+   * Import settings from JSON string
+   *
+   * @param json - JSON string containing settings to import
+   * @param configTarget - Where to save: Global, Workspace, or WorkspaceFolder
+   * @returns Promise that resolves when all settings are imported
+   * @throws Error if JSON is invalid or import fails
+   *
+   * @example
+   * ```typescript
+   * const config = ExtensionConfig.getInstance();
+   * const json = await fs.readFile('enzyme-settings.json', 'utf-8');
+   * await config.importSettings(json);
+   * ```
    */
   public async importSettings(
     json: string,
@@ -400,7 +518,18 @@ export class ExtensionConfig {
   }
 
   /**
-   * Validate settings
+   * Validate all current settings
+   *
+   * @returns Validation result with errors array
+   *
+   * @example
+   * ```typescript
+   * const config = ExtensionConfig.getInstance();
+   * const result = config.validate();
+   * if (!result.valid) {
+   *   console.error('Invalid settings:', result.errors);
+   * }
+   * ```
    */
   public validate(): { valid: boolean; errors: string[] } {
     const errors: string[] = [];
@@ -438,7 +567,15 @@ export class ExtensionConfig {
   }
 
   /**
-   * Dispose resources
+   * Dispose all resources and clean up listeners
+   * Should be called when extension is deactivated
+   *
+   * @example
+   * ```typescript
+   * export function deactivate() {
+   *   ExtensionConfig.getInstance().dispose();
+   * }
+   * ```
    */
   public dispose(): void {
     this.disposables.forEach((d) => d.dispose());
@@ -459,6 +596,8 @@ export function getExtensionConfig(): ExtensionConfig {
 
 /**
  * Get extension setting value
+ * @param key
+ * @param scope
  */
 export function getSetting<K extends ExtensionSettingKey>(
   key: K,
@@ -469,8 +608,11 @@ export function getSetting<K extends ExtensionSettingKey>(
 
 /**
  * Set extension setting value
+ * @param key
+ * @param value
+ * @param target
  */
-export function setSetting<K extends ExtensionSettingKey>(
+export async function setSetting<K extends ExtensionSettingKey>(
   key: K,
   value: EnzymeExtensionSettings[K],
   target?: vscode.ConfigurationTarget
@@ -480,6 +622,8 @@ export function setSetting<K extends ExtensionSettingKey>(
 
 /**
  * Subscribe to setting changes
+ * @param key
+ * @param callback
  */
 export function onSettingChange(
   key: ExtensionSettingKey | '*',

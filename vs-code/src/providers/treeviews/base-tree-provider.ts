@@ -34,18 +34,20 @@ interface CacheEntry<T> {
 export abstract class BaseTreeProvider<T extends vscode.TreeItem>
   implements vscode.TreeDataProvider<T> {
 
-  private _onDidChangeTreeData = new vscode.EventEmitter<T | undefined | null | void>();
+  private readonly _onDidChangeTreeData = new vscode.EventEmitter<T | undefined | null | void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
-  private cache = new Map<string, CacheEntry<unknown[]>>();
+  private readonly cache = new Map<string, CacheEntry<unknown[]>>();
   private refreshDebounceTimer: NodeJS.Timeout | undefined;
   private disposables: vscode.Disposable[] = [];
-  private parentMap = new Map<T, T | undefined>();
+  private readonly parentMap = new Map<T, T | undefined>();
 
   protected readonly options: Required<TreeProviderOptions>;
 
   /**
    * PERFORMANCE: Optimized tree provider with increased cache TTL and better defaults
+   * @param context
+   * @param options
    */
   constructor(
     protected readonly context: vscode.ExtensionContext,
@@ -67,6 +69,7 @@ export abstract class BaseTreeProvider<T extends vscode.TreeItem>
 
   /**
    * Get tree item representation for VS Code
+   * @param element
    */
   getTreeItem(element: T): vscode.TreeItem | Thenable<vscode.TreeItem> {
     return element;
@@ -74,16 +77,17 @@ export abstract class BaseTreeProvider<T extends vscode.TreeItem>
 
   /**
    * Get children of a tree item
+   * @param element
    */
   async getChildren(element?: T): Promise<T[]> {
     try {
       if (!element) {
         // Root items
         return await this.getRootItems();
-      } else {
+      } 
         // Child items
         return await this.getChildItems(element);
-      }
+      
     } catch (error) {
       this.handleError(error as Error, 'getChildren');
       return [];
@@ -92,6 +96,7 @@ export abstract class BaseTreeProvider<T extends vscode.TreeItem>
 
   /**
    * Get parent of a tree item (for reveal operations)
+   * @param element
    */
   getParent?(element: T): vscode.ProviderResult<T> {
     return this.parentMap.get(element);
@@ -99,6 +104,8 @@ export abstract class BaseTreeProvider<T extends vscode.TreeItem>
 
   /**
    * Track parent-child relationships for reveal operations
+   * @param child
+   * @param parent
    */
   protected trackParent(child: T, parent?: T): void {
     this.parentMap.set(child, parent);
@@ -106,6 +113,9 @@ export abstract class BaseTreeProvider<T extends vscode.TreeItem>
 
   /**
    * Resolve additional information for a tree item
+   * @param _item
+   * @param _element
+   * @param _token
    */
   resolveTreeItem?(_item: T, _element: T, _token: vscode.CancellationToken): vscode.ProviderResult<T> {
     return _element;
@@ -113,8 +123,9 @@ export abstract class BaseTreeProvider<T extends vscode.TreeItem>
 
   /**
    * Refresh the entire tree with debouncing
+   * @param debounce
    */
-  refresh(debounce: boolean = true): void {
+  refresh(debounce = true): void {
     if (debounce && this.options.refreshDebounceMs > 0) {
       if (this.refreshDebounceTimer) {
         clearTimeout(this.refreshDebounceTimer);
@@ -131,6 +142,7 @@ export abstract class BaseTreeProvider<T extends vscode.TreeItem>
 
   /**
    * Refresh a specific tree item
+   * @param item
    */
   refreshItem(item: T): void {
     this.invalidateCacheForItem(item);
@@ -139,6 +151,8 @@ export abstract class BaseTreeProvider<T extends vscode.TreeItem>
 
   /**
    * Get cached items or fetch new ones
+   * @param cacheKey
+   * @param fetchFn
    */
   protected async getCachedOrFetch<K>(
     cacheKey: string,
@@ -170,6 +184,7 @@ export abstract class BaseTreeProvider<T extends vscode.TreeItem>
 
   /**
    * Invalidate cache for a specific item
+   * @param item
    */
   protected invalidateCacheForItem(item: T): void {
     const key = this.getCacheKeyForItem(item);
@@ -180,6 +195,7 @@ export abstract class BaseTreeProvider<T extends vscode.TreeItem>
 
   /**
    * Get cache key for an item
+   * @param item
    */
   protected getCacheKeyForItem(item: T): string | undefined {
     return item.label?.toString();
@@ -195,7 +211,7 @@ export abstract class BaseTreeProvider<T extends vscode.TreeItem>
     }
 
     const patterns = this.getWatchPatterns();
-    if (!patterns.length) {
+    if (patterns.length === 0) {
       return;
     }
 
@@ -222,6 +238,8 @@ export abstract class BaseTreeProvider<T extends vscode.TreeItem>
 
   /**
    * Handle errors with logging and user notification
+   * @param error
+   * @param operation
    */
   protected handleError(error: Error, operation: string): void {
     console.error(`[${this.constructor.name}] Error in ${operation}:`, error);
@@ -232,6 +250,7 @@ export abstract class BaseTreeProvider<T extends vscode.TreeItem>
 
   /**
    * Show information message
+   * @param message
    */
   protected showInfo(message: string): void {
     vscode.window.showInformationMessage(`Enzyme: ${message}`);
@@ -239,6 +258,7 @@ export abstract class BaseTreeProvider<T extends vscode.TreeItem>
 
   /**
    * Show warning message
+   * @param message
    */
   protected showWarning(message: string): void {
     vscode.window.showWarningMessage(`Enzyme: ${message}`);
@@ -253,6 +273,7 @@ export abstract class BaseTreeProvider<T extends vscode.TreeItem>
 
   /**
    * Check if a file exists
+   * @param path
    */
   protected async fileExists(path: string): Promise<boolean> {
     try {
@@ -265,6 +286,7 @@ export abstract class BaseTreeProvider<T extends vscode.TreeItem>
 
   /**
    * Read file content
+   * @param path
    */
   protected async readFile(path: string): Promise<string> {
     const uri = vscode.Uri.file(path);
@@ -274,6 +296,8 @@ export abstract class BaseTreeProvider<T extends vscode.TreeItem>
 
   /**
    * Get all files matching a glob pattern
+   * @param pattern
+   * @param exclude
    */
   protected async findFiles(pattern: string, exclude?: string): Promise<vscode.Uri[]> {
     return vscode.workspace.findFiles(pattern, exclude);
@@ -281,6 +305,8 @@ export abstract class BaseTreeProvider<T extends vscode.TreeItem>
 
   /**
    * Open a file in the editor
+   * @param path
+   * @param line
    */
   protected async openFile(path: string, line?: number): Promise<void> {
     const uri = vscode.Uri.file(path);

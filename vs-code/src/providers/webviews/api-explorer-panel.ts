@@ -1,6 +1,9 @@
 import * as vscode from 'vscode';
 import { BaseWebViewPanel } from './base-webview-panel';
 
+/**
+ *
+ */
 interface APIEndpoint {
 	id: string;
 	name: string;
@@ -13,6 +16,9 @@ interface APIEndpoint {
 	collection?: string;
 }
 
+/**
+ *
+ */
 interface APIRequest {
 	id: string;
 	endpoint: APIEndpoint;
@@ -27,6 +33,9 @@ interface APIRequest {
 	error?: string;
 }
 
+/**
+ *
+ */
 interface Environment {
 	name: string;
 	variables: Record<string, string>;
@@ -44,6 +53,10 @@ export class APIExplorerPanel extends BaseWebViewPanel {
 	private activeEnvironment: string | null = null;
 	private readonly maxHistorySize = 50;
 
+	/**
+	 *
+	 * @param context
+	 */
 	private constructor(context: vscode.ExtensionContext) {
 		super(context, 'enzyme.apiExplorer', 'Enzyme API Explorer');
 		this.loadData();
@@ -51,6 +64,7 @@ export class APIExplorerPanel extends BaseWebViewPanel {
 
 	/**
 	 * Get or create the singleton instance
+	 * @param context
 	 */
 	public static getInstance(context: vscode.ExtensionContext): APIExplorerPanel {
 		if (!APIExplorerPanel.instance) {
@@ -61,20 +75,28 @@ export class APIExplorerPanel extends BaseWebViewPanel {
 
 	/**
 	 * Show the API explorer panel
+	 * @param context
 	 */
 	public static show(context: vscode.ExtensionContext): void {
 		const panel = APIExplorerPanel.getInstance(context);
 		panel.show();
 	}
 
-	protected getIconPath(): vscode.Uri | { light: vscode.Uri; dark: vscode.Uri } | undefined {
+	/**
+	 *
+	 */
+	protected override getIconPath(): vscode.Uri | { light: vscode.Uri; dark: vscode.Uri } | undefined {
 		return {
 			light: vscode.Uri.file(this.context.asAbsolutePath('resources/icons/api-light.svg')),
 			dark: vscode.Uri.file(this.context.asAbsolutePath('resources/icons/api-dark.svg'))
 		};
 	}
 
-	protected getBodyContent(webview: vscode.Webview): string {
+	/**
+	 *
+	 * @param _webview
+	 */
+	protected getBodyContent(_webview: vscode.Webview): string {
 		return `
 			<div class="container">
 				<div class="header">
@@ -303,11 +325,20 @@ export class APIExplorerPanel extends BaseWebViewPanel {
 		`;
 	}
 
+	/**
+	 *
+	 * @param webview
+	 * @param nonce
+	 */
 	protected getScripts(webview: vscode.Webview, nonce: string): string {
 		const scriptUri = this.getWebviewUri(webview, ['src', 'webview-ui', 'api-explorer', 'main.js']);
 		return `<script nonce="${nonce}" src="${scriptUri}"></script>`;
 	}
 
+	/**
+	 *
+	 * @param message
+	 */
 	protected async handleMessage(message: any): Promise<void> {
 		switch (message.type) {
 			case 'sendRequest':
@@ -348,14 +379,29 @@ export class APIExplorerPanel extends BaseWebViewPanel {
 		}
 	}
 
-	protected onPanelCreated(): void {
+	/**
+	 *
+	 */
+	protected override onPanelCreated(): void {
 		this.sendDataUpdate();
 	}
 
-	protected onPanelVisible(): void {
+	/**
+	 *
+	 */
+	protected override onPanelVisible(): void {
 		this.sendDataUpdate();
 	}
 
+	/**
+	 *
+	 * @param payload
+	 * @param payload.method
+	 * @param payload.url
+	 * @param payload.headers
+	 * @param payload.body
+	 * @param payload.params
+	 */
 	private async sendRequest(payload: {
 		method: string;
 		url: string;
@@ -396,9 +442,9 @@ export class APIExplorerPanel extends BaseWebViewPanel {
 					name: `${payload.method} ${payload.url}`,
 					method: payload.method as any,
 					url: payload.url,
-					headers: payload.headers,
-					body: payload.body,
-					params: payload.params
+					...(payload.headers && { headers: payload.headers }),
+					...(payload.body && { body: payload.body }),
+					...(payload.params && { params: payload.params })
 				},
 				timestamp: startTime,
 				response: simulatedResponse
@@ -436,6 +482,10 @@ export class APIExplorerPanel extends BaseWebViewPanel {
 		}
 	}
 
+	/**
+	 *
+	 * @param payload
+	 */
 	private async saveEndpoint(payload: APIEndpoint): Promise<void> {
 		const existing = this.endpoints.find(e => e.id === payload.id);
 		if (existing) {
@@ -449,6 +499,11 @@ export class APIExplorerPanel extends BaseWebViewPanel {
 		vscode.window.showInformationMessage('Endpoint saved');
 	}
 
+	/**
+	 *
+	 * @param payload
+	 * @param payload.id
+	 */
 	private async deleteEndpoint(payload: { id: string }): Promise<void> {
 		this.endpoints = this.endpoints.filter(e => e.id !== payload.id);
 		await this.persistData();
@@ -456,6 +511,9 @@ export class APIExplorerPanel extends BaseWebViewPanel {
 		vscode.window.showInformationMessage('Endpoint deleted');
 	}
 
+	/**
+	 *
+	 */
 	private async clearHistory(): Promise<void> {
 		const answer = await vscode.window.showWarningMessage(
 			'Are you sure you want to clear the request history?',
@@ -471,6 +529,10 @@ export class APIExplorerPanel extends BaseWebViewPanel {
 		}
 	}
 
+	/**
+	 *
+	 * @param payload
+	 */
 	private async saveEnvironment(payload: Environment): Promise<void> {
 		const existing = this.environments.find(e => e.name === payload.name);
 		if (existing) {
@@ -484,6 +546,11 @@ export class APIExplorerPanel extends BaseWebViewPanel {
 		vscode.window.showInformationMessage(`Environment "${payload.name}" saved`);
 	}
 
+	/**
+	 *
+	 * @param payload
+	 * @param payload.name
+	 */
 	private async deleteEnvironment(payload: { name: string }): Promise<void> {
 		this.environments = this.environments.filter(e => e.name !== payload.name);
 		if (this.activeEnvironment === payload.name) {
@@ -494,11 +561,18 @@ export class APIExplorerPanel extends BaseWebViewPanel {
 		vscode.window.showInformationMessage(`Environment "${payload.name}" deleted`);
 	}
 
+	/**
+	 *
+	 * @param name
+	 */
 	private setActiveEnvironment(name: string | null): void {
 		this.activeEnvironment = name;
 		this.sendDataUpdate();
 	}
 
+	/**
+	 *
+	 */
 	private async importCollection(): Promise<void> {
 		const uris = await vscode.window.showOpenDialog({
 			canSelectMany: false,
@@ -509,7 +583,7 @@ export class APIExplorerPanel extends BaseWebViewPanel {
 
 		if (uris && uris.length > 0) {
 			try {
-				const content = await vscode.workspace.fs.readFile(uris[0]);
+				const content = await vscode.workspace.fs.readFile(uris[0]!);
 				const collection = JSON.parse(content.toString());
 
 				if (Array.isArray(collection.endpoints)) {
@@ -525,6 +599,11 @@ export class APIExplorerPanel extends BaseWebViewPanel {
 		}
 	}
 
+	/**
+	 *
+	 * @param payload
+	 * @param payload.collectionName
+	 */
 	private async exportCollection(payload: { collectionName?: string }): Promise<void> {
 		const uri = await vscode.window.showSaveDialog({
 			filters: {
@@ -546,24 +625,32 @@ export class APIExplorerPanel extends BaseWebViewPanel {
 		}
 	}
 
+	/**
+	 *
+	 * @param text
+	 */
 	private replaceEnvironmentVariables(text: string): string {
 		if (!this.activeEnvironment) {
 			return text;
 		}
 
-		const env = this.environments.find(e => e.name === this.activeEnvironment);
-		if (!env) {
+		const environment = this.environments.find(e => e.name === this.activeEnvironment);
+		if (!environment) {
 			return text;
 		}
 
 		let result = text;
-		for (const [key, value] of Object.entries(env.variables)) {
+		for (const [key, value] of Object.entries(environment.variables)) {
 			result = result.replace(new RegExp(`{{${key}}}`, 'g'), value);
 		}
 
 		return result;
 	}
 
+	/**
+	 *
+	 * @param request
+	 */
 	private addToHistory(request: APIRequest): void {
 		this.requestHistory.unshift(request);
 		if (this.requestHistory.length > this.maxHistorySize) {
@@ -572,6 +659,9 @@ export class APIExplorerPanel extends BaseWebViewPanel {
 		this.persistData();
 	}
 
+	/**
+	 *
+	 */
 	private sendDataUpdate(): void {
 		this.postMessage({
 			type: 'dataUpdate',
@@ -585,6 +675,9 @@ export class APIExplorerPanel extends BaseWebViewPanel {
 		});
 	}
 
+	/**
+	 *
+	 */
 	private async loadData(): Promise<void> {
 		this.endpoints = this.getPersistedState<APIEndpoint[]>('endpoints', []);
 		this.requestHistory = this.getPersistedState<APIRequest[]>('history', []);
@@ -592,6 +685,9 @@ export class APIExplorerPanel extends BaseWebViewPanel {
 		this.activeEnvironment = this.getPersistedState<string | null>('activeEnvironment', null);
 	}
 
+	/**
+	 *
+	 */
 	private async persistData(): Promise<void> {
 		await this.persistState('endpoints', this.endpoints);
 		await this.persistState('history', this.requestHistory.slice(0, 50));
@@ -599,11 +695,17 @@ export class APIExplorerPanel extends BaseWebViewPanel {
 		await this.persistState('activeEnvironment', this.activeEnvironment);
 	}
 
+	/**
+	 *
+	 */
 	private generateId(): string {
-		return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+		return `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
 	}
 
-	public dispose(): void {
+	/**
+	 *
+	 */
+	public override dispose(): void {
 		super.dispose();
 		APIExplorerPanel.instance = undefined;
 	}

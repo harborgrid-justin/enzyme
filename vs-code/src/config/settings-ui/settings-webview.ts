@@ -4,7 +4,7 @@
  */
 
 import * as vscode from 'vscode';
-import { getExtensionConfig, ExtensionConfig, DEFAULT_SETTINGS, type ExtensionSettingKey } from '../extension-config';
+import { getExtensionConfig, DEFAULT_SETTINGS, type ExtensionSettingKey , ExtensionConfig} from '../extension-config';
 import { generateSettingsHTML } from './settings-html';
 
 // =============================================================================
@@ -17,9 +17,13 @@ import { generateSettingsHTML } from './settings-html';
 export class SettingsWebView {
   private panel: vscode.WebviewPanel | null = null;
   private disposables: vscode.Disposable[] = [];
-  private config: ExtensionConfig;
+  private readonly config: ExtensionConfig;
 
-  constructor(private context: vscode.ExtensionContext) {
+  /**
+   *
+   * @param context
+   */
+  constructor(private readonly context: vscode.ExtensionContext) {
     this.config = getExtensionConfig();
   }
 
@@ -106,6 +110,8 @@ export class SettingsWebView {
 
   /**
    * Handle update setting
+   * @param key
+   * @param value
    */
   private async handleUpdateSetting(key: string, value: unknown): Promise<void> {
     try {
@@ -133,6 +139,7 @@ export class SettingsWebView {
 
   /**
    * Handle reset setting
+   * @param key
    */
   private async handleResetSetting(key: string): Promise<void> {
     try {
@@ -229,7 +236,11 @@ export class SettingsWebView {
     }
 
     try {
-      const content = await vscode.workspace.fs.readFile(uris[0]);
+      const firstUri = uris[0];
+      if (!firstUri) {
+        return;
+      }
+      const content = await vscode.workspace.fs.readFile(firstUri);
       const json = Buffer.from(content).toString('utf-8');
 
       await this.config.importSettings(json);
@@ -285,6 +296,7 @@ export class SettingsWebView {
 
 /**
  * Register settings webview command
+ * @param context
  */
 export function registerSettingsWebView(context: vscode.ExtensionContext): vscode.Disposable {
   const webview = new SettingsWebView(context);

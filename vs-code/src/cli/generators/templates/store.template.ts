@@ -1,5 +1,9 @@
-import { GeneratorOptions, GeneratorTemplate } from '../index';
+import type { GeneratorOptions, GeneratorTemplate } from '../index';
 
+/**
+ *
+ * @param options
+ */
 export function storeTemplate(options: GeneratorOptions): GeneratorTemplate {
   const { name, path: basePath = 'src/store' } = options;
   const storePath = `${basePath}/${name}`;
@@ -48,6 +52,10 @@ export function storeTemplate(options: GeneratorOptions): GeneratorTemplate {
   };
 }
 
+/**
+ *
+ * @param name
+ */
 function generateStore(name: string): string {
   return `import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
@@ -85,6 +93,10 @@ export const use${name}Store = create<${name}Store>()(
 `;
 }
 
+/**
+ *
+ * @param name
+ */
 function generateTypes(name: string): string {
   return `export interface ${name}Item {
   id: string;
@@ -123,6 +135,10 @@ export interface ${name}Store extends ${name}State, ${name}Actions {}
 `;
 }
 
+/**
+ *
+ * @param name
+ */
 function generateActions(name: string): string {
   return `import { StateCreator } from 'zustand';
 import { ${name}Actions, ${name}Item, ${name}State } from './${name}.types';
@@ -253,6 +269,10 @@ async function deleteItemFromAPI(id: string): Promise<void> {
 `;
 }
 
+/**
+ *
+ * @param name
+ */
 function generateSelectors(name: string): string {
   return `import { ${name}Store } from './${name}.types';
 
@@ -283,6 +303,10 @@ export const ${name}Selectors = {
 `;
 }
 
+/**
+ *
+ * @param name
+ */
 function generateTest(name: string): string {
   return `import { renderHook, act, waitFor } from '@testing-library/react';
 import { use${name}Store } from './${name}.store';
@@ -349,6 +373,10 @@ describe('${name}Store', () => {
 `;
 }
 
+/**
+ *
+ * @param name
+ */
 function generateIndex(name: string): string {
   return `export { use${name}Store } from './${name}.store';
 export { ${name}Selectors } from './${name}.selectors';

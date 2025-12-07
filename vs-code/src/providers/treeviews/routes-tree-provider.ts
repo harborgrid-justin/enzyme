@@ -3,11 +3,15 @@
  * @description Displays all Enzyme routes with conflict detection and grouping options
  */
 
+import * as path from 'node:path';
 import * as vscode from 'vscode';
-import * as path from 'path';
-import { BaseTreeProvider, TreeProviderOptions } from './base-tree-provider';
+import { BaseTreeProvider } from './base-tree-provider';
 import { EnzymeRouteItem, EnzymeCategoryItem } from './tree-items';
+import type { TreeProviderOptions } from './base-tree-provider';
 
+/**
+ *
+ */
 interface RouteMetadata {
   path: string;
   filePath: string;
@@ -22,15 +26,36 @@ interface RouteMetadata {
   conflictsWith?: string[];
 }
 
+/**
+ *
+ */
 type RouteGrouping = 'by-feature' | 'by-path' | 'flat';
 
 /**
  * TreeView provider for Enzyme routes
+ *
+ * @description Displays all application routes with advanced features including:
+ * - Route conflict detection and visualization
+ * - Multiple grouping modes (by-feature, by-path, flat)
+ * - Route metadata extraction (loaders, actions, guards, lazy loading)
+ * - Protected route identification
+ *
+ * @example
+ * ```typescript
+ * const provider = new EnzymeRoutesTreeProvider(context);
+ * provider.setGrouping('by-feature');
+ * const conflicts = provider.getConflictingRoutes();
+ * ```
  */
 export class EnzymeRoutesTreeProvider extends BaseTreeProvider<EnzymeRouteItem | EnzymeCategoryItem> {
   private routes: RouteMetadata[] = [];
   private grouping: RouteGrouping = 'by-path';
 
+  /**
+   *
+   * @param context
+   * @param options
+   */
   constructor(context: vscode.ExtensionContext, options?: TreeProviderOptions) {
     super(context, options);
   }
@@ -48,6 +73,7 @@ export class EnzymeRoutesTreeProvider extends BaseTreeProvider<EnzymeRouteItem |
 
   /**
    * Set grouping mode
+   * @param grouping
    */
   setGrouping(grouping: RouteGrouping): void {
     this.grouping = grouping;
@@ -79,6 +105,7 @@ export class EnzymeRoutesTreeProvider extends BaseTreeProvider<EnzymeRouteItem |
 
   /**
    * Get child items
+   * @param element
    */
   protected async getChildItems(
     element: EnzymeRouteItem | EnzymeCategoryItem
@@ -134,6 +161,7 @@ export class EnzymeRoutesTreeProvider extends BaseTreeProvider<EnzymeRouteItem |
 
   /**
    * Parse a route file to extract metadata
+   * @param filePath
    */
   private async parseRouteFile(filePath: string): Promise<RouteMetadata | null> {
     try {
@@ -158,7 +186,6 @@ export class EnzymeRoutesTreeProvider extends BaseTreeProvider<EnzymeRouteItem |
       return {
         path: routePath,
         filePath,
-        feature,
         params,
         isProtected,
         hasLoader,
@@ -166,6 +193,7 @@ export class EnzymeRoutesTreeProvider extends BaseTreeProvider<EnzymeRouteItem |
         hasGuard,
         isLazy,
         hasConflict: false,
+        ...(feature && { feature }),
       };
     } catch (error) {
       console.error(`Error parsing route file ${filePath}:`, error);
@@ -175,11 +203,13 @@ export class EnzymeRoutesTreeProvider extends BaseTreeProvider<EnzymeRouteItem |
 
   /**
    * Extract route path from file
+   * @param filePath
+   * @param content
    */
   private extractRoutePathFromFile(filePath: string, content: string): string {
     // First try to find explicit path definition
-    const pathMatch = content.match(/path:\s*['"`](.+?)['"`]/);
-    if (pathMatch) {
+    const pathMatch = /path:\s*["'`](.+?)["'`]/.exec(content);
+    if (pathMatch?.[1]) {
       return pathMatch[1];
     }
 
@@ -195,10 +225,10 @@ export class EnzymeRoutesTreeProvider extends BaseTreeProvider<EnzymeRouteItem |
     }
 
     if (baseIndex === -1) {
-      return '/' + path.basename(filePath, path.extname(filePath));
+      return `/${  path.basename(filePath, path.extname(filePath))}`;
     }
 
-    const relativePath = filePath.substring(baseIndex);
+    const relativePath = filePath.slice(Math.max(0, baseIndex));
     const segments = relativePath.split(path.sep);
 
     // Convert file-system path to URL path
@@ -208,7 +238,7 @@ export class EnzymeRoutesTreeProvider extends BaseTreeProvider<EnzymeRouteItem |
         segment = segment.replace(/\.(tsx?|jsx?)$/, '');
 
         // Convert [param] to :param
-        segment = segment.replace(/\[([^\]]+)\]/g, ':$1');
+        segment = segment.replace(/\[([^\]]+)]/g, ':$1');
 
         // Convert (group) to nothing (route groups)
         segment = segment.replace(/\([^)]+\)/g, '');
@@ -223,19 +253,22 @@ export class EnzymeRoutesTreeProvider extends BaseTreeProvider<EnzymeRouteItem |
       .filter(Boolean)
       .join('/');
 
-    return '/' + urlPath || '/';
+    return `/${  urlPath}` || '/';
   }
 
   /**
    * Extract route parameters from path
+   * @param routePath
    */
   private extractRouteParams(routePath: string): string[] {
     const params: string[] = [];
-    const paramRegex = /:([a-zA-Z0-9_]+)\??/g;
+    const paramRegex = /:(\w+)\??/g;
     let match;
 
     while ((match = paramRegex.exec(routePath)) !== null) {
-      params.push(match[1]);
+      if (match[1]) {
+        params.push(match[1]);
+      }
     }
 
     return params;
@@ -243,14 +276,16 @@ export class EnzymeRoutesTreeProvider extends BaseTreeProvider<EnzymeRouteItem |
 
   /**
    * Extract feature name from file path
+   * @param filePath
    */
   private extractFeatureFromPath(filePath: string): string | undefined {
-    const match = filePath.match(/\/features\/([^\/]+)\//);
+    const match = /\/features\/([^/]+)\//.exec(filePath);
     return match ? match[1] : undefined;
   }
 
   /**
    * Check if route is protected
+   * @param content
    */
   private checkIsProtected(content: string): boolean {
     return (
@@ -263,6 +298,7 @@ export class EnzymeRoutesTreeProvider extends BaseTreeProvider<EnzymeRouteItem |
 
   /**
    * Check if route has loader
+   * @param content
    */
   private checkHasLoader(content: string): boolean {
     return (
@@ -273,6 +309,7 @@ export class EnzymeRoutesTreeProvider extends BaseTreeProvider<EnzymeRouteItem |
 
   /**
    * Check if route has action
+   * @param content
    */
   private checkHasAction(content: string): boolean {
     return (
@@ -283,6 +320,7 @@ export class EnzymeRoutesTreeProvider extends BaseTreeProvider<EnzymeRouteItem |
 
   /**
    * Check if route has guards
+   * @param content
    */
   private checkHasGuard(content: string): boolean {
     return (
@@ -294,6 +332,7 @@ export class EnzymeRoutesTreeProvider extends BaseTreeProvider<EnzymeRouteItem |
 
   /**
    * Check if route is lazy loaded
+   * @param content
    */
   private checkIsLazy(content: string): boolean {
     return (
@@ -332,10 +371,11 @@ export class EnzymeRoutesTreeProvider extends BaseTreeProvider<EnzymeRouteItem |
 
   /**
    * Normalize path for conflict detection
+   * @param routePath
    */
   private normalizePath(routePath: string): string {
     // Replace all parameters with a placeholder
-    return routePath.replace(/:[a-zA-Z0-9_]+\??/g, ':param');
+    return routePath.replace(/:\w+\??/g, ':param');
   }
 
   /**
@@ -353,7 +393,7 @@ export class EnzymeRoutesTreeProvider extends BaseTreeProvider<EnzymeRouteItem |
     }
 
     // Create category items
-    const items: Array<EnzymeCategoryItem> = [];
+    const items: EnzymeCategoryItem[] = [];
     for (const [feature, routes] of featureMap) {
       items.push(new EnzymeCategoryItem(
         feature,
@@ -375,17 +415,17 @@ export class EnzymeRoutesTreeProvider extends BaseTreeProvider<EnzymeRouteItem |
     for (const route of this.routes) {
       const segments = route.path.split('/').filter(Boolean);
       if (segments.length > 0) {
-        topLevelPaths.add('/' + segments[0]);
+        topLevelPaths.add(`/${  segments[0]}`);
       } else {
         topLevelPaths.add('/');
       }
     }
 
     // Create category items for each top-level path
-    const items: Array<EnzymeCategoryItem> = [];
+    const items: EnzymeCategoryItem[] = [];
     for (const topPath of topLevelPaths) {
       const matchingRoutes = this.routes.filter(r =>
-        r.path === topPath || r.path.startsWith(topPath + '/')
+        r.path === topPath || r.path.startsWith(`${topPath  }/`)
       );
 
       items.push(new EnzymeCategoryItem(
@@ -407,6 +447,7 @@ export class EnzymeRoutesTreeProvider extends BaseTreeProvider<EnzymeRouteItem |
 
   /**
    * Get routes for a category
+   * @param categoryName
    */
   private getCategoryRoutes(categoryName: string): EnzymeRouteItem[] {
     let filteredRoutes: RouteMetadata[];
@@ -417,7 +458,7 @@ export class EnzymeRoutesTreeProvider extends BaseTreeProvider<EnzymeRouteItem |
       );
     } else if (this.grouping === 'by-path') {
       filteredRoutes = this.routes.filter(r =>
-        r.path === categoryName || r.path.startsWith(categoryName + '/')
+        r.path === categoryName || r.path.startsWith(`${categoryName  }/`)
       );
     } else {
       filteredRoutes = this.routes;
@@ -428,6 +469,7 @@ export class EnzymeRoutesTreeProvider extends BaseTreeProvider<EnzymeRouteItem |
 
   /**
    * Create a route tree item
+   * @param route
    */
   private createRouteItem(route: RouteMetadata): EnzymeRouteItem {
     return new EnzymeRouteItem(
@@ -440,8 +482,8 @@ export class EnzymeRoutesTreeProvider extends BaseTreeProvider<EnzymeRouteItem |
         hasGuard: route.hasGuard,
         isLazy: route.isLazy,
         hasConflict: route.hasConflict,
-        feature: route.feature,
         params: route.params,
+        ...(route.feature && { feature: route.feature }),
       }
     );
   }

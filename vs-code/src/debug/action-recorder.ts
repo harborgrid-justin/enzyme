@@ -7,6 +7,9 @@
 // Types
 // ============================================================================
 
+/**
+ *
+ */
 export interface ActionRecord {
   /** Unique action ID */
   id: string;
@@ -28,6 +31,9 @@ export interface ActionRecord {
   duration?: number;
 }
 
+/**
+ *
+ */
 export interface RecorderOptions {
   /** Maximum number of actions to keep */
   maxActions?: number;
@@ -39,6 +45,9 @@ export interface RecorderOptions {
   ignorePatterns?: RegExp[];
 }
 
+/**
+ *
+ */
 export interface RecorderFilter {
   /** Filter by store name */
   store?: string;
@@ -54,6 +63,9 @@ export interface RecorderFilter {
   search?: string;
 }
 
+/**
+ *
+ */
 export interface RecordingSession {
   id: string;
   name: string;
@@ -66,14 +78,21 @@ export interface RecordingSession {
 // Action Recorder
 // ============================================================================
 
+/**
+ *
+ */
 export class ActionRecorder {
   private actions: ActionRecord[] = [];
-  private sessions: Map<string, RecordingSession> = new Map();
+  private readonly sessions = new Map<string, RecordingSession>();
   private currentSessionId: string | null = null;
   private isRecording = false;
-  private options: Required<RecorderOptions>;
+  private readonly options: Required<RecorderOptions>;
   private actionIdCounter = 0;
 
+  /**
+   *
+   * @param options
+   */
   constructor(options: RecorderOptions = {}) {
     this.options = {
       maxActions: options.maxActions ?? 1000,
@@ -99,6 +118,7 @@ export class ActionRecorder {
 
   /**
    * Record an action
+   * @param action
    */
   record(action: Omit<ActionRecord, 'id' | 'timestamp'>): ActionRecord {
     if (!this.isRecording) {
@@ -155,6 +175,7 @@ export class ActionRecorder {
 
   /**
    * Get all recorded actions
+   * @param filter
    */
   getActions(filter?: RecorderFilter): ActionRecord[] {
     return this.filterActions(this.actions, filter);
@@ -162,6 +183,7 @@ export class ActionRecorder {
 
   /**
    * Get action by ID
+   * @param id
    */
   getAction(id: string): ActionRecord | undefined {
     return this.actions.find((action) => action.id === id);
@@ -176,6 +198,7 @@ export class ActionRecorder {
 
   /**
    * Search actions by text
+   * @param query
    */
   search(query: string): ActionRecord[] {
     const lowerQuery = query.toLowerCase();
@@ -198,7 +221,7 @@ export class ActionRecorder {
         version: '1.0.0',
         exportTime: Date.now(),
         actions: this.actions,
-        sessions: Array.from(this.sessions.values()),
+        sessions: [...this.sessions.values()],
       },
       null,
       2
@@ -207,6 +230,7 @@ export class ActionRecorder {
 
   /**
    * Import action log from JSON
+   * @param json
    */
   import(json: string): void {
     try {
@@ -227,6 +251,7 @@ export class ActionRecorder {
 
   /**
    * Start a new recording session
+   * @param name
    */
   startSession(name: string): string {
     const sessionId = `session_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
@@ -265,6 +290,7 @@ export class ActionRecorder {
 
   /**
    * Get recording session
+   * @param sessionId
    */
   getSession(sessionId: string): RecordingSession | undefined {
     return this.sessions.get(sessionId);
@@ -274,11 +300,12 @@ export class ActionRecorder {
    * Get all sessions
    */
   getSessions(): RecordingSession[] {
-    return Array.from(this.sessions.values());
+    return [...this.sessions.values()];
   }
 
   /**
    * Delete session
+   * @param sessionId
    */
   deleteSession(sessionId: string): boolean {
     return this.sessions.delete(sessionId);
@@ -286,6 +313,9 @@ export class ActionRecorder {
 
   /**
    * Replay actions with a callback
+   * @param actions
+   * @param onAction
+   * @param speed
    */
   async replay(
     actions: ActionRecord[],
@@ -296,17 +326,18 @@ export class ActionRecorder {
       return;
     }
 
-    const startTime = actions[0].timestamp;
-
     for (let i = 0; i < actions.length; i++) {
       const action = actions[i];
+      if (!action) {
+        continue;
+      }
       const nextAction = actions[i + 1];
 
       // Execute action
       await onAction(action);
 
       // Wait for next action timing
-      if (nextAction) {
+      if (nextAction && action) {
         const delay = (nextAction.timestamp - action.timestamp) / speed;
         if (delay > 0) {
           await this.sleep(delay);
@@ -366,6 +397,8 @@ export class ActionRecorder {
 
   /**
    * Get actions in time range
+   * @param fromTime
+   * @param toTime
    */
   getActionsInRange(fromTime: number, toTime: number): ActionRecord[] {
     return this.actions.filter(
@@ -375,6 +408,8 @@ export class ActionRecorder {
 
   /**
    * Filter actions
+   * @param actions
+   * @param filter
    */
   private filterActions(actions: ActionRecord[], filter?: RecorderFilter): ActionRecord[] {
     if (!filter) {
@@ -415,6 +450,7 @@ export class ActionRecorder {
 
   /**
    * Check if action should be ignored
+   * @param type
    */
   private shouldIgnoreAction(type: string): boolean {
     return this.options.ignorePatterns.some((pattern) => pattern.test(type));
@@ -429,8 +465,9 @@ export class ActionRecorder {
 
   /**
    * Sleep utility
+   * @param ms
    */
-  private sleep(ms: number): Promise<void> {
+  private async sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
@@ -443,6 +480,7 @@ let globalRecorder: ActionRecorder | null = null;
 
 /**
  * Get or create global recorder instance
+ * @param options
  */
 export function getGlobalRecorder(options?: RecorderOptions): ActionRecorder {
   if (!globalRecorder) {

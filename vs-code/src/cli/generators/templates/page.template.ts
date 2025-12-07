@@ -1,5 +1,9 @@
-import { GeneratorOptions, GeneratorTemplate } from '../index';
+import type { GeneratorOptions, GeneratorTemplate } from '../index';
 
+/**
+ *
+ * @param options
+ */
 export function pageTemplate(options: GeneratorOptions): GeneratorTemplate {
   const { name, path: basePath = 'src/pages', skipTests } = options;
   const pagePath = `${basePath}/${name}`;
@@ -50,6 +54,10 @@ export function pageTemplate(options: GeneratorOptions): GeneratorTemplate {
   };
 }
 
+/**
+ *
+ * @param name
+ */
 function generatePage(name: string): string {
   return `import React from 'react';
 import { useLoaderData } from 'react-router-dom';
@@ -71,6 +79,10 @@ ${name}Page.displayName = '${name}Page';
 `;
 }
 
+/**
+ *
+ * @param name
+ */
 function generateTypes(name: string): string {
   return `export interface ${name}PageProps {
   // Add your props here
@@ -86,6 +98,10 @@ export interface ${name}PageParams {
 `;
 }
 
+/**
+ *
+ * @param name
+ */
 function generateLoader(name: string): string {
   return `import { LoaderFunctionArgs } from 'react-router-dom';
 import { ${name}PageData, ${name}PageParams } from './${name}Page.types';
@@ -104,6 +120,10 @@ export async function ${name.toLowerCase()}PageLoader({
 `;
 }
 
+/**
+ *
+ * @param name
+ */
 function generateErrorBoundary(name: string): string {
   return `import React from 'react';
 import { useRouteError, isRouteErrorResponse } from 'react-router-dom';
@@ -132,6 +152,10 @@ ${name}PageError.displayName = '${name}PageError';
 `;
 }
 
+/**
+ *
+ * @param name
+ */
 function generateTest(name: string): string {
   return `import React from 'react';
 import { render, screen } from '@testing-library/react';
@@ -162,6 +186,10 @@ describe('${name}Page', () => {
 `;
 }
 
+/**
+ *
+ * @param name
+ */
 function generateIndex(name: string): string {
   return `export { ${name}Page } from './${name}Page';
 export { ${name}PageError } from './${name}Page.error';

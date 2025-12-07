@@ -3,14 +3,17 @@
  * @description Main debugger for Enzyme state with DevTools integration
  */
 
-import { StateDiff, type DiffNode } from './state-diff';
 import { ActionRecorder, type ActionRecord } from './action-recorder';
 import { StateBridge, MessageType, type BridgeMessage } from './state-bridge';
+import { StateDiff, type DiffNode } from './state-diff';
 
 // ============================================================================
 // Types
 // ============================================================================
 
+/**
+ *
+ */
 export interface StateSnapshot {
   id: string;
   name?: string;
@@ -20,12 +23,18 @@ export interface StateSnapshot {
   metadata?: Record<string, unknown>;
 }
 
+/**
+ *
+ */
 export interface TimeTravelState {
   snapshots: StateSnapshot[];
   currentIndex: number;
   isTimeTraveling: boolean;
 }
 
+/**
+ *
+ */
 export interface DebuggerConfig {
   /** Enable DevTools integration */
   enableDevTools?: boolean;
@@ -42,6 +51,9 @@ export interface DebuggerConfig {
   };
 }
 
+/**
+ *
+ */
 export interface DebuggerState {
   connected: boolean;
   recording: boolean;
@@ -54,17 +66,23 @@ export interface DebuggerState {
 // State Debugger
 // ============================================================================
 
+/**
+ *
+ */
 export class StateDebugger {
-  private config: Required<DebuggerConfig>;
+  private readonly config: Required<DebuggerConfig>;
   private snapshots: StateSnapshot[] = [];
-  private currentSnapshot: StateSnapshot | null = null;
-  private recorder: ActionRecorder;
-  private bridge: StateBridge | null = null;
-  private differ: StateDiff;
-  private timeTravel: TimeTravelState;
+  private readonly recorder: ActionRecorder;
+  private readonly bridge: StateBridge | null = null;
+  private readonly differ: StateDiff;
+  private readonly timeTravel: TimeTravelState;
   private snapshotIdCounter = 0;
   private isInitialized = false;
 
+  /**
+   *
+   * @param config
+   */
   constructor(config: DebuggerConfig = {}) {
     this.config = {
       enableDevTools: config.enableDevTools ?? true,
@@ -144,19 +162,21 @@ export class StateDebugger {
 
   /**
    * Capture state snapshot
+   * @param state
+   * @param name
+   * @param storeName
    */
   captureSnapshot(state: unknown, name?: string, storeName?: string): StateSnapshot {
     const snapshot: StateSnapshot = {
       id: this.generateSnapshotId(),
-      name,
+      ...(name !== undefined && { name }),
       timestamp: Date.now(),
       state: this.deepClone(state),
-      storeName,
+      ...(storeName !== undefined && { storeName }),
     };
 
     if (this.config.enableSnapshots) {
       this.snapshots.push(snapshot);
-      this.currentSnapshot = snapshot;
 
       // Enforce max snapshots
       if (this.snapshots.length > this.config.maxSnapshots) {
@@ -169,6 +189,7 @@ export class StateDebugger {
 
   /**
    * Get snapshot by ID
+   * @param id
    */
   getSnapshot(id: string): StateSnapshot | undefined {
     return this.snapshots.find((s) => s.id === id);
@@ -183,6 +204,8 @@ export class StateDebugger {
 
   /**
    * Compute diff between two snapshots
+   * @param snapshotId1
+   * @param snapshotId2
    */
   computeDiff(snapshotId1: string, snapshotId2: string): DiffNode | null {
     const s1 = this.getSnapshot(snapshotId1);
@@ -197,6 +220,7 @@ export class StateDebugger {
 
   /**
    * Record action
+   * @param action
    */
   recordAction(action: Omit<ActionRecord, 'id' | 'timestamp'>): ActionRecord {
     return this.recorder.record(action);
@@ -235,6 +259,7 @@ export class StateDebugger {
 
   /**
    * Import state and actions
+   * @param json
    */
   importDebugData(json: string): void {
     try {
@@ -285,7 +310,7 @@ export class StateDebugger {
 
     if (this.timeTravel.currentIndex > 0) {
       this.timeTravel.currentIndex--;
-      return this.timeTravel.snapshots[this.timeTravel.currentIndex];
+      return this.timeTravel.snapshots[this.timeTravel.currentIndex] ?? null;
     }
 
     return null;
@@ -301,7 +326,7 @@ export class StateDebugger {
 
     if (this.timeTravel.currentIndex < this.timeTravel.snapshots.length - 1) {
       this.timeTravel.currentIndex++;
-      return this.timeTravel.snapshots[this.timeTravel.currentIndex];
+      return this.timeTravel.snapshots[this.timeTravel.currentIndex] ?? null;
     }
 
     return null;
@@ -309,6 +334,7 @@ export class StateDebugger {
 
   /**
    * Go to specific snapshot
+   * @param index
    */
   timeTravelTo(index: number): StateSnapshot | null {
     if (!this.timeTravel.isTimeTraveling) {
@@ -317,7 +343,7 @@ export class StateDebugger {
 
     if (index >= 0 && index < this.timeTravel.snapshots.length) {
       this.timeTravel.currentIndex = index;
-      return this.timeTravel.snapshots[index];
+      return this.timeTravel.snapshots[index] ?? null;
     }
 
     return null;
@@ -331,11 +357,15 @@ export class StateDebugger {
       return null;
     }
 
-    return this.timeTravel.snapshots[this.timeTravel.currentIndex];
+    return this.timeTravel.snapshots[this.timeTravel.currentIndex] ?? null;
   }
 
   /**
    * Replay actions
+   * @param onAction
+   * @param fromIndex
+   * @param toIndex
+   * @param speed
    */
   async replayActions(
     onAction: (action: ActionRecord) => void | Promise<void>,
@@ -366,7 +396,6 @@ export class StateDebugger {
    */
   clearSnapshots(): void {
     this.snapshots = [];
-    this.currentSnapshot = null;
   }
 
   /**
@@ -416,6 +445,7 @@ export class StateDebugger {
 
   /**
    * Deep clone value
+   * @param value
    */
   private deepClone<T>(value: T): T {
     return JSON.parse(JSON.stringify(value));
@@ -430,6 +460,7 @@ let globalDebugger: StateDebugger | null = null;
 
 /**
  * Get or create global debugger instance
+ * @param config
  */
 export function getGlobalDebugger(config?: DebuggerConfig): StateDebugger {
   if (!globalDebugger) {

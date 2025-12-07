@@ -1,7 +1,11 @@
+import * as path from 'node:path';
 import * as vscode from 'vscode';
-import * as path from 'path';
-import { BaseCommand, CommandContext, CommandMetadata } from '../base-command';
+import { BaseCommand } from '../base-command';
+import type { CommandContext, CommandMetadata } from '../base-command';
 
+/**
+ *
+ */
 interface RouteDefinition {
   path: string;
   file: string;
@@ -15,6 +19,9 @@ interface RouteDefinition {
  * Keybinding: Ctrl+Shift+R
  */
 export class GoToRouteCommand extends BaseCommand {
+  /**
+   *
+   */
   getMetadata(): CommandMetadata {
     return {
       id: 'enzyme.navigation.goToRoute',
@@ -28,6 +35,10 @@ export class GoToRouteCommand extends BaseCommand {
     };
   }
 
+  /**
+   *
+   * @param _context
+   */
   protected async executeCommand(_context: CommandContext): Promise<void> {
     const workspaceFolder = await this.ensureWorkspaceFolder();
 
@@ -77,16 +88,20 @@ export class GoToRouteCommand extends BaseCommand {
     });
   }
 
+  /**
+   *
+   * @param workspaceFolder
+   */
   private async findRoutes(
     workspaceFolder: vscode.WorkspaceFolder
   ): Promise<RouteDefinition[]> {
     const routes: RouteDefinition[] = [];
-    const srcPath = path.join(workspaceFolder.uri.fsPath, 'src');
+    const sourcePath = path.join(workspaceFolder.uri.fsPath, 'src');
 
     try {
       // Find route configuration files
       const routeFiles = await vscode.workspace.findFiles(
-        new vscode.RelativePattern(srcPath, '**/routes/**/*.{ts,tsx,js,jsx}'),
+        new vscode.RelativePattern(sourcePath, '**/routes/**/*.{ts,tsx,js,jsx}'),
         '**/node_modules/**'
       );
 
@@ -96,13 +111,15 @@ export class GoToRouteCommand extends BaseCommand {
         const text = document.getText();
 
         // Look for route path patterns
-        const pathRegex = /path:\s*['"`]([^'"`]+)['"`]/g;
+        const pathRegex = /path:\s*["'`]([^"'`]+)["'`]/g;
         const componentRegex = /(?:element|component):\s*(?:<(\w+)|(\w+))/g;
 
         let match;
         while ((match = pathRegex.exec(text)) !== null) {
           const routePath = match[1];
-          const line = document.positionAt(match.index).line;
+          if (!routePath) continue;
+
+          const {line} = document.positionAt(match.index);
 
           // Try to find associated component
           let component: string | undefined;
@@ -112,15 +129,20 @@ export class GoToRouteCommand extends BaseCommand {
 
           const componentMatch = componentRegex.exec(context);
           if (componentMatch) {
-            component = componentMatch[1] || componentMatch[2];
+            component = componentMatch[1] ?? componentMatch[2];
           }
 
-          routes.push({
+          const route: RouteDefinition = {
             path: routePath,
             file: fileUri.fsPath,
             line,
-            component,
-          });
+          };
+
+          if (component !== undefined) {
+            route.component = component;
+          }
+
+          routes.push(route);
         }
       }
 

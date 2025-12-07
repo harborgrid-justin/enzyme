@@ -1,7 +1,11 @@
+import * as path from 'node:path';
 import * as vscode from 'vscode';
-import * as path from 'path';
-import { BaseCommand, CommandContext, CommandMetadata } from '../base-command';
+import { BaseCommand } from '../base-command';
+import type { CommandContext, CommandMetadata } from '../base-command';
 
+/**
+ *
+ */
 interface StoreDefinition {
   name: string;
   file: string;
@@ -15,6 +19,9 @@ interface StoreDefinition {
  * Keybinding: Ctrl+Shift+T
  */
 export class GoToStoreCommand extends BaseCommand {
+  /**
+   *
+   */
   getMetadata(): CommandMetadata {
     return {
       id: 'enzyme.navigation.goToStore',
@@ -28,6 +35,10 @@ export class GoToStoreCommand extends BaseCommand {
     };
   }
 
+  /**
+   *
+   * @param _context
+   */
   protected async executeCommand(_context: CommandContext): Promise<void> {
     const workspaceFolder = await this.ensureWorkspaceFolder();
 
@@ -70,17 +81,21 @@ export class GoToStoreCommand extends BaseCommand {
     await this.openFile(uri);
   }
 
+  /**
+   *
+   * @param workspaceFolder
+   */
   private async findStores(
     workspaceFolder: vscode.WorkspaceFolder
   ): Promise<StoreDefinition[]> {
     const stores: StoreDefinition[] = [];
-    const srcPath = path.join(workspaceFolder.uri.fsPath, 'src');
+    const sourcePath = path.join(workspaceFolder.uri.fsPath, 'src');
 
     try {
       // Find store files in common locations
       const storeFiles = await vscode.workspace.findFiles(
         new vscode.RelativePattern(
-          srcPath,
+          sourcePath,
           '**/store/**/*.{ts,tsx,js,jsx}'
         ),
         '**/node_modules/**'
@@ -89,7 +104,7 @@ export class GoToStoreCommand extends BaseCommand {
       // Also find stores in features
       const featureStoreFiles = await vscode.workspace.findFiles(
         new vscode.RelativePattern(
-          srcPath,
+          sourcePath,
           '**/features/**/store/**/*.{ts,tsx,js,jsx}'
         ),
         '**/node_modules/**'
@@ -114,6 +129,8 @@ export class GoToStoreCommand extends BaseCommand {
 
         while ((match = zustandPattern.exec(text)) !== null) {
           const hookName = match[1];
+          if (!hookName) continue;
+
           const storeName = hookName.replace(/^use/, '').replace(/Store$/, '');
 
           stores.push({
@@ -128,6 +145,8 @@ export class GoToStoreCommand extends BaseCommand {
         const contextPattern = /export\s+const\s+(\w+Context)\s*=/g;
         while ((match = contextPattern.exec(text)) !== null) {
           const contextName = match[1];
+          if (!contextName) continue;
+
           const storeName = contextName.replace(/Context$/, '');
 
           // Look for accompanying hook
@@ -136,12 +155,13 @@ export class GoToStoreCommand extends BaseCommand {
             'g'
           );
           const hookMatch = hookPattern.exec(text);
+          const foundHookName = hookMatch?.[1];
 
-          if (hookMatch) {
+          if (foundHookName) {
             stores.push({
               name: storeName,
               file: fileUri.fsPath,
-              hookName: hookMatch[1],
+              hookName: foundHookName,
               type: 'context',
             });
           }
@@ -149,9 +169,7 @@ export class GoToStoreCommand extends BaseCommand {
       }
 
       // Remove duplicates and sort
-      const uniqueStores = Array.from(
-        new Map(stores.map((s) => [s.hookName, s])).values()
-      );
+      const uniqueStores = [...new Map(stores.map((s) => [s.hookName, s])).values()];
 
       uniqueStores.sort((a, b) => a.name.localeCompare(b.name));
 

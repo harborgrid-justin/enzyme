@@ -1,6 +1,11 @@
 import * as vscode from 'vscode';
+import { getMessageValidator } from '../../core/message-validator';
+import { sanitizePath } from '../../core/security-utils';
 import { BaseWebViewPanel } from './base-webview-panel';
 
+/**
+ *
+ */
 interface GeneratorTemplate {
 	id: string;
 	name: string;
@@ -11,6 +16,9 @@ interface GeneratorTemplate {
 	preview?: string;
 }
 
+/**
+ *
+ */
 interface GeneratorOption {
 	name: string;
 	label: string;
@@ -21,13 +29,16 @@ interface GeneratorOption {
 	description?: string;
 }
 
+/**
+ *
+ */
 interface GenerationResult {
 	success: boolean;
-	files: {
+	files: Array<{
 		path: string;
 		content: string;
 		created: boolean;
-	}[];
+	}>;
 	errors?: string[];
 }
 
@@ -38,10 +49,14 @@ interface GenerationResult {
 export class GeneratorWizardPanel extends BaseWebViewPanel {
 	private static instance: GeneratorWizardPanel | undefined;
 	private templates: GeneratorTemplate[] = [];
-	private currentStep: number = 0;
+	private currentStep = 0;
 	private selectedTemplate: GeneratorTemplate | null = null;
 	private wizardData: Record<string, any> = {};
 
+	/**
+	 *
+	 * @param context
+	 */
 	private constructor(context: vscode.ExtensionContext) {
 		super(context, 'enzyme.generatorWizard', 'Enzyme Generator');
 		this.loadTemplates();
@@ -49,6 +64,7 @@ export class GeneratorWizardPanel extends BaseWebViewPanel {
 
 	/**
 	 * Get or create the singleton instance
+	 * @param context
 	 */
 	public static getInstance(context: vscode.ExtensionContext): GeneratorWizardPanel {
 		if (!GeneratorWizardPanel.instance) {
@@ -59,6 +75,8 @@ export class GeneratorWizardPanel extends BaseWebViewPanel {
 
 	/**
 	 * Show the generator wizard panel
+	 * @param context
+	 * @param templateId
 	 */
 	public static show(context: vscode.ExtensionContext, templateId?: string): void {
 		const panel = GeneratorWizardPanel.getInstance(context);
@@ -68,6 +86,9 @@ export class GeneratorWizardPanel extends BaseWebViewPanel {
 		panel.show();
 	}
 
+	/**
+	 *
+	 */
 	protected override getIconPath(): vscode.Uri | { light: vscode.Uri; dark: vscode.Uri } | undefined {
 		return {
 			light: vscode.Uri.file(this.context.asAbsolutePath('resources/icons/generator-light.svg')),
@@ -75,6 +96,10 @@ export class GeneratorWizardPanel extends BaseWebViewPanel {
 		};
 	}
 
+	/**
+	 *
+	 * @param _webview
+	 */
 	protected getBodyContent(_webview: vscode.Webview): string {
 		return `
 			<div class="container">
@@ -209,31 +234,78 @@ export class GeneratorWizardPanel extends BaseWebViewPanel {
 		`;
 	}
 
+	/**
+	 *
+	 * @param webview
+	 * @param nonce
+	 */
 	protected getScripts(webview: vscode.Webview, nonce: string): string {
 		const scriptUri = this.getWebviewUri(webview, ['src', 'webview-ui', 'generator-wizard', 'main.js']);
 		return `<script nonce="${nonce}" src="${scriptUri}"></script>`;
 	}
 
+	/**
+	 * SECURITY: Handle messages from webview with validation
+	 * All messages are validated before processing to prevent injection attacks
+	 * @param message
+	 */
 	protected async handleMessage(message: any): Promise<void> {
+		// SECURITY: Validate base message structure
+		const validator = getMessageValidator();
+		const baseValidation = validator.validateBaseMessage(message);
+
+		if (!baseValidation.valid) {
+			vscode.window.showErrorMessage('Invalid message received from webview');
+			return;
+		}
+
+		// SECURITY: Validate message type is expected
+		const validTypes = ['getTemplates', 'selectTemplate', 'updateWizardData', 'previewFiles', 'generate', 'reset', 'openFile'];
+		if (!validTypes.includes(message.type)) {
+			vscode.window.showErrorMessage(`Unknown message type: ${message.type}`);
+			return;
+		}
+
 		switch (message.type) {
 			case 'getTemplates':
 				this.sendTemplatesUpdate();
 				break;
 
 			case 'selectTemplate':
+				// SECURITY: Validate template ID
+				if (typeof message.payload?.id !== 'string' || !message.payload.id.match(/^[\w\-]+$/)) {
+					vscode.window.showErrorMessage('Invalid template ID');
+					return;
+				}
 				this.selectTemplate(message.payload.id);
 				break;
 
 			case 'updateWizardData':
-				this.wizardData = { ...this.wizardData, ...message.payload };
+				// SECURITY: Validate and sanitize wizard data before merging
+				if (typeof message.payload !== 'object' || message.payload === null) {
+					vscode.window.showErrorMessage('Invalid wizard data');
+					return;
+				}
+				const sanitizedData = this.sanitizeWizardData(message.payload);
+				this.wizardData = { ...this.wizardData, ...sanitizedData };
 				break;
 
 			case 'previewFiles':
-				await this.previewFiles(message.payload);
+				// SECURITY: Validate payload is an object
+				if (typeof message.payload !== 'object' || message.payload === null) {
+					vscode.window.showErrorMessage('Invalid preview data');
+					return;
+				}
+				await this.previewFiles(this.sanitizeWizardData(message.payload));
 				break;
 
 			case 'generate':
-				await this.generateCode(message.payload);
+				// SECURITY: Validate payload is an object
+				if (typeof message.payload !== 'object' || message.payload === null) {
+					vscode.window.showErrorMessage('Invalid generation data');
+					return;
+				}
+				await this.generateCode(this.sanitizeWizardData(message.payload));
 				break;
 
 			case 'reset':
@@ -241,19 +313,105 @@ export class GeneratorWizardPanel extends BaseWebViewPanel {
 				break;
 
 			case 'openFile':
-				await this.openGeneratedFile(message.payload);
+				// SECURITY: Validate file path
+				if (typeof message.payload !== 'string') {
+					vscode.window.showErrorMessage('Invalid file path');
+					return;
+				}
+				// SECURITY: Sanitize path to prevent traversal attacks
+				const workspaceRoot = this.getWorkspaceRoot();
+				if (!workspaceRoot) {
+					vscode.window.showErrorMessage('No workspace folder open');
+					return;
+				}
+				const sanitized = sanitizePath(message.payload, workspaceRoot);
+				if (!sanitized) {
+					vscode.window.showErrorMessage('Invalid or unsafe file path');
+					return;
+				}
+				await this.openGeneratedFile(sanitized);
 				break;
 		}
 	}
 
+	/**
+	 * SECURITY: Sanitize wizard data to prevent injection attacks
+	 * Validates and sanitizes all user input from webview
+	 *
+	 * @param data - Raw data from webview
+	 * @returns Sanitized data safe for use
+	 */
+	private sanitizeWizardData(data: Record<string, any>): Record<string, any> {
+		const sanitized: Record<string, any> = {};
+
+		for (const [key, value] of Object.entries(data)) {
+			// SECURITY: Only allow alphanumeric keys
+			if (!/^[A-Za-z]\w*$/.test(key)) {
+				continue; // Skip invalid keys
+			}
+
+			// SECURITY: Sanitize based on value type
+			if (typeof value === 'string') {
+				// SECURITY: For 'name' field, ensure it's a valid identifier
+				if (key === 'name') {
+					if (/^[A-Za-z]\w*$/.test(value) && value.length <= 100) {
+						sanitized[key] = value;
+					}
+				}
+				// SECURITY: For 'path' field, sanitize to prevent path traversal
+				else if (key === 'path') {
+					const workspaceRoot = this.getWorkspaceRoot();
+					if (workspaceRoot) {
+						const sanitizedPath = sanitizePath(value, workspaceRoot);
+						if (sanitizedPath) {
+							sanitized[key] = sanitizedPath;
+						}
+					}
+				}
+				// SECURITY: For other string fields, limit length and remove control chars
+				else {
+					const trimmed = value.trim().slice(0, 500);
+					// Remove control characters except newlines and tabs
+					sanitized[key] = trimmed.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+				}
+			}
+			else if (typeof value === 'boolean') {
+				sanitized[key] = value;
+			}
+			else if (typeof value === 'number' && !isNaN(value)) {
+				sanitized[key] = value;
+			}
+			// SECURITY: Reject other types (objects, arrays, etc.) to prevent prototype pollution
+		}
+
+		return sanitized;
+	}
+
+	/**
+	 * Get workspace root path
+	 */
+	private getWorkspaceRoot(): string | null {
+		const folders = vscode.workspace.workspaceFolders;
+		return folders && folders.length > 0 ? folders[0]!.uri.fsPath : null;
+	}
+
+	/**
+	 *
+	 */
 	protected override onPanelCreated(): void {
 		this.sendTemplatesUpdate();
 	}
 
+	/**
+	 *
+	 */
 	protected override onPanelVisible(): void {
 		this.sendTemplatesUpdate();
 	}
 
+	/**
+	 *
+	 */
 	private loadTemplates(): void {
 		// Define available templates
 		this.templates = [
@@ -445,6 +603,10 @@ export class GeneratorWizardPanel extends BaseWebViewPanel {
 		];
 	}
 
+	/**
+	 *
+	 * @param templateId
+	 */
 	private selectTemplate(templateId: string): void {
 		const template = this.templates.find(t => t.id === templateId);
 		if (template) {
@@ -455,6 +617,10 @@ export class GeneratorWizardPanel extends BaseWebViewPanel {
 		}
 	}
 
+	/**
+	 *
+	 * @param data
+	 */
 	private async previewFiles(data: Record<string, any>): Promise<void> {
 		if (!this.selectedTemplate) {
 			return;
@@ -468,6 +634,10 @@ export class GeneratorWizardPanel extends BaseWebViewPanel {
 		});
 	}
 
+	/**
+	 *
+	 * @param data
+	 */
 	private async generateCode(data: Record<string, any>): Promise<void> {
 		if (!this.selectedTemplate) {
 			return;
@@ -524,56 +694,81 @@ export class GeneratorWizardPanel extends BaseWebViewPanel {
 		}
 	}
 
-	private generateFileList(template: GeneratorTemplate, data: Record<string, any>): { path: string; content: string }[] {
-		const files: { path: string; content: string }[] = [];
+	/**
+	 * SECURITY: Generate file list with path validation
+	 * Sanitizes all file paths to prevent path traversal attacks
+	 *
+	 * @param template - Generator template
+	 * @param data - Sanitized generation data
+	 * @returns Array of files to generate with validated paths
+	 */
+	private generateFileList(template: GeneratorTemplate, data: Record<string, any>): Array<{ path: string; content: string }> {
+		const files: Array<{ path: string; content: string }> = [];
+
+		// SECURITY: Validate name (already sanitized by sanitizeWizardData, but double-check)
 		const name = data['name'] || 'MyComponent';
-		const path = data['path'] || 'src';
+		if (!/^[A-Za-z]\w*$/.test(name)) {
+			throw new Error('Invalid component name');
+		}
+
+		// SECURITY: Validate path (already sanitized by sanitizeWizardData, but double-check)
+		const basePath = data['path'] || 'src';
+		const workspaceRoot = this.getWorkspaceRoot();
+		if (!workspaceRoot) {
+			throw new Error('No workspace folder open');
+		}
+
+		// SECURITY: Sanitize base path to prevent traversal
+		const sanitizedBasePath = sanitizePath(basePath, workspaceRoot);
+		if (!sanitizedBasePath) {
+			throw new Error('Invalid or unsafe base path');
+		}
 
 		switch (template.id) {
 			case 'component':
 				files.push({
-					path: `${path}/${name}/${name}.tsx`,
+					path: `${sanitizedBasePath}/${name}/${name}.tsx`,
 					content: this.generateComponentContent(name, data)
 				});
 
 				if (data['withStyles']) {
 					files.push({
-						path: `${path}/${name}/${name}.module.css`,
+						path: `${sanitizedBasePath}/${name}/${name}.module.css`,
 						content: this.generateStylesContent()
 					});
 				}
 
 				if (data['withTests']) {
 					files.push({
-						path: `${path}/${name}/${name}.test.tsx`,
+						path: `${sanitizedBasePath}/${name}/${name}.test.tsx`,
 						content: this.generateTestContent(name)
 					});
 				}
 
 				files.push({
-					path: `${path}/${name}/index.ts`,
+					path: `${sanitizedBasePath}/${name}/index.ts`,
 					content: `export { ${name} } from './${name}';\n`
 				});
 				break;
 
 			case 'hook':
 				files.push({
-					path: `${path}/${data['name']}.ts`,
-					content: this.generateHookContent(data['name'])
+					path: `${sanitizedBasePath}/${name}.ts`,
+					content: this.generateHookContent(name)
 				});
 
 				if (data['withTests']) {
 					files.push({
-						path: `${path}/${data['name']}.test.ts`,
-						content: this.generateHookTestContent(data['name'])
+						path: `${sanitizedBasePath}/${name}.test.ts`,
+						content: this.generateHookTestContent(name)
 					});
 				}
 				break;
 
 			case 'store':
 				files.push({
-					path: `${path}/${data['name']}.ts`,
-					content: this.generateStoreContent(data['name'], data)
+					path: `${sanitizedBasePath}/${name}.ts`,
+					content: this.generateStoreContent(name, data)
 				});
 				break;
 
@@ -583,6 +778,11 @@ export class GeneratorWizardPanel extends BaseWebViewPanel {
 		return files;
 	}
 
+	/**
+	 *
+	 * @param name
+	 * @param data
+	 */
 	private generateComponentContent(name: string, data: Record<string, any>): string {
 		const hasProps = data['withProps'];
 		const hasStyles = data['withStyles'];
@@ -604,6 +804,9 @@ ${hasProps ? `interface ${name}Props {
 `;
 	}
 
+	/**
+	 *
+	 */
 	private generateStylesContent(): string {
 		return `.container {
   /* Add your styles here */
@@ -611,6 +814,10 @@ ${hasProps ? `interface ${name}Props {
 `;
 	}
 
+	/**
+	 *
+	 * @param name
+	 */
 	private generateTestContent(name: string): string {
 		return `import { render, screen } from '@testing-library/react';
 import { ${name} } from './${name}';
@@ -624,6 +831,10 @@ describe('${name}', () => {
 `;
 	}
 
+	/**
+	 *
+	 * @param name
+	 */
 	private generateHookContent(name: string): string {
 		return `import { useState, useEffect } from 'react';
 
@@ -639,6 +850,10 @@ export const ${name} = () => {
 `;
 	}
 
+	/**
+	 *
+	 * @param name
+	 */
 	private generateHookTestContent(name: string): string {
 		return `import { renderHook } from '@testing-library/react';
 import { ${name} } from './${name}';
@@ -652,6 +867,11 @@ describe('${name}', () => {
 `;
 	}
 
+	/**
+	 *
+	 * @param name
+	 * @param data
+	 */
 	private generateStoreContent(name: string, data: Record<string, any>): string {
 		const withPersist = data['withPersist'];
 		const withDevtools = data['withDevtools'];
@@ -672,6 +892,9 @@ export const use${name} = create${withDevtools || withPersist ? '(' : '<'}${name
 `;
 	}
 
+	/**
+	 *
+	 */
 	private resetWizard(): void {
 		this.currentStep = 0;
 		this.selectedTemplate = null;
@@ -679,6 +902,10 @@ export const use${name} = create${withDevtools || withPersist ? '(' : '<'}${name
 		this.sendWizardUpdate();
 	}
 
+	/**
+	 *
+	 * @param filePath
+	 */
 	private async openGeneratedFile(filePath: string): Promise<void> {
 		try {
 			const uri = vscode.Uri.file(filePath);
@@ -690,6 +917,9 @@ export const use${name} = create${withDevtools || withPersist ? '(' : '<'}${name
 		}
 	}
 
+	/**
+	 *
+	 */
 	private sendTemplatesUpdate(): void {
 		this.postMessage({
 			type: 'templatesUpdate',
@@ -699,6 +929,9 @@ export const use${name} = create${withDevtools || withPersist ? '(' : '<'}${name
 		});
 	}
 
+	/**
+	 *
+	 */
 	private sendWizardUpdate(): void {
 		this.postMessage({
 			type: 'wizardUpdate',
@@ -710,6 +943,9 @@ export const use${name} = create${withDevtools || withPersist ? '(' : '<'}${name
 		});
 	}
 
+	/**
+	 *
+	 */
 	public override dispose(): void {
 		super.dispose();
 		GeneratorWizardPanel.instance = undefined;

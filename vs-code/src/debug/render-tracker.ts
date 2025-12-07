@@ -7,6 +7,9 @@
 // Types
 // ============================================================================
 
+/**
+ *
+ */
 export interface RenderRecord {
   id: string;
   componentName: string;
@@ -32,6 +35,9 @@ export enum RenderReason {
   UNKNOWN = 'unknown',
 }
 
+/**
+ *
+ */
 export interface ComponentStats {
   name: string;
   renderCount: number;
@@ -43,6 +49,9 @@ export interface ComponentStats {
   lastRender?: RenderRecord;
 }
 
+/**
+ *
+ */
 export interface RenderTreeNode {
   componentName: string;
   renderTime: number;
@@ -51,6 +60,9 @@ export interface RenderTreeNode {
   props?: Record<string, unknown>;
 }
 
+/**
+ *
+ */
 export interface TrackerOptions {
   /** Enable prop tracking */
   trackProps?: boolean;
@@ -70,15 +82,22 @@ export interface TrackerOptions {
 // Render Tracker
 // ============================================================================
 
+/**
+ *
+ */
 export class RenderTracker {
-  private options: Required<TrackerOptions>;
+  private readonly options: Required<TrackerOptions>;
   private renders: RenderRecord[] = [];
-  private stats = new Map<string, ComponentStats>();
+  private readonly stats = new Map<string, ComponentStats>();
   private renderIdCounter = 0;
   private isTracking = false;
   private renderTree: RenderTreeNode[] = [];
-  private activeRenders = new Map<string, RenderRecord>();
+  private readonly activeRenders = new Map<string, RenderRecord>();
 
+  /**
+   *
+   * @param options
+   */
   constructor(options: TrackerOptions = {}) {
     this.options = {
       trackProps: options.trackProps ?? true,
@@ -106,6 +125,10 @@ export class RenderTracker {
 
   /**
    * Record component render start
+   * @param componentName
+   * @param props
+   * @param state
+   * @param hooks
    */
   startRender(
     componentName: string,
@@ -123,9 +146,9 @@ export class RenderTracker {
       componentName,
       timestamp: performance.now(),
       duration: 0,
-      props: this.options.trackProps ? props : undefined,
-      state: this.options.trackState ? state : undefined,
-      hooks: this.options.trackHooks ? hooks : undefined,
+      ...(this.options.trackProps && props !== undefined && { props }),
+      ...(this.options.trackState && state !== undefined && { state }),
+      ...(this.options.trackHooks && hooks !== undefined && { hooks }),
     };
 
     this.activeRenders.set(renderId, record);
@@ -134,6 +157,8 @@ export class RenderTracker {
 
   /**
    * Record component render end
+   * @param renderId
+   * @param reason
    */
   endRender(renderId: string, reason?: RenderReason): void {
     if (!renderId) {
@@ -147,7 +172,9 @@ export class RenderTracker {
 
     // Calculate duration
     record.duration = performance.now() - record.timestamp;
-    record.reason = reason;
+    if (reason !== undefined) {
+      record.reason = reason;
+    }
 
     // Detect unnecessary renders
     if (this.options.detectUnnecessary) {
@@ -175,6 +202,7 @@ export class RenderTracker {
 
   /**
    * Get all render records
+   * @param componentName
    */
   getRenders(componentName?: string): RenderRecord[] {
     if (componentName) {
@@ -185,16 +213,18 @@ export class RenderTracker {
 
   /**
    * Get component statistics
+   * @param componentName
    */
   getStats(componentName?: string): ComponentStats | ComponentStats[] {
     if (componentName) {
       return this.stats.get(componentName) ?? this.createEmptyStats(componentName);
     }
-    return Array.from(this.stats.values());
+    return [...this.stats.values()];
   }
 
   /**
    * Get slow renders (above threshold)
+   * @param thresholdMs
    */
   getSlowRenders(thresholdMs = 16): RenderRecord[] {
     return this.renders.filter((r) => r.duration > thresholdMs);
@@ -224,6 +254,7 @@ export class RenderTracker {
 
   /**
    * Build render tree from records
+   * @param records
    */
   buildRenderTree(records: RenderRecord[]): RenderTreeNode[] {
     // Sort by timestamp
@@ -238,12 +269,16 @@ export class RenderTracker {
         renderTime: record.timestamp,
         duration: record.duration,
         children: [],
-        props: record.props,
+        ...(record.props !== undefined && { props: record.props }),
       };
 
       // Find parent based on timing
       while (stack.length > 0) {
         const parent = stack[stack.length - 1];
+        if (!parent) {
+          stack.pop();
+          continue;
+        }
         const parentEnd = parent.renderTime + parent.duration;
 
         if (record.timestamp < parentEnd) {
@@ -339,7 +374,7 @@ export class RenderTracker {
         version: '1.0.0',
         exportTime: Date.now(),
         renders: this.renders,
-        stats: Array.from(this.stats.entries()),
+        stats: [...this.stats.entries()],
       },
       null,
       2
@@ -348,6 +383,7 @@ export class RenderTracker {
 
   /**
    * Detect unnecessary render
+   * @param record
    */
   private detectUnnecessaryRender(record: RenderRecord): boolean {
     // Find previous render of same component
@@ -360,6 +396,9 @@ export class RenderTracker {
     }
 
     const previous = previousRenders[previousRenders.length - 1];
+    if (!previous) {
+      return false;
+    }
 
     // Check if props changed
     if (record.props && previous.props) {
@@ -380,6 +419,7 @@ export class RenderTracker {
 
   /**
    * Update component statistics
+   * @param record
    */
   private updateStats(record: RenderRecord): void {
     let stats = this.stats.get(record.componentName);
@@ -399,6 +439,7 @@ export class RenderTracker {
 
   /**
    * Create empty stats object
+   * @param componentName
    */
   private createEmptyStats(componentName: string): ComponentStats {
     return {
@@ -414,6 +455,7 @@ export class RenderTracker {
 
   /**
    * Check if component should be ignored
+   * @param componentName
    */
   private shouldIgnore(componentName: string): boolean {
     return this.options.ignorePatterns.some((pattern) => pattern.test(componentName));
@@ -428,17 +470,19 @@ export class RenderTracker {
 
   /**
    * Deep equality check
+   * @param a
+   * @param b
    */
   private deepEqual(a: unknown, b: unknown): boolean {
-    if (a === b) return true;
-    if (a === null || b === null) return false;
-    if (typeof a !== typeof b) return false;
+    if (a === b) {return true;}
+    if (a === null || b === null) {return false;}
+    if (typeof a !== typeof b) {return false;}
 
     if (typeof a === 'object' && typeof b === 'object') {
       const aKeys = Object.keys(a);
       const bKeys = Object.keys(b);
 
-      if (aKeys.length !== bKeys.length) return false;
+      if (aKeys.length !== bKeys.length) {return false;}
 
       for (const key of aKeys) {
         if (!this.deepEqual((a as Record<string, unknown>)[key], (b as Record<string, unknown>)[key])) {
@@ -461,6 +505,7 @@ let globalTracker: RenderTracker | null = null;
 
 /**
  * Get or create global tracker instance
+ * @param options
  */
 export function getGlobalTracker(options?: TrackerOptions): RenderTracker {
   if (!globalTracker) {

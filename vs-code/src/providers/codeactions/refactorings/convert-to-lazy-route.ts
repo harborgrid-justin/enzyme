@@ -1,10 +1,19 @@
 import * as vscode from 'vscode';
 
+/**
+ *
+ */
 export class ConvertToLazyRouteRefactoring {
+  /**
+   *
+   * @param document
+   * @param range
+   * @param context
+   */
   public provideRefactorings(
     document: vscode.TextDocument,
     range: vscode.Range | vscode.Selection,
-    context: vscode.CodeActionContext
+    _context: vscode.CodeActionContext
   ): vscode.CodeAction[] {
     const actions: vscode.CodeAction[] = [];
 
@@ -26,18 +35,28 @@ export class ConvertToLazyRouteRefactoring {
     return actions;
   }
 
+  /**
+   *
+   * @param document
+   * @param range
+   */
   private isValidRouteDefinition(document: vscode.TextDocument, range: vscode.Range): boolean {
     const line = document.lineAt(range.start.line);
-    const text = line.text;
+    const {text} = line;
 
     // Check if line contains route definition patterns
     return (
       /component:\s*\w+/.test(text) ||
       /createRoute\s*\(/.test(text) ||
-      /path:\s*['"]/.test(text)
+      /path:\s*["']/.test(text)
     );
   }
 
+  /**
+   *
+   * @param document
+   * @param range
+   */
   private createLazyRouteEdit(
     document: vscode.TextDocument,
     range: vscode.Range
@@ -80,6 +99,11 @@ export class ConvertToLazyRouteRefactoring {
     return edit;
   }
 
+  /**
+   *
+   * @param document
+   * @param startLine
+   */
   private findRouteDefinition(
     document: vscode.TextDocument,
     startLine: number
@@ -99,7 +123,7 @@ export class ConvertToLazyRouteRefactoring {
     // Search backwards for createRoute or route object start
     while (currentLine >= 0 && currentLine >= startLine - 20) {
       const line = document.lineAt(currentLine);
-      if (line.text.includes('createRoute') || line.text.match(/\w+:\s*{/)) {
+      if (line.text.includes('createRoute') || (/\w+:\s*{/.exec(line.text))) {
         routeStartLine = currentLine;
         foundStart = true;
         break;
@@ -117,16 +141,16 @@ export class ConvertToLazyRouteRefactoring {
 
     while (currentLine < document.lineCount && currentLine < routeStartLine + 50) {
       const line = document.lineAt(currentLine);
-      const componentMatch = line.text.match(/component:\s*(\w+)/);
+      const componentMatch = /component:\s*(\w+)/.exec(line.text);
 
-      if (componentMatch) {
+      if (componentMatch && componentMatch[1]) {
         component = componentMatch[1];
       }
 
       // Track braces to find end of route definition
       for (const char of line.text) {
-        if (char === '{') braceCount++;
-        if (char === '}') braceCount--;
+        if (char === '{') {braceCount++;}
+        if (char === '}') {braceCount--;}
       }
 
       if (braceCount === 0 && currentLine > routeStartLine) {
@@ -144,14 +168,29 @@ export class ConvertToLazyRouteRefactoring {
     // Find import statement for component
     const importStatement = this.findComponentImport(document, component);
 
-    return {
+    const result: {
+      startLine: number;
+      endLine: number;
+      component: string;
+      importStatement?: { line: number; text: string };
+    } = {
       startLine: routeStartLine,
       endLine: routeEndLine,
       component,
-      importStatement,
     };
+
+    if (importStatement) {
+      result.importStatement = importStatement;
+    }
+
+    return result;
   }
 
+  /**
+   *
+   * @param document
+   * @param component
+   */
   private findComponentImport(
     document: vscode.TextDocument,
     component: string
@@ -171,6 +210,11 @@ export class ConvertToLazyRouteRefactoring {
     return undefined;
   }
 
+  /**
+   *
+   * @param routeText
+   * @param component
+   */
   private convertToLazyLoad(routeText: string, component: string): string {
     // Replace direct component reference with lazy load
     const lazyComponent = `lazy(() => import('./components/${component}'))`;
@@ -194,7 +238,7 @@ export class ConvertToLazyRouteRefactoring {
       );
 
       // Add note about adding Suspense manually
-      converted = `  // TODO: Add Suspense boundary or loading state\n` + converted;
+      converted = `  // TODO: Add Suspense boundary or loading state\n${  converted}`;
     }
 
     return converted;
@@ -202,11 +246,15 @@ export class ConvertToLazyRouteRefactoring {
 }
 
 // Helper to check if import for lazy exists
+/**
+ *
+ * @param document
+ */
 export function ensureLazyImport(document: vscode.TextDocument): vscode.WorkspaceEdit | null {
   const text = document.getText();
 
   // Check if lazy is already imported
-  if (text.includes('lazy') && text.match(/import\s+{[^}]*lazy[^}]*}\s+from\s+['"]react['"]/)) {
+  if (text.includes('lazy') && (/import\s+{[^}]*lazy[^}]*}\s+from\s+["']react["']/.exec(text))) {
     return null;
   }
 
@@ -216,11 +264,11 @@ export function ensureLazyImport(document: vscode.TextDocument): vscode.Workspac
   for (let i = 0; i < Math.min(50, document.lineCount); i++) {
     const line = document.lineAt(i);
 
-    if (line.text.match(/import\s+(?:{[^}]*}|React)\s+from\s+['"]react['"]/)) {
+    if (/import\s+(?:{[^}]*}|React)\s+from\s+["']react["']/.exec(line.text)) {
       // Add lazy to existing import
-      const importMatch = line.text.match(/import\s+{([^}]*)}\s+from\s+['"]react['"]/);
+      const importMatch = /import\s+{([^}]*)}\s+from\s+["']react["']/.exec(line.text);
 
-      if (importMatch) {
+      if (importMatch && importMatch[1]) {
         const existingImports = importMatch[1];
         const newImports = existingImports.includes('lazy')
           ? existingImports

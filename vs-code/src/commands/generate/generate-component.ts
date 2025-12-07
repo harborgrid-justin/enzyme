@@ -1,8 +1,21 @@
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
 import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs/promises';
-import { BaseCommand, CommandContext, CommandMetadata } from '../base-command';
+import { BaseCommand } from '../base-command';
+import type { CommandContext, CommandMetadata } from '../base-command';
 
+/**
+ * Component generation options interface
+ *
+ * @interface ComponentOptions
+ * @property {string} name - The component name in PascalCase (e.g., 'MyComponent')
+ * @property {'functional' | 'class' | 'form' | 'layout' | 'hoc'} type - The type of component to generate
+ * @property {'feature' | 'shared' | 'ui'} location - Where to place the component
+ * @property {boolean} withTests - Whether to generate test files
+ * @property {boolean} withStories - Whether to generate Storybook stories
+ * @property {boolean} withStyles - Whether to generate CSS module file
+ * @property {string} [featurePath] - Optional feature directory path if location is 'feature'
+ */
 interface ComponentOptions {
   name: string;
   type: 'functional' | 'class' | 'form' | 'layout' | 'hoc';
@@ -15,10 +28,38 @@ interface ComponentOptions {
 
 /**
  * Generate Component Command
- * Creates a new React component with optional tests, stories, and styles
- * Keybinding: Ctrl+Shift+G C
+ *
+ * Creates a new React component with optional tests, stories, and CSS modules.
+ * Supports multiple component patterns including functional, class, form, layout, and HOC.
+ *
+ * Features:
+ * - Interactive wizard for component configuration
+ * - Multiple component types (functional, class, form, layout, HOC)
+ * - Flexible location options (feature-specific, shared, or UI)
+ * - Optional test file generation with proper imports
+ * - Optional Storybook stories generation
+ * - Optional CSS module generation
+ * - Automatic index file creation for clean exports
+ *
+ * @class GenerateComponentCommand
+ * @augments {BaseCommand}
+ *
+ * @example
+ * ```typescript
+ * // Command registration
+ * const command = new GenerateComponentCommand(context, outputChannel);
+ * context.subscriptions.push(command.register());
+ *
+ * // Execute programmatically
+ * await vscode.commands.executeCommand('enzyme.generate.component');
+ * ```
+ *
+ * Keybinding: Ctrl+Shift+G C (Windows/Linux), Cmd+Shift+G C (macOS)
  */
 export class GenerateComponentCommand extends BaseCommand {
+  /**
+   *
+   */
   getMetadata(): CommandMetadata {
     return {
       id: 'enzyme.generate.component',
@@ -33,6 +74,10 @@ export class GenerateComponentCommand extends BaseCommand {
     };
   }
 
+  /**
+   *
+   * @param _context
+   */
   protected async executeCommand(_context: CommandContext): Promise<void> {
     const workspaceFolder = await this.ensureWorkspaceFolder();
 
@@ -70,6 +115,10 @@ export class GenerateComponentCommand extends BaseCommand {
     );
   }
 
+  /**
+   *
+   * @param workspaceFolder
+   */
   private async gatherComponentOptions(
     workspaceFolder: vscode.WorkspaceFolder
   ): Promise<ComponentOptions | undefined> {
@@ -119,7 +168,7 @@ export class GenerateComponentCommand extends BaseCommand {
         if (!value) {
           return 'Component name is required';
         }
-        if (!/^[A-Z][a-zA-Z0-9]*$/.test(value)) {
+        if (!/^[A-Z][\dA-Za-z]*$/.test(value)) {
           return 'Component name must be in PascalCase (e.g., MyComponent)';
         }
         return undefined;
@@ -185,26 +234,35 @@ export class GenerateComponentCommand extends BaseCommand {
     const withStyles =
       selectedOptions?.some((o) => o.value === 'styles') ?? true;
 
-    return {
+    const options: ComponentOptions = {
       name,
       type: typeSelection.value,
       location: locationSelection.value,
       withTests,
       withStories,
       withStyles,
-      featurePath,
     };
+
+    if (featurePath !== undefined) {
+      options.featurePath = featurePath;
+    }
+
+    return options;
   }
 
+  /**
+   *
+   * @param workspaceFolder
+   */
   private async selectFeatureDirectory(
     workspaceFolder: vscode.WorkspaceFolder
   ): Promise<string | undefined> {
-    const srcPath = path.join(workspaceFolder.uri.fsPath, 'src');
-    const featuresPath = path.join(srcPath, 'features');
+    const sourcePath = path.join(workspaceFolder.uri.fsPath, 'src');
+    const featuresPath = path.join(sourcePath, 'features');
 
     try {
       const features = await fs.readdir(featuresPath);
-      const featureDirs = await Promise.all(
+      const featureDirectories = await Promise.all(
         features.map(async (feature) => {
           const featurePath = path.join(featuresPath, feature);
           const stat = await fs.stat(featurePath);
@@ -212,7 +270,7 @@ export class GenerateComponentCommand extends BaseCommand {
         })
       );
 
-      const validFeatures = featureDirs.filter(
+      const validFeatures = featureDirectories.filter(
         (f): f is string => f !== null
       );
 
@@ -239,6 +297,12 @@ export class GenerateComponentCommand extends BaseCommand {
     }
   }
 
+  /**
+   *
+   * @param workspaceFolder
+   * @param options
+   * @param token
+   */
   private async generateComponent(
     workspaceFolder: vscode.WorkspaceFolder,
     options: ComponentOptions,
@@ -246,14 +310,14 @@ export class GenerateComponentCommand extends BaseCommand {
   ): Promise<string> {
     // Determine target directory
     let targetDir: string;
-    const srcPath = path.join(workspaceFolder.uri.fsPath, 'src');
+    const sourcePath = path.join(workspaceFolder.uri.fsPath, 'src');
 
     if (options.location === 'feature' && options.featurePath) {
       targetDir = path.join(options.featurePath, 'components', options.name);
     } else if (options.location === 'shared') {
-      targetDir = path.join(srcPath, 'shared', 'components', options.name);
+      targetDir = path.join(sourcePath, 'shared', 'components', options.name);
     } else {
-      targetDir = path.join(srcPath, 'ui', 'components', options.name);
+      targetDir = path.join(sourcePath, 'ui', 'components', options.name);
     }
 
     // Create directory
@@ -297,6 +361,10 @@ export class GenerateComponentCommand extends BaseCommand {
     return componentPath;
   }
 
+  /**
+   *
+   * @param options
+   */
   private generateComponentContent(options: ComponentOptions): string {
     const { name, type, withStyles } = options;
 
@@ -437,6 +505,10 @@ export function with${name}<P extends object>(
     return `${imports}\n${componentCode}`;
   }
 
+  /**
+   *
+   * @param options
+   */
   private generateStylesContent(options: ComponentOptions): string {
     const { name } = options;
     return `.${name.toLowerCase()} {
@@ -445,6 +517,10 @@ export function with${name}<P extends object>(
 `;
   }
 
+  /**
+   *
+   * @param options
+   */
   private generateTestContent(options: ComponentOptions): string {
     const { name, type } = options;
 
@@ -463,6 +539,10 @@ describe('${componentName}', () => {
 `;
   }
 
+  /**
+   *
+   * @param options
+   */
   private generateStoryContent(options: ComponentOptions): string {
     const { name, type } = options;
 

@@ -1,7 +1,10 @@
+import { spawn } from 'node:child_process';
 import * as vscode from 'vscode';
-import { spawn, ChildProcess } from 'child_process';
-import { CLIDetector } from './cli-detector';
+import type { CLIDetector } from './cli-detector';
 
+/**
+ *
+ */
 export interface CLIRunOptions {
   args: string[];
   cwd?: string;
@@ -12,6 +15,9 @@ export interface CLIRunOptions {
   signal?: AbortSignal;
 }
 
+/**
+ *
+ */
 export interface CLIRunResult {
   stdout: string;
   stderr: string;
@@ -19,8 +25,11 @@ export interface CLIRunResult {
   success: boolean;
 }
 
+/**
+ *
+ */
 export class CLIRunner {
-  private runningProcesses: Map<string, ChildProcess> = new Map();
+  private readonly runningProcesses = new Map<string, ReturnType<typeof spawn>>();
 
   // Allowed CLI commands for security validation
   private static readonly ALLOWED_COMMANDS = [
@@ -30,10 +39,18 @@ export class CLIRunner {
     'node'
   ];
 
-  constructor(private detector: CLIDetector) {}
+  /**
+   *
+   * @param detector
+   */
+  constructor(private readonly detector: CLIDetector) {}
 
   /**
    * Dispose and cleanup all running processes
+   * Ensures all child processes are properly terminated
+   * Uses SIGTERM first, then SIGKILL after 5s timeout
+   *
+   * @public
    */
   dispose(): void {
     for (const [id, process] of this.runningProcesses.entries()) {
@@ -56,9 +73,14 @@ export class CLIRunner {
 
   /**
    * Validate command is in allowlist for security
+   * SECURITY: Prevents execution of unauthorized commands
+   *
+   * @param command - The command to validate
+   * @returns True if command is allowed, false otherwise
+   * @private
    */
   private isAllowedCommand(command: string): boolean {
-    const executable = command.split(/[\\/]/).pop()?.split(' ')[0] || '';
+    const executable = command.split(/[/\\]/).pop()?.split(' ')[0] || '';
     return CLIRunner.ALLOWED_COMMANDS.some(allowed =>
       executable === allowed || executable.startsWith(`${allowed}.`) || executable.endsWith(allowed)
     );
@@ -66,24 +88,40 @@ export class CLIRunner {
 
   /**
    * Sanitize argument to prevent command injection
-   * Removes shell metacharacters
+   * SECURITY: Removes shell metacharacters that could be used for injection attacks
+   *
+   * @param arg - The argument to sanitize
+   * @param argument
+   * @returns Sanitized argument string
+   * @private
    */
-  private sanitizeArgument(arg: string): string {
+  private sanitizeArgument(argument: string): string {
     // Remove dangerous shell metacharacters
-    return arg.replace(/[;&|`$(){}[\]<>!#]/g, '');
+    return argument.replace(/[!#$&();<>[\]`{|}]/g, '');
   }
 
   /**
    * Validate and sanitize arguments
+   * SECURITY: Applies sanitization to all arguments in array
+   *
+   * @param args - Array of arguments to validate
+   * @returns Array of sanitized arguments
+   * @private
    */
   private validateArgs(args: string[]): string[] {
-    return args.map(arg => this.sanitizeArgument(arg));
+    return args.map(argument => this.sanitizeArgument(argument));
   }
 
   /**
    * Get safe environment variables (whitelist approach)
+   * SECURITY: Only passes whitelisted environment variables to child processes
+   *
+   * @param customEnv - Optional custom environment variables to merge
+   * @param customEnvironment
+   * @returns Safe environment object for child process
+   * @private
    */
-  private getSafeEnvironment(customEnv?: Record<string, string>): NodeJS.ProcessEnv {
+  private getSafeEnvironment(customEnvironment?: Record<string, string>): NodeJS.ProcessEnv {
     return {
       PATH: process.env['PATH'],
       HOME: process.env['HOME'],
@@ -91,13 +129,14 @@ export class CLIRunner {
       TMPDIR: process.env['TMPDIR'],
       LANG: process.env['LANG'],
       NODE_ENV: process.env['NODE_ENV'],
-      ...customEnv,
+      ...customEnvironment,
       FORCE_COLOR: '1',
     };
   }
 
   /**
    * Execute a CLI command
+   * @param options
    */
   async run(options: CLIRunOptions): Promise<CLIRunResult> {
     const cliPath = await this.detector.getExecutablePath();
@@ -110,6 +149,8 @@ export class CLIRunner {
 
   /**
    * Execute a CLI command and stream output to a channel
+   * @param options
+   * @param outputChannel
    */
   async runWithOutput(
     options: CLIRunOptions,
@@ -130,6 +171,7 @@ export class CLIRunner {
 
   /**
    * Execute a CLI command with JSON output
+   * @param options
    */
   async runJSON<T = any>(options: CLIRunOptions): Promise<T> {
     const result = await this.run({
@@ -165,6 +207,9 @@ export class CLIRunner {
 
   /**
    * Generate code using CLI with input validation
+   * @param type
+   * @param name
+   * @param options
    */
   async generate(type: string, name: string, options: Record<string, any> = {}): Promise<CLIRunResult> {
     // Validate type
@@ -174,7 +219,7 @@ export class CLIRunner {
     }
 
     // Validate name (alphanumeric, hyphens, underscores only)
-    if (!/^[a-zA-Z0-9\-_]+$/.test(name)) {
+    if (!/^[\w\-]+$/.test(name)) {
       throw new Error(`Invalid name: ${name}. Use only alphanumeric characters, hyphens, and underscores.`);
     }
 
@@ -183,7 +228,7 @@ export class CLIRunner {
     // Add options as flags with validation
     for (const [key, value] of Object.entries(options)) {
       // Validate option key
-      if (!/^[a-zA-Z][a-zA-Z0-9\-]*$/.test(key)) {
+      if (!/^[A-Za-z][\dA-Za-z\-]*$/.test(key)) {
         throw new Error(`Invalid option key: ${key}`);
       }
 
@@ -194,7 +239,7 @@ export class CLIRunner {
       } else if (typeof value === 'string' || typeof value === 'number') {
         args.push(`--${key}`, String(value));
       } else {
-        throw new Error(`Invalid option value type for ${key}: ${typeof value}`);
+        throw new TypeError(`Invalid option value type for ${key}: ${typeof value}`);
       }
     }
 
@@ -203,6 +248,8 @@ export class CLIRunner {
 
   /**
    * Add a feature using CLI
+   * @param feature
+   * @param options
    */
   async addFeature(feature: string, options: Record<string, any> = {}): Promise<CLIRunResult> {
     const args = ['add', feature];
@@ -222,6 +269,7 @@ export class CLIRunner {
 
   /**
    * Analyze project using CLI
+   * @param options
    */
   async analyze(options: Record<string, any> = {}): Promise<any> {
     return this.runJSON({
@@ -240,6 +288,7 @@ export class CLIRunner {
 
   /**
    * Cancel a running command
+   * @param processId
    */
   cancel(processId: string): void {
     const process = this.runningProcesses.get(processId);
@@ -262,6 +311,8 @@ export class CLIRunner {
   /**
    * Execute command with spawn (secure implementation)
    * Uses shell: false and validates all inputs for security
+   * @param command
+   * @param options
    */
   private async execute(command: string, options: CLIRunOptions): Promise<CLIRunResult> {
     return new Promise((resolve, reject) => {
@@ -276,19 +327,33 @@ export class CLIRunner {
       let stderr = '';
 
       // Parse command if it contains spaces (like "npx @enzyme/cli")
-      const [cmd, ...cmdArgs] = command.split(' ');
+      const parts = command.split(' ');
+      const cmd = parts[0]!; // split always returns at least one element
+      const cmdArgs = parts.slice(1);
 
       // Security: Sanitize all arguments
       const sanitizedCmdArgs = this.validateArgs(cmdArgs);
       const sanitizedArgs = this.validateArgs(options.args);
       const allArgs = [...sanitizedCmdArgs, ...sanitizedArgs];
 
+      // Determine working directory
+      const workspaceRoot = this.getWorkspaceRoot();
+      const cwd: string | null = options.cwd ?? workspaceRoot;
+
       // Security: Use shell: false to prevent command injection
-      const childProcess = spawn(cmd, allArgs, {
-        cwd: options.cwd || this.getWorkspaceRoot() || undefined,
-        env: this.getSafeEnvironment(options.env),
+      // Build spawn options conditionally to satisfy exactOptionalPropertyTypes
+      const spawnOptions: any = {
         shell: false, // SECURITY: Never use shell: true
-      });
+      };
+      if (cwd) {
+        spawnOptions.cwd = cwd;
+      }
+      if (options.env) {
+        spawnOptions.env = this.getSafeEnvironment(options.env);
+      } else {
+        spawnOptions.env = this.getSafeEnvironment();
+      }
+      const childProcess: ReturnType<typeof spawn> = spawn(cmd, allArgs, spawnOptions);
 
       this.runningProcesses.set(processId, childProcess);
 
@@ -348,6 +413,11 @@ export class CLIRunner {
 
   /**
    * Build args from options object
+   * Converts key-value pairs into CLI flag arguments
+   *
+   * @param options - Object containing option key-value pairs
+   * @returns Array of CLI arguments
+   * @private
    */
   private buildArgs(options: Record<string, any>): string[] {
     const args: string[] = [];
@@ -370,10 +440,14 @@ export class CLIRunner {
   }
 
   /**
-   * Get workspace root
+   * Get workspace root directory
+   *
+   * @returns Path to workspace root or null if no workspace is open
+   * @private
    */
   private getWorkspaceRoot(): string | null {
     const folders = vscode.workspace.workspaceFolders;
-    return folders && folders.length > 0 ? folders[0].uri.fsPath : null;
+    const firstFolder = folders?.[0];
+    return firstFolder ? firstFolder.uri.fsPath : null;
   }
 }

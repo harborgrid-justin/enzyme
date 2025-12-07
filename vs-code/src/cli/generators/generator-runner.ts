@@ -1,31 +1,40 @@
+import * as path from 'node:path';
 import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs/promises';
-import { CLIRunner } from '../cli-runner';
-import { GeneratorOptions, GeneratorResult, GeneratorType, GeneratorTemplate } from './index';
-import { componentTemplate } from './templates/component.template';
-import { pageTemplate } from './templates/page.template';
-import { hookTemplate } from './templates/hook.template';
-import { featureTemplate } from './templates/feature.template';
-import { storeTemplate } from './templates/store.template';
+import { sanitizePath } from '../../core/security-utils';
 import { apiTemplate } from './templates/api.template';
+import { componentTemplate } from './templates/component.template';
+import { featureTemplate } from './templates/feature.template';
+import { hookTemplate } from './templates/hook.template';
+import { pageTemplate } from './templates/page.template';
+import { storeTemplate } from './templates/store.template';
+import type { CLIRunner } from '../cli-runner';
+import type { GeneratorOptions, GeneratorResult, GeneratorType, GeneratorTemplate } from './index';
 
+/**
+ *
+ */
 export class GeneratorRunner {
-  private templates: Map<GeneratorType, (options: GeneratorOptions) => GeneratorTemplate>;
+  private readonly templates: Map<GeneratorType, (options: GeneratorOptions) => GeneratorTemplate>;
 
-  constructor(private cliRunner: CLIRunner) {
+  /**
+   *
+   * @param cliRunner
+   */
+  constructor(private readonly cliRunner: CLIRunner) {
     this.templates = new Map();
     this.registerTemplates();
   }
 
   /**
    * generate code using CLI or fallback to direct generation
+   * @param type
+   * @param options
    */
   async generate(type: GeneratorType, options: GeneratorOptions): Promise<GeneratorResult> {
     try {
       // Try CLI first
       return await this.generateViaCLI(type, options);
-    } catch (error) {
+    } catch {
       // Fallback to direct generation
       vscode.window.showWarningMessage(
         'CLI generation failed, using built-in templates',
@@ -37,6 +46,8 @@ export class GeneratorRunner {
 
   /**
    * generate using CLI
+   * @param type
+   * @param options
    */
   private async generateViaCLI(type: GeneratorType, options: GeneratorOptions): Promise<GeneratorResult> {
     const result = await this.cliRunner.generate(type, options.name, options);
@@ -56,7 +67,10 @@ export class GeneratorRunner {
   }
 
   /**
-   * generate directly using templates
+   * SECURITY: Generate directly using templates with path validation
+   * Uses VS Code fs API for security and validates all file paths
+   * @param type
+   * @param options
    */
   private async generateDirect(type: GeneratorType, options: GeneratorOptions): Promise<GeneratorResult> {
     const templateFn = this.templates.get(type);
@@ -75,27 +89,53 @@ export class GeneratorRunner {
 
     for (const file of template.files) {
       try {
-        const fullPath = path.join(workspaceRoot, file.path);
+        // SECURITY: Sanitize file path to prevent path traversal
+        const sanitizedPath = sanitizePath(file.path, workspaceRoot);
+        if (!sanitizedPath) {
+          errors.push(`Invalid or unsafe file path: ${file.path}`);
+          continue;
+        }
 
-        // Check if file exists
+        // SECURITY: Build full path and verify it's within workspace
+        const fullPath = path.isAbsolute(sanitizedPath)
+          ? sanitizedPath
+          : path.join(workspaceRoot, sanitizedPath);
+
+        // SECURITY: Double-check the resolved path is within workspace
+        const normalizedFullPath = path.normalize(fullPath);
+        const normalizedWorkspace = path.normalize(workspaceRoot);
+        if (!normalizedFullPath.startsWith(normalizedWorkspace)) {
+          errors.push(`Path traversal detected: ${file.path}`);
+          continue;
+        }
+
+        const fileUri = vscode.Uri.file(fullPath);
+
+        // SECURITY: Check if file exists using VS Code fs API
         if (file.skipIfExists) {
           try {
-            await fs.access(fullPath);
+            await vscode.workspace.fs.stat(fileUri);
             continue; // Skip existing file
           } catch {
             // File doesn't exist, proceed
           }
         }
 
-        // Create directory if needed
-        const dir = path.dirname(fullPath);
-        await fs.mkdir(dir, { recursive: true });
+        // SECURITY: Create directory if needed using VS Code fs API
+        const dirUri = vscode.Uri.file(path.dirname(fullPath));
+        try {
+          await vscode.workspace.fs.createDirectory(dirUri);
+        } catch {
+          // Directory might already exist, which is fine
+        }
 
-        // Write file
-        await fs.writeFile(fullPath, file.content, 'utf-8');
+        // SECURITY: Write file using VS Code fs API
+        const contentBuffer = Buffer.from(file.content, 'utf-8');
+        await vscode.workspace.fs.writeFile(fileUri, contentBuffer);
         createdFiles.push(fullPath);
       } catch (error) {
-        errors.push(`Failed to create ${file.path}: ${error}`);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        errors.push(`Failed to create ${file.path}: ${errorMessage}`);
       }
     }
 
@@ -124,6 +164,7 @@ export class GeneratorRunner {
 
   /**
    * Parse generated files from CLI output
+   * @param output
    */
   private parseGeneratedFiles(output: string): string[] {
     const files: string[] = [];
@@ -131,8 +172,8 @@ export class GeneratorRunner {
 
     for (const line of lines) {
       // Match patterns like "Created src/components/Button.tsx"
-      const match = line.match(/(?:Created|Generated|Added)\s+(.+)/i);
-      if (match) {
+      const match = /(?:created|generated|added)\s+(.+)/i.exec(line);
+      if (match?.[1]) {
         files.push(match[1].trim());
       }
     }
@@ -142,6 +183,8 @@ export class GeneratorRunner {
 
   /**
    * Substitute variables in template content
+   * @param content
+   * @param variables
    */
   substituteVariables(content: string, variables: Record<string, string>): string {
     let result = content;
@@ -159,6 +202,7 @@ export class GeneratorRunner {
    */
   private getWorkspaceRoot(): string | null {
     const folders = vscode.workspace.workspaceFolders;
-    return folders && folders.length > 0 ? folders[0].uri.fsPath : null;
+    const firstFolder = folders?.[0];
+    return firstFolder ? firstFolder.uri.fsPath : null;
   }
 }

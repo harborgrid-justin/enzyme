@@ -1,8 +1,12 @@
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
 import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs/promises';
-import { BaseCommand, CommandContext, CommandMetadata } from '../base-command';
+import { BaseCommand } from '../base-command';
+import type { CommandContext, CommandMetadata } from '../base-command';
 
+/**
+ *
+ */
 interface BundleAnalysis {
   totalSize: number;
   chunks: ChunkInfo[];
@@ -10,12 +14,18 @@ interface BundleAnalysis {
   recommendations: string[];
 }
 
+/**
+ *
+ */
 interface ChunkInfo {
   name: string;
   size: number;
   modules: number;
 }
 
+/**
+ *
+ */
 interface DependencyInfo {
   name: string;
   size: number;
@@ -27,6 +37,9 @@ interface DependencyInfo {
  * Analyze build bundle and show size visualization
  */
 export class AnalyzeBundleCommand extends BaseCommand {
+  /**
+   *
+   */
   getMetadata(): CommandMetadata {
     return {
       id: 'enzyme.analysis.analyzeBundle',
@@ -36,18 +49,22 @@ export class AnalyzeBundleCommand extends BaseCommand {
     };
   }
 
+  /**
+   *
+   * @param _context
+   */
   protected async executeCommand(_context: CommandContext): Promise<void> {
     const workspaceFolder = await this.ensureWorkspaceFolder();
 
     // Check if build exists
-    const distPath = path.join(workspaceFolder!.uri.fsPath, 'dist');
-    const buildPath = path.join(workspaceFolder!.uri.fsPath, 'build');
+    const distributionPath = path.join(workspaceFolder.uri.fsPath, 'dist');
+    const buildPath = path.join(workspaceFolder.uri.fsPath, 'build');
 
     let bundlePath: string | undefined;
 
     try {
-      await fs.access(distPath);
-      bundlePath = distPath;
+      await fs.access(distributionPath);
+      bundlePath = distributionPath;
     } catch {
       try {
         await fs.access(buildPath);
@@ -72,7 +89,7 @@ export class AnalyzeBundleCommand extends BaseCommand {
       'Analyzing bundle...',
       async (progress) => {
         progress.report({ message: 'Scanning build output...' });
-        return this.analyzeBundle(bundlePath!);
+        return this.analyzeBundle(bundlePath);
       }
     );
 
@@ -87,12 +104,16 @@ export class AnalyzeBundleCommand extends BaseCommand {
     );
   }
 
+  /**
+   *
+   * @param workspaceFolder
+   */
   private async buildProject(
     workspaceFolder: vscode.WorkspaceFolder
   ): Promise<void> {
     const terminal = vscode.window.createTerminal({
       name: 'Enzyme Build',
-      cwd: workspaceFolder!.uri.fsPath,
+      cwd: workspaceFolder.uri.fsPath,
     });
 
     terminal.show();
@@ -103,6 +124,10 @@ export class AnalyzeBundleCommand extends BaseCommand {
     );
   }
 
+  /**
+   *
+   * @param bundlePath
+   */
   private async analyzeBundle(bundlePath: string): Promise<BundleAnalysis> {
     const analysis: BundleAnalysis = {
       totalSize: 0,
@@ -186,6 +211,11 @@ export class AnalyzeBundleCommand extends BaseCommand {
     }
   }
 
+  /**
+   *
+   * @param dir
+   * @param pattern
+   */
   private async findFiles(
     dir: string,
     pattern: RegExp
@@ -212,6 +242,10 @@ export class AnalyzeBundleCommand extends BaseCommand {
     return results;
   }
 
+  /**
+   *
+   * @param file
+   */
   private async estimateModuleCount(file: string): Promise<number> {
     try {
       const content = await fs.readFile(file, 'utf-8');
@@ -224,6 +258,10 @@ export class AnalyzeBundleCommand extends BaseCommand {
     }
   }
 
+  /**
+   *
+   * @param analysis
+   */
   private generateBundleRecommendations(analysis: BundleAnalysis): void {
     const ONE_MB = 1024 * 1024;
 
@@ -256,6 +294,10 @@ export class AnalyzeBundleCommand extends BaseCommand {
     }
   }
 
+  /**
+   *
+   * @param analysis
+   */
   private displayBundleAnalysis(analysis: BundleAnalysis): void {
     this.outputChannel.appendLine('='.repeat(80));
     this.outputChannel.appendLine('BUNDLE SIZE ANALYSIS');
@@ -270,10 +312,11 @@ export class AnalyzeBundleCommand extends BaseCommand {
 
     // Chunks
     this.outputChannel.appendLine('CHUNKS:');
+    const maxSize = analysis.chunks[0]?.size ?? 1;
     for (const chunk of analysis.chunks.slice(0, 10)) {
       const sizeBar = this.createSizeBar(
         chunk.size,
-        analysis.chunks[0].size
+        maxSize
       );
       this.outputChannel.appendLine(
         `  ${chunk.name.padEnd(40)} ${this.formatSize(chunk.size).padStart(10)} ${sizeBar}`
@@ -308,6 +351,10 @@ export class AnalyzeBundleCommand extends BaseCommand {
     this.outputChannel.appendLine('='.repeat(80));
   }
 
+  /**
+   *
+   * @param bytes
+   */
   private formatSize(bytes: number): string {
     const kb = bytes / 1024;
     const mb = kb / 1024;
@@ -316,11 +363,16 @@ export class AnalyzeBundleCommand extends BaseCommand {
       return `${mb.toFixed(2)} MB`;
     } else if (kb >= 1) {
       return `${kb.toFixed(2)} KB`;
-    } else {
+    } 
       return `${bytes} B`;
-    }
+    
   }
 
+  /**
+   *
+   * @param size
+   * @param maxSize
+   */
   private createSizeBar(size: number, maxSize: number): string {
     const barLength = 20;
     const filledLength = Math.round((size / maxSize) * barLength);

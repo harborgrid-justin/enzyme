@@ -7,6 +7,9 @@
 // Types
 // ============================================================================
 
+/**
+ *
+ */
 export interface WatchExpression {
   id: string;
   expression: string;
@@ -19,6 +22,9 @@ export interface WatchExpression {
   formatter?: (value: unknown) => string;
 }
 
+/**
+ *
+ */
 export interface WatchUpdate {
   expression: WatchExpression;
   oldValue: unknown;
@@ -26,19 +32,29 @@ export interface WatchUpdate {
   timestamp: number;
 }
 
+/**
+ *
+ */
 export type WatchCallback = (update: WatchUpdate) => void | Promise<void>;
 
 // ============================================================================
 // State Watch Provider
 // ============================================================================
 
+/**
+ *
+ */
 export class StateWatchProvider {
-  private watches = new Map<string, WatchExpression>();
-  private callbacks = new Map<string, Set<WatchCallback>>();
+  private readonly watches = new Map<string, WatchExpression>();
+  private readonly callbacks = new Map<string, Set<WatchCallback>>();
   private watchIdCounter = 0;
 
   /**
    * Add a watch expression
+   * @param expression
+   * @param storeName
+   * @param formatter
+   * @param condition
    */
   addWatch(
     expression: string,
@@ -49,11 +65,11 @@ export class StateWatchProvider {
     const watch: WatchExpression = {
       id: this.generateWatchId(),
       expression,
-      storeName,
+      ...(storeName !== undefined && { storeName }),
       enabled: true,
       lastUpdate: Date.now(),
-      formatter,
-      condition,
+      ...(formatter !== undefined && { formatter }),
+      ...(condition !== undefined && { condition }),
     };
 
     this.watches.set(watch.id, watch);
@@ -62,6 +78,7 @@ export class StateWatchProvider {
 
   /**
    * Remove a watch
+   * @param id
    */
   removeWatch(id: string): boolean {
     this.callbacks.delete(id);
@@ -70,6 +87,7 @@ export class StateWatchProvider {
 
   /**
    * Enable a watch
+   * @param id
    */
   enableWatch(id: string): void {
     const watch = this.watches.get(id);
@@ -80,6 +98,7 @@ export class StateWatchProvider {
 
   /**
    * Disable a watch
+   * @param id
    */
   disableWatch(id: string): void {
     const watch = this.watches.get(id);
@@ -90,9 +109,10 @@ export class StateWatchProvider {
 
   /**
    * Get all watches
+   * @param storeName
    */
   getWatches(storeName?: string): WatchExpression[] {
-    const watches = Array.from(this.watches.values());
+    const watches = [...this.watches.values()];
     if (storeName) {
       return watches.filter((w) => w.storeName === storeName);
     }
@@ -101,6 +121,7 @@ export class StateWatchProvider {
 
   /**
    * Get watch by ID
+   * @param id
    */
   getWatch(id: string): WatchExpression | undefined {
     return this.watches.get(id);
@@ -116,6 +137,8 @@ export class StateWatchProvider {
 
   /**
    * Register watch callback
+   * @param watchId
+   * @param callback
    */
   onWatch(watchId: string, callback: WatchCallback): () => void {
     if (!this.callbacks.has(watchId)) {
@@ -132,6 +155,8 @@ export class StateWatchProvider {
 
   /**
    * Update watch values from state
+   * @param storeName
+   * @param state
    */
   async updateWatches(storeName: string, state: Record<string, unknown>): Promise<void> {
     const watches = this.getWatches(storeName);
@@ -147,15 +172,17 @@ export class StateWatchProvider {
 
       try {
         newValue = this.evaluateExpression(watch.expression, state);
-      } catch (err) {
-        error = err instanceof Error ? err.message : String(err);
+      } catch (error_) {
+        error = error_ instanceof Error ? error_.message : String(error_);
         newValue = undefined;
       }
 
       // Check if value changed
       if (!this.deepEqual(oldValue, newValue) || error !== watch.error) {
         watch.value = newValue;
-        watch.error = error;
+        if (error !== undefined) {
+          watch.error = error;
+        }
         watch.lastUpdate = Date.now();
 
         // Check condition if specified
@@ -164,8 +191,8 @@ export class StateWatchProvider {
             if (!watch.condition(newValue)) {
               continue;
             }
-          } catch (err) {
-            console.error('Watch condition error:', err);
+          } catch (error_) {
+            console.error('Watch condition error:', error_);
             continue;
           }
         }
@@ -183,6 +210,7 @@ export class StateWatchProvider {
 
   /**
    * Get formatted watch value
+   * @param id
    */
   getFormattedValue(id: string): string | undefined {
     const watch = this.watches.get(id);
@@ -214,11 +242,13 @@ export class StateWatchProvider {
   /**
    * Evaluate expression against state
    * SECURITY: Restricted to safe property access only, no arbitrary code execution
+   * @param expression
+   * @param state
    */
   private evaluateExpression(expression: string, state: Record<string, unknown>): unknown {
     // Only allow simple path expressions for security
     // Patterns allowed: "property", "object.property", "array[0]", "nested.path.value"
-    if (!/^[a-zA-Z_$][\w$.[\]0-9]*$/.test(expression)) {
+    if (!/^[$A-Z_a-z][\w$.[\]]*$/.test(expression)) {
       throw new Error(
         'Invalid expression. Only simple property paths are allowed (e.g., "user.name", "items[0].value"). ' +
         'Complex expressions are disabled for security reasons.'
@@ -231,11 +261,14 @@ export class StateWatchProvider {
 
   /**
    * Safely evaluate a property path (e.g., "user.name" or "items[0].value")
+   * @param obj
+   * @param object
+   * @param path
    */
-  private evaluatePropertyPath(obj: Record<string, unknown>, path: string): unknown {
+  private evaluatePropertyPath(object: Record<string, unknown>, path: string): unknown {
     // Split by dots and handle array accessors
     const parts = path.split('.');
-    let current: unknown = obj;
+    let current: unknown = object;
 
     for (const part of parts) {
       if (current === null || current === undefined) {
@@ -243,11 +276,14 @@ export class StateWatchProvider {
       }
 
       // Handle array accessor like "items[0]"
-      const arrayMatch = part.match(/^([a-zA-Z_$][\w]*)(\[(\d+)\])$/);
+      const arrayMatch = /^([$A-Z_a-z]\w*)(\[(\d+)])$/.exec(part);
       if (arrayMatch) {
-        const [, prop, , index] = arrayMatch;
+        const [, property, , index] = arrayMatch;
+        if (!property || !index) {
+          return undefined;
+        }
         if (typeof current === 'object') {
-          current = (current as Record<string, unknown>)[prop];
+          current = (current as Record<string, unknown>)[property];
         } else {
           return undefined;
         }
@@ -256,8 +292,8 @@ export class StateWatchProvider {
           return undefined;
         }
 
-        const idx = parseInt(index, 10);
-        current = current[idx];
+        const index_ = Number.parseInt(index, 10);
+        current = current[index_];
       } else {
         // Simple property access
         if (typeof current === 'object') {
@@ -272,28 +308,8 @@ export class StateWatchProvider {
   }
 
   /**
-   * Get value at path in object
-   */
-  private getValueAtPath(obj: Record<string, unknown>, path: string): unknown {
-    const parts = path.split('.');
-    let current: unknown = obj;
-
-    for (const part of parts) {
-      if (current === null || current === undefined) {
-        return undefined;
-      }
-      if (typeof current === 'object') {
-        current = (current as Record<string, unknown>)[part];
-      } else {
-        return undefined;
-      }
-    }
-
-    return current;
-  }
-
-  /**
    * Default value formatter
+   * @param value
    */
   private defaultFormat(value: unknown): string {
     if (value === null) {
@@ -341,17 +357,19 @@ export class StateWatchProvider {
 
   /**
    * Deep equality check
+   * @param a
+   * @param b
    */
   private deepEqual(a: unknown, b: unknown): boolean {
-    if (a === b) return true;
-    if (a === null || b === null) return false;
-    if (typeof a !== typeof b) return false;
+    if (a === b) {return true;}
+    if (a === null || b === null) {return false;}
+    if (typeof a !== typeof b) {return false;}
 
     if (typeof a === 'object' && typeof b === 'object') {
       const aKeys = Object.keys(a);
       const bKeys = Object.keys(b);
 
-      if (aKeys.length !== bKeys.length) return false;
+      if (aKeys.length !== bKeys.length) {return false;}
 
       for (const key of aKeys) {
         if (!this.deepEqual((a as Record<string, unknown>)[key], (b as Record<string, unknown>)[key])) {
@@ -367,6 +385,8 @@ export class StateWatchProvider {
 
   /**
    * Notify callbacks
+   * @param watchId
+   * @param update
    */
   private async notifyCallbacks(watchId: string, update: WatchUpdate): Promise<void> {
     const callbacks = this.callbacks.get(watchId);

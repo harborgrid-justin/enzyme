@@ -1,8 +1,12 @@
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
 import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs/promises';
-import { BaseCommand, CommandContext, CommandMetadata } from '../base-command';
+import { BaseCommand } from '../base-command';
+import type { CommandContext, CommandMetadata } from '../base-command';
 
+/**
+ *
+ */
 interface StoreOptions {
   name: string;
   stateShape: StateField[];
@@ -11,6 +15,9 @@ interface StoreOptions {
   devToolsName: string;
 }
 
+/**
+ *
+ */
 interface StateField {
   name: string;
   type: string;
@@ -23,6 +30,9 @@ interface StateField {
  * Keybinding: Ctrl+Shift+G S
  */
 export class GenerateStoreCommand extends BaseCommand {
+  /**
+   *
+   */
   getMetadata(): CommandMetadata {
     return {
       id: 'enzyme.generate.store',
@@ -37,6 +47,10 @@ export class GenerateStoreCommand extends BaseCommand {
     };
   }
 
+  /**
+   *
+   * @param _context
+   */
   protected async executeCommand(_context: CommandContext): Promise<void> {
     const workspaceFolder = await this.ensureWorkspaceFolder();
 
@@ -71,6 +85,9 @@ export class GenerateStoreCommand extends BaseCommand {
     await this.showInfo(`Store "${options.name}" created successfully!`);
   }
 
+  /**
+   *
+   */
   private async gatherStoreOptions(): Promise<StoreOptions | undefined> {
     // Get store name
     const name = await this.showInputBox({
@@ -80,7 +97,7 @@ export class GenerateStoreCommand extends BaseCommand {
         if (!value) {
           return 'Store name is required';
         }
-        if (!/^[a-z][a-zA-Z0-9]*$/.test(value)) {
+        if (!/^[a-z][\dA-Za-z]*$/.test(value)) {
           return 'Store name must be in camelCase (e.g., userSettings)';
         }
         return undefined;
@@ -115,42 +132,45 @@ export class GenerateStoreCommand extends BaseCommand {
     const withPersistence = persistenceSelection.value;
 
     // DevTools option
-    const devToolsOptions = [
+    const developmentToolsOptions = [
       { label: 'Yes - Enable Redux DevTools', value: true },
       { label: 'No - Disable DevTools', value: false },
     ];
 
-    const devToolsSelection = await this.showQuickPick(devToolsOptions, {
+    const developmentToolsSelection = await this.showQuickPick(developmentToolsOptions, {
       title: 'Enable Redux DevTools Integration?',
       placeHolder: 'Should this store integrate with Redux DevTools?',
     });
 
-    if (!devToolsSelection) {
+    if (!developmentToolsSelection) {
       return undefined;
     }
 
-    const withDevTools = devToolsSelection.value;
+    const withDevelopmentTools = developmentToolsSelection.value;
 
     // DevTools name
-    let devToolsName = name;
-    if (withDevTools) {
+    let developmentToolsName = name;
+    if (withDevelopmentTools) {
       const customName = await this.showInputBox({
         prompt: 'Enter DevTools name (optional)',
         placeHolder: `${name} Store`,
         value: `${name} Store`,
       });
-      devToolsName = customName || `${name} Store`;
+      developmentToolsName = customName || `${name} Store`;
     }
 
     return {
       name,
       stateShape,
       withPersistence,
-      withDevTools,
-      devToolsName,
+      withDevTools: withDevelopmentTools,
+      devToolsName: developmentToolsName,
     };
   }
 
+  /**
+   *
+   */
   private async gatherStateFields(): Promise<StateField[]> {
     const fields: StateField[] = [];
     let continueAdding = true;
@@ -211,13 +231,19 @@ export class GenerateStoreCommand extends BaseCommand {
     return fields;
   }
 
+  /**
+   *
+   * @param workspaceFolder
+   * @param options
+   * @param token
+   */
   private async generateStore(
     workspaceFolder: vscode.WorkspaceFolder,
     options: StoreOptions,
     token: vscode.CancellationToken
   ): Promise<string> {
-    const srcPath = path.join(workspaceFolder.uri.fsPath, 'src');
-    const storePath = path.join(srcPath, 'store', 'slices');
+    const sourcePath = path.join(workspaceFolder.uri.fsPath, 'src');
+    const storePath = path.join(sourcePath, 'store', 'slices');
 
     // Create directory
     await fs.mkdir(storePath, { recursive: true });
@@ -232,11 +258,15 @@ export class GenerateStoreCommand extends BaseCommand {
     await fs.writeFile(storeFilePath, storeContent);
 
     // Update main store index
-    await this.updateStoreIndex(srcPath, options.name);
+    await this.updateStoreIndex(sourcePath, options.name);
 
     return storeFilePath;
   }
 
+  /**
+   *
+   * @param options
+   */
   private generateStoreContent(options: StoreOptions): string {
     const { name, stateShape, withPersistence, withDevTools, devToolsName } =
       options;
@@ -245,8 +275,8 @@ export class GenerateStoreCommand extends BaseCommand {
 
     // Generate imports
     const middlewareImports: string[] = [];
-    if (withDevTools) middlewareImports.push('devtools');
-    if (withPersistence) middlewareImports.push('persist');
+    if (withDevTools) {middlewareImports.push('devtools');}
+    if (withPersistence) {middlewareImports.push('persist');}
 
     const imports = `import { create } from 'zustand';${middlewareImports.length > 0 ? `\nimport { ${middlewareImports.join(', ')} } from 'zustand/middleware';` : ''}`;
 
@@ -330,11 +360,16 @@ ${selectors}
 `;
   }
 
+  /**
+   *
+   * @param sourcePath
+   * @param storeName
+   */
   private async updateStoreIndex(
-    srcPath: string,
+    sourcePath: string,
     storeName: string
   ): Promise<void> {
-    const indexPath = path.join(srcPath, 'store', 'index.ts');
+    const indexPath = path.join(sourcePath, 'store', 'index.ts');
     let indexContent = '';
 
     try {

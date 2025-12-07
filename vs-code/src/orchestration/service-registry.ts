@@ -3,7 +3,7 @@
  */
 
 import * as vscode from 'vscode';
-import { EventBus } from './event-bus';
+import type { EventBus } from './event-bus';
 
 /**
  * Service health status
@@ -78,17 +78,20 @@ export interface ServiceRegistration {
  */
 export class ServiceRegistry {
   private static instance: ServiceRegistry;
-  private services: Map<string, ServiceRegistration> = new Map();
-  private eventBus: EventBus;
-  private eventEmitter: vscode.EventEmitter<{ name: string; state: ServiceState }>;
+  private readonly services = new Map<string, ServiceRegistration>();
+  private readonly eventEmitter: vscode.EventEmitter<{ name: string; state: ServiceState }>;
 
-  private constructor(eventBus: EventBus) {
-    this.eventBus = eventBus;
+  /**
+   *
+   * @param _eventBus
+   */
+  private constructor(_eventBus: EventBus) {
     this.eventEmitter = new vscode.EventEmitter();
   }
 
   /**
    * Create the service registry
+   * @param eventBus
    */
   public static create(eventBus: EventBus): ServiceRegistry {
     if (!ServiceRegistry.instance) {
@@ -109,6 +112,8 @@ export class ServiceRegistry {
 
   /**
    * Register a service
+   * @param metadata
+   * @param service
    */
   public register(metadata: ServiceMetadata, service: IService): void {
     const registration: ServiceRegistration = {
@@ -130,6 +135,7 @@ export class ServiceRegistry {
 
   /**
    * Unregister a service
+   * @param name
    */
   public async unregister(name: string): Promise<void> {
     const registration = this.services.get(name);
@@ -146,6 +152,7 @@ export class ServiceRegistry {
 
   /**
    * Start a service
+   * @param name
    */
   public async start(name: string): Promise<void> {
     const registration = this.services.get(name);
@@ -189,6 +196,7 @@ export class ServiceRegistry {
 
   /**
    * Stop a service
+   * @param name
    */
   public async stop(name: string): Promise<void> {
     const registration = this.services.get(name);
@@ -224,6 +232,7 @@ export class ServiceRegistry {
 
   /**
    * Restart a service
+   * @param name
    */
   public async restart(name: string): Promise<void> {
     const registration = this.services.get(name);
@@ -253,6 +262,7 @@ export class ServiceRegistry {
 
   /**
    * Check service health
+   * @param name
    */
   public async checkHealth(name: string): Promise<ServiceHealth> {
     const registration = this.services.get(name);
@@ -269,7 +279,7 @@ export class ServiceRegistry {
           ? ServiceHealth.HEALTHY
           : ServiceHealth.UNHEALTHY;
       }
-    } catch (error) {
+    } catch {
       registration.health = ServiceHealth.UNHEALTHY;
     }
 
@@ -278,6 +288,7 @@ export class ServiceRegistry {
 
   /**
    * Get service state
+   * @param name
    */
   public getState(name: string): ServiceState | undefined {
     return this.services.get(name)?.state;
@@ -285,6 +296,7 @@ export class ServiceRegistry {
 
   /**
    * Get service health
+   * @param name
    */
   public getHealth(name: string): ServiceHealth | undefined {
     return this.services.get(name)?.health;
@@ -292,6 +304,7 @@ export class ServiceRegistry {
 
   /**
    * Get service metrics
+   * @param name
    */
   public getMetrics(name: string): ServiceMetrics | undefined {
     const registration = this.services.get(name);
@@ -308,6 +321,7 @@ export class ServiceRegistry {
 
   /**
    * Get service registration
+   * @param name
    */
   public getRegistration(name: string): ServiceRegistration | undefined {
     return this.services.get(name);
@@ -317,7 +331,7 @@ export class ServiceRegistry {
    * Get all service names
    */
   public getServiceNames(): string[] {
-    return Array.from(this.services.keys());
+    return [...this.services.keys()];
   }
 
   /**
@@ -387,6 +401,8 @@ export class ServiceRegistry {
 
   /**
    * Set service state
+   * @param name
+   * @param state
    */
   private setState(name: string, state: ServiceState): void {
     const registration = this.services.get(name);
@@ -398,6 +414,7 @@ export class ServiceRegistry {
 
   /**
    * Subscribe to state changes
+   * @param listener
    */
   public onStateChange(
     listener: (event: { name: string; state: ServiceState }) => void

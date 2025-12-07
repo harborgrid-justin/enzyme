@@ -7,6 +7,9 @@
 // Types
 // ============================================================================
 
+/**
+ *
+ */
 export interface DebugConfiguration {
   type: string;
   request: 'launch' | 'attach';
@@ -20,6 +23,9 @@ export interface DebugConfiguration {
   trace?: boolean;
 }
 
+/**
+ *
+ */
 export interface VariableScope {
   name: string;
   variablesReference: number;
@@ -28,6 +34,9 @@ export interface VariableScope {
   indexedVariables?: number;
 }
 
+/**
+ *
+ */
 export interface Variable {
   name: string;
   value: string;
@@ -36,6 +45,9 @@ export interface Variable {
   evaluateName?: string;
 }
 
+/**
+ *
+ */
 export interface StackFrame {
   id: number;
   name: string;
@@ -49,6 +61,9 @@ export interface StackFrame {
   endColumn?: number;
 }
 
+/**
+ *
+ */
 export interface Thread {
   id: number;
   name: string;
@@ -58,11 +73,14 @@ export interface Thread {
 // Enzyme Debug Adapter
 // ============================================================================
 
+/**
+ *
+ */
 export class EnzymeDebugAdapter {
   private isInitialized = false;
-  private variableHandles = new Map<number, unknown>();
+  private readonly variableHandles = new Map<number, unknown>();
   private handleCounter = 1;
-  private breakpoints = new Map<string, Set<number>>();
+  private readonly breakpoints = new Map<string, Set<number>>();
 
   /**
    * Initialize debug adapter
@@ -77,6 +95,8 @@ export class EnzymeDebugAdapter {
 
   /**
    * Set breakpoints for a file
+   * @param path
+   * @param lines
    */
   setBreakpoints(path: string, lines: number[]): Array<{ verified: boolean; line: number }> {
     const breakpoints = new Set(lines);
@@ -90,6 +110,7 @@ export class EnzymeDebugAdapter {
 
   /**
    * Clear breakpoints for a file
+   * @param path
    */
   clearBreakpoints(path: string): void {
     this.breakpoints.delete(path);
@@ -97,8 +118,9 @@ export class EnzymeDebugAdapter {
 
   /**
    * Get variable scopes for a stack frame
+   * @param _frameId
    */
-  getScopes(frameId: number): VariableScope[] {
+  getScopes(_frameId: number): VariableScope[] {
     // Return default scopes
     return [
       {
@@ -121,6 +143,7 @@ export class EnzymeDebugAdapter {
 
   /**
    * Get variables for a scope
+   * @param variablesReference
    */
   getVariables(variablesReference: number): Variable[] {
     const value = this.variableHandles.get(variablesReference);
@@ -136,6 +159,8 @@ export class EnzymeDebugAdapter {
    * Evaluate expression safely
    * SECURITY: Do NOT use eval() - it allows arbitrary code execution
    * Instead, use a safe expression parser for simple expressions
+   * @param expression
+   * @param frameId
    */
   evaluate(expression: string, frameId?: number): {
     result: string;
@@ -164,6 +189,8 @@ export class EnzymeDebugAdapter {
    * Safe expression evaluator
    * SECURITY: Only evaluates simple, safe expressions - no arbitrary code execution
    * Supports: literals (numbers, strings, booleans, null, undefined), JSON
+   * @param expression
+   * @param _frameId
    */
   private safeEvaluate(expression: string, _frameId?: number): { value: unknown; type: string } {
     const trimmed = expression.trim();
@@ -185,16 +212,16 @@ export class EnzymeDebugAdapter {
     }
 
     // Handle number literals
-    const num = Number(trimmed);
-    if (!isNaN(num) && /^-?\d*\.?\d+$/.test(trimmed)) {
-      return { value: num, type: 'number' };
+    const number_ = Number(trimmed);
+    if (!isNaN(number_) && /^-?\d*\.?\d+$/.test(trimmed)) {
+      return { value: number_, type: 'number' };
     }
 
     // Handle string literals (single or double quoted)
     if ((trimmed.startsWith('"') && trimmed.endsWith('"')) ||
         (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
-      const strValue = trimmed.slice(1, -1);
-      return { value: strValue, type: 'string' };
+      const stringValue = trimmed.slice(1, -1);
+      return { value: stringValue, type: 'string' };
     }
 
     // Handle JSON objects and arrays
@@ -219,23 +246,24 @@ export class EnzymeDebugAdapter {
 
   /**
    * Get stack trace
+   * @param _threadId
    */
-  getStackTrace(threadId: number): StackFrame[] {
+  getStackTrace(_threadId: number): StackFrame[] {
     // Return current stack
     const error = new Error();
     const stack = error.stack?.split('\n').slice(2) ?? [];
 
     return stack.map((line, index) => {
-      const match = line.match(/at (.+?) \((.+?):(\d+):(\d+)\)/);
+      const match = /at (.+?) \((.+?):(\d+):(\d+)\)/.exec(line);
 
       if (match) {
-        const [, name, path, lineStr, columnStr] = match;
+        const [, name, path, lineString, columnString] = match;
         return {
           id: index,
-          name: name.trim(),
-          source: { path },
-          line: parseInt(lineStr, 10),
-          column: parseInt(columnStr, 10),
+          name: name?.trim() ?? 'unknown',
+          source: { path: path ?? 'unknown' },
+          line: Number.parseInt(lineString ?? '0', 10),
+          column: Number.parseInt(columnString ?? '0', 10),
         };
       }
 
@@ -263,6 +291,7 @@ export class EnzymeDebugAdapter {
 
   /**
    * Continue execution
+   * @param threadId
    */
   continue(threadId: number): void {
     // Resume execution
@@ -271,6 +300,7 @@ export class EnzymeDebugAdapter {
 
   /**
    * Step over
+   * @param threadId
    */
   stepOver(threadId: number): void {
     console.log(`Step over in thread ${threadId}`);
@@ -278,6 +308,7 @@ export class EnzymeDebugAdapter {
 
   /**
    * Step into
+   * @param threadId
    */
   stepInto(threadId: number): void {
     console.log(`Step into in thread ${threadId}`);
@@ -285,6 +316,7 @@ export class EnzymeDebugAdapter {
 
   /**
    * Step out
+   * @param threadId
    */
   stepOut(threadId: number): void {
     console.log(`Step out in thread ${threadId}`);
@@ -292,6 +324,7 @@ export class EnzymeDebugAdapter {
 
   /**
    * Pause execution
+   * @param threadId
    */
   pause(threadId: number): void {
     console.log(`Pausing thread ${threadId}`);
@@ -308,6 +341,7 @@ export class EnzymeDebugAdapter {
 
   /**
    * Create variable handle
+   * @param value
    */
   private createVariableHandle(value: unknown): number {
     const handle = this.handleCounter++;
@@ -317,6 +351,7 @@ export class EnzymeDebugAdapter {
 
   /**
    * Convert value to variables
+   * @param value
    */
   private convertToVariables(value: unknown): Variable[] {
     if (value === null || value === undefined) {
@@ -336,12 +371,12 @@ export class EnzymeDebugAdapter {
         });
       }
     } else if (typeof value === 'object') {
-      for (const [key, val] of Object.entries(value)) {
+      for (const [key, value_] of Object.entries(value)) {
         variables.push({
           name: key,
-          value: this.formatValue(val),
-          type: typeof val,
-          variablesReference: this.isComplexType(val) ? this.createVariableHandle(val) : 0,
+          value: this.formatValue(value_),
+          type: typeof value_,
+          variablesReference: this.isComplexType(value_) ? this.createVariableHandle(value_) : 0,
           evaluateName: key,
         });
       }
@@ -352,19 +387,21 @@ export class EnzymeDebugAdapter {
 
   /**
    * Format value for display
+   * @param value
    */
   private formatValue(value: unknown): string {
-    if (value === null) return 'null';
-    if (value === undefined) return 'undefined';
-    if (typeof value === 'string') return `"${value}"`;
-    if (typeof value === 'number' || typeof value === 'boolean') return String(value);
-    if (Array.isArray(value)) return `Array(${value.length})`;
-    if (typeof value === 'object') return `Object(${Object.keys(value).length})`;
+    if (value === null) {return 'null';}
+    if (value === undefined) {return 'undefined';}
+    if (typeof value === 'string') {return `"${value}"`;}
+    if (typeof value === 'number' || typeof value === 'boolean') {return String(value);}
+    if (Array.isArray(value)) {return `Array(${value.length})`;}
+    if (typeof value === 'object') {return `Object(${Object.keys(value).length})`;}
     return String(value);
   }
 
   /**
    * Check if value is complex type
+   * @param value
    */
   private isComplexType(value: unknown): boolean {
     return (
