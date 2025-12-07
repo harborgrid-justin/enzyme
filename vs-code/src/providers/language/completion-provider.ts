@@ -5,8 +5,15 @@ import { getIndex } from './enzyme-index';
  * EnzymeCompletionProvider - Provides IntelliSense completions for Enzyme
  * Supports routes, hooks, components, imports, and configuration
  */
+/**
+ * PERFORMANCE: Completion provider with caching for better performance
+ * Caches completion results to avoid expensive re-computation
+ */
 export class EnzymeCompletionProvider implements vscode.CompletionItemProvider {
   private enzymeConfigItems: vscode.CompletionItem[] = [];
+  // PERFORMANCE: Cache completion results to avoid expensive re-computation
+  private completionCache = new Map<string, { items: vscode.CompletionItem[]; timestamp: number }>();
+  private readonly CACHE_TTL = 5000; // 5 seconds
 
   constructor() {
     this.initializeConfigCompletions();
@@ -135,14 +142,22 @@ export class EnzymeCompletionProvider implements vscode.CompletionItemProvider {
   }
 
   /**
-   * Provide route completions
+   * PERFORMANCE: Provide route completions with caching
    */
   private provideRouteCompletions(): vscode.CompletionItem[] {
+    const cacheKey = 'routes';
+    const cached = this.completionCache.get(cacheKey);
+
+    // Check cache validity
+    if (cached && (Date.now() - cached.timestamp) < this.CACHE_TTL) {
+      return cached.items;
+    }
+
     try {
       const index = getIndex();
       const routes = index.getAllRoutes();
 
-      return routes.map(route => {
+      const items = routes.map(route => {
         const item = new vscode.CompletionItem(
           route.name,
           vscode.CompletionItemKind.Constant
@@ -170,6 +185,10 @@ export class EnzymeCompletionProvider implements vscode.CompletionItemProvider {
 
         return item;
       });
+
+      // PERFORMANCE: Cache results
+      this.completionCache.set(cacheKey, { items, timestamp: Date.now() });
+      return items;
     } catch (error) {
       return [];
     }
@@ -184,14 +203,22 @@ export class EnzymeCompletionProvider implements vscode.CompletionItemProvider {
   }
 
   /**
-   * Provide hook completions
+   * PERFORMANCE: Provide hook completions with caching
    */
   private provideHookCompletions(): vscode.CompletionItem[] {
+    const cacheKey = 'hooks';
+    const cached = this.completionCache.get(cacheKey);
+
+    // Check cache validity
+    if (cached && (Date.now() - cached.timestamp) < this.CACHE_TTL) {
+      return cached.items;
+    }
+
     try {
       const index = getIndex();
       const hooks = index.getAllHooks();
 
-      return hooks.map(hook => {
+      const items = hooks.map(hook => {
         const item = new vscode.CompletionItem(
           hook.name,
           vscode.CompletionItemKind.Function
@@ -243,6 +270,10 @@ export class EnzymeCompletionProvider implements vscode.CompletionItemProvider {
 
         return item;
       });
+
+      // PERFORMANCE: Cache results
+      this.completionCache.set(cacheKey, { items, timestamp: Date.now() });
+      return items;
     } catch (error) {
       return [];
     }

@@ -21,24 +21,25 @@
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
 
-    /* Type Checking */
+    /* Type Checking - Enhanced for Better Code Quality */
     "strict": true,
-    "noImplicitAny": false,
-    "strictNullChecks": false,
+    "noImplicitAny": true,                         // Enforce explicit types
+    "strictNullChecks": true,                      // Enforce null checking
     "strictFunctionTypes": true,
     "strictBindCallApply": true,
-    "strictPropertyInitialization": false,
+    "strictPropertyInitialization": true,          // Ensure class properties are initialized
     "noImplicitThis": true,
     "alwaysStrict": true,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "noImplicitReturns": false,
+    "noUnusedLocals": true,                        // Flag unused local variables
+    "noUnusedParameters": true,                    // Flag unused parameters
+    "noImplicitReturns": true,                     // Ensure all code paths return a value
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": false,
-    "noImplicitOverride": false,
-    "noPropertyAccessFromIndexSignature": false,
+    "noUncheckedIndexedAccess": true,              // Add undefined to index access
+    "noImplicitOverride": true,                    // Require override keyword
+    "noPropertyAccessFromIndexSignature": true,    // Enforce dot notation
     "allowUnusedLabels": false,
     "allowUnreachableCode": false,
+    "exactOptionalPropertyTypes": true,            // Strict optional property types
 
     /* Completeness */
     "skipLibCheck": true,

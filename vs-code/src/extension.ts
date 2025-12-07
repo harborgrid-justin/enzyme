@@ -15,6 +15,7 @@ import {
 } from './core/workspace';
 import { registerTreeViewProviders } from './providers/treeviews/register-treeviews';
 import { registerWebViewProviders } from './providers/webviews/register-webviews';
+import { performanceMonitor } from './core/performance-monitor';
 
 // NOTE: File watchers are now stored in context.subscriptions to avoid module-level state
 
@@ -22,7 +23,12 @@ import { registerWebViewProviders } from './providers/webviews/register-webviews
  * Activate the extension
  * This is called when the extension is first activated
  */
+/**
+ * PERFORMANCE: Extension activation with performance monitoring
+ * Tracks activation time to ensure fast startup
+ */
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
+  performanceMonitor.start('extension.activation');
   logger.header(`Activating ${EXTENSION_NAME}`);
 
   try {
@@ -52,6 +58,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     vscode.window.showErrorMessage(
       `Failed to activate ${EXTENSION_NAME}: ${error instanceof Error ? error.message : String(error)}`
     );
+  } finally {
+    const activationTime = performanceMonitor.end('extension.activation');
+    logger.info(`Extension activation completed in ${activationTime?.toFixed(2)}ms`);
   }
 }
 
@@ -148,15 +157,19 @@ export async function deactivate(): Promise<void> {
  * PERFORMANCE: Initialize Enzyme workspace asynchronously after activation
  * This prevents blocking the extension host during activation
  */
+/**
+ * PERFORMANCE: Initialize Enzyme workspace with performance tracking
+ */
 async function initializeEnzymeWorkspace(
   enzymeContext: EnzymeExtensionContext,
   context: vscode.ExtensionContext
 ): Promise<void> {
-  logger.info('Initializing Enzyme workspace (deferred)');
+  return performanceMonitor.measure('workspace.initialization', async () => {
+    logger.info('Initializing Enzyme workspace (deferred)');
 
-  // Detect Enzyme workspace
-  const isEnzymeWorkspace = await detectEnzymeProject();
-  logger.info(`Enzyme workspace detected: ${isEnzymeWorkspace}`);
+    // Detect Enzyme workspace
+    const isEnzymeWorkspace = await detectEnzymeProject();
+    logger.info(`Enzyme workspace detected: ${isEnzymeWorkspace}`);
 
   // Set context keys for command enablement (must be done before showing UI)
   await vscode.commands.executeCommand('setContext', 'enzyme:isEnzymeProject', isEnzymeWorkspace);
@@ -228,7 +241,8 @@ async function initializeEnzymeWorkspace(
     });
   }
 
-  logger.success('Enzyme workspace initialization complete');
+    logger.success('Enzyme workspace initialization complete');
+  });
 }
 
 /**

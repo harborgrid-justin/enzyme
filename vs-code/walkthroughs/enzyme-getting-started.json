@@ -1,0 +1,71 @@
+{
+  "id": "enzyme.gettingStarted",
+  "title": "Get Started with Enzyme Framework",
+  "description": "Learn how to build enterprise React applications with Enzyme",
+  "steps": [
+    {
+      "id": "verify-project",
+      "title": "Verify Your Enzyme Project",
+      "description": "The extension automatically detects Enzyme projects. Let's check if this workspace contains an Enzyme project.\n\n[Detect Enzyme Project](command:enzyme.workspace.detect)",
+      "media": {
+        "markdown": "media/walkthroughs/verify-project.md"
+      }
+    },
+    {
+      "id": "initialize-project",
+      "title": "Initialize Enzyme (New Projects)",
+      "description": "Starting a new project? Initialize Enzyme configuration to get started.\n\n[Initialize Enzyme Project](command:enzyme.init)",
+      "media": {
+        "markdown": "media/walkthroughs/initialize-project.md"
+      }
+    },
+    {
+      "id": "generate-component",
+      "title": "Generate Your First Component",
+      "description": "Create React components with TypeScript, proper imports, and optional tests.\n\n[Generate Component](command:enzyme.generate.component)",
+      "media": {
+        "markdown": "media/walkthroughs/generate-component.md"
+      }
+    },
+    {
+      "id": "create-feature",
+      "title": "Create a Feature Module",
+      "description": "Organize your app with feature-based architecture. Features are self-contained modules with components, routes, state, and API clients.\n\n[Generate Feature](command:enzyme.generate.feature)",
+      "media": {
+        "markdown": "media/walkthroughs/create-feature.md"
+      }
+    },
+    {
+      "id": "explore-project",
+      "title": "Explore Project Structure",
+      "description": "Use the Enzyme Explorer to browse your features, routes, components, stores, and API clients. Click the Enzyme icon in the Activity Bar.",
+      "media": {
+        "markdown": "media/walkthroughs/explore-project.md"
+      }
+    },
+    {
+      "id": "use-snippets",
+      "title": "Use Code Snippets",
+      "description": "Accelerate development with built-in code snippets. Type prefixes like `enzyme-component`, `enzyme-hook`, `enzyme-store` in TypeScript files.\n\n[Show All Snippets](command:enzyme.snippets.show)",
+      "media": {
+        "markdown": "media/walkthroughs/use-snippets.md"
+      }
+    },
+    {
+      "id": "validate-code",
+      "title": "Validate Configuration",
+      "description": "Enzyme validates your configuration and routes in real-time.\n\n[Validate Config](command:enzyme.validate.config)\n[Validate Routes](command:enzyme.validate.routes)",
+      "media": {
+        "markdown": "media/walkthroughs/validate-code.md"
+      }
+    },
+    {
+      "id": "analyze-performance",
+      "title": "Monitor Performance",
+      "description": "Analyze and optimize your application's performance.\n\n[Analyze Performance](command:enzyme.analyze.performance)",
+      "media": {
+        "markdown": "media/walkthroughs/analyze-performance.md"
+      }
+    }
+  ]
+}

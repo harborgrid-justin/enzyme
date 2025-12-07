@@ -27,6 +27,10 @@ export abstract class BaseWebViewPanel {
 	protected title: string;
 	protected options: WebViewPanelOptions;
 
+	/**
+	 * PERFORMANCE: Default retainContextWhenHidden to false to reduce memory usage
+	 * Only set to true for webviews that need to preserve state when hidden
+	 */
 	constructor(
 		context: vscode.ExtensionContext,
 		viewType: string,
@@ -37,7 +41,7 @@ export abstract class BaseWebViewPanel {
 		this.viewType = viewType;
 		this.title = title;
 		this.options = {
-			retainContextWhenHidden: options.retainContextWhenHidden ?? true,
+			retainContextWhenHidden: options.retainContextWhenHidden ?? false, // PERFORMANCE: Changed default from true to false
 			enableFindWidget: options.enableFindWidget ?? false,
 			enableCommandUris: options.enableCommandUris ?? false,
 		};
@@ -55,7 +59,8 @@ export abstract class BaseWebViewPanel {
 	}
 
 	/**
-	 * Create a new WebView panel
+	 * PERFORMANCE: Create webview panel with lazy HTML loading
+	 * HTML content is only generated when the panel becomes visible
 	 */
 	protected createPanel(): void {
 		const columnToShowIn = vscode.window.activeTextEditor
@@ -79,7 +84,10 @@ export abstract class BaseWebViewPanel {
 			}
 		);
 
-		this.panel.webview.html = this.getHtmlContent(this.panel.webview);
+		// PERFORMANCE: Lazy load HTML content only when visible
+		if (this.panel.visible) {
+			this.panel.webview.html = this.getHtmlContent(this.panel.webview);
+		}
 		this.panel.iconPath = this.getIconPath();
 
 		// Handle messages from the webview
@@ -96,10 +104,14 @@ export abstract class BaseWebViewPanel {
 			this.disposables
 		);
 
-		// Handle view state changes
+		// PERFORMANCE: Handle view state changes with lazy content loading
 		this.panel.onDidChangeViewState(
 			(e) => {
 				if (e.webviewPanel.visible) {
+					// PERFORMANCE: Load HTML content when panel becomes visible
+					if (!e.webviewPanel.webview.html || e.webviewPanel.webview.html.length < 100) {
+						e.webviewPanel.webview.html = this.getHtmlContent(e.webviewPanel.webview);
+					}
 					this.onPanelVisible();
 				} else {
 					this.onPanelHidden();
@@ -115,6 +127,7 @@ export abstract class BaseWebViewPanel {
 
 	/**
 	 * Generate HTML content for the webview
+	 * SECURITY: Implements strict Content Security Policy
 	 */
 	protected getHtmlContent(webview: vscode.Webview): string {
 		const nonce = this.getNonce();
@@ -123,12 +136,15 @@ export abstract class BaseWebViewPanel {
 		// Get the current color theme
 		const theme = this.getCurrentTheme();
 
+		// SECURITY: Build strict CSP
+		const csp = this.buildContentSecurityPolicy(cspSource, nonce);
+
 		return `<!DOCTYPE html>
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${cspSource} 'nonce-${nonce}'; script-src 'nonce-${nonce}'; font-src ${cspSource}; img-src ${cspSource} https: data:; connect-src https:;">
+	<meta http-equiv="Content-Security-Policy" content="${csp}">
 	<title>${this.title}</title>
 	${this.getStyles(webview, nonce)}
 </head>
@@ -137,6 +153,69 @@ export abstract class BaseWebViewPanel {
 	${this.getScripts(webview, nonce)}
 </body>
 </html>`;
+	}
+
+	/**
+	 * SECURITY: Build strict Content Security Policy
+	 *
+	 * Implements defense-in-depth CSP following OWASP and Microsoft VS Code guidelines:
+	 * - Block everything by default (default-src 'none')
+	 * - Only allow vetted resources with nonces
+	 * - No eval() or unsafe-inline
+	 * - Prevent clickjacking (frame-ancestors 'none')
+	 * - Block form submissions (form-action 'none')
+	 * - Prevent base tag hijacking (base-uri 'none')
+	 *
+	 * Override this method in subclasses to customize CSP for specific webviews
+	 *
+	 * @param cspSource - VS Code webview CSP source
+	 * @param nonce - Cryptographic nonce for inline scripts/styles
+	 * @returns CSP header value
+	 */
+	protected buildContentSecurityPolicy(cspSource: string, nonce: string): string {
+		// SECURITY: Start with strictest policy - deny everything
+		const directives = [
+			"default-src 'none'",
+
+			// SECURITY: Only allow styles from extension with nonce (no unsafe-inline)
+			`style-src ${cspSource} 'nonce-${nonce}'`,
+
+			// SECURITY: Only allow scripts with nonce (no eval, no unsafe-inline, no unsafe-eval)
+			`script-src 'nonce-${nonce}'`,
+
+			// SECURITY: Only allow fonts from extension
+			`font-src ${cspSource}`,
+
+			// SECURITY: Only allow HTTPS images, data URIs, and extension resources
+			// Note: 'https:' allows any HTTPS image source (required for some features)
+			// Override this method if you need stricter image CSP
+			`img-src ${cspSource} https: data:`,
+
+			// SECURITY: Only allow connections to extension resources by default
+			// Override this method if you need to connect to external APIs
+			`connect-src ${cspSource}`,
+
+			// SECURITY: Block object/embed/applet tags
+			"object-src 'none'",
+
+			// SECURITY: Prevent base tag hijacking
+			"base-uri 'none'",
+
+			// SECURITY: Block form submissions (webviews should use postMessage)
+			"form-action 'none'",
+
+			// SECURITY: Prevent framing (clickjacking protection)
+			"frame-ancestors 'none'",
+
+			// SECURITY: Disable plugins
+			"plugin-types 'none'",
+
+			// SECURITY: Block worker/shared-worker (unless specifically needed)
+			"worker-src 'none'",
+			"child-src 'none'",
+		];
+
+		return directives.join('; ');
 	}
 
 	/**

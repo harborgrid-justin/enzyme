@@ -45,3 +45,13 @@ yarn-error.log*
 
 # Misc
 .cache/
+
+# Coverage reports
+coverage/
+*.lcov
+.nyc_output/
+
+# Test artifacts
+.vitest/
+test-results/
+

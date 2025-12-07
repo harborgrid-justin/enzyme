@@ -44,6 +44,14 @@ export type {
 
 // Coordinators
 export {
+  IntegrationCoordinator,
+  IntegrationPhase,
+} from './integration-coordinator';
+export type {
+  IntegrationStatus,
+} from './integration-coordinator';
+
+export {
   IndexingCoordinator,
 } from './indexing-coordinator';
 export type {

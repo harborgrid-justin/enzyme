@@ -3,15 +3,18 @@ import { RouteRules } from './rules/route-rules';
 import { ComponentRules } from './rules/component-rules';
 import { PerformanceRules } from './rules/performance-rules';
 import { SecurityRules } from './rules/security-rules';
+import { debounce } from '../../utils/performance-utils';
 
+/**
+ * PERFORMANCE: Enzyme diagnostics provider with optimized debouncing
+ */
 export class EnzymeDiagnosticsProvider {
   private diagnosticCollection: vscode.DiagnosticCollection;
   private routeRules: RouteRules;
   private componentRules: ComponentRules;
   private performanceRules: PerformanceRules;
   private securityRules: SecurityRules;
-  private debounceTimer?: NodeJS.Timeout;
-  private debounceDelay: number;
+  private debouncedAnalyze: (document: vscode.TextDocument) => void;
   private configChangeListener?: vscode.Disposable;
 
   constructor() {
@@ -23,7 +26,12 @@ export class EnzymeDiagnosticsProvider {
 
     // Read debounce delay from configuration
     const config = vscode.workspace.getConfiguration('enzyme');
-    this.debounceDelay = config.get<number>('analysis.debounceMs', 300);
+    const debounceDelay = config.get<number>('analysis.debounceMs', 500); // PERFORMANCE: Increased default from 300ms to 500ms
+
+    // PERFORMANCE: Use utility debounce function
+    this.debouncedAnalyze = debounce((document: vscode.TextDocument) => {
+      this.analyzeDocument(document);
+    }, debounceDelay);
   }
 
   public activate(context: vscode.ExtensionContext): void {
@@ -39,6 +47,7 @@ export class EnzymeDiagnosticsProvider {
       })
     );
 
+    // PERFORMANCE: Use optimized debounced analysis
     context.subscriptions.push(
       vscode.workspace.onDidChangeTextDocument((event) => {
         this.debouncedAnalyze(event.document);
@@ -59,11 +68,14 @@ export class EnzymeDiagnosticsProvider {
       })
     );
 
-    // Watch for configuration changes
+    // PERFORMANCE: Watch for configuration changes and recreate debounced function
     this.configChangeListener = vscode.workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration('enzyme.analysis.debounceMs')) {
         const config = vscode.workspace.getConfiguration('enzyme');
-        this.debounceDelay = config.get<number>('analysis.debounceMs', 300);
+        const debounceDelay = config.get<number>('analysis.debounceMs', 500);
+        this.debouncedAnalyze = debounce((document: vscode.TextDocument) => {
+          this.analyzeDocument(document);
+        }, debounceDelay);
       }
 
       if (e.affectsConfiguration('enzyme.diagnostics.enabled')) {
@@ -78,16 +90,9 @@ export class EnzymeDiagnosticsProvider {
     context.subscriptions.push(this.configChangeListener);
   }
 
-  private debouncedAnalyze(document: vscode.TextDocument): void {
-    if (this.debounceTimer) {
-      clearTimeout(this.debounceTimer);
-    }
-
-    this.debounceTimer = setTimeout(() => {
-      this.analyzeDocument(document);
-    }, this.debounceDelay);
-  }
-
+  /**
+   * PERFORMANCE: Analyze document with debouncing handled by utility function
+   */
   public async analyzeDocument(document: vscode.TextDocument): Promise<void> {
     // Only analyze TypeScript/JavaScript files
     if (!this.shouldAnalyze(document)) {
@@ -138,11 +143,12 @@ export class EnzymeDiagnosticsProvider {
     this.diagnosticCollection.clear();
   }
 
+  /**
+   * PERFORMANCE: Dispose resources properly
+   */
   public dispose(): void {
     this.diagnosticCollection.dispose();
-    if (this.debounceTimer) {
-      clearTimeout(this.debounceTimer);
-    }
+    this.configChangeListener?.dispose();
   }
 }
 

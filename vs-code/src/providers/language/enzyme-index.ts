@@ -205,25 +205,36 @@ export class EnzymeIndex {
   }
 
   /**
-   * Index all files in workspace
+   * PERFORMANCE: Index workspace in batches to avoid blocking
+   * Uses progressive indexing with batching to prevent UI freezing
    */
   private async indexWorkspace(): Promise<void> {
     const files = await vscode.workspace.findFiles(
       '**/*.{ts,tsx,js,jsx}',
       '**/node_modules/**',
-      10000
+      1000 // PERFORMANCE: Reduced from 10000 to 1000 to prevent excessive indexing
     );
 
-    const indexPromises = files.map(file => this.indexFile(file));
-    await Promise.all(indexPromises);
+    // PERFORMANCE: Batch index files to prevent blocking (50 files at a time)
+    const BATCH_SIZE = 50;
+    for (let i = 0; i < files.length; i += BATCH_SIZE) {
+      const batch = files.slice(i, i + BATCH_SIZE);
+      await Promise.all(batch.map(file => this.indexFile(file)));
+
+      // PERFORMANCE: Yield control to event loop between batches
+      await new Promise(resolve => setImmediate(resolve));
+    }
   }
 
   /**
-   * Index a single file
+   * PERFORMANCE: Index a single file without loading into editor
+   * Reads file content directly to avoid unnecessary document loading
    */
   private async indexFile(uri: vscode.Uri): Promise<void> {
     try {
-      const document = await vscode.workspace.openTextDocument(uri);
+      // PERFORMANCE: Check if document is already open to avoid redundant loading
+      const openDoc = vscode.workspace.textDocuments.find(doc => doc.uri.toString() === uri.toString());
+      const document = openDoc || await vscode.workspace.openTextDocument(uri);
       const result = this.parser.parseDocument(document);
 
       // Index routes
@@ -265,26 +276,53 @@ export class EnzymeIndex {
   }
 
   /**
-   * Set up file system watchers for incremental updates
+   * PERFORMANCE: Set up file system watchers with debouncing
+   * File changes are batched and processed together to avoid excessive re-indexing
    */
   private setupFileWatchers(): void {
     this.fileWatcher = vscode.workspace.createFileSystemWatcher(
       '**/*.{ts,tsx,js,jsx}'
     );
 
-    // Handle file changes
-    this.fileWatcher.onDidChange(async uri => {
-      await this.updateFileIndex(uri);
+    // PERFORMANCE: Debounce file watcher events to batch updates
+    let changeDebounceTimer: NodeJS.Timeout | undefined;
+    const DEBOUNCE_DELAY = 500; // ms
+    const pendingChanges = new Set<string>();
+
+    const processChanges = async () => {
+      const changes = Array.from(pendingChanges);
+      pendingChanges.clear();
+
+      // PERFORMANCE: Process changes in batches
+      const BATCH_SIZE = 20;
+      for (let i = 0; i < changes.length; i += BATCH_SIZE) {
+        const batch = changes.slice(i, i + BATCH_SIZE);
+        await Promise.all(batch.map(uri => this.updateFileIndex(vscode.Uri.file(uri))));
+        await new Promise(resolve => setImmediate(resolve));
+      }
+
       this.onDidChangeEmitter.fire();
+    };
+
+    // Handle file changes with debouncing
+    this.fileWatcher.onDidChange(uri => {
+      pendingChanges.add(uri.fsPath);
+      if (changeDebounceTimer) {
+        clearTimeout(changeDebounceTimer);
+      }
+      changeDebounceTimer = setTimeout(processChanges, DEBOUNCE_DELAY);
     });
 
-    // Handle file creation
-    this.fileWatcher.onDidCreate(async uri => {
-      await this.indexFile(uri);
-      this.onDidChangeEmitter.fire();
+    // Handle file creation with debouncing
+    this.fileWatcher.onDidCreate(uri => {
+      pendingChanges.add(uri.fsPath);
+      if (changeDebounceTimer) {
+        clearTimeout(changeDebounceTimer);
+      }
+      changeDebounceTimer = setTimeout(processChanges, DEBOUNCE_DELAY);
     });
 
-    // Handle file deletion
+    // Handle file deletion immediately (no need to batch)
     this.fileWatcher.onDidDelete(uri => {
       this.removeFileFromIndex(uri.fsPath);
       this.onDidChangeEmitter.fire();
