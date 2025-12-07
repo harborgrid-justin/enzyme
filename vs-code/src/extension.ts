@@ -26,6 +26,61 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   logger.header(`Activating ${EXTENSION_NAME}`);
 
   try {
+    // SECURITY: Check workspace trust before performing any operations
+    // Per VS Code Extension Guidelines, extensions should respect workspace trust
+    if (!vscode.workspace.isTrusted) {
+      logger.warn('Workspace is not trusted. Running in restricted mode.');
+
+      // Register listener for when workspace becomes trusted
+      const trustDisposable = vscode.workspace.onDidGrantWorkspaceTrust(async () => {
+        logger.info('Workspace trust granted. Enabling full functionality.');
+        await initializeFullFunctionality(context);
+      });
+      context.subscriptions.push(trustDisposable);
+
+      // Only register safe commands in untrusted workspaces
+      registerSafeCommands(context);
+
+      logger.info(`${EXTENSION_NAME} activated in restricted mode (untrusted workspace)`);
+      return;
+    }
+
+    await initializeFullFunctionality(context);
+
+  } catch (error) {
+    logger.error('Failed to activate extension', error);
+    vscode.window.showErrorMessage(
+      `Failed to activate ${EXTENSION_NAME}: ${error instanceof Error ? error.message : String(error)}`
+    );
+  }
+}
+
+/**
+ * SECURITY: Register only safe commands for untrusted workspaces
+ * These commands don't execute code or access sensitive files
+ */
+function registerSafeCommands(context: vscode.ExtensionContext): void {
+  // Documentation commands are safe
+  context.subscriptions.push(
+    vscode.commands.registerCommand(COMMANDS.DOCS_OPEN, async () => {
+      await vscode.env.openExternal(vscode.Uri.parse(URLS.DOCUMENTATION));
+    })
+  );
+
+  // Show logs is safe
+  context.subscriptions.push(
+    vscode.commands.registerCommand(COMMANDS.DEBUG_SHOW_LOGS, async () => {
+      logger.show();
+    })
+  );
+
+  logger.info('Safe commands registered for untrusted workspace');
+}
+
+/**
+ * Initialize full extension functionality (for trusted workspaces)
+ */
+async function initializeFullFunctionality(context: vscode.ExtensionContext): Promise<void> {
     // Initialize the extension context singleton
     const enzymeContext = EnzymeExtensionContext.initialize(context);
     logger.info('Extension context initialized');
@@ -62,13 +117,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     isFirstActivationCheck(enzymeContext).catch(error => {
       logger.error('Failed to check first activation', error);
     });
-
-  } catch (error) {
-    logger.error('Failed to activate extension', error);
-    vscode.window.showErrorMessage(
-      `Failed to activate ${EXTENSION_NAME}: ${error instanceof Error ? error.message : String(error)}`
-    );
-  }
 }
 
 /**

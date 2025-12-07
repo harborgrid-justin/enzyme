@@ -1,10 +1,49 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs/promises';
-import { exec } from 'child_process';
-import { promisify } from 'util';
+import { spawn } from 'child_process';
 
-const execAsync = promisify(exec);
+/**
+ * SECURITY: Execute command safely using spawn with shell: false
+ * This prevents command injection attacks by not using shell interpolation
+ */
+async function execSafe(command: string, args: string[], timeout = 5000): Promise<{ stdout: string; stderr: string }> {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, {
+      shell: false, // SECURITY: Never use shell: true to prevent injection
+      timeout,
+    });
+
+    let stdout = '';
+    let stderr = '';
+
+    child.stdout.on('data', (data) => {
+      stdout += data.toString();
+    });
+
+    child.stderr.on('data', (data) => {
+      stderr += data.toString();
+    });
+
+    child.on('error', (error) => {
+      reject(error);
+    });
+
+    child.on('close', (code) => {
+      if (code === 0) {
+        resolve({ stdout, stderr });
+      } else {
+        reject(new Error(`Command exited with code ${code}`));
+      }
+    });
+
+    // Handle timeout
+    setTimeout(() => {
+      child.kill();
+      reject(new Error('Command timed out'));
+    }, timeout);
+  });
+}
 
 export interface CLIInfo {
   path: string;
@@ -112,15 +151,20 @@ export class CLIDetector {
 
   /**
    * Detect global installation
+   * SECURITY: Uses execSafe with shell: false to prevent command injection
    */
   private async detectGlobal(): Promise<CLIInfo | null> {
     try {
-      const { stdout } = await execAsync('which enzyme', {
-        timeout: 5000,
-      });
+      // SECURITY: Use 'which' command with no shell interpolation
+      const { stdout } = await execSafe('which', ['enzyme']);
 
       const globalPath = stdout.trim();
       if (!globalPath) {
+        return null;
+      }
+
+      // SECURITY: Validate the path is a real file path before using
+      if (!this.isValidExecutablePath(globalPath)) {
         return null;
       }
 
@@ -139,21 +183,50 @@ export class CLIDetector {
   }
 
   /**
+   * SECURITY: Validate that a path looks like a legitimate executable path
+   * This prevents path traversal and injection attacks
+   */
+  private isValidExecutablePath(pathStr: string): boolean {
+    // Must be an absolute path
+    if (!path.isAbsolute(pathStr)) {
+      return false;
+    }
+
+    // No shell metacharacters allowed
+    const shellMetaChars = /[;&|`$(){}[\]<>!#*?~\\'"]/;
+    if (shellMetaChars.test(pathStr)) {
+      return false;
+    }
+
+    // No path traversal
+    if (pathStr.includes('..')) {
+      return false;
+    }
+
+    // Basic path format check
+    if (!/^[/a-zA-Z0-9._-]+$/.test(pathStr)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
    * Detect npx availability
+   * SECURITY: Uses execSafe with shell: false to prevent command injection
    */
   private async detectNpx(): Promise<CLIInfo | null> {
     try {
-      const { stdout } = await execAsync('npx --version', {
-        timeout: 5000,
-      });
+      // SECURITY: Use npx command with arguments passed separately
+      const { stdout } = await execSafe('npx', ['--version']);
 
       if (!stdout.trim()) {
         return null;
       }
 
       // npx can run @enzyme/cli without installation
-      const version = await this.extractVersion('npx @enzyme/cli');
-      const features = await this.detectFeatures('npx @enzyme/cli');
+      const version = await this.extractVersionNpx();
+      const features = await this.detectFeaturesNpx();
 
       return {
         path: 'npx @enzyme/cli',
@@ -167,13 +240,62 @@ export class CLIDetector {
   }
 
   /**
+   * Extract version using npx (separate method for security)
+   */
+  private async extractVersionNpx(): Promise<string> {
+    try {
+      const { stdout } = await execSafe('npx', ['@enzyme/cli', '--version']);
+      return stdout.trim() || '0.0.0';
+    } catch {
+      return '0.0.0';
+    }
+  }
+
+  /**
+   * Detect features using npx (separate method for security)
+   */
+  private async detectFeaturesNpx(): Promise<Set<string>> {
+    const features = new Set<string>();
+
+    try {
+      const { stdout } = await execSafe('npx', ['@enzyme/cli', '--help']);
+
+      // Parse help output for available commands
+      const lines = stdout.split('\n');
+      for (const line of lines) {
+        const match = line.match(/^\s+(generate|add|remove|new|analyze|migrate|upgrade|docs|config|doctor)\s/);
+        if (match) {
+          features.add(match[1]);
+        }
+      }
+
+      // Default features if parsing fails
+      if (features.size === 0) {
+        features.add('generate');
+        features.add('add');
+        features.add('remove');
+        features.add('new');
+      }
+    } catch {
+      features.add('generate');
+    }
+
+    return features;
+  }
+
+  /**
    * Extract version from CLI
+   * SECURITY: Uses validated path with execSafe to prevent command injection
    */
   private async extractVersion(cliPath: string): Promise<string> {
     try {
-      const { stdout } = await execAsync(`${cliPath} --version`, {
-        timeout: 5000,
-      });
+      // SECURITY: Validate the path before execution
+      if (!this.isValidExecutablePath(cliPath)) {
+        return '0.0.0';
+      }
+
+      // SECURITY: Pass arguments separately, never interpolate
+      const { stdout } = await execSafe(cliPath, ['--version']);
       return stdout.trim() || '0.0.0';
     } catch {
       return '0.0.0';
@@ -182,14 +304,20 @@ export class CLIDetector {
 
   /**
    * Detect available features/commands
+   * SECURITY: Uses validated path with execSafe to prevent command injection
    */
   private async detectFeatures(cliPath: string): Promise<Set<string>> {
     const features = new Set<string>();
 
     try {
-      const { stdout } = await execAsync(`${cliPath} --help`, {
-        timeout: 5000,
-      });
+      // SECURITY: Validate the path before execution
+      if (!this.isValidExecutablePath(cliPath)) {
+        features.add('generate');
+        return features;
+      }
+
+      // SECURITY: Pass arguments separately, never interpolate
+      const { stdout } = await execSafe(cliPath, ['--help']);
 
       // Parse help output for available commands
       const lines = stdout.split('\n');

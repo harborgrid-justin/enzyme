@@ -13,3 +13,4 @@ export { FeatureDashboardPanel } from './feature-dashboard-panel';
 export { APIExplorerPanel } from './api-explorer-panel';
 export { GeneratorWizardPanel } from './generator-wizard-panel';
 export { WelcomePanel } from './welcome-panel';
+export { SetupWizardPanel } from './setup-wizard-panel';
