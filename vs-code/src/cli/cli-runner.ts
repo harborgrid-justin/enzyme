@@ -85,12 +85,12 @@ export class CLIRunner {
    */
   private getSafeEnvironment(customEnv?: Record<string, string>): NodeJS.ProcessEnv {
     return {
-      PATH: process.env.PATH,
-      HOME: process.env.HOME,
-      USER: process.env.USER,
-      TMPDIR: process.env.TMPDIR,
-      LANG: process.env.LANG,
-      NODE_ENV: process.env.NODE_ENV,
+      PATH: process.env['PATH'],
+      HOME: process.env['HOME'],
+      USER: process.env['USER'],
+      TMPDIR: process.env['TMPDIR'],
+      LANG: process.env['LANG'],
+      NODE_ENV: process.env['NODE_ENV'],
       ...customEnv,
       FORCE_COLOR: '1',
     };
@@ -321,7 +321,7 @@ export class CLIRunner {
         options.onError?.(text);
       });
 
-      childProcess.on('error', (error) => {
+      childProcess.on('error', (error: Error) => {
         if (timeoutId) {
           clearTimeout(timeoutId);
         }
@@ -329,7 +329,7 @@ export class CLIRunner {
         reject(error);
       });
 
-      childProcess.on('close', (code) => {
+      childProcess.on('close', (code: number | null) => {
         if (timeoutId) {
           clearTimeout(timeoutId);
         }

@@ -8,47 +8,51 @@
 // VS Code API is available globally in webviews
 declare function acquireVsCodeApi(): VSCodeAPI;
 
-interface VSCodeAPI {
-	postMessage(message: any): void;
-	setState(state: any): void;
-	getState(): any;
+interface VSCodeAPI<T = unknown> {
+	postMessage(message: T): void;
+	setState(state: T): void;
+	getState(): T | undefined;
 }
 
-class VSCodeAPIWrapper {
+class VSCodeAPIWrapper<TState = Record<string, unknown>> {
 	private readonly api: VSCodeAPI;
-	private state: any = {};
+	private state: TState;
 
 	constructor() {
 		this.api = acquireVsCodeApi();
-		this.state = this.api.getState() || {};
+		this.state = (this.api.getState() || {}) as TState;
 	}
 
 	/**
 	 * Post a message to the extension host
+	 * @param message - The message to send to the extension host
 	 */
-	public postMessage(message: any): void {
+	public postMessage<T = unknown>(message: T): void {
 		this.api.postMessage(message);
 	}
 
 	/**
 	 * Get the current state
+	 * @returns The current webview state
 	 */
-	public getState(): any {
+	public getState(): TState {
 		return this.state;
 	}
 
 	/**
 	 * Set the current state
+	 * @param state - The new state to set
 	 */
-	public setState(state: any): void {
+	public setState(state: TState): void {
 		this.state = state;
 		this.api.setState(state);
 	}
 
 	/**
 	 * Update a portion of the state
+	 * @param updates - Partial state updates to apply
 	 */
-	public updateState(updates: any): void {
+	public updateState(updates: Partial<TState>): void {
 		this.state = {
 			...this.state,
 			...updates
@@ -58,8 +62,10 @@ class VSCodeAPIWrapper {
 
 	/**
 	 * Listen for messages from the extension host
+	 * @param handler - Callback function to handle incoming messages
+	 * @returns Function to unsubscribe from messages
 	 */
-	public onMessage(handler: (message: any) => void): () => void {
+	public onMessage<T = unknown>(handler: (message: T) => void): () => void {
 		const listener = (event: MessageEvent) => {
 			handler(event.data);
 		};
@@ -78,8 +84,10 @@ export const vscode = new VSCodeAPIWrapper();
 
 /**
  * Helper function to create a message sender
+ * @param type - The message type identifier
+ * @returns A function that sends messages of the specified type
  */
-export function createMessageSender<T = any>(type: string) {
+export function createMessageSender<T = unknown>(type: string) {
 	return (payload?: T) => {
 		vscode.postMessage({ type, payload });
 	};
@@ -87,12 +95,15 @@ export function createMessageSender<T = any>(type: string) {
 
 /**
  * Helper function to create a message handler
+ * @param type - The message type to handle
+ * @param handler - Callback function to process the message payload
+ * @returns Function to unsubscribe from the message handler
  */
-export function createMessageHandler<T = any>(
+export function createMessageHandler<T = unknown>(
 	type: string,
 	handler: (payload: T) => void
 ): () => void {
-	return vscode.onMessage((message) => {
+	return vscode.onMessage<{ type: string; payload: T }>((message) => {
 		if (message.type === type) {
 			handler(message.payload);
 		}
@@ -225,8 +236,10 @@ export const webviewUtils = {
 
 	/**
 	 * Syntax highlight JSON
+	 * @param json - JSON object or string to highlight
+	 * @returns HTML string with syntax highlighting
 	 */
-	syntaxHighlightJSON(json: any): string {
+	syntaxHighlightJSON(json: unknown): string {
 		if (typeof json !== 'string') {
 			json = JSON.stringify(json, null, 2);
 		}

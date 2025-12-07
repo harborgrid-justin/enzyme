@@ -174,10 +174,10 @@ Configure the extension in VS Code settings:
 
 | Command | Windows/Linux | macOS |
 |---------|--------------|--------|
-| Generate Component | `Ctrl+Shift+E C` | `Cmd+Shift+E C` |
-| Generate Feature | `Ctrl+Shift+E F` | `Cmd+Shift+E F` |
-| Generate Route | `Ctrl+Shift+E R` | `Cmd+Shift+E R` |
-| Analyze Performance | `Ctrl+Shift+E P` | `Cmd+Shift+E P` |
+| Generate Component | `Ctrl+Alt+E C` | `Cmd+Alt+E C` |
+| Generate Feature | `Ctrl+Alt+E F` | `Cmd+Alt+E F` |
+| Generate Route | `Ctrl+Alt+E R` | `Cmd+Alt+E R` |
+| Analyze Performance | `Ctrl+Alt+E P` | `Cmd+Alt+E P` |
 
 ## Development
 

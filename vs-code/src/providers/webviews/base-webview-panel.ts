@@ -3,6 +3,18 @@ import * as path from 'path';
 import * as crypto from 'crypto';
 
 /**
+ * WebView panel options
+ */
+export interface WebViewPanelOptions {
+	/** Retain context when hidden (default: true) - set to false for simple panels to improve performance */
+	retainContextWhenHidden?: boolean;
+	/** Enable find widget (default: false) */
+	enableFindWidget?: boolean;
+	/** Enable command URIs (default: false) */
+	enableCommandUris?: boolean;
+}
+
+/**
  * Base class for all WebView panels in the Enzyme extension.
  * Provides common functionality for panel lifecycle, messaging, state persistence,
  * and security (CSP).
@@ -13,15 +25,22 @@ export abstract class BaseWebViewPanel {
 	protected context: vscode.ExtensionContext;
 	protected viewType: string;
 	protected title: string;
+	protected options: WebViewPanelOptions;
 
 	constructor(
 		context: vscode.ExtensionContext,
 		viewType: string,
-		title: string
+		title: string,
+		options: WebViewPanelOptions = {}
 	) {
 		this.context = context;
 		this.viewType = viewType;
 		this.title = title;
+		this.options = {
+			retainContextWhenHidden: options.retainContextWhenHidden ?? true,
+			enableFindWidget: options.enableFindWidget ?? false,
+			enableCommandUris: options.enableCommandUris ?? false,
+		};
 	}
 
 	/**
@@ -49,7 +68,9 @@ export abstract class BaseWebViewPanel {
 			columnToShowIn || vscode.ViewColumn.One,
 			{
 				enableScripts: true,
-				retainContextWhenHidden: true,
+				retainContextWhenHidden: this.options.retainContextWhenHidden,
+				enableFindWidget: this.options.enableFindWidget,
+				enableCommandUris: this.options.enableCommandUris,
 				localResourceRoots: [
 					vscode.Uri.file(path.join(this.context.extensionPath, 'out')),
 					vscode.Uri.file(path.join(this.context.extensionPath, 'resources')),
@@ -119,16 +140,18 @@ export abstract class BaseWebViewPanel {
 	}
 
 	/**
-	 * Get the current VS Code theme (light, dark, or high-contrast)
+	 * Get the current VS Code theme (light, dark, high-contrast, or high-contrast-light)
 	 */
 	protected getCurrentTheme(): string {
 		const theme = vscode.window.activeColorTheme.kind;
 		switch (theme) {
 			case vscode.ColorThemeKind.Light:
-			case vscode.ColorThemeKind.HighContrastLight:
 				return 'light';
-			case vscode.ColorThemeKind.Dark:
+			case vscode.ColorThemeKind.HighContrastLight:
+				return 'high-contrast-light';
 			case vscode.ColorThemeKind.HighContrast:
+				return 'high-contrast';
+			case vscode.ColorThemeKind.Dark:
 			default:
 				return 'dark';
 		}

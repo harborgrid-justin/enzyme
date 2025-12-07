@@ -79,71 +79,75 @@ export class APIExplorerPanel extends BaseWebViewPanel {
 			<div class="container">
 				<div class="header">
 					<h1>
-						<span class="icon">🔌</span>
+						<span class="codicon codicon-globe"></span>
 						API Explorer
 					</h1>
 					<div class="header-actions">
-						<select id="environmentSelect" class="select">
+						<label for="environmentSelect" class="visually-hidden">Select environment</label>
+						<select id="environmentSelect" class="select" aria-label="Select environment">
 							<option value="">No Environment</option>
 						</select>
-						<button id="manageEnvironments" class="btn btn-secondary" title="Manage Environments">
-							<span class="codicon codicon-settings-gear"></span>
+						<button id="manageEnvironments" class="btn btn-secondary" title="Manage Environments" aria-label="Manage API environments">
+							<span class="codicon codicon-settings-gear" aria-hidden="true"></span>
 						</button>
-						<button id="importCollection" class="btn btn-secondary" title="Import Collection">
-							<span class="codicon codicon-import"></span>
+						<button id="importCollection" class="btn btn-secondary" title="Import Collection" aria-label="Import API collection from file">
+							<span class="codicon codicon-import" aria-hidden="true"></span>
 						</button>
 					</div>
 				</div>
 
 				<div class="content">
-					<div class="sidebar">
+					<nav class="sidebar" aria-label="API collections and history">
 						<div class="sidebar-header">
 							<h2>Collections</h2>
-							<button id="newCollection" class="btn btn-icon" title="New Collection">
-								<span class="codicon codicon-new-folder"></span>
+							<button id="newCollection" class="btn btn-icon" title="New Collection" aria-label="Create new API collection">
+								<span class="codicon codicon-new-folder" aria-hidden="true"></span>
 							</button>
 						</div>
-						<div id="collectionsTree" class="collections-tree">
-							<div class="empty-state-small">
-								<p>No collections yet</p>
+						<div id="collectionsTree" class="collections-tree" role="tree" aria-label="API collections">
+							<div class="empty-state-small" role="status">
+								<p>No collections yet. Create one to get started.</p>
 							</div>
 						</div>
 
 						<div class="sidebar-header">
 							<h2>History</h2>
-							<button id="clearHistory" class="btn btn-icon" title="Clear History">
-								<span class="codicon codicon-clear-all"></span>
+							<button id="clearHistory" class="btn btn-icon" title="Clear History" aria-label="Clear request history">
+								<span class="codicon codicon-clear-all" aria-hidden="true"></span>
 							</button>
 						</div>
-						<div id="historyList" class="history-list">
-							<div class="empty-state-small">
-								<p>No requests yet</p>
+						<div id="historyList" class="history-list" role="list" aria-label="Request history">
+							<div class="empty-state-small" role="status">
+								<p>No requests yet. Send a request to see history.</p>
 							</div>
 						</div>
-					</div>
+					</nav>
 
-					<div class="main-panel">
+					<main class="main-panel" role="main">
 						<div class="request-builder">
-							<div class="request-line">
-								<select id="requestMethod" class="select method-select">
+							<div class="request-line" role="group" aria-label="API request configuration">
+								<label for="requestMethod" class="visually-hidden">HTTP method</label>
+								<select id="requestMethod" class="select method-select" aria-label="Select HTTP method">
 									<option value="GET">GET</option>
 									<option value="POST">POST</option>
 									<option value="PUT">PUT</option>
 									<option value="DELETE">DELETE</option>
 									<option value="PATCH">PATCH</option>
 								</select>
+								<label for="requestUrl" class="visually-hidden">Request URL</label>
 								<input
 									type="text"
 									id="requestUrl"
 									class="input url-input"
 									placeholder="Enter request URL..."
+									aria-label="Enter request URL"
 								/>
-								<button id="sendRequest" class="btn btn-primary">
-									<span class="codicon codicon-play"></span>
+								<button id="sendRequest" class="btn btn-primary" aria-label="Send API request">
+									<span class="codicon codicon-play" aria-hidden="true"></span>
 									Send
 								</button>
-								<button id="saveRequest" class="btn btn-secondary" title="Save Request">
-									<span class="codicon codicon-save"></span>
+								<button id="saveRequest" class="btn btn-secondary" title="Save Request" aria-label="Save request to collection">
+									<span class="codicon codicon-save" aria-hidden="true"></span>
 								</button>
 							</div>
 
@@ -407,17 +411,18 @@ export class APIExplorerPanel extends BaseWebViewPanel {
 				payload: request
 			});
 
-		} catch (error: any) {
+		} catch (error) {
+			const errorMessage = error instanceof Error ? error.message : String(error);
 			const request: APIRequest = {
 				id: this.generateId(),
 				endpoint: {
 					id: this.generateId(),
 					name: `${payload.method} ${payload.url}`,
-					method: payload.method as any,
+					method: payload.method as 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH',
 					url: payload.url
 				},
 				timestamp: startTime,
-				error: error.message
+				error: errorMessage
 			};
 
 			this.addToHistory(request);
@@ -513,8 +518,9 @@ export class APIExplorerPanel extends BaseWebViewPanel {
 					this.sendDataUpdate();
 					vscode.window.showInformationMessage('Collection imported successfully');
 				}
-			} catch (error: any) {
-				vscode.window.showErrorMessage(`Failed to import collection: ${error.message}`);
+			} catch (error) {
+				const errorMessage = error instanceof Error ? error.message : String(error);
+				vscode.window.showErrorMessage(`Failed to import collection: ${errorMessage}`);
 			}
 		}
 	}

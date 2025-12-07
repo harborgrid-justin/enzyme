@@ -216,9 +216,15 @@ export class LoggerService {
 
   /**
    * Dispose all output channels
+   * FIXED: Now properly resets singleton instance to prevent memory leaks
    */
   public dispose(): void {
     this.outputChannels.forEach(channel => channel.dispose());
     this.outputChannels.clear();
+    this.logHistory = [];
+    // Reset singleton instance
+    if (LoggerService.instance === this) {
+      LoggerService.instance = null as any;
+    }
   }
 }

@@ -180,10 +180,15 @@ export class EventBus {
 
   /**
    * Dispose the event bus
+   * FIXED: Now properly resets singleton instance to prevent memory leaks
    */
   public dispose(): void {
     this.emitter.dispose();
     this.eventHistory = [];
     this.oneTimeListeners.clear();
+    // Reset singleton instance
+    if (EventBus.instance === this) {
+      EventBus.instance = null as any;
+    }
   }
 }

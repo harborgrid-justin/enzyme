@@ -1,5 +1,36 @@
 /**
- * Bootstrap - Initializes and bootstraps the Enzyme VS Code Extension
+ * Bootstrap - Alternative Enterprise-Grade Architecture for Enzyme VS Code Extension
+ *
+ * ⚠️ NOTE: This file implements a full DI-based architecture with orchestration patterns.
+ * It is currently NOT USED as the main entry point (see extension.ts instead).
+ *
+ * This bootstrap module provides:
+ * - Full Dependency Injection Container
+ * - Event Bus for cross-component communication
+ * - Lifecycle Management with phased initialization
+ * - Service Registry and Provider Registry
+ * - Health Monitoring and Cache Management
+ * - Indexing Coordinator for workspace analysis
+ * - File Watcher Coordinator for file system events
+ * - View Orchestrator for UI components
+ *
+ * ARCHITECTURAL DECISION:
+ * We maintain TWO architectures in this codebase:
+ * 1. extension.ts - Simple, lightweight architecture (CURRENTLY ACTIVE)
+ * 2. bootstrap.ts - Enterprise-grade DI architecture (FOR FUTURE MIGRATION)
+ *
+ * The simple architecture (extension.ts) is currently used for:
+ * - Faster activation time
+ * - Simpler debugging and maintenance
+ * - Gradual feature development
+ *
+ * The bootstrap architecture can be adopted when:
+ * - The extension grows to need more sophisticated dependency management
+ * - Multiple complex subsystems need to coordinate
+ * - Enterprise features require orchestration
+ *
+ * To switch to this architecture, simply change package.json main entry to use
+ * this file's activate/deactivate exports instead of extension.ts.
  */
 
 import * as vscode from 'vscode';
@@ -116,7 +147,10 @@ export async function bootstrap(context: vscode.ExtensionContext): Promise<Enzym
       providerRegistry.dispose();
       commandRegistry.dispose();
       await serviceRegistry.dispose();
-      workspaceAnalyzer;
+      // FIXED: Was a no-op statement, now properly disposes if dispose method exists
+      if (workspaceAnalyzer && typeof (workspaceAnalyzer as any).dispose === 'function') {
+        (workspaceAnalyzer as any).dispose();
+      }
       telemetryService.dispose();
       analysisService.dispose();
       workspaceService.dispose();

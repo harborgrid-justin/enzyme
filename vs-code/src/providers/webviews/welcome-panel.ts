@@ -66,8 +66,8 @@ export class WelcomePanel extends BaseWebViewPanel {
 			<div class="welcome-container">
 				<div class="hero">
 					<div class="logo">
-						<img src="${logoUri}" alt="Enzyme Logo" onerror="this.style.display='none'" />
-						<h1 class="brand-name">🧬 Enzyme</h1>
+						<img src="${logoUri}" alt="Enzyme Framework Logo" onerror="this.style.display='none'" />
+						<h1 class="brand-name"><span class="codicon codicon-beaker"></span> Enzyme</h1>
 					</div>
 					<p class="tagline">Enterprise React Framework for Modern Web Applications</p>
 					<p class="version">VS Code Extension v1.0.0</p>
@@ -76,80 +76,80 @@ export class WelcomePanel extends BaseWebViewPanel {
 				<div class="content">
 					<section class="section">
 						<h2>
-							<span class="codicon codicon-rocket"></span>
+							<span class="codicon codicon-rocket" aria-hidden="true"></span>
 							Quick Start
 						</h2>
-						<div class="quick-actions">
-							<div class="action-card" data-action="create-project">
-								<span class="action-icon codicon codicon-folder-opened"></span>
+						<div class="quick-actions" role="list">
+							<article class="action-card" data-action="create-project" role="listitem">
+								<span class="action-icon codicon codicon-folder-opened" aria-hidden="true"></span>
 								<h3>Create New Project</h3>
 								<p>Start a new Enzyme project with our CLI</p>
-								<button class="btn btn-primary">Create Project</button>
-							</div>
+								<button class="btn btn-primary" aria-label="Create new Enzyme project">Create Project</button>
+							</article>
 
-							<div class="action-card" data-action="open-generator">
-								<span class="action-icon codicon codicon-wand"></span>
+							<article class="action-card" data-action="open-generator" role="listitem">
+								<span class="action-icon codicon codicon-wand" aria-hidden="true"></span>
 								<h3>Generate Code</h3>
 								<p>Use generators to create components, pages, and more</p>
-								<button class="btn btn-primary">Open Generator</button>
-							</div>
+								<button class="btn btn-primary" aria-label="Open code generator wizard">Open Generator</button>
+							</article>
 
-							<div class="action-card" data-action="configure">
-								<span class="action-icon codicon codicon-settings-gear"></span>
+							<article class="action-card" data-action="configure" role="listitem">
+								<span class="action-icon codicon codicon-settings-gear" aria-hidden="true"></span>
 								<h3>Configure Extension</h3>
 								<p>Set up your preferences and workspace settings</p>
-								<button class="btn btn-primary">Configure</button>
-							</div>
+								<button class="btn btn-primary" aria-label="Configure Enzyme extension settings">Configure</button>
+							</article>
 						</div>
 					</section>
 
 					<section class="section">
 						<h2>
-							<span class="codicon codicon-star"></span>
+							<span class="codicon codicon-star" aria-hidden="true"></span>
 							Key Features
 						</h2>
-						<div class="features-grid">
-							<div class="feature-item">
-								<span class="feature-icon">🔍</span>
+						<div class="features-grid" role="list">
+							<article class="feature-item" role="listitem">
+								<span class="feature-icon codicon codicon-inspect" aria-hidden="true"></span>
 								<h3>State Inspector</h3>
 								<p>Real-time Zustand state visualization and time-travel debugging</p>
-								<a href="#" class="feature-link" data-action="open-state-inspector">Open Inspector</a>
-							</div>
+								<a href="#" class="feature-link" data-action="open-state-inspector" aria-label="Open State Inspector panel">Open Inspector</a>
+							</article>
 
-							<div class="feature-item">
-								<span class="feature-icon">⚡</span>
+							<article class="feature-item" role="listitem">
+								<span class="feature-icon codicon codicon-dashboard" aria-hidden="true"></span>
 								<h3>Performance Monitor</h3>
 								<p>Track Core Web Vitals and optimize your application</p>
-								<a href="#" class="feature-link" data-action="open-performance">Open Monitor</a>
-							</div>
+								<a href="#" class="feature-link" data-action="open-performance" aria-label="Open Performance Monitor panel">Open Monitor</a>
+							</article>
 
-							<div class="feature-item">
-								<span class="feature-icon">🗺️</span>
+							<article class="feature-item" role="listitem">
+								<span class="feature-icon codicon codicon-type-hierarchy" aria-hidden="true"></span>
 								<h3>Route Visualizer</h3>
 								<p>Interactive route tree and navigation flow diagrams</p>
-								<a href="#" class="feature-link" data-action="open-routes">Open Visualizer</a>
-							</div>
+								<a href="#" class="feature-link" data-action="open-routes" aria-label="Open Route Visualizer panel">Open Visualizer</a>
+							</article>
 
-							<div class="feature-item">
-								<span class="feature-icon">🎛️</span>
+							<article class="feature-item" role="listitem">
+								<span class="feature-icon codicon codicon-server-environment" aria-hidden="true"></span>
 								<h3>Feature Dashboard</h3>
 								<p>Manage feature flags and A/B tests with ease</p>
-								<a href="#" class="feature-link" data-action="open-features">Open Dashboard</a>
-							</div>
+								<a href="#" class="feature-link" data-action="open-features" aria-label="Open Feature Dashboard panel">Open Dashboard</a>
+							</article>
 
-							<div class="feature-item">
-								<span class="feature-icon">🔌</span>
+							<article class="feature-item" role="listitem">
+								<span class="feature-icon codicon codicon-globe" aria-hidden="true"></span>
 								<h3>API Explorer</h3>
 								<p>Test and debug APIs right from VS Code</p>
-								<a href="#" class="feature-link" data-action="open-api">Open Explorer</a>
-							</div>
+								<a href="#" class="feature-link" data-action="open-api" aria-label="Open API Explorer panel">Open Explorer</a>
+							</article>
 
-							<div class="feature-item">
-								<span class="feature-icon">⚡</span>
+							<article class="feature-item" role="listitem">
+								<span class="feature-icon codicon codicon-wand" aria-hidden="true"></span>
 								<h3>Code Generators</h3>
 								<p>Scaffold components, hooks, and more with templates</p>
-								<a href="#" class="feature-link" data-action="open-generator">Open Generator</a>
-							</div>
+								<a href="#" class="feature-link" data-action="open-generator" aria-label="Open code generator wizard">Open Generator</a>
+							</article>
 						</div>
 					</section>
 

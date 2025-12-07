@@ -165,26 +165,34 @@ export const FILE_PATTERNS = {
  * Enzyme Framework Patterns
  */
 export const ENZYME_PATTERNS = {
-  // Hook Patterns
+  // Hook Patterns - Enzyme framework hooks
   USE_AUTH: /useAuth\s*\(/,
-  USE_ROUTE: /useRoute\s*\(/,
-  USE_FEATURE: /useFeature\s*\(/,
+  USE_HAS_ROLE: /useHasRole\s*\(/,
+  USE_HAS_PERMISSION: /useHasPermission\s*\(/,
+  USE_FEATURE_VISIBILITY: /useFeatureVisibility\s*\(/,
+  USE_FEATURE_FLAG: /useFeatureFlag\s*\(/,
 
-  // Store Patterns
-  CREATE_STORE: /createStore\s*</,
+  // Store Patterns - Zustand is used
+  CREATE_ZUSTAND_STORE: /create\s*<.*>\s*\(/,
   USE_STORE: /use\w+Store\s*\(/,
 
-  // API Patterns
-  CREATE_API_CLIENT: /createApiClient\s*</,
-  USE_API: /use\w+Api\s*\(/,
+  // API Patterns - Enzyme uses apiClient, not createApiClient
+  API_CLIENT: /apiClient\.(get|post|put|patch|del)/,
+  USE_API_REQUEST: /useApiRequest\s*</,
+  USE_API_MUTATION: /useApiMutation\s*</,
 
-  // Route Patterns
-  ROUTE_COMPONENT: /export\s+default\s+function\s+\w+Route/,
+  // Route Patterns - React Router DOM patterns
+  ROUTE_COMPONENT: /export\s+default\s+function\s+\w+(Page|Route)/,
   ROUTE_LOADER: /export\s+(const|function)\s+loader\s*=/,
+  ROUTE_ACTION: /export\s+(const|function)\s+action\s*=/,
 
-  // Feature Patterns
-  FEATURE_CONFIG: /export\s+default\s+{[\s\S]*?id:\s*['"`][\w-]+['"`]/,
-  FEATURE_ROUTES: /routes:\s*\[/,
+  // Feature Patterns - Enzyme feature config structure
+  FEATURE_CONFIG: /export\s+const\s+\w+Feature:\s*FeatureConfig\s*=/,
+  FEATURE_METADATA: /metadata:\s*{/,
+  FEATURE_ACCESS: /access:\s*{/,
+
+  // Enzyme-specific imports
+  ENZYME_IMPORT: /@missionfabric-js\/enzyme\/(auth|api|routing|state|feature|flags|theme|monitoring|performance)/,
 };
 
 /**

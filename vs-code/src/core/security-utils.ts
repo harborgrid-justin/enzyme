@@ -62,8 +62,9 @@ export function generateNonce(): string {
 
 /**
  * Build a secure Content Security Policy string
+ * SECURITY: Implements strict CSP following Microsoft VS Code security guidelines
  * @param webviewCspSource - The webview's CSP source from VS Code
- * @param nonce - The nonce for inline scripts
+ * @param nonce - The nonce for inline scripts and styles
  * @param options - Additional CSP options
  * @returns CSP string
  */
@@ -76,10 +77,22 @@ export function buildCsp(
     allowConnections?: string[];
   }
 ): string {
+  // SECURITY: Build strict CSP with defense in depth
   const directives: string[] = [
+    // Block everything by default
     "default-src 'none'",
-    `style-src ${webviewCspSource}`,
+    // Only allow styles from extension with nonce
+    `style-src ${webviewCspSource} 'nonce-${nonce}'`,
+    // Only allow scripts with nonce (no eval, no unsafe-inline)
     `script-src 'nonce-${nonce}'`,
+    // Block object/embed/applet tags
+    "object-src 'none'",
+    // Prevent base tag hijacking
+    "base-uri 'none'",
+    // Block form submissions
+    "form-action 'none'",
+    // Prevent framing
+    "frame-ancestors 'none'",
   ];
 
   if (options?.allowFonts !== false) {
@@ -87,11 +100,17 @@ export function buildCsp(
   }
 
   if (options?.allowImages !== false) {
+    // SECURITY: Only allow HTTPS images (no http://), data URIs, and extension resources
     directives.push(`img-src ${webviewCspSource} https: data:`);
   }
 
   if (options?.allowConnections && options.allowConnections.length > 0) {
-    directives.push(`connect-src ${options.allowConnections.join(' ')}`);
+    // SECURITY: Only allow explicitly whitelisted connection targets
+    // Default to extension resources only
+    directives.push(`connect-src ${webviewCspSource} ${options.allowConnections.join(' ')}`);
+  } else {
+    // Default: only allow connections to extension resources
+    directives.push(`connect-src ${webviewCspSource}`);
   }
 
   return directives.join('; ');
@@ -116,7 +135,7 @@ export function sanitizeInput(input: string, maxLength: number = 1000): string {
 
 /**
  * Validate and sanitize a file path
- * Prevents path traversal attacks
+ * Prevents path traversal attacks using robust validation
  * @param path - Path to validate
  * @param allowedBase - Base directory that paths must be within
  * @returns Sanitized path or null if invalid
@@ -126,23 +145,60 @@ export function sanitizePath(path: string, allowedBase?: string): string | null 
     return null;
   }
 
-  // Remove null bytes and normalize separators
-  const normalized = path.replace(/\0/g, '').replace(/\\/g, '/');
+  // Remove null bytes
+  let sanitized = path.replace(/\0/g, '');
 
-  // Check for path traversal attempts
-  if (normalized.includes('..') || normalized.includes('//')) {
-    return null;
-  }
+  // Normalize path separators to forward slashes
+  sanitized = sanitized.replace(/\\/g, '/');
 
-  // If an allowed base is specified, verify the path is within it
-  if (allowedBase) {
-    const normalizedBase = allowedBase.replace(/\\/g, '/');
-    if (!normalized.startsWith(normalizedBase)) {
+  // Remove any leading slashes to prevent absolute path access
+  sanitized = sanitized.replace(/^\/+/, '');
+
+  // Check for various path traversal patterns
+  const traversalPatterns = [
+    /\.\./,           // Standard traversal (..)
+    /%2e%2e/i,        // URL encoded (..)
+    /\.\.\\/,         // Windows style
+    /\.\.\//,         // Unix style
+    /\.\.%2f/i,       // Mixed encoding
+    /%252e%252e/i,    // Double URL encoding
+    /\.%2e/i,         // Partial encoding
+    /%2e\./i,         // Partial encoding
+  ];
+
+  for (const pattern of traversalPatterns) {
+    if (pattern.test(sanitized)) {
       return null;
     }
   }
 
-  return normalized;
+  // Check for consecutive slashes (could be used in bypass attempts)
+  if (/\/\/+/.test(sanitized)) {
+    return null;
+  }
+
+  // Validate characters - only allow safe path characters
+  if (!/^[a-zA-Z0-9\-_./]+$/.test(sanitized)) {
+    return null;
+  }
+
+  // If an allowed base is specified, verify the resolved path is within it
+  if (allowedBase) {
+    const normalizedBase = allowedBase.replace(/\\/g, '/').replace(/\/+$/, '');
+
+    // Ensure the path starts with the base or is relative
+    if (!sanitized.startsWith(normalizedBase + '/') && sanitized !== normalizedBase) {
+      // For relative paths, prepend the base
+      sanitized = normalizedBase + '/' + sanitized;
+    }
+
+    // Verify the final path is still within the allowed base
+    if (!sanitized.startsWith(normalizedBase + '/') && sanitized !== normalizedBase) {
+      return null;
+    }
+  }
+
+  return sanitized;
 }
 
 /**

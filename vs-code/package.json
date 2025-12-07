@@ -52,93 +52,111 @@
       {
         "command": "enzyme.init",
         "title": "Initialize Enzyme Project",
-        "category": "Enzyme"
+        "category": "Enzyme",
+        "enablement": "workspaceFolderCount > 0"
       },
       {
         "command": "enzyme.generate.component",
         "title": "Generate Component",
-        "category": "Enzyme"
+        "category": "Enzyme",
+        "enablement": "enzyme:isEnzymeProject"
       },
       {
         "command": "enzyme.generate.feature",
         "title": "Generate Feature",
-        "category": "Enzyme"
+        "category": "Enzyme",
+        "enablement": "enzyme:isEnzymeProject"
       },
       {
         "command": "enzyme.generate.route",
         "title": "Generate Route",
-        "category": "Enzyme"
+        "category": "Enzyme",
+        "enablement": "enzyme:isEnzymeProject"
       },
       {
         "command": "enzyme.generate.store",
         "title": "Generate Zustand Store",
-        "category": "Enzyme"
+        "category": "Enzyme",
+        "enablement": "enzyme:isEnzymeProject"
       },
       {
         "command": "enzyme.generate.hook",
         "title": "Generate Custom Hook",
-        "category": "Enzyme"
+        "category": "Enzyme",
+        "enablement": "enzyme:isEnzymeProject"
       },
       {
         "command": "enzyme.generate.apiClient",
         "title": "Generate API Client",
-        "category": "Enzyme"
+        "category": "Enzyme",
+        "enablement": "enzyme:isEnzymeProject"
       },
       {
         "command": "enzyme.generate.test",
         "title": "Generate Test File",
-        "category": "Enzyme"
+        "category": "Enzyme",
+        "enablement": "enzyme:isEnzymeProject"
       },
       {
         "command": "enzyme.analyze.performance",
         "title": "Analyze Performance",
-        "category": "Enzyme"
+        "category": "Enzyme",
+        "enablement": "enzyme:isEnzymeProject"
       },
       {
         "command": "enzyme.analyze.security",
         "title": "Analyze Security",
-        "category": "Enzyme"
+        "category": "Enzyme",
+        "enablement": "enzyme:isEnzymeProject"
       },
       {
         "command": "enzyme.analyze.dependencies",
         "title": "Analyze Dependencies",
-        "category": "Enzyme"
+        "category": "Enzyme",
+        "enablement": "enzyme:isEnzymeProject"
       },
       {
         "command": "enzyme.refactor.convertToEnzyme",
         "title": "Convert to Enzyme Pattern",
-        "category": "Enzyme"
+        "category": "Enzyme",
+        "enablement": "editorHasSelection && (resourceLangId == typescript || resourceLangId == typescriptreact)"
       },
       {
         "command": "enzyme.refactor.optimizeImports",
         "title": "Optimize Enzyme Imports",
-        "category": "Enzyme"
+        "category": "Enzyme",
+        "enablement": "enzyme:isEnzymeProject && (resourceLangId == typescript || resourceLangId == typescriptreact)"
       },
       {
         "command": "enzyme.validate.config",
         "title": "Validate Enzyme Config",
-        "category": "Enzyme"
+        "category": "Enzyme",
+        "enablement": "enzyme:isEnzymeProject"
       },
       {
         "command": "enzyme.validate.routes",
         "title": "Validate Routes",
-        "category": "Enzyme"
+        "category": "Enzyme",
+        "enablement": "enzyme:isEnzymeProject && enzyme:hasRoutes"
       },
       {
         "command": "enzyme.validate.features",
         "title": "Validate Features",
-        "category": "Enzyme"
+        "category": "Enzyme",
+        "enablement": "enzyme:isEnzymeProject && enzyme:hasFeatures"
       },
       {
         "command": "enzyme.explorer.refresh",
         "title": "Refresh Explorer",
         "category": "Enzyme",
-        "icon": "$(refresh)"
+        "icon": "$(refresh)",
+        "enablement": "enzyme:isEnzymeProject"
       },
       {
         "command": "enzyme.explorer.openFile",
         "title": "Open File",
-        "category": "Enzyme"
+        "category": "Enzyme",
+        "enablement": "false"
       },
       {
         "command": "enzyme.docs.open",
@@ -149,12 +167,14 @@
       {
         "command": "enzyme.snippets.show",
         "title": "Show Code Snippets",
-        "category": "Enzyme"
+        "category": "Enzyme",
+        "enablement": "enzyme:isEnzymeProject"
       },
       {
         "command": "enzyme.migration.analyze",
         "title": "Analyze Migration from CRA/Next.js",
-        "category": "Enzyme"
+        "category": "Enzyme",
+        "enablement": "workspaceFolderCount > 0"
       },
       {
         "command": "enzyme.telemetry.toggle",
@@ -169,7 +189,8 @@
       {
         "command": "enzyme.workspace.detect",
         "title": "Detect Enzyme Project",
-        "category": "Enzyme"
+        "category": "Enzyme",
+        "enablement": "workspaceFolderCount > 0"
       }
     ],
     "viewsContainers": {
@@ -186,32 +207,38 @@
         {
           "id": "enzyme.views.features",
           "name": "Features",
-          "contextualTitle": "Enzyme Features"
+          "contextualTitle": "Enzyme Features",
+          "when": "enzyme:isEnzymeProject"
         },
         {
           "id": "enzyme.views.routes",
           "name": "Routes",
-          "contextualTitle": "Enzyme Routes"
+          "contextualTitle": "Enzyme Routes",
+          "when": "enzyme:isEnzymeProject"
         },
         {
           "id": "enzyme.views.components",
           "name": "Components",
-          "contextualTitle": "Enzyme Components"
+          "contextualTitle": "Enzyme Components",
+          "when": "enzyme:isEnzymeProject"
         },
         {
           "id": "enzyme.views.stores",
           "name": "State Stores",
-          "contextualTitle": "Enzyme State Stores"
+          "contextualTitle": "Enzyme State Stores",
+          "when": "enzyme:isEnzymeProject"
         },
         {
           "id": "enzyme.views.api",
           "name": "API Clients",
-          "contextualTitle": "Enzyme API Clients"
+          "contextualTitle": "Enzyme API Clients",
+          "when": "enzyme:isEnzymeProject"
         },
         {
           "id": "enzyme.views.performance",
           "name": "Performance",
-          "contextualTitle": "Performance Metrics"
+          "contextualTitle": "Performance Metrics",
+          "when": "enzyme:isEnzymeProject"
         }
       ]
     },
@@ -546,29 +573,29 @@
     "menus": {
       "editor/context": [
         {
-          "when": "resourceLangId == typescript || resourceLangId == typescriptreact",
+          "when": "enzyme:isEnzymeProject && (resourceLangId == typescript || resourceLangId == typescriptreact)",
           "command": "enzyme.generate.component",
           "group": "enzyme@1"
         },
         {
-          "when": "resourceLangId == typescript || resourceLangId == typescriptreact",
+          "when": "enzyme:isEnzymeProject && (resourceLangId == typescript || resourceLangId == typescriptreact)",
           "command": "enzyme.generate.test",
           "group": "enzyme@2"
         },
         {
-          "when": "resourceLangId == typescript || resourceLangId == typescriptreact",
+          "when": "editorHasSelection && (resourceLangId == typescript || resourceLangId == typescriptreact)",
           "command": "enzyme.refactor.convertToEnzyme",
           "group": "enzyme@3"
         }
       ],
       "explorer/context": [
         {
-          "when": "explorerResourceIsFolder",
+          "when": "enzyme:isEnzymeProject && explorerResourceIsFolder",
           "command": "enzyme.generate.feature",
           "group": "enzyme@1"
         },
         {
-          "when": "explorerResourceIsFolder",
+          "when": "enzyme:isEnzymeProject && explorerResourceIsFolder",
           "command": "enzyme.generate.component",
           "group": "enzyme@2"
         }
@@ -597,25 +624,25 @@
         "command": "enzyme.generate.component",
         "key": "ctrl+alt+e c",
         "mac": "cmd+alt+e c",
-        "when": "editorTextFocus"
+        "when": "editorTextFocus && enzyme:isEnzymeProject"
       },
       {
         "command": "enzyme.generate.feature",
         "key": "ctrl+alt+e f",
         "mac": "cmd+alt+e f",
-        "when": "explorerViewletVisible || editorTextFocus"
+        "when": "enzyme:isEnzymeProject && (explorerViewletVisible || editorTextFocus)"
       },
       {
         "command": "enzyme.generate.route",
         "key": "ctrl+alt+e r",
         "mac": "cmd+alt+e r",
-        "when": "explorerViewletVisible || editorTextFocus"
+        "when": "enzyme:isEnzymeProject && (explorerViewletVisible || editorTextFocus)"
       },
       {
         "command": "enzyme.analyze.performance",
         "key": "ctrl+alt+e p",
         "mac": "cmd+alt+e p",
-        "when": "editorTextFocus"
+        "when": "editorTextFocus && enzyme:isEnzymeProject"
       }
     ],
     "languages": [

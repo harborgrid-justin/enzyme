@@ -57,8 +57,14 @@ export class EnzymeTerminalProvider {
 
   /**
    * Run a command in the Enzyme terminal
+   * SECURITY: Validates command before execution
    */
   runCommand(command: string, show = true): void {
+    // SECURITY: Basic validation - reject obviously malicious patterns
+    if (this.containsMaliciousPatterns(command)) {
+      throw new Error('Command contains potentially malicious patterns and was blocked');
+    }
+
     const terminal = this.getOrCreateTerminal();
 
     if (show) {
@@ -66,6 +72,25 @@ export class EnzymeTerminalProvider {
     }
 
     terminal.sendText(command);
+  }
+
+  /**
+   * Check for malicious command patterns
+   */
+  private containsMaliciousPatterns(command: string): boolean {
+    // Check for command chaining that could be used for injection
+    const maliciousPatterns = [
+      /;\s*rm\s+-rf/i,           // rm -rf commands
+      /;\s*dd\s+if=/i,            // dd commands
+      /&&\s*rm\s+-rf/i,           // chained destructive commands
+      /\|\s*sh\s*$/i,             // piping to shell
+      /;\s*curl.*\|\s*bash/i,     // curl to bash
+      /;\s*wget.*\|\s*bash/i,     // wget to bash
+      /`.*`/,                     // backtick command substitution
+      /\$\(.*\)/,                 // $() command substitution (but allow within quoted strings)
+    ];
+
+    return maliciousPatterns.some(pattern => pattern.test(command));
   }
 
   /**

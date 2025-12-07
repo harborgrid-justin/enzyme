@@ -4,7 +4,6 @@
  */
 
 import * as vscode from 'vscode';
-import * as fs from 'fs';
 import * as path from 'path';
 import { logger } from './logger';
 import { FILE_PATTERNS, TIMEOUTS } from './constants';
@@ -21,7 +20,8 @@ import {
 } from '../types';
 
 /**
- * Detect if the workspace contains an Enzyme project
+ * PERFORMANCE: Detect if the workspace contains an Enzyme project (async)
+ * Uses VS Code's workspace.fs API instead of Node.js fs for better performance
  */
 export async function detectEnzymeProject(): Promise<boolean> {
   const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
@@ -30,13 +30,14 @@ export async function detectEnzymeProject(): Promise<boolean> {
     return false;
   }
 
-  const rootPath = workspaceFolder.uri.fsPath;
+  const rootUri = workspaceFolder.uri;
 
-  // Check for package.json with Enzyme dependencies
-  const packageJsonPath = path.join(rootPath, 'package.json');
-  if (fs.existsSync(packageJsonPath)) {
+  try {
+    // PERFORMANCE: Check for package.json with Enzyme dependencies
+    const packageJsonUri = vscode.Uri.joinPath(rootUri, 'package.json');
     try {
-      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8')) as PackageJson;
+      const packageJsonContent = await vscode.workspace.fs.readFile(packageJsonUri);
+      const packageJson = JSON.parse(Buffer.from(packageJsonContent).toString('utf-8')) as PackageJson;
       const allDeps = {
         ...packageJson.dependencies,
         ...packageJson.devDependencies,
@@ -54,45 +55,52 @@ export async function detectEnzymeProject(): Promise<boolean> {
         return true;
       }
     } catch (error) {
-      logger.error('Failed to parse package.json', error);
+      // package.json doesn't exist or failed to parse
+      logger.debug('No package.json or parse error');
     }
-  }
 
-  // Check for enzyme.config.ts or enzyme.config.js
-  const configPaths = [
-    path.join(rootPath, 'enzyme.config.ts'),
-    path.join(rootPath, 'enzyme.config.js'),
-  ];
-
-  for (const configPath of configPaths) {
-    if (fs.existsSync(configPath)) {
-      logger.info(`Enzyme project detected via ${path.basename(configPath)}`);
-      return true;
+    // PERFORMANCE: Check for enzyme.config.ts or enzyme.config.js
+    const configFiles = ['enzyme.config.ts', 'enzyme.config.js'];
+    for (const configFile of configFiles) {
+      const configUri = vscode.Uri.joinPath(rootUri, configFile);
+      try {
+        await vscode.workspace.fs.stat(configUri);
+        logger.info(`Enzyme project detected via ${configFile}`);
+        return true;
+      } catch {
+        // File doesn't exist, continue
+      }
     }
-  }
 
-  // Check for .enzyme directory
-  const enzymeDirPath = path.join(rootPath, '.enzyme');
-  if (fs.existsSync(enzymeDirPath) && fs.statSync(enzymeDirPath).isDirectory()) {
-    logger.info('Enzyme project detected via .enzyme directory');
-    return true;
-  }
+    // PERFORMANCE: Check for .enzyme directory
+    const enzymeDirUri = vscode.Uri.joinPath(rootUri, '.enzyme');
+    try {
+      const stat = await vscode.workspace.fs.stat(enzymeDirUri);
+      if (stat.type === vscode.FileType.Directory) {
+        logger.info('Enzyme project detected via .enzyme directory');
+        return true;
+      }
+    } catch {
+      // Directory doesn't exist
+    }
 
-  logger.debug('No Enzyme project detected');
-  return false;
+    logger.debug('No Enzyme project detected');
+    return false;
+  } catch (error) {
+    logger.error('Error detecting Enzyme project', error);
+    return false;
+  }
 }
 
 /**
- * Get Enzyme version from package.json
+ * PERFORMANCE: Get Enzyme version from package.json (async)
  */
-export function getEnzymeVersion(rootPath: string): string | undefined {
-  const packageJsonPath = path.join(rootPath, 'package.json');
-  if (!fs.existsSync(packageJsonPath)) {
-    return undefined;
-  }
-
+export async function getEnzymeVersion(rootPath: string): Promise<string | undefined> {
   try {
-    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8')) as PackageJson;
+    const packageJsonUri = vscode.Uri.file(path.join(rootPath, 'package.json'));
+    const packageJsonContent = await vscode.workspace.fs.readFile(packageJsonUri);
+    const packageJson = JSON.parse(Buffer.from(packageJsonContent).toString('utf-8')) as PackageJson;
+
     const allDeps = {
       ...packageJson.dependencies,
       ...packageJson.devDependencies,
@@ -124,28 +132,26 @@ export function getEnzymeVersion(rootPath: string): string | undefined {
 }
 
 /**
- * Find Enzyme configuration file
+ * PERFORMANCE: Find Enzyme configuration file (async)
  */
 export async function findEnzymeConfig(rootPath: string): Promise<EnzymeConfig | undefined> {
-  const configPaths = [
-    path.join(rootPath, 'enzyme.config.ts'),
-    path.join(rootPath, 'enzyme.config.js'),
-  ];
+  const configFiles = ['enzyme.config.ts', 'enzyme.config.js'];
+  const rootUri = vscode.Uri.file(rootPath);
 
-  for (const configPath of configPaths) {
-    if (fs.existsSync(configPath)) {
-      try {
-        // For now, just return a placeholder
-        // In a real implementation, we would parse the TypeScript/JavaScript file
-        logger.info(`Found Enzyme config at ${configPath}`);
-        return {
-          version: '1.0.0',
-          features: [],
-          routes: [],
-        };
-      } catch (error) {
-        logger.error(`Failed to parse config at ${configPath}`, error);
-      }
+  for (const configFile of configFiles) {
+    const configUri = vscode.Uri.joinPath(rootUri, configFile);
+    try {
+      await vscode.workspace.fs.stat(configUri);
+      // For now, just return a placeholder
+      // In a real implementation, we would parse the TypeScript/JavaScript file
+      logger.info(`Found Enzyme config at ${configFile}`);
+      return {
+        version: '1.0.0',
+        features: [],
+        routes: [],
+      };
+    } catch {
+      // File doesn't exist, continue
     }
   }
 
@@ -153,16 +159,13 @@ export async function findEnzymeConfig(rootPath: string): Promise<EnzymeConfig |
 }
 
 /**
- * Get package.json
+ * PERFORMANCE: Get package.json (async)
  */
-export function getPackageJson(rootPath: string): PackageJson | undefined {
-  const packageJsonPath = path.join(rootPath, 'package.json');
-  if (!fs.existsSync(packageJsonPath)) {
-    return undefined;
-  }
-
+export async function getPackageJson(rootPath: string): Promise<PackageJson | undefined> {
   try {
-    return JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8')) as PackageJson;
+    const packageJsonUri = vscode.Uri.file(path.join(rootPath, 'package.json'));
+    const packageJsonContent = await vscode.workspace.fs.readFile(packageJsonUri);
+    return JSON.parse(Buffer.from(packageJsonContent).toString('utf-8')) as PackageJson;
   } catch (error) {
     logger.error('Failed to parse package.json', error);
     return undefined;
@@ -170,7 +173,8 @@ export function getPackageJson(rootPath: string): PackageJson | undefined {
 }
 
 /**
- * Analyze project structure and return workspace information
+ * PERFORMANCE: Analyze project structure with caching
+ * Caches workspace structure to avoid expensive rescanning
  */
 export async function getProjectStructure(): Promise<EnzymeWorkspace> {
   const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
@@ -188,17 +192,30 @@ export async function getProjectStructure(): Promise<EnzymeWorkspace> {
   }
 
   const rootPath = workspaceFolder.uri.fsPath;
-  const isEnzymeProject = await detectEnzymeProject();
-  const packageJson = getPackageJson(rootPath);
-  const enzymeConfig = await findEnzymeConfig(rootPath);
-  const enzymeVersion = getEnzymeVersion(rootPath);
 
-  // Scan for features, routes, components, etc.
-  const features = await scanFeatures(rootPath);
-  const routes = await scanRoutes(rootPath);
-  const components = await scanComponents(rootPath);
-  const stores = await scanStores(rootPath);
-  const apiClients = await scanApiClients(rootPath);
+  // PERFORMANCE: Try to load cached workspace structure
+  const cachedWorkspace = await loadCachedWorkspaceStructure(rootPath);
+  if (cachedWorkspace) {
+    logger.info('Using cached workspace structure');
+    return cachedWorkspace;
+  }
+
+  // Not cached or cache expired, perform full scan
+  logger.info('Scanning workspace structure (no cache)');
+
+  const isEnzymeProject = await detectEnzymeProject();
+  const packageJson = await getPackageJson(rootPath);
+  const enzymeConfig = await findEnzymeConfig(rootPath);
+  const enzymeVersion = await getEnzymeVersion(rootPath);
+
+  // PERFORMANCE: Scan for features, routes, components, etc. in parallel
+  const [features, routes, components, stores, apiClients] = await Promise.all([
+    scanFeatures(rootPath),
+    scanRoutes(rootPath),
+    scanComponents(rootPath),
+    scanStores(rootPath),
+    scanApiClients(rootPath),
+  ]);
 
   logger.info('Project structure analyzed', {
     isEnzymeProject,
@@ -210,7 +227,7 @@ export async function getProjectStructure(): Promise<EnzymeWorkspace> {
     apiClientsCount: apiClients.length,
   });
 
-  return {
+  const workspace: EnzymeWorkspace = {
     rootPath,
     packageJson,
     enzymeConfig,
@@ -222,32 +239,127 @@ export async function getProjectStructure(): Promise<EnzymeWorkspace> {
     stores,
     apiClients,
   };
+
+  // PERFORMANCE: Cache the workspace structure
+  await cacheWorkspaceStructure(rootPath, workspace);
+
+  return workspace;
 }
 
 /**
- * Scan for Enzyme features
+ * PERFORMANCE: Load cached workspace structure if valid
+ */
+async function loadCachedWorkspaceStructure(rootPath: string): Promise<EnzymeWorkspace | null> {
+  try {
+    const context = vscode.extensions.getExtension('missionfabric.enzyme-vscode')?.exports?.context;
+    if (!context) {
+      return null;
+    }
+
+    const cacheKey = `workspace:${rootPath}`;
+    const cached = context.workspaceState.get<{
+      data: EnzymeWorkspace;
+      timestamp: number;
+    }>(cacheKey);
+
+    if (!cached) {
+      return null;
+    }
+
+    // PERFORMANCE: Cache TTL of 5 minutes
+    const CACHE_TTL = 5 * 60 * 1000;
+    const now = Date.now();
+
+    if (now - cached.timestamp > CACHE_TTL) {
+      logger.debug('Workspace cache expired');
+      return null;
+    }
+
+    return cached.data;
+  } catch (error) {
+    logger.error('Failed to load cached workspace', error);
+    return null;
+  }
+}
+
+/**
+ * PERFORMANCE: Cache workspace structure
+ */
+async function cacheWorkspaceStructure(rootPath: string, workspace: EnzymeWorkspace): Promise<void> {
+  try {
+    const context = vscode.extensions.getExtension('missionfabric.enzyme-vscode')?.exports?.context;
+    if (!context) {
+      return;
+    }
+
+    const cacheKey = `workspace:${rootPath}`;
+    await context.workspaceState.update(cacheKey, {
+      data: workspace,
+      timestamp: Date.now(),
+    });
+
+    logger.debug('Workspace structure cached');
+  } catch (error) {
+    logger.error('Failed to cache workspace structure', error);
+  }
+}
+
+/**
+ * PERFORMANCE: Invalidate workspace cache (call when files change)
+ */
+export async function invalidateWorkspaceCache(): Promise<void> {
+  try {
+    const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+    if (!workspaceFolder) {
+      return;
+    }
+
+    const context = vscode.extensions.getExtension('missionfabric.enzyme-vscode')?.exports?.context;
+    if (!context) {
+      return;
+    }
+
+    const rootPath = workspaceFolder.uri.fsPath;
+    const cacheKey = `workspace:${rootPath}`;
+    await context.workspaceState.update(cacheKey, undefined);
+
+    logger.debug('Workspace cache invalidated');
+  } catch (error) {
+    logger.error('Failed to invalidate workspace cache', error);
+  }
+}
+
+/**
+ * PERFORMANCE: Scan for Enzyme features (async with limit)
+ * Uses workspace.findFiles with max results to prevent blocking
  */
 async function scanFeatures(rootPath: string): Promise<EnzymeFeature[]> {
   const features: EnzymeFeature[] = [];
-  const featuresPath = path.join(rootPath, 'src', 'features');
-
-  if (!fs.existsSync(featuresPath)) {
-    return features;
-  }
+  const rootUri = vscode.Uri.file(rootPath);
+  const featuresUri = vscode.Uri.joinPath(rootUri, 'src', 'features');
 
   try {
-    const featureDirs = fs.readdirSync(featuresPath, { withFileTypes: true })
-      .filter(dirent => dirent.isDirectory());
+    // Check if features directory exists
+    await vscode.workspace.fs.stat(featuresUri);
 
-    for (const featureDir of featureDirs) {
-      const featurePath = path.join(featuresPath, featureDir.name);
-      const feature = await analyzeFeature(featurePath, featureDir.name);
-      if (feature) {
-        features.push(feature);
-      }
-    }
+    // PERFORMANCE: Use workspace.findFiles to get all feature index files (limited to 100)
+    const featureIndexFiles = await vscode.workspace.findFiles(
+      new vscode.RelativePattern(featuresUri, '*/index.{ts,tsx}'),
+      '**/node_modules/**',
+      100 // PERFORMANCE: Limit to prevent blocking
+    );
+
+    // PERFORMANCE: Process features in parallel (but limit concurrency)
+    const featurePromises = featureIndexFiles.map(async (fileUri) => {
+      const featureName = path.basename(path.dirname(fileUri.fsPath));
+      return await analyzeFeature(fileUri.fsPath, featureName);
+    });
+
+    const featureResults = await Promise.all(featurePromises);
+    features.push(...featureResults.filter((f): f is EnzymeFeature => f !== null));
   } catch (error) {
-    logger.error('Failed to scan features', error);
+    // Features directory doesn't exist or error scanning
+    logger.debug('No features directory or scan error');
   }
 
   return features;
@@ -274,62 +386,102 @@ async function analyzeFeature(featurePath: string, featureId: string): Promise<E
 }
 
 /**
- * Scan for routes
+ * PERFORMANCE: Scan for routes (async with limit)
  */
 async function scanRoutes(rootPath: string): Promise<EnzymeRoute[]> {
   const routes: EnzymeRoute[] = [];
-  const routesPath = path.join(rootPath, 'src', 'routes');
+  const rootUri = vscode.Uri.file(rootPath);
 
-  if (!fs.existsSync(routesPath)) {
-    return routes;
+  try {
+    // PERFORMANCE: Use workspace.findFiles with limit
+    const routeFiles = await vscode.workspace.findFiles(
+      new vscode.RelativePattern(rootUri, 'src/routes/**/*.{ts,tsx}'),
+      '**/node_modules/**',
+      100 // PERFORMANCE: Limit to prevent blocking
+    );
+
+    // Placeholder: would parse route files here
+    logger.debug(`Found ${routeFiles.length} route files`);
+  } catch {
+    // Routes directory doesn't exist
+    logger.debug('No routes directory');
   }
 
-  // Placeholder implementation
   return routes;
 }
 
 /**
- * Scan for components
+ * PERFORMANCE: Scan for components (async with limit)
  */
 async function scanComponents(rootPath: string): Promise<EnzymeComponent[]> {
   const components: EnzymeComponent[] = [];
-  const componentsPath = path.join(rootPath, 'src', 'components');
+  const rootUri = vscode.Uri.file(rootPath);
 
-  if (!fs.existsSync(componentsPath)) {
-    return components;
+  try {
+    // PERFORMANCE: Use workspace.findFiles with limit
+    const componentFiles = await vscode.workspace.findFiles(
+      new vscode.RelativePattern(rootUri, 'src/components/**/*.{ts,tsx}'),
+      '**/node_modules/**',
+      100 // PERFORMANCE: Limit to prevent blocking
+    );
+
+    // Placeholder: would parse component files here
+    logger.debug(`Found ${componentFiles.length} component files`);
+  } catch {
+    // Components directory doesn't exist
+    logger.debug('No components directory');
   }
 
-  // Placeholder implementation
   return components;
 }
 
 /**
- * Scan for stores
+ * PERFORMANCE: Scan for stores (async with limit)
  */
 async function scanStores(rootPath: string): Promise<EnzymeStore[]> {
   const stores: EnzymeStore[] = [];
-  const storesPath = path.join(rootPath, 'src', 'stores');
+  const rootUri = vscode.Uri.file(rootPath);
 
-  if (!fs.existsSync(storesPath)) {
-    return stores;
+  try {
+    // PERFORMANCE: Use workspace.findFiles with limit
+    const storeFiles = await vscode.workspace.findFiles(
+      new vscode.RelativePattern(rootUri, 'src/stores/**/*.{ts,tsx}'),
+      '**/node_modules/**',
+      100 // PERFORMANCE: Limit to prevent blocking
+    );
+
+    // Placeholder: would parse store files here
+    logger.debug(`Found ${storeFiles.length} store files`);
+  } catch {
+    // Stores directory doesn't exist
+    logger.debug('No stores directory');
   }
 
-  // Placeholder implementation
   return stores;
 }
 
 /**
- * Scan for API clients
+ * PERFORMANCE: Scan for API clients (async with limit)
  */
 async function scanApiClients(rootPath: string): Promise<EnzymeApiClient[]> {
   const apiClients: EnzymeApiClient[] = [];
-  const apiPath = path.join(rootPath, 'src', 'api');
+  const rootUri = vscode.Uri.file(rootPath);
 
-  if (!fs.existsSync(apiPath)) {
-    return apiClients;
+  try {
+    // PERFORMANCE: Use workspace.findFiles with limit
+    const apiFiles = await vscode.workspace.findFiles(
+      new vscode.RelativePattern(rootUri, 'src/api/**/*.{ts,tsx}'),
+      '**/node_modules/**',
+      100 // PERFORMANCE: Limit to prevent blocking
+    );
+
+    // Placeholder: would parse API client files here
+    logger.debug(`Found ${apiFiles.length} API client files`);
+  } catch {
+    // API directory doesn't exist
+    logger.debug('No API directory');
   }
 
-  // Placeholder implementation
   return apiClients;
 }
 

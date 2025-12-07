@@ -187,17 +187,17 @@
 }
 
 .diff-item.added {
-	background-color: rgba(0, 255, 0, 0.1);
+	background-color: var(--vscode-diffEditor-insertedTextBackground);
 	border-left-color: var(--vscode-terminal-ansiGreen);
 }
 
 .diff-item.removed {
-	background-color: rgba(255, 0, 0, 0.1);
+	background-color: var(--vscode-diffEditor-removedTextBackground);
 	border-left-color: var(--vscode-terminal-ansiRed);
 }
 
 .diff-item.modified {
-	background-color: rgba(255, 255, 0, 0.1);
+	background-color: var(--vscode-editorWarning-background);
 	border-left-color: var(--vscode-terminal-ansiYellow);
 }
 
