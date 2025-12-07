@@ -13,12 +13,24 @@ import * as vscode from 'vscode';
  * Complete Enzyme extension settings
  */
 export interface EnzymeExtensionSettings {
+  // Telemetry
+  'enzyme.telemetry.enabled': boolean;
+
+  // Logging
+  'enzyme.logging.level': 'debug' | 'info' | 'warn' | 'error';
+
   // CLI Configuration
   'enzyme.cli.path': string;
   'enzyme.cli.autoInstall': boolean;
 
-  // Telemetry
-  'enzyme.telemetry.enabled': boolean;
+  // Generator
+  'enzyme.generator.componentStyle': 'function' | 'arrow';
+  'enzyme.generator.testFramework': 'vitest' | 'jest';
+  'enzyme.generator.cssFramework': 'tailwind' | 'css-modules' | 'styled-components' | 'emotion';
+
+  // Validation
+  'enzyme.validation.onSave': boolean;
+  'enzyme.validation.strict': boolean;
 
   // Analysis
   'enzyme.analysis.autoRun': boolean;
@@ -61,8 +73,27 @@ export interface EnzymeExtensionSettings {
   'enzyme.debug.port': number;
 
   // Performance
+  'enzyme.performance.monitoring.enabled': boolean;
   'enzyme.performance.caching': boolean;
   'enzyme.performance.maxCacheSize': number;
+
+  // Security
+  'enzyme.security.scanning.enabled': boolean;
+
+  // Imports
+  'enzyme.imports.autoOptimize': boolean;
+
+  // Snippets
+  'enzyme.snippets.enabled': boolean;
+
+  // Code Actions
+  'enzyme.codeActions.enabled': boolean;
+
+  // Explorer
+  'enzyme.explorer.autoRefresh': boolean;
+
+  // Format
+  'enzyme.format.onSave': boolean;
 
   // Experimental
   'enzyme.experimental.features': string[];
@@ -81,12 +112,24 @@ export type ExtensionSettingKey = keyof EnzymeExtensionSettings;
  * Default extension settings
  */
 export const DEFAULT_SETTINGS: EnzymeExtensionSettings = {
+  // Telemetry - CRITICAL: Matches package.json (false by default for privacy)
+  'enzyme.telemetry.enabled': false,
+
+  // Logging
+  'enzyme.logging.level': 'info',
+
   // CLI
   'enzyme.cli.path': 'enzyme',
   'enzyme.cli.autoInstall': true,
 
-  // Telemetry
-  'enzyme.telemetry.enabled': true,
+  // Generator
+  'enzyme.generator.componentStyle': 'function',
+  'enzyme.generator.testFramework': 'vitest',
+  'enzyme.generator.cssFramework': 'tailwind',
+
+  // Validation
+  'enzyme.validation.onSave': true,
+  'enzyme.validation.strict': false,
 
   // Analysis
   'enzyme.analysis.autoRun': true,
@@ -129,8 +172,27 @@ export const DEFAULT_SETTINGS: EnzymeExtensionSettings = {
   'enzyme.debug.port': 9229,
 
   // Performance
+  'enzyme.performance.monitoring.enabled': true,
   'enzyme.performance.caching': true,
   'enzyme.performance.maxCacheSize': 100,
+
+  // Security
+  'enzyme.security.scanning.enabled': true,
+
+  // Imports
+  'enzyme.imports.autoOptimize': true,
+
+  // Snippets
+  'enzyme.snippets.enabled': true,
+
+  // Code Actions
+  'enzyme.codeActions.enabled': true,
+
+  // Explorer
+  'enzyme.explorer.autoRefresh': true,
+
+  // Format
+  'enzyme.format.onSave': true,
 
   // Experimental
   'enzyme.experimental.features': [],

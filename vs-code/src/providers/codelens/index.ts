@@ -6,11 +6,41 @@ import { FeatureCodeLensProvider } from './feature-code-lens';
 
 export function registerCodeLensProviders(context: vscode.ExtensionContext): void {
   const config = vscode.workspace.getConfiguration('enzyme');
-  const enableCodeLens = config.get<boolean>('enableCodeLens', true);
+  const enableCodeLens = config.get<boolean>('codeLens.enabled', true);
 
   if (!enableCodeLens) {
     return;
   }
+
+  // Watch for configuration changes to enable/disable CodeLens dynamically
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration('enzyme.codeLens.enabled')) {
+        const newConfig = vscode.workspace.getConfiguration('enzyme');
+        const newEnabled = newConfig.get<boolean>('codeLens.enabled', true);
+
+        if (newEnabled) {
+          vscode.window.showInformationMessage(
+            'CodeLens enabled. Reload window to see changes.',
+            'Reload'
+          ).then((action) => {
+            if (action === 'Reload') {
+              vscode.commands.executeCommand('workbench.action.reloadWindow');
+            }
+          });
+        } else {
+          vscode.window.showInformationMessage(
+            'CodeLens disabled. Reload window to see changes.',
+            'Reload'
+          ).then((action) => {
+            if (action === 'Reload') {
+              vscode.commands.executeCommand('workbench.action.reloadWindow');
+            }
+          });
+        }
+      }
+    })
+  );
 
   // Register route code lens provider
   const routeCodeLensProvider = new RouteCodeLensProvider();

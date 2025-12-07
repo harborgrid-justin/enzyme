@@ -41,9 +41,9 @@ export class EnzymeFeatureItem extends vscode.TreeItem {
 
     // Add command to open feature file
     this.command = {
-      command: 'enzyme.openFile',
+      command: 'enzyme.explorer.openFile',
       title: 'Open Feature',
-      arguments: [filePath]
+      arguments: [vscode.Uri.file(filePath)]
     };
   }
 
@@ -97,9 +97,9 @@ export class EnzymeRouteItem extends vscode.TreeItem {
     }
 
     this.command = {
-      command: 'enzyme.openFile',
+      command: 'enzyme.explorer.openFile',
       title: 'Open Route',
-      arguments: [filePath]
+      arguments: [vscode.Uri.file(filePath)]
     };
   }
 
@@ -119,10 +119,10 @@ export class EnzymeRouteItem extends vscode.TreeItem {
   private buildDescription(): string {
     const badges: string[] = [];
 
-    if (this.metadata?.isProtected) badges.push('🔒');
-    if (this.metadata?.hasLoader) badges.push('📊');
-    if (this.metadata?.hasAction) badges.push('⚡');
-    if (this.metadata?.isLazy) badges.push('💤');
+    if (this.metadata?.isProtected) badges.push('[Protected]');
+    if (this.metadata?.hasLoader) badges.push('[Loader]');
+    if (this.metadata?.hasAction) badges.push('[Action]');
+    if (this.metadata?.isLazy) badges.push('[Lazy]');
     if (this.metadata?.feature) badges.push(`[${this.metadata.feature}]`);
 
     return badges.join(' ');
@@ -184,9 +184,9 @@ export class EnzymeComponentItem extends vscode.TreeItem {
     this.contextValue = 'enzyme.component';
 
     this.command = {
-      command: 'enzyme.openFile',
+      command: 'enzyme.explorer.openFile',
       title: 'Open Component',
-      arguments: [filePath]
+      arguments: [vscode.Uri.file(filePath)]
     };
   }
 
@@ -197,7 +197,7 @@ export class EnzymeComponentItem extends vscode.TreeItem {
       parts.push(`[${this.metadata.category}]`);
     }
     if (this.metadata?.usageCount !== undefined && this.metadata.usageCount > 0) {
-      parts.push(`📊 ${this.metadata.usageCount}`);
+      parts.push(`${this.metadata.usageCount} uses`);
     }
 
     return parts.join(' ');
@@ -256,17 +256,17 @@ export class EnzymeStoreItem extends vscode.TreeItem {
     this.contextValue = 'enzyme.store';
 
     this.command = {
-      command: 'enzyme.openFile',
+      command: 'enzyme.explorer.openFile',
       title: 'Open Store',
-      arguments: [filePath]
+      arguments: [vscode.Uri.file(filePath)]
     };
   }
 
   private buildDescription(): string {
     const badges: string[] = [];
 
-    if (this.metadata?.isPersisted) badges.push('💾');
-    if (this.metadata?.hasDevTools) badges.push('🔧');
+    if (this.metadata?.isPersisted) badges.push('[Persisted]');
+    if (this.metadata?.hasDevTools) badges.push('[DevTools]');
     if (this.metadata?.slices?.length) badges.push(`${this.metadata.slices.length} slices`);
 
     return badges.join(' ');
@@ -323,9 +323,9 @@ export class EnzymeHookItem extends vscode.TreeItem {
     this.contextValue = 'enzyme.hook';
 
     this.command = {
-      command: 'enzyme.openFile',
+      command: 'enzyme.explorer.openFile',
       title: 'Open Hook',
-      arguments: [filePath]
+      arguments: [vscode.Uri.file(filePath)]
     };
   }
 
@@ -379,9 +379,9 @@ export class EnzymeAPIItem extends vscode.TreeItem {
     this.contextValue = 'enzyme.api';
 
     this.command = {
-      command: 'enzyme.openFile',
+      command: 'enzyme.explorer.openFile',
       title: 'Open API',
-      arguments: [filePath]
+      arguments: [vscode.Uri.file(filePath)]
     };
   }
 
@@ -407,10 +407,10 @@ export class EnzymeAPIItem extends vscode.TreeItem {
       parts.push(`[${this.metadata.method}]`);
     }
     if (this.metadata?.isMocked) {
-      parts.push('🎭');
+      parts.push('[Mock]');
     }
     if (this.metadata?.hasAuth) {
-      parts.push('🔐');
+      parts.push('[Auth]');
     }
 
     return parts.join(' ');

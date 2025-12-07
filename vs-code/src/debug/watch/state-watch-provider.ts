@@ -213,22 +213,62 @@ export class StateWatchProvider {
 
   /**
    * Evaluate expression against state
+   * SECURITY: Restricted to safe property access only, no arbitrary code execution
    */
   private evaluateExpression(expression: string, state: Record<string, unknown>): unknown {
-    // Handle simple path expressions (e.g., "user.name")
-    if (/^[a-zA-Z_$][\w$.]*$/.test(expression)) {
-      return this.getValueAtPath(state, expression);
+    // Only allow simple path expressions for security
+    // Patterns allowed: "property", "object.property", "array[0]", "nested.path.value"
+    if (!/^[a-zA-Z_$][\w$.[\]0-9]*$/.test(expression)) {
+      throw new Error(
+        'Invalid expression. Only simple property paths are allowed (e.g., "user.name", "items[0].value"). ' +
+        'Complex expressions are disabled for security reasons.'
+      );
     }
 
-    // Handle more complex expressions with safe evaluation
-    // Note: In production, you might want to use a proper expression evaluator
-    try {
-      // Create a function with state properties in scope
-      const fn = new Function(...Object.keys(state), `return ${expression}`);
-      return fn(...Object.values(state));
-    } catch (error) {
-      throw new Error(`Invalid expression: ${error instanceof Error ? error.message : String(error)}`);
+    // Parse and evaluate the path safely
+    return this.evaluatePropertyPath(state, expression);
+  }
+
+  /**
+   * Safely evaluate a property path (e.g., "user.name" or "items[0].value")
+   */
+  private evaluatePropertyPath(obj: Record<string, unknown>, path: string): unknown {
+    // Split by dots and handle array accessors
+    const parts = path.split('.');
+    let current: unknown = obj;
+
+    for (const part of parts) {
+      if (current === null || current === undefined) {
+        return undefined;
+      }
+
+      // Handle array accessor like "items[0]"
+      const arrayMatch = part.match(/^([a-zA-Z_$][\w]*)(\[(\d+)\])$/);
+      if (arrayMatch) {
+        const [, prop, , index] = arrayMatch;
+        if (typeof current === 'object') {
+          current = (current as Record<string, unknown>)[prop];
+        } else {
+          return undefined;
+        }
+
+        if (!Array.isArray(current)) {
+          return undefined;
+        }
+
+        const idx = parseInt(index, 10);
+        current = current[idx];
+      } else {
+        // Simple property access
+        if (typeof current === 'object') {
+          current = (current as Record<string, unknown>)[part];
+        } else {
+          return undefined;
+        }
+      }
     }
+
+    return current;
   }
 
   /**

@@ -489,7 +489,8 @@ export class GeneratorWizardPanel extends BaseWebViewPanel {
 						...file,
 						created: true
 					});
-				} catch (error: any) {
+				} catch (error) {
+					const errorMessage = error instanceof Error ? error.message : String(error);
 					result.files.push({
 						...file,
 						created: false
@@ -497,7 +498,7 @@ export class GeneratorWizardPanel extends BaseWebViewPanel {
 					if (!result.errors) {
 						result.errors = [];
 					}
-					result.errors.push(`Failed to create ${file.path}: ${error.message}`);
+					result.errors.push(`Failed to create ${file.path}: ${errorMessage}`);
 				}
 			}
 
@@ -512,13 +513,14 @@ export class GeneratorWizardPanel extends BaseWebViewPanel {
 				);
 			}
 
-		} catch (error: any) {
+		} catch (error) {
+			const errorMessage = error instanceof Error ? error.message : String(error);
 			this.postMessage({
 				type: 'generationError',
-				payload: { error: error.message }
+				payload: { error: errorMessage }
 			});
 
-			vscode.window.showErrorMessage(`Generation failed: ${error.message}`);
+			vscode.window.showErrorMessage(`Generation failed: ${errorMessage}`);
 		}
 	}
 
@@ -682,8 +684,9 @@ export const use${name} = create${withDevtools || withPersist ? '(' : '<'}${name
 			const uri = vscode.Uri.file(filePath);
 			const document = await vscode.workspace.openTextDocument(uri);
 			await vscode.window.showTextDocument(document);
-		} catch (error: any) {
-			vscode.window.showErrorMessage(`Failed to open file: ${error.message}`);
+		} catch (error) {
+			const errorMessage = error instanceof Error ? error.message : String(error);
+			vscode.window.showErrorMessage(`Failed to open file: ${errorMessage}`);
 		}
 	}
 

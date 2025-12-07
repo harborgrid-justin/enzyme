@@ -229,9 +229,14 @@ export class Logger {
 
   /**
    * Dispose the output channel
+   * FIXED: Now properly resets singleton instance to prevent memory leaks
    */
   public dispose(): void {
     this.outputChannel.dispose();
+    // Reset singleton instance
+    if (Logger.instance === this) {
+      Logger.instance = null as any;
+    }
   }
 
   /**

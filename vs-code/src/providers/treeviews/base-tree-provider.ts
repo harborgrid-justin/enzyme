@@ -41,6 +41,7 @@ export abstract class BaseTreeProvider<T extends vscode.TreeItem>
   private refreshDebounceTimer: NodeJS.Timeout | undefined;
   private fileWatcher: vscode.FileSystemWatcher | undefined;
   private disposables: vscode.Disposable[] = [];
+  private parentMap = new Map<T, T | undefined>();
 
   protected readonly options: Required<TreeProviderOptions>;
 
@@ -91,7 +92,14 @@ export abstract class BaseTreeProvider<T extends vscode.TreeItem>
    * Get parent of a tree item (for reveal operations)
    */
   getParent?(element: T): vscode.ProviderResult<T> {
-    return undefined;
+    return this.parentMap.get(element);
+  }
+
+  /**
+   * Track parent-child relationships for reveal operations
+   */
+  protected trackParent(child: T, parent?: T): void {
+    this.parentMap.set(child, parent);
   }
 
   /**
@@ -155,6 +163,7 @@ export abstract class BaseTreeProvider<T extends vscode.TreeItem>
    */
   protected clearCache(): void {
     this.cache.clear();
+    this.parentMap.clear();
   }
 
   /**

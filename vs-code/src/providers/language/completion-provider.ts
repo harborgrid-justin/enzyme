@@ -327,37 +327,67 @@ export class EnzymeCompletionProvider implements vscode.CompletionItemProvider {
   private provideImportCompletions(linePrefix: string): vscode.CompletionItem[] {
     const items: vscode.CompletionItem[] = [];
 
-    // Enzyme framework imports
+    // Enzyme framework imports - Correct package structure
     const enzymeImports = [
       {
-        label: '@enzyme/core',
-        detail: 'Enzyme core utilities',
-        insertText: '@enzyme/core',
+        label: '@missionfabric-js/enzyme',
+        detail: 'Enzyme framework - main export',
+        insertText: '@missionfabric-js/enzyme',
       },
       {
-        label: '@enzyme/router',
-        detail: 'Enzyme routing',
-        insertText: '@enzyme/router',
+        label: '@missionfabric-js/enzyme/auth',
+        detail: 'Enzyme authentication & authorization',
+        insertText: '@missionfabric-js/enzyme/auth',
       },
       {
-        label: '@enzyme/store',
-        detail: 'Enzyme state management',
-        insertText: '@enzyme/store',
-      },
-      {
-        label: '@enzyme/api',
+        label: '@missionfabric-js/enzyme/api',
         detail: 'Enzyme API client',
-        insertText: '@enzyme/api',
+        insertText: '@missionfabric-js/enzyme/api',
       },
       {
-        label: '@enzyme/hooks',
-        detail: 'Enzyme hooks',
-        insertText: '@enzyme/hooks',
+        label: '@missionfabric-js/enzyme/routing',
+        detail: 'Enzyme routing utilities',
+        insertText: '@missionfabric-js/enzyme/routing',
       },
       {
-        label: '@enzyme/ui',
+        label: '@missionfabric-js/enzyme/state',
+        detail: 'Enzyme state management',
+        insertText: '@missionfabric-js/enzyme/state',
+      },
+      {
+        label: '@missionfabric-js/enzyme/feature',
+        detail: 'Enzyme feature factory',
+        insertText: '@missionfabric-js/enzyme/feature',
+      },
+      {
+        label: '@missionfabric-js/enzyme/flags',
+        detail: 'Enzyme feature flags',
+        insertText: '@missionfabric-js/enzyme/flags',
+      },
+      {
+        label: '@missionfabric-js/enzyme/theme',
+        detail: 'Enzyme theme system',
+        insertText: '@missionfabric-js/enzyme/theme',
+      },
+      {
+        label: '@missionfabric-js/enzyme/ui',
         detail: 'Enzyme UI components',
-        insertText: '@enzyme/ui',
+        insertText: '@missionfabric-js/enzyme/ui',
+      },
+      {
+        label: '@missionfabric-js/enzyme/hooks',
+        detail: 'Enzyme custom hooks',
+        insertText: '@missionfabric-js/enzyme/hooks',
+      },
+      {
+        label: '@missionfabric-js/enzyme/monitoring',
+        detail: 'Enzyme monitoring & error tracking',
+        insertText: '@missionfabric-js/enzyme/monitoring',
+      },
+      {
+        label: '@missionfabric-js/enzyme/performance',
+        detail: 'Enzyme performance utilities',
+        insertText: '@missionfabric-js/enzyme/performance',
       },
     ];
 

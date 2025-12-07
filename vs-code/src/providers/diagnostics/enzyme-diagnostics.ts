@@ -11,7 +11,8 @@ export class EnzymeDiagnosticsProvider {
   private performanceRules: PerformanceRules;
   private securityRules: SecurityRules;
   private debounceTimer?: NodeJS.Timeout;
-  private readonly debounceDelay = 500; // ms
+  private debounceDelay: number;
+  private configChangeListener?: vscode.Disposable;
 
   constructor() {
     this.diagnosticCollection = vscode.languages.createDiagnosticCollection('enzyme');
@@ -19,6 +20,10 @@ export class EnzymeDiagnosticsProvider {
     this.componentRules = new ComponentRules();
     this.performanceRules = new PerformanceRules();
     this.securityRules = new SecurityRules();
+
+    // Read debounce delay from configuration
+    const config = vscode.workspace.getConfiguration('enzyme');
+    this.debounceDelay = config.get<number>('analysis.debounceMs', 300);
   }
 
   public activate(context: vscode.ExtensionContext): void {
@@ -54,7 +59,23 @@ export class EnzymeDiagnosticsProvider {
       })
     );
 
+    // Watch for configuration changes
+    this.configChangeListener = vscode.workspace.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration('enzyme.analysis.debounceMs')) {
+        const config = vscode.workspace.getConfiguration('enzyme');
+        this.debounceDelay = config.get<number>('analysis.debounceMs', 300);
+      }
+
+      if (e.affectsConfiguration('enzyme.diagnostics.enabled')) {
+        // Re-analyze all open documents when diagnostics are toggled
+        vscode.workspace.textDocuments.forEach((doc) => {
+          this.analyzeDocument(doc);
+        });
+      }
+    });
+
     context.subscriptions.push(this.diagnosticCollection);
+    context.subscriptions.push(this.configChangeListener);
   }
 
   private debouncedAnalyze(document: vscode.TextDocument): void {
@@ -90,8 +111,8 @@ export class EnzymeDiagnosticsProvider {
   }
 
   private shouldAnalyze(document: vscode.TextDocument): boolean {
-    const config = vscode.workspace.getConfiguration('enzyme');
-    const enableDiagnostics = config.get<boolean>('enableDiagnostics', true);
+    const config = vscode.workspace.getConfiguration('enzyme', document.uri);
+    const enableDiagnostics = config.get<boolean>('diagnostics.enabled', true);
 
     if (!enableDiagnostics) {
       return false;

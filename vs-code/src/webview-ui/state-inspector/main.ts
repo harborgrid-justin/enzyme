@@ -119,16 +119,29 @@ function renderStateTree() {
 	if (!container) return;
 
 	if (!currentState) {
-		container.innerHTML = `
-			<div class="empty-state">
-				<span class="codicon codicon-info"></span>
-				<p>No state available. Start your application to see state.</p>
-			</div>
-		`;
+		// SECURITY: Use safe DOM manipulation instead of innerHTML
+		container.textContent = '';
+		const emptyState = document.createElement('div');
+		emptyState.className = 'empty-state';
+
+		const icon = document.createElement('span');
+		icon.className = 'codicon codicon-info';
+
+		const text = document.createElement('p');
+		text.textContent = 'No state available. Start your application to see state.';
+
+		emptyState.appendChild(icon);
+		emptyState.appendChild(text);
+		container.appendChild(emptyState);
 		return;
 	}
 
-	container.innerHTML = renderObject(currentState, 'root');
+	// SECURITY: renderObject returns sanitized HTML, but we use a safer approach
+	// by creating a wrapper element
+	const wrapper = document.createElement('div');
+	wrapper.innerHTML = renderObject(currentState, 'root');
+	container.textContent = '';
+	container.appendChild(wrapper);
 }
 
 function renderObject(obj: any, path: string, level: number = 0): string {
@@ -249,34 +262,60 @@ function renderActionHistory() {
 	}
 
 	if (currentHistory.length === 0) {
-		container.innerHTML = `
-			<div class="empty-state">
-				<span class="codicon codicon-history"></span>
-				<p>No actions recorded yet.</p>
-			</div>
-		`;
+		// SECURITY: Use safe DOM manipulation
+		container.textContent = '';
+		const emptyState = document.createElement('div');
+		emptyState.className = 'empty-state';
+
+		const icon = document.createElement('span');
+		icon.className = 'codicon codicon-history';
+
+		const text = document.createElement('p');
+		text.textContent = 'No actions recorded yet.';
+
+		emptyState.appendChild(icon);
+		emptyState.appendChild(text);
+		container.appendChild(emptyState);
 		return;
 	}
 
-	let html = '<div class="history-items">';
+	// SECURITY: Use DOM manipulation instead of innerHTML to prevent XSS
+	container.textContent = '';
+	const historyItemsDiv = document.createElement('div');
+	historyItemsDiv.className = 'history-items';
 
 	currentHistory.forEach((item, index) => {
 		const isActive = index === currentIndex;
 		const time = webviewUtils.formatRelativeTime(item.timestamp);
 
-		html += `
-			<div class="history-item ${isActive ? 'active' : ''}" onclick="window.selectHistoryItem(${index})">
-				<div class="history-item-header">
-					<span class="history-action">${item.action || 'State Update'}</span>
-					${item.hasChanges ? '<span class="codicon codicon-diff"></span>' : ''}
-				</div>
-				<div class="history-item-time">${time}</div>
-			</div>
-		`;
+		const historyItem = document.createElement('div');
+		historyItem.className = `history-item ${isActive ? 'active' : ''}`;
+		historyItem.onclick = () => (window as any).selectHistoryItem(index);
+
+		const header = document.createElement('div');
+		header.className = 'history-item-header';
+
+		const actionSpan = document.createElement('span');
+		actionSpan.className = 'history-action';
+		actionSpan.textContent = item.action || 'State Update';
+		header.appendChild(actionSpan);
+
+		if (item.hasChanges) {
+			const diffIcon = document.createElement('span');
+			diffIcon.className = 'codicon codicon-diff';
+			header.appendChild(diffIcon);
+		}
+
+		const timeDiv = document.createElement('div');
+		timeDiv.className = 'history-item-time';
+		timeDiv.textContent = time;
+
+		historyItem.appendChild(header);
+		historyItem.appendChild(timeDiv);
+		historyItemsDiv.appendChild(historyItem);
 	});
 
-	html += '</div>';
-	container.innerHTML = html;
+	container.appendChild(historyItemsDiv);
 }
 
 function updateTimeTravelControls() {

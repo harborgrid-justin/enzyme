@@ -199,11 +199,30 @@ export class ViewOrchestrator {
   public refreshTreeView(id: string): void {
     const registration = this.treeViews.get(id);
     if (registration) {
-      if ('refresh' in registration.provider && typeof registration.provider.refresh === 'function') {
-        (registration.provider as any).refresh();
+      // Type-safe refresh: trigger onDidChangeTreeData event
+      if ('_onDidChangeTreeData' in registration.provider) {
+        const provider = registration.provider as any;
+        if (provider._onDidChangeTreeData && typeof provider._onDidChangeTreeData.fire === 'function') {
+          provider._onDidChangeTreeData.fire();
+        }
+      }
+      // Fallback: check for custom refresh method
+      else if ('refresh' in registration.provider && typeof registration.provider.refresh === 'function') {
+        const provider = registration.provider as { refresh: () => void };
+        provider.refresh();
       }
       this.logger.debug(`TreeView refreshed: ${id}`);
     }
+  }
+
+  /**
+   * Refresh all TreeViews
+   */
+  public refreshAllTreeViews(): void {
+    for (const id of this.treeViews.keys()) {
+      this.refreshTreeView(id);
+    }
+    this.logger.debug('All TreeViews refreshed');
   }
 
   /**

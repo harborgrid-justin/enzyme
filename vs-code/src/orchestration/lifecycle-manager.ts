@@ -160,13 +160,14 @@ export class LifecycleManager {
 
   /**
    * Deactivate the extension
+   * FIXED: Now properly stops health checks and resets singleton
    */
   public async deactivate(): Promise<void> {
     this.logger.info('Starting extension deactivation...');
 
     try {
       await this.runPhase(LifecyclePhase.DEACTIVATING, async () => {
-        // Stop health checks
+        // Stop health checks - CRITICAL for preventing memory leaks
         this.stopHealthChecks();
 
         // Dispose all disposables
@@ -181,6 +182,11 @@ export class LifecycleManager {
 
       this.currentPhase = LifecyclePhase.DEACTIVATED;
       this.eventBus.emit({ type: 'extension:deactivated' });
+
+      // Reset singleton instance to prevent memory leaks
+      if (LifecycleManager.instance === this) {
+        LifecycleManager.instance = null as any;
+      }
 
     } catch (error) {
       this.logger.error('Extension deactivation failed', error);
@@ -307,6 +313,7 @@ export class LifecycleManager {
       this.logger.success('Recovery successful');
     } catch (recoveryError) {
       this.logger.error('Recovery failed', recoveryError);
+      // FIXED: Added error handling to prevent floating promise
       vscode.window.showErrorMessage(
         'Enzyme extension failed to recover. Please reload VS Code.',
         'Reload'
@@ -314,6 +321,8 @@ export class LifecycleManager {
         if (action === 'Reload') {
           vscode.commands.executeCommand('workbench.action.reloadWindow');
         }
+      }, error => {
+        this.logger.error('Failed to show reload prompt', error);
       });
     }
   }

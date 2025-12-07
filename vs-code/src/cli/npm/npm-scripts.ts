@@ -100,6 +100,7 @@ export class NPMScripts {
 
   /**
    * Run script with output streaming
+   * SECURITY: Uses shell: false to prevent command injection
    */
   async runScriptWithOutput(
     scriptName: string,
@@ -111,6 +112,11 @@ export class NPMScripts {
       throw new Error('No workspace folder open');
     }
 
+    // SECURITY: Validate script name to prevent injection
+    if (!this.isValidScriptName(scriptName)) {
+      throw new Error(`Invalid script name: ${scriptName}. Only alphanumeric, hyphens, and colons allowed.`);
+    }
+
     const channel = outputChannel || vscode.window.createOutputChannel(`npm ${scriptName}`);
     channel.show();
 
@@ -118,9 +124,10 @@ export class NPMScripts {
       const command = packageManager === 'npm' ? 'npm' : packageManager;
       const args = packageManager === 'npm' ? ['run', scriptName] : [scriptName];
 
+      // SECURITY: Use shell: false to prevent command injection attacks
       const child = spawn(command, args, {
         cwd: workspaceRoot,
-        shell: true,
+        shell: false,
       });
 
       child.stdout?.on('data', (data) => {
@@ -144,6 +151,14 @@ export class NPMScripts {
 
       this.updateStatusBar(scriptName, 'running');
     });
+  }
+
+  /**
+   * Validate script name to prevent command injection
+   */
+  private isValidScriptName(name: string): boolean {
+    // Allow alphanumeric characters, hyphens, underscores, and colons (for namespaced scripts)
+    return /^[a-zA-Z0-9\-_:]+$/.test(name);
   }
 
   /**

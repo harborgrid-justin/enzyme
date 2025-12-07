@@ -222,6 +222,7 @@ export class Container {
 
   /**
    * Dispose all singleton services that implement dispose
+   * FIXED: Now properly resets singleton instance to prevent memory leaks
    */
   public dispose(): void {
     this.singletons.forEach((instance) => {
@@ -230,6 +231,10 @@ export class Container {
       }
     });
     this.clear();
+    // Reset singleton instance
+    if (Container.instance === this) {
+      Container.instance = null as any;
+    }
   }
 }
 

@@ -68,20 +68,20 @@ export class StateInspectorPanel extends BaseWebViewPanel {
 			<div class="container">
 				<div class="header">
 					<h1>
-						<span class="icon">🔍</span>
+						<span class="codicon codicon-inspect"></span>
 						State Inspector
 					</h1>
 					<div class="header-actions">
-						<button id="clearHistory" class="btn btn-secondary" title="Clear History">
+						<button id="clearHistory" class="btn btn-secondary" title="Clear History" aria-label="Clear state history">
 							<span class="codicon codicon-clear-all"></span>
 						</button>
-						<button id="exportState" class="btn btn-secondary" title="Export State">
+						<button id="exportState" class="btn btn-secondary" title="Export State" aria-label="Export current state to file">
 							<span class="codicon codicon-export"></span>
 						</button>
-						<button id="importState" class="btn btn-secondary" title="Import State">
+						<button id="importState" class="btn btn-secondary" title="Import State" aria-label="Import state from file">
 							<span class="codicon codicon-import"></span>
 						</button>
-						<button id="refreshState" class="btn btn-primary" title="Refresh State">
+						<button id="refreshState" class="btn btn-primary" title="Refresh State" aria-label="Refresh state data">
 							<span class="codicon codicon-refresh"></span>
 						</button>
 					</div>
@@ -89,27 +89,29 @@ export class StateInspectorPanel extends BaseWebViewPanel {
 
 				<div class="toolbar">
 					<div class="search-box">
-						<span class="codicon codicon-search"></span>
+						<label for="stateFilter" class="visually-hidden">Search state keys</label>
+						<span class="codicon codicon-search" aria-hidden="true"></span>
 						<input
 							type="text"
 							id="stateFilter"
 							placeholder="Search state keys..."
 							class="search-input"
+							aria-label="Search state keys"
 						/>
 					</div>
-					<div class="time-travel-controls">
-						<button id="timeTravelFirst" class="btn btn-icon" title="First State" disabled>
-							<span class="codicon codicon-debug-step-back"></span>
+					<div class="time-travel-controls" role="group" aria-label="Time travel navigation">
+						<button id="timeTravelFirst" class="btn btn-icon" title="First State" aria-label="Go to first state" disabled>
+							<span class="codicon codicon-debug-step-back" aria-hidden="true"></span>
 						</button>
-						<button id="timeTravelPrev" class="btn btn-icon" title="Previous State" disabled>
-							<span class="codicon codicon-chevron-left"></span>
+						<button id="timeTravelPrev" class="btn btn-icon" title="Previous State" aria-label="Go to previous state" disabled>
+							<span class="codicon codicon-chevron-left" aria-hidden="true"></span>
 						</button>
-						<span id="statePosition" class="state-position">0 / 0</span>
-						<button id="timeTravelNext" class="btn btn-icon" title="Next State" disabled>
-							<span class="codicon codicon-chevron-right"></span>
+						<span id="statePosition" class="state-position" aria-live="polite" aria-atomic="true">0 / 0</span>
+						<button id="timeTravelNext" class="btn btn-icon" title="Next State" aria-label="Go to next state" disabled>
+							<span class="codicon codicon-chevron-right" aria-hidden="true"></span>
 						</button>
-						<button id="timeTravelLast" class="btn btn-icon" title="Latest State" disabled>
-							<span class="codicon codicon-debug-step-over"></span>
+						<button id="timeTravelLast" class="btn btn-icon" title="Latest State" aria-label="Go to latest state" disabled>
+							<span class="codicon codicon-debug-step-over" aria-hidden="true"></span>
 						</button>
 					</div>
 				</div>
@@ -118,18 +120,18 @@ export class StateInspectorPanel extends BaseWebViewPanel {
 					<div class="panel state-panel">
 						<div class="panel-header">
 							<h2>Current State</h2>
-							<div class="panel-actions">
-								<button id="expandAll" class="btn btn-icon" title="Expand All">
-									<span class="codicon codicon-expand-all"></span>
+							<div class="panel-actions" role="group" aria-label="State tree actions">
+								<button id="expandAll" class="btn btn-icon" title="Expand All" aria-label="Expand all state nodes">
+									<span class="codicon codicon-expand-all" aria-hidden="true"></span>
 								</button>
-								<button id="collapseAll" class="btn btn-icon" title="Collapse All">
-									<span class="codicon codicon-collapse-all"></span>
+								<button id="collapseAll" class="btn btn-icon" title="Collapse All" aria-label="Collapse all state nodes">
+									<span class="codicon codicon-collapse-all" aria-hidden="true"></span>
 								</button>
 							</div>
 						</div>
-						<div id="stateTree" class="state-tree">
-							<div class="empty-state">
-								<span class="codicon codicon-info"></span>
+						<div id="stateTree" class="state-tree" role="tree" aria-label="State tree view">
+							<div class="empty-state" role="status">
+								<span class="codicon codicon-info" aria-hidden="true"></span>
 								<p>No state available. Start your application to see state.</p>
 							</div>
 						</div>
