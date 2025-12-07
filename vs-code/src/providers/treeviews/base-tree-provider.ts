@@ -44,15 +44,18 @@ export abstract class BaseTreeProvider<T extends vscode.TreeItem>
 
   protected readonly options: Required<TreeProviderOptions>;
 
+  /**
+   * PERFORMANCE: Optimized tree provider with increased cache TTL and better defaults
+   */
   constructor(
     protected readonly context: vscode.ExtensionContext,
     options: TreeProviderOptions = {}
   ) {
     this.options = {
-      refreshDebounceMs: options.refreshDebounceMs ?? 300,
+      refreshDebounceMs: options.refreshDebounceMs ?? 500, // PERFORMANCE: Increased from 300ms to 500ms
       enableCache: options.enableCache ?? true,
-      cacheTtlMs: options.cacheTtlMs ?? 5000,
-      autoRefresh: options.autoRefresh ?? true,
+      cacheTtlMs: options.cacheTtlMs ?? 30000, // PERFORMANCE: Increased from 5s to 30s
+      autoRefresh: options.autoRefresh ?? false, // PERFORMANCE: Disabled auto-refresh by default
     };
 
     this.disposables.push(this._onDidChangeTreeData);
@@ -292,14 +295,23 @@ export abstract class BaseTreeProvider<T extends vscode.TreeItem>
   }
 
   /**
-   * Dispose resources
+   * PERFORMANCE: Dispose resources with proper cleanup
+   * Ensures all timers are cleared and memory is freed
    */
   dispose(): void {
+    // PERFORMANCE: Clear debounce timer
     if (this.refreshDebounceTimer) {
       clearTimeout(this.refreshDebounceTimer);
+      this.refreshDebounceTimer = undefined;
     }
+
+    // PERFORMANCE: Dispose all disposables
     this.disposables.forEach(d => d.dispose());
+    this.disposables = [];
+
+    // PERFORMANCE: Clear all caches to free memory
     this.cache.clear();
+    this.parentMap.clear();
   }
 
   /**

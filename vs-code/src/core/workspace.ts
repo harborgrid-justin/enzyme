@@ -570,11 +570,20 @@ export class FileWatcher {
   }
 
   /**
-   * Dispose the file watcher
+   * PERFORMANCE: Dispose the file watcher with proper cleanup
+   * Ensures all timers are cleared to prevent memory leaks
    */
   public dispose(): void {
     this.stop();
-    this.disposables.forEach(d => d.dispose());
+
+    // PERFORMANCE: Clear all disposables to prevent memory leaks
+    this.disposables.forEach(d => {
+      try {
+        d.dispose();
+      } catch (error) {
+        // Silently handle dispose errors
+      }
+    });
     this.disposables = [];
   }
 }

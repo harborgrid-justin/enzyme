@@ -125,18 +125,41 @@ export class TelemetryService {
   }
 
   /**
-   * Track error
+   * Track error with enhanced context
+   *
+   * @param error - Error to track (supports EnzymeError for enhanced tracking)
+   * @param properties - Additional properties
+   *
+   * @example
+   * ```typescript
+   * telemetryService.trackError(error, { component: 'MyComponent' });
+   * ```
    */
-  public trackError(error: Error, properties?: Record<string, string>): void {
+  public trackError(error: Error | any, properties?: Record<string, string>): void {
     if (!this.enabled) {
       return;
     }
 
-    this.trackEvent('error.occurred', {
-      errorName: error.name,
-      errorMessage: this.anonymizeErrorMessage(error.message),
-      ...properties,
-    });
+    // Enhanced tracking for EnzymeError
+    const isEnzymeError = error && typeof error === 'object' && 'code' in error && 'category' in error;
+
+    if (isEnzymeError) {
+      this.trackEvent('error.occurred', {
+        errorName: error.name,
+        errorCode: error.code,
+        errorCategory: error.category,
+        errorSeverity: error.severity,
+        errorMessage: this.anonymizeErrorMessage(error.message),
+        ...properties,
+      });
+    } else {
+      // Standard error tracking
+      this.trackEvent('error.occurred', {
+        errorName: error.name,
+        errorMessage: this.anonymizeErrorMessage(error.message),
+        ...properties,
+      });
+    }
   }
 
   /**

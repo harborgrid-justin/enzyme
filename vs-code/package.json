@@ -22,7 +22,9 @@
     "Snippets",
     "Formatters",
     "Linters",
-    "Other"
+    "Debuggers",
+    "Testing",
+    "Visualization"
   ],
   "keywords": [
     "enzyme",
@@ -32,19 +34,54 @@
     "enterprise",
     "auth",
     "routing",
-    "state-management"
+    "state-management",
+    "zustand",
+    "react-router",
+    "tanstack-query",
+    "vite",
+    "code-generation",
+    "scaffolding",
+    "component-generator",
+    "performance",
+    "security",
+    "diagnostics",
+    "intellisense",
+    "autocomplete",
+    "refactoring"
   ],
-  "icon": "resources/icon.png",
+  "icon": "resources/enzyme-icon.png",
   "galleryBanner": {
-    "color": "#1e1e1e",
+    "color": "#2C3E50",
     "theme": "dark"
   },
+  "badges": [
+    {
+      "url": "https://img.shields.io/visual-studio-marketplace/v/missionfabric.enzyme-vscode",
+      "href": "https://marketplace.visualstudio.com/items?itemName=missionfabric.enzyme-vscode",
+      "description": "Visual Studio Marketplace Version"
+    },
+    {
+      "url": "https://img.shields.io/visual-studio-marketplace/i/missionfabric.enzyme-vscode",
+      "href": "https://marketplace.visualstudio.com/items?itemName=missionfabric.enzyme-vscode",
+      "description": "Installs"
+    },
+    {
+      "url": "https://img.shields.io/visual-studio-marketplace/r/missionfabric.enzyme-vscode",
+      "href": "https://marketplace.visualstudio.com/items?itemName=missionfabric.enzyme-vscode",
+      "description": "Rating"
+    }
+  ],
+  "sponsor": {
+    "url": "https://github.com/sponsors/harborgrid"
+  },
   "activationEvents": [
-    "workspaceContains:**/enzyme.config.ts",
-    "workspaceContains:**/enzyme.config.js",
+    "onStartupFinished",
+    "workspaceContains:**/enzyme.config.{ts,js,json}",
     "workspaceContains:**/.enzyme/**",
-    "workspaceContains:**/.enzymerc",
-    "workspaceContains:**/.enzymerc.json"
+    "workspaceContains:**/.enzymerc{,.json}",
+    "onLanguage:typescript",
+    "onLanguage:typescriptreact",
+    "onLanguage:enzyme-config"
   ],
   "main": "./out/extension.js",
   "capabilities": {
@@ -463,7 +500,8 @@
           "default": false,
           "scope": "application",
           "order": 1,
-          "description": "Enable anonymous telemetry to help improve the extension"
+          "description": "Enable anonymous telemetry to help improve the extension",
+          "markdownDescription": "Enable anonymous telemetry to help improve the extension. No personal data is collected. [Learn more](https://enzyme-framework.dev/privacy)"
         },
         "enzyme.logging.level": {
           "type": "string",
@@ -473,10 +511,17 @@
             "warn",
             "error"
           ],
+          "enumDescriptions": [
+            "Show all log messages (verbose)",
+            "Show informational messages and above",
+            "Show warnings and errors only",
+            "Show errors only"
+          ],
           "default": "info",
           "scope": "application",
           "order": 2,
-          "description": "Logging level for the extension"
+          "description": "Logging level for the extension",
+          "markdownDescription": "Set the logging level for the extension. Use **debug** for troubleshooting, **info** for normal operation."
         },
         "enzyme.cli.path": {
           "type": "string",
@@ -814,6 +859,28 @@
           "when": "editorHasSelection && (resourceLangId == typescript || resourceLangId == typescriptreact)",
           "command": "enzyme.refactor.convertToEnzyme",
           "group": "enzyme@3"
+        },
+        {
+          "when": "editorHasSelection && enzyme:isEnzymeProject",
+          "command": "enzyme.extractComponent",
+          "group": "enzyme.refactor@1"
+        },
+        {
+          "when": "editorHasSelection && enzyme:isEnzymeProject",
+          "command": "enzyme.extractHook",
+          "group": "enzyme.refactor@2"
+        },
+        {
+          "when": "enzyme:isEnzymeProject && (resourceLangId == typescript || resourceLangId == typescriptreact)",
+          "command": "enzyme.organizeImports",
+          "group": "1_modification@4"
+        }
+      ],
+      "editor/title": [
+        {
+          "when": "enzyme:isEnzymeProject && (resourceLangId == typescript || resourceLangId == typescriptreact)",
+          "command": "enzyme.runComponentTests",
+          "group": "navigation"
         }
       ],
       "explorer/context": [
@@ -826,24 +893,64 @@
           "when": "enzyme:isEnzymeProject && explorerResourceIsFolder",
           "command": "enzyme.generate.component",
           "group": "enzyme@2"
+        },
+        {
+          "when": "enzyme:isEnzymeProject && resourceExtname == .tsx",
+          "command": "enzyme.generate.test",
+          "group": "enzyme@3"
+        },
+        {
+          "when": "enzyme:isEnzymeProject && resourceFilename == enzyme.config.ts",
+          "command": "enzyme.validate.config",
+          "group": "enzyme@4"
         }
       ],
       "view/title": [
         {
           "command": "enzyme.explorer.refresh",
           "when": "view =~ /^enzyme\\.views\\./",
-          "group": "navigation"
+          "group": "navigation@1"
         },
         {
           "command": "enzyme.docs.open",
           "when": "view =~ /^enzyme\\.views\\./",
+          "group": "navigation@2"
+        },
+        {
+          "command": "enzyme.openSettings",
+          "when": "view =~ /^enzyme\\.views\\./",
+          "group": "1_config"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "enzyme.explorer.openFile",
+          "when": "view =~ /^enzyme\\.views\\./",
           "group": "navigation"
+        },
+        {
+          "command": "enzyme.editFeatureFlag",
+          "when": "view == enzyme.views.features",
+          "group": "inline"
+        },
+        {
+          "command": "enzyme.runComponentTests",
+          "when": "view == enzyme.views.components",
+          "group": "enzyme@1"
         }
       ],
       "commandPalette": [
         {
           "command": "enzyme.explorer.openFile",
           "when": "false"
+        },
+        {
+          "command": "enzyme.editFeatureFlag",
+          "when": "enzyme:isEnzymeProject"
+        },
+        {
+          "command": "enzyme.openFeatureDashboard",
+          "when": "enzyme:isEnzymeProject"
         }
       ]
     },
@@ -867,10 +974,57 @@
         "when": "enzyme:isEnzymeProject && (explorerViewletVisible || editorTextFocus)"
       },
       {
+        "command": "enzyme.generate.hook",
+        "key": "ctrl+alt+e h",
+        "mac": "cmd+alt+e h",
+        "when": "editorTextFocus && enzyme:isEnzymeProject"
+      },
+      {
+        "command": "enzyme.generate.store",
+        "key": "ctrl+alt+e s",
+        "mac": "cmd+alt+e s",
+        "when": "editorTextFocus && enzyme:isEnzymeProject"
+      },
+      {
+        "command": "enzyme.generate.test",
+        "key": "ctrl+alt+e t",
+        "mac": "cmd+alt+e t",
+        "when": "editorTextFocus && enzyme:isEnzymeProject"
+      },
+      {
         "command": "enzyme.analyze.performance",
         "key": "ctrl+alt+e p",
         "mac": "cmd+alt+e p",
         "when": "editorTextFocus && enzyme:isEnzymeProject"
+      },
+      {
+        "command": "enzyme.analyze.security",
+        "key": "ctrl+alt+e shift+s",
+        "mac": "cmd+alt+e shift+s",
+        "when": "editorTextFocus && enzyme:isEnzymeProject"
+      },
+      {
+        "command": "enzyme.panel.showGeneratorWizard",
+        "key": "ctrl+alt+e g",
+        "mac": "cmd+alt+e g",
+        "when": "enzyme:isEnzymeProject"
+      },
+      {
+        "command": "enzyme.panel.showFeatureDashboard",
+        "key": "ctrl+alt+e d",
+        "mac": "cmd+alt+e d",
+        "when": "enzyme:isEnzymeProject"
+      },
+      {
+        "command": "enzyme.docs.open",
+        "key": "ctrl+alt+e shift+d",
+        "mac": "cmd+alt+e shift+d"
+      },
+      {
+        "command": "enzyme.explorer.refresh",
+        "key": "ctrl+alt+e shift+r",
+        "mac": "cmd+alt+e shift+r",
+        "when": "enzyme:isEnzymeProject"
       }
     ],
     "languages": [
@@ -936,8 +1090,268 @@
         "properties": {
           "task": {
             "type": "string",
-            "description": "The Enzyme task to execute"
+            "description": "The Enzyme task to execute",
+            "enum": [
+              "dev",
+              "build",
+              "test",
+              "lint",
+              "format",
+              "analyze"
+            ]
+          },
+          "args": {
+            "type": "array",
+            "description": "Additional arguments to pass to the task",
+            "items": {
+              "type": "string"
+            }
+          },
+          "cwd": {
+            "type": "string",
+            "description": "Working directory for the task"
           }
+        }
+      }
+    ],
+    "walkthroughs": [
+      {
+        "id": "enzyme.getting-started",
+        "title": "Getting Started with Enzyme",
+        "description": "Learn how to use the Enzyme extension to build React applications faster",
+        "steps": [
+          {
+            "id": "enzyme.walkthrough.initialize",
+            "title": "Initialize Enzyme Project",
+            "description": "Create a new Enzyme project or configure an existing one.\n[Initialize Project](command:enzyme.init)",
+            "media": {
+              "markdown": "resources/walkthroughs/initialize.md"
+            }
+          },
+          {
+            "id": "enzyme.walkthrough.generate",
+            "title": "Generate Components",
+            "description": "Use code generators to quickly scaffold components, features, and routes.\n[Open Generator Wizard](command:enzyme.panel.showGeneratorWizard)",
+            "media": {
+              "markdown": "resources/walkthroughs/generate.md"
+            }
+          },
+          {
+            "id": "enzyme.walkthrough.explore",
+            "title": "Explore Your Project",
+            "description": "Use the Enzyme explorer to navigate features, routes, and components.\n[Open Explorer](command:workbench.view.extension.enzyme-explorer)",
+            "media": {
+              "markdown": "resources/walkthroughs/explore.md"
+            }
+          },
+          {
+            "id": "enzyme.walkthrough.analyze",
+            "title": "Analyze Performance",
+            "description": "Monitor performance and security with built-in analyzers.\n[Run Performance Analysis](command:enzyme.analyze.performance)",
+            "media": {
+              "markdown": "resources/walkthroughs/analyze.md"
+            }
+          }
+        ]
+      }
+    ],
+    "colors": [
+      {
+        "id": "enzyme.featureColor",
+        "description": "Color for Enzyme feature items in tree views",
+        "defaults": {
+          "dark": "#4EC9B0",
+          "light": "#267F99",
+          "highContrast": "#4EC9B0"
+        }
+      },
+      {
+        "id": "enzyme.routeColor",
+        "description": "Color for Enzyme route items in tree views",
+        "defaults": {
+          "dark": "#DCDCAA",
+          "light": "#795E26",
+          "highContrast": "#DCDCAA"
+        }
+      },
+      {
+        "id": "enzyme.errorColor",
+        "description": "Color for Enzyme errors and warnings",
+        "defaults": {
+          "dark": "#F48771",
+          "light": "#E51400",
+          "highContrast": "#F48771"
+        }
+      },
+      {
+        "id": "enzyme.successColor",
+        "description": "Color for Enzyme success indicators",
+        "defaults": {
+          "dark": "#89D185",
+          "light": "#008000",
+          "highContrast": "#89D185"
+        }
+      }
+    ],
+    "breakpoints": [
+      {
+        "language": "typescript"
+      },
+      {
+        "language": "typescriptreact"
+      },
+      {
+        "language": "javascript"
+      },
+      {
+        "language": "javascriptreact"
+      }
+    ],
+    "debuggers": [
+      {
+        "type": "enzyme",
+        "label": "Enzyme Debugger",
+        "languages": [
+          "typescript",
+          "typescriptreact",
+          "javascript",
+          "javascriptreact"
+        ],
+        "configurationAttributes": {
+          "launch": {
+            "required": [],
+            "properties": {
+              "program": {
+                "type": "string",
+                "description": "Absolute path to the program",
+                "default": "${workspaceFolder}/src/main.tsx"
+              },
+              "args": {
+                "type": "array",
+                "description": "Command line arguments",
+                "default": []
+              },
+              "cwd": {
+                "type": "string",
+                "description": "Absolute path to the working directory",
+                "default": "${workspaceFolder}"
+              },
+              "env": {
+                "type": "object",
+                "description": "Environment variables",
+                "default": {}
+              },
+              "envFile": {
+                "type": "string",
+                "description": "Path to .env file",
+                "default": "${workspaceFolder}/.env.local"
+              },
+              "sourceMaps": {
+                "type": "boolean",
+                "description": "Use source maps",
+                "default": true
+              },
+              "outFiles": {
+                "type": "array",
+                "description": "Output file patterns",
+                "default": [
+                  "${workspaceFolder}/dist/**/*.js"
+                ]
+              }
+            }
+          },
+          "attach": {
+            "required": [
+              "port"
+            ],
+            "properties": {
+              "port": {
+                "type": "number",
+                "description": "Debug port",
+                "default": 9229
+              },
+              "host": {
+                "type": "string",
+                "description": "Debug host",
+                "default": "localhost"
+              },
+              "sourceMaps": {
+                "type": "boolean",
+                "description": "Use source maps",
+                "default": true
+              },
+              "restart": {
+                "type": "boolean",
+                "description": "Restart on disconnect",
+                "default": false
+              }
+            }
+          }
+        },
+        "initialConfigurations": [
+          {
+            "type": "enzyme",
+            "request": "launch",
+            "name": "Launch Enzyme App",
+            "program": "${workspaceFolder}/src/main.tsx",
+            "cwd": "${workspaceFolder}",
+            "sourceMaps": true
+          }
+        ],
+        "configurationSnippets": [
+          {
+            "label": "Enzyme: Launch",
+            "description": "Launch Enzyme application with debugger",
+            "body": {
+              "type": "enzyme",
+              "request": "launch",
+              "name": "Launch Enzyme App",
+              "program": "^\"\\${workspaceFolder}/src/main.tsx\"",
+              "cwd": "^\"\\${workspaceFolder}\"",
+              "sourceMaps": true
+            }
+          },
+          {
+            "label": "Enzyme: Attach",
+            "description": "Attach to running Enzyme application",
+            "body": {
+              "type": "enzyme",
+              "request": "attach",
+              "name": "Attach to Enzyme",
+              "port": 9229,
+              "restart": true
+            }
+          }
+        ]
+      }
+    ],
+    "semanticTokenScopes": [
+      {
+        "language": "typescript",
+        "scopes": {
+          "property.enzyme": [
+            "variable.other.property.enzyme"
+          ],
+          "function.enzyme": [
+            "entity.name.function.enzyme"
+          ],
+          "class.enzyme": [
+            "entity.name.type.class.enzyme"
+          ]
+        }
+      },
+      {
+        "language": "typescriptreact",
+        "scopes": {
+          "property.enzyme": [
+            "variable.other.property.enzyme"
+          ],
+          "function.enzyme": [
+            "entity.name.function.enzyme"
+          ],
+          "class.enzyme": [
+            "entity.name.type.class.enzyme"
+          ]
         }
       }
     ]
@@ -959,6 +1373,7 @@
     "package": "vsce package",
     "publish": "vsce publish",
     "copy-resources": "mkdir -p out/resources && cp -r resources/* out/resources/ 2>/dev/null || true",
+    "create-icon": "echo 'Note: Convert resources/enzyme-icon.svg to resources/enzyme-icon.png (128x128) for marketplace'",
     "ci": "npm run lint:check && npm run format:check && npm run compile && npm run test",
     "pre-commit": "npm run lint:fix && npm run format"
   },

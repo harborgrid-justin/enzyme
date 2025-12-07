@@ -1,7 +1,23 @@
 /**
  * @file Security Utilities
- * @description Security utilities for the Enzyme VS Code extension
- * Provides HTML escaping, CSP nonce generation, and input sanitization
+ * @description Enterprise-grade security utilities for the Enzyme VS Code extension
+ *
+ * SECURITY: This module provides critical security functions including:
+ * - HTML/JS escaping to prevent XSS attacks
+ * - Content Security Policy (CSP) generation
+ * - Input sanitization and validation
+ * - Path traversal prevention
+ * - Safe JSON serialization
+ *
+ * OWASP Compliance:
+ * - A03:2021 - Injection: Input validation and escaping prevents injection attacks
+ * - A05:2021 - Security Misconfiguration: Strict CSP prevents common misconfigurations
+ * - A06:2021 - Vulnerable and Outdated Components: Uses crypto module from Node.js
+ *
+ * All functions in this module are security-critical and should be used
+ * whenever handling user input, generating webview content, or processing file paths.
+ *
+ * @module security-utils
  */
 
 import * as crypto from 'crypto';

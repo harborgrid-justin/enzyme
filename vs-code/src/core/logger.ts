@@ -1,11 +1,23 @@
 /**
  * Enterprise Logging Utility for Enzyme VS Code Extension
  * Provides structured logging with multiple output channels and telemetry integration
+ *
+ * Features:
+ * - Multiple log levels (DEBUG, INFO, WARN, ERROR)
+ * - Structured logging with context
+ * - Integration with VS Code Output Channel
+ * - Telemetry integration for error tracking
+ * - Operation timing and performance tracking
+ * - Error enrichment with stack traces
+ * - Log filtering and search
+ *
+ * @module logger
  */
 
 import * as vscode from 'vscode';
 import { LogLevel } from '../types';
 import { OUTPUT_CHANNELS, CONFIG_KEYS, TELEMETRY_EVENTS } from './constants';
+import type { EnzymeError } from './errors';
 
 /**
  * Logger class for structured logging with multiple severity levels
@@ -283,6 +295,249 @@ export class Logger {
     this.divider();
     this.info(title);
     this.divider();
+  }
+
+  /**
+   * Log an EnzymeError with full context
+   *
+   * @param error - EnzymeError to log
+   * @param additionalContext - Additional context to include
+   *
+   * @example
+   * ```typescript
+   * logger.logError(enzymeError, { userId: '123' });
+   * ```
+   */
+  public logError(error: any, additionalContext?: Record<string, unknown>): void {
+    // Check if it's an EnzymeError with additional properties
+    const isEnzymeError = error && typeof error === 'object' && 'code' in error && 'category' in error;
+
+    if (isEnzymeError) {
+      const enzymeError = error as EnzymeError;
+      const context = {
+        code: enzymeError.code,
+        category: enzymeError.category,
+        severity: enzymeError.severity,
+        ...enzymeError.context,
+        ...additionalContext,
+      };
+
+      this.error(enzymeError.message, context);
+
+      // Log recovery suggestions if available
+      if (enzymeError.recoverySuggestions && enzymeError.recoverySuggestions.length > 0) {
+        this.info('Recovery suggestions:', {
+          suggestions: enzymeError.recoverySuggestions,
+        });
+      }
+    } else {
+      // Regular error
+      this.error('Error occurred', error);
+    }
+  }
+
+  /**
+   * Log a critical error that requires immediate attention
+   *
+   * @param message - Error message
+   * @param error - Error object or data
+   */
+  public critical(message: string, error?: Error | unknown): void {
+    this.outputChannel.appendLine('');
+    this.outputChannel.appendLine('═'.repeat(80));
+    this.error(`CRITICAL: ${message}`, error);
+    this.outputChannel.appendLine('═'.repeat(80));
+    this.outputChannel.appendLine('');
+
+    // Always send critical errors to telemetry if enabled
+    if (this.telemetryEnabled) {
+      this.sendTelemetry('critical_error', message, error);
+    }
+  }
+
+  /**
+   * Log an error with stack trace enrichment
+   *
+   * @param message - Error message
+   * @param error - Error object
+   * @param context - Additional context
+   */
+  public errorWithStack(message: string, error: Error, context?: Record<string, unknown>): void {
+    const enrichedData = {
+      name: error.name,
+      message: error.message,
+      stack: error.stack?.split('\n').map(line => line.trim()),
+      context,
+    };
+
+    this.write(LogLevel.ERROR, message, enrichedData);
+  }
+
+  /**
+   * Log a performance warning
+   *
+   * @param operation - Operation name
+   * @param duration - Duration in milliseconds
+   * @param threshold - Performance threshold
+   */
+  public performanceWarning(operation: string, duration: number, threshold: number): void {
+    this.warn(`Performance Warning: ${operation} took ${duration}ms (threshold: ${threshold}ms)`, {
+      operation,
+      duration,
+      threshold,
+      exceedBy: duration - threshold,
+    });
+  }
+
+  /**
+   * Log an event with structured data
+   *
+   * @param eventName - Event name
+   * @param data - Event data
+   */
+  public event(eventName: string, data?: Record<string, unknown>): void {
+    this.info(`Event: ${eventName}`, data);
+
+    if (this.telemetryEnabled) {
+      this.sendTelemetry(eventName, eventName, data);
+    }
+  }
+
+  /**
+   * Create a child logger with a specific prefix
+   *
+   * @param prefix - Prefix for all log messages
+   * @returns Child logger instance
+   *
+   * @example
+   * ```typescript
+   * const commandLogger = logger.createChild('Commands');
+   * commandLogger.info('Command executed'); // Logs: "[Commands] Command executed"
+   * ```
+   */
+  public createChild(prefix: string): ChildLogger {
+    return new ChildLogger(this, prefix);
+  }
+
+  /**
+   * Log a table of data for better visualization
+   *
+   * @param title - Table title
+   * @param data - Array of objects to display
+   */
+  public table(title: string, data: Array<Record<string, unknown>>): void {
+    this.info(title);
+    if (data.length === 0) {
+      this.outputChannel.appendLine('  (empty)');
+      return;
+    }
+
+    try {
+      // Simple table formatting
+      const keys = Object.keys(data[0]!);
+      const rows = data.map(item =>
+        keys.map(key => String(item[key] ?? '')).join(' | ')
+      );
+
+      this.outputChannel.appendLine(`  ${keys.join(' | ')}`);
+      this.outputChannel.appendLine(`  ${keys.map(() => '---').join(' | ')}`);
+      rows.forEach(row => this.outputChannel.appendLine(`  ${row}`));
+    } catch (error) {
+      this.error('Failed to format table', error);
+    }
+  }
+
+  /**
+   * Measure and log execution time of a function
+   *
+   * @param label - Label for the measurement
+   * @param fn - Function to measure
+   * @returns Result of the function
+   *
+   * @example
+   * ```typescript
+   * const result = await logger.measure('Database Query', async () => {
+   *   return await db.query();
+   * });
+   * ```
+   */
+  public async measure<T>(label: string, fn: () => Promise<T> | T): Promise<T> {
+    const start = Date.now();
+    this.debug(`Starting: ${label}`);
+
+    try {
+      const result = await fn();
+      const duration = Date.now() - start;
+      this.debug(`Completed: ${label} (${duration}ms)`);
+      return result;
+    } catch (error) {
+      const duration = Date.now() - start;
+      this.error(`Failed: ${label} (${duration}ms)`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Log a deprecation warning
+   *
+   * @param feature - Deprecated feature
+   * @param alternative - Alternative to use
+   * @param version - Version when feature will be removed
+   */
+  public deprecation(feature: string, alternative?: string, version?: string): void {
+    let message = `DEPRECATED: ${feature}`;
+    if (alternative) {
+      message += ` - Use ${alternative} instead`;
+    }
+    if (version) {
+      message += ` (will be removed in v${version})`;
+    }
+    this.warn(message);
+  }
+
+  /**
+   * Log with a custom log level color/style
+   *
+   * @param level - Log level
+   * @param message - Message to log
+   * @param data - Additional data
+   */
+  public log(level: LogLevel, message: string, data?: unknown): void {
+    this.write(level, message, data);
+  }
+}
+
+/**
+ * Child Logger with prefix support
+ */
+export class ChildLogger {
+  constructor(
+    private parent: Logger,
+    private prefix: string
+  ) {}
+
+  private formatMessage(message: string): string {
+    return `[${this.prefix}] ${message}`;
+  }
+
+  public debug(message: string, data?: unknown): void {
+    this.parent.debug(this.formatMessage(message), data);
+  }
+
+  public info(message: string, data?: unknown): void {
+    this.parent.info(this.formatMessage(message), data);
+  }
+
+  public warn(message: string, data?: unknown): void {
+    this.parent.warn(this.formatMessage(message), data);
+  }
+
+  public error(message: string, error?: Error | unknown): void {
+    this.parent.error(this.formatMessage(message), error);
+  }
+
+  public success(message: string, data?: unknown): void {
+    this.parent.success(this.formatMessage(message), data);
   }
 }
 
