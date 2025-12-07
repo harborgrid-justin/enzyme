@@ -1,6 +1,11 @@
 import * as vscode from 'vscode';
+import { getMessageValidator } from '../../core/message-validator';
+import { sanitizeInput } from '../../core/security-utils';
 import { BaseWebViewPanel } from './base-webview-panel';
 
+/**
+ *
+ */
 interface StateSnapshot {
 	timestamp: number;
 	state: any;
@@ -8,6 +13,9 @@ interface StateSnapshot {
 	diff?: any;
 }
 
+/**
+ *
+ */
 interface StateInspectorMessage {
 	type: 'getState' | 'setState' | 'exportState' | 'importState' | 'timeTravel' | 'filterState' | 'clearHistory';
 	payload?: any;
@@ -20,10 +28,14 @@ interface StateInspectorMessage {
 export class StateInspectorPanel extends BaseWebViewPanel {
 	private static instance: StateInspectorPanel | undefined;
 	private stateHistory: StateSnapshot[] = [];
-	private currentStateIndex: number = -1;
-	private maxHistorySize: number = 100;
+	private currentStateIndex = -1;
+	private readonly maxHistorySize = 100;
 	private updateThrottle: NodeJS.Timeout | undefined;
 
+	/**
+	 *
+	 * @param context
+	 */
 	private constructor(context: vscode.ExtensionContext) {
 		super(context, 'enzyme.stateInspector', 'Enzyme State Inspector');
 		this.loadPersistedHistory();
@@ -31,6 +43,7 @@ export class StateInspectorPanel extends BaseWebViewPanel {
 
 	/**
 	 * Get or create the singleton instance
+	 * @param context
 	 */
 	public static getInstance(context: vscode.ExtensionContext): StateInspectorPanel {
 		if (!StateInspectorPanel.instance) {
@@ -41,12 +54,16 @@ export class StateInspectorPanel extends BaseWebViewPanel {
 
 	/**
 	 * Show the state inspector panel
+	 * @param context
 	 */
 	public static show(context: vscode.ExtensionContext): void {
 		const panel = StateInspectorPanel.getInstance(context);
 		panel.show();
 	}
 
+	/**
+	 *
+	 */
 	protected override getIconPath(): vscode.Uri | { light: vscode.Uri; dark: vscode.Uri } | undefined {
 		return {
 			light: vscode.Uri.file(this.context.asAbsolutePath('resources/icons/state-light.svg')),
@@ -54,6 +71,11 @@ export class StateInspectorPanel extends BaseWebViewPanel {
 		};
 	}
 
+	/**
+	 *
+	 * @param webview
+	 * @param nonce
+	 */
 	protected override getStyles(webview: vscode.Webview, nonce: string): string {
 		const sharedStylesUri = this.getWebviewUri(webview, ['src', 'webview-ui', 'shared', 'styles.css']);
 		const stateStylesUri = this.getWebviewUri(webview, ['src', 'webview-ui', 'state-inspector', 'styles.css']);
@@ -63,6 +85,10 @@ export class StateInspectorPanel extends BaseWebViewPanel {
 		`;
 	}
 
+	/**
+	 *
+	 * @param _webview
+	 */
 	protected getBodyContent(_webview: vscode.Webview): string {
 		return `
 			<div class="container">
@@ -177,18 +203,58 @@ export class StateInspectorPanel extends BaseWebViewPanel {
 		`;
 	}
 
+	/**
+	 *
+	 * @param webview
+	 * @param nonce
+	 */
 	protected getScripts(webview: vscode.Webview, nonce: string): string {
 		const scriptUri = this.getWebviewUri(webview, ['src', 'webview-ui', 'state-inspector', 'main.js']);
 		return `<script nonce="${nonce}" src="${scriptUri}"></script>`;
 	}
 
+	/**
+	 * SECURITY: Handle messages from webview with validation
+	 * All messages are validated before processing to prevent injection attacks
+	 * @param message
+	 */
 	protected async handleMessage(message: StateInspectorMessage): Promise<void> {
+		// SECURITY: Validate base message structure
+		const validator = getMessageValidator();
+		const baseValidation = validator.validateBaseMessage(message);
+
+		if (!baseValidation.valid) {
+			vscode.window.showErrorMessage('Invalid message received from webview');
+			return;
+		}
+
+		// SECURITY: Validate message type is expected
+		const validTypes: Array<StateInspectorMessage['type']> = [
+			'getState', 'setState', 'exportState', 'importState',
+			'timeTravel', 'filterState', 'clearHistory'
+		];
+		if (!validTypes.includes(message.type)) {
+			vscode.window.showErrorMessage(`Unknown message type: ${message.type}`);
+			return;
+		}
+
 		switch (message.type) {
 			case 'getState':
 				await this.handleGetState();
 				break;
 
 			case 'setState':
+				// SECURITY: Validate payload exists
+				if (message.payload === undefined || message.payload === null) {
+					vscode.window.showErrorMessage('Invalid state data');
+					return;
+				}
+				// SECURITY: Limit size of state payload to prevent DoS
+				const stateSize = JSON.stringify(message.payload).length;
+				if (stateSize > 1024 * 1024) { // 1MB limit
+					vscode.window.showErrorMessage('State payload too large');
+					return;
+				}
 				await this.handleSetState(message.payload);
 				break;
 
@@ -201,11 +267,27 @@ export class StateInspectorPanel extends BaseWebViewPanel {
 				break;
 
 			case 'timeTravel':
+				// SECURITY: Validate payload is a number
+				if (typeof message.payload !== 'number' || !Number.isInteger(message.payload)) {
+					vscode.window.showErrorMessage('Invalid time travel index');
+					return;
+				}
+				// SECURITY: Validate index is within valid range
+				if (message.payload < 0 || message.payload >= this.stateHistory.length) {
+					vscode.window.showErrorMessage('Time travel index out of range');
+					return;
+				}
 				await this.handleTimeTravel(message.payload);
 				break;
 
 			case 'filterState':
-				await this.handleFilterState(message.payload);
+				// SECURITY: Validate and sanitize filter string
+				if (typeof message.payload !== 'string') {
+					vscode.window.showErrorMessage('Invalid filter value');
+					return;
+				}
+				const sanitizedFilter = sanitizeInput(message.payload, 100);
+				await this.handleFilterState(sanitizedFilter);
 				break;
 
 			case 'clearHistory':
@@ -214,11 +296,17 @@ export class StateInspectorPanel extends BaseWebViewPanel {
 		}
 	}
 
+	/**
+	 *
+	 */
 	protected override onPanelCreated(): void {
 		// Send initial state to the webview
 		this.sendStateUpdate();
 	}
 
+	/**
+	 *
+	 */
 	protected override onPanelVisible(): void {
 		// Refresh state when panel becomes visible
 		this.sendStateUpdate();
@@ -226,6 +314,8 @@ export class StateInspectorPanel extends BaseWebViewPanel {
 
 	/**
 	 * Handle state update from the application
+	 * @param state
+	 * @param action
 	 */
 	public updateState(state: any, action?: string): void {
 		// Throttle updates to prevent overwhelming the UI
@@ -237,7 +327,7 @@ export class StateInspectorPanel extends BaseWebViewPanel {
 			const snapshot: StateSnapshot = {
 				timestamp: Date.now(),
 				state: this.deepClone(state),
-				action
+				...(action && { action })
 			};
 
 			// Calculate diff from previous state
@@ -264,10 +354,17 @@ export class StateInspectorPanel extends BaseWebViewPanel {
 		}, 100);
 	}
 
+	/**
+	 *
+	 */
 	private async handleGetState(): Promise<void> {
 		this.sendStateUpdate();
 	}
 
+	/**
+	 *
+	 * @param payload
+	 */
 	private async handleSetState(payload: any): Promise<void> {
 		// In a real implementation, this would send the state update to the application
 		// For now, we'll just update our local state
@@ -275,6 +372,9 @@ export class StateInspectorPanel extends BaseWebViewPanel {
 		vscode.window.showInformationMessage('State updated successfully');
 	}
 
+	/**
+	 *
+	 */
 	private async handleExportState(): Promise<void> {
 		const currentState = this.getCurrentState();
 		if (!currentState) {
@@ -296,6 +396,10 @@ export class StateInspectorPanel extends BaseWebViewPanel {
 		}
 	}
 
+	/**
+	 * SECURITY: Handle import state with validation
+	 * Validates imported JSON to prevent malicious payloads
+	 */
 	private async handleImportState(): Promise<void> {
 		const uris = await vscode.window.showOpenDialog({
 			canSelectMany: false,
@@ -307,15 +411,42 @@ export class StateInspectorPanel extends BaseWebViewPanel {
 		if (uris && uris.length > 0) {
 			try {
 				const content = await vscode.workspace.fs.readFile(uris[0]!);
-				const state = JSON.parse(content.toString());
+				const contentString = content.toString();
+
+				// SECURITY: Limit file size to prevent DoS
+				if (contentString.length > 5 * 1024 * 1024) { // 5MB limit
+					vscode.window.showErrorMessage('Imported file is too large (max 5MB)');
+					return;
+				}
+
+				// SECURITY: Parse JSON with error handling
+				let state: any;
+				try {
+					state = JSON.parse(contentString);
+				} catch {
+					vscode.window.showErrorMessage('Invalid JSON file');
+					return;
+				}
+
+				// SECURITY: Validate imported state structure
+				if (typeof state !== 'object' || state === null) {
+					vscode.window.showErrorMessage('Invalid state format: must be an object');
+					return;
+				}
+
 				this.updateState(state, 'Imported State');
 				vscode.window.showInformationMessage('State imported successfully');
 			} catch (error) {
-				vscode.window.showErrorMessage(`Failed to import state: ${error}`);
+				const errorMessage = error instanceof Error ? error.message : String(error);
+				vscode.window.showErrorMessage(`Failed to import state: ${errorMessage}`);
 			}
 		}
 	}
 
+	/**
+	 *
+	 * @param index
+	 */
 	private async handleTimeTravel(index: number): Promise<void> {
 		if (index >= 0 && index < this.stateHistory.length) {
 			this.currentStateIndex = index;
@@ -323,12 +454,19 @@ export class StateInspectorPanel extends BaseWebViewPanel {
 		}
 	}
 
+	/**
+	 *
+	 * @param filter
+	 */
 	private async handleFilterState(filter: string): Promise<void> {
 		// Filter will be applied on the client side
 		// This is just for logging purposes
 		console.log(`Filtering state with: ${filter}`);
 	}
 
+	/**
+	 *
+	 */
 	private async handleClearHistory(): Promise<void> {
 		const answer = await vscode.window.showWarningMessage(
 			'Are you sure you want to clear the state history?',
@@ -345,6 +483,9 @@ export class StateInspectorPanel extends BaseWebViewPanel {
 		}
 	}
 
+	/**
+	 *
+	 */
 	private sendStateUpdate(): void {
 		const currentState = this.getCurrentState();
 		const currentSnapshot = this.getCurrentSnapshot();
@@ -365,6 +506,9 @@ export class StateInspectorPanel extends BaseWebViewPanel {
 		});
 	}
 
+	/**
+	 *
+	 */
 	private getCurrentState(): any {
 		if (this.currentStateIndex >= 0 && this.currentStateIndex < this.stateHistory.length) {
 			return this.stateHistory[this.currentStateIndex]!.state;
@@ -372,6 +516,9 @@ export class StateInspectorPanel extends BaseWebViewPanel {
 		return null;
 	}
 
+	/**
+	 *
+	 */
 	private getCurrentSnapshot(): StateSnapshot | null {
 		if (this.currentStateIndex >= 0 && this.currentStateIndex < this.stateHistory.length) {
 			return this.stateHistory[this.currentStateIndex]!;
@@ -379,6 +526,11 @@ export class StateInspectorPanel extends BaseWebViewPanel {
 		return null;
 	}
 
+	/**
+	 *
+	 * @param oldState
+	 * @param newState
+	 */
 	private calculateDiff(oldState: any, newState: any): any {
 		const diff: any = {};
 
@@ -404,26 +556,39 @@ export class StateInspectorPanel extends BaseWebViewPanel {
 		return Object.keys(diff).length > 0 ? diff : null;
 	}
 
-	private deepClone(obj: any): any {
+	/**
+	 *
+	 * @param object
+	 */
+	private deepClone(object: any): any {
 		try {
-			return JSON.parse(JSON.stringify(obj));
-		} catch (error) {
-			return obj;
+			return JSON.parse(JSON.stringify(object));
+		} catch {
+			return object;
 		}
 	}
 
+	/**
+	 *
+	 */
 	private async persistHistory(): Promise<void> {
 		// Persist only the last 50 states to avoid storage limits
 		const statesToPersist = this.stateHistory.slice(-50);
 		await this.persistState('history', statesToPersist);
 	}
 
+	/**
+	 *
+	 */
 	private loadPersistedHistory(): void {
 		const history = this.getPersistedState<StateSnapshot[]>('history', []);
 		this.stateHistory = history;
 		this.currentStateIndex = history.length - 1;
 	}
 
+	/**
+	 *
+	 */
 	public override dispose(): void {
 		if (this.updateThrottle) {
 			clearTimeout(this.updateThrottle);

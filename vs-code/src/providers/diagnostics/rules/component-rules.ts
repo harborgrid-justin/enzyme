@@ -1,7 +1,14 @@
 import * as vscode from 'vscode';
 import { createDiagnostic } from '../enzyme-diagnostics';
 
+/**
+ *
+ */
 export class ComponentRules {
+  /**
+   *
+   * @param document
+   */
   public async analyze(document: vscode.TextDocument): Promise<vscode.Diagnostic[]> {
     const diagnostics: vscode.Diagnostic[] = [];
     const text = document.getText();
@@ -26,6 +33,10 @@ export class ComponentRules {
     return diagnostics;
   }
 
+  /**
+   *
+   * @param document
+   */
   private isReactFile(document: vscode.TextDocument): boolean {
     return (
       document.languageId === 'typescriptreact' ||
@@ -35,6 +46,11 @@ export class ComponentRules {
     );
   }
 
+  /**
+   *
+   * @param document
+   * @param text
+   */
   private checkMissingMemo(document: vscode.TextDocument, text: string): vscode.Diagnostic[] {
     const diagnostics: vscode.Diagnostic[] = [];
 
@@ -47,7 +63,7 @@ export class ComponentRules {
       const position = document.positionAt(match.index);
 
       // Check if component is memoized
-      if (!this.isComponentMemoized(text, componentName)) {
+      if (componentName && !this.isComponentMemoized(text, componentName)) {
         const range = new vscode.Range(position, position.translate(0, match[0].length));
         diagnostics.push(
           createDiagnostic(
@@ -63,6 +79,11 @@ export class ComponentRules {
     return diagnostics;
   }
 
+  /**
+   *
+   * @param document
+   * @param text
+   */
   private checkMissingKeyProp(document: vscode.TextDocument, text: string): vscode.Diagnostic[] {
     const diagnostics: vscode.Diagnostic[] = [];
 
@@ -75,7 +96,7 @@ export class ComponentRules {
       const props = match[2];
 
       // Check if key prop exists
-      if (!props.includes('key=')) {
+      if (props && !props.includes('key=')) {
         const position = document.positionAt(match.index);
         const range = new vscode.Range(position, position.translate(0, match[0].length));
 
@@ -93,6 +114,11 @@ export class ComponentRules {
     return diagnostics;
   }
 
+  /**
+   *
+   * @param document
+   * @param text
+   */
   private checkLargeComponents(document: vscode.TextDocument, text: string): vscode.Diagnostic[] {
     const diagnostics: vscode.Diagnostic[] = [];
     const maxComponentLines = 200;
@@ -111,7 +137,7 @@ export class ComponentRules {
       if (componentInfo) {
         const lineCount = componentInfo.endLine - componentInfo.startLine;
 
-        if (lineCount > maxComponentLines) {
+        if (lineCount > maxComponentLines && componentName) {
           const range = new vscode.Range(
             startPosition,
             startPosition.translate(0, componentName.length)
@@ -132,6 +158,11 @@ export class ComponentRules {
     return diagnostics;
   }
 
+  /**
+   *
+   * @param document
+   * @param text
+   */
   private checkMissingErrorBoundary(
     document: vscode.TextDocument,
     text: string
@@ -159,12 +190,12 @@ export class ComponentRules {
         const componentText = text.substring(componentInfo.startIndex, componentInfo.endIndex);
 
         // Check if this component has async operations
-        const hasAsync = /(?:async|useEffect|fetch|axios|await)/.test(componentText);
+        const hasAsync = /async|useEffect|fetch|axios|await/.test(componentText);
 
         // Check if wrapped with ErrorBoundary
         const hasErrorBoundary = componentText.includes('ErrorBoundary');
 
-        if (hasAsync && !hasErrorBoundary) {
+        if (hasAsync && !hasErrorBoundary && componentName) {
           const range = new vscode.Range(
             startPosition,
             startPosition.translate(0, componentName.length)
@@ -185,11 +216,21 @@ export class ComponentRules {
     return diagnostics;
   }
 
+  /**
+   *
+   * @param text
+   * @param componentName
+   */
   private isComponentMemoized(text: string, componentName: string): boolean {
     const memoPattern = new RegExp(`React\\.memo\\(${componentName}\\)|memo\\(${componentName}\\)`);
     return memoPattern.test(text);
   }
 
+  /**
+   *
+   * @param document
+   * @param startPosition
+   */
   private getComponentBoundaries(
     document: vscode.TextDocument,
     startPosition: vscode.Position
@@ -199,7 +240,6 @@ export class ComponentRules {
     startIndex: number;
     endIndex: number;
   } | null {
-    const text = document.getText();
     let currentLine = startPosition.line;
     let braceCount = 0;
     let startedBody = false;

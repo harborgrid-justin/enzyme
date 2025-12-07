@@ -7,6 +7,9 @@ import * as vscode from 'vscode';
 export class EnzymeFoldingProvider implements vscode.FoldingRangeProvider {
   /**
    * Provide folding ranges
+   * @param document
+   * @param _context
+   * @param _token
    */
   public async provideFoldingRanges(
     document: vscode.TextDocument,
@@ -41,6 +44,9 @@ export class EnzymeFoldingProvider implements vscode.FoldingRangeProvider {
 
   /**
    * Add folding ranges for route configurations
+   * @param document
+   * @param text
+   * @param foldingRanges
    */
   private addRouteFolding(
     document: vscode.TextDocument,
@@ -56,11 +62,11 @@ export class EnzymeFoldingProvider implements vscode.FoldingRangeProvider {
       const endPos = this.findMatchingBrace(text, match.index + match[0].length - 1);
 
       if (endPos !== -1) {
-        const endPosObj = document.positionAt(endPos);
-        if (endPosObj.line > startPos.line) {
+        const endPosObject = document.positionAt(endPos);
+        if (endPosObject.line > startPos.line) {
           foldingRanges.push(new vscode.FoldingRange(
             startPos.line,
-            endPosObj.line,
+            endPosObject.line,
             vscode.FoldingRangeKind.Region
           ));
         }
@@ -68,18 +74,18 @@ export class EnzymeFoldingProvider implements vscode.FoldingRangeProvider {
     }
 
     // Individual route definitions
-    const routeDefPattern = /(['"]?\w+['"]?):\s*{\s*(?:path|component|guards)/g;
+    const routeDefPattern = /(["']?\w+["']?):\s*{\s*(?:path|component|guards)/g;
     while ((match = routeDefPattern.exec(text)) !== null) {
       const startPos = document.positionAt(match.index);
       const braceIndex = text.indexOf('{', match.index);
       const endPos = this.findMatchingBrace(text, braceIndex);
 
       if (endPos !== -1) {
-        const endPosObj = document.positionAt(endPos);
-        if (endPosObj.line > startPos.line) {
+        const endPosObject = document.positionAt(endPos);
+        if (endPosObject.line > startPos.line) {
           foldingRanges.push(new vscode.FoldingRange(
             startPos.line,
-            endPosObj.line,
+            endPosObject.line,
             vscode.FoldingRangeKind.Region
           ));
         }
@@ -89,6 +95,9 @@ export class EnzymeFoldingProvider implements vscode.FoldingRangeProvider {
 
   /**
    * Add folding ranges for component definitions
+   * @param document
+   * @param text
+   * @param foldingRanges
    */
   private addComponentFolding(
     document: vscode.TextDocument,
@@ -105,11 +114,11 @@ export class EnzymeFoldingProvider implements vscode.FoldingRangeProvider {
       const endPos = this.findMatchingBrace(text, braceIndex);
 
       if (endPos !== -1) {
-        const endPosObj = document.positionAt(endPos);
-        if (endPosObj.line > startPos.line) {
+        const endPosObject = document.positionAt(endPos);
+        if (endPosObject.line > startPos.line) {
           foldingRanges.push(new vscode.FoldingRange(
             startPos.line,
-            endPosObj.line,
+            endPosObject.line,
             vscode.FoldingRangeKind.Region
           ));
         }
@@ -119,6 +128,9 @@ export class EnzymeFoldingProvider implements vscode.FoldingRangeProvider {
 
   /**
    * Add folding ranges for store definitions
+   * @param document
+   * @param text
+   * @param foldingRanges
    */
   private addStoreFolding(
     document: vscode.TextDocument,
@@ -135,11 +147,11 @@ export class EnzymeFoldingProvider implements vscode.FoldingRangeProvider {
       const endPos = this.findMatchingBrace(text, braceIndex);
 
       if (endPos !== -1) {
-        const endPosObj = document.positionAt(endPos);
-        if (endPosObj.line > startPos.line) {
+        const endPosObject = document.positionAt(endPos);
+        if (endPosObject.line > startPos.line) {
           foldingRanges.push(new vscode.FoldingRange(
             startPos.line,
-            endPosObj.line,
+            endPosObject.line,
             vscode.FoldingRangeKind.Region
           ));
         }
@@ -154,11 +166,11 @@ export class EnzymeFoldingProvider implements vscode.FoldingRangeProvider {
       const endPos = this.findMatchingBrace(text, braceIndex);
 
       if (endPos !== -1) {
-        const endPosObj = document.positionAt(endPos);
-        if (endPosObj.line > startPos.line) {
+        const endPosObject = document.positionAt(endPos);
+        if (endPosObject.line > startPos.line) {
           foldingRanges.push(new vscode.FoldingRange(
             startPos.line,
-            endPosObj.line,
+            endPosObject.line,
             vscode.FoldingRangeKind.Region
           ));
         }
@@ -168,6 +180,9 @@ export class EnzymeFoldingProvider implements vscode.FoldingRangeProvider {
 
   /**
    * Add folding ranges for feature registrations
+   * @param document
+   * @param text
+   * @param foldingRanges
    */
   private addFeatureFolding(
     document: vscode.TextDocument,
@@ -183,11 +198,11 @@ export class EnzymeFoldingProvider implements vscode.FoldingRangeProvider {
       const endPos = this.findMatchingBrace(text, braceIndex);
 
       if (endPos !== -1) {
-        const endPosObj = document.positionAt(endPos);
-        if (endPosObj.line > startPos.line) {
+        const endPosObject = document.positionAt(endPos);
+        if (endPosObject.line > startPos.line) {
           foldingRanges.push(new vscode.FoldingRange(
             startPos.line,
-            endPosObj.line,
+            endPosObject.line,
             vscode.FoldingRangeKind.Region
           ));
         }
@@ -197,6 +212,9 @@ export class EnzymeFoldingProvider implements vscode.FoldingRangeProvider {
 
   /**
    * Add folding ranges for object literals
+   * @param document
+   * @param text
+   * @param foldingRanges
    */
   private addObjectLiteralFolding(
     document: vscode.TextDocument,
@@ -208,11 +226,15 @@ export class EnzymeFoldingProvider implements vscode.FoldingRangeProvider {
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
+      if (!line) {
+        continue;
+      }
+
       const braceIndex = line.indexOf('{');
 
       if (braceIndex !== -1) {
         // Check if this starts an object literal (not a function or class)
-        const beforeBrace = line.substring(0, braceIndex);
+        const beforeBrace = line.slice(0, Math.max(0, braceIndex));
 
         // Skip function/class/control flow braces
         if (/(?:function|class|if|else|for|while|switch|catch|try)\s*$/.test(beforeBrace)) {
@@ -223,17 +245,17 @@ export class EnzymeFoldingProvider implements vscode.FoldingRangeProvider {
         const endPos = this.findMatchingBrace(text, absoluteIndex);
 
         if (endPos !== -1) {
-          const endPosObj = document.positionAt(endPos);
-          if (endPosObj.line > i + 1) { // At least 2 lines
+          const endPosObject = document.positionAt(endPos);
+          if (endPosObject.line > i + 1) { // At least 2 lines
             // Avoid duplicates by checking if we already have a range at this position
             const isDuplicate = foldingRanges.some(
-              r => r.start === i && r.end === endPosObj.line
+              r => r.start === i && r.end === endPosObject.line
             );
 
             if (!isDuplicate) {
               foldingRanges.push(new vscode.FoldingRange(
                 i,
-                endPosObj.line,
+                endPosObject.line,
                 vscode.FoldingRangeKind.Region
               ));
             }
@@ -245,6 +267,9 @@ export class EnzymeFoldingProvider implements vscode.FoldingRangeProvider {
 
   /**
    * Add folding ranges for array literals
+   * @param document
+   * @param text
+   * @param foldingRanges
    */
   private addArrayLiteralFolding(
     document: vscode.TextDocument,
@@ -255,6 +280,10 @@ export class EnzymeFoldingProvider implements vscode.FoldingRangeProvider {
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
+      if (!line) {
+        continue;
+      }
+
       const bracketIndex = line.indexOf('[');
 
       if (bracketIndex !== -1) {
@@ -262,11 +291,11 @@ export class EnzymeFoldingProvider implements vscode.FoldingRangeProvider {
         const endPos = this.findMatchingBracket(text, absoluteIndex);
 
         if (endPos !== -1) {
-          const endPosObj = document.positionAt(endPos);
-          if (endPosObj.line > i + 1) { // At least 2 lines
+          const endPosObject = document.positionAt(endPos);
+          if (endPosObject.line > i + 1) { // At least 2 lines
             foldingRanges.push(new vscode.FoldingRange(
               i,
-              endPosObj.line,
+              endPosObject.line,
               vscode.FoldingRangeKind.Region
             ));
           }
@@ -277,6 +306,8 @@ export class EnzymeFoldingProvider implements vscode.FoldingRangeProvider {
 
   /**
    * Find matching closing brace for an opening brace
+   * @param text
+   * @param startIndex
    */
   private findMatchingBrace(text: string, startIndex: number): number {
     let count = 1;
@@ -286,7 +317,7 @@ export class EnzymeFoldingProvider implements vscode.FoldingRangeProvider {
 
     for (let i = startIndex + 1; i < text.length; i++) {
       const char = text[i];
-      const prevChar = i > 0 ? text[i - 1] : '';
+      const previousChar = i > 0 ? text[i - 1] : '';
       const nextChar = i < text.length - 1 ? text[i + 1] : '';
 
       // Handle comments
@@ -312,7 +343,7 @@ export class EnzymeFoldingProvider implements vscode.FoldingRangeProvider {
       }
 
       // Handle strings
-      if ((char === '"' || char === "'" || char === '`') && prevChar !== '\\') {
+      if ((char === '"' || char === "'" || char === '`') && previousChar !== '\\') {
         if (!inString) {
           inString = true;
           stringChar = char;
@@ -342,6 +373,8 @@ export class EnzymeFoldingProvider implements vscode.FoldingRangeProvider {
 
   /**
    * Find matching closing bracket for an opening bracket
+   * @param text
+   * @param startIndex
    */
   private findMatchingBracket(text: string, startIndex: number): number {
     let count = 1;
@@ -350,10 +383,10 @@ export class EnzymeFoldingProvider implements vscode.FoldingRangeProvider {
 
     for (let i = startIndex + 1; i < text.length; i++) {
       const char = text[i];
-      const prevChar = i > 0 ? text[i - 1] : '';
+      const previousChar = i > 0 ? text[i - 1] : '';
 
       // Handle strings
-      if ((char === '"' || char === "'" || char === '`') && prevChar !== '\\') {
+      if ((char === '"' || char === "'" || char === '`') && previousChar !== '\\') {
         if (!inString) {
           inString = true;
           stringChar = char;

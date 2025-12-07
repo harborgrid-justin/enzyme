@@ -3,10 +3,10 @@
  * PERFORMANCE: All file operations are async to prevent blocking the event loop
  */
 
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
 import * as vscode from 'vscode';
-import * as fs from 'fs/promises';
-import * as path from 'path';
-import {
+import type {
   EnzymeWorkspace,
   EnzymeConfig,
   PackageJson,
@@ -19,6 +19,7 @@ import {
 
 /**
  * PERFORMANCE: Helper to check if path exists (async)
+ * @param filePath
  */
 async function pathExists(filePath: string): Promise<boolean> {
   try {
@@ -31,6 +32,7 @@ async function pathExists(filePath: string): Promise<boolean> {
 
 /**
  * PERFORMANCE: Helper to check if path is directory (async)
+ * @param filePath
  */
 async function isDirectory(filePath: string): Promise<boolean> {
   try {
@@ -47,8 +49,11 @@ async function isDirectory(filePath: string): Promise<boolean> {
 export class WorkspaceService {
   private static instance: WorkspaceService;
   private workspace: EnzymeWorkspace | null = null;
-  private eventEmitter: vscode.EventEmitter<EnzymeWorkspace>;
+  private readonly eventEmitter: vscode.EventEmitter<EnzymeWorkspace>;
 
+  /**
+   *
+   */
   private constructor() {
     this.eventEmitter = new vscode.EventEmitter<EnzymeWorkspace>();
   }
@@ -118,6 +123,7 @@ export class WorkspaceService {
   /**
    * Get package.json (async version - preferred)
    * PERFORMANCE: Uses async file operations
+   * @param rootPath
    */
   public async getPackageJsonAsync(rootPath?: string): Promise<PackageJson | undefined> {
     const root = rootPath || this.getRootPath();
@@ -140,6 +146,7 @@ export class WorkspaceService {
 
   /**
    * Get package.json (sync version - for backwards compatibility)
+   * @param rootPath
    * @deprecated Use getPackageJsonAsync instead
    */
   public getPackageJson(rootPath?: string): PackageJson | undefined {
@@ -156,6 +163,7 @@ export class WorkspaceService {
 
   /**
    * Get Enzyme version from package.json
+   * @param rootPath
    */
   public getEnzymeVersion(rootPath?: string): string | undefined {
     const packageJson = this.getPackageJson(rootPath);
@@ -174,9 +182,9 @@ export class WorkspaceService {
       'enzyme',
     ];
 
-    for (const pkg of enzymePackages) {
-      if (allDeps[pkg]) {
-        return allDeps[pkg];
+    for (const package_ of enzymePackages) {
+      if (allDeps[package_]) {
+        return allDeps[package_];
       }
     }
 
@@ -190,6 +198,7 @@ export class WorkspaceService {
   /**
    * Find Enzyme configuration file
    * PERFORMANCE: Uses async file operations
+   * @param rootPath
    */
   public async findEnzymeConfig(rootPath?: string): Promise<EnzymeConfig | undefined> {
     const root = rootPath || this.getRootPath();
@@ -239,16 +248,24 @@ export class WorkspaceService {
 
     const workspace: EnzymeWorkspace = {
       rootPath,
-      packageJson,
-      enzymeConfig,
       isEnzymeProject,
-      enzymeVersion,
       features,
       routes,
       components,
       stores,
       apiClients,
     };
+
+    // Conditionally add optional properties to satisfy exactOptionalPropertyTypes
+    if (packageJson !== undefined) {
+      workspace.packageJson = packageJson;
+    }
+    if (enzymeConfig !== undefined) {
+      workspace.enzymeConfig = enzymeConfig;
+    }
+    if (enzymeVersion !== undefined) {
+      workspace.enzymeVersion = enzymeVersion;
+    }
 
     this.workspace = workspace;
     this.eventEmitter.fire(workspace);
@@ -286,6 +303,7 @@ export class WorkspaceService {
 
   /**
    * Get relative path from workspace root
+   * @param absolutePath
    */
   public getRelativePath(absolutePath: string): string {
     const rootPath = this.getRootPath();
@@ -297,6 +315,7 @@ export class WorkspaceService {
 
   /**
    * Get absolute path from workspace root
+   * @param relativePath
    */
   public getAbsolutePath(relativePath: string): string {
     const rootPath = this.getRootPath();
@@ -309,6 +328,7 @@ export class WorkspaceService {
   /**
    * Check if file exists (async)
    * PERFORMANCE: Uses async file operations
+   * @param filePath
    */
   public async fileExistsAsync(filePath: string): Promise<boolean> {
     return pathExists(filePath);
@@ -316,9 +336,10 @@ export class WorkspaceService {
 
   /**
    * Check if file exists (sync - deprecated)
+   * @param _filePath
    * @deprecated Use fileExistsAsync instead
    */
-  public fileExists(filePath: string): boolean {
+  public fileExists(_filePath: string): boolean {
     console.warn('WorkspaceService.fileExists() is deprecated. Use fileExistsAsync() instead.');
     return false; // Encourage migration to async
   }
@@ -326,6 +347,7 @@ export class WorkspaceService {
   /**
    * Read file content
    * PERFORMANCE: Already async
+   * @param filePath
    */
   public async readFile(filePath: string): Promise<string> {
     return fs.readFile(filePath, 'utf-8');
@@ -334,6 +356,8 @@ export class WorkspaceService {
   /**
    * Write file content
    * PERFORMANCE: Uses async file operations
+   * @param filePath
+   * @param content
    */
   public async writeFile(filePath: string, content: string): Promise<void> {
     const dir = path.dirname(filePath);
@@ -345,6 +369,7 @@ export class WorkspaceService {
 
   /**
    * Subscribe to workspace changes
+   * @param listener
    */
   public onWorkspaceChanged(listener: (workspace: EnzymeWorkspace) => void): vscode.Disposable {
     return this.eventEmitter.event(listener);
@@ -353,6 +378,7 @@ export class WorkspaceService {
   /**
    * Scan for features
    * PERFORMANCE: Uses async file operations
+   * @param rootPath
    */
   private async scanFeatures(rootPath: string): Promise<EnzymeFeature[]> {
     const features: EnzymeFeature[] = [];
@@ -364,9 +390,9 @@ export class WorkspaceService {
 
     try {
       const entries = await fs.readdir(featuresPath, { withFileTypes: true });
-      const featureDirs = entries.filter(dirent => dirent.isDirectory());
+      const featureDirectories = entries.filter(dirent => dirent.isDirectory());
 
-      for (const featureDir of featureDirs) {
+      for (const featureDir of featureDirectories) {
         features.push({
           id: featureDir.name,
           name: featureDir.name.charAt(0).toUpperCase() + featureDir.name.slice(1),
@@ -386,6 +412,7 @@ export class WorkspaceService {
 
   /**
    * Scan for routes
+   * @param _rootPath
    */
   private async scanRoutes(_rootPath: string): Promise<EnzymeRoute[]> {
     // Placeholder implementation
@@ -394,6 +421,7 @@ export class WorkspaceService {
 
   /**
    * Scan for components
+   * @param _rootPath
    */
   private async scanComponents(_rootPath: string): Promise<EnzymeComponent[]> {
     // Placeholder implementation
@@ -402,6 +430,7 @@ export class WorkspaceService {
 
   /**
    * Scan for stores
+   * @param _rootPath
    */
   private async scanStores(_rootPath: string): Promise<EnzymeStore[]> {
     // Placeholder implementation
@@ -410,6 +439,7 @@ export class WorkspaceService {
 
   /**
    * Scan for API clients
+   * @param _rootPath
    */
   private async scanApiClients(_rootPath: string): Promise<EnzymeApiClient[]> {
     // Placeholder implementation

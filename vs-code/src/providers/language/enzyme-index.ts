@@ -1,12 +1,13 @@
 import * as vscode from 'vscode';
 import {
+  getParser
+} from './parser';
+import type {
   EnzymeParser,
-  getParser,
   RouteDefinition,
   ComponentDefinition,
   StoreDefinition,
-  ApiDefinition,
-} from './parser';
+  ApiDefinition} from './parser';
 
 /**
  * Route metadata for indexing
@@ -60,18 +61,22 @@ export interface ApiMetadata extends ApiDefinition {
  * Maintains a searchable index of routes, components, hooks, stores, and APIs
  */
 export class EnzymeIndex {
-  private parser: EnzymeParser;
-  private routes = new Map<string, RouteMetadata>();
-  private components = new Map<string, ComponentMetadata>();
-  private hooks = new Map<string, HookMetadata>();
-  private stores = new Map<string, StoreMetadata>();
-  private apis = new Map<string, ApiMetadata>();
+  private readonly parser: EnzymeParser;
+  private readonly routes = new Map<string, RouteMetadata>();
+  private readonly components = new Map<string, ComponentMetadata>();
+  private readonly hooks = new Map<string, HookMetadata>();
+  private readonly stores = new Map<string, StoreMetadata>();
+  private readonly apis = new Map<string, ApiMetadata>();
   private fileWatcher?: vscode.FileSystemWatcher;
   private indexingInProgress = false;
-  private onDidChangeEmitter = new vscode.EventEmitter<void>();
+  private readonly onDidChangeEmitter = new vscode.EventEmitter<void>();
   public readonly onDidChange = this.onDidChangeEmitter.event;
 
-  constructor(private workspaceRoot: string) {
+  /**
+   *
+   * @param workspaceRoot
+   */
+  constructor(private readonly workspaceRoot: string) {
     this.parser = getParser();
     this.initializeBuiltInHooks();
   }
@@ -219,7 +224,7 @@ export class EnzymeIndex {
     const BATCH_SIZE = 50;
     for (let i = 0; i < files.length; i += BATCH_SIZE) {
       const batch = files.slice(i, i + BATCH_SIZE);
-      await Promise.all(batch.map(file => this.indexFile(file)));
+      await Promise.all(batch.map(async file => this.indexFile(file)));
 
       // PERFORMANCE: Yield control to event loop between batches
       await new Promise(resolve => setImmediate(resolve));
@@ -229,12 +234,13 @@ export class EnzymeIndex {
   /**
    * PERFORMANCE: Index a single file without loading into editor
    * Reads file content directly to avoid unnecessary document loading
+   * @param uri
    */
   private async indexFile(uri: vscode.Uri): Promise<void> {
     try {
       // PERFORMANCE: Check if document is already open to avoid redundant loading
-      const openDoc = vscode.workspace.textDocuments.find(doc => doc.uri.toString() === uri.toString());
-      const document = openDoc || await vscode.workspace.openTextDocument(uri);
+      const openDocument = vscode.workspace.textDocuments.find(document_ => document_.uri.toString() === uri.toString());
+      const document = openDocument || await vscode.workspace.openTextDocument(uri);
       const result = this.parser.parseDocument(document);
 
       // Index routes
@@ -290,14 +296,14 @@ export class EnzymeIndex {
     const pendingChanges = new Set<string>();
 
     const processChanges = async () => {
-      const changes = Array.from(pendingChanges);
+      const changes = [...pendingChanges];
       pendingChanges.clear();
 
       // PERFORMANCE: Process changes in batches
       const BATCH_SIZE = 20;
       for (let i = 0; i < changes.length; i += BATCH_SIZE) {
         const batch = changes.slice(i, i + BATCH_SIZE);
-        await Promise.all(batch.map(uri => this.updateFileIndex(vscode.Uri.file(uri))));
+        await Promise.all(batch.map(async uri => this.updateFileIndex(vscode.Uri.file(uri))));
         await new Promise(resolve => setImmediate(resolve));
       }
 
@@ -331,6 +337,7 @@ export class EnzymeIndex {
 
   /**
    * Update index for a changed file
+   * @param uri
    */
   private async updateFileIndex(uri: vscode.Uri): Promise<void> {
     // Remove old entries
@@ -342,6 +349,7 @@ export class EnzymeIndex {
 
   /**
    * Remove all entries for a file from index
+   * @param filePath
    */
   private removeFileFromIndex(filePath: string): void {
     // Remove routes
@@ -380,11 +388,12 @@ export class EnzymeIndex {
    * Get all routes
    */
   public getAllRoutes(): RouteMetadata[] {
-    return Array.from(this.routes.values());
+    return [...this.routes.values()];
   }
 
   /**
    * Get route by name
+   * @param name
    */
   public getRoute(name: string): RouteMetadata | undefined {
     for (const route of this.routes.values()) {
@@ -397,6 +406,7 @@ export class EnzymeIndex {
 
   /**
    * Search routes by query
+   * @param query
    */
   public searchRoutes(query: string): RouteMetadata[] {
     const lowerQuery = query.toLowerCase();
@@ -410,11 +420,12 @@ export class EnzymeIndex {
    * Get all components
    */
   public getAllComponents(): ComponentMetadata[] {
-    return Array.from(this.components.values());
+    return [...this.components.values()];
   }
 
   /**
    * Get component by name
+   * @param name
    */
   public getComponent(name: string): ComponentMetadata | undefined {
     for (const component of this.components.values()) {
@@ -427,6 +438,7 @@ export class EnzymeIndex {
 
   /**
    * Search components by query
+   * @param query
    */
   public searchComponents(query: string): ComponentMetadata[] {
     const lowerQuery = query.toLowerCase();
@@ -439,11 +451,12 @@ export class EnzymeIndex {
    * Get all hooks
    */
   public getAllHooks(): HookMetadata[] {
-    return Array.from(this.hooks.values());
+    return [...this.hooks.values()];
   }
 
   /**
    * Get hook by name
+   * @param name
    */
   public getHook(name: string): HookMetadata | undefined {
     return this.hooks.get(name);
@@ -451,6 +464,7 @@ export class EnzymeIndex {
 
   /**
    * Search hooks by query
+   * @param query
    */
   public searchHooks(query: string): HookMetadata[] {
     const lowerQuery = query.toLowerCase();
@@ -463,11 +477,12 @@ export class EnzymeIndex {
    * Get all stores
    */
   public getAllStores(): StoreMetadata[] {
-    return Array.from(this.stores.values());
+    return [...this.stores.values()];
   }
 
   /**
    * Get store by name
+   * @param name
    */
   public getStore(name: string): StoreMetadata | undefined {
     for (const store of this.stores.values()) {
@@ -480,12 +495,13 @@ export class EnzymeIndex {
 
   /**
    * Search stores by query
+   * @param query
    */
   public searchStores(query: string): StoreMetadata[] {
     const lowerQuery = query.toLowerCase();
     return this.getAllStores().filter(store =>
       store.name.toLowerCase().includes(lowerQuery) ||
-      (store.sliceName && store.sliceName.toLowerCase().includes(lowerQuery))
+      (store.sliceName?.toLowerCase().includes(lowerQuery))
     );
   }
 
@@ -493,11 +509,12 @@ export class EnzymeIndex {
    * Get all APIs
    */
   public getAllApis(): ApiMetadata[] {
-    return Array.from(this.apis.values());
+    return [...this.apis.values()];
   }
 
   /**
    * Search APIs by query
+   * @param query
    */
   public searchApis(query: string): ApiMetadata[] {
     const lowerQuery = query.toLowerCase();
@@ -509,6 +526,7 @@ export class EnzymeIndex {
 
   /**
    * Get all entities in a file
+   * @param filePath
    */
   public getEntitiesInFile(filePath: string): {
     routes: RouteMetadata[];
@@ -526,6 +544,8 @@ export class EnzymeIndex {
 
   /**
    * Find entity at position
+   * @param document
+   * @param position
    */
   public findEntityAtPosition(
     document: vscode.TextDocument,
@@ -632,6 +652,7 @@ let indexInstance: EnzymeIndex | undefined;
 
 /**
  * Get or create index instance
+ * @param workspaceRoot
  */
 export function getIndex(workspaceRoot?: string): EnzymeIndex {
   if (!indexInstance && workspaceRoot) {

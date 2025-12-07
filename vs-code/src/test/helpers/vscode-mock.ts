@@ -13,38 +13,69 @@ export class MockOutputChannel {
   public name: string;
   private messages: string[] = [];
 
+  /**
+   *
+   * @param name
+   */
   constructor(name: string) {
     this.name = name;
   }
 
+  /**
+   *
+   * @param value
+   */
   append(value: string): void {
     this.messages.push(value);
   }
 
+  /**
+   *
+   * @param value
+   */
   appendLine(value: string): void {
-    this.messages.push(value + '\n');
+    this.messages.push(`${value  }\n`);
   }
 
+  /**
+   *
+   */
   clear(): void {
     this.messages = [];
   }
 
-  show(preserveFocus?: boolean): void {
+  /**
+   *
+   * @param _preserveFocus
+   */
+  show(_preserveFocus?: boolean): void {
     // Mock implementation
   }
 
+  /**
+   *
+   */
   hide(): void {
     // Mock implementation
   }
 
+  /**
+   *
+   */
   dispose(): void {
     this.messages = [];
   }
 
+  /**
+   *
+   */
   getMessages(): string[] {
     return [...this.messages];
   }
 
+  /**
+   *
+   */
   getLastMessage(): string | undefined {
     return this.messages[this.messages.length - 1];
   }
@@ -54,23 +85,45 @@ export class MockOutputChannel {
  * Mock Memento for state storage
  */
 export class MockMemento {
-  private storage = new Map<string, unknown>();
+  private readonly storage = new Map<string, unknown>();
 
+  /**
+   *
+   */
   get<T>(key: string): T | undefined;
+  /**
+   *
+   */
   get<T>(key: string, defaultValue: T): T;
+  /**
+   *
+   * @param key
+   * @param defaultValue
+   */
   get<T>(key: string, defaultValue?: T): T | undefined {
     const value = this.storage.get(key);
     return value !== undefined ? (value as T) : defaultValue;
   }
 
+  /**
+   *
+   * @param key
+   * @param value
+   */
   async update(key: string, value: unknown): Promise<void> {
     this.storage.set(key, value);
   }
 
+  /**
+   *
+   */
   keys(): readonly string[] {
-    return Array.from(this.storage.keys());
+    return [...this.storage.keys()];
   }
 
+  /**
+   *
+   */
   clear(): void {
     this.storage.clear();
   }
@@ -80,16 +133,29 @@ export class MockMemento {
  * Mock SecretStorage for secure storage
  */
 export class MockSecretStorage {
-  private secrets = new Map<string, string>();
+  private readonly secrets = new Map<string, string>();
 
+  /**
+   *
+   * @param key
+   */
   async get(key: string): Promise<string | undefined> {
     return this.secrets.get(key);
   }
 
+  /**
+   *
+   * @param key
+   * @param value
+   */
   async store(key: string, value: string): Promise<void> {
     this.secrets.set(key, value);
   }
 
+  /**
+   *
+   * @param key
+   */
   async delete(key: string): Promise<void> {
     this.secrets.delete(key);
   }
@@ -101,7 +167,7 @@ export class MockSecretStorage {
  * Mock ExtensionContext for testing
  */
 export class MockExtensionContext {
-  public subscriptions: { dispose(): unknown }[] = [];
+  public subscriptions: Array<{ dispose(): unknown }> = [];
   public workspaceState = new MockMemento();
   public globalState = new MockMemento() as MockMemento & {
     setKeysForSync(keys: readonly string[]): void;
@@ -114,6 +180,9 @@ export class MockExtensionContext {
   public logUri = { fsPath: '/mock/log', scheme: 'file' } as any;
   public extensionMode = 3; // Production mode
 
+  /**
+   *
+   */
   constructor() {
     // Add setKeysForSync method to globalState
     (this.globalState as any).setKeysForSync = vi.fn();
@@ -125,12 +194,21 @@ export class MockExtensionContext {
  */
 export class MockDiagnosticCollection {
   public name: string;
-  private diagnostics = new Map<string, any[]>();
+  private readonly diagnostics = new Map<string, any[]>();
 
+  /**
+   *
+   * @param name
+   */
   constructor(name: string) {
     this.name = name;
   }
 
+  /**
+   *
+   * @param uri
+   * @param diagnostics
+   */
   set(uri: any, diagnostics: any[] | undefined): void {
     if (diagnostics === undefined) {
       this.diagnostics.delete(uri.toString());
@@ -139,26 +217,48 @@ export class MockDiagnosticCollection {
     }
   }
 
+  /**
+   *
+   * @param uri
+   */
   delete(uri: any): void {
     this.diagnostics.delete(uri.toString());
   }
 
+  /**
+   *
+   */
   clear(): void {
     this.diagnostics.clear();
   }
 
+  /**
+   *
+   * @param callback
+   */
   forEach(callback: (uri: any, diagnostics: any[]) => void): void {
-    this.diagnostics.forEach(callback);
+    this.diagnostics.forEach((diagnostics, uri) => callback(uri, diagnostics));
   }
 
+  /**
+   *
+   * @param uri
+   */
   get(uri: any): any[] | undefined {
     return this.diagnostics.get(uri.toString());
   }
 
+  /**
+   *
+   * @param uri
+   */
   has(uri: any): boolean {
     return this.diagnostics.has(uri.toString());
   }
 
+  /**
+   *
+   */
   dispose(): void {
     this.diagnostics.clear();
   }
@@ -175,18 +275,30 @@ export class MockStatusBarItem {
   public priority = 0;
   private visible = false;
 
+  /**
+   *
+   */
   show(): void {
     this.visible = true;
   }
 
+  /**
+   *
+   */
   hide(): void {
     this.visible = false;
   }
 
+  /**
+   *
+   */
   dispose(): void {
     this.visible = false;
   }
 
+  /**
+   *
+   */
   isVisible(): boolean {
     return this.visible;
   }
@@ -198,6 +310,9 @@ export class MockStatusBarItem {
 export class MockEventEmitter<T> {
   private listeners: Array<(e: T) => void> = [];
 
+  /**
+   *
+   */
   get event() {
     return (listener: (e: T) => void) => {
       this.listeners.push(listener);
@@ -212,10 +327,17 @@ export class MockEventEmitter<T> {
     };
   }
 
+  /**
+   *
+   * @param data
+   */
   fire(data: T): void {
     this.listeners.forEach(listener => listener(data));
   }
 
+  /**
+   *
+   */
   dispose(): void {
     this.listeners = [];
   }
@@ -225,24 +347,49 @@ export class MockEventEmitter<T> {
  * Mock WorkspaceConfiguration
  */
 export class MockWorkspaceConfiguration {
-  private config = new Map<string, unknown>();
+  private readonly config = new Map<string, unknown>();
 
+  /**
+   *
+   */
   get<T>(section: string): T | undefined;
+  /**
+   *
+   */
   get<T>(section: string, defaultValue: T): T;
+  /**
+   *
+   * @param section
+   * @param defaultValue
+   */
   get<T>(section: string, defaultValue?: T): T | undefined {
     const value = this.config.get(section);
     return value !== undefined ? (value as T) : defaultValue;
   }
 
-  async update(section: string, value: unknown, target?: number): Promise<void> {
+  /**
+   *
+   * @param section
+   * @param value
+   * @param _target
+   */
+  async update(section: string, value: unknown, _target?: number): Promise<void> {
     this.config.set(section, value);
   }
 
+  /**
+   *
+   * @param section
+   */
   has(section: string): boolean {
     return this.config.has(section);
   }
 
-  inspect<T>(section: string): any {
+  /**
+   *
+   * @param section
+   */
+  inspect(section: string): any {
     return {
       key: section,
       defaultValue: undefined,
@@ -252,6 +399,11 @@ export class MockWorkspaceConfiguration {
     };
   }
 
+  /**
+   *
+   * @param section
+   * @param value
+   */
   setConfig(section: string, value: unknown): void {
     this.config.set(section, value);
   }

@@ -1,22 +1,25 @@
 import * as vscode from 'vscode';
-import { RouteRules } from './rules/route-rules';
+import { debounce } from '../../utils/performance-utils';
 import { ComponentRules } from './rules/component-rules';
 import { PerformanceRules } from './rules/performance-rules';
+import { RouteRules } from './rules/route-rules';
 import { SecurityRules } from './rules/security-rules';
-import { debounce } from '../../utils/performance-utils';
 
 /**
  * PERFORMANCE: Enzyme diagnostics provider with optimized debouncing
  */
 export class EnzymeDiagnosticsProvider {
-  private diagnosticCollection: vscode.DiagnosticCollection;
-  private routeRules: RouteRules;
-  private componentRules: ComponentRules;
-  private performanceRules: PerformanceRules;
-  private securityRules: SecurityRules;
-  private debouncedAnalyze: (document: vscode.TextDocument) => void;
+  private readonly diagnosticCollection: vscode.DiagnosticCollection;
+  private readonly routeRules: RouteRules;
+  private readonly componentRules: ComponentRules;
+  private readonly performanceRules: PerformanceRules;
+  private readonly securityRules: SecurityRules;
+  private debouncedAnalyze: (...args: unknown[]) => void;
   private configChangeListener?: vscode.Disposable;
 
+  /**
+   *
+   */
   constructor() {
     this.diagnosticCollection = vscode.languages.createDiagnosticCollection('enzyme');
     this.routeRules = new RouteRules();
@@ -29,11 +32,15 @@ export class EnzymeDiagnosticsProvider {
     const debounceDelay = config.get<number>('analysis.debounceMs', 500); // PERFORMANCE: Increased default from 300ms to 500ms
 
     // PERFORMANCE: Use utility debounce function
-    this.debouncedAnalyze = debounce((document: vscode.TextDocument) => {
+    this.debouncedAnalyze = debounce(((document: vscode.TextDocument) => {
       this.analyzeDocument(document);
-    }, debounceDelay);
+    }) as (...args: unknown[]) => void, debounceDelay);
   }
 
+  /**
+   *
+   * @param context
+   */
   public activate(context: vscode.ExtensionContext): void {
     // Analyze open documents
     if (vscode.window.activeTextEditor) {
@@ -73,15 +80,15 @@ export class EnzymeDiagnosticsProvider {
       if (e.affectsConfiguration('enzyme.analysis.debounceMs')) {
         const config = vscode.workspace.getConfiguration('enzyme');
         const debounceDelay = config.get<number>('analysis.debounceMs', 500);
-        this.debouncedAnalyze = debounce((document: vscode.TextDocument) => {
+        this.debouncedAnalyze = debounce(((document: vscode.TextDocument) => {
           this.analyzeDocument(document);
-        }, debounceDelay);
+        }) as (...args: unknown[]) => void, debounceDelay);
       }
 
       if (e.affectsConfiguration('enzyme.diagnostics.enabled')) {
         // Re-analyze all open documents when diagnostics are toggled
-        vscode.workspace.textDocuments.forEach((doc) => {
-          this.analyzeDocument(doc);
+        vscode.workspace.textDocuments.forEach((document) => {
+          this.analyzeDocument(document);
         });
       }
     });
@@ -92,6 +99,7 @@ export class EnzymeDiagnosticsProvider {
 
   /**
    * PERFORMANCE: Analyze document with debouncing handled by utility function
+   * @param document
    */
   public async analyzeDocument(document: vscode.TextDocument): Promise<void> {
     // Only analyze TypeScript/JavaScript files
@@ -115,6 +123,10 @@ export class EnzymeDiagnosticsProvider {
     }
   }
 
+  /**
+   *
+   * @param document
+   */
   private shouldAnalyze(document: vscode.TextDocument): boolean {
     const config = vscode.workspace.getConfiguration('enzyme', document.uri);
     const enableDiagnostics = config.get<boolean>('diagnostics.enabled', true);
@@ -139,6 +151,9 @@ export class EnzymeDiagnosticsProvider {
     return true;
   }
 
+  /**
+   *
+   */
   public clear(): void {
     this.diagnosticCollection.clear();
   }
@@ -152,6 +167,14 @@ export class EnzymeDiagnosticsProvider {
   }
 }
 
+/**
+ *
+ * @param range
+ * @param message
+ * @param severity
+ * @param code
+ * @param relatedInformation
+ */
 export function createDiagnostic(
   range: vscode.Range,
   message: string,

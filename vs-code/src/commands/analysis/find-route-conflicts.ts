@@ -1,7 +1,11 @@
+import * as path from 'node:path';
 import * as vscode from 'vscode';
-import * as path from 'path';
-import { BaseCommand, CommandContext, CommandMetadata } from '../base-command';
+import { BaseCommand } from '../base-command';
+import type { CommandContext, CommandMetadata } from '../base-command';
 
+/**
+ *
+ */
 interface RouteInfo {
   path: string;
   file: string;
@@ -9,6 +13,9 @@ interface RouteInfo {
   pattern: string;
 }
 
+/**
+ *
+ */
 interface RouteConflict {
   route1: RouteInfo;
   route2: RouteInfo;
@@ -21,8 +28,13 @@ interface RouteConflict {
  * Detect route conflicts and show diagnostics with quick fixes
  */
 export class FindRouteConflictsCommand extends BaseCommand {
-  private diagnosticCollection: vscode.DiagnosticCollection;
+  private readonly diagnosticCollection: vscode.DiagnosticCollection;
 
+  /**
+   *
+   * @param context
+   * @param outputChannel
+   */
   constructor(
     context: vscode.ExtensionContext,
     outputChannel?: vscode.OutputChannel
@@ -32,6 +44,9 @@ export class FindRouteConflictsCommand extends BaseCommand {
     context.subscriptions.push(this.diagnosticCollection);
   }
 
+  /**
+   *
+   */
   getMetadata(): CommandMetadata {
     return {
       id: 'enzyme.analysis.findRouteConflicts',
@@ -41,6 +56,10 @@ export class FindRouteConflictsCommand extends BaseCommand {
     };
   }
 
+  /**
+   *
+   * @param _context
+   */
   protected async executeCommand(_context: CommandContext): Promise<void> {
     const workspaceFolder = await this.ensureWorkspaceFolder();
 
@@ -91,15 +110,19 @@ export class FindRouteConflictsCommand extends BaseCommand {
     );
   }
 
+  /**
+   *
+   * @param workspaceFolder
+   */
   private async findAllRoutes(
     workspaceFolder: vscode.WorkspaceFolder
   ): Promise<RouteInfo[]> {
     const routes: RouteInfo[] = [];
-    const srcPath = path.join(workspaceFolder.uri.fsPath, 'src');
+    const sourcePath = path.join(workspaceFolder.uri.fsPath, 'src');
 
     try {
       const routeFiles = await vscode.workspace.findFiles(
-        new vscode.RelativePattern(srcPath, '**/routes/**/*.{ts,tsx,js,jsx}'),
+        new vscode.RelativePattern(sourcePath, '**/routes/**/*.{ts,tsx,js,jsx}'),
         '**/node_modules/**'
       );
 
@@ -108,12 +131,14 @@ export class FindRouteConflictsCommand extends BaseCommand {
         const text = document.getText();
 
         // Find path definitions
-        const pathRegex = /path:\s*['"`]([^'"`]+)['"`]/g;
+        const pathRegex = /path:\s*["'`]([^"'`]+)["'`]/g;
         let match;
 
         while ((match = pathRegex.exec(text)) !== null) {
           const routePath = match[1];
-          const line = document.positionAt(match.index).line;
+          if (!routePath) continue;
+
+          const {line} = document.positionAt(match.index);
 
           routes.push({
             path: routePath,
@@ -131,6 +156,10 @@ export class FindRouteConflictsCommand extends BaseCommand {
     }
   }
 
+  /**
+   *
+   * @param routePath
+   */
   private routeToPattern(routePath: string): string {
     // Convert route path to a pattern for conflict detection
     return routePath
@@ -138,6 +167,10 @@ export class FindRouteConflictsCommand extends BaseCommand {
       .replace(/\*/g, '*wildcard'); // Normalize wildcards
   }
 
+  /**
+   *
+   * @param routes
+   */
   private detectConflicts(routes: RouteInfo[]): RouteConflict[] {
     const conflicts: RouteConflict[] = [];
 
@@ -147,24 +180,26 @@ export class FindRouteConflictsCommand extends BaseCommand {
         const route1 = routes[i];
         const route2 = routes[j];
 
+        if (!route1 || !route2) continue;
+
         // Exact duplicates
-        if (route1!.path === route2!.path) {
+        if (route1.path === route2.path) {
           conflicts.push({
             route1,
             route2,
             type: 'duplicate',
-            description: `Duplicate route path: ${route1!.path}`,
+            description: `Duplicate route path: ${route1.path}`,
           });
           continue;
         }
 
         // Pattern conflicts (e.g., /users/:id and /users/:userId)
-        if (route1!.pattern === route2!.pattern && route1!.path !== route2!.path) {
+        if (route1.pattern === route2.pattern && route1.path !== route2.path) {
           conflicts.push({
             route1,
             route2,
             type: 'ambiguous',
-            description: `Ambiguous routes: ${route1!.path} and ${route2!.path} will match the same URLs`,
+            description: `Ambiguous routes: ${route1.path} and ${route2.path} will match the same URLs`,
           });
           continue;
         }
@@ -175,7 +210,7 @@ export class FindRouteConflictsCommand extends BaseCommand {
             route1,
             route2,
             type: 'shadowed',
-            description: `Route ${route1!.path} may be shadowed by ${route2!.path}`,
+            description: `Route ${route1.path} may be shadowed by ${route2.path}`,
           });
         }
       }
@@ -184,9 +219,14 @@ export class FindRouteConflictsCommand extends BaseCommand {
     return conflicts;
   }
 
+  /**
+   *
+   * @param route1
+   * @param route2
+   */
   private isShadowed(route1: RouteInfo, route2: RouteInfo): boolean {
-    const parts1 = route1!.path.split('/').filter(Boolean);
-    const parts2 = route2!.path.split('/').filter(Boolean);
+    const parts1 = route1.path.split('/').filter(Boolean);
+    const parts2 = route2.path.split('/').filter(Boolean);
 
     if (parts1.length !== parts2.length) {
       return false;
@@ -210,6 +250,12 @@ export class FindRouteConflictsCommand extends BaseCommand {
     return false;
   }
 
+  /**
+   *
+   * @param diagnosticsMap
+   * @param route
+   * @param conflict
+   */
   private addDiagnostic(
     diagnosticsMap: Map<string, vscode.Diagnostic[]>,
     route: RouteInfo,
@@ -249,6 +295,10 @@ export class FindRouteConflictsCommand extends BaseCommand {
     diagnosticsMap.set(route.file, diagnostics);
   }
 
+  /**
+   *
+   * @param conflicts
+   */
   private displayConflicts(conflicts: RouteConflict[]): void {
     this.outputChannel.appendLine('='.repeat(80));
     this.outputChannel.appendLine('ROUTE CONFLICTS DETECTED');
@@ -268,9 +318,9 @@ export class FindRouteConflictsCommand extends BaseCommand {
     if (duplicates.length > 0) {
       this.outputChannel.appendLine('DUPLICATE ROUTES:');
       for (const conflict of duplicates) {
-        this.outputChannel.appendLine(`  ❌ ${conflict.route1!.path}`);
-        this.outputChannel.appendLine(`     ${conflict.route1!.file}:${conflict.route1!.line + 1}`);
-        this.outputChannel.appendLine(`     ${conflict.route2!.file}:${conflict.route2!.line + 1}`);
+        this.outputChannel.appendLine(`  ❌ ${conflict.route1.path}`);
+        this.outputChannel.appendLine(`     ${conflict.route1.file}:${conflict.route1.line + 1}`);
+        this.outputChannel.appendLine(`     ${conflict.route2.file}:${conflict.route2.line + 1}`);
         this.outputChannel.appendLine('');
       }
     }
@@ -278,9 +328,9 @@ export class FindRouteConflictsCommand extends BaseCommand {
     if (ambiguous.length > 0) {
       this.outputChannel.appendLine('AMBIGUOUS ROUTES:');
       for (const conflict of ambiguous) {
-        this.outputChannel.appendLine(`  ⚠️  ${conflict.route1!.path} ↔ ${conflict.route2!.path}`);
-        this.outputChannel.appendLine(`     ${conflict.route1!.file}:${conflict.route1!.line + 1}`);
-        this.outputChannel.appendLine(`     ${conflict.route2!.file}:${conflict.route2!.line + 1}`);
+        this.outputChannel.appendLine(`  ⚠️  ${conflict.route1.path} ↔ ${conflict.route2.path}`);
+        this.outputChannel.appendLine(`     ${conflict.route1.file}:${conflict.route1.line + 1}`);
+        this.outputChannel.appendLine(`     ${conflict.route2.file}:${conflict.route2.line + 1}`);
         this.outputChannel.appendLine('');
       }
     }
@@ -288,8 +338,8 @@ export class FindRouteConflictsCommand extends BaseCommand {
     if (shadowed.length > 0) {
       this.outputChannel.appendLine('SHADOWED ROUTES:');
       for (const conflict of shadowed) {
-        this.outputChannel.appendLine(`  ℹ️  ${conflict.route1!.path} shadowed by ${conflict.route2!.path}`);
-        this.outputChannel.appendLine(`     ${conflict.route1!.file}:${conflict.route1!.line + 1}`);
+        this.outputChannel.appendLine(`  ℹ️  ${conflict.route1.path} shadowed by ${conflict.route2.path}`);
+        this.outputChannel.appendLine(`     ${conflict.route1.file}:${conflict.route1.line + 1}`);
         this.outputChannel.appendLine('');
       }
     }

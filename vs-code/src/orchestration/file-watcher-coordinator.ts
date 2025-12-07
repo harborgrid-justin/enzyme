@@ -3,9 +3,9 @@
  */
 
 import * as vscode from 'vscode';
-import { EventBus } from './event-bus';
-import { LoggerService } from '../services/logger-service';
 import { TIMEOUTS } from '../core/constants';
+import type { EventBus } from './event-bus';
+import type { LoggerService } from '../services/logger-service';
 
 /**
  * File change event
@@ -33,13 +33,18 @@ export interface WatchPatternRegistration {
  */
 export class FileWatcherCoordinator {
   private static instance: FileWatcherCoordinator;
-  private eventBus: EventBus;
-  private logger: LoggerService;
-  private watchers: Map<string, WatchPatternRegistration> = new Map();
-  private debounceTimers: Map<string, NodeJS.Timeout> = new Map();
-  private eventQueue: Map<string, FileChangeEvent[]> = new Map();
-  private maxWatchers: number = 50;
+  private readonly eventBus: EventBus;
+  private readonly logger: LoggerService;
+  private readonly watchers = new Map<string, WatchPatternRegistration>();
+  private readonly debounceTimers = new Map<string, NodeJS.Timeout>();
+  private readonly eventQueue = new Map<string, FileChangeEvent[]>();
+  private readonly maxWatchers = 50;
 
+  /**
+   *
+   * @param eventBus
+   * @param logger
+   */
   private constructor(eventBus: EventBus, logger: LoggerService) {
     this.eventBus = eventBus;
     this.logger = logger;
@@ -47,6 +52,8 @@ export class FileWatcherCoordinator {
 
   /**
    * Create the file watcher coordinator
+   * @param eventBus
+   * @param logger
    */
   public static create(eventBus: EventBus, logger: LoggerService): FileWatcherCoordinator {
     if (!FileWatcherCoordinator.instance) {
@@ -67,6 +74,10 @@ export class FileWatcherCoordinator {
 
   /**
    * Register a file watcher
+   * @param id
+   * @param pattern
+   * @param handler
+   * @param debounceDelay
    */
   public registerWatcher(
     id: string,
@@ -115,6 +126,7 @@ export class FileWatcherCoordinator {
 
   /**
    * Unregister a file watcher
+   * @param id
    */
   public unregisterWatcher(id: string): void {
     const registration = this.watchers.get(id);
@@ -140,6 +152,12 @@ export class FileWatcherCoordinator {
 
   /**
    * Handle file system event with debouncing
+   * @param id
+   * @param pattern
+   * @param type
+   * @param uri
+   * @param handler
+   * @param debounceDelay
    */
   private handleFileEvent(
     id: string,
@@ -177,6 +195,8 @@ export class FileWatcherCoordinator {
 
   /**
    * Process event queue
+   * @param id
+   * @param handler
    */
   private async processEventQueue(
     id: string,
@@ -207,6 +227,7 @@ export class FileWatcherCoordinator {
 
   /**
    * Deduplicate events - keep only the latest event per file
+   * @param events
    */
   private deduplicateEvents(events: FileChangeEvent[]): FileChangeEvent[] {
     const eventMap = new Map<string, FileChangeEvent>();
@@ -220,7 +241,7 @@ export class FileWatcherCoordinator {
       }
     }
 
-    return Array.from(eventMap.values());
+    return [...eventMap.values()];
   }
 
   /**
@@ -310,7 +331,7 @@ export class FileWatcherCoordinator {
       totalWatchers: this.watchers.size,
       activeWatchers: this.debounceTimers.size,
       queuedEvents,
-      patterns: Array.from(this.watchers.values()).map(w => w.pattern),
+      patterns: [...this.watchers.values()].map(w => w.pattern),
     };
   }
 
@@ -333,21 +354,52 @@ export class FileWatcherCoordinator {
   }
 
   /**
-   * Dispose all watchers
+   * Dispose all watchers and clean up resources
+   *
+   * PERFORMANCE: Critical for preventing memory leaks
+   * - Disposes all file system watchers
+   * - Clears all debounce timers
+   * - Clears all event queues
+   * - Resets singleton instance
+   *
+   * ERROR HANDLING: Uses try-catch to safely dispose each watcher
+   * to prevent one failing disposal from blocking others
+   *
+   * @example
+   * ```typescript
+   * const coordinator = FileWatcherCoordinator.getInstance();
+   * // Later, on deactivation:
+   * coordinator.dispose();
+   * ```
    */
   public dispose(): void {
     this.logger.info('Disposing all file watchers');
 
+    // PERFORMANCE: Safely dispose each watcher
     for (const registration of this.watchers.values()) {
-      registration.watcher.dispose();
+      try {
+        registration.watcher.dispose();
+      } catch (error) {
+        this.logger.error(`Failed to dispose watcher: ${registration.id}`, error);
+      }
     }
 
+    // PERFORMANCE: Clear all debounce timers
     for (const timer of this.debounceTimers.values()) {
-      clearTimeout(timer);
+      try {
+        clearTimeout(timer);
+      } catch (error) {
+        this.logger.error('Failed to clear debounce timer', error);
+      }
     }
 
     this.watchers.clear();
     this.debounceTimers.clear();
     this.eventQueue.clear();
+
+    // Reset singleton instance to prevent memory leaks
+    if (FileWatcherCoordinator.instance === this) {
+      FileWatcherCoordinator.instance = null as any;
+    }
   }
 }

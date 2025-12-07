@@ -2,7 +2,7 @@
  * Type definitions for the Enzyme VS Code Extension
  */
 
-import * as vscode from 'vscode';
+import type * as vscode from 'vscode';
 
 /**
  * Log Levels
@@ -324,8 +324,8 @@ export interface PerformanceMetric {
  * Performance Filter
  */
 export interface PerformanceFilter {
-  type?: PerformanceMetric['type'][];
-  severity?: PerformanceMetric['severity'][];
+  type?: Array<PerformanceMetric['type']>;
+  severity?: Array<PerformanceMetric['severity']>;
   component?: string;
   startTime?: number;
   endTime?: number;
@@ -341,13 +341,13 @@ export interface GenerateComponentOptions {
   cssFramework: CSSFramework;
   withTest: boolean;
   withStory: boolean;
-  props?: ComponentProp[];
+  props?: ComponentProperty[];
 }
 
 /**
  * Component Prop Definition
  */
-export interface ComponentProp {
+export interface ComponentProperty {
   name: string;
   type: string;
   optional: boolean;
@@ -431,7 +431,7 @@ export interface GenerateTestOptions {
   targetFile: string;
   framework: TestFramework;
   withCoverage: boolean;
-  testTypes: ('unit' | 'integration' | 'e2e')[];
+  testTypes: Array<'unit' | 'integration' | 'e2e'>;
 }
 
 /**

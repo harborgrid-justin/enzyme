@@ -3,10 +3,10 @@
  */
 
 import * as vscode from 'vscode';
-import { Container } from './container';
-import { EventBus } from './event-bus';
-import { LoggerService } from '../services/logger-service';
-import { WorkspaceService } from '../services/workspace-service';
+import type { Container } from './container';
+import type { EventBus } from './event-bus';
+import type { LoggerService } from '../services/logger-service';
+import type { WorkspaceService } from '../services/workspace-service';
 
 /**
  * Lifecycle phase
@@ -38,15 +38,19 @@ export interface LifecycleStatus {
  */
 export class LifecycleManager {
   private static instance: LifecycleManager;
-  private container: Container;
-  private eventBus: EventBus;
-  private logger: LoggerService;
+  private readonly container: Container;
+  private readonly eventBus: EventBus;
+  private readonly logger: LoggerService;
   private currentPhase: LifecyclePhase = LifecyclePhase.INITIALIZING;
-  private phaseHistory: LifecycleStatus[] = [];
+  private readonly phaseHistory: LifecycleStatus[] = [];
   private disposables: vscode.Disposable[] = [];
-  private isReady: boolean = false;
+  private isReady = false;
   private healthCheckInterval?: NodeJS.Timeout;
 
+  /**
+   *
+   * @param container
+   */
   private constructor(container: Container) {
     this.container = container;
     this.eventBus = container.resolve<EventBus>('EventBus');
@@ -55,6 +59,7 @@ export class LifecycleManager {
 
   /**
    * Create a new lifecycle manager
+   * @param container
    */
   public static create(container: Container): LifecycleManager {
     if (!LifecycleManager.instance) {
@@ -75,6 +80,7 @@ export class LifecycleManager {
 
   /**
    * Activate the extension
+   * @param context
    */
   public async activate(context: vscode.ExtensionContext): Promise<void> {
     this.logger.info('Starting extension activation...');
@@ -196,6 +202,8 @@ export class LifecycleManager {
 
   /**
    * Run a lifecycle phase
+   * @param phase
+   * @param action
    */
   private async runPhase(phase: LifecyclePhase, action: () => Promise<void>): Promise<void> {
     this.currentPhase = phase;
@@ -213,6 +221,7 @@ export class LifecycleManager {
 
   /**
    * Record a phase in history
+   * @param phase
    */
   private recordPhase(phase: LifecyclePhase): void {
     this.phaseHistory.push({
@@ -223,6 +232,7 @@ export class LifecycleManager {
 
   /**
    * Record a phase error
+   * @param error
    */
   private recordPhaseError(error: Error): void {
     const lastPhase = this.phaseHistory[this.phaseHistory.length - 1];
@@ -254,6 +264,7 @@ export class LifecycleManager {
 
   /**
    * Register a disposable
+   * @param disposable
    */
   public registerDisposable(disposable: vscode.Disposable): void {
     this.disposables.push(disposable);
@@ -274,7 +285,7 @@ export class LifecycleManager {
   private stopHealthChecks(): void {
     if (this.healthCheckInterval) {
       clearInterval(this.healthCheckInterval);
-      this.healthCheckInterval = undefined;
+      delete this.healthCheckInterval;
     }
   }
 
@@ -303,6 +314,7 @@ export class LifecycleManager {
 
   /**
    * Recover from error
+   * @param error
    */
   public async recoverFromError(error: Error): Promise<void> {
     this.logger.error('Attempting error recovery', error);

@@ -3,6 +3,10 @@ import { EnzymeCodeActionProvider } from './enzyme-code-action-provider';
 import { executeExtractFeature } from './refactorings/extract-feature';
 import { executeExtractHook } from './refactorings/extract-hook';
 
+/**
+ *
+ * @param context
+ */
 export function registerCodeActionProviders(context: vscode.ExtensionContext): void {
   // Register the main code action provider
   const codeActionProvider = new EnzymeCodeActionProvider();
@@ -32,31 +36,31 @@ export function registerCodeActionProviders(context: vscode.ExtensionContext): v
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand('enzyme.extractComponent', async (uri, range) => {
+    vscode.commands.registerCommand('enzyme.extractComponent', async (_uri, _range) => {
       vscode.window.showInformationMessage('Extract Component - Coming soon!');
     })
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand('enzyme.splitComponent', async (uri, range) => {
+    vscode.commands.registerCommand('enzyme.splitComponent', async (_uri, _range) => {
       vscode.window.showInformationMessage('Split Component - Coming soon!');
     })
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand('enzyme.splitStore', async (uri, range) => {
+    vscode.commands.registerCommand('enzyme.splitStore', async (_uri, _range) => {
       vscode.window.showInformationMessage('Split Store - Coming soon!');
     })
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand('enzyme.extractStoreSlice', async (uri, range) => {
+    vscode.commands.registerCommand('enzyme.extractStoreSlice', async (_uri, _range) => {
       vscode.window.showInformationMessage('Extract Store Slice - Coming soon!');
     })
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand('enzyme.removeUnusedImports', async (uri) => {
+    vscode.commands.registerCommand('enzyme.removeUnusedImports', async (_uri) => {
       vscode.window.showInformationMessage('Remove Unused Imports - Coming soon!');
     })
   );

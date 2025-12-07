@@ -1,23 +1,29 @@
 import * as vscode from 'vscode';
-import { RouteQuickFixes } from './quick-fixes/route-quick-fixes';
 import { ComponentQuickFixes } from './quick-fixes/component-quick-fixes';
 import { HookQuickFixes } from './quick-fixes/hook-quick-fixes';
-import { StoreQuickFixes } from './quick-fixes/store-quick-fixes';
 import { ImportQuickFixes } from './quick-fixes/import-quick-fixes';
+import { RouteQuickFixes } from './quick-fixes/route-quick-fixes';
+import { StoreQuickFixes } from './quick-fixes/store-quick-fixes';
+import { ConvertToLazyRouteRefactoring } from './refactorings/convert-to-lazy-route';
 import { ExtractFeatureRefactoring } from './refactorings/extract-feature';
 import { ExtractHookRefactoring } from './refactorings/extract-hook';
-import { ConvertToLazyRouteRefactoring } from './refactorings/convert-to-lazy-route';
 
+/**
+ *
+ */
 export class EnzymeCodeActionProvider implements vscode.CodeActionProvider {
-  private routeQuickFixes: RouteQuickFixes;
-  private componentQuickFixes: ComponentQuickFixes;
-  private hookQuickFixes: HookQuickFixes;
-  private storeQuickFixes: StoreQuickFixes;
-  private importQuickFixes: ImportQuickFixes;
-  private extractFeatureRefactoring: ExtractFeatureRefactoring;
-  private extractHookRefactoring: ExtractHookRefactoring;
-  private convertToLazyRouteRefactoring: ConvertToLazyRouteRefactoring;
+  private readonly routeQuickFixes: RouteQuickFixes;
+  private readonly componentQuickFixes: ComponentQuickFixes;
+  private readonly hookQuickFixes: HookQuickFixes;
+  private readonly storeQuickFixes: StoreQuickFixes;
+  private readonly importQuickFixes: ImportQuickFixes;
+  private readonly extractFeatureRefactoring: ExtractFeatureRefactoring;
+  private readonly extractHookRefactoring: ExtractHookRefactoring;
+  private readonly convertToLazyRouteRefactoring: ConvertToLazyRouteRefactoring;
 
+  /**
+   *
+   */
   constructor() {
     this.routeQuickFixes = new RouteQuickFixes();
     this.componentQuickFixes = new ComponentQuickFixes();
@@ -35,12 +41,19 @@ export class EnzymeCodeActionProvider implements vscode.CodeActionProvider {
     vscode.CodeActionKind.Source,
   ];
 
+  /**
+   *
+   * @param document
+   * @param range
+   * @param context
+   * @param token
+   */
   public provideCodeActions(
     document: vscode.TextDocument,
     range: vscode.Range | vscode.Selection,
     context: vscode.CodeActionContext,
-    token: vscode.CancellationToken
-  ): vscode.ProviderResult<(vscode.CodeAction | vscode.Command)[]> {
+    _token: vscode.CancellationToken
+  ): vscode.ProviderResult<Array<vscode.CodeAction | vscode.Command>> {
     const actions: vscode.CodeAction[] = [];
 
     // Quick Fixes - respond to diagnostics
@@ -55,7 +68,7 @@ export class EnzymeCodeActionProvider implements vscode.CodeActionProvider {
     actions.push(...this.importQuickFixes.provideQuickFixes(document, range, context));
 
     // Refactorings - context-aware
-    if (context.only && context.only.contains(vscode.CodeActionKind.Refactor)) {
+    if (context.only?.contains(vscode.CodeActionKind.Refactor)) {
       actions.push(
         ...this.extractFeatureRefactoring.provideRefactorings(document, range, context)
       );
@@ -69,6 +82,10 @@ export class EnzymeCodeActionProvider implements vscode.CodeActionProvider {
     return this.sortActionsByPriority(actions);
   }
 
+  /**
+   *
+   * @param actions
+   */
   private sortActionsByPriority(actions: vscode.CodeAction[]): vscode.CodeAction[] {
     const priorityMap: Record<string, number> = {
       [vscode.CodeActionKind.QuickFix.value]: 1,

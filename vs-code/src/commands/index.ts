@@ -2,6 +2,11 @@ import * as vscode from 'vscode';
 
 // Import all command classes
 import {
+  AnalyzeProjectCommand,
+  AnalyzeBundleCommand,
+  FindRouteConflictsCommand,
+} from './analysis';
+import {
   GenerateComponentCommand,
   GeneratePageCommand,
   GenerateHookCommand,
@@ -9,26 +14,17 @@ import {
   GenerateStoreCommand,
   GenerateAPICommand,
 } from './generate';
-
 import {
   GoToRouteCommand,
   GoToFeatureCommand,
   GoToStoreCommand,
 } from './navigation';
-
-import {
-  AnalyzeProjectCommand,
-  AnalyzeBundleCommand,
-  FindRouteConflictsCommand,
-} from './analysis';
-
 import {
   ShowStateInspectorCommand,
   ShowPerformanceCommand,
   ShowRouteVisualizerCommand,
   ShowAPIExplorerCommand,
 } from './panel';
-
 import {
   RefreshAllCommand,
   OpenDocsCommand,
@@ -42,7 +38,7 @@ export enum CommandCategory {
   Navigation = 'navigation',
   Analysis = 'analysis',
   Panel = 'panel',
-  Utils = 'utils',
+  Utilities = 'utils',
 }
 
 /**

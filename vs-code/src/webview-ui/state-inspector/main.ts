@@ -88,6 +88,33 @@ function setupEventListeners() {
 		collapseAll();
 	});
 
+	// SECURITY: Event delegation for state tree toggle (CSP-compliant, no inline handlers)
+	const stateTree = (document as any).getElementById('stateTree');
+	stateTree?.addEventListener('click', (event: MouseEvent) => {
+		const target = event.target as HTMLElement;
+		const toggleable = target.closest('.state-toggleable') as HTMLElement;
+		if (toggleable) {
+			const path = toggleable.getAttribute('data-path');
+			if (path) {
+				togglePath(path);
+			}
+		}
+	});
+
+	// SECURITY: Event delegation for history item selection (CSP-compliant)
+	const actionHistory = (document as any).getElementById('actionHistory');
+	actionHistory?.addEventListener('click', (event: MouseEvent) => {
+		const target = event.target as HTMLElement;
+		const historyItem = target.closest('.history-item') as HTMLElement;
+		if (historyItem) {
+			const items = Array.from((document as any).querySelectorAll('.history-item'));
+			const index = items.indexOf(historyItem);
+			if (index >= 0) {
+				sendTimeTravel(index);
+			}
+		}
+	});
+
 	// Listen for messages from extension
 	vscode.onMessage((message) => {
 		handleMessage(message);
@@ -144,20 +171,6 @@ function renderStateTree() {
 	container.appendChild(wrapper);
 }
 
-/**
- * SECURITY: Escape a path string for safe use in JavaScript onclick handlers
- * This prevents XSS attacks through malicious object keys
- */
-function escapeJsString(str: string): string {
-	return str
-		.replace(/\\/g, '\\\\')
-		.replace(/'/g, "\\'")
-		.replace(/"/g, '\\"')
-		.replace(/</g, '\\x3c')
-		.replace(/>/g, '\\x3e')
-		.replace(/&/g, '\\x26');
-}
-
 function renderObject(obj: any, path: string, level: number = 0): string {
 	if (obj === null) {
 		return `<span class="state-value state-null">null</span>`;
@@ -183,9 +196,6 @@ function renderObject(obj: any, path: string, level: number = 0): string {
 		return `<span class="state-value state-boolean">${obj}</span>`;
 	}
 
-	// SECURITY: Escape path for use in onclick handlers
-	const escapedPath = escapeJsString(path);
-
 	if (Array.isArray(obj)) {
 		const isExpanded = expandedPaths.has(path);
 		const length = obj.length;
@@ -194,9 +204,10 @@ function renderObject(obj: any, path: string, level: number = 0): string {
 			return `<span class="state-value state-array">[]</span>`;
 		}
 
+		// SECURITY: Use data attribute for path instead of inline onclick
 		let html = `
 			<div class="state-node">
-				<div class="state-key-line" data-path="${webviewUtils.escapeHtml(path)}" onclick="(window as any).togglePath('${escapedPath}')">
+				<div class="state-key-line state-toggleable" data-path="${webviewUtils.escapeHtml(path)}">
 					<span class="codicon codicon-chevron-${isExpanded ? 'down' : 'right'}"></span>
 					<span class="state-bracket">[</span>
 					<span class="state-info">${length} items</span>
@@ -235,9 +246,10 @@ function renderObject(obj: any, path: string, level: number = 0): string {
 			return `<span class="state-value state-object">{}</span>`;
 		}
 
+		// SECURITY: Use data attribute for path instead of inline onclick
 		let html = `
 			<div class="state-node">
-				<div class="state-key-line" data-path="${webviewUtils.escapeHtml(path)}" onclick="(window as any).togglePath('${escapedPath}')">
+				<div class="state-key-line state-toggleable" data-path="${webviewUtils.escapeHtml(path)}">
 					<span class="codicon codicon-chevron-${isExpanded ? 'down' : 'right'}"></span>
 					<span class="state-bracket">{</span>
 					<span class="state-info">${length} keys</span>
@@ -312,7 +324,7 @@ function renderActionHistory() {
 
 		const historyItem = (document as any).createElement('div');
 		historyItem.className = `history-item ${isActive ? 'active' : ''}`;
-		historyItem.onclick = () => (window as any).selectHistoryItem(index);
+		// SECURITY: No inline onclick - click handled via event delegation
 
 		const header = (document as any).createElement('div');
 		header.className = 'history-item-header';
@@ -397,19 +409,18 @@ function addAllPaths(obj: any, path: string) {
 	}
 }
 
-// Expose functions to window for onclick handlers
-(window as any).togglePath = (path: string) => {
+/**
+ * SECURITY: Toggle path expansion (CSP-compliant - no window exposure)
+ * Called via event delegation instead of inline onclick handlers
+ */
+function togglePath(path: string) {
 	if (expandedPaths.has(path)) {
 		expandedPaths.delete(path);
 	} else {
 		expandedPaths.add(path);
 	}
 	renderStateTree();
-};
-
-(window as any).selectHistoryItem = (index: number) => {
-	sendTimeTravel(index);
-};
+}
 
 // Start the app
 if ((document as any).readyState === 'loading') {

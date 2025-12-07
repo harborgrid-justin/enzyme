@@ -1,8 +1,11 @@
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
 import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs/promises';
-import { CLIRunner } from '../cli-runner';
+import type { CLIRunner } from '../cli-runner';
 
+/**
+ *
+ */
 export interface Migration {
   version: string;
   name: string;
@@ -10,6 +13,9 @@ export interface Migration {
   breaking: boolean;
 }
 
+/**
+ *
+ */
 export interface MigrationResult {
   success: boolean;
   version: string;
@@ -17,8 +23,15 @@ export interface MigrationResult {
   errors: string[];
 }
 
+/**
+ *
+ */
 export class MigrationRunner {
-  constructor(private cliRunner: CLIRunner) {}
+  /**
+   *
+   * @param cliRunner
+   */
+  constructor(private readonly cliRunner: CLIRunner) {}
 
   /**
    * Detect current Enzyme version
@@ -63,6 +76,10 @@ export class MigrationRunner {
 
   /**
    * Run migration to specific version
+   * @param targetVersion
+   * @param options
+   * @param options.dryRun
+   * @param options.force
    */
   async migrate(
     targetVersion?: string,
@@ -236,6 +253,7 @@ export class MigrationRunner {
 
   /**
    * Dry run migration
+   * @param targetVersion
    */
   async dryRun(targetVersion?: string): Promise<MigrationResult | null> {
     return this.migrate(targetVersion, { dryRun: true });
@@ -243,6 +261,7 @@ export class MigrationRunner {
 
   /**
    * Show migration changes in output channel
+   * @param changes
    */
   private showChanges(changes: string[]): void {
     const channel = vscode.window.createOutputChannel('Enzyme Migration');
@@ -261,6 +280,7 @@ export class MigrationRunner {
    */
   private getWorkspaceRoot(): string | null {
     const folders = vscode.workspace.workspaceFolders;
-    return folders && folders.length > 0 ? folders[0].uri.fsPath : null;
+    const firstFolder = folders?.[0];
+    return firstFolder ? firstFolder.uri.fsPath : null;
   }
 }

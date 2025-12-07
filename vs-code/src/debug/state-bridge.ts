@@ -32,6 +32,9 @@ export enum MessageType {
   ERROR = 'error',
 }
 
+/**
+ *
+ */
 export interface BridgeMessage<T = unknown> {
   type: MessageType;
   id?: string;
@@ -40,6 +43,9 @@ export interface BridgeMessage<T = unknown> {
   timestamp: number;
 }
 
+/**
+ *
+ */
 export interface ConnectionConfig {
   /** WebSocket URL */
   url: string;
@@ -53,6 +59,9 @@ export interface ConnectionConfig {
   connectionTimeout?: number;
 }
 
+/**
+ *
+ */
 export interface BridgeSession {
   id: string;
   appName: string;
@@ -62,24 +71,34 @@ export interface BridgeSession {
   metadata?: Record<string, unknown>;
 }
 
+/**
+ *
+ */
 export type MessageHandler<T = unknown> = (message: BridgeMessage<T>) => void | Promise<void>;
 
 // ============================================================================
 // State Bridge
 // ============================================================================
 
+/**
+ *
+ */
 export class StateBridge {
   private ws: WebSocket | null = null;
-  private config: Required<ConnectionConfig>;
+  private readonly config: Required<ConnectionConfig>;
   private sessionId: string | null = null;
   private isConnected = false;
   private reconnectTimer: NodeJS.Timeout | null = null;
   private heartbeatTimer: NodeJS.Timeout | null = null;
   private reconnectAttempt = 0;
-  private messageHandlers = new Map<MessageType, Set<MessageHandler>>();
+  private readonly messageHandlers = new Map<MessageType, Set<MessageHandler>>();
   private pendingMessages: BridgeMessage[] = [];
-  private sessions = new Map<string, BridgeSession>();
+  private readonly sessions = new Map<string, BridgeSession>();
 
+  /**
+   *
+   * @param config
+   */
   constructor(config: ConnectionConfig) {
     this.config = {
       url: config.url,
@@ -155,6 +174,9 @@ export class StateBridge {
 
   /**
    * Send a message to the dev server
+   * @param type
+   * @param payload
+   * @param id
    */
   send<T>(type: MessageType, payload: T, id?: string): void {
     if (!this.sessionId) {
@@ -163,7 +185,7 @@ export class StateBridge {
 
     const message: BridgeMessage<T> = {
       type,
-      id,
+      ...(id !== undefined && { id }),
       sessionId: this.sessionId,
       payload,
       timestamp: Date.now(),
@@ -184,6 +206,7 @@ export class StateBridge {
 
   /**
    * Subscribe to state updates
+   * @param storeName
    */
   subscribeToState(storeName?: string): void {
     this.send(MessageType.STATE_SUBSCRIBE, { storeName });
@@ -191,6 +214,7 @@ export class StateBridge {
 
   /**
    * Unsubscribe from state updates
+   * @param storeName
    */
   unsubscribeFromState(storeName?: string): void {
     this.send(MessageType.STATE_UNSUBSCRIBE, { storeName });
@@ -198,6 +222,7 @@ export class StateBridge {
 
   /**
    * Request state snapshot
+   * @param storeName
    */
   requestStateSnapshot(storeName?: string): void {
     this.send(MessageType.STATE_SNAPSHOT, { storeName });
@@ -205,6 +230,9 @@ export class StateBridge {
 
   /**
    * Dispatch action to the app
+   * @param storeName
+   * @param actionType
+   * @param payload
    */
   dispatchAction(storeName: string, actionType: string, payload?: unknown): void {
     this.send(MessageType.ACTION_DISPATCH, {
@@ -216,6 +244,8 @@ export class StateBridge {
 
   /**
    * Register message handler
+   * @param type
+   * @param handler
    */
   on<T = unknown>(type: MessageType, handler: MessageHandler<T>): () => void {
     if (!this.messageHandlers.has(type)) {
@@ -233,6 +263,8 @@ export class StateBridge {
 
   /**
    * Remove message handler
+   * @param type
+   * @param handler
    */
   off<T = unknown>(type: MessageType, handler: MessageHandler<T>): void {
     const handlers = this.messageHandlers.get(type);
@@ -260,6 +292,7 @@ export class StateBridge {
 
   /**
    * Get active session
+   * @param sessionId
    */
   getSession(sessionId?: string): BridgeSession | undefined {
     const id = sessionId ?? this.sessionId;
@@ -270,11 +303,12 @@ export class StateBridge {
    * Get all sessions
    */
   getSessions(): BridgeSession[] {
-    return Array.from(this.sessions.values());
+    return [...this.sessions.values()];
   }
 
   /**
    * Handle incoming message
+   * @param data
    */
   private handleMessage(data: string): void {
     try {
@@ -304,6 +338,7 @@ export class StateBridge {
 
   /**
    * Handle WebSocket error
+   * @param error
    */
   private handleError(error: Event): void {
     console.error('WebSocket error:', error);
@@ -383,6 +418,8 @@ export class StateBridge {
 
   /**
    * Emit message to handlers
+   * @param type
+   * @param payload
    */
   private emit<T>(type: MessageType, payload: T): void {
     const handlers = this.messageHandlers.get(type);
@@ -411,6 +448,7 @@ let globalBridge: StateBridge | null = null;
 
 /**
  * Get or create global bridge instance
+ * @param config
  */
 export function getGlobalBridge(config?: ConnectionConfig): StateBridge {
   if (!globalBridge && config) {

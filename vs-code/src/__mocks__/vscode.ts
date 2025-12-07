@@ -40,7 +40,7 @@ class MockOutputChannel {
   }
 }
 
-class MockMemento {
+export class MockMemento {
   private storage = new Map<string, any>();
 
   get<T>(key: string, defaultValue?: T): T | undefined {
@@ -57,7 +57,7 @@ class MockMemento {
   }
 }
 
-class MockSecretStorage {
+export class MockSecretStorage {
   private secrets = new Map<string, string>();
 
   async get(key: string): Promise<string | undefined> {
@@ -110,18 +110,22 @@ class MockStatusBarItem {
   public command?: string;
   public alignment = 2;
   public priority = 0;
-  private visible = false;
+  private _visible = false;
 
   show(): void {
-    this.visible = true;
+    this._visible = true;
   }
 
   hide(): void {
-    this.visible = false;
+    this._visible = false;
   }
 
   dispose(): void {
-    this.visible = false;
+    this._visible = false;
+  }
+
+  get visible(): boolean {
+    return this._visible;
   }
 }
 

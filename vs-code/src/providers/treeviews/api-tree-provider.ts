@@ -4,11 +4,18 @@
  */
 
 import * as vscode from 'vscode';
-import { BaseTreeProvider, TreeProviderOptions } from './base-tree-provider';
+import { BaseTreeProvider } from './base-tree-provider';
 import { EnzymeAPIItem, EnzymeCategoryItem } from './tree-items';
+import type { TreeProviderOptions } from './base-tree-provider';
 
+/**
+ *
+ */
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
+/**
+ *
+ */
 interface APIEndpointMetadata {
   name: string;
   filePath: string;
@@ -24,10 +31,33 @@ interface APIEndpointMetadata {
 
 /**
  * TreeView provider for Enzyme API endpoints
+ *
+ * @description Discovers and organizes API endpoints with comprehensive metadata:
+ * - HTTP method detection (GET, POST, PUT, PATCH, DELETE)
+ * - Endpoint path extraction and normalization
+ * - Request/response type inference from TypeScript annotations
+ * - Mock service integration detection (MSW, faker)
+ * - Authentication requirement identification
+ * - Resource-based grouping and organization
+ * - JSDoc description extraction
+ *
+ * @example
+ * ```typescript
+ * const provider = new EnzymeAPITreeProvider(context);
+ * const endpoints = provider.getEndpoints();
+ * const getEndpoints = provider.getEndpointsByMethod('GET');
+ * const mockedEndpoints = provider.getMockedEndpoints();
+ * const authenticatedEndpoints = provider.getAuthenticatedEndpoints();
+ * ```
  */
 export class EnzymeAPITreeProvider extends BaseTreeProvider<EnzymeAPIItem | EnzymeCategoryItem> {
   private endpoints: APIEndpointMetadata[] = [];
 
+  /**
+   *
+   * @param context
+   * @param options
+   */
   constructor(context: vscode.ExtensionContext, options?: TreeProviderOptions) {
     super(context, options);
   }
@@ -61,10 +91,11 @@ export class EnzymeAPITreeProvider extends BaseTreeProvider<EnzymeAPIItem | Enzy
 
   /**
    * Get child items
+   * @param element
    */
   protected async getChildItems(
     element: EnzymeAPIItem | EnzymeCategoryItem
-  ): Promise<Array<EnzymeAPIItem>> {
+  ): Promise<EnzymeAPIItem[]> {
     if (element instanceof EnzymeCategoryItem) {
       return this.getResourceEndpoints(element.categoryName);
     }
@@ -106,7 +137,7 @@ export class EnzymeAPITreeProvider extends BaseTreeProvider<EnzymeAPIItem | Enzy
       // Sort endpoints by resource and method
       this.endpoints.sort((a, b) => {
         const resourceCompare = a.resource.localeCompare(b.resource);
-        if (resourceCompare !== 0) return resourceCompare;
+        if (resourceCompare !== 0) {return resourceCompare;}
         return a.method.localeCompare(b.method);
       });
     } catch (error) {
@@ -116,6 +147,7 @@ export class EnzymeAPITreeProvider extends BaseTreeProvider<EnzymeAPIItem | Enzy
 
   /**
    * Parse an API file to extract endpoint metadata
+   * @param filePath
    */
   private async parseAPIFile(filePath: string): Promise<APIEndpointMetadata[] | null> {
     try {
@@ -125,12 +157,16 @@ export class EnzymeAPITreeProvider extends BaseTreeProvider<EnzymeAPIItem | Enzy
 
       // Look for various API client patterns
       // Pattern 1: axios/fetch calls
-      const httpMethodPattern = /(get|post|put|patch|delete)\s*[<(]['"`]([^'"`]+)['"`]/gi;
+      const httpMethodPattern = /(get|post|put|patch|delete)\s*[(<]["'`]([^"'`]+)["'`]/gi;
       let match;
 
       while ((match = httpMethodPattern.exec(content)) !== null) {
-        const method = match[1].toUpperCase() as HttpMethod;
+        const method = match[1]?.toUpperCase() as HttpMethod;
         const apiPath = match[2];
+
+        if (!method || !apiPath) {
+          continue;
+        }
 
         const endpoint = this.createEndpointMetadata(
           content,
@@ -145,11 +181,16 @@ export class EnzymeAPITreeProvider extends BaseTreeProvider<EnzymeAPIItem | Enzy
       }
 
       // Pattern 2: API client method definitions
-      const apiMethodPattern = /export\s+(?:const|function)\s+(\w+)\s*=?\s*(?:async)?\s*\([^)]*\)\s*(?::\s*[^{]+)?\s*{[^}]*(?:get|post|put|patch|delete)\s*[<(]['"`]([^'"`]+)['"`]/gis;
+      const apiMethodPattern = /export\s+(?:const|function)\s+(\w+)\s*=?\s*(?:async)?\s*\([^)]*\)\s*(?::\s*[^{]+)?\s*{[^}]*(?:get|post|put|patch|delete)\s*[(<]["'`]([^"'`]+)["'`]/gis;
 
       while ((match = apiMethodPattern.exec(content)) !== null) {
         const methodName = match[1];
         const apiPath = match[2];
+
+        if (!methodName || !apiPath) {
+          continue;
+        }
+
         const method = this.inferMethodFromName(methodName);
 
         const endpoint = this.createEndpointMetadata(
@@ -174,6 +215,11 @@ export class EnzymeAPITreeProvider extends BaseTreeProvider<EnzymeAPIItem | Enzy
 
   /**
    * Create endpoint metadata
+   * @param content
+   * @param filePath
+   * @param method
+   * @param apiPath
+   * @param methodName
    */
   private createEndpointMetadata(
     content: string,
@@ -208,11 +254,11 @@ export class EnzymeAPITreeProvider extends BaseTreeProvider<EnzymeAPIItem | Enzy
         method,
         path: apiPath,
         resource,
-        requestType,
-        responseType,
         isMocked,
         hasAuth,
-        description,
+        ...(requestType && { requestType }),
+        ...(responseType && { responseType }),
+        ...(description && { description }),
       };
     } catch {
       return null;
@@ -221,6 +267,7 @@ export class EnzymeAPITreeProvider extends BaseTreeProvider<EnzymeAPIItem | Enzy
 
   /**
    * Infer HTTP method from function name
+   * @param methodName
    */
   private inferMethodFromName(methodName: string): HttpMethod {
     const lowerName = methodName.toLowerCase();
@@ -246,10 +293,15 @@ export class EnzymeAPITreeProvider extends BaseTreeProvider<EnzymeAPIItem | Enzy
 
   /**
    * Extract resource name from API path
+   * @param apiPath
    */
   private extractResourceFromPath(apiPath: string): string {
     // Remove leading slash and query params
     const cleanPath = apiPath.replace(/^\//, '').split('?')[0];
+
+    if (!cleanPath) {
+      return 'Unknown';
+    }
 
     // Get first segment
     const segments = cleanPath.split('/');
@@ -261,6 +313,8 @@ export class EnzymeAPITreeProvider extends BaseTreeProvider<EnzymeAPIItem | Enzy
 
   /**
    * Extract request type from content
+   * @param content
+   * @param context
    */
   private extractRequestType(content: string, context: string): string | undefined {
     // Look for type annotations near the context
@@ -270,15 +324,15 @@ export class EnzymeAPITreeProvider extends BaseTreeProvider<EnzymeAPIItem | Enzy
     );
     const match = content.match(requestTypePattern);
 
-    if (match && match[1]) {
+    if (match?.[1]) {
       return match[1].trim();
     }
 
     // Look for data parameter type
-    const dataTypePattern = /data:\s*([^,)]+)/i;
-    const dataMatch = content.match(dataTypePattern);
+    const dataTypePattern = /data:\s*([^),]+)/i;
+    const dataMatch = dataTypePattern.exec(content);
 
-    if (dataMatch && dataMatch[1]) {
+    if (dataMatch?.[1]) {
       return dataMatch[1].trim();
     }
 
@@ -287,6 +341,8 @@ export class EnzymeAPITreeProvider extends BaseTreeProvider<EnzymeAPIItem | Enzy
 
   /**
    * Extract response type from content
+   * @param content
+   * @param context
    */
   private extractResponseType(content: string, context: string): string | undefined {
     // Look for return type annotation
@@ -296,7 +352,7 @@ export class EnzymeAPITreeProvider extends BaseTreeProvider<EnzymeAPIItem | Enzy
     );
     const match = content.match(returnTypePattern);
 
-    if (match && match[1]) {
+    if (match?.[1]) {
       return match[1].trim();
     }
 
@@ -305,9 +361,9 @@ export class EnzymeAPITreeProvider extends BaseTreeProvider<EnzymeAPIItem | Enzy
       `(?:get|post|put|patch|delete)\\s*<\\s*([^>]+)\\s*>`,
       'i'
     );
-    const genericMatch = content.match(genericPattern);
+    const genericMatch = genericPattern.exec(content);
 
-    if (genericMatch && genericMatch[1]) {
+    if (genericMatch?.[1]) {
       return genericMatch[1].trim();
     }
 
@@ -316,6 +372,7 @@ export class EnzymeAPITreeProvider extends BaseTreeProvider<EnzymeAPIItem | Enzy
 
   /**
    * Check if endpoint is mocked
+   * @param content
    */
   private checkIsMocked(content: string): boolean {
     return (
@@ -328,6 +385,7 @@ export class EnzymeAPITreeProvider extends BaseTreeProvider<EnzymeAPIItem | Enzy
 
   /**
    * Check if endpoint requires authentication
+   * @param content
    */
   private checkHasAuth(content: string): boolean {
     return (
@@ -340,20 +398,22 @@ export class EnzymeAPITreeProvider extends BaseTreeProvider<EnzymeAPIItem | Enzy
 
   /**
    * Extract description from JSDoc
+   * @param content
+   * @param methodName
    */
   private extractDescription(content: string, methodName?: string): string | undefined {
-    if (!methodName) return undefined;
+    if (!methodName) {return undefined;}
 
     // Look for JSDoc comment before the method
-    const docPattern = new RegExp(
+    const documentPattern = new RegExp(
       `/\\*\\*([^*]|\\*(?!/))*\\*/\\s*export\\s+(?:const|function)\\s+${methodName}`,
       's'
     );
-    const match = content.match(docPattern);
+    const match = content.match(documentPattern);
 
     if (match) {
-      const docComment = match[0];
-      const descMatch = docComment.match(/\/\*\*\s*\n\s*\*\s*(.+?)\s*\n/);
+      const documentComment = match[0];
+      const descMatch = /\/\*\*\s*\n\s*\*\s*(.+?)\s*\n/.exec(documentComment);
       if (descMatch) {
         return descMatch[1];
       }
@@ -388,6 +448,7 @@ export class EnzymeAPITreeProvider extends BaseTreeProvider<EnzymeAPIItem | Enzy
 
   /**
    * Get endpoints for a resource
+   * @param resource
    */
   private getResourceEndpoints(resource: string): EnzymeAPIItem[] {
     const filteredEndpoints = this.endpoints.filter(e => e.resource === resource);
@@ -399,10 +460,10 @@ export class EnzymeAPITreeProvider extends BaseTreeProvider<EnzymeAPIItem | Enzy
         method: endpoint.method,
         path: endpoint.path,
         resource: endpoint.resource,
-        requestType: endpoint.requestType,
-        responseType: endpoint.responseType,
         isMocked: endpoint.isMocked,
         hasAuth: endpoint.hasAuth,
+        ...(endpoint.requestType && { requestType: endpoint.requestType }),
+        ...(endpoint.responseType && { responseType: endpoint.responseType }),
       }
     ));
   }
@@ -416,6 +477,7 @@ export class EnzymeAPITreeProvider extends BaseTreeProvider<EnzymeAPIItem | Enzy
 
   /**
    * Get endpoints by method
+   * @param method
    */
   getEndpointsByMethod(method: HttpMethod): APIEndpointMetadata[] {
     return this.endpoints.filter(e => e.method === method);

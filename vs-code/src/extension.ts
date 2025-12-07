@@ -4,28 +4,45 @@
  */
 
 import * as vscode from 'vscode';
+import { registerCLIFeatures } from './cli/index';
+import { registerConfigFeatures } from './config/index';
+import { EXTENSION_NAME, COMMANDS, URLS } from './core/constants';
 import { EnzymeExtensionContext } from './core/context';
 import { logger } from './core/logger';
-import { EXTENSION_NAME, COMMANDS, URLS } from './core/constants';
+import { performanceMonitor } from './core/performance-monitor';
 import {
   detectEnzymeProject,
   getProjectStructure,
   createEnzymeFileWatchers,
-  FileWatcher,
 } from './core/workspace';
+import { registerCodeActionProviders } from './providers/codeactions/index';
+import { registerCodeLensProviders } from './providers/codelens/index';
+import { registerDiagnostics } from './providers/diagnostics/index';
+import { registerLanguageProviders } from './providers/language/index';
 import { registerTreeViewProviders } from './providers/treeviews/register-treeviews';
 import { registerWebViewProviders } from './providers/webviews/register-webviews';
-import { performanceMonitor } from './core/performance-monitor';
 
 // NOTE: File watchers are now stored in context.subscriptions to avoid module-level state
 
 /**
- * Activate the extension
- * This is called when the extension is first activated
- */
-/**
- * PERFORMANCE: Extension activation with performance monitoring
- * Tracks activation time to ensure fast startup
+ * Activates the Enzyme VS Code extension
+ *
+ * This is the main entry point called by VS Code when the extension is activated.
+ * Implements lazy activation patterns and workspace trust validation for optimal
+ * performance and security.
+ *
+ * @param context - The VS Code extension context providing access to extension APIs and lifecycle
+ * @returns A promise that resolves when activation is complete
+ *
+ * @remarks
+ * - Respects workspace trust settings per VS Code Extension Guidelines
+ * - Uses performance monitoring to track activation time (target: < 10ms)
+ * - Defers heavy operations (workspace analysis, file watching) to avoid blocking
+ * - Registers only safe commands in untrusted workspaces
+ * - Handles activation errors gracefully with user notifications
+ *
+ * @see {@link https://code.visualstudio.com/api/references/activation-events | VS Code Activation Events}
+ * @see {@link https://code.visualstudio.com/api/extension-guides/workspace-trust | Workspace Trust}
  */
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
   performanceMonitor.start('extension.activation');
@@ -65,8 +82,22 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 }
 
 /**
- * SECURITY: Register only safe commands for untrusted workspaces
- * These commands don't execute code or access sensitive files
+ * Registers safe commands that can be executed in untrusted workspaces
+ *
+ * Per VS Code Extension Guidelines, extensions must provide limited functionality
+ * in untrusted workspaces. This function registers commands that:
+ * - Don't execute arbitrary code
+ * - Don't access or modify sensitive files
+ * - Don't perform file system operations
+ *
+ * @param context - The VS Code extension context for registering commands
+ *
+ * @remarks
+ * Safe commands include:
+ * - Documentation links (read-only, external)
+ * - Log viewing (diagnostic, no code execution)
+ *
+ * @see {@link https://code.visualstudio.com/api/extension-guides/workspace-trust | Workspace Trust Guide}
  */
 function registerSafeCommands(context: vscode.ExtensionContext): void {
   // Documentation commands are safe
@@ -87,7 +118,22 @@ function registerSafeCommands(context: vscode.ExtensionContext): void {
 }
 
 /**
- * Initialize full extension functionality (for trusted workspaces)
+ * Initializes full extension functionality for trusted workspaces
+ *
+ * This function sets up all extension features including:
+ * - Command registration
+ * - TreeView and WebView providers
+ * - Workspace analysis (deferred)
+ * - Telemetry (opt-in)
+ * - First-time activation checks
+ *
+ * @param context - The VS Code extension context
+ * @returns A promise that resolves when initialization is complete
+ *
+ * @remarks
+ * Heavy operations like workspace analysis are deferred using `setImmediate`
+ * to ensure the extension activation completes quickly (< 10ms target).
+ * This prevents blocking the VS Code extension host during startup.
  */
 async function initializeFullFunctionality(context: vscode.ExtensionContext): Promise<void> {
     // Initialize the extension context singleton
@@ -106,6 +152,34 @@ async function initializeFullFunctionality(context: vscode.ExtensionContext): Pr
     const webViewDisposables = registerWebViewProviders(enzymeContext);
     webViewDisposables.forEach(d => enzymeContext.registerDisposable(d));
     logger.info('WebView providers registered');
+
+    // ORCHESTRATION: Register language features providers
+    // Note: Language providers require workspace root path, so we defer until workspace is available
+    // This registration happens in initializeEnzymeWorkspace for Enzyme projects
+
+    // ORCHESTRATION: Register CodeLens providers (enhances editor experience)
+    registerCodeLensProviders(context);
+    logger.info('CodeLens providers registered');
+
+    // ORCHESTRATION: Register diagnostics provider (enables Problems panel)
+    registerDiagnostics(context);
+    logger.info('Diagnostics provider registered');
+
+    // ORCHESTRATION: Register code actions provider (enables quick fixes and refactorings)
+    registerCodeActionProviders(context);
+    logger.info('Code actions providers registered');
+
+    // ORCHESTRATION: Register configuration features (config completion, validation, etc.)
+    const configDisposables = registerConfigFeatures(context);
+    configDisposables.forEach(d => enzymeContext.registerDisposable(d));
+    logger.info('Configuration features registered');
+
+    // ORCHESTRATION: Register CLI features (task provider, debug config, terminal, etc.)
+    // This is async and runs detection/installation prompts
+    registerCLIFeatures(context).catch(error => {
+      logger.error('Failed to register CLI features', error);
+    });
+    logger.info('CLI features registration initiated');
 
     // PERFORMANCE: Defer heavy operations to avoid blocking activation
     // Use setImmediate to allow activation to complete first
@@ -129,10 +203,24 @@ async function initializeFullFunctionality(context: vscode.ExtensionContext): Pr
 }
 
 /**
- * Deactivate the extension
- * This is called when the extension is deactivated
+ * Deactivates the Enzyme VS Code extension
  *
- * Note: File watchers are automatically disposed via context.subscriptions
+ * This function is called by VS Code when the extension is being deactivated.
+ * It performs cleanup of all extension resources including:
+ * - Extension context singleton
+ * - File watchers (via context.subscriptions)
+ * - Status bar items
+ * - Diagnostic collections
+ * - Event emitters
+ *
+ * @returns A promise that resolves when deactivation is complete
+ *
+ * @remarks
+ * - File watchers are automatically disposed via context.subscriptions
+ * - Handles cases where activation may have failed (context may not exist)
+ * - All errors during deactivation are logged but don't throw
+ *
+ * @see {@link https://code.visualstudio.com/api/references/vscode-api#Extension | Extension Lifecycle}
  */
 export async function deactivate(): Promise<void> {
   logger.header(`Deactivating ${EXTENSION_NAME}`);
@@ -142,7 +230,7 @@ export async function deactivate(): Promise<void> {
     try {
       const enzymeContext = EnzymeExtensionContext.getInstance();
       await enzymeContext.dispose();
-    } catch (error) {
+    } catch {
       // Instance may not exist if activation failed
       logger.warn('Extension context not initialized during deactivation');
     }
@@ -154,11 +242,26 @@ export async function deactivate(): Promise<void> {
 }
 
 /**
- * PERFORMANCE: Initialize Enzyme workspace asynchronously after activation
- * This prevents blocking the extension host during activation
- */
-/**
- * PERFORMANCE: Initialize Enzyme workspace with performance tracking
+ * Initializes Enzyme workspace detection and file watching
+ *
+ * This function performs heavy workspace analysis operations that are deferred
+ * from the main activation path to ensure fast extension startup. It:
+ * - Detects if the workspace is an Enzyme project
+ * - Loads project structure (features, routes, components)
+ * - Sets up file watchers for config and structure changes
+ * - Updates VS Code context keys for command enablement
+ * - Shows activation notifications to the user
+ *
+ * @param enzymeContext - The Enzyme extension context singleton
+ * @param context - The VS Code extension context
+ * @returns A promise that resolves when workspace initialization is complete
+ *
+ * @remarks
+ * - Called via `setImmediate` to avoid blocking extension activation
+ * - Uses progress indicators for long-running operations
+ * - File watchers are registered via context.subscriptions for proper cleanup
+ * - Performance is tracked and logged
+ * - Errors are logged but don't prevent extension from functioning
  */
 async function initializeEnzymeWorkspace(
   enzymeContext: EnzymeExtensionContext,
@@ -182,12 +285,24 @@ async function initializeEnzymeWorkspace(
       const workspace = await getProjectStructure();
       enzymeContext.setWorkspace(workspace);
 
+      // ORCHESTRATION: Register language providers now that we have workspace
+      progress.report({ message: 'Initializing language features...', increment: 50 });
+      const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+      if (workspaceRoot) {
+        try {
+          await registerLanguageProviders(context, workspaceRoot);
+          logger.info('Language providers registered');
+        } catch (error) {
+          logger.error('Failed to register language providers', error);
+        }
+      }
+
       // Set additional context keys based on project structure
       await vscode.commands.executeCommand('setContext', 'enzyme:hasFeatures', workspace.features.length > 0);
       await vscode.commands.executeCommand('setContext', 'enzyme:hasRoutes', workspace.routes.length > 0);
       await vscode.commands.executeCommand('setContext', 'enzyme:isTypeScript', true); // Set based on project analysis
 
-      progress.report({ message: 'Setting up file watchers...', increment: 50 });
+      progress.report({ message: 'Setting up file watchers...', increment: 70 });
 
       // Create file watchers and register them properly via context.subscriptions
       const fileWatchers = createEnzymeFileWatchers();
@@ -246,7 +361,18 @@ async function initializeEnzymeWorkspace(
 }
 
 /**
- * PERFORMANCE: Check if first activation asynchronously
+ * Checks if this is the first activation of the extension and shows welcome message
+ *
+ * This check is performed asynchronously to avoid blocking activation.
+ * On first activation, displays a welcome message with quick-start options.
+ *
+ * @param enzymeContext - The Enzyme extension context singleton
+ * @returns A promise that resolves when the check is complete
+ *
+ * @remarks
+ * - Uses global state to persist first activation flag across sessions
+ * - Called asynchronously after main activation completes
+ * - Errors are caught and logged without disrupting extension functionality
  */
 async function isFirstActivationCheck(enzymeContext: EnzymeExtensionContext): Promise<void> {
   const isFirstActivation = await enzymeContext.isFirstActivation();
@@ -257,8 +383,32 @@ async function isFirstActivationCheck(enzymeContext: EnzymeExtensionContext): Pr
 }
 
 /**
- * Wrapper for command handlers with error handling
- * Ensures all commands have consistent error handling and logging
+ * Wraps command handlers with consistent error handling and logging
+ *
+ * This higher-order function provides a standard error handling pattern for all
+ * extension commands. It ensures that:
+ * - Commands are logged when executed
+ * - Errors are caught and logged with context
+ * - Users are notified of errors with actionable options
+ * - Stack traces are preserved for debugging
+ *
+ * @param commandId - The command identifier for logging and error messages
+ * @param handler - The async command handler function to wrap
+ * @returns A wrapped command handler with error handling
+ *
+ * @remarks
+ * All extension commands should be wrapped with this function to ensure
+ * consistent error handling and user experience.
+ *
+ * @example
+ * ```typescript
+ * vscode.commands.registerCommand(
+ *   'enzyme.myCommand',
+ *   wrapCommandHandler('enzyme.myCommand', async () => {
+ *     // Command implementation
+ *   })
+ * );
+ * ```
  */
 function wrapCommandHandler(
   commandId: string,
@@ -286,7 +436,26 @@ function wrapCommandHandler(
 }
 
 /**
- * Register all extension commands
+ * Registers all extension commands with the VS Code command registry
+ *
+ * This function registers all Enzyme extension commands organized by category:
+ * - Initialization (project setup)
+ * - Generation (components, features, routes, stores, hooks, API clients, tests)
+ * - Analysis (performance, security, dependencies)
+ * - Refactoring (convert to Enzyme, optimize imports)
+ * - Validation (config, routes, features)
+ * - Explorer (refresh, open files)
+ * - Documentation (open docs, show snippets)
+ * - Migration (analyze CRA/Next.js projects)
+ * - Debug & Utility (telemetry, logs, workspace detection)
+ *
+ * @param enzymeContext - The Enzyme extension context singleton
+ *
+ * @remarks
+ * - All commands are wrapped with `wrapCommandHandler` for consistent error handling
+ * - Commands are registered via enzymeContext.registerDisposable for proper cleanup
+ * - Command enablement is controlled by context keys set in package.json
+ * - Most commands show "Coming Soon" messages as placeholders for future implementation
  */
 function registerCommands(enzymeContext: EnzymeExtensionContext): void {
 
@@ -456,7 +625,20 @@ function registerCommands(enzymeContext: EnzymeExtensionContext): void {
 }
 
 /**
- * Handle the init command
+ * Handles the enzyme.init command to initialize a new Enzyme project
+ *
+ * Prompts the user to confirm initialization and then guides them through
+ * the project setup process.
+ *
+ * @param enzymeContext - The Enzyme extension context singleton
+ * @returns A promise that resolves when the command completes
+ *
+ * @remarks
+ * Currently shows a placeholder message. Future implementation will:
+ * - Create enzyme.config.ts
+ * - Set up project structure
+ * - Install required dependencies
+ * - Configure routing and state management
  */
 async function handleInitCommand(enzymeContext: EnzymeExtensionContext): Promise<void> {
   const answer = await vscode.window.showInformationMessage(
@@ -471,7 +653,24 @@ async function handleInitCommand(enzymeContext: EnzymeExtensionContext): Promise
 }
 
 /**
- * PERFORMANCE: Refresh workspace structure with cache invalidation
+ * Refreshes the workspace structure by invalidating cache and re-analyzing
+ *
+ * This function forces a complete re-scan of the workspace to detect changes in:
+ * - Features and feature modules
+ * - Routes and route configuration
+ * - Components and component structure
+ * - State stores
+ * - API clients
+ * - Enzyme configuration
+ *
+ * @param enzymeContext - The Enzyme extension context singleton
+ * @returns A promise that resolves when the workspace is refreshed
+ *
+ * @remarks
+ * - Invalidates all cached workspace data before re-scanning
+ * - Updates all TreeView providers with new data
+ * - Errors are logged but don't throw to maintain extension stability
+ * - Typically called when user clicks "Refresh" or file watcher detects changes
  */
 async function refreshWorkspace(enzymeContext: EnzymeExtensionContext): Promise<void> {
   logger.info('Refreshing workspace structure');
@@ -490,9 +689,22 @@ async function refreshWorkspace(enzymeContext: EnzymeExtensionContext): Promise<
 }
 
 /**
- * Show welcome message on first activation
+ * Shows a welcome message to users on their first activation of the extension
+ *
+ * Displays an informative message with quick-start options including:
+ * - Get Started: Opens command palette for quick actions
+ * - View Documentation: Opens Enzyme framework documentation
+ * - Don't Show Again: Suppresses future welcome messages
+ *
+ * @param _enzymeContext - The Enzyme extension context singleton (unused in current implementation)
+ * @returns A promise that resolves when the user responds to the message
+ *
+ * @remarks
+ * - Only shown once per installation (tracked in global state)
+ * - Provides new users with immediate guidance
+ * - Non-blocking - user can dismiss and continue working
  */
-async function showWelcomeMessage(enzymeContext: EnzymeExtensionContext): Promise<void> {
+async function showWelcomeMessage(_enzymeContext: EnzymeExtensionContext): Promise<void> {
   const selection = await vscode.window.showInformationMessage(
     `Welcome to ${EXTENSION_NAME}! 🧪`,
     'Get Started',
@@ -508,8 +720,22 @@ async function showWelcomeMessage(enzymeContext: EnzymeExtensionContext): Promis
 }
 
 /**
- * Initialize telemetry (opt-in)
- * Respects VS Code's global telemetry setting per VS Code Extension Guidelines
+ * Initializes opt-in telemetry for the extension
+ *
+ * Configures anonymous usage telemetry while respecting user privacy preferences.
+ * Telemetry is only enabled when BOTH conditions are met:
+ * 1. VS Code's global telemetry setting is enabled
+ * 2. Extension-specific telemetry setting is enabled
+ *
+ * @param enzymeContext - The Enzyme extension context singleton
+ *
+ * @remarks
+ * - Respects VS Code Extension Guidelines for telemetry
+ * - No personal data is collected
+ * - Defaults to disabled (opt-in only)
+ * - Logs telemetry status for transparency
+ *
+ * @see {@link https://code.visualstudio.com/api/extension-guides/telemetry | VS Code Telemetry Guide}
  */
 function initializeTelemetry(enzymeContext: EnzymeExtensionContext): void {
   // CRITICAL: Check VS Code's global telemetry setting first
@@ -527,7 +753,20 @@ function initializeTelemetry(enzymeContext: EnzymeExtensionContext): void {
 }
 
 /**
- * Toggle telemetry
+ * Toggles the extension's telemetry setting on or off
+ *
+ * Allows users to enable or disable extension-specific telemetry collection.
+ * Note that VS Code's global telemetry setting must also be enabled for
+ * telemetry to be active.
+ *
+ * @param enzymeContext - The Enzyme extension context singleton
+ * @returns A promise that resolves when the setting is updated
+ *
+ * @remarks
+ * - Updates the 'enzyme.telemetry.enabled' configuration
+ * - Shows confirmation message to user
+ * - Logs the new telemetry state
+ * - Setting persists across sessions
  */
 async function toggleTelemetry(enzymeContext: EnzymeExtensionContext): Promise<void> {
   const currentState = enzymeContext.getConfig('enzyme.telemetry.enabled', false);

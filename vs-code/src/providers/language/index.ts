@@ -1,17 +1,17 @@
 import * as vscode from 'vscode';
 import { EnzymeCompletionProvider, getCompletionTriggerCharacters } from './completion-provider';
-import { EnzymeHoverProvider } from './hover-provider';
 import { EnzymeDefinitionProvider } from './definition-provider';
-import { EnzymeReferenceProvider } from './reference-provider';
-import { EnzymeSignatureProvider, getSignatureTriggerCharacters } from './signature-provider';
 import { EnzymeDocumentSymbolProvider } from './document-symbol-provider';
-import { EnzymeWorkspaceSymbolProvider } from './workspace-symbol-provider';
-import { EnzymeRenameProvider } from './rename-provider';
-import { EnzymeFoldingProvider } from './folding-provider';
-import { EnzymeSemanticTokensProvider, getSemanticTokensConfiguration } from './semantic-tokens-provider';
-import { EnzymeInlayHintsProvider } from './inlay-hints-provider';
 import { EnzymeIndex, getIndex } from './enzyme-index';
+import { EnzymeFoldingProvider } from './folding-provider';
+import { EnzymeHoverProvider } from './hover-provider';
+import { EnzymeInlayHintsProvider } from './inlay-hints-provider';
 import { EnzymeParser, getParser } from './parser';
+import { EnzymeReferenceProvider } from './reference-provider';
+import { EnzymeRenameProvider } from './rename-provider';
+import { EnzymeSemanticTokensProvider, getSemanticTokensConfiguration } from './semantic-tokens-provider';
+import { EnzymeSignatureProvider, getSignatureTriggerCharacters } from './signature-provider';
+import { EnzymeWorkspaceSymbolProvider } from './workspace-symbol-provider';
 
 /**
  * Export all language providers
@@ -68,7 +68,7 @@ export async function registerLanguageProviders(
     async () => {
       // Wait for initial indexing to complete
       await new Promise(resolve => setTimeout(resolve, 1000));
-      return;
+      
     }
   );
 
@@ -258,7 +258,7 @@ export function getLanguageFeaturesStatus(): {
       indexing: false, // Would need to track this in EnzymeIndex
       stats: index.getStats(),
     };
-  } catch (error) {
+  } catch {
     return {
       indexing: false,
       stats: {

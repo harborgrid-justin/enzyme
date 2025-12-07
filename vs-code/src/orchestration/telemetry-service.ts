@@ -3,8 +3,8 @@
  */
 
 import * as vscode from 'vscode';
-import { LoggerService } from '../services/logger-service';
 import { CONFIG_KEYS } from '../core/constants';
+import type { LoggerService } from '../services/logger-service';
 
 /**
  * Telemetry event
@@ -21,13 +21,17 @@ export interface TelemetryEvent {
  */
 export class TelemetryService {
   private static instance: TelemetryService;
-  private logger: LoggerService;
-  private enabled: boolean = false;
+  private readonly logger: LoggerService;
+  private enabled = false;
   private events: TelemetryEvent[] = [];
-  private maxEventHistory: number = 1000;
-  private sessionId: string;
-  private sessionStart: number;
+  private readonly maxEventHistory = 1000;
+  private readonly sessionId: string;
+  private readonly sessionStart: number;
 
+  /**
+   *
+   * @param logger
+   */
   private constructor(logger: LoggerService) {
     this.logger = logger;
     this.sessionId = this.generateSessionId();
@@ -37,6 +41,7 @@ export class TelemetryService {
 
   /**
    * Create the telemetry service
+   * @param logger
    */
   public static create(logger: LoggerService): TelemetryService {
     if (!TelemetryService.instance) {
@@ -67,7 +72,7 @@ export class TelemetryService {
    * Generate session ID
    */
   private generateSessionId(): string {
-    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    return `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
   }
 
   /**
@@ -97,6 +102,9 @@ export class TelemetryService {
 
   /**
    * Track an event
+   * @param name
+   * @param properties
+   * @param measurements
    */
   public trackEvent(
     name: string,
@@ -107,10 +115,11 @@ export class TelemetryService {
       return;
     }
 
+    const anonymizedProps = this.anonymizeProperties(properties);
     const event: TelemetryEvent = {
       name: this.anonymizeName(name),
-      properties: this.anonymizeProperties(properties),
-      measurements,
+      ...(anonymizedProps ? { properties: anonymizedProps } : {}),
+      ...(measurements ? { measurements } : {}),
       timestamp: Date.now(),
     };
 
@@ -164,6 +173,9 @@ export class TelemetryService {
 
   /**
    * Track performance metric
+   * @param name
+   * @param duration
+   * @param properties
    */
   public trackPerformance(
     name: string,
@@ -183,6 +195,8 @@ export class TelemetryService {
 
   /**
    * Track usage
+   * @param feature
+   * @param action
    */
   public trackUsage(feature: string, action: string): void {
     if (!this.enabled) {
@@ -197,14 +211,16 @@ export class TelemetryService {
 
   /**
    * Anonymize event name
+   * @param name
    */
   private anonymizeName(name: string): string {
     // Remove any potential PII from event names
-    return name.replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, '<uuid>');
+    return name.replace(/[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}/gi, '<uuid>');
   }
 
   /**
    * Anonymize properties
+   * @param properties
    */
   private anonymizeProperties(
     properties?: Record<string, string | number | boolean>
@@ -219,8 +235,8 @@ export class TelemetryService {
       if (typeof value === 'string') {
         // Remove potential file paths
         const anonymizedValue = value
-          .replace(/\/[^\/\s]+\/[^\/\s]+/g, '/<path>')
-          .replace(/[A-Za-z]:\\[^\s]+/g, '<path>');
+          .replace(/(?:\/[^\s/]+){2}/g, '/<path>')
+          .replace(/[A-Za-z]:\\\S+/g, '<path>');
         anonymized[key] = anonymizedValue;
       } else {
         anonymized[key] = value;
@@ -232,17 +248,19 @@ export class TelemetryService {
 
   /**
    * Anonymize error message
+   * @param message
    */
   private anonymizeErrorMessage(message: string): string {
     // Remove file paths and potential PII
     return message
-      .replace(/\/[^\/\s]+\/[^\/\s]+/g, '/<path>')
-      .replace(/[A-Za-z]:\\[^\s]+/g, '<path>')
-      .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, '<uuid>');
+      .replace(/(?:\/[^\s/]+){2}/g, '/<path>')
+      .replace(/[A-Za-z]:\\\S+/g, '<path>')
+      .replace(/[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}/gi, '<uuid>');
   }
 
   /**
    * Get event history
+   * @param count
    */
   public getEventHistory(count?: number): TelemetryEvent[] {
     if (count) {
@@ -267,7 +285,7 @@ export class TelemetryService {
       eventCounts.set(event.name, count + 1);
     }
 
-    const topEvents = Array.from(eventCounts.entries())
+    const topEvents = [...eventCounts.entries()]
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 10);

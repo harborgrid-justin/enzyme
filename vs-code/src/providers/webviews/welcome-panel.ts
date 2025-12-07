@@ -7,8 +7,12 @@ import { BaseWebViewPanel } from './base-webview-panel';
  */
 export class WelcomePanel extends BaseWebViewPanel {
 	private static instance: WelcomePanel | undefined;
-	private showOnStartup: boolean = true;
+	private showOnStartup = true;
 
+	/**
+	 *
+	 * @param context
+	 */
 	private constructor(context: vscode.ExtensionContext) {
 		super(context, 'enzyme.welcome', 'Welcome to Enzyme');
 		this.loadPreferences();
@@ -16,6 +20,7 @@ export class WelcomePanel extends BaseWebViewPanel {
 
 	/**
 	 * Get or create the singleton instance
+	 * @param context
 	 */
 	public static getInstance(context: vscode.ExtensionContext): WelcomePanel {
 		if (!WelcomePanel.instance) {
@@ -26,6 +31,7 @@ export class WelcomePanel extends BaseWebViewPanel {
 
 	/**
 	 * Show the welcome panel
+	 * @param context
 	 */
 	public static show(context: vscode.ExtensionContext): void {
 		const panel = WelcomePanel.getInstance(context);
@@ -34,6 +40,7 @@ export class WelcomePanel extends BaseWebViewPanel {
 
 	/**
 	 * Show welcome panel on startup if enabled
+	 * @param context
 	 */
 	public static showOnStartupIfEnabled(context: vscode.ExtensionContext): void {
 		const panel = WelcomePanel.getInstance(context);
@@ -42,6 +49,9 @@ export class WelcomePanel extends BaseWebViewPanel {
 		}
 	}
 
+	/**
+	 *
+	 */
 	protected override getIconPath(): vscode.Uri | { light: vscode.Uri; dark: vscode.Uri } | undefined {
 		return {
 			light: vscode.Uri.file(this.context.asAbsolutePath('resources/icons/enzyme-light.svg')),
@@ -49,6 +59,10 @@ export class WelcomePanel extends BaseWebViewPanel {
 		};
 	}
 
+	/**
+	 *
+	 * @param webview
+	 */
 	protected getBodyContent(webview: vscode.Webview): string {
 		const logoUri = this.getWebviewUri(webview, ['resources', 'images', 'enzyme-logo.png']);
 
@@ -272,6 +286,11 @@ export class WelcomePanel extends BaseWebViewPanel {
 		`;
 	}
 
+	/**
+	 *
+	 * @param webview
+	 * @param nonce
+	 */
 	protected override getStyles(webview: vscode.Webview, nonce: string): string {
 		const sharedStylesUri = this.getWebviewUri(webview, ['src', 'webview-ui', 'shared', 'styles.css']);
 		const welcomeStylesUri = this.getWebviewUri(webview, ['src', 'webview-ui', 'welcome', 'styles.css']);
@@ -281,11 +300,20 @@ export class WelcomePanel extends BaseWebViewPanel {
 		`;
 	}
 
+	/**
+	 *
+	 * @param webview
+	 * @param nonce
+	 */
 	protected getScripts(webview: vscode.Webview, nonce: string): string {
 		const scriptUri = this.getWebviewUri(webview, ['src', 'webview-ui', 'welcome', 'main.js']);
 		return `<script nonce="${nonce}" src="${scriptUri}"></script>`;
 	}
 
+	/**
+	 *
+	 * @param message
+	 */
 	protected async handleMessage(message: any): Promise<void> {
 		switch (message.type) {
 			case 'openStateInspector':
@@ -330,6 +358,9 @@ export class WelcomePanel extends BaseWebViewPanel {
 		}
 	}
 
+	/**
+	 *
+	 */
 	private async createNewProject(): Promise<void> {
 		const projectName = await vscode.window.showInputBox({
 			prompt: 'Enter project name',
@@ -338,7 +369,7 @@ export class WelcomePanel extends BaseWebViewPanel {
 				if (!value || value.trim().length === 0) {
 					return 'Project name is required';
 				}
-				if (!/^[a-z0-9-]+$/.test(value)) {
+				if (!/^[\da-z-]+$/.test(value)) {
 					return 'Project name can only contain lowercase letters, numbers, and hyphens';
 				}
 				return null;
@@ -352,10 +383,17 @@ export class WelcomePanel extends BaseWebViewPanel {
 		}
 	}
 
+	/**
+	 *
+	 */
 	private async openSettings(): Promise<void> {
 		await vscode.commands.executeCommand('workbench.action.openSettings', 'enzyme');
 	}
 
+	/**
+	 *
+	 * @param config
+	 */
 	private async saveConfiguration(config: Record<string, boolean>): Promise<void> {
 		const configuration = vscode.workspace.getConfiguration('enzyme');
 
@@ -366,15 +404,25 @@ export class WelcomePanel extends BaseWebViewPanel {
 		vscode.window.showInformationMessage('Configuration saved successfully');
 	}
 
+	/**
+	 *
+	 * @param show
+	 */
 	private async toggleShowOnStartup(show: boolean): Promise<void> {
 		this.showOnStartup = show;
 		await this.persistState('showOnStartup', show, true);
 	}
 
+	/**
+	 *
+	 */
 	private loadPreferences(): void {
 		this.showOnStartup = this.getPersistedState<boolean>('showOnStartup', true, true);
 	}
 
+	/**
+	 *
+	 */
 	public override dispose(): void {
 		super.dispose();
 		WelcomePanel.instance = undefined;

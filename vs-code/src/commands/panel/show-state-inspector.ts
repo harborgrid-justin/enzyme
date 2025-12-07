@@ -1,6 +1,7 @@
+import * as crypto from 'node:crypto';
 import * as vscode from 'vscode';
-import * as crypto from 'crypto';
-import { BaseCommand, CommandContext, CommandMetadata } from '../base-command';
+import { BaseCommand } from '../base-command';
+import type { CommandContext, CommandMetadata } from '../base-command';
 
 /**
  * Show State Inspector Command
@@ -10,6 +11,9 @@ import { BaseCommand, CommandContext, CommandMetadata } from '../base-command';
 export class ShowStateInspectorCommand extends BaseCommand {
   private panel: vscode.WebviewPanel | undefined;
 
+  /**
+   *
+   */
   getMetadata(): CommandMetadata {
     return {
       id: 'enzyme.panel.showStateInspector',
@@ -23,6 +27,10 @@ export class ShowStateInspectorCommand extends BaseCommand {
     };
   }
 
+  /**
+   *
+   * @param _context
+   */
   protected async executeCommand(_context: CommandContext): Promise<void> {
     // If panel already exists, reveal it
     if (this.panel) {
@@ -74,7 +82,7 @@ export class ShowStateInspectorCommand extends BaseCommand {
 
     // Handle messages from webview
     this.panel.webview.onDidReceiveMessage(
-      (message) => this.handleWebviewMessage(message),
+      async (message) => this.handleWebviewMessage(message),
       null,
       this.context.subscriptions
     );
@@ -82,10 +90,17 @@ export class ShowStateInspectorCommand extends BaseCommand {
     this.log('info', 'State Inspector panel opened');
   }
 
+  /**
+   *
+   */
   private getNonce(): string {
     return crypto.randomBytes(16).toString('base64');
   }
 
+  /**
+   *
+   * @param webview
+   */
   private getWebviewContent(webview: vscode.Webview): string {
     const nonce = this.getNonce();
 
@@ -254,6 +269,11 @@ export class ShowStateInspectorCommand extends BaseCommand {
 </html>`;
   }
 
+  /**
+   *
+   * @param message
+   * @param message.type
+   */
   private async handleWebviewMessage(message: { type: string; [key: string]: unknown }): Promise<void> {
     switch (message.type) {
       case 'refresh':
@@ -270,8 +290,8 @@ export class ShowStateInspectorCommand extends BaseCommand {
         break;
 
       case 'inspect':
-        this.log('info', `Inspecting store: ${message.storeName}`);
-        await this.showInfo(`Inspecting store: ${message.storeName}`);
+        this.log('info', `Inspecting store: ${message['storeName']}`);
+        await this.showInfo(`Inspecting store: ${message['storeName']}`);
         break;
 
       default:

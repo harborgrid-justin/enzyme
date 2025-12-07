@@ -22,10 +22,13 @@ interface PerformanceMetric {
  */
 export class PerformanceMonitor {
   private static instance: PerformanceMonitor;
-  private metrics = new Map<string, PerformanceMetric>();
+  private readonly metrics = new Map<string, PerformanceMetric>();
   private metricHistory: PerformanceMetric[] = [];
   private readonly MAX_HISTORY = 100;
 
+  /**
+   *
+   */
   private constructor() {}
 
   /**
@@ -40,17 +43,20 @@ export class PerformanceMonitor {
 
   /**
    * Start measuring a metric
+   * @param name
+   * @param metadata
    */
   public start(name: string, metadata?: Record<string, unknown>): void {
     this.metrics.set(name, {
       name,
       startTime: performance.now(),
-      metadata,
+      ...(metadata ? { metadata } : {}),
     });
   }
 
   /**
    * End measuring a metric
+   * @param name
    */
   public end(name: string): number | undefined {
     const metric = this.metrics.get(name);
@@ -86,6 +92,9 @@ export class PerformanceMonitor {
 
   /**
    * Measure a function execution
+   * @param name
+   * @param fn
+   * @param metadata
    */
   public async measure<T>(
     name: string,
@@ -94,8 +103,7 @@ export class PerformanceMonitor {
   ): Promise<T> {
     this.start(name, metadata);
     try {
-      const result = await fn();
-      return result;
+      return await fn();
     } finally {
       this.end(name);
     }
@@ -103,6 +111,9 @@ export class PerformanceMonitor {
 
   /**
    * Measure a synchronous function execution
+   * @param name
+   * @param fn
+   * @param metadata
    */
   public measureSync<T>(
     name: string,
@@ -111,8 +122,7 @@ export class PerformanceMonitor {
   ): T {
     this.start(name, metadata);
     try {
-      const result = fn();
-      return result;
+      return fn();
     } finally {
       this.end(name);
     }
@@ -177,18 +187,21 @@ export const performanceMonitor = PerformanceMonitor.getInstance();
 
 /**
  * Decorator for measuring method performance
+ * @param target
+ * @param propertyKey
+ * @param descriptor
  */
 export function measurePerformance(target: unknown, propertyKey: string, descriptor: PropertyDescriptor): PropertyDescriptor {
   const originalMethod = descriptor.value;
 
   descriptor.value = async function(...args: unknown[]) {
     const monitor = PerformanceMonitor.getInstance();
-    const metricName = `${target.constructor.name}.${propertyKey}`;
+    const targetName = (target as { constructor: { name: string } }).constructor.name;
+    const metricName = `${targetName}.${propertyKey}`;
 
     monitor.start(metricName);
     try {
-      const result = await originalMethod.apply(this, args);
-      return result;
+      return await originalMethod.apply(this, args);
     } finally {
       monitor.end(metricName);
     }

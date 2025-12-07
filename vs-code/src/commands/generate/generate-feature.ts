@@ -1,8 +1,12 @@
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
 import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs/promises';
-import { BaseCommand, CommandContext, CommandMetadata } from '../base-command';
+import { BaseCommand } from '../base-command';
+import type { CommandContext, CommandMetadata } from '../base-command';
 
+/**
+ *
+ */
 interface FeatureOptions {
   name: string;
   description: string;
@@ -18,6 +22,9 @@ interface FeatureOptions {
  * Keybinding: Ctrl+Shift+G F
  */
 export class GenerateFeatureCommand extends BaseCommand {
+  /**
+   *
+   */
   getMetadata(): CommandMetadata {
     return {
       id: 'enzyme.generate.feature',
@@ -32,6 +39,10 @@ export class GenerateFeatureCommand extends BaseCommand {
     };
   }
 
+  /**
+   *
+   * @param _context
+   */
   protected async executeCommand(_context: CommandContext): Promise<void> {
     const workspaceFolder = await this.ensureWorkspaceFolder();
 
@@ -69,6 +80,9 @@ export class GenerateFeatureCommand extends BaseCommand {
     );
   }
 
+  /**
+   *
+   */
   private async gatherFeatureOptions(): Promise<FeatureOptions | undefined> {
     // Get feature name
     const name = await this.showInputBox({
@@ -78,7 +92,7 @@ export class GenerateFeatureCommand extends BaseCommand {
         if (!value) {
           return 'Feature name is required';
         }
-        if (!/^[a-z][a-z0-9-]*$/.test(value)) {
+        if (!/^[a-z][\da-z-]*$/.test(value)) {
           return 'Feature name must be in kebab-case (e.g., user-management)';
         }
         return undefined;
@@ -139,23 +153,34 @@ export class GenerateFeatureCommand extends BaseCommand {
       }
     }
 
-    return {
+    const options: FeatureOptions = {
       name,
       description: description || `${name} feature module`,
       withRoutes,
       withStore,
       withAPI,
-      routePrefix,
     };
+
+    if (routePrefix !== undefined) {
+      options.routePrefix = routePrefix;
+    }
+
+    return options;
   }
 
+  /**
+   *
+   * @param workspaceFolder
+   * @param options
+   * @param token
+   */
   private async generateFeature(
     workspaceFolder: vscode.WorkspaceFolder,
     options: FeatureOptions,
     token: vscode.CancellationToken
   ): Promise<string> {
-    const srcPath = path.join(workspaceFolder.uri.fsPath, 'src');
-    const featurePath = path.join(srcPath, 'features', options.name);
+    const sourcePath = path.join(workspaceFolder.uri.fsPath, 'src');
+    const featurePath = path.join(sourcePath, 'features', options.name);
 
     // Create feature directory structure
     await fs.mkdir(featurePath, { recursive: true });
@@ -201,6 +226,10 @@ export class GenerateFeatureCommand extends BaseCommand {
     return featurePath;
   }
 
+  /**
+   *
+   * @param options
+   */
   private generateIndexContent(options: FeatureOptions): string {
     const { name, withRoutes, withStore, withAPI } = options;
 
@@ -223,6 +252,10 @@ ${exports}
 `;
   }
 
+  /**
+   *
+   * @param options
+   */
   private generateReadmeContent(options: FeatureOptions): string {
     return `# ${options.name} Feature
 
@@ -247,10 +280,14 @@ import { /* exports */ } from '@/features/${options.name}';
 
 ## Features
 
-${options.withRoutes ? '- Route configuration with ' + (options.routePrefix || '/' + options.name) + ' prefix\n' : ''}${options.withStore ? '- Zustand store for state management\n' : ''}${options.withAPI ? '- API integration with React Query\n' : ''}
+${options.withRoutes ? `- Route configuration with ${  options.routePrefix || `/${  options.name}`  } prefix\n` : ''}${options.withStore ? '- Zustand store for state management\n' : ''}${options.withAPI ? '- API integration with React Query\n' : ''}
 `;
   }
 
+  /**
+   *
+   * @param options
+   */
   private generateTypesContent(options: FeatureOptions): string {
     const pascalName = this.toPascalCase(options.name);
 
@@ -279,6 +316,11 @@ export interface ${pascalName}Filters {
 `;
   }
 
+  /**
+   *
+   * @param featurePath
+   * @param options
+   */
   private async generateRoutes(
     featurePath: string,
     options: FeatureOptions
@@ -355,6 +397,11 @@ export const ${pascalName}DetailPage: React.FC = () => {
     );
   }
 
+  /**
+   *
+   * @param featurePath
+   * @param options
+   */
   private async generateStore(
     featurePath: string,
     options: FeatureOptions
@@ -410,6 +457,11 @@ export const use${pascalName}Store = create<${pascalName}Store>()(
     await fs.writeFile(path.join(storePath, 'index.ts'), storeContent);
   }
 
+  /**
+   *
+   * @param featurePath
+   * @param options
+   */
   private async generateAPI(
     featurePath: string,
     options: FeatureOptions
@@ -516,8 +568,12 @@ export function useDelete${pascalName}() {
     await fs.writeFile(path.join(apiPath, 'index.ts'), apiContent);
   }
 
-  private toPascalCase(str: string): string {
-    return str
+  /**
+   *
+   * @param string_
+   */
+  private toPascalCase(string_: string): string {
+    return string_
       .split('-')
       .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
       .join('');

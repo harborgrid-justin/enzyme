@@ -17,6 +17,9 @@ export enum BreakpointCondition {
   MATCHES = 'matches',
 }
 
+/**
+ *
+ */
 export interface StateBreakpoint {
   id: string;
   enabled: boolean;
@@ -29,6 +32,9 @@ export interface StateBreakpoint {
   metadata?: Record<string, unknown>;
 }
 
+/**
+ *
+ */
 export interface BreakpointHit {
   breakpoint: StateBreakpoint;
   timestamp: number;
@@ -37,21 +43,32 @@ export interface BreakpointHit {
   stackTrace?: string[];
 }
 
+/**
+ *
+ */
 export type BreakpointCallback = (hit: BreakpointHit) => void | Promise<void>;
 
 // ============================================================================
 // State Breakpoint Provider
 // ============================================================================
 
+/**
+ *
+ */
 export class StateBreakpointProvider {
-  private breakpoints = new Map<string, StateBreakpoint>();
+  private readonly breakpoints = new Map<string, StateBreakpoint>();
   private hits: BreakpointHit[] = [];
-  private callbacks = new Set<BreakpointCallback>();
+  private readonly callbacks = new Set<BreakpointCallback>();
   private breakpointIdCounter = 0;
-  private stateCache = new Map<string, Map<string, unknown>>();
+  private readonly stateCache = new Map<string, Map<string, unknown>>();
 
   /**
    * Add a state breakpoint
+   * @param storeName
+   * @param path
+   * @param condition
+   * @param value
+   * @param logMessage
    */
   addBreakpoint(
     storeName: string,
@@ -66,9 +83,9 @@ export class StateBreakpointProvider {
       storeName,
       path,
       condition,
-      value,
+      ...(value !== undefined && { value }),
       hitCount: 0,
-      logMessage,
+      ...(logMessage !== undefined && { logMessage }),
     };
 
     this.breakpoints.set(breakpoint.id, breakpoint);
@@ -77,6 +94,7 @@ export class StateBreakpointProvider {
 
   /**
    * Remove a breakpoint
+   * @param id
    */
   removeBreakpoint(id: string): boolean {
     return this.breakpoints.delete(id);
@@ -84,6 +102,7 @@ export class StateBreakpointProvider {
 
   /**
    * Enable a breakpoint
+   * @param id
    */
   enableBreakpoint(id: string): void {
     const breakpoint = this.breakpoints.get(id);
@@ -94,6 +113,7 @@ export class StateBreakpointProvider {
 
   /**
    * Disable a breakpoint
+   * @param id
    */
   disableBreakpoint(id: string): void {
     const breakpoint = this.breakpoints.get(id);
@@ -104,9 +124,10 @@ export class StateBreakpointProvider {
 
   /**
    * Get all breakpoints
+   * @param storeName
    */
   getBreakpoints(storeName?: string): StateBreakpoint[] {
-    const breakpoints = Array.from(this.breakpoints.values());
+    const breakpoints = [...this.breakpoints.values()];
     if (storeName) {
       return breakpoints.filter((bp) => bp.storeName === storeName);
     }
@@ -115,6 +136,7 @@ export class StateBreakpointProvider {
 
   /**
    * Get breakpoint by ID
+   * @param id
    */
   getBreakpoint(id: string): StateBreakpoint | undefined {
     return this.breakpoints.get(id);
@@ -129,6 +151,7 @@ export class StateBreakpointProvider {
 
   /**
    * Register breakpoint callback
+   * @param callback
    */
   onBreakpoint(callback: BreakpointCallback): () => void {
     this.callbacks.add(callback);
@@ -139,6 +162,8 @@ export class StateBreakpointProvider {
 
   /**
    * Check state change against breakpoints
+   * @param storeName
+   * @param newState
    */
   async checkBreakpoints(storeName: string, newState: Record<string, unknown>): Promise<void> {
     const breakpoints = this.getBreakpoints(storeName);
@@ -193,6 +218,7 @@ export class StateBreakpointProvider {
 
   /**
    * Get breakpoint hits
+   * @param breakpointId
    */
   getHits(breakpointId?: string): BreakpointHit[] {
     if (breakpointId) {
@@ -210,6 +236,9 @@ export class StateBreakpointProvider {
 
   /**
    * Evaluate breakpoint condition
+   * @param breakpoint
+   * @param oldValue
+   * @param newValue
    */
   private evaluateCondition(
     breakpoint: StateBreakpoint,
@@ -258,10 +287,13 @@ export class StateBreakpointProvider {
 
   /**
    * Get value at path in object
+   * @param obj
+   * @param object
+   * @param path
    */
-  private getValueAtPath(obj: Record<string, unknown>, path: string): unknown {
+  private getValueAtPath(object: Record<string, unknown>, path: string): unknown {
     const parts = path.split('.');
-    let current: unknown = obj;
+    let current: unknown = object;
 
     for (const part of parts) {
       if (current === null || current === undefined) {
@@ -279,17 +311,19 @@ export class StateBreakpointProvider {
 
   /**
    * Deep equality check
+   * @param a
+   * @param b
    */
   private deepEqual(a: unknown, b: unknown): boolean {
-    if (a === b) return true;
-    if (a === null || b === null) return false;
-    if (typeof a !== typeof b) return false;
+    if (a === b) {return true;}
+    if (a === null || b === null) {return false;}
+    if (typeof a !== typeof b) {return false;}
 
     if (typeof a === 'object' && typeof b === 'object') {
       const aKeys = Object.keys(a);
       const bKeys = Object.keys(b);
 
-      if (aKeys.length !== bKeys.length) return false;
+      if (aKeys.length !== bKeys.length) {return false;}
 
       for (const key of aKeys) {
         if (!this.deepEqual((a as Record<string, unknown>)[key], (b as Record<string, unknown>)[key])) {
@@ -316,6 +350,8 @@ export class StateBreakpointProvider {
 
   /**
    * Format log message with placeholders
+   * @param template
+   * @param hit
    */
   private formatLogMessage(template: string, hit: BreakpointHit): string {
     return template
@@ -327,6 +363,7 @@ export class StateBreakpointProvider {
 
   /**
    * Notify callbacks
+   * @param hit
    */
   private async notifyCallbacks(hit: BreakpointHit): Promise<void> {
     for (const callback of this.callbacks) {

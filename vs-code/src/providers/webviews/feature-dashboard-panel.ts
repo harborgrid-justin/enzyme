@@ -1,6 +1,9 @@
 import * as vscode from 'vscode';
 import { BaseWebViewPanel } from './base-webview-panel';
 
+/**
+ *
+ */
 interface Feature {
 	id: string;
 	name: string;
@@ -13,10 +16,10 @@ interface Feature {
 	tags?: string[];
 	createdAt: string;
 	updatedAt: string;
-	variants?: {
+	variants?: Array<{
 		name: string;
 		weight: number;
-	}[];
+	}>;
 	analytics?: {
 		impressions: number;
 		conversions: number;
@@ -24,6 +27,9 @@ interface Feature {
 	};
 }
 
+/**
+ *
+ */
 interface FeatureDashboardMessage {
 	type: 'getFeatures' | 'toggleFeature' | 'createFeature' | 'updateFeature' | 'deleteFeature' | 'refreshFeatures';
 	payload?: any;
@@ -37,6 +43,10 @@ export class FeatureDashboardPanel extends BaseWebViewPanel {
 	private static instance: FeatureDashboardPanel | undefined;
 	private features: Feature[] = [];
 
+	/**
+	 *
+	 * @param context
+	 */
 	private constructor(context: vscode.ExtensionContext) {
 		super(context, 'enzyme.featureDashboard', 'Enzyme Feature Dashboard');
 		this.loadFeatures();
@@ -44,6 +54,7 @@ export class FeatureDashboardPanel extends BaseWebViewPanel {
 
 	/**
 	 * Get or create the singleton instance
+	 * @param context
 	 */
 	public static getInstance(context: vscode.ExtensionContext): FeatureDashboardPanel {
 		if (!FeatureDashboardPanel.instance) {
@@ -54,20 +65,28 @@ export class FeatureDashboardPanel extends BaseWebViewPanel {
 
 	/**
 	 * Show the feature dashboard panel
+	 * @param context
 	 */
 	public static show(context: vscode.ExtensionContext): void {
 		const panel = FeatureDashboardPanel.getInstance(context);
 		panel.show();
 	}
 
-	protected getIconPath(): vscode.Uri | { light: vscode.Uri; dark: vscode.Uri } | undefined {
+	/**
+	 *
+	 */
+	protected override getIconPath(): vscode.Uri | { light: vscode.Uri; dark: vscode.Uri } | undefined {
 		return {
 			light: vscode.Uri.file(this.context.asAbsolutePath('resources/icons/feature-light.svg')),
 			dark: vscode.Uri.file(this.context.asAbsolutePath('resources/icons/feature-dark.svg'))
 		};
 	}
 
-	protected getBodyContent(webview: vscode.Webview): string {
+	/**
+	 *
+	 * @param _webview
+	 */
+	protected getBodyContent(_webview: vscode.Webview): string {
 		return `
 			<div class="container">
 				<div class="header">
@@ -266,11 +285,20 @@ export class FeatureDashboardPanel extends BaseWebViewPanel {
 		`;
 	}
 
+	/**
+	 *
+	 * @param webview
+	 * @param nonce
+	 */
 	protected getScripts(webview: vscode.Webview, nonce: string): string {
 		const scriptUri = this.getWebviewUri(webview, ['src', 'webview-ui', 'feature-dashboard', 'main.js']);
 		return `<script nonce="${nonce}" src="${scriptUri}"></script>`;
 	}
 
+	/**
+	 *
+	 * @param message
+	 */
 	protected async handleMessage(message: FeatureDashboardMessage): Promise<void> {
 		switch (message.type) {
 			case 'getFeatures':
@@ -300,16 +328,23 @@ export class FeatureDashboardPanel extends BaseWebViewPanel {
 		}
 	}
 
-	protected onPanelCreated(): void {
+	/**
+	 *
+	 */
+	protected override onPanelCreated(): void {
 		this.sendFeaturesUpdate();
 	}
 
-	protected onPanelVisible(): void {
+	/**
+	 *
+	 */
+	protected override onPanelVisible(): void {
 		this.sendFeaturesUpdate();
 	}
 
 	/**
 	 * Update features from external source
+	 * @param features
 	 */
 	public updateFeatures(features: Feature[]): void {
 		this.features = features;
@@ -317,6 +352,9 @@ export class FeatureDashboardPanel extends BaseWebViewPanel {
 		this.persistFeatures();
 	}
 
+	/**
+	 *
+	 */
 	private async loadFeatures(): Promise<void> {
 		// Load from persisted state
 		this.features = this.getPersistedState<Feature[]>('features', []);
@@ -324,6 +362,11 @@ export class FeatureDashboardPanel extends BaseWebViewPanel {
 		// In a real implementation, this would also load from feature flag service
 	}
 
+	/**
+	 *
+	 * @param payload
+	 * @param payload.id
+	 */
 	private async toggleFeature(payload: { id: string }): Promise<void> {
 		const feature = this.features.find(f => f.id === payload.id);
 		if (feature) {
@@ -338,6 +381,10 @@ export class FeatureDashboardPanel extends BaseWebViewPanel {
 		}
 	}
 
+	/**
+	 *
+	 * @param payload
+	 */
 	private async createFeature(payload: Partial<Feature>): Promise<void> {
 		const newFeature: Feature = {
 			id: payload.id || this.generateId(),
@@ -346,12 +393,12 @@ export class FeatureDashboardPanel extends BaseWebViewPanel {
 			enabled: payload.enabled || false,
 			type: payload.type || 'feature-flag',
 			status: 'active',
-			rolloutPercentage: payload.rolloutPercentage,
+			...(payload.rolloutPercentage !== undefined && { rolloutPercentage: payload.rolloutPercentage }),
 			dependencies: payload.dependencies || [],
 			tags: payload.tags || [],
 			createdAt: new Date().toISOString(),
 			updatedAt: new Date().toISOString(),
-			variants: payload.variants,
+			...(payload.variants && { variants: payload.variants }),
 			analytics: {
 				impressions: 0,
 				conversions: 0,
@@ -366,21 +413,33 @@ export class FeatureDashboardPanel extends BaseWebViewPanel {
 		vscode.window.showInformationMessage(`Feature "${newFeature.name}" created successfully`);
 	}
 
+	/**
+	 *
+	 * @param payload
+	 */
 	private async updateFeature(payload: Partial<Feature> & { id: string }): Promise<void> {
 		const index = this.features.findIndex(f => f.id === payload.id);
 		if (index !== -1) {
+			const feature = this.features[index]!;
 			this.features[index] = {
-				...this.features[index],
-				...payload,
+				...feature,
+				...Object.fromEntries(
+					Object.entries(payload).filter(([_, value]) => value !== undefined)
+				) as Partial<Feature>,
 				updatedAt: new Date().toISOString()
 			};
 			this.sendFeaturesUpdate();
 			this.persistFeatures();
 
-			vscode.window.showInformationMessage(`Feature "${this.features[index].name}" updated`);
+			vscode.window.showInformationMessage(`Feature "${this.features[index]!.name}" updated`);
 		}
 	}
 
+	/**
+	 *
+	 * @param payload
+	 * @param payload.id
+	 */
 	private async deleteFeature(payload: { id: string }): Promise<void> {
 		const feature = this.features.find(f => f.id === payload.id);
 		if (!feature) {
@@ -402,6 +461,9 @@ export class FeatureDashboardPanel extends BaseWebViewPanel {
 		}
 	}
 
+	/**
+	 *
+	 */
 	private sendFeaturesUpdate(): void {
 		const stats = this.calculateStats();
 
@@ -415,6 +477,9 @@ export class FeatureDashboardPanel extends BaseWebViewPanel {
 		});
 	}
 
+	/**
+	 *
+	 */
 	private calculateStats() {
 		return {
 			total: this.features.length,
@@ -425,15 +490,24 @@ export class FeatureDashboardPanel extends BaseWebViewPanel {
 		};
 	}
 
+	/**
+	 *
+	 */
 	private generateId(): string {
-		return `feature-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+		return `feature-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
 	}
 
+	/**
+	 *
+	 */
 	private async persistFeatures(): Promise<void> {
 		await this.persistState('features', this.features);
 	}
 
-	public dispose(): void {
+	/**
+	 *
+	 */
+	public override dispose(): void {
 		super.dispose();
 		FeatureDashboardPanel.instance = undefined;
 	}

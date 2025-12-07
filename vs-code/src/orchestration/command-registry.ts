@@ -3,8 +3,8 @@
  */
 
 import * as vscode from 'vscode';
-import { EventBus } from './event-bus';
-import { LoggerService } from '../services/logger-service';
+import type { EventBus } from './event-bus';
+import type { LoggerService } from '../services/logger-service';
 
 /**
  * Command metadata
@@ -47,12 +47,17 @@ export interface CommandRegistration {
  */
 export class CommandRegistry {
   private static instance: CommandRegistry;
-  private commands: Map<string, CommandRegistration> = new Map();
-  private eventBus: EventBus;
-  private logger: LoggerService;
+  private readonly commands = new Map<string, CommandRegistration>();
+  private readonly eventBus: EventBus;
+  private readonly logger: LoggerService;
   private executionHistory: CommandExecutionContext[] = [];
-  private maxHistorySize: number = 100;
+  private readonly maxHistorySize = 100;
 
+  /**
+   *
+   * @param eventBus
+   * @param logger
+   */
   private constructor(eventBus: EventBus, logger: LoggerService) {
     this.eventBus = eventBus;
     this.logger = logger;
@@ -60,6 +65,8 @@ export class CommandRegistry {
 
   /**
    * Create the command registry
+   * @param eventBus
+   * @param logger
    */
   public static create(eventBus: EventBus, logger: LoggerService): CommandRegistry {
     if (!CommandRegistry.instance) {
@@ -80,6 +87,8 @@ export class CommandRegistry {
 
   /**
    * Register a command
+   * @param metadata
+   * @param handler
    */
   public register(
     metadata: CommandMetadata,
@@ -134,8 +143,6 @@ export class CommandRegistry {
       handler,
       disposable,
       executionCount: 0,
-      lastExecuted: undefined,
-      lastError: undefined,
     };
 
     this.commands.set(metadata.id, registration);
@@ -147,6 +154,7 @@ export class CommandRegistry {
 
   /**
    * Unregister a command
+   * @param commandId
    */
   public unregister(commandId: string): void {
     const registration = this.commands.get(commandId);
@@ -162,6 +170,8 @@ export class CommandRegistry {
 
   /**
    * Execute a command
+   * @param commandId
+   * @param {...any} args
    */
   public async execute(commandId: string, ...args: unknown[]): Promise<unknown> {
     return await vscode.commands.executeCommand(commandId, ...args);
@@ -169,6 +179,7 @@ export class CommandRegistry {
 
   /**
    * Check if command is registered
+   * @param commandId
    */
   public has(commandId: string): boolean {
     return this.commands.has(commandId);
@@ -176,6 +187,7 @@ export class CommandRegistry {
 
   /**
    * Get command registration
+   * @param commandId
    */
   public getRegistration(commandId: string): CommandRegistration | undefined {
     return this.commands.get(commandId);
@@ -190,15 +202,18 @@ export class CommandRegistry {
 
   /**
    * Get commands by category
+   * @param category
    */
   public getCommandsByCategory(category: string): CommandRegistration[] {
-    return Array.from(this.commands.values()).filter(
+    return [...this.commands.values()].filter(
       reg => reg.metadata.category === category
     );
   }
 
   /**
    * Record command execution
+   * @param commandId
+   * @param context
    */
   private recordExecution(commandId: string, context: CommandExecutionContext): void {
     const registration = this.commands.get(commandId);
@@ -220,6 +235,7 @@ export class CommandRegistry {
 
   /**
    * Get execution history
+   * @param count
    */
   public getExecutionHistory(count?: number): CommandExecutionContext[] {
     if (count) {
@@ -244,7 +260,7 @@ export class CommandRegistry {
       mostUsed: [] as Array<{ id: string; count: number }>,
     };
 
-    const commands = Array.from(this.commands.values());
+    const commands = [...this.commands.values()];
 
     for (const registration of commands) {
       stats.totalExecutions += registration.executionCount;
@@ -279,7 +295,7 @@ export class CommandRegistry {
     const keybindingMap = new Map<string, string[]>();
 
     for (const [id, registration] of this.commands) {
-      const keybinding = registration.metadata.keybinding;
+      const {keybinding} = registration.metadata;
       if (keybinding) {
         const commands = keybindingMap.get(keybinding) || [];
         commands.push(id);

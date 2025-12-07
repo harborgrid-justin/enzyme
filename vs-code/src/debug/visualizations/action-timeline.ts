@@ -9,6 +9,9 @@ import type { ActionRecord } from '../action-recorder';
 // Types
 // ============================================================================
 
+/**
+ *
+ */
 export interface TimelineItem {
   id: string;
   action: ActionRecord;
@@ -19,6 +22,9 @@ export interface TimelineItem {
   color: string;
 }
 
+/**
+ *
+ */
 export interface TimelineGroup {
   id: string;
   name: string;
@@ -28,6 +34,9 @@ export interface TimelineGroup {
   collapsed: boolean;
 }
 
+/**
+ *
+ */
 export interface TimelineOptions {
   /** Width of timeline */
   width?: number;
@@ -45,6 +54,9 @@ export interface TimelineOptions {
   colorMap?: Record<string, string>;
 }
 
+/**
+ *
+ */
 export interface TimeRange {
   start: number;
   end: number;
@@ -54,16 +66,23 @@ export interface TimeRange {
 // Action Timeline
 // ============================================================================
 
+/**
+ *
+ */
 export class ActionTimeline {
-  private options: Required<TimelineOptions>;
+  private readonly options: Required<TimelineOptions>;
   private actions: ActionRecord[] = [];
-  private groups = new Map<string, TimelineGroup>();
+  private readonly groups = new Map<string, TimelineGroup>();
   private items: TimelineItem[] = [];
   private zoom = 1;
   private pan = 0;
   private selectedItem: TimelineItem | null = null;
   private timeRange: TimeRange | null = null;
 
+  /**
+   *
+   * @param options
+   */
   constructor(options: TimelineOptions = {}) {
     this.options = {
       width: options.width ?? 1000,
@@ -78,6 +97,7 @@ export class ActionTimeline {
 
   /**
    * Set actions to display
+   * @param actions
    */
   setActions(actions: ActionRecord[]): void {
     this.actions = [...actions].sort((a, b) => a.timestamp - b.timestamp);
@@ -86,6 +106,7 @@ export class ActionTimeline {
 
   /**
    * Add action
+   * @param action
    */
   addAction(action: ActionRecord): void {
     this.actions.push(action);
@@ -106,6 +127,8 @@ export class ActionTimeline {
 
   /**
    * Set time range
+   * @param start
+   * @param end
    */
   setTimeRange(start: number, end: number): void {
     this.timeRange = { start, end };
@@ -122,6 +145,7 @@ export class ActionTimeline {
 
   /**
    * Set zoom level
+   * @param zoom
    */
   setZoom(zoom: number): void {
     this.zoom = Math.max(this.options.minZoom, Math.min(this.options.maxZoom, zoom));
@@ -130,6 +154,7 @@ export class ActionTimeline {
 
   /**
    * Zoom in
+   * @param factor
    */
   zoomIn(factor = 1.2): void {
     this.setZoom(this.zoom * factor);
@@ -137,6 +162,7 @@ export class ActionTimeline {
 
   /**
    * Zoom out
+   * @param factor
    */
   zoomOut(factor = 1.2): void {
     this.setZoom(this.zoom / factor);
@@ -144,6 +170,7 @@ export class ActionTimeline {
 
   /**
    * Set pan offset
+   * @param offset
    */
   setPan(offset: number): void {
     this.pan = offset;
@@ -151,6 +178,7 @@ export class ActionTimeline {
 
   /**
    * Select item
+   * @param itemId
    */
   selectItem(itemId: string): void {
     this.selectedItem = this.items.find((item) => item.id === itemId) ?? null;
@@ -165,6 +193,8 @@ export class ActionTimeline {
 
   /**
    * Get item at position
+   * @param x
+   * @param y
    */
   getItemAtPosition(x: number, y: number): TimelineItem | null {
     for (const item of this.items) {
@@ -184,7 +214,7 @@ export class ActionTimeline {
    * Get all groups
    */
   getGroups(): TimelineGroup[] {
-    return Array.from(this.groups.values());
+    return [...this.groups.values()];
   }
 
   /**
@@ -203,6 +233,7 @@ export class ActionTimeline {
 
   /**
    * Collapse group
+   * @param groupId
    */
   collapseGroup(groupId: string): void {
     const group = this.groups.get(groupId);
@@ -214,6 +245,7 @@ export class ActionTimeline {
 
   /**
    * Expand group
+   * @param groupId
    */
   expandGroup(groupId: string): void {
     const group = this.groups.get(groupId);
@@ -225,6 +257,7 @@ export class ActionTimeline {
 
   /**
    * Toggle group
+   * @param groupId
    */
   toggleGroup(groupId: string): void {
     const group = this.groups.get(groupId);
@@ -236,6 +269,7 @@ export class ActionTimeline {
 
   /**
    * Filter actions by type
+   * @param types
    */
   filterByType(types: string[]): void {
     this.actions = this.actions.filter((action) => types.includes(action.type));
@@ -244,6 +278,7 @@ export class ActionTimeline {
 
   /**
    * Filter actions by store
+   * @param stores
    */
   filterByStore(stores: string[]): void {
     this.actions = this.actions.filter(
@@ -278,8 +313,8 @@ export class ActionTimeline {
     }
 
     // Calculate time bounds
-    const minTime = filteredActions[0].timestamp;
-    const maxTime = filteredActions[filteredActions.length - 1].timestamp;
+    const minTime = filteredActions[0]?.timestamp ?? 0;
+    const maxTime = filteredActions[filteredActions.length - 1]?.timestamp ?? 0;
     const timeSpan = maxTime - minTime || 1;
 
     // Group by store
@@ -336,6 +371,7 @@ export class ActionTimeline {
 
   /**
    * Get action color
+   * @param type
    */
   private getActionColor(type: string): string {
     // Check color map
@@ -353,11 +389,13 @@ export class ActionTimeline {
 
   /**
    * Hash string to number
+   * @param str
+   * @param string_
    */
-  private hashString(str: string): number {
+  private hashString(string_: string): number {
     let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
+    for (let i = 0; i < string_.length; i++) {
+      const char = string_.charCodeAt(i);
       hash = (hash << 5) - hash + char;
       hash = hash & hash;
     }
@@ -387,6 +425,7 @@ export class ActionTimeline {
 
 /**
  * Format action details for tooltip
+ * @param action
  */
 export function formatActionDetails(action: ActionRecord): string {
   const lines: string[] = [];
@@ -417,6 +456,9 @@ export function formatActionDetails(action: ActionRecord): string {
 
 /**
  * Export timeline as SVG
+ * @param timeline
+ * @param width
+ * @param height
  */
 export function exportTimelineAsSVG(timeline: ActionTimeline, width: number, height: number): string {
   const items = timeline.getItems();

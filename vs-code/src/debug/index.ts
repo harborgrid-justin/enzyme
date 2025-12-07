@@ -4,15 +4,24 @@
  */
 
 // Imports for types used in this file
-import { StateDebugger, getGlobalDebugger } from './state-debugger';
-import { ActionRecorder, getGlobalRecorder } from './action-recorder';
-import { RenderTracker, getGlobalTracker } from './render-tracker';
-import { PerformanceProfiler, getGlobalProfiler } from './performance-profiler';
-import { NetworkInspector, getGlobalInspector } from './network-inspector';
-import { StateBreakpointProvider, getGlobalBreakpointProvider } from './breakpoints/state-breakpoint-provider';
-import { RouteBreakpointProvider, getGlobalRouteBreakpointProvider } from './breakpoints/route-breakpoint-provider';
-import { StateWatchProvider, getGlobalWatchProvider } from './watch/state-watch-provider';
-import { SnapshotManager, getGlobalSnapshotManager } from './snapshots/snapshot-manager';
+import { getGlobalRecorder } from './action-recorder';
+import { getGlobalRouteBreakpointProvider } from './breakpoints/route-breakpoint-provider';
+import { getGlobalBreakpointProvider } from './breakpoints/state-breakpoint-provider';
+import { getGlobalInspector } from './network-inspector';
+import { getGlobalProfiler } from './performance-profiler';
+import { getGlobalTracker } from './render-tracker';
+import { getGlobalSnapshotManager } from './snapshots/snapshot-manager';
+import { getGlobalDebugger } from './state-debugger';
+import { getGlobalWatchProvider } from './watch/state-watch-provider';
+import type { ActionRecorder} from './action-recorder';
+import type { RouteBreakpointProvider} from './breakpoints/route-breakpoint-provider';
+import type { StateBreakpointProvider} from './breakpoints/state-breakpoint-provider';
+import type { NetworkInspector} from './network-inspector';
+import type { PerformanceProfiler} from './performance-profiler';
+import type { RenderTracker} from './render-tracker';
+import type { SnapshotManager} from './snapshots/snapshot-manager';
+import type { StateDebugger} from './state-debugger';
+import type { StateWatchProvider} from './watch/state-watch-provider';
 
 // ============================================================================
 // Core Debugging
@@ -238,7 +247,7 @@ export interface DebugFeaturesConfig {
  * Debug features instance
  */
 export class DebugFeatures {
-  private config: Required<DebugFeaturesConfig>;
+  private readonly config: Required<DebugFeaturesConfig>;
   private debugger?: StateDebugger;
   // private bridge?: StateBridge;
   private recorder?: ActionRecorder;
@@ -250,6 +259,10 @@ export class DebugFeatures {
   private watchProvider?: StateWatchProvider;
   private snapshotManager?: SnapshotManager;
 
+  /**
+   *
+   * @param config
+   */
   constructor(config: DebugFeaturesConfig = {}) {
     this.config = {
       enableStateDebug: config.enableStateDebug ?? true,
@@ -427,6 +440,7 @@ let globalFeatures: DebugFeatures | null = null;
 
 /**
  * Register debug features
+ * @param config
  */
 export async function registerDebugFeatures(
   config: DebugFeaturesConfig = {}

@@ -1,6 +1,6 @@
+import * as crypto from 'node:crypto';
+import * as path from 'node:path';
 import * as vscode from 'vscode';
-import * as path from 'path';
-import * as crypto from 'crypto';
 
 /**
  * WebView panel options
@@ -30,6 +30,10 @@ export abstract class BaseWebViewPanel {
 	/**
 	 * PERFORMANCE: Default retainContextWhenHidden to false to reduce memory usage
 	 * Only set to true for webviews that need to preserve state when hidden
+	 * @param context
+	 * @param viewType
+	 * @param title
+	 * @param options
 	 */
 	constructor(
 		context: vscode.ExtensionContext,
@@ -67,28 +71,33 @@ export abstract class BaseWebViewPanel {
 			? vscode.window.activeTextEditor.viewColumn
 			: vscode.ViewColumn.One;
 
+		const webviewOptions: vscode.WebviewPanelOptions & vscode.WebviewOptions = {
+			enableScripts: true,
+			...(this.options.retainContextWhenHidden !== undefined && { retainContextWhenHidden: this.options.retainContextWhenHidden }),
+			...(this.options.enableFindWidget !== undefined && { enableFindWidget: this.options.enableFindWidget }),
+			...(this.options.enableCommandUris !== undefined && { enableCommandUris: this.options.enableCommandUris }),
+			localResourceRoots: [
+				vscode.Uri.file(path.join(this.context.extensionPath, 'out')),
+				vscode.Uri.file(path.join(this.context.extensionPath, 'resources')),
+				vscode.Uri.file(path.join(this.context.extensionPath, 'src', 'webview-ui'))
+			]
+		};
+
 		this.panel = vscode.window.createWebviewPanel(
 			this.viewType,
 			this.title,
 			columnToShowIn || vscode.ViewColumn.One,
-			{
-				enableScripts: true,
-				retainContextWhenHidden: this.options.retainContextWhenHidden,
-				enableFindWidget: this.options.enableFindWidget,
-				enableCommandUris: this.options.enableCommandUris,
-				localResourceRoots: [
-					vscode.Uri.file(path.join(this.context.extensionPath, 'out')),
-					vscode.Uri.file(path.join(this.context.extensionPath, 'resources')),
-					vscode.Uri.file(path.join(this.context.extensionPath, 'src', 'webview-ui'))
-				]
-			}
+			webviewOptions
 		);
 
 		// PERFORMANCE: Lazy load HTML content only when visible
 		if (this.panel.visible) {
 			this.panel.webview.html = this.getHtmlContent(this.panel.webview);
 		}
-		this.panel.iconPath = this.getIconPath();
+		const iconPath = this.getIconPath();
+		if (iconPath !== undefined) {
+			this.panel.iconPath = iconPath;
+		}
 
 		// Handle messages from the webview
 		this.panel.webview.onDidReceiveMessage(
@@ -128,10 +137,11 @@ export abstract class BaseWebViewPanel {
 	/**
 	 * Generate HTML content for the webview
 	 * SECURITY: Implements strict Content Security Policy
+	 * @param webview
 	 */
 	protected getHtmlContent(webview: vscode.Webview): string {
 		const nonce = this.getNonce();
-		const cspSource = webview.cspSource;
+		const {cspSource} = webview;
 
 		// Get the current color theme
 		const theme = this.getCurrentTheme();
@@ -246,6 +256,8 @@ export abstract class BaseWebViewPanel {
 	/**
 	 * Generate styles for the webview
 	 * Override this method to add custom styles
+	 * @param webview
+	 * @param nonce
 	 */
 	protected getStyles(webview: vscode.Webview, nonce: string): string {
 		const sharedStylesUri = this.getWebviewUri(webview, ['src', 'webview-ui', 'shared', 'styles.css']);
@@ -294,6 +306,7 @@ export abstract class BaseWebViewPanel {
 
 	/**
 	 * Send a message to the webview
+	 * @param message
 	 */
 	protected postMessage(message: any): Thenable<boolean> | undefined {
 		return this.panel?.webview.postMessage(message);
@@ -301,8 +314,11 @@ export abstract class BaseWebViewPanel {
 
 	/**
 	 * Persist state to workspace or global state
+	 * @param key
+	 * @param value
+	 * @param global
 	 */
-	protected async persistState(key: string, value: any, global: boolean = false): Promise<void> {
+	protected async persistState(key: string, value: any, global = false): Promise<void> {
 		const stateKey = `${this.viewType}.${key}`;
 		const storage = global ? this.context.globalState : this.context.workspaceState;
 		await storage.update(stateKey, value);
@@ -310,8 +326,11 @@ export abstract class BaseWebViewPanel {
 
 	/**
 	 * Retrieve persisted state
+	 * @param key
+	 * @param defaultValue
+	 * @param global
 	 */
-	protected getPersistedState<T>(key: string, defaultValue: T, global: boolean = false): T {
+	protected getPersistedState<T>(key: string, defaultValue: T, global = false): T {
 		const stateKey = `${this.viewType}.${key}`;
 		const storage = global ? this.context.globalState : this.context.workspaceState;
 		return storage.get<T>(stateKey, defaultValue);
@@ -326,6 +345,8 @@ export abstract class BaseWebViewPanel {
 
 	/**
 	 * Get a webview URI for a resource
+	 * @param webview
+	 * @param pathSegments
 	 */
 	protected getWebviewUri(webview: vscode.Webview, pathSegments: string[]): vscode.Uri {
 		const diskPath = vscode.Uri.file(
@@ -343,7 +364,7 @@ export abstract class BaseWebViewPanel {
 			this.panel = undefined;
 		}
 
-		while (this.disposables.length) {
+		while (this.disposables.length > 0) {
 			const disposable = this.disposables.pop();
 			if (disposable) {
 				disposable.dispose();

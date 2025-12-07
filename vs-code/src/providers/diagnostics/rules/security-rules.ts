@@ -1,7 +1,14 @@
 import * as vscode from 'vscode';
 import { createDiagnostic } from '../enzyme-diagnostics';
 
+/**
+ *
+ */
 export class SecurityRules {
+  /**
+   *
+   * @param document
+   */
   public async analyze(document: vscode.TextDocument): Promise<vscode.Diagnostic[]> {
     const diagnostics: vscode.Diagnostic[] = [];
     const text = document.getText();
@@ -21,6 +28,11 @@ export class SecurityRules {
     return diagnostics;
   }
 
+  /**
+   *
+   * @param document
+   * @param text
+   */
   private checkXSSVulnerabilities(
     document: vscode.TextDocument,
     text: string
@@ -28,7 +40,7 @@ export class SecurityRules {
     const diagnostics: vscode.Diagnostic[] = [];
 
     // Check for dangerouslySetInnerHTML
-    const dangerousPattern = /dangerouslySetInnerHTML\s*=\s*\{\s*{/g;
+    const dangerousPattern = /dangerouslySetInnerHTML\s*=\s*{\s*{/g;
     let match;
 
     while ((match = dangerousPattern.exec(text)) !== null) {
@@ -80,16 +92,21 @@ export class SecurityRules {
     return diagnostics;
   }
 
+  /**
+   *
+   * @param document
+   * @param text
+   */
   private checkExposedSecrets(document: vscode.TextDocument, text: string): vscode.Diagnostic[] {
     const diagnostics: vscode.Diagnostic[] = [];
 
     // Common patterns for API keys, tokens, and passwords
     const secretPatterns = [
-      { pattern: /(?:api[_-]?key|apikey)\s*[:=]\s*['"]([^'"]{20,})['"]/gi, name: 'API Key' },
-      { pattern: /(?:secret|password|passwd|pwd)\s*[:=]\s*['"]([^'"]{8,})['"]/gi, name: 'Secret/Password' },
-      { pattern: /(?:token|auth[_-]?token)\s*[:=]\s*['"]([^'"]{20,})['"]/gi, name: 'Auth Token' },
-      { pattern: /(?:private[_-]?key)\s*[:=]\s*['"]([^'"]{20,})['"]/gi, name: 'Private Key' },
-      { pattern: /(?:aws[_-]?access[_-]?key[_-]?id)\s*[:=]\s*['"]([^'"]{16,})['"]/gi, name: 'AWS Access Key' },
+      { pattern: /(?:api[_-]?key|apikey)\s*[:=]\s*["']([^"']{20,})["']/gi, name: 'API Key' },
+      { pattern: /(?:secret|password|passwd|pwd)\s*[:=]\s*["']([^"']{8,})["']/gi, name: 'Secret/Password' },
+      { pattern: /(?:token|auth[_-]?token)\s*[:=]\s*["']([^"']{20,})["']/gi, name: 'Auth Token' },
+      { pattern: /private[_-]?key\s*[:=]\s*["']([^"']{20,})["']/gi, name: 'Private Key' },
+      { pattern: /aws[_-]?access[_-]?key[_-]?id\s*[:=]\s*["']([^"']{16,})["']/gi, name: 'AWS Access Key' },
     ];
 
     for (const { pattern, name } of secretPatterns) {
@@ -98,7 +115,7 @@ export class SecurityRules {
         const secretValue = match[1];
 
         // Skip common placeholders
-        if (this.isPlaceholder(secretValue)) {
+        if (!secretValue || this.isPlaceholder(secretValue)) {
           continue;
         }
 
@@ -137,6 +154,11 @@ export class SecurityRules {
     return diagnostics;
   }
 
+  /**
+   *
+   * @param document
+   * @param text
+   */
   private checkInsecureAPICalls(
     document: vscode.TextDocument,
     text: string
@@ -144,7 +166,7 @@ export class SecurityRules {
     const diagnostics: vscode.Diagnostic[] = [];
 
     // Check for HTTP (non-HTTPS) API calls
-    const httpPattern = /(?:fetch|axios|request)\s*\(\s*['"]http:\/\/(?!localhost|127\.0\.0\.1)/g;
+    const httpPattern = /(?:fetch|axios|request)\s*\(\s*["']http:\/\/(?!localhost|127\.0\.0\.1)/g;
     let match;
 
     while ((match = httpPattern.exec(text)) !== null) {
@@ -162,7 +184,7 @@ export class SecurityRules {
     }
 
     // Check for missing CORS configuration
-    const fetchPattern = /fetch\s*\(\s*['"][^'"]+['"]\s*,\s*{/g;
+    const fetchPattern = /fetch\s*\(\s*["'][^"']+["']\s*,\s*{/g;
     while ((match = fetchPattern.exec(text)) !== null) {
       const contextStart = match.index;
       const contextEnd = Math.min(text.length, contextStart + 200);
@@ -187,6 +209,11 @@ export class SecurityRules {
     return diagnostics;
   }
 
+  /**
+   *
+   * @param document
+   * @param text
+   */
   private checkMissingCSP(document: vscode.TextDocument, text: string): vscode.Diagnostic[] {
     const diagnostics: vscode.Diagnostic[] = [];
 
@@ -234,6 +261,10 @@ export class SecurityRules {
     return diagnostics;
   }
 
+  /**
+   *
+   * @param value
+   */
   private isPlaceholder(value: string): boolean {
     const placeholderPatterns = [
       /^xxx+$/i,
@@ -244,7 +275,7 @@ export class SecurityRules {
       /^dummy$/i,
       /^your[_-]?.*?[_-]?here$/i,
       /^\*+$/,
-      /^\.\.\.$/,
+      /^\.{3}$/,
     ];
 
     return placeholderPatterns.some((pattern) => pattern.test(value));

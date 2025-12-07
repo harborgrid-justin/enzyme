@@ -2,8 +2,8 @@
  * CacheManager - LRU cache with TTL support and persistence
  */
 
-import * as vscode from 'vscode';
-import { LoggerService } from '../services/logger-service';
+import type { LoggerService } from '../services/logger-service';
+import type * as vscode from 'vscode';
 
 /**
  * Cache entry
@@ -33,22 +33,27 @@ export interface CacheStatistics {
  */
 export class CacheManager {
   private static instance: CacheManager;
-  private logger: LoggerService;
-  private memoryCache: Map<string, CacheEntry<unknown>> = new Map();
-  private maxSize: number = 1000;
+  private readonly logger: LoggerService;
+  private readonly memoryCache = new Map<string, CacheEntry<unknown>>();
+  private maxSize = 1000;
   private defaultTTL: number = 5 * 60 * 1000; // 5 minutes
-  private hits: number = 0;
-  private misses: number = 0;
-  private evictions: number = 0;
+  private hits = 0;
+  private misses = 0;
+  private evictions = 0;
   private cleanupInterval?: NodeJS.Timeout;
   private context?: vscode.ExtensionContext;
 
+  /**
+   *
+   * @param logger
+   */
   private constructor(logger: LoggerService) {
     this.logger = logger;
   }
 
   /**
    * Create the cache manager
+   * @param logger
    */
   public static create(logger: LoggerService): CacheManager {
     if (!CacheManager.instance) {
@@ -69,6 +74,7 @@ export class CacheManager {
 
   /**
    * Initialize with VS Code context
+   * @param context
    */
   public initialize(context: vscode.ExtensionContext): void {
     this.context = context;
@@ -77,6 +83,9 @@ export class CacheManager {
 
   /**
    * Set a value in cache
+   * @param key
+   * @param value
+   * @param ttl
    */
   public set<T>(key: string, value: T, ttl?: number): void {
     // Check cache size and evict if necessary
@@ -98,6 +107,7 @@ export class CacheManager {
 
   /**
    * Get a value from cache
+   * @param key
    */
   public get<T>(key: string): T | undefined {
     const entry = this.memoryCache.get(key) as CacheEntry<T> | undefined;
@@ -127,6 +137,7 @@ export class CacheManager {
 
   /**
    * Check if key exists in cache
+   * @param key
    */
   public has(key: string): boolean {
     const entry = this.memoryCache.get(key);
@@ -145,6 +156,7 @@ export class CacheManager {
 
   /**
    * Delete a value from cache
+   * @param key
    */
   public delete(key: string): boolean {
     const deleted = this.memoryCache.delete(key);
@@ -164,6 +176,7 @@ export class CacheManager {
 
   /**
    * Clear by prefix
+   * @param prefix
    */
   public clearByPrefix(prefix: string): void {
     let count = 0;
@@ -212,7 +225,7 @@ export class CacheManager {
   private stopCleanup(): void {
     if (this.cleanupInterval) {
       clearInterval(this.cleanupInterval);
-      this.cleanupInterval = undefined;
+      delete this.cleanupInterval;
     }
   }
 
@@ -254,6 +267,8 @@ export class CacheManager {
 
   /**
    * Set value in persistent cache
+   * @param key
+   * @param value
    */
   public async setPersistent<T>(key: string, value: T): Promise<void> {
     if (!this.context) {
@@ -267,18 +282,25 @@ export class CacheManager {
 
   /**
    * Get value from persistent cache
+   * @param key
+   * @param defaultValue
    */
+  public getPersistent<T>(key: string, defaultValue: T): T;
+  public getPersistent<T>(key: string): T | undefined;
   public getPersistent<T>(key: string, defaultValue?: T): T | undefined {
     if (!this.context) {
       this.logger.warn('Cannot get persistent cache: context not initialized');
       return defaultValue;
     }
 
-    return this.context.globalState.get<T>(key, defaultValue);
+    return defaultValue !== undefined
+      ? this.context.globalState.get<T>(key, defaultValue)
+      : this.context.globalState.get<T>(key);
   }
 
   /**
    * Delete from persistent cache
+   * @param key
    */
   public async deletePersistent(key: string): Promise<void> {
     if (!this.context) {
@@ -293,11 +315,12 @@ export class CacheManager {
    * Get all cache keys
    */
   public getKeys(): string[] {
-    return Array.from(this.memoryCache.keys());
+    return [...this.memoryCache.keys()];
   }
 
   /**
    * Get cache entry info
+   * @param key
    */
   public getEntryInfo(key: string): {
     exists: boolean;
@@ -314,14 +337,15 @@ export class CacheManager {
     return {
       exists: true,
       age: Date.now() - entry.timestamp,
-      ttl: entry.ttl,
-      accessCount: entry.accessCount,
-      lastAccess: entry.lastAccess,
+      ...(entry.ttl !== undefined ? { ttl: entry.ttl } : {}),
+      ...(entry.accessCount !== undefined ? { accessCount: entry.accessCount } : {}),
+      ...(entry.lastAccess !== undefined ? { lastAccess: entry.lastAccess } : {}),
     };
   }
 
   /**
    * Set max cache size
+   * @param size
    */
   public setMaxSize(size: number): void {
     this.maxSize = size;
@@ -335,6 +359,7 @@ export class CacheManager {
 
   /**
    * Set default TTL
+   * @param ttl
    */
   public setDefaultTTL(ttl: number): void {
     this.defaultTTL = ttl;
@@ -343,9 +368,15 @@ export class CacheManager {
 
   /**
    * Dispose the cache manager
+   * PERFORMANCE: Properly cleans up all resources to prevent memory leaks
    */
   public dispose(): void {
     this.stopCleanup();
     this.clear();
+
+    // Reset singleton instance to prevent memory leaks
+    if (CacheManager.instance === this) {
+      CacheManager.instance = null as any;
+    }
   }
 }

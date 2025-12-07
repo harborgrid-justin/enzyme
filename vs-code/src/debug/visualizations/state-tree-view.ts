@@ -19,6 +19,9 @@ export enum NodeType {
   SYMBOL = 'symbol',
 }
 
+/**
+ *
+ */
 export interface TreeNode {
   id: string;
   key: string;
@@ -31,6 +34,9 @@ export interface TreeNode {
   modified?: boolean;
 }
 
+/**
+ *
+ */
 export interface TreeViewOptions {
   /** Maximum depth to render */
   maxDepth?: number;
@@ -46,26 +52,39 @@ export interface TreeViewOptions {
   highlightModified?: boolean;
 }
 
+/**
+ *
+ */
 export interface NodeUpdate {
   path: string[];
   oldValue: unknown;
   newValue: unknown;
 }
 
+/**
+ *
+ */
 export type NodeUpdateCallback = (update: NodeUpdate) => void | Promise<void>;
 
 // ============================================================================
 // State Tree View
 // ============================================================================
 
+/**
+ *
+ */
 export class StateTreeView {
-  private options: Required<TreeViewOptions>;
+  private readonly options: Required<TreeViewOptions>;
   private rootNode: TreeNode | null = null;
-  private nodeMap = new Map<string, TreeNode>();
-  private expandedPaths = new Set<string>();
-  private callbacks = new Set<NodeUpdateCallback>();
+  private readonly nodeMap = new Map<string, TreeNode>();
+  private readonly expandedPaths = new Set<string>();
+  private readonly callbacks = new Set<NodeUpdateCallback>();
   private nodeIdCounter = 0;
 
+  /**
+   *
+   * @param options
+   */
   constructor(options: TreeViewOptions = {}) {
     this.options = {
       maxDepth: options.maxDepth ?? 10,
@@ -84,6 +103,8 @@ export class StateTreeView {
 
   /**
    * Build tree from state
+   * @param state
+   * @param rootKey
    */
   buildTree(state: unknown, rootKey = 'root'): TreeNode {
     this.nodeMap.clear();
@@ -95,6 +116,7 @@ export class StateTreeView {
 
   /**
    * Get tree node by path
+   * @param path
    */
   getNode(path: string[]): TreeNode | undefined {
     const pathKey = path.join('.');
@@ -103,6 +125,7 @@ export class StateTreeView {
 
   /**
    * Expand node
+   * @param path
    */
   expandNode(path: string[]): void {
     const pathKey = path.join('.');
@@ -116,6 +139,7 @@ export class StateTreeView {
 
   /**
    * Collapse node
+   * @param path
    */
   collapseNode(path: string[]): void {
     const pathKey = path.join('.');
@@ -129,6 +153,7 @@ export class StateTreeView {
 
   /**
    * Toggle node expansion
+   * @param path
    */
   toggleNode(path: string[]): void {
     const pathKey = path.join('.');
@@ -167,10 +192,12 @@ export class StateTreeView {
 
   /**
    * Update node value
+   * @param path
+   * @param newValue
    */
   async updateNodeValue(path: string[], newValue: unknown): Promise<boolean> {
     const node = this.getNode(path);
-    if (!node || !node.editable) {
+    if (!node?.editable) {
       return false;
     }
 
@@ -183,9 +210,10 @@ export class StateTreeView {
 
     // Rebuild children if complex type
     if (node.type === NodeType.OBJECT || node.type === NodeType.ARRAY) {
-      node.children = this.createChildren(newValue, path);
-    } else {
-      node.children = undefined;
+      const children = this.createChildren(newValue, path);
+      if (children.length > 0) {
+        node.children = children;
+      }
     }
 
     // Notify callbacks
@@ -200,6 +228,7 @@ export class StateTreeView {
 
   /**
    * Copy node value
+   * @param path
    */
   copyNodeValue(path: string[]): string | null {
     const node = this.getNode(path);
@@ -212,6 +241,7 @@ export class StateTreeView {
 
   /**
    * Copy node path
+   * @param path
    */
   copyNodePath(path: string[]): string {
     return path.join('.');
@@ -219,6 +249,7 @@ export class StateTreeView {
 
   /**
    * Register update callback
+   * @param callback
    */
   onUpdate(callback: NodeUpdateCallback): () => void {
     this.callbacks.add(callback);
@@ -236,6 +267,7 @@ export class StateTreeView {
 
   /**
    * Filter tree by search query
+   * @param query
    */
   search(query: string): TreeNode[] {
     const lowerQuery = query.toLowerCase();
@@ -249,8 +281,8 @@ export class StateTreeView {
       }
 
       // Search in value
-      const valueStr = String(node.value).toLowerCase();
-      if (valueStr.includes(lowerQuery)) {
+      const valueString = String(node.value).toLowerCase();
+      if (valueString.includes(lowerQuery)) {
         matches.push(node);
       }
     }
@@ -262,7 +294,7 @@ export class StateTreeView {
    * Get modified nodes
    */
   getModifiedNodes(): TreeNode[] {
-    return Array.from(this.nodeMap.values()).filter((node) => node.modified);
+    return [...this.nodeMap.values()].filter((node) => node.modified);
   }
 
   /**
@@ -276,6 +308,10 @@ export class StateTreeView {
 
   /**
    * Create tree node
+   * @param key
+   * @param value
+   * @param path
+   * @param depth
    */
   private createNode(key: string, value: unknown, path: string[], depth = 0): TreeNode {
     const type = this.getNodeType(value);
@@ -294,7 +330,10 @@ export class StateTreeView {
 
     // Create children for complex types
     if (depth < this.options.maxDepth && (type === NodeType.OBJECT || type === NodeType.ARRAY)) {
-      node.children = this.createChildren(value, path, depth);
+      const children = this.createChildren(value, path, depth);
+      if (children.length > 0) {
+        node.children = children;
+      }
     }
 
     // Store in map
@@ -305,6 +344,9 @@ export class StateTreeView {
 
   /**
    * Create children nodes
+   * @param value
+   * @param parentPath
+   * @param depth
    */
   private createChildren(value: unknown, parentPath: string[], depth = 0): TreeNode[] {
     const children: TreeNode[] = [];
@@ -318,17 +360,17 @@ export class StateTreeView {
     } else if (this.isObject(value)) {
       const entries = Object.entries(value as Record<string, unknown>);
 
-      for (const [key, val] of entries) {
+      for (const [key, value_] of entries) {
         // Skip functions and symbols if not enabled
-        if (typeof val === 'function' && !this.options.showFunctions) {
+        if (typeof value_ === 'function' && !this.options.showFunctions) {
           continue;
         }
-        if (typeof val === 'symbol' && !this.options.showSymbols) {
+        if (typeof value_ === 'symbol' && !this.options.showSymbols) {
           continue;
         }
 
         const childPath = [...parentPath, key];
-        const child = this.createNode(key, val, childPath, depth + 1);
+        const child = this.createNode(key, value_, childPath, depth + 1);
         children.push(child);
       }
     }
@@ -338,10 +380,11 @@ export class StateTreeView {
 
   /**
    * Get node type
+   * @param value
    */
   private getNodeType(value: unknown): NodeType {
-    if (value === null) return NodeType.NULL;
-    if (value === undefined) return NodeType.UNDEFINED;
+    if (value === null) {return NodeType.NULL;}
+    if (value === undefined) {return NodeType.UNDEFINED;}
 
     const type = typeof value;
 
@@ -365,6 +408,7 @@ export class StateTreeView {
 
   /**
    * Check if type is editable
+   * @param type
    */
   private isEditableType(type: NodeType): boolean {
     return (
@@ -377,6 +421,7 @@ export class StateTreeView {
 
   /**
    * Check if value is plain object
+   * @param value
    */
   private isObject(value: unknown): boolean {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -384,6 +429,7 @@ export class StateTreeView {
 
   /**
    * Notify callbacks
+   * @param update
    */
   private async notifyCallbacks(update: NodeUpdate): Promise<void> {
     for (const callback of this.callbacks) {
@@ -409,6 +455,7 @@ export class StateTreeView {
 
 /**
  * Format node value for display
+ * @param node
  */
 export function formatNodeValue(node: TreeNode): string {
   switch (node.type) {
@@ -436,6 +483,7 @@ export function formatNodeValue(node: TreeNode): string {
 
 /**
  * Get node icon/color based on type
+ * @param node
  */
 export function getNodeStyle(node: TreeNode): {
   icon: string;

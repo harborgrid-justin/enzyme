@@ -1,9 +1,18 @@
 import * as vscode from 'vscode';
 
+/**
+ *
+ */
 export class ComponentQuickFixes {
+  /**
+   *
+   * @param document
+   * @param range
+   * @param context
+   */
   public provideQuickFixes(
     document: vscode.TextDocument,
-    range: vscode.Range | vscode.Selection,
+    _range: vscode.Range | vscode.Selection,
     context: vscode.CodeActionContext
   ): vscode.CodeAction[] {
     const actions: vscode.CodeAction[] = [];
@@ -35,6 +44,11 @@ export class ComponentQuickFixes {
     return actions;
   }
 
+  /**
+   *
+   * @param document
+   * @param diagnostic
+   */
   private createErrorBoundaryFixes(
     document: vscode.TextDocument,
     diagnostic: vscode.Diagnostic
@@ -74,6 +88,11 @@ export class ComponentQuickFixes {
     return actions;
   }
 
+  /**
+   *
+   * @param document
+   * @param diagnostic
+   */
   private createMemoFixes(
     document: vscode.TextDocument,
     diagnostic: vscode.Diagnostic
@@ -89,7 +108,7 @@ export class ComponentQuickFixes {
 
     // Find component declaration
     const line = document.lineAt(diagnostic.range.start.line);
-    const componentMatch = line.text.match(/(?:export\s+)?(?:const|function)\s+(\w+)/);
+    const componentMatch = /(?:export\s+)?(?:const|function)\s+(\w+)/.exec(line.text);
 
     if (componentMatch) {
       const componentName = componentMatch[1];
@@ -125,6 +144,11 @@ export class ComponentQuickFixes {
     return actions;
   }
 
+  /**
+   *
+   * @param document
+   * @param diagnostic
+   */
   private createDisplayNameFixes(
     document: vscode.TextDocument,
     diagnostic: vscode.Diagnostic
@@ -132,7 +156,7 @@ export class ComponentQuickFixes {
     const actions: vscode.CodeAction[] = [];
 
     const line = document.lineAt(diagnostic.range.start.line);
-    const componentMatch = line.text.match(/(?:export\s+)?(?:const|function)\s+(\w+)/);
+    const componentMatch = /(?:export\s+)?(?:const|function)\s+(\w+)/.exec(line.text);
 
     if (componentMatch) {
       const componentName = componentMatch[1];
@@ -157,6 +181,11 @@ export class ComponentQuickFixes {
     return actions;
   }
 
+  /**
+   *
+   * @param document
+   * @param diagnostic
+   */
   private createSplitComponentFixes(
     document: vscode.TextDocument,
     diagnostic: vscode.Diagnostic
@@ -190,6 +219,11 @@ export class ComponentQuickFixes {
     return actions;
   }
 
+  /**
+   *
+   * @param document
+   * @param diagnostic
+   */
   private createKeyPropFixes(
     document: vscode.TextDocument,
     diagnostic: vscode.Diagnostic
@@ -205,19 +239,19 @@ export class ComponentQuickFixes {
 
     // Find the opening tag
     const line = document.lineAt(diagnostic.range.start.line);
-    const tagMatch = line.text.match(/<(\w+)(\s|>)/);
+    const tagMatch = /<(\w+)(\s|>)/.exec(line.text);
 
     if (tagMatch) {
       const insertPos = new vscode.Position(
         diagnostic.range.start.line,
-        tagMatch.index! + tagMatch[0].length - 1
+        tagMatch.index + tagMatch[0].length - 1
       );
 
       // Try to infer the loop variable
-      const mapMatch = document.getText().match(/\.map\(\((\w+),\s*(\w+)\)/);
-      const indexVar = mapMatch ? mapMatch[2] : 'index';
+      const mapMatch = /\.map\(\((\w+),\s*(\w+)\)/.exec(document.getText());
+      const indexVariable = mapMatch ? mapMatch[2] : 'index';
 
-      addKeyAction.edit.insert(document.uri, insertPos, ` key={${indexVar}}`);
+      addKeyAction.edit.insert(document.uri, insertPos, ` key={${indexVariable}}`);
       addKeyAction.isPreferred = true;
       actions.push(addKeyAction);
     }
@@ -233,13 +267,13 @@ export class ComponentQuickFixes {
     if (tagMatch) {
       const insertPos = new vscode.Position(
         diagnostic.range.start.line,
-        tagMatch.index! + tagMatch[0].length - 1
+        tagMatch.index + tagMatch[0].length - 1
       );
 
-      const mapMatch = document.getText().match(/\.map\(\((\w+)\)/);
-      const itemVar = mapMatch ? mapMatch[1] : 'item';
+      const mapMatch = /\.map\(\((\w+)\)/.exec(document.getText());
+      const itemVariable = mapMatch ? mapMatch[1] : 'item';
 
-      addKeyIdAction.edit.insert(document.uri, insertPos, ` key={${itemVar}.id}`);
+      addKeyIdAction.edit.insert(document.uri, insertPos, ` key={${itemVariable}.id}`);
       actions.push(addKeyIdAction);
     }
 

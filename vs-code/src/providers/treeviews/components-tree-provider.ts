@@ -3,11 +3,15 @@
  * @description Displays all Enzyme components with categorization and usage tracking
  */
 
+import * as path from 'node:path';
 import * as vscode from 'vscode';
-import * as path from 'path';
-import { BaseTreeProvider, TreeProviderOptions } from './base-tree-provider';
+import { BaseTreeProvider } from './base-tree-provider';
 import { EnzymeComponentItem, EnzymeCategoryItem } from './tree-items';
+import type { TreeProviderOptions } from './base-tree-provider';
 
+/**
+ *
+ */
 interface ComponentMetadata {
   name: string;
   filePath: string;
@@ -21,6 +25,9 @@ interface ComponentMetadata {
   propsInterface?: string;
 }
 
+/**
+ *
+ */
 type ComponentCategory =
   | 'forms'
   | 'layout'
@@ -33,11 +40,31 @@ type ComponentCategory =
 
 /**
  * TreeView provider for Enzyme components
+ *
+ * @description Manages component discovery, categorization, and visualization with features:
+ * - Automatic component categorization (forms, layout, data-display, etc.)
+ * - UI component vs feature component distinction
+ * - Storybook story and test file detection
+ * - Props interface extraction
+ * - Component usage tracking
+ * - Filtering and search capabilities
+ *
+ * @example
+ * ```typescript
+ * const provider = new EnzymeComponentsTreeProvider(context);
+ * provider.setFilter('Button');
+ * const uiComponents = provider.getComponents().filter(c => c.isUIComponent);
+ * ```
  */
 export class EnzymeComponentsTreeProvider extends BaseTreeProvider<EnzymeComponentItem | EnzymeCategoryItem> {
   private components: ComponentMetadata[] = [];
-  private filterText: string = '';
+  private filterText = '';
 
+  /**
+   *
+   * @param context
+   * @param options
+   */
   constructor(context: vscode.ExtensionContext, options?: TreeProviderOptions) {
     super(context, options);
   }
@@ -55,6 +82,7 @@ export class EnzymeComponentsTreeProvider extends BaseTreeProvider<EnzymeCompone
 
   /**
    * Set filter text
+   * @param filterText
    */
   setFilter(filterText: string): void {
     this.filterText = filterText.toLowerCase();
@@ -94,10 +122,11 @@ export class EnzymeComponentsTreeProvider extends BaseTreeProvider<EnzymeCompone
 
   /**
    * Get child items
+   * @param element
    */
   protected async getChildItems(
     element: EnzymeComponentItem | EnzymeCategoryItem
-  ): Promise<Array<EnzymeComponentItem>> {
+  ): Promise<EnzymeComponentItem[]> {
     if (element instanceof EnzymeCategoryItem) {
       return this.getCategoryComponents(element.categoryName as ComponentCategory);
     }
@@ -177,6 +206,8 @@ export class EnzymeComponentsTreeProvider extends BaseTreeProvider<EnzymeCompone
 
   /**
    * Parse a component file to extract metadata
+   * @param filePath
+   * @param isUIComponent
    */
   private async parseComponentFile(
     filePath: string,
@@ -213,7 +244,7 @@ export class EnzymeComponentsTreeProvider extends BaseTreeProvider<EnzymeCompone
         hasProps,
         hasStory,
         hasTests,
-        propsInterface,
+        ...(propsInterface && { propsInterface }),
       };
     } catch (error) {
       console.error(`Error parsing component file ${filePath}:`, error);
@@ -223,16 +254,18 @@ export class EnzymeComponentsTreeProvider extends BaseTreeProvider<EnzymeCompone
 
   /**
    * Extract component name from file content or path
+   * @param content
+   * @param filePath
    */
   private extractComponentName(content: string, filePath: string): string | null {
     // Try to find export default or named export
-    const defaultExportMatch = content.match(/export\s+default\s+(?:function\s+)?(\w+)/);
-    if (defaultExportMatch) {
+    const defaultExportMatch = /export\s+default\s+(?:function\s+)?(\w+)/.exec(content);
+    if (defaultExportMatch?.[1]) {
       return defaultExportMatch[1];
     }
 
-    const namedExportMatch = content.match(/export\s+(?:const|function)\s+(\w+)/);
-    if (namedExportMatch) {
+    const namedExportMatch = /export\s+(?:const|function)\s+(\w+)/.exec(content);
+    if (namedExportMatch?.[1]) {
       return namedExportMatch[1];
     }
 
@@ -247,19 +280,21 @@ export class EnzymeComponentsTreeProvider extends BaseTreeProvider<EnzymeCompone
 
   /**
    * Determine component category
+   * @param filePath
+   * @param content
    */
   private determineCategory(filePath: string, content: string): ComponentCategory {
     const lowerPath = filePath.toLowerCase();
     const lowerContent = content.toLowerCase();
 
     // Check path segments
-    if (lowerPath.includes('/forms/')) return 'forms';
-    if (lowerPath.includes('/layout/')) return 'layout';
-    if (lowerPath.includes('/feedback/')) return 'feedback';
-    if (lowerPath.includes('/data-display/')) return 'data-display';
-    if (lowerPath.includes('/navigation/')) return 'navigation';
-    if (lowerPath.includes('/inputs/')) return 'inputs';
-    if (lowerPath.includes('/overlays/')) return 'overlays';
+    if (lowerPath.includes('/forms/')) {return 'forms';}
+    if (lowerPath.includes('/layout/')) {return 'layout';}
+    if (lowerPath.includes('/feedback/')) {return 'feedback';}
+    if (lowerPath.includes('/data-display/')) {return 'data-display';}
+    if (lowerPath.includes('/navigation/')) {return 'navigation';}
+    if (lowerPath.includes('/inputs/')) {return 'inputs';}
+    if (lowerPath.includes('/overlays/')) {return 'overlays';}
 
     // Check content patterns
     if (lowerContent.includes('form') || lowerContent.includes('input') || lowerContent.includes('select')) {
@@ -280,6 +315,7 @@ export class EnzymeComponentsTreeProvider extends BaseTreeProvider<EnzymeCompone
 
   /**
    * Check if component has props interface
+   * @param content
    */
   private checkHasProps(content: string): boolean {
     return (
@@ -290,14 +326,16 @@ export class EnzymeComponentsTreeProvider extends BaseTreeProvider<EnzymeCompone
 
   /**
    * Extract props interface name
+   * @param content
    */
   private extractPropsInterface(content: string): string | undefined {
-    const match = content.match(/(?:interface|type)\s+(\w+Props)/);
+    const match = /(?:interface|type)\s+(\w+Props)/.exec(content);
     return match ? match[1] : undefined;
   }
 
   /**
    * Check if component has a Storybook story
+   * @param filePath
    */
   private async checkHasStory(filePath: string): Promise<boolean> {
     const dir = path.dirname(filePath);
@@ -321,6 +359,7 @@ export class EnzymeComponentsTreeProvider extends BaseTreeProvider<EnzymeCompone
 
   /**
    * Check if component has tests
+   * @param filePath
    */
   private async checkHasTests(filePath: string): Promise<boolean> {
     const dir = path.dirname(filePath);
@@ -349,16 +388,14 @@ export class EnzymeComponentsTreeProvider extends BaseTreeProvider<EnzymeCompone
    */
   private async calculateUsageCounts(): Promise<void> {
     const workspaceRoot = this.getWorkspaceRoot();
-    if (!workspaceRoot) return;
+    if (!workspaceRoot) {return;}
 
     for (const component of this.components) {
       try {
-        // Search for component usage in the workspace
-        const searchPattern = new RegExp(`<${component.name}[\\s/>]`, 'g');
-
         // This is a simplified implementation
         // In a real implementation, you would use workspace.findTextInFiles
-        // or a similar API to search across all files
+        // or a similar API to search across all files with pattern:
+        // new RegExp(`<${component.name}[\\s/>]`, 'g')
         component.usageCount = 0;
       } catch {
         component.usageCount = 0;
@@ -368,8 +405,9 @@ export class EnzymeComponentsTreeProvider extends BaseTreeProvider<EnzymeCompone
 
   /**
    * Group components by category
+   * @param components
    */
-  private groupByCategory(components: ComponentMetadata[]): Array<EnzymeCategoryItem> {
+  private groupByCategory(components: ComponentMetadata[]): EnzymeCategoryItem[] {
     const categoryMap = new Map<ComponentCategory, ComponentMetadata[]>();
 
     for (const component of components) {
@@ -392,6 +430,7 @@ export class EnzymeComponentsTreeProvider extends BaseTreeProvider<EnzymeCompone
 
   /**
    * Format category name for display
+   * @param category
    */
   private formatCategoryName(category: ComponentCategory): string {
     return category
@@ -402,6 +441,7 @@ export class EnzymeComponentsTreeProvider extends BaseTreeProvider<EnzymeCompone
 
   /**
    * Get components for a category
+   * @param category
    */
   private getCategoryComponents(category: ComponentCategory): EnzymeComponentItem[] {
     const formattedCategory = this.formatCategoryName(category);
@@ -417,10 +457,10 @@ export class EnzymeComponentsTreeProvider extends BaseTreeProvider<EnzymeCompone
         category: this.formatCategoryName(component.category),
         isUIComponent: component.isUIComponent,
         isFeatureComponent: component.isFeatureComponent,
-        usageCount: component.usageCount,
         hasProps: component.hasProps,
         hasStory: component.hasStory,
         hasTests: component.hasTests,
+        ...(component.usageCount !== undefined && { usageCount: component.usageCount }),
       }
     ));
   }
@@ -434,6 +474,7 @@ export class EnzymeComponentsTreeProvider extends BaseTreeProvider<EnzymeCompone
 
   /**
    * Get components by category
+   * @param category
    */
   getComponentsByCategory(category: ComponentCategory): ComponentMetadata[] {
     return this.components.filter(c => c.category === category);

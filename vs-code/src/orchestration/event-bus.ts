@@ -24,18 +24,25 @@ export type ExtensionEvent =
   | { type: 'indexing:completed'; payload: { duration: number } }
   | { type: 'provider:registered'; payload: { name: string } }
   | { type: 'provider:disabled'; payload: { name: string } }
-  | { type: 'error:occurred'; payload: { message: string; error: Error } };
+  | { type: 'error:occurred'; payload: { message: string; error: Error } }
+  | { type: 'cli:installed'; payload: any }
+  | { type: 'onboarding:stateChanged'; payload: any }
+  | { type: 'onboarding:completed' }
+  | { type: 'onboarding:milestone'; payload: { milestone: string; timestamp: number } };
 
 /**
  * EventBus - Central event system for the extension
  */
 export class EventBus {
   private static instance: EventBus;
-  private emitter: vscode.EventEmitter<ExtensionEvent>;
+  private readonly emitter: vscode.EventEmitter<ExtensionEvent>;
   private eventHistory: Array<{ event: ExtensionEvent; timestamp: number }> = [];
-  private maxHistorySize: number = 100;
-  private oneTimeListeners: Map<string, Array<(event: ExtensionEvent) => void>> = new Map();
+  private readonly maxHistorySize = 100;
+  private readonly oneTimeListeners = new Map<string, Array<(event: ExtensionEvent) => void>>();
 
+  /**
+   *
+   */
   public constructor() {
     this.emitter = new vscode.EventEmitter<ExtensionEvent>();
   }
@@ -52,6 +59,7 @@ export class EventBus {
 
   /**
    * Emit an event
+   * @param event
    */
   public emit(event: ExtensionEvent): void {
     // Add to history
@@ -73,6 +81,7 @@ export class EventBus {
 
   /**
    * Subscribe to events
+   * @param listener
    */
   public on(listener: (event: ExtensionEvent) => void): vscode.Disposable {
     return this.emitter.event(listener);
@@ -80,6 +89,8 @@ export class EventBus {
 
   /**
    * Subscribe to a specific event type
+   * @param type
+   * @param listener
    */
   public onType<T extends ExtensionEvent['type']>(
     type: T,
@@ -94,6 +105,8 @@ export class EventBus {
 
   /**
    * Subscribe to an event once
+   * @param type
+   * @param listener
    */
   public once<T extends ExtensionEvent['type']>(
     type: T,
@@ -106,6 +119,7 @@ export class EventBus {
 
   /**
    * Emit and wait for async handlers
+   * @param event
    */
   public async emitAsync(event: ExtensionEvent): Promise<void> {
     this.emit(event);
@@ -115,6 +129,7 @@ export class EventBus {
 
   /**
    * Get event history
+   * @param count
    */
   public getHistory(count?: number): Array<{ event: ExtensionEvent; timestamp: number }> {
     if (count) {
@@ -132,6 +147,7 @@ export class EventBus {
 
   /**
    * Get events of a specific type from history
+   * @param type
    */
   public getHistoryByType<T extends ExtensionEvent['type']>(
     type: T
@@ -146,8 +162,10 @@ export class EventBus {
 
   /**
    * Wait for a specific event
+   * @param type
+   * @param timeout
    */
-  public waitFor<T extends ExtensionEvent['type']>(
+  public async waitFor<T extends ExtensionEvent['type']>(
     type: T,
     timeout?: number
   ): Promise<Extract<ExtensionEvent, { type: T }>> {

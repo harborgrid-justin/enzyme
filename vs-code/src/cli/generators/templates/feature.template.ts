@@ -1,5 +1,9 @@
-import { GeneratorOptions, GeneratorTemplate } from '../index';
+import type { GeneratorOptions, GeneratorTemplate } from '../index';
 
+/**
+ *
+ * @param options
+ */
 export function featureTemplate(options: GeneratorOptions): GeneratorTemplate {
   const { name, path: basePath = 'src/features' } = options;
   const featurePath = `${basePath}/${name}`;
@@ -60,6 +64,10 @@ export function featureTemplate(options: GeneratorOptions): GeneratorTemplate {
   };
 }
 
+/**
+ *
+ * @param name
+ */
 function generateIndex(name: string): string {
   return `// Feature: ${name}
 export { ${name}Feature } from './${name}.feature';
@@ -70,6 +78,10 @@ export * from './types';
 `;
 }
 
+/**
+ *
+ * @param name
+ */
 function generateFeature(name: string): string {
   return `import { Feature } from '@enzyme/core';
 import { ${name}Routes } from './routes';
@@ -104,6 +116,10 @@ export const ${name}Feature: Feature = {
 `;
 }
 
+/**
+ *
+ * @param name
+ */
 function generateRoutes(name: string): string {
   return `import React from 'react';
 import { RouteObject } from 'react-router-dom';
@@ -128,6 +144,10 @@ export const ${name}Routes: RouteObject[] = [
 `;
 }
 
+/**
+ *
+ * @param name
+ */
 function generateStore(name: string): string {
   return `import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
@@ -188,6 +208,10 @@ async function fetch${name}Items(): Promise<any[]> {
 `;
 }
 
+/**
+ *
+ * @param name
+ */
 function generateAPI(name: string): string {
   return `import { APIClient } from '@enzyme/core';
 
@@ -232,6 +256,10 @@ export const ${name}API = new ${name}APIClient();
 `;
 }
 
+/**
+ *
+ * @param name
+ */
 function generateTypes(name: string): string {
   return `export interface ${name}Item {
   id: string;
@@ -255,6 +283,10 @@ export interface ${name}Actions {
 `;
 }
 
+/**
+ *
+ * @param name
+ */
 function generateDashboard(name: string): string {
   return `import React from 'react';
 import { Outlet } from 'react-router-dom';
@@ -287,6 +319,10 @@ export const ${name}Dashboard: React.FC = () => {
 `;
 }
 
+/**
+ *
+ * @param name
+ */
 function generateHook(name: string): string {
   return `import { use${name}Store } from '../store/${name}.store';
 

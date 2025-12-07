@@ -150,7 +150,7 @@ export function memoize<T extends (...args: unknown[]) => unknown>(
 export function batch<T>(
   fn: (items: T[]) => void,
   wait: number,
-  maxBatchSize: number = 100
+  maxBatchSize = 100
 ): (item: T) => void {
   const items: T[] = [];
   let timeoutId: NodeJS.Timeout | undefined;
@@ -241,14 +241,19 @@ export function rateLimit(
 export class AsyncQueue<T> {
   private queue: Array<() => Promise<T>> = [];
   private running = 0;
-  private maxConcurrency: number;
+  private readonly maxConcurrency: number;
 
-  constructor(maxConcurrency: number = 1) {
+  /**
+   *
+   * @param maxConcurrency
+   */
+  constructor(maxConcurrency = 1) {
     this.maxConcurrency = maxConcurrency;
   }
 
   /**
    * Add task to queue
+   * @param task
    */
   public async add(task: () => Promise<T>): Promise<T> {
     return new Promise((resolve, reject) => {
@@ -309,7 +314,7 @@ export class AsyncQueue<T> {
  *
  * @param ms - Milliseconds to sleep
  */
-export function sleep(ms: number): Promise<void> {
+export async function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
@@ -323,8 +328,8 @@ export function sleep(ms: number): Promise<void> {
  */
 export async function retryWithBackoff<T>(
   fn: () => Promise<T>,
-  maxRetries: number = 3,
-  baseDelay: number = 1000
+  maxRetries = 3,
+  baseDelay = 1000
 ): Promise<T> {
   let lastError: Error | undefined;
 

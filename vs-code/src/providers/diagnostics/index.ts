@@ -1,6 +1,10 @@
-import * as vscode from 'vscode';
 import { EnzymeDiagnosticsProvider } from './enzyme-diagnostics';
+import type * as vscode from 'vscode';
 
+/**
+ *
+ * @param context
+ */
 export function registerDiagnostics(context: vscode.ExtensionContext): void {
   const diagnosticsProvider = new EnzymeDiagnosticsProvider();
   diagnosticsProvider.activate(context);

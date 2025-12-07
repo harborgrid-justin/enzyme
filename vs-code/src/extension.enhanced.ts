@@ -17,40 +17,40 @@
 import * as vscode from 'vscode';
 
 // Core Infrastructure
+import { registerAllCommands } from './commands';
+import { EXTENSION_NAME, COMMANDS, URLS } from './core/constants';
 import { EnzymeExtensionContext } from './core/context';
 import { logger } from './core/logger';
-import { EXTENSION_NAME, COMMANDS, URLS } from './core/constants';
 import { performanceMonitor } from './core/performance-monitor';
 
 // Orchestration Layer
-import { Container } from './orchestration/container';
-import { EventBus } from './orchestration/event-bus';
-import { ServiceRegistry } from './orchestration/service-registry';
-import { ProviderRegistry } from './orchestration/provider-registry';
-import { CommandRegistry } from './orchestration/command-registry';
-import { LifecycleManager } from './orchestration/lifecycle-manager';
-import { TelemetryService } from './orchestration/telemetry-service';
-import { HealthMonitor } from './orchestration/health-monitor';
-import { CacheManager } from './orchestration/cache-manager';
-
-// Services
-import { LoggerService } from './services/logger-service';
-import { WorkspaceService } from './services/workspace-service';
-import { AnalysisService } from './services/analysis-service';
-
-// Command Registration
-import { registerAllCommands } from './commands';
-
-// Provider Registration
-import { registerTreeViewProviders } from './providers/treeviews/register-treeviews';
-import { registerWebViewProviders } from './providers/webviews/register-webviews';
-
-// Workspace Detection
 import {
   detectEnzymeProject,
   getProjectStructure,
   createEnzymeFileWatchers,
 } from './core/workspace';
+import { CacheManager } from './orchestration/cache-manager';
+import { CommandRegistry } from './orchestration/command-registry';
+import { Container } from './orchestration/container';
+import { EventBus } from './orchestration/event-bus';
+import { HealthMonitor } from './orchestration/health-monitor';
+import { LifecycleManager } from './orchestration/lifecycle-manager';
+import { ProviderRegistry } from './orchestration/provider-registry';
+import { ServiceRegistry } from './orchestration/service-registry';
+import { TelemetryService } from './orchestration/telemetry-service';
+
+// Services
+import { registerTreeViewProviders } from './providers/treeviews/register-treeviews';
+import { registerWebViewProviders } from './providers/webviews/register-webviews';
+import { AnalysisService } from './services/analysis-service';
+import { LoggerService } from './services/logger-service';
+import { WorkspaceService } from './services/workspace-service';
+
+// Command Registration
+
+// Provider Registration
+
+// Workspace Detection
 
 /**
  * Extension API exposed to other extensions
@@ -78,11 +78,6 @@ export interface EnzymeExtensionAPI {
   /** Get extension context */
   getContext(): vscode.ExtensionContext;
 }
-
-/**
- * Global container instance for extension lifecycle
- */
-let containerInstance: Container | null = null;
 
 /**
  * Activate the Enzyme VS Code Extension
@@ -167,7 +162,6 @@ async function initializeFullFunctionality(context: vscode.ExtensionContext): Pr
   // Initialize DI Container
   const container = Container.getInstance();
   container.initialize(context);
-  containerInstance = container;
   logger.info('✓ DI Container initialized');
 
   // Resolve core services
@@ -292,7 +286,6 @@ async function initializeFullFunctionality(context: vscode.ExtensionContext): Pr
       eventBus.dispose();
       container.dispose();
       await enzymeContext.dispose();
-      containerInstance = null;
       logger.info('✓ Enzyme extension disposed');
     },
   });
@@ -333,7 +326,7 @@ async function initializeFullFunctionality(context: vscode.ExtensionContext): Pr
 async function initializeDeferredOperations(
   enzymeContext: EnzymeExtensionContext,
   context: vscode.ExtensionContext,
-  healthMonitor: HealthMonitor
+  _healthMonitor: HealthMonitor
 ): Promise<void> {
   performanceMonitor.start('deferred.operations');
   logger.info('Initializing deferred operations...');
@@ -418,7 +411,7 @@ async function initializeDeferredOperations(
  * @internal
  */
 async function showEnhancedWelcome(
-  enzymeContext: EnzymeExtensionContext,
+  _enzymeContext: EnzymeExtensionContext,
   isEnzymeWorkspace: boolean
 ): Promise<void> {
   logger.info('Showing enhanced welcome experience');
@@ -481,7 +474,7 @@ async function showEnhancedWelcome(
  * @param enzymeContext - Extension context
  * @internal
  */
-function showQuietActivationNotification(enzymeContext: EnzymeExtensionContext): void {
+function showQuietActivationNotification(_enzymeContext: EnzymeExtensionContext): void {
   vscode.window.showInformationMessage(
     `${EXTENSION_NAME} is now active!`,
     'Show Commands',
@@ -551,7 +544,7 @@ function initializeTelemetry(
 
   if (telemetryEnabled) {
     logger.info('Telemetry enabled');
-    telemetryService.track('extension.activated', {
+    telemetryService.trackEvent('extension.activated', {
       version: enzymeContext.getContext().extension.packageJSON.version,
     });
   } else {

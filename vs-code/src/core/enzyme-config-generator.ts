@@ -12,9 +12,9 @@
  * @module enzyme-config-generator
  */
 
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
 import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs/promises';
 import { logger } from './logger';
 
 /**
@@ -147,8 +147,8 @@ export class EnzymeConfigGenerator {
           // Generate .env.example
           progress.report({ message: 'Creating .env.example...', increment: 20 });
           try {
-            const envFile = await this.generateEnvExample(options);
-            result.filesCreated.push(envFile);
+            const environmentFile = await this.generateEnvExample(options);
+            result.filesCreated.push(environmentFile);
           } catch (error) {
             result.errors.push(`Failed to create .env.example: ${error}`);
           }
@@ -197,8 +197,8 @@ export class EnzymeConfigGenerator {
         );
         if (openConfig === 'Open Config') {
           const configPath = path.join(options.targetDir, `enzyme.config.${options.typescript ? 'ts' : 'js'}`);
-          const doc = await vscode.workspace.openTextDocument(configPath);
-          await vscode.window.showTextDocument(doc);
+          const document = await vscode.workspace.openTextDocument(configPath);
+          await vscode.window.showTextDocument(document);
         }
       } else {
         vscode.window.showErrorMessage(
@@ -311,11 +311,7 @@ export class EnzymeConfigGenerator {
     content += ` * @see https://enzyme-framework.dev/docs/configuration\n`;
     content += ` */\n`;
 
-    if (options.typescript) {
-      content += `const config: EnzymeConfig = {\n`;
-    } else {
-      content += `export default {\n`;
-    }
+    content += options.typescript ? `const config: EnzymeConfig = {\n` : `export default {\n`;
 
     // Base configuration
     content += `  /** Application name */\n`;
@@ -405,7 +401,7 @@ export class EnzymeConfigGenerator {
    * @returns Path to created file
    */
   private async generateEnvExample(options: ConfigGenerationOptions): Promise<string> {
-    const envPath = path.join(options.targetDir, '.env.example');
+    const environmentPath = path.join(options.targetDir, '.env.example');
 
     let content = '# Enzyme Framework Environment Variables\n';
     content += '# Copy this file to .env and update values as needed\n\n';
@@ -429,10 +425,10 @@ export class EnzymeConfigGenerator {
     content += 'VITE_DEV_PORT=3000\n';
     content += 'VITE_DEV_HOST=localhost\n\n';
 
-    await fs.writeFile(envPath, content, 'utf-8');
+    await fs.writeFile(environmentPath, content, 'utf-8');
     logger.info('Created .env.example');
 
-    return envPath;
+    return environmentPath;
   }
 
   /**
@@ -589,6 +585,6 @@ export class EnzymeConfigGenerator {
    */
   private getWorkspaceRoot(): string | null {
     const folders = vscode.workspace.workspaceFolders;
-    return folders && folders.length > 0 ? folders[0].uri.fsPath : null;
+    return folders?.[0]?.uri.fsPath ?? null;
   }
 }

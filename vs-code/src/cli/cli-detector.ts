@@ -1,11 +1,14 @@
+import { spawn } from 'node:child_process';
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
 import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs/promises';
-import { spawn } from 'child_process';
 
 /**
  * SECURITY: Execute command safely using spawn with shell: false
  * This prevents command injection attacks by not using shell interpolation
+ * @param command
+ * @param args
+ * @param timeout
  */
 async function execSafe(command: string, args: string[], timeout = 5000): Promise<{ stdout: string; stderr: string }> {
   return new Promise((resolve, reject) => {
@@ -45,6 +48,9 @@ async function execSafe(command: string, args: string[], timeout = 5000): Promis
   });
 }
 
+/**
+ *
+ */
 export interface CLIInfo {
   path: string;
   version: string;
@@ -52,13 +58,17 @@ export interface CLIInfo {
   features: Set<string>;
 }
 
+/**
+ *
+ */
 export class CLIDetector {
   private cache: CLIInfo | null = null;
-  private cacheTimestamp: number = 0;
+  private cacheTimestamp = 0;
   private readonly CACHE_TTL = 60000; // 1 minute
 
   /**
    * Detect the Enzyme CLI installation
+   * @param forceRefresh
    */
   async detect(forceRefresh = false): Promise<CLIInfo | null> {
     if (!forceRefresh && this.isCacheValid()) {
@@ -69,9 +79,9 @@ export class CLIDetector {
 
     // Try detection strategies in order
     const strategies = [
-      () => this.detectLocal(workspaceRoot),
-      () => this.detectGlobal(),
-      () => this.detectNpx(),
+      async () => this.detectLocal(workspaceRoot),
+      async () => this.detectGlobal(),
+      async () => this.detectNpx(),
     ];
 
     for (const strategy of strategies) {
@@ -82,7 +92,7 @@ export class CLIDetector {
           this.cacheTimestamp = Date.now();
           return info;
         }
-      } catch (error) {
+      } catch {
         // Continue to next strategy
       }
     }
@@ -109,6 +119,7 @@ export class CLIDetector {
 
   /**
    * Check if a specific feature is supported
+   * @param feature
    */
   async supportsFeature(feature: string): Promise<boolean> {
     const info = await this.detect();
@@ -125,6 +136,7 @@ export class CLIDetector {
 
   /**
    * Detect local installation in node_modules
+   * @param workspaceRoot
    */
   private async detectLocal(workspaceRoot: string | null): Promise<CLIInfo | null> {
     if (!workspaceRoot) {
@@ -185,26 +197,28 @@ export class CLIDetector {
   /**
    * SECURITY: Validate that a path looks like a legitimate executable path
    * This prevents path traversal and injection attacks
+   * @param pathStr
+   * @param pathString
    */
-  private isValidExecutablePath(pathStr: string): boolean {
+  private isValidExecutablePath(pathString: string): boolean {
     // Must be an absolute path
-    if (!path.isAbsolute(pathStr)) {
+    if (!path.isAbsolute(pathString)) {
       return false;
     }
 
     // No shell metacharacters allowed
-    const shellMetaChars = /[;&|`$(){}[\]<>!#*?~\\'"]/;
-    if (shellMetaChars.test(pathStr)) {
+    const shellMetaChars = /[!"#$&'()*;<>?[\\\]`{|}~]/;
+    if (shellMetaChars.test(pathString)) {
       return false;
     }
 
     // No path traversal
-    if (pathStr.includes('..')) {
+    if (pathString.includes('..')) {
       return false;
     }
 
     // Basic path format check
-    if (!/^[/a-zA-Z0-9._-]+$/.test(pathStr)) {
+    if (!/^[\w./-]+$/.test(pathString)) {
       return false;
     }
 
@@ -263,8 +277,8 @@ export class CLIDetector {
       // Parse help output for available commands
       const lines = stdout.split('\n');
       for (const line of lines) {
-        const match = line.match(/^\s+(generate|add|remove|new|analyze|migrate|upgrade|docs|config|doctor)\s/);
-        if (match) {
+        const match = /^\s+(generate|add|remove|new|analyze|migrate|upgrade|docs|config|doctor)\s/.exec(line);
+        if (match?.[1]) {
           features.add(match[1]);
         }
       }
@@ -286,6 +300,7 @@ export class CLIDetector {
   /**
    * Extract version from CLI
    * SECURITY: Uses validated path with execSafe to prevent command injection
+   * @param cliPath
    */
   private async extractVersion(cliPath: string): Promise<string> {
     try {
@@ -305,6 +320,7 @@ export class CLIDetector {
   /**
    * Detect available features/commands
    * SECURITY: Uses validated path with execSafe to prevent command injection
+   * @param cliPath
    */
   private async detectFeatures(cliPath: string): Promise<Set<string>> {
     const features = new Set<string>();
@@ -322,8 +338,8 @@ export class CLIDetector {
       // Parse help output for available commands
       const lines = stdout.split('\n');
       for (const line of lines) {
-        const match = line.match(/^\s+(generate|add|remove|new|analyze|migrate|upgrade|docs|config|doctor)\s/);
-        if (match) {
+        const match = /^\s+(generate|add|remove|new|analyze|migrate|upgrade|docs|config|doctor)\s/.exec(line);
+        if (match?.[1]) {
           features.add(match[1]);
         }
       }
@@ -348,7 +364,8 @@ export class CLIDetector {
    */
   private getWorkspaceRoot(): string | null {
     const folders = vscode.workspace.workspaceFolders;
-    return folders && folders.length > 0 ? folders[0].uri.fsPath : null;
+    const firstFolder = folders?.[0];
+    return firstFolder ? firstFolder.uri.fsPath : null;
   }
 
   /**

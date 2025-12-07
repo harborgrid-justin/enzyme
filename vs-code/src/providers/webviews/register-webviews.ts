@@ -4,7 +4,6 @@
  */
 
 import * as vscode from 'vscode';
-import { EnzymeExtensionContext } from '../../core/context';
 import { logger } from '../../core/logger';
 import {
   StateInspectorPanel,
@@ -16,9 +15,11 @@ import {
   GeneratorWizardPanel,
   WelcomePanel,
 } from './index';
+import type { EnzymeExtensionContext } from '../../core/context';
 
 /**
  * Register all WebView panel commands
+ * @param enzymeContext
  */
 export function registerWebViewProviders(
   enzymeContext: EnzymeExtensionContext

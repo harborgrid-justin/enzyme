@@ -12,8 +12,8 @@
  * - A07:2021 - Identification and Authentication Failures: Secure credential storage
  */
 
-import * as vscode from 'vscode';
 import { logger } from './logger';
+import type * as vscode from 'vscode';
 
 // =============================================================================
 // Types
@@ -72,15 +72,15 @@ export interface SecretMetadata {
  * ```
  */
 export class SecretManager {
-  private storage: vscode.SecretStorage;
-  private metadataKey = 'enzyme.secrets.metadata';
+  private readonly storage: vscode.SecretStorage;
+  private readonly metadataKey = 'enzyme.secrets.metadata';
   private disposables: vscode.Disposable[] = [];
 
   /**
    * SECURITY: Initialize secret manager with VS Code's SecretStorage
    * @param context - VS Code extension context
    */
-  constructor(private context: vscode.ExtensionContext) {
+  constructor(context: vscode.ExtensionContext) {
     this.storage = context.secrets;
 
     // Listen for secret changes
@@ -287,6 +287,7 @@ export class SecretManager {
 
   /**
    * Get metadata for a secret
+   * @param key
    */
   private async getMetadata(key: SecretKey): Promise<SecretMetadata | undefined> {
     const allMetadata = await this.getAllMetadata();
@@ -312,6 +313,8 @@ export class SecretManager {
 
   /**
    * Update metadata for a secret
+   * @param key
+   * @param metadata
    */
   private async updateMetadata(key: SecretKey, metadata: SecretMetadata): Promise<void> {
     const allMetadata = await this.getAllMetadata();
@@ -328,6 +331,7 @@ export class SecretManager {
 
   /**
    * Remove metadata for a secret
+   * @param key
    */
   private async removeMetadata(key: SecretKey): Promise<void> {
     const allMetadata = await this.getAllMetadata();
@@ -337,6 +341,7 @@ export class SecretManager {
 
   /**
    * Get human-readable description for a secret key
+   * @param key
    */
   private getSecretDescription(key: SecretKey): string {
     const descriptions: Record<string, string> = {

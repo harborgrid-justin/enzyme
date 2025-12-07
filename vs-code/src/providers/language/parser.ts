@@ -1,6 +1,6 @@
+import * as path from 'node:path';
 import * as ts from 'typescript';
 import * as vscode from 'vscode';
-import * as path from 'path';
 
 /**
  * Represents a route definition extracted from source code
@@ -85,56 +85,34 @@ interface CacheEntry {
  * and extracting Enzyme-specific constructs
  */
 export class EnzymeParser {
-  private cache = new Map<string, CacheEntry>();
-  private program?: ts.Program;
-  private compilerOptions: ts.CompilerOptions;
+  private readonly cache = new Map<string, CacheEntry>();
 
+  /**
+   *
+   */
   constructor() {
-    // Default TypeScript compiler options
-    this.compilerOptions = {
-      target: ts.ScriptTarget.Latest,
-      module: ts.ModuleKind.ESNext,
-      jsx: ts.JsxEmit.React,
-      allowJs: true,
-      checkJs: false,
-      moduleResolution: ts.ModuleResolutionKind.NodeJs,
-      esModuleInterop: true,
-      skipLibCheck: true,
-    };
+    // Intentionally empty - parser initialized with default settings
   }
 
   /**
    * Initialize parser with workspace configuration
+   * @param workspaceRoot
    */
-  public async initialize(workspaceRoot: string): Promise<void> {
-    const tsconfigPath = path.join(workspaceRoot, 'tsconfig.json');
-
-    try {
-      const configFile = ts.readConfigFile(tsconfigPath, ts.sys.readFile);
-      if (configFile.config) {
-        const parsedConfig = ts.parseJsonConfigFileContent(
-          configFile.config,
-          ts.sys,
-          workspaceRoot
-        );
-        this.compilerOptions = parsedConfig.options;
-      }
-    } catch (error) {
-      // Use default options if tsconfig not found
-      console.warn('Could not load tsconfig.json, using defaults');
-    }
+  public async initialize(_workspaceRoot: string): Promise<void> {
+    // Parser initialization - reserved for future use
   }
 
   /**
    * Parse a document and extract all Enzyme entities
+   * @param document
    */
   public parseDocument(document: vscode.TextDocument): ParseResult {
     const filePath = document.uri.fsPath;
-    const version = document.version;
+    const {version} = document;
 
     // Check cache
     const cached = this.cache.get(filePath);
-    if (cached && cached.version === version) {
+    if (cached?.version === version) {
       return {
         routes: cached.routes,
         hooks: cached.hooks,
@@ -176,6 +154,8 @@ export class EnzymeParser {
 
   /**
    * Extract route definitions from source file
+   * @param sourceFile
+   * @param document
    */
   private extractRoutes(
     sourceFile: ts.SourceFile,
@@ -201,17 +181,19 @@ export class EnzymeParser {
             position,
             range,
             file: document.uri.fsPath,
+            guards: [],
+            params: [],
           });
         }
       }
 
       // Look for route configurations in enzyme.config.ts
       if (ts.isObjectLiteralExpression(node)) {
-        node.properties.forEach(prop => {
-          if (ts.isPropertyAssignment(prop)) {
-            const name = prop.name?.getText(sourceFile);
-            if (name === 'routes' && ts.isObjectLiteralExpression(prop.initializer)) {
-              this.extractRoutesFromConfig(prop.initializer, sourceFile, document, routes);
+        node.properties.forEach(property => {
+          if (ts.isPropertyAssignment(property)) {
+            const name = property.name?.getText(sourceFile);
+            if (name === 'routes' && ts.isObjectLiteralExpression(property.initializer)) {
+              this.extractRoutesFromConfig(property.initializer, sourceFile, document, routes);
             }
           }
         });
@@ -226,6 +208,10 @@ export class EnzymeParser {
 
   /**
    * Extract routes from configuration object
+   * @param node
+   * @param sourceFile
+   * @param document
+   * @param routes
    */
   private extractRoutesFromConfig(
     node: ts.ObjectLiteralExpression,
@@ -233,13 +219,13 @@ export class EnzymeParser {
     document: vscode.TextDocument,
     routes: RouteDefinition[]
   ): void {
-    node.properties.forEach(prop => {
-      if (ts.isPropertyAssignment(prop)) {
-        const routeName = prop.name?.getText(sourceFile).replace(/['"]/g, '');
-        const position = document.positionAt(prop.getStart(sourceFile));
+    node.properties.forEach(property => {
+      if (ts.isPropertyAssignment(property)) {
+        const routeName = property.name?.getText(sourceFile).replace(/["']/g, '');
+        const position = document.positionAt(property.getStart(sourceFile));
         const range = new vscode.Range(
           position,
-          document.positionAt(prop.getEnd())
+          document.positionAt(property.getEnd())
         );
 
         let routePath = `/${routeName}`;
@@ -248,24 +234,24 @@ export class EnzymeParser {
         let params: string[] = [];
 
         // Extract route details from initializer
-        if (ts.isObjectLiteralExpression(prop.initializer)) {
-          prop.initializer.properties.forEach(routeProp => {
-            if (ts.isPropertyAssignment(routeProp)) {
-              const key = routeProp.name?.getText(sourceFile);
-              const value = routeProp.initializer.getText(sourceFile).replace(/['"]/g, '');
+        if (ts.isObjectLiteralExpression(property.initializer)) {
+          property.initializer.properties.forEach(routeProperty => {
+            if (ts.isPropertyAssignment(routeProperty)) {
+              const key = routeProperty.name?.getText(sourceFile);
+              const value = routeProperty.initializer.getText(sourceFile).replace(/["']/g, '');
 
               if (key === 'path') {
                 routePath = value;
                 // Extract params from path like /user/:id
                 const paramMatches = routePath.match(/:(\w+)/g);
                 if (paramMatches) {
-                  params = paramMatches.map(p => p.substring(1));
+                  params = paramMatches.map(p => p.slice(1));
                 }
               } else if (key === 'component') {
                 component = value;
-              } else if (key === 'guards' && ts.isArrayLiteralExpression(routeProp.initializer)) {
-                guards = routeProp.initializer.elements.map(e =>
-                  e.getText(sourceFile).replace(/['"]/g, '')
+              } else if (key === 'guards' && ts.isArrayLiteralExpression(routeProperty.initializer)) {
+                guards = routeProperty.initializer.elements.map(e =>
+                  e.getText(sourceFile).replace(/["']/g, '')
                 );
               }
             }
@@ -275,7 +261,7 @@ export class EnzymeParser {
         routes.push({
           name: routeName,
           path: routePath,
-          component,
+          ...(component ? { component } : {}),
           guards,
           params,
           position,
@@ -288,6 +274,8 @@ export class EnzymeParser {
 
   /**
    * Extract hook usages from source file
+   * @param sourceFile
+   * @param document
    */
   private extractHooks(
     sourceFile: ts.SourceFile,
@@ -317,7 +305,7 @@ export class EnzymeParser {
             document.positionAt(node.getEnd())
           );
 
-          const args = node.arguments.map(arg => arg.getText(sourceFile));
+          const args = node.arguments.map(argument => argument.getText(sourceFile));
 
           hooks.push({
             name: hookName,
@@ -338,6 +326,8 @@ export class EnzymeParser {
 
   /**
    * Extract component definitions from source file
+   * @param sourceFile
+   * @param document
    */
   private extractComponents(
     sourceFile: ts.SourceFile,
@@ -362,7 +352,7 @@ export class EnzymeParser {
 
           components.push({
             name,
-            props,
+            ...(props ? { props } : {}),
             position,
             range,
             file: document.uri.fsPath,
@@ -387,7 +377,7 @@ export class EnzymeParser {
 
             components.push({
               name,
-              props,
+              ...(props ? { props } : {}),
               position,
               range,
               file: document.uri.fsPath,
@@ -406,6 +396,8 @@ export class EnzymeParser {
 
   /**
    * Extract store definitions from source file
+   * @param sourceFile
+   * @param document
    */
   private extractStores(
     sourceFile: ts.SourceFile,
@@ -432,27 +424,31 @@ export class EnzymeParser {
 
           // Extract store details from argument
           if (node.arguments.length > 0) {
-            const arg = node.arguments[0];
-            if (ts.isObjectLiteralExpression(arg)) {
-              arg.properties.forEach(prop => {
-                if (ts.isPropertyAssignment(prop)) {
-                  const key = prop.name?.getText(sourceFile);
+            const argument = node.arguments[0];
+            if (argument && ts.isObjectLiteralExpression(argument)) {
+              argument.properties.forEach(property => {
+                if (ts.isPropertyAssignment(property)) {
+                  const key = property.name?.getText(sourceFile);
 
-                  if (key === 'name') {
-                    sliceName = prop.initializer.getText(sourceFile).replace(/['"]/g, '');
+                  if (key === 'name' && property.initializer) {
+                    sliceName = property.initializer.getText(sourceFile).replace(/["']/g, '');
                     name = sliceName;
-                  } else if (key === 'initialState' && ts.isObjectLiteralExpression(prop.initializer)) {
-                    prop.initializer.properties.forEach(stateProp => {
-                      if (ts.isPropertyAssignment(stateProp)) {
-                        const stateName = stateProp.name?.getText(sourceFile);
-                        const stateType = this.inferType(stateProp.initializer, sourceFile);
+                  } else if (key === 'initialState' && ts.isObjectLiteralExpression(property.initializer)) {
+                    property.initializer.properties.forEach(stateProperty => {
+                      if (ts.isPropertyAssignment(stateProperty)) {
+                        const stateName = stateProperty.name?.getText(sourceFile);
+                        if (!stateName || !stateProperty.initializer) return;
+                        const stateType = this.inferType(stateProperty.initializer, sourceFile);
                         state[stateName] = stateType;
                       }
                     });
-                  } else if (key === 'reducers' && ts.isObjectLiteralExpression(prop.initializer)) {
-                    prop.initializer.properties.forEach(reducer => {
+                  } else if (key === 'reducers' && ts.isObjectLiteralExpression(property.initializer)) {
+                    property.initializer.properties.forEach(reducer => {
                       if (ts.isPropertyAssignment(reducer) || ts.isMethodDeclaration(reducer)) {
-                        actions.push(reducer.name?.getText(sourceFile) || '');
+                        const reducerName = reducer.name?.getText(sourceFile);
+                        if (reducerName) {
+                          actions.push(reducerName);
+                        }
                       }
                     });
                   }
@@ -463,9 +459,9 @@ export class EnzymeParser {
 
           stores.push({
             name,
-            sliceName,
-            state,
-            actions,
+            ...(sliceName ? { sliceName } : {}),
+            ...(Object.keys(state).length > 0 ? { state } : {}),
+            ...(actions.length > 0 ? { actions } : {}),
             position,
             range,
             file: document.uri.fsPath,
@@ -482,6 +478,8 @@ export class EnzymeParser {
 
   /**
    * Extract API definitions from source file
+   * @param sourceFile
+   * @param document
    */
   private extractApis(
     sourceFile: ts.SourceFile,
@@ -495,8 +493,8 @@ export class EnzymeParser {
         const callText = node.expression.getText(sourceFile);
 
         // Match patterns like apiClient.get(), RequestBuilder.post()
-        const match = callText.match(/\.(get|post|put|patch|delete|head|options)\(/);
-        if (match) {
+        const match = /\.(get|post|put|patch|delete|head|options)\(/.exec(callText);
+        if (match && match[1]) {
           const method = match[1].toUpperCase();
           const position = document.positionAt(node.getStart(sourceFile));
           const range = new vscode.Range(
@@ -505,8 +503,9 @@ export class EnzymeParser {
           );
 
           let endpoint = '';
-          if (node.arguments.length > 0) {
-            endpoint = node.arguments[0].getText(sourceFile).replace(/['"]/g, '');
+          const firstArg = node.arguments[0];
+          if (node.arguments.length > 0 && firstArg) {
+            endpoint = firstArg.getText(sourceFile).replace(/["']/g, '');
           }
 
           apis.push({
@@ -529,6 +528,8 @@ export class EnzymeParser {
 
   /**
    * Extract props from function declaration
+   * @param node
+   * @param sourceFile
    */
   private extractPropsFromFunction(
     node: ts.FunctionDeclaration,
@@ -539,7 +540,7 @@ export class EnzymeParser {
     }
 
     const propsParam = node.parameters[0];
-    if (!propsParam.type) {
+    if (!propsParam || !propsParam.type) {
       return undefined;
     }
 
@@ -548,6 +549,8 @@ export class EnzymeParser {
 
   /**
    * Extract props from arrow function
+   * @param node
+   * @param sourceFile
    */
   private extractPropsFromArrowFunction(
     node: ts.ArrowFunction,
@@ -558,7 +561,7 @@ export class EnzymeParser {
     }
 
     const propsParam = node.parameters[0];
-    if (!propsParam.type) {
+    if (!propsParam || !propsParam.type) {
       return undefined;
     }
 
@@ -567,6 +570,8 @@ export class EnzymeParser {
 
   /**
    * Extract props from type node
+   * @param typeNode
+   * @param sourceFile
    */
   private extractPropsFromType(
     typeNode: ts.TypeNode,
@@ -577,9 +582,9 @@ export class EnzymeParser {
     if (ts.isTypeLiteralNode(typeNode)) {
       typeNode.members.forEach(member => {
         if (ts.isPropertySignature(member) && member.name) {
-          const propName = member.name.getText(sourceFile);
-          const propType = member.type?.getText(sourceFile) || 'any';
-          props[propName] = propType;
+          const propertyName = member.name.getText(sourceFile);
+          const propertyType = member.type?.getText(sourceFile) || 'any';
+          props[propertyName] = propertyType;
         }
       });
       return props;
@@ -590,6 +595,7 @@ export class EnzymeParser {
 
   /**
    * Check if node is exported
+   * @param node
    */
   private isNodeExported(node: ts.Node): boolean {
     return (
@@ -600,8 +606,10 @@ export class EnzymeParser {
 
   /**
    * Infer type from node
+   * @param node
+   * @param _sourceFile
    */
-  private inferType(node: ts.Node, sourceFile: ts.SourceFile): string {
+  private inferType(node: ts.Node, _sourceFile: ts.SourceFile): string {
     if (ts.isStringLiteral(node)) {
       return 'string';
     }
@@ -622,10 +630,11 @@ export class EnzymeParser {
 
   /**
    * Get script kind based on file extension
+   * @param filePath
    */
   private getScriptKind(filePath: string): ts.ScriptKind {
-    const ext = path.extname(filePath);
-    switch (ext) {
+    const extension = path.extname(filePath);
+    switch (extension) {
       case '.ts':
         return ts.ScriptKind.TS;
       case '.tsx':
@@ -640,6 +649,7 @@ export class EnzymeParser {
 
   /**
    * Get source file from cache or parse
+   * @param document
    */
   public getSourceFile(document: vscode.TextDocument): ts.SourceFile | undefined {
     const cached = this.cache.get(document.uri.fsPath);
@@ -658,6 +668,7 @@ export class EnzymeParser {
 
   /**
    * Clear cache for a specific file
+   * @param filePath
    */
   public clearCache(filePath: string): void {
     this.cache.delete(filePath);
@@ -676,7 +687,7 @@ export class EnzymeParser {
   public getCacheStats(): { size: number; files: string[] } {
     return {
       size: this.cache.size,
-      files: Array.from(this.cache.keys()),
+      files: [...this.cache.keys()],
     };
   }
 }

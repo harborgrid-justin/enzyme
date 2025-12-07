@@ -9,6 +9,9 @@ import * as vscode from 'vscode';
 // Hover Data
 // =============================================================================
 
+/**
+ *
+ */
 interface PropertyHoverInfo {
   name: string;
   type: string;
@@ -19,7 +22,7 @@ interface PropertyHoverInfo {
   deprecated?: boolean;
   deprecationMessage?: string;
   since?: string;
-  links?: { text: string; url: string }[];
+  links?: Array<{ text: string; url: string }>;
 }
 
 const HOVER_INFO: Record<string, PropertyHoverInfo> = {
@@ -261,11 +264,14 @@ const HOVER_INFO: Record<string, PropertyHoverInfo> = {
 export class ConfigHoverProvider implements vscode.HoverProvider {
   /**
    * Provide hover information
+   * @param document
+   * @param position
+   * @param token
    */
   public provideHover(
     document: vscode.TextDocument,
     position: vscode.Position,
-    token: vscode.CancellationToken
+    _token: vscode.CancellationToken
   ): vscode.ProviderResult<vscode.Hover> {
     const range = document.getWordRangeAtPosition(position);
     if (!range) {
@@ -288,6 +294,7 @@ export class ConfigHoverProvider implements vscode.HoverProvider {
 
   /**
    * Build hover markdown
+   * @param info
    */
   private buildHoverMarkdown(info: PropertyHoverInfo): vscode.MarkdownString {
     const md = new vscode.MarkdownString();
@@ -347,6 +354,8 @@ export class ConfigHoverProvider implements vscode.HoverProvider {
 
   /**
    * Get property context (e.g., "api" for "api.baseUrl")
+   * @param document
+   * @param position
    */
   private getPropertyContext(document: vscode.TextDocument, position: vscode.Position): string | null {
     const text = document.getText(new vscode.Range(0, 0, position.line, position.character));
@@ -362,7 +371,7 @@ export class ConfigHoverProvider implements vscode.HoverProvider {
     }
 
     // Check for nested route context
-    if (text.match(/routes:\s*{\s*routes:\s*\[[^\]]*$/s)) {
+    if (/routes:\s*{\s*routes:\s*\[[^\]]*$/s.exec(text)) {
       return 'route';
     }
 

@@ -3,11 +3,15 @@
  * @description Displays all Zustand stores with slices, persistence, and DevTools info
  */
 
+import * as path from 'node:path';
 import * as vscode from 'vscode';
-import * as path from 'path';
-import { BaseTreeProvider, TreeProviderOptions } from './base-tree-provider';
+import { BaseTreeProvider } from './base-tree-provider';
 import { EnzymeStoreItem, EnzymeCategoryItem } from './tree-items';
+import type { TreeProviderOptions } from './base-tree-provider';
 
+/**
+ *
+ */
 interface StoreMetadata {
   name: string;
   filePath: string;
@@ -18,6 +22,9 @@ interface StoreMetadata {
   stateShape: Record<string, string>;
 }
 
+/**
+ *
+ */
 interface SliceMetadata {
   name: string;
   actions: string[];
@@ -27,10 +34,31 @@ interface SliceMetadata {
 
 /**
  * TreeView provider for Enzyme state stores
+ *
+ * @description Discovers and displays Zustand state stores with comprehensive analysis:
+ * - Store slice detection and metadata extraction
+ * - Persistence layer identification (localStorage, sessionStorage)
+ * - Redux DevTools integration detection
+ * - Middleware analysis (immer, logger, etc.)
+ * - State shape extraction and type information
+ * - Action and selector enumeration
+ *
+ * @example
+ * ```typescript
+ * const provider = new EnzymeStateTreeProvider(context);
+ * const stores = provider.getStores();
+ * const persistedStores = provider.getPersistedStores();
+ * const devToolsStores = provider.getStoresWithDevTools();
+ * ```
  */
 export class EnzymeStateTreeProvider extends BaseTreeProvider<EnzymeStoreItem | EnzymeCategoryItem> {
   private stores: StoreMetadata[] = [];
 
+  /**
+   *
+   * @param context
+   * @param options
+   */
   constructor(context: vscode.ExtensionContext, options?: TreeProviderOptions) {
     super(context, options);
   }
@@ -77,10 +105,11 @@ export class EnzymeStateTreeProvider extends BaseTreeProvider<EnzymeStoreItem | 
 
   /**
    * Get child items (slices)
+   * @param element
    */
   protected async getChildItems(
     element: EnzymeStoreItem | EnzymeCategoryItem
-  ): Promise<Array<EnzymeCategoryItem>> {
+  ): Promise<EnzymeCategoryItem[]> {
     if (element instanceof EnzymeStoreItem) {
       return this.getStoreSlices(element.storeName);
     }
@@ -128,6 +157,7 @@ export class EnzymeStateTreeProvider extends BaseTreeProvider<EnzymeStoreItem | 
 
   /**
    * Parse a store file to extract metadata
+   * @param filePath
    */
   private async parseStoreFile(filePath: string): Promise<StoreMetadata | null> {
     try {
@@ -148,7 +178,7 @@ export class EnzymeStateTreeProvider extends BaseTreeProvider<EnzymeStoreItem | 
       const isPersisted = this.checkIsPersisted(content);
 
       // Check for DevTools
-      const hasDevTools = this.checkHasDevTools(content);
+      const hasDevelopmentTools = this.checkHasDevTools(content);
 
       // Check for middleware
       const hasMiddleware = this.checkHasMiddleware(content);
@@ -161,7 +191,7 @@ export class EnzymeStateTreeProvider extends BaseTreeProvider<EnzymeStoreItem | 
         filePath,
         slices,
         isPersisted,
-        hasDevTools,
+        hasDevTools: hasDevelopmentTools,
         hasMiddleware,
         stateShape,
       };
@@ -173,6 +203,7 @@ export class EnzymeStateTreeProvider extends BaseTreeProvider<EnzymeStoreItem | 
 
   /**
    * Check if file contains a Zustand store
+   * @param content
    */
   private isZustandStore(content: string): boolean {
     return (
@@ -183,16 +214,18 @@ export class EnzymeStateTreeProvider extends BaseTreeProvider<EnzymeStoreItem | 
 
   /**
    * Extract store name from content or file path
+   * @param content
+   * @param filePath
    */
   private extractStoreName(content: string, filePath: string): string {
     // Try to find store export
-    const exportMatch = content.match(/export\s+const\s+(\w+Store)/);
-    if (exportMatch) {
+    const exportMatch = /export\s+const\s+(\w+Store)/.exec(content);
+    if (exportMatch?.[1]) {
       return exportMatch[1];
     }
 
-    const useStoreMatch = content.match(/export\s+const\s+(use\w+)/);
-    if (useStoreMatch) {
+    const useStoreMatch = /export\s+const\s+(use\w+)/.exec(content);
+    if (useStoreMatch?.[1]) {
       return useStoreMatch[1];
     }
 
@@ -203,6 +236,7 @@ export class EnzymeStateTreeProvider extends BaseTreeProvider<EnzymeStoreItem | 
 
   /**
    * Extract slices from store content
+   * @param content
    */
   private extractSlices(content: string): SliceMetadata[] {
     const slices: SliceMetadata[] = [];
@@ -213,6 +247,9 @@ export class EnzymeStateTreeProvider extends BaseTreeProvider<EnzymeStoreItem | 
 
     for (const match of sliceMatches) {
       const sliceName = match[1];
+      if (!sliceName) {
+        continue;
+      }
       const sliceData = this.extractSliceData(content, sliceName);
       if (sliceData) {
         slices.push(sliceData);
@@ -224,17 +261,19 @@ export class EnzymeStateTreeProvider extends BaseTreeProvider<EnzymeStoreItem | 
 
   /**
    * Extract data for a specific slice
+   * @param content
+   * @param sliceName
    */
-  private extractSliceData(content: string, sliceName: string): SliceMetadata | null {
+  private extractSliceData(content: string, _sliceName: string): SliceMetadata | null {
     try {
       // This is a simplified extraction
       // In production, you'd use a proper AST parser
-      const actions = this.extractSliceActions(content, sliceName);
-      const selectors = this.extractSliceSelectors(content, sliceName);
-      const stateKeys = this.extractSliceStateKeys(content, sliceName);
+      const actions = this.extractSliceActions(content, _sliceName);
+      const selectors = this.extractSliceSelectors(content, _sliceName);
+      const stateKeys = this.extractSliceStateKeys(content, _sliceName);
 
       return {
-        name: sliceName,
+        name: _sliceName,
         actions,
         selectors,
         stateKeys,
@@ -246,8 +285,10 @@ export class EnzymeStateTreeProvider extends BaseTreeProvider<EnzymeStoreItem | 
 
   /**
    * Extract actions from a slice
+   * @param content
+   * @param sliceName
    */
-  private extractSliceActions(content: string, sliceName: string): string[] {
+  private extractSliceActions(content: string, _sliceName: string): string[] {
     const actions: string[] = [];
 
     // Look for action patterns
@@ -264,15 +305,19 @@ export class EnzymeStateTreeProvider extends BaseTreeProvider<EnzymeStoreItem | 
 
   /**
    * Extract selectors from a slice
+   * @param content
+   * @param sliceName
    */
-  private extractSliceSelectors(content: string, sliceName: string): string[] {
+  private extractSliceSelectors(content: string, _sliceName: string): string[] {
     const selectors: string[] = [];
 
     // Look for selector patterns
     const selectorMatches = content.matchAll(/export\s+const\s+(select\w+)/g);
 
     for (const match of selectorMatches) {
-      selectors.push(match[1]);
+      if (match[1]) {
+        selectors.push(match[1]);
+      }
     }
 
     return selectors;
@@ -280,18 +325,22 @@ export class EnzymeStateTreeProvider extends BaseTreeProvider<EnzymeStoreItem | 
 
   /**
    * Extract state keys from a slice
+   * @param content
+   * @param sliceName
    */
-  private extractSliceStateKeys(content: string, sliceName: string): string[] {
+  private extractSliceStateKeys(content: string, _sliceName: string): string[] {
     const keys: string[] = [];
 
     // Look for state interface or type
-    const stateInterfaceMatch = content.match(/interface\s+\w+State\s*{([^}]+)}/);
-    if (stateInterfaceMatch) {
+    const stateInterfaceMatch = /interface\s+\w+State\s*{([^}]+)}/.exec(content);
+    if (stateInterfaceMatch?.[1]) {
       const stateBody = stateInterfaceMatch[1];
       const keyMatches = stateBody.matchAll(/(\w+):/g);
 
       for (const match of keyMatches) {
-        keys.push(match[1]);
+        if (match[1]) {
+          keys.push(match[1]);
+        }
       }
     }
 
@@ -300,6 +349,7 @@ export class EnzymeStateTreeProvider extends BaseTreeProvider<EnzymeStoreItem | 
 
   /**
    * Check if store has persistence
+   * @param content
    */
   private checkIsPersisted(content: string): boolean {
     return (
@@ -311,6 +361,7 @@ export class EnzymeStateTreeProvider extends BaseTreeProvider<EnzymeStoreItem | 
 
   /**
    * Check if store has DevTools enabled
+   * @param content
    */
   private checkHasDevTools(content: string): boolean {
     return (
@@ -321,6 +372,7 @@ export class EnzymeStateTreeProvider extends BaseTreeProvider<EnzymeStoreItem | 
 
   /**
    * Check if store has middleware
+   * @param content
    */
   private checkHasMiddleware(content: string): boolean {
     return (
@@ -332,23 +384,26 @@ export class EnzymeStateTreeProvider extends BaseTreeProvider<EnzymeStoreItem | 
 
   /**
    * Extract state shape from store
+   * @param content
    */
   private extractStateShape(content: string): Record<string, string> {
     const shape: Record<string, string> = {};
 
     // Look for state interface
-    const stateInterfaceMatch = content.match(/interface\s+\w+State\s*{([^}]+)}/);
-    if (!stateInterfaceMatch) {
+    const stateInterfaceMatch = /interface\s+\w+State\s*{([^}]+)}/.exec(content);
+    if (!stateInterfaceMatch?.[1]) {
       return shape;
     }
 
     const stateBody = stateInterfaceMatch[1];
-    const propertyMatches = stateBody.matchAll(/(\w+)\s*:\s*([^;,\n]+)/g);
+    const propertyMatches = stateBody.matchAll(/(\w+)\s*:\s*([^\n,;]+)/g);
 
     for (const match of propertyMatches) {
       const key = match[1];
-      const type = match[2].trim();
-      shape[key] = type;
+      const type = match[2];
+      if (key && type) {
+        shape[key] = type.trim();
+      }
     }
 
     return shape;
@@ -356,6 +411,7 @@ export class EnzymeStateTreeProvider extends BaseTreeProvider<EnzymeStoreItem | 
 
   /**
    * Get slices for a store
+   * @param storeName
    */
   private getStoreSlices(storeName: string): EnzymeCategoryItem[] {
     const store = this.stores.find(s => s.name === storeName);

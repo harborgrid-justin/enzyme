@@ -86,8 +86,11 @@ export interface BaseMessage {
  * ```
  */
 export class MessageValidator {
-  private trustedOrigins: Set<string> = new Set();
+  private readonly trustedOrigins = new Set<string>();
 
+  /**
+   *
+   */
   constructor() {
     logger.debug('MessageValidator initialized');
   }
@@ -173,6 +176,9 @@ export class MessageValidator {
 
   /**
    * SECURITY: Validate string value
+   * @param value
+   * @param schema
+   * @param errors
    */
   private validateString(
     value: unknown,
@@ -210,6 +216,9 @@ export class MessageValidator {
 
   /**
    * SECURITY: Validate number value
+   * @param value
+   * @param schema
+   * @param errors
    */
   private validateNumber(
     value: unknown,
@@ -233,10 +242,13 @@ export class MessageValidator {
 
   /**
    * SECURITY: Validate boolean value
+   * @param value
+   * @param schema
+   * @param errors
    */
   private validateBoolean(
     value: unknown,
-    schema: MessageSchema,
+    _schema: MessageSchema,
     errors: string[]
   ): void {
     if (typeof value !== 'boolean') {
@@ -246,6 +258,9 @@ export class MessageValidator {
 
   /**
    * SECURITY: Validate array value
+   * @param value
+   * @param schema
+   * @param errors
    */
   private validateArray(
     value: unknown,
@@ -262,7 +277,6 @@ export class MessageValidator {
     // Validate array items if schema provided
     if (schema.items) {
       for (let i = 0; i < value.length; i++) {
-        const itemErrors: string[] = [];
         const result = this.validate(value[i], schema.items);
 
         if (!result.valid) {
@@ -280,6 +294,9 @@ export class MessageValidator {
 
   /**
    * SECURITY: Validate object value
+   * @param value
+   * @param schema
+   * @param errors
    */
   private validateObject(
     value: unknown,
@@ -291,21 +308,21 @@ export class MessageValidator {
       return {};
     }
 
-    const obj = value as Record<string, unknown>;
+    const object = value as Record<string, unknown>;
     const sanitized: Record<string, unknown> = {};
 
     // Validate object properties if schema provided
     if (schema.properties) {
-      for (const [key, propSchema] of Object.entries(schema.properties)) {
-        const propValue = obj[key];
+      for (const [key, propertySchema] of Object.entries(schema.properties)) {
+        const propertyValue = object[key];
 
-        if (propValue === undefined && propSchema.required) {
+        if (propertyValue === undefined && propertySchema.required) {
           errors.push(`Required property "${key}" is missing`);
           continue;
         }
 
-        if (propValue !== undefined) {
-          const result = this.validate(propValue, propSchema);
+        if (propertyValue !== undefined) {
+          const result = this.validate(propertyValue, propertySchema);
 
           if (!result.valid) {
             errors.push(`Property "${key}": ${result.errors.join(', ')}`);
@@ -317,7 +334,7 @@ export class MessageValidator {
 
       // SECURITY: Check for unexpected properties
       if (schema.allowedKeys) {
-        for (const key of Object.keys(obj)) {
+        for (const key of Object.keys(object)) {
           if (!schema.allowedKeys.includes(key) && !schema.properties[key]) {
             logger.warn(`Unexpected property in message: ${key}`);
             // Don't add error, just log for security monitoring
@@ -325,7 +342,7 @@ export class MessageValidator {
         }
       }
     } else {
-      return obj;
+      return object;
     }
 
     return sanitized;
@@ -333,6 +350,9 @@ export class MessageValidator {
 
   /**
    * SECURITY: Validate enum value
+   * @param value
+   * @param schema
+   * @param errors
    */
   private validateEnum(
     value: unknown,
@@ -367,7 +387,7 @@ export class MessageValidator {
           required: true,
           minLength: 1,
           maxLength: 100,
-          pattern: /^[a-zA-Z][a-zA-Z0-9:._-]*$/,
+          pattern: /^[A-Za-z][\w.:-]*$/,
         },
         payload: {
           type: 'object',
@@ -485,7 +505,7 @@ export const CommonSchemas = {
           command: {
             type: 'string' as const,
             required: true,
-            pattern: /^[a-zA-Z][a-zA-Z0-9._-]*$/,
+            pattern: /^[A-Za-z][\w.-]*$/,
             maxLength: 100,
           },
           args: {

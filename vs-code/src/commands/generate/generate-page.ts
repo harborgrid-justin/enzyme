@@ -1,8 +1,12 @@
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
 import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs/promises';
-import { BaseCommand, CommandContext, CommandMetadata } from '../base-command';
+import { BaseCommand } from '../base-command';
+import type { CommandContext, CommandMetadata } from '../base-command';
 
+/**
+ *
+ */
 interface PageOptions {
   name: string;
   routePath: string;
@@ -19,6 +23,9 @@ interface PageOptions {
  * Keybinding: Ctrl+Shift+G P
  */
 export class GeneratePageCommand extends BaseCommand {
+  /**
+   *
+   */
   getMetadata(): CommandMetadata {
     return {
       id: 'enzyme.generate.page',
@@ -33,6 +40,10 @@ export class GeneratePageCommand extends BaseCommand {
     };
   }
 
+  /**
+   *
+   * @param _context
+   */
   protected async executeCommand(_context: CommandContext): Promise<void> {
     const workspaceFolder = await this.ensureWorkspaceFolder();
 
@@ -73,6 +84,9 @@ export class GeneratePageCommand extends BaseCommand {
     );
   }
 
+  /**
+   *
+   */
   private async gatherPageOptions(): Promise<PageOptions | undefined> {
     // Get route path
     const routePath = await this.showInputBox({
@@ -106,7 +120,7 @@ export class GeneratePageCommand extends BaseCommand {
         if (!value) {
           return 'Page name is required';
         }
-        if (!/^[A-Z][a-zA-Z0-9]*Page$/.test(value)) {
+        if (!/^[A-Z][\dA-Za-z]*Page$/.test(value)) {
           return 'Page name must be in PascalCase and end with "Page" (e.g., MyPage)';
         }
         return undefined;
@@ -168,29 +182,45 @@ export class GeneratePageCommand extends BaseCommand {
       selectedOptions?.some((o) => o.value === 'loader') ?? true;
     const withMeta = selectedOptions?.some((o) => o.value === 'meta') ?? true;
 
-    return {
+    const options: PageOptions = {
       name,
       routePath,
-      layout,
       guards,
       params,
       withLoader,
       withMeta,
     };
+
+    if (layout !== undefined) {
+      options.layout = layout;
+    }
+
+    return options;
   }
 
+  /**
+   *
+   * @param routePath
+   */
   private extractRouteParams(routePath: string): string[] {
-    const paramRegex = /:([a-zA-Z0-9_]+)/g;
+    const paramRegex = /:(\w+)/g;
     const params: string[] = [];
     let match;
 
     while ((match = paramRegex.exec(routePath)) !== null) {
-      params.push(match[1]);
+      const param = match[1];
+      if (param) {
+        params.push(param);
+      }
     }
 
     return params;
   }
 
+  /**
+   *
+   * @param routePath
+   */
   private routePathToPageName(routePath: string): string {
     // Remove leading slash and parameters
     const cleaned = routePath
@@ -207,13 +237,19 @@ export class GeneratePageCommand extends BaseCommand {
     return `${pascalCase || 'Home'}Page`;
   }
 
+  /**
+   *
+   * @param workspaceFolder
+   * @param options
+   * @param token
+   */
   private async generatePage(
     workspaceFolder: vscode.WorkspaceFolder,
     options: PageOptions,
     token: vscode.CancellationToken
   ): Promise<string> {
-    const srcPath = path.join(workspaceFolder.uri.fsPath, 'src');
-    const pagesPath = path.join(srcPath, 'pages');
+    const sourcePath = path.join(workspaceFolder.uri.fsPath, 'src');
+    const pagesPath = path.join(sourcePath, 'pages');
 
     // Create pages directory if it doesn't exist
     await fs.mkdir(pagesPath, { recursive: true });
@@ -237,6 +273,10 @@ export class GeneratePageCommand extends BaseCommand {
     return pagePath;
   }
 
+  /**
+   *
+   * @param options
+   */
   private generatePageContent(options: PageOptions): string {
     const { name, params, withLoader, withMeta } = options;
 
@@ -300,6 +340,10 @@ export const ${name}: React.FC = () => {
 `;
   }
 
+  /**
+   *
+   * @param options
+   */
   private generateLoaderContent(options: PageOptions): string {
     const { name, params } = options;
 
@@ -328,12 +372,17 @@ export async function ${name.replace('Page', '')}Loader({
 `;
   }
 
+  /**
+   *
+   * @param workspaceFolder
+   * @param options
+   */
   private async registerRoute(
     workspaceFolder: vscode.WorkspaceFolder,
     options: PageOptions
   ): Promise<void> {
-    const srcPath = path.join(workspaceFolder.uri.fsPath, 'src');
-    const routesPath = path.join(srcPath, 'routes');
+    const sourcePath = path.join(workspaceFolder.uri.fsPath, 'src');
+    const routesPath = path.join(sourcePath, 'routes');
 
     // Create routes directory if it doesn't exist
     await fs.mkdir(routesPath, { recursive: true });
@@ -359,6 +408,10 @@ export async function ${name.replace('Page', '')}Loader({
     this.log('info', `Route registered at ${options.routePath}`);
   }
 
+  /**
+   *
+   * @param options
+   */
   private generateRouteConfig(options: PageOptions): string {
     const { name, routePath, layout, guards, withLoader } = options;
 
@@ -394,12 +447,17 @@ import { ${name} } from '../pages/${name}';
 }`;
   }
 
+  /**
+   *
+   * @param existingContent
+   * @param routeConfig
+   */
   private insertRouteConfig(
     existingContent: string,
     routeConfig: string
   ): string {
     // Add import at the top (after existing imports)
-    const importMatch = routeConfig.match(/^(import.*\n)+/m);
+    const importMatch = /^(import.*\n)+/m.exec(routeConfig);
     if (importMatch) {
       const imports = importMatch[0];
       const lastImportIndex = existingContent.lastIndexOf('import ');

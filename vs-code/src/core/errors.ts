@@ -216,7 +216,7 @@ export class EnzymeError extends Error {
     userMessage?: string,
     recoverySuggestions: string[] = [],
     recoveryActions: RecoveryAction[] = [],
-    reportable: boolean = true
+    reportable = true
   ) {
     super(message);
     this.name = 'EnzymeError';
@@ -256,7 +256,7 @@ export class EnzymeError extends Error {
   /**
    * Convert error to string representation
    */
-  toString(): string {
+  override toString(): string {
     return `${this.name} [${this.code}]: ${this.message}`;
   }
 }
@@ -265,6 +265,13 @@ export class EnzymeError extends Error {
  * File system operation errors
  */
 export class FileSystemError extends EnzymeError {
+  /**
+   *
+   * @param message
+   * @param code
+   * @param context
+   * @param userMessage
+   */
   constructor(
     message: string,
     code: ErrorCode = ErrorCode.FILE_NOT_FOUND,
@@ -288,6 +295,13 @@ export class FileSystemError extends EnzymeError {
  * Network and API errors
  */
 export class NetworkError extends EnzymeError {
+  /**
+   *
+   * @param message
+   * @param code
+   * @param context
+   * @param userMessage
+   */
   constructor(
     message: string,
     code: ErrorCode = ErrorCode.NETWORK_TIMEOUT,
@@ -311,6 +325,13 @@ export class NetworkError extends EnzymeError {
  * Parse errors
  */
 export class ParseError extends EnzymeError {
+  /**
+   *
+   * @param message
+   * @param code
+   * @param context
+   * @param userMessage
+   */
   constructor(
     message: string,
     code: ErrorCode = ErrorCode.INVALID_SYNTAX,
@@ -334,6 +355,13 @@ export class ParseError extends EnzymeError {
  * Configuration errors
  */
 export class ConfigurationError extends EnzymeError {
+  /**
+   *
+   * @param message
+   * @param code
+   * @param context
+   * @param userMessage
+   */
   constructor(
     message: string,
     code: ErrorCode = ErrorCode.CONFIG_INVALID,
@@ -357,6 +385,13 @@ export class ConfigurationError extends EnzymeError {
  * Validation errors
  */
 export class ValidationError extends EnzymeError {
+  /**
+   *
+   * @param message
+   * @param code
+   * @param context
+   * @param userMessage
+   */
   constructor(
     message: string,
     code: ErrorCode = ErrorCode.VALIDATION_FAILED,
@@ -380,6 +415,13 @@ export class ValidationError extends EnzymeError {
  * Workspace errors
  */
 export class WorkspaceError extends EnzymeError {
+  /**
+   *
+   * @param message
+   * @param code
+   * @param context
+   * @param userMessage
+   */
   constructor(
     message: string,
     code: ErrorCode = ErrorCode.NO_WORKSPACE,
@@ -403,6 +445,13 @@ export class WorkspaceError extends EnzymeError {
  * Command execution errors
  */
 export class CommandError extends EnzymeError {
+  /**
+   *
+   * @param message
+   * @param code
+   * @param context
+   * @param userMessage
+   */
   constructor(
     message: string,
     code: ErrorCode = ErrorCode.COMMAND_FAILED,
@@ -426,6 +475,13 @@ export class CommandError extends EnzymeError {
  * Provider errors
  */
 export class ProviderError extends EnzymeError {
+  /**
+   *
+   * @param message
+   * @param code
+   * @param context
+   * @param userMessage
+   */
   constructor(
     message: string,
     code: ErrorCode = ErrorCode.PROVIDER_OPERATION_FAILED,
@@ -468,7 +524,7 @@ export class ProviderError extends EnzymeError {
  */
 export function wrapError(
   error: unknown,
-  defaultMessage: string = 'An unexpected error occurred',
+  defaultMessage = 'An unexpected error occurred',
   context: ErrorContext = {}
 ): EnzymeError {
   if (error instanceof EnzymeError) {
@@ -560,7 +616,7 @@ export function hasErrorCode(error: unknown, code: ErrorCode): boolean {
  * vscode.window.showErrorMessage(message);
  * ```
  */
-export function getUserMessage(error: unknown, defaultMessage: string = 'An error occurred'): string {
+export function getUserMessage(error: unknown, defaultMessage = 'An error occurred'): string {
   if (error instanceof EnzymeError) {
     return error.userMessage;
   }
@@ -601,7 +657,7 @@ export function getRecoverySuggestions(error: unknown): string[] {
  * logger.error(formatErrorForLogging(error, true));
  * ```
  */
-export function formatErrorForLogging(error: unknown, includeStack: boolean = true): string {
+export function formatErrorForLogging(error: unknown, includeStack = true): string {
   if (error instanceof EnzymeError) {
     let formatted = `[${error.code}] ${error.category}: ${error.message}`;
 

@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { getIndex } from './enzyme-index';
 
 /**
  * EnzymeReferenceProvider - Provides find-all-references functionality
@@ -8,6 +7,10 @@ import { getIndex } from './enzyme-index';
 export class EnzymeReferenceProvider implements vscode.ReferenceProvider {
   /**
    * Provide reference locations
+   * @param document
+   * @param position
+   * @param _context
+   * @param _token
    */
   public async provideReferences(
     document: vscode.TextDocument,
@@ -48,6 +51,7 @@ export class EnzymeReferenceProvider implements vscode.ReferenceProvider {
 
   /**
    * Find all route references
+   * @param routeName
    */
   private async findRouteReferences(routeName: string): Promise<vscode.Location[]> {
     const locations: vscode.Location[] = [];
@@ -97,6 +101,7 @@ export class EnzymeReferenceProvider implements vscode.ReferenceProvider {
 
   /**
    * Find all component references
+   * @param componentName
    */
   private async findComponentReferences(componentName: string): Promise<vscode.Location[]> {
     const locations: vscode.Location[] = [];
@@ -156,6 +161,7 @@ export class EnzymeReferenceProvider implements vscode.ReferenceProvider {
 
   /**
    * Find all hook references
+   * @param hookName
    */
   private async findHookReferences(hookName: string): Promise<vscode.Location[]> {
     const locations: vscode.Location[] = [];
@@ -204,6 +210,7 @@ export class EnzymeReferenceProvider implements vscode.ReferenceProvider {
 
   /**
    * Find all store references
+   * @param storeName
    */
   private async findStoreReferences(storeName: string): Promise<vscode.Location[]> {
     const locations: vscode.Location[] = [];
@@ -252,6 +259,8 @@ export class EnzymeReferenceProvider implements vscode.ReferenceProvider {
 
   /**
    * Check if position is in route context
+   * @param document
+   * @param position
    */
   private isRouteContext(document: vscode.TextDocument, position: vscode.Position): boolean {
     const line = document.lineAt(position.line).text;
@@ -260,6 +269,7 @@ export class EnzymeReferenceProvider implements vscode.ReferenceProvider {
 
   /**
    * Check if in store context
+   * @param line
    */
   private isInStoreContext(line: string): boolean {
     return line.includes('useStore') || line.includes('state.') || line.includes('dispatch(');

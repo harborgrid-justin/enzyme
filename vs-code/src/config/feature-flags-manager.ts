@@ -3,9 +3,9 @@
  * @description Manages feature flags for the Enzyme VS Code extension
  */
 
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
 import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs/promises';
 
 // =============================================================================
 // Types
@@ -62,14 +62,18 @@ export interface FlagAuditEntry {
  * Feature flags manager
  */
 export class FeatureFlagsManager {
-  private flags: Map<string, FeatureFlag> = new Map();
-  private overrides: Map<string, boolean> = new Map();
+  private readonly flags = new Map<string, FeatureFlag>();
+  private readonly overrides = new Map<string, boolean>();
   private auditLog: FlagAuditEntry[] = [];
   private listeners: Array<(flags: Map<string, FeatureFlag>) => void> = [];
-  private remoteUrl?: string;
-  private pollInterval?: NodeJS.Timeout;
+  // private remoteUrl?: string;
+  private pollInterval: NodeJS.Timeout | undefined;
 
-  constructor(private workspaceRoot: string) {}
+  /**
+   *
+   * @param workspaceRoot
+   */
+  constructor(private readonly workspaceRoot: string) {}
 
   /**
    * Initialize feature flags
@@ -88,11 +92,11 @@ export class FeatureFlagsManager {
       const content = await fs.readFile(configPath, 'utf-8');
 
       // Parse flags from config (simplified)
-      const flagsMatch = content.match(/features:\s*{[\s\S]*?flags:\s*\[([\s\S]*?)\]/);
-      if (flagsMatch) {
+      const flagsMatch = /features:\s*{[\S\s]*?flags:\s*\[([\S\s]*?)]/.exec(content);
+      if (flagsMatch && flagsMatch[1]) {
         // In production, use proper TS parser
-        const flagsStr = flagsMatch[1];
-        const flags = this.parseFlagsString(flagsStr);
+        const flagsString = flagsMatch[1];
+        const flags = this.parseFlagsString(flagsString);
         flags.forEach((flag) => this.flags.set(flag.key, flag));
       }
 
@@ -104,18 +108,22 @@ export class FeatureFlagsManager {
 
   /**
    * Parse flags string (simplified parser)
+   * @param str
+   * @param string_
    */
-  private parseFlagsString(str: string): FeatureFlag[] {
+  private parseFlagsString(string_: string): FeatureFlag[] {
     const flags: FeatureFlag[] = [];
 
     // Very simple parsing - in production use proper parser
-    const flagMatches = str.matchAll(/{\s*key:\s*['"]([^'"]+)['"]\s*,\s*enabled:\s*(true|false)/g);
+    const flagMatches = string_.matchAll(/{\s*key:\s*["']([^"']+)["']\s*,\s*enabled:\s*(true|false)/g);
 
     for (const match of flagMatches) {
-      flags.push({
-        key: match[1],
-        enabled: match[2] === 'true',
-      });
+      if (match[1] && match[2]) {
+        flags.push({
+          key: match[1],
+          enabled: match[2] === 'true',
+        });
+      }
     }
 
     return flags;
@@ -165,6 +173,7 @@ export class FeatureFlagsManager {
 
   /**
    * Get flag by key
+   * @param key
    */
   public getFlag(key: string): FeatureFlag | undefined {
     return this.flags.get(key);
@@ -172,17 +181,23 @@ export class FeatureFlagsManager {
 
   /**
    * Evaluate flag with context
+   * @param key
+   * @param context
    */
   public evaluateFlag(key: string, context?: FlagContext): FlagEvaluationResult {
     // Check override first
     if (this.overrides.has(key)) {
-      this.addAuditEntry({
+      const overrideValue = this.overrides.get(key)!;
+      const auditEntry: FlagAuditEntry = {
         timestamp: new Date(),
         flag: key,
         action: 'evaluate',
-        value: this.overrides.get(key)!,
-        context,
-      });
+        value: overrideValue,
+      };
+      if (context !== undefined) {
+        auditEntry.context = context;
+      }
+      this.addAuditEntry(auditEntry);
 
       return {
         enabled: this.overrides.get(key)!,
@@ -193,7 +208,7 @@ export class FeatureFlagsManager {
     // Check config
     const flag = this.flags.get(key);
     if (flag) {
-      let enabled = flag.enabled;
+      let {enabled} = flag;
 
       // Apply rollout percentage
       if (flag.rolloutPercentage !== undefined && context?.userId) {
@@ -201,13 +216,16 @@ export class FeatureFlagsManager {
         enabled = (hash % 100) < flag.rolloutPercentage;
       }
 
-      this.addAuditEntry({
+      const auditEntry: FlagAuditEntry = {
         timestamp: new Date(),
         flag: key,
         action: 'evaluate',
         value: enabled,
-        context,
-      });
+      };
+      if (context !== undefined) {
+        auditEntry.context = context;
+      }
+      this.addAuditEntry(auditEntry);
 
       return {
         enabled,
@@ -224,6 +242,8 @@ export class FeatureFlagsManager {
 
   /**
    * Check if flag is enabled
+   * @param key
+   * @param context
    */
   public isEnabled(key: string, context?: FlagContext): boolean {
     return this.evaluateFlag(key, context).enabled;
@@ -231,6 +251,7 @@ export class FeatureFlagsManager {
 
   /**
    * Toggle flag override
+   * @param key
    */
   public async toggleOverride(key: string): Promise<void> {
     const currentValue = this.overrides.get(key);
@@ -253,6 +274,8 @@ export class FeatureFlagsManager {
 
   /**
    * Set flag override
+   * @param key
+   * @param value
    */
   public async setOverride(key: string, value: boolean): Promise<void> {
     this.overrides.set(key, value);
@@ -270,6 +293,7 @@ export class FeatureFlagsManager {
 
   /**
    * Clear flag override
+   * @param key
    */
   public async clearOverride(key: string): Promise<void> {
     this.overrides.delete(key);
@@ -316,14 +340,15 @@ export class FeatureFlagsManager {
 
   /**
    * Sync with remote flag service
+   * @param url
    */
-  public async syncWithRemote(url: string): Promise<void> {
-    this.remoteUrl = url;
+  public async syncWithRemote(_url: string): Promise<void> {
+    // this.remoteUrl = url;
 
     try {
       // In production, make actual HTTP request
       // For now, just a placeholder
-      console.log('Syncing flags with:', url);
+      console.log('Syncing flags with:', _url);
 
       // Example: const response = await fetch(url);
       // const remoteFlags = await response.json();
@@ -338,8 +363,10 @@ export class FeatureFlagsManager {
 
   /**
    * Start polling remote service
+   * @param url
+   * @param intervalMs
    */
-  public startRemotePolling(url: string, intervalMs: number = 60000): void {
+  public startRemotePolling(url: string, intervalMs = 60000): void {
     this.stopRemotePolling();
 
     this.pollInterval = setInterval(async () => {
@@ -355,7 +382,7 @@ export class FeatureFlagsManager {
    * Stop polling remote service
    */
   public stopRemotePolling(): void {
-    if (this.pollInterval) {
+    if (this.pollInterval !== undefined) {
       clearInterval(this.pollInterval);
       this.pollInterval = undefined;
     }
@@ -363,6 +390,7 @@ export class FeatureFlagsManager {
 
   /**
    * Get audit log
+   * @param limit
    */
   public getAuditLog(limit?: number): FlagAuditEntry[] {
     const log = [...this.auditLog].reverse();
@@ -378,6 +406,7 @@ export class FeatureFlagsManager {
 
   /**
    * Export audit log
+   * @param filePath
    */
   public async exportAuditLog(filePath: string): Promise<void> {
     const content = JSON.stringify(this.auditLog, null, 2);
@@ -386,6 +415,7 @@ export class FeatureFlagsManager {
 
   /**
    * Add audit entry
+   * @param entry
    */
   private addAuditEntry(entry: FlagAuditEntry): void {
     this.auditLog.push(entry);
@@ -398,11 +428,13 @@ export class FeatureFlagsManager {
 
   /**
    * Hash string for consistent rollout
+   * @param str
+   * @param string_
    */
-  private hashString(str: string): number {
+  private hashString(string_: string): number {
     let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
+    for (let i = 0; i < string_.length; i++) {
+      const char = string_.charCodeAt(i);
       hash = ((hash << 5) - hash) + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
@@ -411,6 +443,7 @@ export class FeatureFlagsManager {
 
   /**
    * Subscribe to flag changes
+   * @param callback
    */
   public onChange(callback: (flags: Map<string, FeatureFlag>) => void): vscode.Disposable {
     this.listeners.push(callback);
@@ -455,16 +488,17 @@ export class FeatureFlagsManager {
  * Manages feature flags for multiple workspace folders
  */
 export class WorkspaceFeatureFlagsManager {
-  private managers: Map<string, FeatureFlagsManager> = new Map();
+  private readonly managers = new Map<string, FeatureFlagsManager>();
 
   /**
    * Get or create manager for workspace folder
+   * @param workspaceFolder
    */
   public async getManager(workspaceFolder: vscode.WorkspaceFolder): Promise<FeatureFlagsManager> {
-    const key = workspaceFolder!.uri.fsPath;
+    const key = workspaceFolder.uri.fsPath;
 
     if (!this.managers.has(key)) {
-      const manager = new FeatureFlagsManager(workspaceFolder!.uri.fsPath);
+      const manager = new FeatureFlagsManager(workspaceFolder.uri.fsPath);
       await manager.initialize();
       this.managers.set(key, manager);
     }

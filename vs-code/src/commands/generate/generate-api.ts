@@ -1,11 +1,15 @@
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
 import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs/promises';
-import { BaseCommand, CommandContext, CommandMetadata } from '../base-command';
+import { BaseCommand } from '../base-command';
+import type { CommandContext, CommandMetadata } from '../base-command';
 
+/**
+ *
+ */
 interface APIOptions {
   resourceName: string;
-  endpoints: ('list' | 'get' | 'create' | 'update' | 'delete')[];
+  endpoints: Array<'list' | 'get' | 'create' | 'update' | 'delete'>;
   withTypes: boolean;
   withMocks: boolean;
   baseUrl?: string;
@@ -17,6 +21,9 @@ interface APIOptions {
  * Keybinding: Ctrl+Shift+G A
  */
 export class GenerateAPICommand extends BaseCommand {
+  /**
+   *
+   */
   getMetadata(): CommandMetadata {
     return {
       id: 'enzyme.generate.api',
@@ -31,6 +38,10 @@ export class GenerateAPICommand extends BaseCommand {
     };
   }
 
+  /**
+   *
+   * @param _context
+   */
   protected async executeCommand(_context: CommandContext): Promise<void> {
     const workspaceFolder = await this.ensureWorkspaceFolder();
 
@@ -67,6 +78,9 @@ export class GenerateAPICommand extends BaseCommand {
     );
   }
 
+  /**
+   *
+   */
   private async gatherAPIOptions(): Promise<APIOptions | undefined> {
     // Get resource name
     const resourceName = await this.showInputBox({
@@ -76,7 +90,7 @@ export class GenerateAPICommand extends BaseCommand {
         if (!value) {
           return 'Resource name is required';
         }
-        if (!/^[a-z][a-z0-9-]*$/.test(value)) {
+        if (!/^[a-z][\da-z-]*$/.test(value)) {
           return 'Resource name must be in kebab-case (e.g., user-profile)';
         }
         return undefined;
@@ -142,13 +156,19 @@ export class GenerateAPICommand extends BaseCommand {
     };
   }
 
+  /**
+   *
+   * @param workspaceFolder
+   * @param options
+   * @param token
+   */
   private async generateAPI(
     workspaceFolder: vscode.WorkspaceFolder,
     options: APIOptions,
     token: vscode.CancellationToken
   ): Promise<string> {
-    const srcPath = path.join(workspaceFolder.uri.fsPath, 'src');
-    const apiPath = path.join(srcPath, 'api', options.resourceName);
+    const sourcePath = path.join(workspaceFolder.uri.fsPath, 'src');
+    const apiPath = path.join(sourcePath, 'api', options.resourceName);
 
     // Create directory
     await fs.mkdir(apiPath, { recursive: true });
@@ -189,6 +209,10 @@ export class GenerateAPICommand extends BaseCommand {
     return hooksPath;
   }
 
+  /**
+   *
+   * @param options
+   */
   private generateTypesContent(options: APIOptions): string {
     const pascalName = this.toPascalCase(options.resourceName);
 
@@ -228,6 +252,10 @@ export interface ${pascalName}ListResponse {
 `;
   }
 
+  /**
+   *
+   * @param options
+   */
   private generateClientContent(options: APIOptions): string {
     const { resourceName, endpoints, baseUrl, withTypes } = options;
     const pascalName = this.toPascalCase(resourceName);
@@ -331,6 +359,10 @@ ${functions.join('\n')}
 `;
   }
 
+  /**
+   *
+   * @param options
+   */
   private generateHooksContent(options: APIOptions): string {
     const { resourceName, endpoints, withTypes } = options;
     const pascalName = this.toPascalCase(resourceName);
@@ -435,6 +467,10 @@ ${hooks.join('\n')}
 `;
   }
 
+  /**
+   *
+   * @param options
+   */
   private generateMocksContent(options: APIOptions): string {
     const { resourceName, withTypes } = options;
     const pascalName = this.toPascalCase(resourceName);
@@ -470,6 +506,10 @@ export const ${resourceName}MockHandlers = {
 `;
   }
 
+  /**
+   *
+   * @param options
+   */
   private generateIndexContent(options: APIOptions): string {
     const { withTypes, withMocks } = options;
 
@@ -482,8 +522,12 @@ export * from './hooks';${withTypes ? `\nexport * from './types';` : ''}${withMo
 `;
   }
 
-  private toPascalCase(str: string): string {
-    return str
+  /**
+   *
+   * @param string_
+   */
+  private toPascalCase(string_: string): string {
+    return string_
       .split('-')
       .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
       .join('');

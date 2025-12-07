@@ -191,11 +191,14 @@ return (
 export class EnzymeHoverProvider implements vscode.HoverProvider {
   /**
    * Provide hover information
+   * @param document
+   * @param position
+   * @param token
    */
   public provideHover(
     document: vscode.TextDocument,
     position: vscode.Position,
-    token: vscode.CancellationToken
+    _token: vscode.CancellationToken
   ): vscode.ProviderResult<vscode.Hover> {
     try {
       // Get the word at the current position
@@ -207,8 +210,8 @@ export class EnzymeHoverProvider implements vscode.HoverProvider {
       const word = document.getText(wordRange);
 
       // Check if this is an Enzyme API
-      const apiDoc = ENZYME_API_DOCS[word];
-      if (!apiDoc) {
+      const apiDocument = ENZYME_API_DOCS[word];
+      if (!apiDocument) {
         return null;
       }
 
@@ -218,22 +221,22 @@ export class EnzymeHoverProvider implements vscode.HoverProvider {
       markdown.supportHtml = true;
 
       // Add signature
-      if (apiDoc.signature) {
-        markdown.appendCodeblock(apiDoc.signature, 'typescript');
+      if (apiDocument.signature) {
+        markdown.appendCodeblock(apiDocument.signature, 'typescript');
       }
 
       // Add description
-      markdown.appendMarkdown(`\n${apiDoc.description}\n`);
+      markdown.appendMarkdown(`\n${apiDocument.description}\n`);
 
       // Add example
-      if (apiDoc.example) {
+      if (apiDocument.example) {
         markdown.appendMarkdown('\n**Example:**\n');
-        markdown.appendCodeblock(apiDoc.example, 'typescript');
+        markdown.appendCodeblock(apiDocument.example, 'typescript');
       }
 
       // Add documentation link
-      if (apiDoc.link) {
-        markdown.appendMarkdown(`\n[📖 View Documentation](${apiDoc.link})\n`);
+      if (apiDocument.link) {
+        markdown.appendMarkdown(`\n[📖 View Documentation](${apiDocument.link})\n`);
       }
 
       // Add Enzyme badge

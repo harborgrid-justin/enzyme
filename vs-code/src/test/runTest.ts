@@ -1,6 +1,9 @@
-import * as path from 'path';
+import * as path from 'node:path';
 import { runTests } from '@vscode/test-electron';
 
+/**
+ *
+ */
 async function main() {
   try {
     // The folder containing the Extension Manifest package.json
@@ -34,8 +37,8 @@ async function main() {
       ]
     });
 
-  } catch (err) {
-    console.error('Failed to run tests:', err);
+  } catch (error) {
+    console.error('Failed to run tests:', error);
     process.exit(1);
   }
 }

@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
-import { BaseCommand, CommandContext, CommandMetadata } from '../base-command';
+import { BaseCommand } from '../base-command';
+import type { CommandContext, CommandMetadata } from '../base-command';
 
 /**
  * Open Documentation Command
@@ -9,6 +10,9 @@ import { BaseCommand, CommandContext, CommandMetadata } from '../base-command';
 export class OpenDocsCommand extends BaseCommand {
   private readonly DOCS_BASE_URL = 'https://github.com/harborgrid-justin/enzyme#readme';
 
+  /**
+   *
+   */
   getMetadata(): CommandMetadata {
     return {
       id: 'enzyme.utils.openDocs',
@@ -22,6 +26,10 @@ export class OpenDocsCommand extends BaseCommand {
     };
   }
 
+  /**
+   *
+   * @param _context
+   */
   protected async executeCommand(_context: CommandContext): Promise<void> {
     // Show quick pick to select documentation section
     const section = await this.showQuickPick(
@@ -123,13 +131,13 @@ export class OpenDocsCommand extends BaseCommand {
       return;
     }
 
-    if (openMethod.value === 'browser') {
-      await this.openInBrowser(url);
-    } else {
-      await this.openInEditor(section.value);
-    }
+    await (openMethod.value === 'browser' ? this.openInBrowser(url) : this.openInEditor(section.value));
   }
 
+  /**
+   *
+   * @param url
+   */
   private async openInBrowser(url: string): Promise<void> {
     try {
       await vscode.env.openExternal(vscode.Uri.parse(url));
@@ -139,6 +147,10 @@ export class OpenDocsCommand extends BaseCommand {
     }
   }
 
+  /**
+   *
+   * @param section
+   */
   private async openInEditor(section: string): Promise<void> {
     const workspaceFolder = this.getWorkspaceFolder();
 

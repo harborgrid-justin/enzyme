@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { getIndex } from './enzyme-index';
 import { logger } from '../../core/logger';
+import { getIndex } from './enzyme-index';
 
 /**
  * EnzymeDefinitionProvider - Provides go-to-definition functionality
@@ -9,6 +9,9 @@ import { logger } from '../../core/logger';
 export class EnzymeDefinitionProvider implements vscode.DefinitionProvider {
   /**
    * Provide definition location(s)
+   * @param document
+   * @param position
+   * @param _token
    */
   public async provideDefinition(
     document: vscode.TextDocument,
@@ -68,6 +71,7 @@ export class EnzymeDefinitionProvider implements vscode.DefinitionProvider {
 
   /**
    * Get route definition location
+   * @param routeName
    */
   private getRouteDefinition(routeName: string): vscode.Location | undefined {
     try {
@@ -90,6 +94,7 @@ export class EnzymeDefinitionProvider implements vscode.DefinitionProvider {
 
   /**
    * Get component definition location
+   * @param componentName
    */
   private getComponentDefinition(componentName: string): vscode.Location | undefined {
     try {
@@ -112,13 +117,14 @@ export class EnzymeDefinitionProvider implements vscode.DefinitionProvider {
 
   /**
    * Get hook definition location
+   * @param hookName
    */
   private getHookDefinition(hookName: string): vscode.Location | undefined {
     try {
       const index = getIndex();
       const hook = index.getHook(hookName);
 
-      if (!hook || !hook.file || !hook.position) {
+      if (!hook?.file || !hook.position) {
         return undefined;
       }
 
@@ -134,6 +140,7 @@ export class EnzymeDefinitionProvider implements vscode.DefinitionProvider {
 
   /**
    * Get store definition location
+   * @param storeName
    */
   private getStoreDefinition(storeName: string): vscode.Location | undefined {
     try {
@@ -156,6 +163,9 @@ export class EnzymeDefinitionProvider implements vscode.DefinitionProvider {
 
   /**
    * Get import definition location
+   * @param _document
+   * @param _position
+   * @param _word
    */
   private async getImportDefinition(
     _document: vscode.TextDocument,
@@ -169,6 +179,7 @@ export class EnzymeDefinitionProvider implements vscode.DefinitionProvider {
 
   /**
    * Check if in store context
+   * @param line
    */
   private isInStoreContext(line: string): boolean {
     return line.includes('useStore') || line.includes('state.') || line.includes('dispatch(');
@@ -176,6 +187,7 @@ export class EnzymeDefinitionProvider implements vscode.DefinitionProvider {
 
   /**
    * Check if in import statement
+   * @param line
    */
   private isInImportStatement(line: string): boolean {
     return /import\s+/.test(line);

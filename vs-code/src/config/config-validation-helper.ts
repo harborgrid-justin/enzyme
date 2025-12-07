@@ -36,6 +36,8 @@ export interface ConfigValidationResult {
 
 /**
  * Validate port number
+ * @param value
+ * @param key
  */
 function validatePort(value: unknown, key: ExtensionSettingKey): ConfigValidationError | null {
   if (typeof value !== 'number') {
@@ -63,6 +65,9 @@ function validatePort(value: unknown, key: ExtensionSettingKey): ConfigValidatio
 
 /**
  * Validate enum value
+ * @param value
+ * @param key
+ * @param validValues
  */
 function validateEnum(
   value: unknown,
@@ -94,6 +99,10 @@ function validateEnum(
 
 /**
  * Validate number range
+ * @param value
+ * @param key
+ * @param min
+ * @param max
  */
 function validateNumberRange(
   value: unknown,
@@ -126,6 +135,8 @@ function validateNumberRange(
 
 /**
  * Validate boolean
+ * @param value
+ * @param key
  */
 function validateBoolean(value: unknown, key: ExtensionSettingKey): ConfigValidationError | null {
   if (typeof value !== 'boolean') {
@@ -143,6 +154,8 @@ function validateBoolean(value: unknown, key: ExtensionSettingKey): ConfigValida
 
 /**
  * Validate string
+ * @param value
+ * @param key
  */
 function validateString(value: unknown, key: ExtensionSettingKey): ConfigValidationError | null {
   if (typeof value !== 'string') {
@@ -160,6 +173,8 @@ function validateString(value: unknown, key: ExtensionSettingKey): ConfigValidat
 
 /**
  * Validate string array
+ * @param value
+ * @param key
  */
 function validateStringArray(value: unknown, key: ExtensionSettingKey): ConfigValidationError | null {
   if (!Array.isArray(value)) {
@@ -292,6 +307,8 @@ const VALIDATION_RULES: Partial<
 export class ConfigValidationHelper {
   /**
    * Validate a single setting
+   * @param key
+   * @param value
    */
   public static validateSetting(
     key: ExtensionSettingKey,
@@ -307,6 +324,7 @@ export class ConfigValidationHelper {
 
   /**
    * Validate all settings
+   * @param scope
    */
   public static validateAllSettings(
     scope?: vscode.ConfigurationScope
@@ -342,6 +360,7 @@ export class ConfigValidationHelper {
 
   /**
    * Display validation errors to user
+   * @param result
    */
   public static async showValidationErrors(result: ConfigValidationResult): Promise<void> {
     if (result.valid && result.warnings.length === 0) {
@@ -371,6 +390,9 @@ export class ConfigValidationHelper {
 
   /**
    * Get safe configuration value with validation
+   * @param key
+   * @param defaultValue
+   * @param scope
    */
   public static getSafeSetting<K extends ExtensionSettingKey>(
     key: K,
@@ -397,6 +419,7 @@ export class ConfigValidationHelper {
 
 /**
  * Create a command to validate all settings
+ * @param context
  */
 export function registerValidationCommand(context: vscode.ExtensionContext): void {
   context.subscriptions.push(

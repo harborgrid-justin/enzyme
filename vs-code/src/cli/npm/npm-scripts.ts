@@ -1,14 +1,20 @@
+import { spawn } from 'node:child_process';
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
 import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs/promises';
-import { spawn } from 'child_process';
 
+/**
+ *
+ */
 export interface NPMScript {
   name: string;
   command: string;
   description?: string;
 }
 
+/**
+ *
+ */
 export class NPMScripts {
   private statusBarItem: vscode.StatusBarItem | null = null;
   private scripts: NPMScript[] = [];
@@ -45,6 +51,8 @@ export class NPMScripts {
 
   /**
    * Run a specific npm script
+   * @param scriptName
+   * @param packageManager
    */
   async runScript(scriptName: string, packageManager: 'npm' | 'yarn' | 'pnpm' = 'npm'): Promise<void> {
     const workspaceRoot = this.getWorkspaceRoot();
@@ -101,6 +109,9 @@ export class NPMScripts {
   /**
    * Run script with output streaming
    * SECURITY: Uses shell: false to prevent command injection
+   * @param scriptName
+   * @param packageManager
+   * @param outputChannel
    */
   async runScriptWithOutput(
     scriptName: string,
@@ -155,10 +166,11 @@ export class NPMScripts {
 
   /**
    * Validate script name to prevent command injection
+   * @param name
    */
   private isValidScriptName(name: string): boolean {
     // Allow alphanumeric characters, hyphens, underscores, and colons (for namespaced scripts)
-    return /^[a-zA-Z0-9\-_:]+$/.test(name);
+    return /^[\w:\-]+$/.test(name);
   }
 
   /**
@@ -207,6 +219,8 @@ export class NPMScripts {
 
   /**
    * Update status bar based on script state
+   * @param scriptName
+   * @param state
    */
   private updateStatusBar(scriptName: string, state: 'running' | 'success' | 'failed'): void {
     if (!this.statusBarItem) {
@@ -243,6 +257,7 @@ export class NPMScripts {
 
   /**
    * Get script category/type
+   * @param scriptName
    */
   private getScriptCategory(scriptName: string): string {
     if (scriptName.includes('dev') || scriptName.includes('start')) {
@@ -294,6 +309,7 @@ export class NPMScripts {
    */
   private getWorkspaceRoot(): string | null {
     const folders = vscode.workspace.workspaceFolders;
-    return folders && folders.length > 0 ? folders[0].uri.fsPath : null;
+    const firstFolder = folders?.[0];
+    return firstFolder ? firstFolder.uri.fsPath : null;
   }
 }

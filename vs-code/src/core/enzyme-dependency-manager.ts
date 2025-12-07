@@ -11,10 +11,10 @@
  * @module enzyme-dependency-manager
  */
 
+import { spawn } from 'node:child_process';
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
 import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs/promises';
-import { spawn } from 'child_process';
 import { logger } from './logger';
 
 /**
@@ -225,8 +225,8 @@ export class EnzymeDependencyManager {
     logger.info(`Using package manager: ${packageManager.type}`);
 
     // Separate into production and dev dependencies
-    const prodDeps = dependencies.filter(d => !d.isDev);
-    const devDeps = dependencies.filter(d => d.isDev);
+    const productionDeps = dependencies.filter(d => !d.isDev);
+    const developmentDeps = dependencies.filter(d => d.isDev);
 
     const result: InstallationResult = {
       success: true,
@@ -236,27 +236,27 @@ export class EnzymeDependencyManager {
     };
 
     // Install production dependencies
-    if (prodDeps.length > 0) {
-      const prodResult = await this.installDependenciesWithProgress(
-        prodDeps,
+    if (productionDeps.length > 0) {
+      const productionResult = await this.installDependenciesWithProgress(
+        productionDeps,
         packageManager.type,
         false
       );
-      result.installed.push(...prodResult.installed);
-      result.failed.push(...prodResult.failed);
-      result.errors.push(...prodResult.errors);
+      result.installed.push(...productionResult.installed);
+      result.failed.push(...productionResult.failed);
+      result.errors.push(...productionResult.errors);
     }
 
     // Install dev dependencies
-    if (devDeps.length > 0) {
-      const devResult = await this.installDependenciesWithProgress(
-        devDeps,
+    if (developmentDeps.length > 0) {
+      const developmentResult = await this.installDependenciesWithProgress(
+        developmentDeps,
         packageManager.type,
         true
       );
-      result.installed.push(...devResult.installed);
-      result.failed.push(...devResult.failed);
-      result.errors.push(...devResult.errors);
+      result.installed.push(...developmentResult.installed);
+      result.failed.push(...developmentResult.failed);
+      result.errors.push(...developmentResult.errors);
     }
 
     result.success = result.failed.length === 0;
@@ -281,17 +281,18 @@ export class EnzymeDependencyManager {
    * @param dependencies - Dependencies to install
    * @param packageManager - Package manager to use
    * @param isDev - Whether to install as dev dependencies
+   * @param isDevelopment
    * @returns Installation result
    */
   private async installDependenciesWithProgress(
     dependencies: EnzymeDependency[],
     packageManager: 'npm' | 'yarn' | 'pnpm',
-    isDev: boolean
+    isDevelopment: boolean
   ): Promise<InstallationResult> {
     return vscode.window.withProgress(
       {
         location: vscode.ProgressLocation.Notification,
-        title: `Installing ${isDev ? 'dev ' : ''}dependencies`,
+        title: `Installing ${isDevelopment ? 'dev ' : ''}dependencies`,
         cancellable: false,
       },
       async (progress) => {
@@ -304,13 +305,16 @@ export class EnzymeDependencyManager {
 
         for (let i = 0; i < dependencies.length; i++) {
           const dep = dependencies[i];
+          if (!dep) {
+            continue;
+          }
           progress.report({
             message: `${dep.name}...`,
             increment: (100 / dependencies.length),
           });
 
           try {
-            await this.installSingleDependency(dep, packageManager, isDev);
+            await this.installSingleDependency(dep, packageManager, isDevelopment);
             result.installed.push(dep.name);
             logger.info(`Installed: ${dep.name}`);
           } catch (error) {
@@ -334,11 +338,12 @@ export class EnzymeDependencyManager {
    * @param dependency - Dependency to install
    * @param packageManager - Package manager to use
    * @param isDev - Whether to install as dev dependency
+   * @param isDevelopment
    */
   private async installSingleDependency(
     dependency: EnzymeDependency,
     packageManager: 'npm' | 'yarn' | 'pnpm',
-    isDev: boolean
+    isDevelopment: boolean
   ): Promise<void> {
     if (!this.workspaceRoot) {
       throw new Error('No workspace root found');
@@ -347,7 +352,7 @@ export class EnzymeDependencyManager {
     const packageSpec = `${dependency.name}@${dependency.minVersion}`;
 
     return new Promise((resolve, reject) => {
-      const args = this.getInstallArgs(packageManager, packageSpec, isDev);
+      const args = this.getInstallArgs(packageManager, packageSpec, isDevelopment);
 
       // SECURITY: Use shell: false to prevent command injection
       const child = spawn(packageManager, args, {
@@ -386,20 +391,21 @@ export class EnzymeDependencyManager {
    * @param packageManager - Package manager type
    * @param packageSpec - Package specification (name@version)
    * @param isDev - Whether to install as dev dependency
+   * @param isDevelopment
    * @returns Array of command arguments
    */
   private getInstallArgs(
     packageManager: 'npm' | 'yarn' | 'pnpm',
     packageSpec: string,
-    isDev: boolean
+    isDevelopment: boolean
   ): string[] {
     switch (packageManager) {
       case 'npm':
-        return ['install', isDev ? '--save-dev' : '--save', packageSpec];
+        return ['install', isDevelopment ? '--save-dev' : '--save', packageSpec];
       case 'yarn':
-        return ['add', isDev ? '--dev' : '', packageSpec].filter(Boolean);
+        return ['add', isDevelopment ? '--dev' : '', packageSpec].filter(Boolean);
       case 'pnpm':
-        return ['add', isDev ? '--save-dev' : '--save-prod', packageSpec];
+        return ['add', isDevelopment ? '--save-dev' : '--save-prod', packageSpec];
     }
   }
 
@@ -443,8 +449,8 @@ export class EnzymeDependencyManager {
    */
   private satisfiesVersion(installed: string, required: string): boolean {
     // Remove semver prefixes (^, ~, >, <, etc.)
-    const cleanInstalled = installed.replace(/^[\^~>=<]+/, '');
-    const cleanRequired = required.replace(/^[\^~>=<]+/, '');
+    const cleanInstalled = installed.replace(/^[<=>^~]+/, '');
+    const cleanRequired = required.replace(/^[<=>^~]+/, '');
 
     // Simple major.minor.patch comparison
     const installedParts = cleanInstalled.split('.').map(Number);
@@ -472,7 +478,7 @@ export class EnzymeDependencyManager {
    */
   private getWorkspaceRoot(): string | null {
     const folders = vscode.workspace.workspaceFolders;
-    return folders && folders.length > 0 ? folders[0].uri.fsPath : null;
+    return folders?.[0]?.uri.fsPath ?? null;
   }
 
   /**

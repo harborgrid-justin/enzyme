@@ -1,6 +1,7 @@
+import * as crypto from 'node:crypto';
 import * as vscode from 'vscode';
-import * as crypto from 'crypto';
-import { BaseCommand, CommandContext, CommandMetadata } from '../base-command';
+import { BaseCommand } from '../base-command';
+import type { CommandContext, CommandMetadata } from '../base-command';
 
 /**
  * Show API Explorer Command
@@ -10,6 +11,9 @@ import { BaseCommand, CommandContext, CommandMetadata } from '../base-command';
 export class ShowAPIExplorerCommand extends BaseCommand {
   private panel: vscode.WebviewPanel | undefined;
 
+  /**
+   *
+   */
   getMetadata(): CommandMetadata {
     return {
       id: 'enzyme.panel.showAPIExplorer',
@@ -23,6 +27,10 @@ export class ShowAPIExplorerCommand extends BaseCommand {
     };
   }
 
+  /**
+   *
+   * @param _context
+   */
   protected async executeCommand(_context: CommandContext): Promise<void> {
     if (this.panel) {
       this.panel.reveal(vscode.ViewColumn.Two);
@@ -50,7 +58,7 @@ export class ShowAPIExplorerCommand extends BaseCommand {
     );
 
     this.panel.webview.onDidReceiveMessage(
-      (message) => this.handleWebviewMessage(message),
+      async (message) => this.handleWebviewMessage(message),
       null,
       this.context.subscriptions
     );
@@ -58,10 +66,17 @@ export class ShowAPIExplorerCommand extends BaseCommand {
     this.log('info', 'API Explorer panel opened');
   }
 
+  /**
+   *
+   */
   private getNonce(): string {
     return crypto.randomBytes(16).toString('base64');
   }
 
+  /**
+   *
+   * @param webview
+   */
   private getWebviewContent(webview: vscode.Webview): string {
     const nonce = this.getNonce();
 
@@ -337,6 +352,11 @@ export class ShowAPIExplorerCommand extends BaseCommand {
 </html>`;
   }
 
+  /**
+   *
+   * @param message
+   * @param message.type
+   */
   private async handleWebviewMessage(message: { type: string; [key: string]: unknown }): Promise<void> {
     switch (message.type) {
       case 'sendRequest':

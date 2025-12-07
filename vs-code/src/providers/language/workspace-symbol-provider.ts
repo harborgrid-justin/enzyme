@@ -8,6 +8,8 @@ import { getIndex } from './enzyme-index';
 export class EnzymeWorkspaceSymbolProvider implements vscode.WorkspaceSymbolProvider {
   /**
    * Provide workspace symbols
+   * @param query
+   * @param _token
    */
   public async provideWorkspaceSymbols(
     query: string,
@@ -97,6 +99,8 @@ export class EnzymeWorkspaceSymbolProvider implements vscode.WorkspaceSymbolProv
 
   /**
    * Resolve workspace symbol (optional, for lazy loading)
+   * @param symbol
+   * @param _token
    */
   public async resolveWorkspaceSymbol(
     symbol: vscode.SymbolInformation,

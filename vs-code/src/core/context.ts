@@ -4,31 +4,36 @@
  */
 
 import * as vscode from 'vscode';
-import { Logger, logger } from './logger';
 import {
   EXTENSION_ID,
-  EXTENSION_NAME,
+  EXTENSION_NAME as _EXTENSION_NAME,
   OUTPUT_CHANNELS,
   CACHE_KEYS,
   CONTEXT_KEYS,
   STATUS_BAR_PRIORITY,
 } from './constants';
-import { EnzymeConfig, EnzymeWorkspace, PackageJson, StatusBarItemConfig } from '../types';
+import { logger } from './logger';
+import type { Logger} from './logger';
+import type { EnzymeConfig, EnzymeWorkspace, PackageJson, StatusBarItemConfig } from '../types';
 
 /**
  * EnzymeExtensionContext - Singleton class managing extension state and resources
  */
 export class EnzymeExtensionContext {
   private static instance: EnzymeExtensionContext | null = null;
-  private context: vscode.ExtensionContext;
-  private _logger: Logger;
-  private _outputChannel: vscode.OutputChannel;
-  private _statusBarItems: Map<string, vscode.StatusBarItem>;
-  private _diagnosticCollection: vscode.DiagnosticCollection;
-  private _eventEmitter: vscode.EventEmitter<string>;
+  private readonly context: vscode.ExtensionContext;
+  private readonly _logger: Logger;
+  private readonly _outputChannel: vscode.OutputChannel;
+  private readonly _statusBarItems: Map<string, vscode.StatusBarItem>;
+  private readonly _diagnosticCollection: vscode.DiagnosticCollection;
+  private readonly _eventEmitter: vscode.EventEmitter<string>;
   private _workspace: EnzymeWorkspace | null = null;
   private _disposables: vscode.Disposable[] = [];
 
+  /**
+   *
+   * @param context
+   */
   private constructor(context: vscode.ExtensionContext) {
     this.context = context;
     this._logger = logger;
@@ -47,6 +52,7 @@ export class EnzymeExtensionContext {
 
   /**
    * Initialize the singleton instance
+   * @param context
    */
   public static initialize(context: vscode.ExtensionContext): EnzymeExtensionContext {
     if (EnzymeExtensionContext.instance) {
@@ -175,6 +181,8 @@ export class EnzymeExtensionContext {
 
   /**
    * Get or create a status bar item
+   * @param id
+   * @param config
    */
   public getStatusBarItem(
     id: string,
@@ -207,6 +215,7 @@ export class EnzymeExtensionContext {
 
   /**
    * Remove a status bar item
+   * @param id
    */
   public removeStatusBarItem(id: string): void {
     const item = this._statusBarItems.get(id);
@@ -218,6 +227,8 @@ export class EnzymeExtensionContext {
 
   /**
    * Set context value (for when clauses)
+   * @param key
+   * @param value
    */
   public async setContextValue(key: string, value: unknown): Promise<void> {
     await vscode.commands.executeCommand('setContext', key, value);
@@ -225,6 +236,7 @@ export class EnzymeExtensionContext {
 
   /**
    * Set Enzyme workspace
+   * @param workspace
    */
   public setWorkspace(workspace: EnzymeWorkspace): void {
     this._workspace = workspace;
@@ -280,6 +292,7 @@ export class EnzymeExtensionContext {
 
   /**
    * Subscribe to extension events
+   * @param listener
    */
   public onEvent(listener: (event: string) => void): vscode.Disposable {
     return this._eventEmitter.event(listener);
@@ -287,6 +300,7 @@ export class EnzymeExtensionContext {
 
   /**
    * Emit an event
+   * @param event
    */
   public emitEvent(event: string): void {
     this._eventEmitter.fire(event);
@@ -294,6 +308,7 @@ export class EnzymeExtensionContext {
 
   /**
    * Register a disposable
+   * @param disposable
    */
   public registerDisposable(disposable: vscode.Disposable): void {
     this.context.subscriptions.push(disposable);
@@ -301,6 +316,7 @@ export class EnzymeExtensionContext {
 
   /**
    * Register multiple disposables
+   * @param {...any} disposables
    */
   public registerDisposables(...disposables: vscode.Disposable[]): void {
     this.context.subscriptions.push(...disposables);
@@ -323,6 +339,8 @@ export class EnzymeExtensionContext {
 
   /**
    * Show information message
+   * @param message
+   * @param {...any} items
    */
   public async showInfo(message: string, ...items: string[]): Promise<string | undefined> {
     return await vscode.window.showInformationMessage(message, ...items);
@@ -330,6 +348,8 @@ export class EnzymeExtensionContext {
 
   /**
    * Show warning message
+   * @param message
+   * @param {...any} items
    */
   public async showWarning(message: string, ...items: string[]): Promise<string | undefined> {
     return await vscode.window.showWarningMessage(message, ...items);
@@ -337,6 +357,8 @@ export class EnzymeExtensionContext {
 
   /**
    * Show error message
+   * @param message
+   * @param {...any} items
    */
   public async showError(message: string, ...items: string[]): Promise<string | undefined> {
     return await vscode.window.showErrorMessage(message, ...items);
@@ -344,6 +366,8 @@ export class EnzymeExtensionContext {
 
   /**
    * Show progress
+   * @param title
+   * @param task
    */
   public async withProgress<R>(
     title: string,
@@ -368,6 +392,8 @@ export class EnzymeExtensionContext {
 
   /**
    * Set diagnostics for a file
+   * @param uri
+   * @param diagnostics
    */
   public setDiagnostics(uri: vscode.Uri, diagnostics: vscode.Diagnostic[]): void {
     this._diagnosticCollection.set(uri, diagnostics);
@@ -375,6 +401,8 @@ export class EnzymeExtensionContext {
 
   /**
    * Get configuration value
+   * @param key
+   * @param defaultValue
    */
   public getConfig<T>(key: string, defaultValue: T): T {
     return vscode.workspace.getConfiguration().get<T>(key, defaultValue);
@@ -382,6 +410,9 @@ export class EnzymeExtensionContext {
 
   /**
    * Update configuration value
+   * @param key
+   * @param value
+   * @param target
    */
   public async updateConfig(
     key: string,

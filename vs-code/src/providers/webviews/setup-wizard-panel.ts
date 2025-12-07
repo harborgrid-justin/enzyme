@@ -13,14 +13,14 @@
  * - Health verification and diagnostics
  */
 
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
 import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs/promises';
 import { BaseWebViewPanel } from './base-webview-panel';
-import { Colors, Icons, Spacing, Typography, Animations, Shadows, BorderRadius } from '../../webview-ui/shared/design-system';
 
 /**
  * PERFORMANCE: Helper to check if path exists (async)
+ * @param filePath
  */
 async function pathExists(filePath: string): Promise<boolean> {
   try {
@@ -35,6 +35,9 @@ async function pathExists(filePath: string): Promise<boolean> {
 // TYPES
 // =============================================================================
 
+/**
+ *
+ */
 export interface SetupWizardState {
   currentStep: SetupStep;
   projectType: 'new' | 'existing' | 'migration';
@@ -46,6 +49,9 @@ export interface SetupWizardState {
   errors: string[];
 }
 
+/**
+ *
+ */
 export type SetupStep =
   | 'welcome'
   | 'assessment'
@@ -55,6 +61,9 @@ export type SetupStep =
   | 'verification'
   | 'complete';
 
+/**
+ *
+ */
 export interface DetectedEnvironment {
   nodeVersion: string;
   packageManager: 'npm' | 'yarn' | 'pnpm';
@@ -68,6 +77,9 @@ export interface DetectedEnvironment {
   cliVersion?: string;
 }
 
+/**
+ *
+ */
 export interface DependencyInfo {
   name: string;
   requiredVersion: string;
@@ -76,6 +88,9 @@ export interface DependencyInfo {
   isRequired: boolean;
 }
 
+/**
+ *
+ */
 export interface InstallationStatus {
   phase: 'idle' | 'preparing' | 'installing' | 'configuring' | 'verifying' | 'complete' | 'error';
   progress: number;
@@ -84,6 +99,9 @@ export interface InstallationStatus {
   failedTasks: string[];
 }
 
+/**
+ *
+ */
 export interface ConfigOptions {
   enableAutoComplete: boolean;
   enableLinting: boolean;
@@ -96,6 +114,9 @@ export interface ConfigOptions {
   cssFramework: 'tailwind' | 'css-modules' | 'styled-components' | 'emotion';
 }
 
+/**
+ *
+ */
 export interface HealthCheckResult {
   name: string;
   status: 'pass' | 'warn' | 'fail' | 'pending';
@@ -107,10 +128,17 @@ export interface HealthCheckResult {
 // SETUP WIZARD PANEL
 // =============================================================================
 
+/**
+ *
+ */
 export class SetupWizardPanel extends BaseWebViewPanel {
   private static instance: SetupWizardPanel | undefined;
-  private state: SetupWizardState;
+  private readonly state: SetupWizardState;
 
+  /**
+   *
+   * @param context
+   */
   private constructor(context: vscode.ExtensionContext) {
     super(context, 'enzyme.setupWizard', 'Enzyme Setup Wizard', {
       retainContextWhenHidden: true,
@@ -121,6 +149,7 @@ export class SetupWizardPanel extends BaseWebViewPanel {
 
   /**
    * Get or create singleton instance
+   * @param context
    */
   public static getInstance(context: vscode.ExtensionContext): SetupWizardPanel {
     if (!SetupWizardPanel.instance) {
@@ -131,12 +160,16 @@ export class SetupWizardPanel extends BaseWebViewPanel {
 
   /**
    * Show the setup wizard
+   * @param context
    */
   public static show(context: vscode.ExtensionContext): void {
     const panel = SetupWizardPanel.getInstance(context);
     panel.show();
   }
 
+  /**
+   *
+   */
   private getInitialState(): SetupWizardState {
     return {
       currentStep: 'welcome',
@@ -175,6 +208,9 @@ export class SetupWizardPanel extends BaseWebViewPanel {
     };
   }
 
+  /**
+   *
+   */
   protected override getIconPath(): vscode.Uri | { light: vscode.Uri; dark: vscode.Uri } | undefined {
     return {
       light: vscode.Uri.file(this.context.asAbsolutePath('resources/icons/enzyme-light.svg')),
@@ -182,14 +218,19 @@ export class SetupWizardPanel extends BaseWebViewPanel {
     };
   }
 
+  /**
+   *
+   */
   protected override onPanelCreated(): void {
     // Start environment detection when panel opens
     this.detectEnvironment();
   }
 
-  protected getBodyContent(webview: vscode.Webview): string {
-    const logoUri = this.getWebviewUri(webview, ['resources', 'images', 'enzyme-logo.png']);
-
+  /**
+   *
+   * @param _webview
+   */
+  protected getBodyContent(_webview: vscode.Webview): string {
     return `
       <div class="setup-wizard" id="setupWizard">
         <!-- Animated Background -->
@@ -234,8 +275,11 @@ export class SetupWizardPanel extends BaseWebViewPanel {
     `;
   }
 
+  /**
+   *
+   */
   private renderProgressSteps(): string {
-    const steps: { key: SetupStep; label: string; icon: string }[] = [
+    const steps: Array<{ key: SetupStep; label: string; icon: string }> = [
       { key: 'welcome', label: 'Welcome', icon: 'codicon-home' },
       { key: 'assessment', label: 'Assessment', icon: 'codicon-search' },
       { key: 'dependencies', label: 'Dependencies', icon: 'codicon-package' },
@@ -249,8 +293,8 @@ export class SetupWizardPanel extends BaseWebViewPanel {
 
     return steps.map((step, index) => {
       let className = 'progress-step';
-      if (index < currentIndex) className += ' completed';
-      if (index === currentIndex) className += ' active';
+      if (index < currentIndex) {className += ' completed';}
+      if (index === currentIndex) {className += ' active';}
 
       return `
         <div class="${className}" data-step="${step.key}">
@@ -264,6 +308,9 @@ export class SetupWizardPanel extends BaseWebViewPanel {
     }).join('');
   }
 
+  /**
+   *
+   */
   private renderCurrentStep(): string {
     switch (this.state.currentStep) {
       case 'welcome':
@@ -285,6 +332,9 @@ export class SetupWizardPanel extends BaseWebViewPanel {
     }
   }
 
+  /**
+   *
+   */
   private renderWelcomeStep(): string {
     return `
       <div class="step-container welcome-step animate-fade-in">
@@ -374,8 +424,11 @@ export class SetupWizardPanel extends BaseWebViewPanel {
     `;
   }
 
+  /**
+   *
+   */
   private renderAssessmentStep(): string {
-    const env = this.state.detectedEnvironment;
+    const environment = this.state.detectedEnvironment;
 
     return `
       <div class="step-container assessment-step animate-slide-in">
@@ -396,14 +449,14 @@ export class SetupWizardPanel extends BaseWebViewPanel {
                 <span class="status-label">Node.js</span>
                 <span class="status-value ${this.getNodeVersionStatus()}">
                   <span class="codicon codicon-${this.getNodeVersionStatus() === 'good' ? 'pass' : 'warning'}"></span>
-                  ${env.nodeVersion}
+                  ${environment.nodeVersion}
                 </span>
               </div>
               <div class="status-item">
                 <span class="status-label">Package Manager</span>
                 <span class="status-value">
                   <span class="codicon codicon-package"></span>
-                  ${env.packageManager}
+                  ${environment.packageManager}
                 </span>
               </div>
             </div>
@@ -418,23 +471,23 @@ export class SetupWizardPanel extends BaseWebViewPanel {
             <div class="card-content">
               <div class="status-item">
                 <span class="status-label">package.json</span>
-                <span class="status-value ${env.hasPackageJson ? 'good' : 'warn'}">
-                  <span class="codicon codicon-${env.hasPackageJson ? 'pass' : 'warning'}"></span>
-                  ${env.hasPackageJson ? 'Found' : 'Missing'}
+                <span class="status-value ${environment.hasPackageJson ? 'good' : 'warn'}">
+                  <span class="codicon codicon-${environment.hasPackageJson ? 'pass' : 'warning'}"></span>
+                  ${environment.hasPackageJson ? 'Found' : 'Missing'}
                 </span>
               </div>
               <div class="status-item">
                 <span class="status-label">TypeScript</span>
-                <span class="status-value ${env.hasTypeScript ? 'good' : 'neutral'}">
-                  <span class="codicon codicon-${env.hasTypeScript ? 'pass' : 'dash'}"></span>
-                  ${env.hasTypeScript ? 'Enabled' : 'Not detected'}
+                <span class="status-value ${environment.hasTypeScript ? 'good' : 'neutral'}">
+                  <span class="codicon codicon-${environment.hasTypeScript ? 'pass' : 'dash'}"></span>
+                  ${environment.hasTypeScript ? 'Enabled' : 'Not detected'}
                 </span>
               </div>
               <div class="status-item">
                 <span class="status-label">React</span>
-                <span class="status-value ${env.hasReact ? 'good' : 'warn'}">
-                  <span class="codicon codicon-${env.hasReact ? 'pass' : 'warning'}"></span>
-                  ${env.hasReact ? 'Installed' : 'Required'}
+                <span class="status-value ${environment.hasReact ? 'good' : 'warn'}">
+                  <span class="codicon codicon-${environment.hasReact ? 'pass' : 'warning'}"></span>
+                  ${environment.hasReact ? 'Installed' : 'Required'}
                 </span>
               </div>
             </div>
@@ -449,16 +502,16 @@ export class SetupWizardPanel extends BaseWebViewPanel {
             <div class="card-content">
               <div class="status-item">
                 <span class="status-label">Framework</span>
-                <span class="status-value ${env.hasEnzymeConfig ? 'good' : 'neutral'}">
-                  <span class="codicon codicon-${env.hasEnzymeConfig ? 'pass' : 'dash'}"></span>
-                  ${env.enzymeVersion || 'Not installed'}
+                <span class="status-value ${environment.hasEnzymeConfig ? 'good' : 'neutral'}">
+                  <span class="codicon codicon-${environment.hasEnzymeConfig ? 'pass' : 'dash'}"></span>
+                  ${environment.enzymeVersion || 'Not installed'}
                 </span>
               </div>
               <div class="status-item">
                 <span class="status-label">CLI</span>
-                <span class="status-value ${env.cliInstalled ? 'good' : 'warn'}">
-                  <span class="codicon codicon-${env.cliInstalled ? 'pass' : 'warning'}"></span>
-                  ${env.cliInstalled ? `v${env.cliVersion}` : 'Not installed'}
+                <span class="status-value ${environment.cliInstalled ? 'good' : 'warn'}">
+                  <span class="codicon codicon-${environment.cliInstalled ? 'pass' : 'warning'}"></span>
+                  ${environment.cliInstalled ? `v${environment.cliVersion}` : 'Not installed'}
                 </span>
               </div>
             </div>
@@ -476,6 +529,9 @@ export class SetupWizardPanel extends BaseWebViewPanel {
     `;
   }
 
+  /**
+   *
+   */
   private renderDependenciesStep(): string {
     const deps = this.state.detectedEnvironment.missingDependencies;
 
@@ -540,6 +596,9 @@ export class SetupWizardPanel extends BaseWebViewPanel {
     `;
   }
 
+  /**
+   *
+   */
   private renderInstallationStep(): string {
     const status = this.state.installationStatus;
 
@@ -589,6 +648,9 @@ export class SetupWizardPanel extends BaseWebViewPanel {
     `;
   }
 
+  /**
+   *
+   */
   private renderConfigurationStep(): string {
     const config = this.state.configOptions;
 
@@ -694,6 +756,9 @@ export class SetupWizardPanel extends BaseWebViewPanel {
     `;
   }
 
+  /**
+   *
+   */
   private renderVerificationStep(): string {
     return `
       <div class="step-container verification-step animate-slide-in">
@@ -713,6 +778,9 @@ export class SetupWizardPanel extends BaseWebViewPanel {
     `;
   }
 
+  /**
+   *
+   */
   private renderCompleteStep(): string {
     return `
       <div class="step-container complete-step animate-scale-in">
@@ -767,6 +835,9 @@ export class SetupWizardPanel extends BaseWebViewPanel {
     `;
   }
 
+  /**
+   *
+   */
   private renderFooterNavigation(): string {
     const step = this.state.currentStep;
     const isFirst = step === 'welcome';
@@ -799,18 +870,24 @@ export class SetupWizardPanel extends BaseWebViewPanel {
   // HELPER METHODS
   // =============================================================================
 
+  /**
+   *
+   */
   private getNodeVersionStatus(): 'good' | 'warn' | 'error' {
-    const version = parseInt(this.state.detectedEnvironment.nodeVersion.replace('v', '').split('.')[0], 10);
-    if (version >= 18) return 'good';
-    if (version >= 16) return 'warn';
+    const version = Number.parseInt(this.state.detectedEnvironment.nodeVersion.replace('v', '').split('.')[0]!, 10);
+    if (version >= 18) {return 'good';}
+    if (version >= 16) {return 'warn';}
     return 'error';
   }
 
+  /**
+   *
+   */
   private generateRecommendations(): string {
     const recommendations: string[] = [];
-    const env = this.state.detectedEnvironment;
+    const environment = this.state.detectedEnvironment;
 
-    if (!env.hasPackageJson) {
+    if (!environment.hasPackageJson) {
       recommendations.push(`
         <div class="recommendation warn">
           <span class="codicon codicon-warning"></span>
@@ -822,7 +899,7 @@ export class SetupWizardPanel extends BaseWebViewPanel {
       `);
     }
 
-    if (!env.cliInstalled) {
+    if (!environment.cliInstalled) {
       recommendations.push(`
         <div class="recommendation info">
           <span class="codicon codicon-info"></span>
@@ -834,7 +911,7 @@ export class SetupWizardPanel extends BaseWebViewPanel {
       `);
     }
 
-    if (!env.hasTypeScript) {
+    if (!environment.hasTypeScript) {
       recommendations.push(`
         <div class="recommendation info">
           <span class="codicon codicon-info"></span>
@@ -861,6 +938,9 @@ export class SetupWizardPanel extends BaseWebViewPanel {
     return recommendations.join('');
   }
 
+  /**
+   *
+   */
   private renderDependencyList(): string {
     const dependencies: DependencyInfo[] = [
       { name: '@enzyme/core', requiredVersion: '^2.0.0', status: 'missing', isRequired: true },
@@ -891,6 +971,9 @@ export class SetupWizardPanel extends BaseWebViewPanel {
     `).join('');
   }
 
+  /**
+   *
+   */
   private renderTaskList(): string {
     const tasks = [
       { name: 'Prepare environment', status: 'complete' },
@@ -913,6 +996,9 @@ export class SetupWizardPanel extends BaseWebViewPanel {
     `).join('');
   }
 
+  /**
+   *
+   */
   private renderHealthChecks(): string {
     const checks: HealthCheckResult[] = [
       { name: 'Node.js version', status: 'pass', message: 'v18.0.0 or higher detected' },
@@ -939,6 +1025,9 @@ export class SetupWizardPanel extends BaseWebViewPanel {
     `).join('');
   }
 
+  /**
+   *
+   */
   private renderVerificationSummary(): string {
     const allPassed = this.state.healthCheckResults.every(c => c.status === 'pass');
 
@@ -957,6 +1046,10 @@ export class SetupWizardPanel extends BaseWebViewPanel {
   // MESSAGE HANDLERS
   // =============================================================================
 
+  /**
+   *
+   * @param message
+   */
   protected async handleMessage(message: any): Promise<void> {
     switch (message.type) {
       case 'setProjectType':
@@ -1011,6 +1104,9 @@ export class SetupWizardPanel extends BaseWebViewPanel {
     }
   }
 
+  /**
+   *
+   */
   private async detectEnvironment(): Promise<void> {
     const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
     if (!workspaceRoot) {
@@ -1061,6 +1157,9 @@ export class SetupWizardPanel extends BaseWebViewPanel {
     }
   }
 
+  /**
+   *
+   */
   private async goToNextStep(): Promise<void> {
     const steps: SetupStep[] = ['welcome', 'assessment', 'dependencies', 'installation', 'configuration', 'verification', 'complete'];
     const currentIndex = steps.indexOf(this.state.currentStep);
@@ -1071,7 +1170,7 @@ export class SetupWizardPanel extends BaseWebViewPanel {
         await this.startInstallation();
       }
 
-      this.state.currentStep = steps[currentIndex + 1];
+      this.state.currentStep = steps[currentIndex + 1]!;
       this.updatePanel();
 
       // Run health checks when entering verification
@@ -1081,16 +1180,22 @@ export class SetupWizardPanel extends BaseWebViewPanel {
     }
   }
 
+  /**
+   *
+   */
   private goToPrevStep(): void {
     const steps: SetupStep[] = ['welcome', 'assessment', 'dependencies', 'installation', 'configuration', 'verification', 'complete'];
     const currentIndex = steps.indexOf(this.state.currentStep);
 
     if (currentIndex > 0) {
-      this.state.currentStep = steps[currentIndex - 1];
+      this.state.currentStep = steps[currentIndex - 1]!;
       this.updatePanel();
     }
   }
 
+  /**
+   *
+   */
   private async startInstallation(): Promise<void> {
     this.state.installationStatus = {
       phase: 'installing',
@@ -1112,6 +1217,9 @@ export class SetupWizardPanel extends BaseWebViewPanel {
     this.updatePanel();
   }
 
+  /**
+   *
+   */
   private async runHealthChecks(): Promise<void> {
     this.state.healthCheckResults = [
       { name: 'Node.js version', status: 'pass', message: `${process.version} detected` },
@@ -1124,6 +1232,9 @@ export class SetupWizardPanel extends BaseWebViewPanel {
     this.updatePanel();
   }
 
+  /**
+   *
+   */
   private updatePanel(): void {
     if (this.panel) {
       this.panel.webview.html = this.getHtmlContent(this.panel.webview);
@@ -1134,6 +1245,9 @@ export class SetupWizardPanel extends BaseWebViewPanel {
   // STYLES
   // =============================================================================
 
+  /**
+   *
+   */
   private getWizardStyles(): string {
     return `
       <style>
@@ -2280,7 +2394,12 @@ export class SetupWizardPanel extends BaseWebViewPanel {
     `;
   }
 
-  protected getScripts(webview: vscode.Webview, nonce: string): string {
+  /**
+   *
+   * @param _webview
+   * @param nonce
+   */
+  protected getScripts(_webview: vscode.Webview, nonce: string): string {
     return `
       <script nonce="${nonce}">
         const vscode = acquireVsCodeApi();
@@ -2343,6 +2462,9 @@ export class SetupWizardPanel extends BaseWebViewPanel {
     `;
   }
 
+  /**
+   *
+   */
   public override dispose(): void {
     super.dispose();
     SetupWizardPanel.instance = undefined;

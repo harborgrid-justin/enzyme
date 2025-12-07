@@ -4,9 +4,13 @@
  */
 
 import * as vscode from 'vscode';
-import { BaseTreeProvider, TreeProviderOptions } from './base-tree-provider';
+import { BaseTreeProvider } from './base-tree-provider';
 import { EnzymeHookItem, EnzymeCategoryItem } from './tree-items';
+import type { TreeProviderOptions } from './base-tree-provider';
 
+/**
+ *
+ */
 interface HookMetadata {
   name: string;
   filePath: string;
@@ -18,6 +22,9 @@ interface HookMetadata {
   description?: string;
 }
 
+/**
+ *
+ */
 type HookCategory =
   | 'state'
   | 'effect'
@@ -30,10 +37,31 @@ type HookCategory =
 
 /**
  * TreeView provider for Enzyme hooks
+ *
+ * @description Discovers and categorizes custom React hooks with intelligent analysis:
+ * - Automatic categorization (state, effect, data-fetching, form, routing, auth, utility)
+ * - JSDoc description extraction
+ * - Parameter and return type detection
+ * - Hook dependency graph analysis
+ * - Async/sync hook identification
+ * - Cross-hook dependency tracking
+ *
+ * @example
+ * ```typescript
+ * const provider = new EnzymeHooksTreeProvider(context);
+ * const hooks = provider.getHooks();
+ * const dataFetchingHooks = provider.getHooksByCategory('data-fetching');
+ * const asyncHooks = provider.getAsyncHooks();
+ * ```
  */
 export class EnzymeHooksTreeProvider extends BaseTreeProvider<EnzymeHookItem | EnzymeCategoryItem> {
   private hooks: HookMetadata[] = [];
 
+  /**
+   *
+   * @param context
+   * @param options
+   */
   constructor(context: vscode.ExtensionContext, options?: TreeProviderOptions) {
     super(context, options);
   }
@@ -67,10 +95,11 @@ export class EnzymeHooksTreeProvider extends BaseTreeProvider<EnzymeHookItem | E
 
   /**
    * Get child items
+   * @param element
    */
   protected async getChildItems(
     element: EnzymeHookItem | EnzymeCategoryItem
-  ): Promise<Array<EnzymeHookItem>> {
+  ): Promise<EnzymeHookItem[]> {
     if (element instanceof EnzymeCategoryItem) {
       return this.getCategoryHooks(element.categoryName as HookCategory);
     }
@@ -118,6 +147,7 @@ export class EnzymeHooksTreeProvider extends BaseTreeProvider<EnzymeHookItem | E
 
   /**
    * Parse a hook file to extract metadata
+   * @param filePath
    */
   private async parseHookFile(filePath: string): Promise<HookMetadata[] | null> {
     try {
@@ -130,6 +160,9 @@ export class EnzymeHooksTreeProvider extends BaseTreeProvider<EnzymeHookItem | E
 
       for (const match of hookMatches) {
         const hookName = match[1];
+        if (!hookName) {
+          continue;
+        }
         const hookData = this.extractHookData(content, hookName, filePath);
         if (hookData) {
           hooks.push(hookData);
@@ -145,6 +178,9 @@ export class EnzymeHooksTreeProvider extends BaseTreeProvider<EnzymeHookItem | E
 
   /**
    * Extract data for a specific hook
+   * @param content
+   * @param hookName
+   * @param filePath
    */
   private extractHookData(content: string, hookName: string, filePath: string): HookMetadata | null {
     try {
@@ -171,10 +207,10 @@ export class EnzymeHooksTreeProvider extends BaseTreeProvider<EnzymeHookItem | E
         filePath,
         category,
         parameters,
-        returnType,
         dependencies,
         isAsync,
-        description,
+        ...(returnType && { returnType }),
+        ...(description && { description }),
       };
     } catch {
       return null;
@@ -183,6 +219,8 @@ export class EnzymeHooksTreeProvider extends BaseTreeProvider<EnzymeHookItem | E
 
   /**
    * Extract JSDoc description for a hook
+   * @param content
+   * @param hookName
    */
   private extractDescription(content: string, hookName: string): string | undefined {
     // Look for JSDoc comment before the hook
@@ -190,8 +228,8 @@ export class EnzymeHooksTreeProvider extends BaseTreeProvider<EnzymeHookItem | E
     const match = content.match(hookPattern);
 
     if (match) {
-      const docComment = match[0];
-      const descMatch = docComment.match(/\/\*\*\s*\n\s*\*\s*(.+?)\s*\n/);
+      const documentComment = match[0];
+      const descMatch = /\/\*\*\s*\n\s*\*\s*(.+?)\s*\n/.exec(documentComment);
       if (descMatch) {
         return descMatch[1];
       }
@@ -202,6 +240,8 @@ export class EnzymeHooksTreeProvider extends BaseTreeProvider<EnzymeHookItem | E
 
   /**
    * Determine hook category
+   * @param hookName
+   * @param content
    */
   private determineCategory(hookName: string, content: string): HookCategory {
     const lowerName = hookName.toLowerCase();
@@ -252,6 +292,8 @@ export class EnzymeHooksTreeProvider extends BaseTreeProvider<EnzymeHookItem | E
 
   /**
    * Extract parameters from hook signature
+   * @param content
+   * @param hookName
    */
   private extractParameters(content: string, hookName: string): string[] {
     const parameters: string[] = [];
@@ -264,14 +306,14 @@ export class EnzymeHooksTreeProvider extends BaseTreeProvider<EnzymeHookItem | E
 
     for (const pattern of signaturePatterns) {
       const match = content.match(pattern);
-      if (match && match[1]) {
+      if (match?.[1]) {
         const paramsString = match[1].trim();
         if (paramsString) {
           // Split parameters and clean them up
           const params = paramsString.split(',').map(p => {
             // Extract parameter name (before the colon if typed)
-            const paramMatch = p.trim().match(/^([a-zA-Z0-9_]+)/);
-            return paramMatch ? paramMatch[1] : p.trim();
+            const paramMatch = /^(\w+)/.exec(p.trim());
+            return paramMatch?.[1] ? paramMatch[1] : p.trim();
           });
           parameters.push(...params.filter(Boolean));
         }
@@ -284,6 +326,8 @@ export class EnzymeHooksTreeProvider extends BaseTreeProvider<EnzymeHookItem | E
 
   /**
    * Extract return type from hook
+   * @param content
+   * @param hookName
    */
   private extractReturnType(content: string, hookName: string): string | undefined {
     // Look for explicit return type annotation
@@ -294,7 +338,7 @@ export class EnzymeHooksTreeProvider extends BaseTreeProvider<EnzymeHookItem | E
 
     for (const pattern of returnTypePatterns) {
       const match = content.match(pattern);
-      if (match && match[1]) {
+      if (match?.[1]) {
         return match[1].trim();
       }
     }
@@ -304,6 +348,7 @@ export class EnzymeHooksTreeProvider extends BaseTreeProvider<EnzymeHookItem | E
 
   /**
    * Extract hook dependencies (other hooks used)
+   * @param content
    */
   private extractDependencies(content: string): string[] {
     const dependencies: string[] = [];
@@ -313,7 +358,7 @@ export class EnzymeHooksTreeProvider extends BaseTreeProvider<EnzymeHookItem | E
 
     for (const match of hookCallMatches) {
       const hookName = match[1];
-      if (!dependencies.includes(hookName)) {
+      if (hookName && !dependencies.includes(hookName)) {
         dependencies.push(hookName);
       }
     }
@@ -342,6 +387,8 @@ export class EnzymeHooksTreeProvider extends BaseTreeProvider<EnzymeHookItem | E
 
   /**
    * Check if hook is async
+   * @param content
+   * @param hookName
    */
   private checkIsAsync(content: string, hookName: string): boolean {
     // Look for async keyword in hook definition
@@ -386,6 +433,7 @@ export class EnzymeHooksTreeProvider extends BaseTreeProvider<EnzymeHookItem | E
 
   /**
    * Format category name for display
+   * @param category
    */
   private formatCategoryName(category: HookCategory): string {
     return category
@@ -396,6 +444,7 @@ export class EnzymeHooksTreeProvider extends BaseTreeProvider<EnzymeHookItem | E
 
   /**
    * Get hooks for a category
+   * @param category
    */
   private getCategoryHooks(category: HookCategory): EnzymeHookItem[] {
     const formattedCategory = this.formatCategoryName(category);
@@ -410,9 +459,9 @@ export class EnzymeHooksTreeProvider extends BaseTreeProvider<EnzymeHookItem | E
       {
         category: this.formatCategoryName(hook.category),
         parameters: hook.parameters,
-        returnType: hook.returnType,
         dependencies: hook.dependencies,
         isAsync: hook.isAsync,
+        ...(hook.returnType && { returnType: hook.returnType }),
       }
     ));
   }
@@ -426,6 +475,7 @@ export class EnzymeHooksTreeProvider extends BaseTreeProvider<EnzymeHookItem | E
 
   /**
    * Get hooks by category
+   * @param category
    */
   getHooksByCategory(category: HookCategory): HookMetadata[] {
     return this.hooks.filter(h => h.category === category);

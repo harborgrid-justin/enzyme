@@ -3,11 +3,11 @@
  * Provides service registration, singleton management, and dependency resolution
  */
 
-import * as vscode from 'vscode';
+import { AnalysisService } from '../services/analysis-service';
 import { LoggerService } from '../services/logger-service';
 import { WorkspaceService } from '../services/workspace-service';
-import { AnalysisService } from '../services/analysis-service';
 import { EventBus } from './event-bus';
+import type * as vscode from 'vscode';
 
 /**
  * Service lifecycle types
@@ -35,10 +35,13 @@ export interface ServiceDescriptor<T = unknown> {
  */
 export class Container {
   private static instance: Container;
-  private services: Map<string, ServiceDescriptor> = new Map();
-  private singletons: Map<string, unknown> = new Map();
+  private readonly services = new Map<string, ServiceDescriptor>();
+  private readonly singletons = new Map<string, unknown>();
   private context?: vscode.ExtensionContext;
 
+  /**
+   *
+   */
   public constructor() {}
 
   /**
@@ -53,6 +56,7 @@ export class Container {
 
   /**
    * Initialize the container with VS Code extension context
+   * @param context
    */
   public initialize(context: vscode.ExtensionContext): void {
     this.context = context;
@@ -78,6 +82,9 @@ export class Container {
 
   /**
    * Register a singleton service
+   * @param name
+   * @param factory
+   * @param dependencies
    */
   public registerSingleton<T>(
     name: string,
@@ -88,12 +95,15 @@ export class Container {
       name,
       factory,
       lifecycle: 'singleton',
-      dependencies,
+      ...(dependencies ? { dependencies } : {}),
     });
   }
 
   /**
    * Register a transient service
+   * @param name
+   * @param factory
+   * @param dependencies
    */
   public registerTransient<T>(
     name: string,
@@ -104,12 +114,15 @@ export class Container {
       name,
       factory,
       lifecycle: 'transient',
-      dependencies,
+      ...(dependencies ? { dependencies } : {}),
     });
   }
 
   /**
    * Register a scoped service
+   * @param name
+   * @param factory
+   * @param dependencies
    */
   public registerScoped<T>(
     name: string,
@@ -120,12 +133,14 @@ export class Container {
       name,
       factory,
       lifecycle: 'scoped',
-      dependencies,
+      ...(dependencies ? { dependencies } : {}),
     });
   }
 
   /**
    * Register a service instance
+   * @param name
+   * @param instance
    */
   public registerInstance<T>(name: string, instance: T): void {
     this.singletons.set(name, instance);
@@ -139,6 +154,7 @@ export class Container {
 
   /**
    * Resolve a service by name
+   * @param name
    */
   public resolve<T>(name: string): T {
     const descriptor = this.services.get(name);
@@ -163,6 +179,7 @@ export class Container {
 
   /**
    * Resolve multiple services
+   * @param {...any} names
    */
   public resolveMany<T>(...names: string[]): T[] {
     return names.map(name => this.resolve<T>(name));
@@ -170,6 +187,7 @@ export class Container {
 
   /**
    * Check if a service is registered
+   * @param name
    */
   public has(name: string): boolean {
     return this.services.has(name);
@@ -179,11 +197,12 @@ export class Container {
    * Get all registered service names
    */
   public getServiceNames(): string[] {
-    return Array.from(this.services.keys());
+    return [...this.services.keys()];
   }
 
   /**
    * Get service descriptor
+   * @param name
    */
   public getDescriptor(name: string): ServiceDescriptor | undefined {
     return this.services.get(name);
@@ -204,7 +223,9 @@ export class Container {
    */
   public createChild(): Container {
     const child = new Container();
-    child.context = this.context;
+    if (this.context) {
+      child.context = this.context;
+    }
     // Copy service registrations
     this.services.forEach((descriptor, name) => {
       child.services.set(name, { ...descriptor });
@@ -240,11 +261,12 @@ export class Container {
 
 /**
  * Decorator for service injection (TypeScript experimental decorators)
+ * @param serviceName
  */
 export function inject(serviceName: string) {
   return function (target: any, propertyKey: string) {
     Object.defineProperty(target, propertyKey, {
-      get: function () {
+      get () {
         const container = Container.getInstance();
         return container.resolve(serviceName);
       },

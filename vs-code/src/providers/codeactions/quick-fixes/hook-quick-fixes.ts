@@ -1,9 +1,18 @@
 import * as vscode from 'vscode';
 
+/**
+ *
+ */
 export class HookQuickFixes {
+  /**
+   *
+   * @param document
+   * @param range
+   * @param context
+   */
   public provideQuickFixes(
     document: vscode.TextDocument,
-    range: vscode.Range | vscode.Selection,
+    _range: vscode.Range | vscode.Selection,
     context: vscode.CodeActionContext
   ): vscode.CodeAction[] {
     const actions: vscode.CodeAction[] = [];
@@ -35,6 +44,11 @@ export class HookQuickFixes {
     return actions;
   }
 
+  /**
+   *
+   * @param document
+   * @param diagnostic
+   */
   private createMissingDependenciesFixes(
     document: vscode.TextDocument,
     diagnostic: vscode.Diagnostic
@@ -54,9 +68,9 @@ export class HookQuickFixes {
 
       // Find the dependency array
       const text = document.getText(diagnostic.range);
-      const depsMatch = text.match(/\[([^\]]*)\]/);
+      const depsMatch = /\[([^\]]*)]/.exec(text);
 
-      if (depsMatch) {
+      if (depsMatch && depsMatch[1]) {
         const currentDeps = depsMatch[1]
           .split(',')
           .map((d) => d.trim())
@@ -98,6 +112,11 @@ export class HookQuickFixes {
     return actions;
   }
 
+  /**
+   *
+   * @param document
+   * @param diagnostic
+   */
   private createUseCallbackFixes(
     document: vscode.TextDocument,
     diagnostic: vscode.Diagnostic
@@ -112,14 +131,14 @@ export class HookQuickFixes {
     wrapAction.edit = new vscode.WorkspaceEdit();
 
     const text = document.getText(diagnostic.range);
-    const functionMatch = text.match(/const\s+(\w+)\s*=\s*(\([^)]*\)\s*=>\s*{[\s\S]*})/);
+    const functionMatch = /const\s+(\w+)\s*=\s*(\([^)]*\)\s*=>\s*{[\S\s]*})/.exec(text);
 
-    if (functionMatch) {
-      const funcName = functionMatch[1];
-      const funcBody = functionMatch[2];
-      const deps = this.inferDependencies(funcBody);
+    if (functionMatch && functionMatch[1] && functionMatch[2]) {
+      const functionName = functionMatch[1];
+      const functionBody = functionMatch[2];
+      const deps = this.inferDependencies(functionBody);
 
-      const wrappedText = `const ${funcName} = useCallback(${funcBody}, [${deps.join(', ')}])`;
+      const wrappedText = `const ${functionName} = useCallback(${functionBody}, [${deps.join(', ')}])`;
       wrapAction.edit.replace(document.uri, diagnostic.range, wrappedText);
       wrapAction.isPreferred = true;
       actions.push(wrapAction);
@@ -128,6 +147,11 @@ export class HookQuickFixes {
     return actions;
   }
 
+  /**
+   *
+   * @param document
+   * @param diagnostic
+   */
   private createUseMemoFixes(
     document: vscode.TextDocument,
     diagnostic: vscode.Diagnostic
@@ -142,14 +166,14 @@ export class HookQuickFixes {
     wrapAction.edit = new vscode.WorkspaceEdit();
 
     const text = document.getText(diagnostic.range);
-    const varMatch = text.match(/const\s+(\w+)\s*=\s*(.+);/);
+    const variableMatch = /const\s+(\w+)\s*=\s*(.+);/.exec(text);
 
-    if (varMatch) {
-      const varName = varMatch[1];
-      const computation = varMatch[2];
+    if (variableMatch && variableMatch[1] && variableMatch[2]) {
+      const _variableName = variableMatch[1];
+      const computation = variableMatch[2];
       const deps = this.inferDependencies(computation);
 
-      const wrappedText = `const ${varName} = useMemo(() => ${computation}, [${deps.join(', ')}]);`;
+      const wrappedText = `const ${_variableName} = useMemo(() => ${computation}, [${deps.join(', ')}]);`;
       wrapAction.edit.replace(document.uri, diagnostic.range, wrappedText);
       wrapAction.isPreferred = true;
       actions.push(wrapAction);
@@ -158,6 +182,11 @@ export class HookQuickFixes {
     return actions;
   }
 
+  /**
+   *
+   * @param document
+   * @param diagnostic
+   */
   private createErrorHandlingFixes(
     document: vscode.TextDocument,
     diagnostic: vscode.Diagnostic
@@ -173,13 +202,13 @@ export class HookQuickFixes {
 
     // Find the async function body
     const text = document.getText(diagnostic.range);
-    const bodyMatch = text.match(/{\s*([\s\S]*)\s*}/);
+    const bodyMatch = /{\s*([\S\s]*)\s*}/.exec(text);
 
-    if (bodyMatch) {
+    if (bodyMatch && bodyMatch[1]) {
       const body = bodyMatch[1];
       const wrappedBody = `{
     try {
-${body.split('\n').map((line) => '  ' + line).join('\n')}
+${body.split('\n').map((line) => `  ${  line}`).join('\n')}
     } catch (error) {
       console.error('Error:', error);
       // Handle error appropriately
@@ -219,6 +248,11 @@ ${body.split('\n').map((line) => '  ' + line).join('\n')}
     return actions;
   }
 
+  /**
+   *
+   * @param document
+   * @param diagnostic
+   */
   private createExtractHookFixes(
     document: vscode.TextDocument,
     diagnostic: vscode.Diagnostic
@@ -240,32 +274,41 @@ ${body.split('\n').map((line) => '  ' + line).join('\n')}
     return actions;
   }
 
+  /**
+   *
+   * @param message
+   */
   private extractMissingDependencies(message: string): string[] {
-    const match = message.match(/missing dependencies?:\s*(.+)/i);
-    if (match) {
+    const match = /missing dependencies?:\s*(.+)/i.exec(message);
+    if (match && match[1]) {
       return match[1]
         .split(',')
-        .map((dep) => dep.trim().replace(/['"`]/g, ''));
+        .map((dep) => dep.trim().replace(/["'`]/g, ''));
     }
     return [];
   }
 
+  /**
+   *
+   * @param code
+   */
   private inferDependencies(code: string): string[] {
     const deps: string[] = [];
     // Simple regex to find potential dependencies (variables referenced)
-    const varRegex = /\b([a-z_$][\w$]*)\b/gi;
-    const matches = code.matchAll(varRegex);
+    const variableRegex = /\b([$_a-z][\w$]*)\b/gi;
+    const matches = code.matchAll(variableRegex);
 
     const seen = new Set<string>();
     for (const match of matches) {
-      const varName = match[1];
+      const variableName = match[1];
+      if (!variableName) continue;
       // Skip common keywords and built-ins
       if (
-        !seen.has(varName) &&
-        !['const', 'let', 'var', 'function', 'return', 'if', 'else', 'true', 'false', 'null', 'undefined'].includes(varName)
+        !seen.has(variableName) &&
+        !['const', 'let', 'var', 'function', 'return', 'if', 'else', 'true', 'false', 'null', 'undefined'].includes(variableName)
       ) {
-        seen.add(varName);
-        deps.push(varName);
+        seen.add(variableName);
+        deps.push(variableName);
       }
     }
 

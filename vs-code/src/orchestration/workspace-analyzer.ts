@@ -2,12 +2,9 @@
  * WorkspaceAnalyzer - Analyzes Enzyme project structure and configuration
  */
 
-import * as vscode from 'vscode';
-import * as fs from 'fs';
-import * as path from 'path';
-import { LoggerService } from '../services/logger-service';
-import { WorkspaceService } from '../services/workspace-service';
-import { EnzymeWorkspace } from '../types';
+import type { LoggerService } from '../services/logger-service';
+import type { WorkspaceService } from '../services/workspace-service';
+import type { EnzymeWorkspace } from '../types';
 
 /**
  * Project type
@@ -67,9 +64,14 @@ export interface AnalysisReport {
  */
 export class WorkspaceAnalyzer {
   private static instance: WorkspaceAnalyzer;
-  private logger: LoggerService;
-  private workspaceService: WorkspaceService;
+  private readonly logger: LoggerService;
+  private readonly workspaceService: WorkspaceService;
 
+  /**
+   *
+   * @param logger
+   * @param workspaceService
+   */
   private constructor(logger: LoggerService, workspaceService: WorkspaceService) {
     this.logger = logger;
     this.workspaceService = workspaceService;
@@ -77,6 +79,8 @@ export class WorkspaceAnalyzer {
 
   /**
    * Create the workspace analyzer
+   * @param logger
+   * @param workspaceService
    */
   public static create(
     logger: LoggerService,
@@ -117,7 +121,7 @@ export class WorkspaceAnalyzer {
 
     const report: AnalysisReport = {
       projectType,
-      enzymeVersion: workspace.enzymeVersion,
+      ...(workspace.enzymeVersion ? { enzymeVersion: workspace.enzymeVersion } : {}),
       features: {
         count: workspace.features.length,
         enabled: workspace.features.filter(f => f.enabled).length,
@@ -153,6 +157,7 @@ export class WorkspaceAnalyzer {
 
   /**
    * Detect project type
+   * @param workspace
    */
   private detectProjectType(workspace: EnzymeWorkspace): ProjectType {
     // Check if it's a new Enzyme project
@@ -172,6 +177,7 @@ export class WorkspaceAnalyzer {
 
   /**
    * Analyze configuration
+   * @param workspace
    */
   private analyzeConfiguration(workspace: EnzymeWorkspace): ConfigurationIssue[] {
     const issues: ConfigurationIssue[] = [];
@@ -229,6 +235,7 @@ export class WorkspaceAnalyzer {
 
   /**
    * Suggest optimizations
+   * @param workspace
    */
   private suggestOptimizations(workspace: EnzymeWorkspace): string[] {
     const optimizations: string[] = [];
@@ -291,6 +298,7 @@ export class WorkspaceAnalyzer {
 
   /**
    * Generate report summary
+   * @param report
    */
   public generateReportSummary(report: AnalysisReport): string {
     const lines: string[] = [

@@ -3,7 +3,7 @@
  * @description Common test utilities and helpers for unit and integration tests
  */
 
-import { vi } from 'vitest';
+import { vi, expect } from 'vitest';
 
 /**
  * Creates a mock function with type safety
@@ -25,7 +25,7 @@ export function createMock<T extends (...args: any[]) => any>() {
  * @example
  * await wait(100); // Wait 100ms
  */
-export function wait(ms: number): Promise<void> {
+export async function wait(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
@@ -64,7 +64,7 @@ export async function waitFor(
  * @example
  * await flushPromises();
  */
-export function flushPromises(): Promise<void> {
+export async function flushPromises(): Promise<void> {
   return new Promise(resolve => setImmediate(resolve));
 }
 
@@ -140,19 +140,29 @@ export function captureConsole() {
  * // All Date operations use 2024-01-01
  * mockDate.restore();
  */
-export function createMockDate(timestamp: number = 0) {
+export function createMockDate(timestamp = 0) {
   const OriginalDate = global.Date;
 
+  /**
+   *
+   */
   class MockDate extends Date {
+    /**
+     *
+     * @param {...any} args
+     */
     constructor(...args: any[]) {
       if (args.length === 0) {
         super(timestamp);
       } else {
-        super(...args);
+        super(args[0] as any);
       }
     }
 
-    static now() {
+    /**
+     *
+     */
+    static override now() {
       return timestamp;
     }
   }
@@ -174,6 +184,7 @@ export function createMockDate(timestamp: number = 0) {
  * @template T - Type of the object
  * @template K - Type of the method name
  * @param obj - The object containing the method
+ * @param object
  * @param method - The method name to spy on
  * @returns Spy function
  * @example
@@ -181,10 +192,10 @@ export function createMockDate(timestamp: number = 0) {
  * expect(spy).toHaveBeenCalled();
  */
 export function spyOn<T extends object, K extends keyof T>(
-  obj: T,
+  object: T,
   method: K
 ): T[K] extends (...args: any[]) => any ? ReturnType<typeof vi.spyOn> : never {
-  return vi.spyOn(obj, method as any) as any;
+  return vi.spyOn(object, method as any) as any;
 }
 
 /**
@@ -207,6 +218,9 @@ export function createSequentialMock<T extends (...args: any[]) => any>(
   return vi.fn((...args: Parameters<T>): ReturnType<T> => {
     const impl = implementations[callCount] || implementations[implementations.length - 1];
     callCount++;
+    if (!impl) {
+      throw new Error('No implementations provided to createSequentialMock');
+    }
     return impl(...args);
   });
 }
@@ -335,7 +349,7 @@ export function createMockFileSystem() {
      * @returns Array of file paths
      */
     listFiles: (): string[] => {
-      return Array.from(files.keys());
+      return [...files.keys()];
     },
     /**
      * Clears all files
@@ -350,6 +364,9 @@ export function createMockFileSystem() {
  * Generates random test data
  * @param type - Type of data to generate
  * @param options - Generation options
+ * @param options.length
+ * @param options.min
+ * @param options.max
  * @returns Generated test data
  * @example
  * const id = generateTestData('id'); // '1a2b3c4d'
@@ -361,10 +378,10 @@ export function generateTestData(
 ): string | number {
   switch (type) {
     case 'id':
-      return Math.random().toString(36).substring(2, 10);
+      return Math.random().toString(36).slice(2, 10);
 
     case 'email':
-      const randomId = Math.random().toString(36).substring(2, 8);
+      const randomId = Math.random().toString(36).slice(2, 8);
       return `user${randomId}@example.com`;
 
     case 'string': {
@@ -389,12 +406,13 @@ export function generateTestData(
  * Creates a snapshot matcher for objects
  * Useful for testing complex object structures
  * @param obj - Object to create snapshot for
+ * @param object
  * @returns Stringified snapshot
  * @example
  * expect(createSnapshot(result)).toMatchInlineSnapshot();
  */
-export function createSnapshot(obj: any): string {
-  return JSON.stringify(obj, null, 2);
+export function createSnapshot(object: any): string {
+  return JSON.stringify(object, null, 2);
 }
 
 /**
@@ -412,6 +430,8 @@ export function assertStructure(actual: any, expected: any): void {
  * Retries an async operation a specified number of times
  * @param operation - Async operation to retry
  * @param options - Retry options
+ * @param options.maxAttempts
+ * @param options.delay
  * @returns Result of the operation
  * @example
  * const result = await retry(() => flakeyOperation(), { maxAttempts: 3 });

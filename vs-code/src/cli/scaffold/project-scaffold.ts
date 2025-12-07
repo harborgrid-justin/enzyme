@@ -1,8 +1,11 @@
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
 import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs/promises';
-import { CLIRunner } from '../cli-runner';
+import type { CLIRunner } from '../cli-runner';
 
+/**
+ *
+ */
 export interface ProjectScaffoldOptions {
   name: string;
   template: 'basic' | 'full' | 'minimal' | 'enterprise';
@@ -12,17 +15,28 @@ export interface ProjectScaffoldOptions {
   install: boolean;
 }
 
+/**
+ *
+ */
 export interface ScaffoldResult {
   success: boolean;
   projectPath: string;
   errors: string[];
 }
 
+/**
+ *
+ */
 export class ProjectScaffold {
-  constructor(private cliRunner: CLIRunner) {}
+  /**
+   *
+   * @param cliRunner
+   */
+  constructor(private readonly cliRunner: CLIRunner) {}
 
   /**
    * Create a new Enzyme project with interactive wizard
+   * @param targetDir
    */
   async createProject(targetDir?: string): Promise<ScaffoldResult | null> {
     // Get project options through wizard
@@ -67,7 +81,7 @@ export class ProjectScaffold {
         if (!value) {
           return 'Project name is required';
         }
-        if (!/^[a-z0-9-_]+$/.test(value)) {
+        if (!/^[\d_a-z-]+$/.test(value)) {
           return 'Project name must contain only lowercase letters, numbers, hyphens, and underscores';
         }
         return null;
@@ -174,6 +188,8 @@ export class ProjectScaffold {
 
   /**
    * Scaffold the project
+   * @param projectPath
+   * @param options
    */
   private async scaffold(
     projectPath: string,
@@ -261,6 +277,7 @@ export class ProjectScaffold {
 
   /**
    * Initialize Git repository
+   * @param projectPath
    */
   private async initializeGit(projectPath: string): Promise<void> {
     const terminal = vscode.window.createTerminal({
@@ -275,6 +292,8 @@ export class ProjectScaffold {
 
   /**
    * Install dependencies
+   * @param projectPath
+   * @param packageManager
    */
   private async installDependencies(
     projectPath: string,
@@ -295,6 +314,7 @@ export class ProjectScaffold {
 
   /**
    * Setup VS Code workspace
+   * @param projectPath
    */
   private async setupWorkspace(projectPath: string): Promise<void> {
     // Create .vscode directory

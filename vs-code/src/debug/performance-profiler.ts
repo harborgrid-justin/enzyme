@@ -14,6 +14,9 @@ export enum ProfileEventType {
   CUSTOM = 'custom',
 }
 
+/**
+ *
+ */
 export interface ProfileEvent {
   id: string;
   type: ProfileEventType;
@@ -25,6 +28,9 @@ export interface ProfileEvent {
   children?: ProfileEvent[];
 }
 
+/**
+ *
+ */
 export interface FlameGraphNode {
   name: string;
   value: number;
@@ -33,6 +39,9 @@ export interface FlameGraphNode {
   metadata?: Record<string, unknown>;
 }
 
+/**
+ *
+ */
 export interface PerformanceMetrics {
   totalEvents: number;
   totalDuration: number;
@@ -49,6 +58,9 @@ export interface PerformanceMetrics {
   }>;
 }
 
+/**
+ *
+ */
 export interface ProfilerOptions {
   /** Enable automatic profiling */
   autoStart?: boolean;
@@ -62,14 +74,21 @@ export interface ProfilerOptions {
 // Performance Profiler
 // ============================================================================
 
+/**
+ *
+ */
 export class PerformanceProfiler {
-  private options: Required<ProfilerOptions>;
+  private readonly options: Required<ProfilerOptions>;
   private events: ProfileEvent[] = [];
-  private activeEvents = new Map<string, ProfileEvent>();
+  private readonly activeEvents = new Map<string, ProfileEvent>();
   private eventStack: ProfileEvent[] = [];
   private isProfiling = false;
   private eventIdCounter = 0;
 
+  /**
+   *
+   * @param options
+   */
   constructor(options: ProfilerOptions = {}) {
     this.options = {
       autoStart: options.autoStart ?? false,
@@ -98,6 +117,9 @@ export class PerformanceProfiler {
 
   /**
    * Start profiling an event
+   * @param type
+   * @param name
+   * @param metadata
    */
   startEvent(
     type: ProfileEventType,
@@ -119,7 +141,7 @@ export class PerformanceProfiler {
       type,
       name,
       startTime: performance.now(),
-      metadata,
+      ...(metadata !== undefined && { metadata }),
       children: [],
     };
 
@@ -131,6 +153,7 @@ export class PerformanceProfiler {
 
   /**
    * End profiling an event
+   * @param eventId
    */
   endEvent(eventId: string): void {
     if (!eventId) {
@@ -154,10 +177,12 @@ export class PerformanceProfiler {
     // Add as child to parent if exists
     if (this.eventStack.length > 0) {
       const parent = this.eventStack[this.eventStack.length - 1];
-      if (!parent.children) {
-        parent.children = [];
+      if (parent) {
+        if (!parent.children) {
+          parent.children = [];
+        }
+        parent.children.push(event);
       }
-      parent.children.push(event);
     } else {
       // Top-level event
       this.events.push(event);
@@ -173,6 +198,10 @@ export class PerformanceProfiler {
 
   /**
    * Profile a synchronous function
+   * @param type
+   * @param name
+   * @param fn
+   * @param metadata
    */
   profile<T>(
     type: ProfileEventType,
@@ -190,6 +219,10 @@ export class PerformanceProfiler {
 
   /**
    * Profile an asynchronous function
+   * @param type
+   * @param name
+   * @param fn
+   * @param metadata
    */
   async profileAsync<T>(
     type: ProfileEventType,
@@ -207,6 +240,7 @@ export class PerformanceProfiler {
 
   /**
    * Get all events
+   * @param type
    */
   getEvents(type?: ProfileEventType): ProfileEvent[] {
     if (type) {
@@ -286,6 +320,7 @@ export class PerformanceProfiler {
 
   /**
    * Get slow events by threshold
+   * @param thresholdMs
    */
   getSlowEvents(thresholdMs = 100): ProfileEvent[] {
     const allEvents = this.flattenEvents(this.events);
@@ -321,6 +356,7 @@ export class PerformanceProfiler {
 
   /**
    * Import profiling data
+   * @param json
    */
   import(json: string): void {
     try {
@@ -337,6 +373,7 @@ export class PerformanceProfiler {
 
   /**
    * Detect performance bottlenecks
+   * @param events
    */
   private detectBottlenecks(
     events: ProfileEvent[]
@@ -371,6 +408,7 @@ export class PerformanceProfiler {
 
   /**
    * Convert event to flame graph node
+   * @param event
    */
   private eventToFlameNode(event: ProfileEvent): FlameGraphNode {
     return {
@@ -378,12 +416,13 @@ export class PerformanceProfiler {
       value: event.duration ?? 0,
       startTime: event.startTime,
       children: (event.children ?? []).map((child) => this.eventToFlameNode(child)),
-      metadata: event.metadata,
+      ...(event.metadata !== undefined && { metadata: event.metadata }),
     };
   }
 
   /**
    * Flatten event tree
+   * @param events
    */
   private flattenEvents(events: ProfileEvent[]): ProfileEvent[] {
     const flattened: ProfileEvent[] = [];
@@ -400,6 +439,8 @@ export class PerformanceProfiler {
 
   /**
    * Filter events by type recursively
+   * @param events
+   * @param type
    */
   private filterEventsByType(events: ProfileEvent[], type: ProfileEventType): ProfileEvent[] {
     const filtered: ProfileEvent[] = [];
@@ -432,6 +473,7 @@ let globalProfiler: PerformanceProfiler | null = null;
 
 /**
  * Get or create global profiler instance
+ * @param options
  */
 export function getGlobalProfiler(options?: ProfilerOptions): PerformanceProfiler {
   if (!globalProfiler) {

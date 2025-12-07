@@ -14,6 +14,9 @@ export enum NodeKind {
   HOOK = 'hook',
 }
 
+/**
+ *
+ */
 export interface GraphNode {
   id: string;
   label: string;
@@ -23,6 +26,9 @@ export interface GraphNode {
   metadata?: Record<string, unknown>;
 }
 
+/**
+ *
+ */
 export interface GraphEdge {
   id: string;
   source: string;
@@ -32,11 +38,17 @@ export interface GraphEdge {
   metadata?: Record<string, unknown>;
 }
 
+/**
+ *
+ */
 export interface Graph {
   nodes: Map<string, GraphNode>;
   edges: Map<string, GraphEdge>;
 }
 
+/**
+ *
+ */
 export interface LayoutOptions {
   width?: number;
   height?: number;
@@ -44,6 +56,9 @@ export interface LayoutOptions {
   levelSpacing?: number;
 }
 
+/**
+ *
+ */
 export interface CircularDependency {
   nodes: GraphNode[];
   path: string[];
@@ -53,11 +68,17 @@ export interface CircularDependency {
 // Dependency Graph
 // ============================================================================
 
+/**
+ *
+ */
 export class DependencyGraph {
-  private graph: Graph;
+  private readonly graph: Graph;
   private nodeIdCounter = 0;
   private edgeIdCounter = 0;
 
+  /**
+   *
+   */
   constructor() {
     this.graph = {
       nodes: new Map(),
@@ -67,13 +88,16 @@ export class DependencyGraph {
 
   /**
    * Add a node
+   * @param label
+   * @param kind
+   * @param metadata
    */
   addNode(label: string, kind: NodeKind, metadata?: Record<string, unknown>): GraphNode {
     const node: GraphNode = {
       id: this.generateNodeId(),
       label,
       kind,
-      metadata,
+      ...(metadata !== undefined && { metadata }),
     };
 
     this.graph.nodes.set(node.id, node);
@@ -82,6 +106,7 @@ export class DependencyGraph {
 
   /**
    * Remove a node
+   * @param id
    */
   removeNode(id: string): boolean {
     // Remove all edges connected to this node
@@ -96,6 +121,11 @@ export class DependencyGraph {
 
   /**
    * Add an edge
+   * @param sourceId
+   * @param targetId
+   * @param label
+   * @param weight
+   * @param metadata
    */
   addEdge(
     sourceId: string,
@@ -115,9 +145,9 @@ export class DependencyGraph {
       id: this.generateEdgeId(),
       source: sourceId,
       target: targetId,
-      label,
+      ...(label !== undefined && { label }),
       weight,
-      metadata,
+      ...(metadata !== undefined && { metadata }),
     };
 
     this.graph.edges.set(edge.id, edge);
@@ -126,6 +156,7 @@ export class DependencyGraph {
 
   /**
    * Remove an edge
+   * @param id
    */
   removeEdge(id: string): boolean {
     return this.graph.edges.delete(id);
@@ -133,6 +164,7 @@ export class DependencyGraph {
 
   /**
    * Get node by ID
+   * @param id
    */
   getNode(id: string): GraphNode | undefined {
     return this.graph.nodes.get(id);
@@ -140,48 +172,53 @@ export class DependencyGraph {
 
   /**
    * Find nodes by label
+   * @param label
    */
   findNodes(label: string): GraphNode[] {
-    return Array.from(this.graph.nodes.values()).filter((node) => node.label === label);
+    return [...this.graph.nodes.values()].filter((node) => node.label === label);
   }
 
   /**
    * Find nodes by kind
+   * @param kind
    */
   getNodesByKind(kind: NodeKind): GraphNode[] {
-    return Array.from(this.graph.nodes.values()).filter((node) => node.kind === kind);
+    return [...this.graph.nodes.values()].filter((node) => node.kind === kind);
   }
 
   /**
    * Get all nodes
    */
   getAllNodes(): GraphNode[] {
-    return Array.from(this.graph.nodes.values());
+    return [...this.graph.nodes.values()];
   }
 
   /**
    * Get all edges
    */
   getAllEdges(): GraphEdge[] {
-    return Array.from(this.graph.edges.values());
+    return [...this.graph.edges.values()];
   }
 
   /**
    * Get edges from node
+   * @param nodeId
    */
   getOutgoingEdges(nodeId: string): GraphEdge[] {
-    return Array.from(this.graph.edges.values()).filter((edge) => edge.source === nodeId);
+    return [...this.graph.edges.values()].filter((edge) => edge.source === nodeId);
   }
 
   /**
    * Get edges to node
+   * @param nodeId
    */
   getIncomingEdges(nodeId: string): GraphEdge[] {
-    return Array.from(this.graph.edges.values()).filter((edge) => edge.target === nodeId);
+    return [...this.graph.edges.values()].filter((edge) => edge.target === nodeId);
   }
 
   /**
    * Get dependencies of node (nodes it depends on)
+   * @param nodeId
    */
   getDependencies(nodeId: string): GraphNode[] {
     const edges = this.getOutgoingEdges(nodeId);
@@ -192,6 +229,7 @@ export class DependencyGraph {
 
   /**
    * Get dependents of node (nodes that depend on it)
+   * @param nodeId
    */
   getDependents(nodeId: string): GraphNode[] {
     const edges = this.getIncomingEdges(nodeId);
@@ -220,6 +258,7 @@ export class DependencyGraph {
 
   /**
    * Get transitive dependencies (all nodes reachable from node)
+   * @param nodeId
    */
   getTransitiveDependencies(nodeId: string): GraphNode[] {
     const visited = new Set<string>();
@@ -244,7 +283,7 @@ export class DependencyGraph {
 
     visited.delete(nodeId); // Remove the starting node
 
-    return Array.from(visited)
+    return [...visited]
       .map((id) => this.graph.nodes.get(id))
       .filter((node): node is GraphNode => node !== undefined);
   }
@@ -285,11 +324,12 @@ export class DependencyGraph {
 
   /**
    * Layout graph using hierarchical layout
+   * @param options
    */
   layoutHierarchical(options: LayoutOptions = {}): void {
     const {
       width = 1000,
-      height = 600,
+      height: _height = 600,
       nodeSpacing = 100,
       levelSpacing = 150,
     } = options;
@@ -305,7 +345,11 @@ export class DependencyGraph {
       const startX = (width - totalWidth) / 2;
 
       for (let i = 0; i < nodeIds.length; i++) {
-        const node = this.graph.nodes.get(nodeIds[i]);
+        const nodeId = nodeIds[i];
+        if (!nodeId) {
+          continue;
+        }
+        const node = this.graph.nodes.get(nodeId);
         if (node) {
           node.x = startX + i * nodeSpacing;
           node.y = y;
@@ -316,6 +360,8 @@ export class DependencyGraph {
 
   /**
    * Layout graph using force-directed layout
+   * @param iterations
+   * @param options
    */
   layoutForceDirected(iterations = 100, options: LayoutOptions = {}): void {
     const {
@@ -340,20 +386,26 @@ export class DependencyGraph {
       }
 
       // Repulsive forces between all pairs
-      const nodes = Array.from(this.graph.nodes.values());
+      const nodes = [...this.graph.nodes.values()];
       for (let i = 0; i < nodes.length; i++) {
         for (let j = i + 1; j < nodes.length; j++) {
           const n1 = nodes[i];
           const n2 = nodes[j];
+          if (!n1 || !n2) {
+            continue;
+          }
 
           const dx = (n2.x ?? 0) - (n1.x ?? 0);
           const dy = (n2.y ?? 0) - (n1.y ?? 0);
-          const distance = Math.sqrt(dx * dx + dy * dy) || 1;
+          const distance = Math.hypot(dx, dy) || 1;
 
           const force = (k * k) / distance;
 
-          const d1 = displacement.get(n1.id)!;
-          const d2 = displacement.get(n2.id)!;
+          const d1 = displacement.get(n1.id);
+          const d2 = displacement.get(n2.id);
+          if (!d1 || !d2) {
+            continue;
+          }
 
           d1.dx -= (dx / distance) * force;
           d1.dy -= (dy / distance) * force;
@@ -367,11 +419,11 @@ export class DependencyGraph {
         const source = this.graph.nodes.get(edge.source);
         const target = this.graph.nodes.get(edge.target);
 
-        if (!source || !target) continue;
+        if (!source || !target) {continue;}
 
         const dx = (target.x ?? 0) - (source.x ?? 0);
         const dy = (target.y ?? 0) - (source.y ?? 0);
-        const distance = Math.sqrt(dx * dx + dy * dy) || 1;
+        const distance = Math.hypot(dx, dy) || 1;
 
         const force = (distance * distance) / k;
 
@@ -385,14 +437,14 @@ export class DependencyGraph {
       }
 
       // Apply displacement with cooling
-      const temp = width / 10 * (1 - iteration / iterations);
+      const temporary = width / 10 * (1 - iteration / iterations);
 
       for (const node of this.graph.nodes.values()) {
         const d = displacement.get(node.id)!;
-        const magnitude = Math.sqrt(d.dx * d.dx + d.dy * d.dy) || 1;
+        const magnitude = Math.hypot(d.dx, d.dy) || 1;
 
-        node.x = (node.x ?? 0) + (d.dx / magnitude) * Math.min(magnitude, temp);
-        node.y = (node.y ?? 0) + (d.dy / magnitude) * Math.min(magnitude, temp);
+        node.x = (node.x ?? 0) + (d.dx / magnitude) * Math.min(magnitude, temporary);
+        node.y = (node.y ?? 0) + (d.dy / magnitude) * Math.min(magnitude, temporary);
 
         // Keep within bounds
         node.x = Math.max(50, Math.min(width - 50, node.x));
@@ -415,8 +467,8 @@ export class DependencyGraph {
   export(): string {
     return JSON.stringify(
       {
-        nodes: Array.from(this.graph.nodes.values()),
-        edges: Array.from(this.graph.edges.values()),
+        nodes: [...this.graph.nodes.values()],
+        edges: [...this.graph.edges.values()],
       },
       null,
       2
@@ -425,6 +477,7 @@ export class DependencyGraph {
 
   /**
    * Import graph from JSON
+   * @param json
    */
   import(json: string): void {
     try {
@@ -453,6 +506,11 @@ export class DependencyGraph {
 
   /**
    * DFS for cycle detection
+   * @param nodeId
+   * @param visited
+   * @param recursionStack
+   * @param pathStack
+   * @param cycles
    */
   private detectCyclesDFS(
     nodeId: string,

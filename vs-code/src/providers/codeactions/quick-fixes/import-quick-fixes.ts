@@ -1,6 +1,15 @@
 import * as vscode from 'vscode';
 
+/**
+ *
+ */
 export class ImportQuickFixes {
+  /**
+   *
+   * @param document
+   * @param range
+   * @param context
+   */
   public provideQuickFixes(
     document: vscode.TextDocument,
     range: vscode.Range | vscode.Selection,
@@ -28,6 +37,11 @@ export class ImportQuickFixes {
     return actions;
   }
 
+  /**
+   *
+   * @param text
+   * @param document
+   */
   private detectMissingImports(text: string, document: vscode.TextDocument): Array<{
     symbol: string;
     module: string;
@@ -61,12 +75,16 @@ export class ImportQuickFixes {
     return imports;
   }
 
+  /**
+   *
+   * @param document
+   */
   private getExistingImports(document: vscode.TextDocument): Set<string> {
     const imports = new Set<string>();
     const text = document.getText();
 
     // Match all import statements
-    const importRegex = /import\s+(?:{([^}]+)}|(\w+))\s+from\s+['"]([^'"]+)['"]/g;
+    const importRegex = /import\s+(?:{([^}]+)}|(\w+))\s+from\s+["']([^"']+)["']/g;
     let match;
 
     while ((match = importRegex.exec(text)) !== null) {
@@ -83,6 +101,13 @@ export class ImportQuickFixes {
     return imports;
   }
 
+  /**
+   *
+   * @param document
+   * @param importInfo
+   * @param importInfo.symbol
+   * @param importInfo.module
+   */
   private createAutoImportActions(
     document: vscode.TextDocument,
     importInfo: { symbol: string; module: string }
@@ -104,14 +129,14 @@ export class ImportQuickFixes {
     if (existingImportLine !== -1) {
       // Add to existing import
       const line = document.lineAt(existingImportLine);
-      const importMatch = line.text.match(/import\s+{([^}]+)}\s+from/);
+      const importMatch = /import\s+{([^}]+)}\s+from/.exec(line.text);
 
       if (importMatch) {
         const existingImports = importMatch[1];
         const newImports = `${existingImports}, ${importInfo.symbol}`;
         const replaceRange = new vscode.Range(
-          new vscode.Position(existingImportLine, importMatch.index!),
-          new vscode.Position(existingImportLine, importMatch.index! + importMatch[0].length)
+          new vscode.Position(existingImportLine, importMatch.index),
+          new vscode.Position(existingImportLine, importMatch.index + importMatch[0].length)
         );
 
         autoImportAction.edit.replace(
@@ -132,6 +157,11 @@ export class ImportQuickFixes {
     return actions;
   }
 
+  /**
+   *
+   * @param document
+   * @param diagnostic
+   */
   private createBarrelImportFixes(
     document: vscode.TextDocument,
     diagnostic: vscode.Diagnostic
@@ -146,17 +176,17 @@ export class ImportQuickFixes {
     convertAction.edit = new vscode.WorkspaceEdit();
 
     const line = document.lineAt(diagnostic.range.start.line);
-    const importMatch = line.text.match(/import\s+{([^}]+)}\s+from\s+['"]([^'"]+)['"]/);
+    const importMatch = /import\s+{([^}]+)}\s+from\s+["']([^"']+)["']/.exec(line.text);
 
-    if (importMatch) {
+    if (importMatch && importMatch[1] && importMatch[2]) {
       const imports = importMatch[1].split(',').map((s) => s.trim());
-      const module = importMatch[2];
+      const _module = importMatch[2];
 
       // Convert to individual submodule imports
       const submoduleImports = imports
         .map((imp) => {
           const cleanImport = imp.replace(/\s+as\s+\w+/, '');
-          return `import { ${imp} } from '${module}/${cleanImport.toLowerCase()}';`;
+          return `import { ${imp} } from '${_module}/${cleanImport.toLowerCase()}';`;
         })
         .join('\n');
 
@@ -201,13 +231,18 @@ export class ImportQuickFixes {
     return actions;
   }
 
-  private findImportInsertPosition(document: vscode.TextDocument, module: string): vscode.Position {
+  /**
+   *
+   * @param document
+   * @param module
+   */
+  private findImportInsertPosition(document: vscode.TextDocument, _module: string): vscode.Position {
     // Find the last import statement
     let lastImportLine = -1;
 
     for (let i = 0; i < Math.min(50, document.lineCount); i++) {
       const line = document.lineAt(i);
-      if (line.text.match(/^import\s+/)) {
+      if (/^import\s+/.exec(line.text)) {
         lastImportLine = i;
       }
     }
@@ -221,6 +256,11 @@ export class ImportQuickFixes {
     return new vscode.Position(lastImportLine + 1, 0);
   }
 
+  /**
+   *
+   * @param document
+   * @param module
+   */
   private findExistingImportLine(document: vscode.TextDocument, module: string): number {
     for (let i = 0; i < Math.min(50, document.lineCount); i++) {
       const line = document.lineAt(i);

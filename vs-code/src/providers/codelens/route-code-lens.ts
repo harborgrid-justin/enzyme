@@ -1,18 +1,26 @@
 import * as vscode from 'vscode';
 
+/**
+ *
+ */
 export class RouteCodeLensProvider implements vscode.CodeLensProvider {
-  private _onDidChangeCodeLenses = new vscode.EventEmitter<void>();
+  private readonly _onDidChangeCodeLenses = new vscode.EventEmitter<void>();
   public readonly onDidChangeCodeLenses = this._onDidChangeCodeLenses.event;
 
+  /**
+   *
+   * @param document
+   * @param token
+   */
   public provideCodeLenses(
     document: vscode.TextDocument,
-    token: vscode.CancellationToken
+    _token: vscode.CancellationToken
   ): vscode.ProviderResult<vscode.CodeLens[]> {
     const codeLenses: vscode.CodeLens[] = [];
     const text = document.getText();
 
     // Find route definitions
-    const routePattern = /createRoute\s*\(\s*\{/g;
+    const routePattern = /createRoute\s*\(\s*{/g;
     let match;
 
     while ((match = routePattern.exec(text)) !== null) {
@@ -69,6 +77,11 @@ export class RouteCodeLensProvider implements vscode.CodeLensProvider {
     return codeLenses;
   }
 
+  /**
+   *
+   * @param document
+   * @param position
+   */
   private extractRouteInfo(
     document: vscode.TextDocument,
     position: vscode.Position
@@ -85,11 +98,11 @@ export class RouteCodeLensProvider implements vscode.CodeLensProvider {
     // Scan forward to find the complete route definition
     while (currentLine < document.lineCount && currentLine < position.line + 50) {
       const line = document.lineAt(currentLine);
-      routeText += line.text + '\n';
+      routeText += `${line.text  }\n`;
 
       for (const char of line.text) {
-        if (char === '{') braceCount++;
-        if (char === '}') braceCount--;
+        if (char === '{') {braceCount++;}
+        if (char === '}') {braceCount--;}
       }
 
       if (braceCount === 0 && currentLine > position.line) {
@@ -100,25 +113,33 @@ export class RouteCodeLensProvider implements vscode.CodeLensProvider {
     }
 
     // Extract path
-    const pathMatch = routeText.match(/path:\s*['"]([^'"]+)['"]/);
+    const pathMatch = /path:\s*["']([^"']+)["']/.exec(routeText);
     const path = pathMatch ? pathMatch[1] : undefined;
 
     // Extract component
-    const componentMatch = routeText.match(/component:\s*(\w+)/);
+    const componentMatch = /component:\s*(\w+)/.exec(routeText);
     const component = componentMatch ? componentMatch[1] : undefined;
 
     // Extract guards
-    const guardsMatch = routeText.match(/guards:\s*\[([^\]]+)\]/);
-    const guards = guardsMatch
+    const guardsMatch = /guards:\s*\[([^\]]+)]/.exec(routeText);
+    const guards = guardsMatch && guardsMatch[1]
       ? guardsMatch[1]
           .split(',')
           .map((g) => g.trim())
           .filter((g) => g.length > 0)
       : undefined;
 
-    return { path, component, guards };
+    const result: { path?: string; component?: string; guards?: string[] } = {};
+    if (path) result.path = path;
+    if (component) result.component = component;
+    if (guards) result.guards = guards;
+
+    return result;
   }
 
+  /**
+   *
+   */
   public refresh(): void {
     this._onDidChangeCodeLenses.fire();
   }

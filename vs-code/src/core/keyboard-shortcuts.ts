@@ -319,15 +319,6 @@ export function generateShortcutsHelp(): string {
 export async function showShortcutsQuickPick(): Promise<void> {
   const isMac = process.platform === 'darwin';
 
-  // Build quick pick items
-  const items: vscode.QuickPickItem[] = KEYBOARD_SHORTCUTS.map(shortcut => ({
-    label: shortcut.name,
-    description: formatShortcutForDisplay(isMac ? shortcut.mac : shortcut.windows),
-    detail: shortcut.description,
-    // Store command in buttons (hack to pass data)
-    buttons: [{ iconPath: new vscode.ThemeIcon('run'), tooltip: 'Execute' }] as any
-  }));
-
   // Group by category
   const categorizedItems: vscode.QuickPickItem[] = [];
   const categories = [...new Set(KEYBOARD_SHORTCUTS.map(s => s.category))];
@@ -367,6 +358,7 @@ export async function showShortcutsQuickPick(): Promise<void> {
 
 /**
  * Get icon for shortcut category
+ * @param category
  */
 function getCategoryIcon(category: KeyboardShortcut['category']): string {
   const icons: Record<KeyboardShortcut['category'], string> = {
@@ -390,7 +382,7 @@ function getCategoryIcon(category: KeyboardShortcut['category']): string {
  * @returns Disposable for cleanup
  */
 export function registerKeyboardShortcutsCommand(
-  context: vscode.ExtensionContext
+  _context: vscode.ExtensionContext
 ): vscode.Disposable {
   return vscode.commands.registerCommand('enzyme.showKeyboardShortcuts', async () => {
     await showShortcutsQuickPick();

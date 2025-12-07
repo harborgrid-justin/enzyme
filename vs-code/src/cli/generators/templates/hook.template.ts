@@ -1,5 +1,9 @@
-import { GeneratorOptions, GeneratorTemplate } from '../index';
+import type { GeneratorOptions, GeneratorTemplate } from '../index';
 
+/**
+ *
+ * @param options
+ */
 export function hookTemplate(options: GeneratorOptions): GeneratorTemplate {
   const { name, path: basePath = 'src/hooks', skipTests } = options;
 
@@ -35,6 +39,10 @@ export function hookTemplate(options: GeneratorOptions): GeneratorTemplate {
   };
 }
 
+/**
+ *
+ * @param name
+ */
 function generateHook(name: string): string {
   const stateName = name.replace(/^use/, '').toLowerCase();
 
@@ -83,6 +91,10 @@ async function doSomething(options?: ${name}Options): Promise<any> {
 `;
 }
 
+/**
+ *
+ * @param name
+ */
 function generateTypes(name: string): string {
   const stateName = name.replace(/^use/, '').toLowerCase();
 
@@ -100,6 +112,10 @@ export interface ${name}Result {
 `;
 }
 
+/**
+ *
+ * @param name
+ */
 function generateTest(name: string): string {
   return `import { renderHook, waitFor } from '@testing-library/react';
 import { ${name} } from './${name}';
@@ -133,6 +149,10 @@ describe('${name}', () => {
 `;
 }
 
-function capitalize(str: string): string {
-  return str.charAt(0).toUpperCase() + str.slice(1);
+/**
+ *
+ * @param string_
+ */
+function capitalize(string_: string): string {
+  return string_.charAt(0).toUpperCase() + string_.slice(1);
 }
