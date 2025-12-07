@@ -5,7 +5,7 @@ import { BaseCommand } from '../base-command';
 import type { CommandContext, CommandMetadata } from '../base-command';
 
 /**
- *
+ * Store options interface
  */
 interface StoreOptions {
   name: string;
@@ -31,7 +31,8 @@ interface StateField {
  */
 export class GenerateStoreCommand extends BaseCommand {
   /**
-   *
+   * Get command metadata for registration
+   * @returns Command metadata object
    */
   getMetadata(): CommandMetadata {
     return {
@@ -48,8 +49,9 @@ export class GenerateStoreCommand extends BaseCommand {
   }
 
   /**
-   *
-   * @param _context
+   * Execute the command
+   * @param _context - Command execution context
+   * @returns Promise that resolves when command completes
    */
   protected async executeCommand(_context: CommandContext): Promise<void> {
     const workspaceFolder = await this.ensureWorkspaceFolder();
@@ -87,6 +89,10 @@ export class GenerateStoreCommand extends BaseCommand {
 
   /**
    *
+   */
+  /**
+   * Gather store generation options from user
+   * @returns Promise resolving to store options or undefined if cancelled
    */
   private async gatherStoreOptions(): Promise<StoreOptions | undefined> {
     // Get store name

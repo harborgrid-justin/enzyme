@@ -72,7 +72,7 @@ interface CircuitBreaker {
   state: CircuitState;
   failureCount: number;
   lastFailureTime: number;
-  resetTimer?: NodeJS.Timeout;
+  resetTimer?: ReturnType<typeof setTimeout>;
 }
 
 /**

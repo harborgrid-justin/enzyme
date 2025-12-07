@@ -93,7 +93,7 @@ export class FeatureFlagsManager {
 
       // Parse flags from config (simplified)
       const flagsMatch = /features:\s*{[\S\s]*?flags:\s*\[([\S\s]*?)]/.exec(content);
-      if (flagsMatch && flagsMatch[1]) {
+      if (flagsMatch?.[1]) {
         // In production, use proper TS parser
         const flagsString = flagsMatch[1];
         const flags = this.parseFlagsString(flagsString);
@@ -341,6 +341,7 @@ export class FeatureFlagsManager {
   /**
    * Sync with remote flag service
    * @param url
+   * @param _url
    */
   public async syncWithRemote(_url: string): Promise<void> {
     // this.remoteUrl = url;

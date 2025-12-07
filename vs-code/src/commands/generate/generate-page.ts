@@ -5,7 +5,7 @@ import { BaseCommand } from '../base-command';
 import type { CommandContext, CommandMetadata } from '../base-command';
 
 /**
- *
+ * Page options interface
  */
 interface PageOptions {
   name: string;
@@ -24,7 +24,8 @@ interface PageOptions {
  */
 export class GeneratePageCommand extends BaseCommand {
   /**
-   *
+   * Get command metadata for registration
+   * @returns Command metadata object
    */
   getMetadata(): CommandMetadata {
     return {
@@ -41,8 +42,9 @@ export class GeneratePageCommand extends BaseCommand {
   }
 
   /**
-   *
-   * @param _context
+   * Execute the command
+   * @param _context - Command execution context
+   * @returns Promise that resolves when command completes
    */
   protected async executeCommand(_context: CommandContext): Promise<void> {
     const workspaceFolder = await this.ensureWorkspaceFolder();
@@ -86,6 +88,10 @@ export class GeneratePageCommand extends BaseCommand {
 
   /**
    *
+   */
+  /**
+   * Gather page generation options from user
+   * @returns Promise resolving to page options or undefined if cancelled
    */
   private async gatherPageOptions(): Promise<PageOptions | undefined> {
     // Get route path

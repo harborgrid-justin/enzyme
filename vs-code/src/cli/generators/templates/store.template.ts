@@ -1,8 +1,9 @@
 import type { GeneratorOptions, GeneratorTemplate } from '../index';
 
 /**
- *
- * @param options
+ * Generate store template files
+ * @param options - Generator configuration options
+ * @returns {GeneratorTemplate} The generated store template structure
  */
 export function storeTemplate(options: GeneratorOptions): GeneratorTemplate {
   const { name, path: basePath = 'src/store' } = options;
@@ -53,8 +54,9 @@ export function storeTemplate(options: GeneratorOptions): GeneratorTemplate {
 }
 
 /**
- *
- * @param name
+ * Generate Zustand store
+ * @param name - The name of the store
+ * @returns {string} The generated store code
  */
 function generateStore(name: string): string {
   return `import { create } from 'zustand';
@@ -94,8 +96,9 @@ export const use${name}Store = create<${name}Store>()(
 }
 
 /**
- *
- * @param name
+ * Generate TypeScript types for store
+ * @param name - The name of the store
+ * @returns {string} The generated types code
  */
 function generateTypes(name: string): string {
   return `export interface ${name}Item {
@@ -136,8 +139,9 @@ export interface ${name}Store extends ${name}State, ${name}Actions {}
 }
 
 /**
- *
- * @param name
+ * Generate store actions
+ * @param name - The name of the store
+ * @returns {string} The generated actions code
  */
 function generateActions(name: string): string {
   return `import { StateCreator } from 'zustand';
@@ -270,8 +274,9 @@ async function deleteItemFromAPI(id: string): Promise<void> {
 }
 
 /**
- *
- * @param name
+ * Generate store selectors
+ * @param name - The name of the store
+ * @returns {string} The generated selectors code
  */
 function generateSelectors(name: string): string {
   return `import { ${name}Store } from './${name}.types';
@@ -304,8 +309,9 @@ export const ${name}Selectors = {
 }
 
 /**
- *
- * @param name
+ * Generate test file
+ * @param name - The name of the store
+ * @returns {string} The generated test code
  */
 function generateTest(name: string): string {
   return `import { renderHook, act, waitFor } from '@testing-library/react';
@@ -374,8 +380,9 @@ describe('${name}Store', () => {
 }
 
 /**
- *
- * @param name
+ * Generate index barrel export
+ * @param name - The name of the store
+ * @returns {string} The generated index code
  */
 function generateIndex(name: string): string {
   return `export { use${name}Store } from './${name}.store';

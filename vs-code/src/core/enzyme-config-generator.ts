@@ -134,7 +134,7 @@ export class EnzymeConfigGenerator {
           title: 'Generating Enzyme configuration',
           cancellable: false,
         },
-        async (progress) => {
+        async (progress: vscode.Progress<{message?: string; increment?: number}>) => {
           // Generate enzyme.config
           progress.report({ message: 'Creating enzyme.config...', increment: 20 });
           try {

@@ -1,6 +1,14 @@
 import * as path from 'node:path';
 import type * as vscode from 'vscode';
 
+// Constants for debug configuration types
+const REQUEST_TYPE_LAUNCH = 'launch';
+const WORKSPACE_FOLDER_VAR = '${workspaceFolder}';
+const WORKSPACE_FOLDER_SRC = '${workspaceFolder}/src';
+const WEBSPACE_FOLDER_VAR = '${webspaceFolder}'; // Note: intentionally 'webspace' for webpack config
+const DEFAULT_APP_URL = 'http://localhost:3000';
+const DEBUG_CONFIG_NAME_CHROME = 'Enzyme: Debug in Chrome';
+
 /**
  *
  */
@@ -8,16 +16,17 @@ export class EnzymeDebugConfigurationProvider implements vscode.DebugConfigurati
   /**
    * Provide debug configurations
    * @param _folder
+   * @returns Promise resolving to array of debug configurations
    */
   async provideDebugConfigurations(
     _folder: vscode.WorkspaceFolder | undefined
   ): Promise<vscode.DebugConfiguration[]> {
-    return [
+    return Promise.resolve([
       this.createChromeConfig(),
       this.createNodeConfig(),
       this.createCompoundConfig(),
       this.createTestConfig(),
-    ];
+    ]);
   }
 
   /**
@@ -25,6 +34,7 @@ export class EnzymeDebugConfigurationProvider implements vscode.DebugConfigurati
    * @param folder
    * @param config
    * @param _token
+   * @returns Resolved debug configuration or null
    */
   async resolveDebugConfiguration(
     folder: vscode.WorkspaceFolder | undefined,
@@ -47,18 +57,19 @@ export class EnzymeDebugConfigurationProvider implements vscode.DebugConfigurati
 
   /**
    * Create Chrome debugging configuration
+   * @returns Chrome debug configuration
    */
   private createChromeConfig(): vscode.DebugConfiguration {
     return {
       type: 'chrome',
-      request: 'launch',
-      name: 'Enzyme: Debug in Chrome',
-      url: 'http://localhost:3000',
-      webRoot: '${workspaceFolder}/src',
+      request: REQUEST_TYPE_LAUNCH,
+      name: DEBUG_CONFIG_NAME_CHROME,
+      url: DEFAULT_APP_URL,
+      webRoot: WORKSPACE_FOLDER_SRC,
       sourceMapPathOverrides: {
-        'webpack:///src/*': '${webspaceFolder}/src/*',
-        'webpack:///./*': '${webspaceFolder}/*',
-        'webpack:///./~/*': '${webspaceFolder}/node_modules/*',
+        'webpack:///src/*': `${WEBSPACE_FOLDER_VAR}/src/*`,
+        'webpack:///./*': `${WEBSPACE_FOLDER_VAR}/*`,
+        'webpack:///./~/*': `${WEBSPACE_FOLDER_VAR}/node_modules/*`,
       },
       preLaunchTask: 'enzyme: dev',
       runtimeArgs: ['--disable-web-security', '--user-data-dir'],
@@ -67,15 +78,16 @@ export class EnzymeDebugConfigurationProvider implements vscode.DebugConfigurati
 
   /**
    * Create Node.js debugging configuration (for SSR)
+   * @returns Node.js debug configuration
    */
   private createNodeConfig(): vscode.DebugConfiguration {
     return {
       type: 'node',
-      request: 'launch',
+      request: REQUEST_TYPE_LAUNCH,
       name: 'Enzyme: Debug SSR',
-      program: '${workspaceFolder}/node_modules/.bin/enzyme',
+      program: `${WORKSPACE_FOLDER_VAR}/node_modules/.bin/enzyme`,
       args: ['dev', '--ssr'],
-      cwd: '${workspaceFolder}',
+      cwd: WORKSPACE_FOLDER_VAR,
       env: {
         NODE_ENV: 'development',
         DEBUG: 'enzyme:*',
@@ -83,34 +95,36 @@ export class EnzymeDebugConfigurationProvider implements vscode.DebugConfigurati
       sourceMaps: true,
       protocol: 'inspector',
       console: 'integratedTerminal',
-      outFiles: ['${workspaceFolder}/dist/**/*.js'],
+      outFiles: [`${WORKSPACE_FOLDER_VAR}/dist/**/*.js`],
     };
   }
 
   /**
    * Create compound configuration (Chrome + Node)
+   * @returns Compound debug configuration
    */
   private createCompoundConfig(): vscode.DebugConfiguration {
     return {
       type: 'compound',
-      request: 'launch',
+      request: REQUEST_TYPE_LAUNCH,
       name: 'Enzyme: Debug Full Stack',
-      configurations: ['Enzyme: Debug in Chrome', 'Enzyme: Debug SSR'],
+      configurations: [DEBUG_CONFIG_NAME_CHROME, 'Enzyme: Debug SSR'],
       stopAll: true,
     };
   }
 
   /**
    * Create test debugging configuration
+   * @returns Test debug configuration
    */
   private createTestConfig(): vscode.DebugConfiguration {
     return {
       type: 'node',
-      request: 'launch',
+      request: REQUEST_TYPE_LAUNCH,
       name: 'Enzyme: Debug Tests',
-      program: '${workspaceFolder}/node_modules/.bin/jest',
+      program: `${WORKSPACE_FOLDER_VAR}/node_modules/.bin/jest`,
       args: ['--runInBand', '--no-cache', '--watchAll=false'],
-      cwd: '${workspaceFolder}',
+      cwd: WORKSPACE_FOLDER_VAR,
       console: 'integratedTerminal',
       internalConsoleOptions: 'neverOpen',
       sourceMaps: true,
@@ -124,29 +138,22 @@ export class EnzymeDebugConfigurationProvider implements vscode.DebugConfigurati
    * Resolve Enzyme-specific configuration
    * @param folder
    * @param config
+   * @returns Resolved debug configuration
    */
   private resolveEnzymeConfig(
     folder: vscode.WorkspaceFolder | undefined,
     config: vscode.DebugConfiguration
   ): vscode.DebugConfiguration {
-    const workspaceRoot = folder?.uri.fsPath || '';
+    const workspaceRoot = folder?.uri.fsPath ?? '';
 
     // Set default values
-    if (!config['url']) {
-      config['url'] = 'http://localhost:3000';
-    }
-
-    if (!config['webRoot']) {
-      config['webRoot'] = path.join(workspaceRoot, 'src');
-    }
-
-    if (!config['cwd']) {
-      config['cwd'] = workspaceRoot;
-    }
+    config['url'] ??= DEFAULT_APP_URL;
+    config['webRoot'] ??= path.join(workspaceRoot, 'src');
+    config['cwd'] ??= workspaceRoot;
 
     // Add Enzyme environment variables
     config['env'] = {
-      ...config['env'],
+      ...(config['env'] as Record<string, string> | undefined),
       ENZYME_ENV: 'development',
       ENZYME_DEBUG: 'true',
     };
@@ -156,9 +163,27 @@ export class EnzymeDebugConfigurationProvider implements vscode.DebugConfigurati
 }
 
 /**
- * Register debug configurations in package.json
+ * Debug configuration contribution for package.json
  */
-export function getDebugConfigurationContribution() {
+interface DebugConfigurationContribution {
+  debuggers: Array<{
+    type: string;
+    label: string;
+    configurationAttributes: Record<string, unknown>;
+    initialConfigurations: vscode.DebugConfiguration[];
+    configurationSnippets: Array<{
+      label: string;
+      description: string;
+      body: vscode.DebugConfiguration;
+    }>;
+  }>;
+}
+
+/**
+ * Register debug configurations in package.json
+ * @returns Debug configuration contribution for package.json
+ */
+export function getDebugConfigurationContribution(): DebugConfigurationContribution {
   return {
     debuggers: [
       {
@@ -171,7 +196,7 @@ export function getDebugConfigurationContribution() {
               url: {
                 type: 'string',
                 description: 'Application URL',
-                default: 'http://localhost:3000',
+                default: DEFAULT_APP_URL,
               },
               webRoot: {
                 type: 'string',
@@ -189,21 +214,21 @@ export function getDebugConfigurationContribution() {
         initialConfigurations: [
           {
             type: 'chrome',
-            request: 'launch',
-            name: 'Enzyme: Debug in Chrome',
-            url: 'http://localhost:3000',
-            webRoot: '${workspaceFolder}/src',
+            request: REQUEST_TYPE_LAUNCH,
+            name: DEBUG_CONFIG_NAME_CHROME,
+            url: DEFAULT_APP_URL,
+            webRoot: WORKSPACE_FOLDER_SRC,
           },
         ],
         configurationSnippets: [
           {
-            label: 'Enzyme: Debug in Chrome',
+            label: DEBUG_CONFIG_NAME_CHROME,
             description: 'Debug Enzyme app in Chrome',
             body: {
               type: 'chrome',
-              request: 'launch',
-              name: 'Enzyme: Debug in Chrome',
-              url: 'http://localhost:3000',
+              request: REQUEST_TYPE_LAUNCH,
+              name: DEBUG_CONFIG_NAME_CHROME,
+              url: DEFAULT_APP_URL,
               webRoot: '^"\\${workspaceFolder}/src"',
             },
           },
@@ -212,7 +237,7 @@ export function getDebugConfigurationContribution() {
             description: 'Debug Enzyme server-side rendering',
             body: {
               type: 'node',
-              request: 'launch',
+              request: REQUEST_TYPE_LAUNCH,
               name: 'Enzyme: Debug SSR',
               program: '^"\\${workspaceFolder}/node_modules/.bin/enzyme"',
               args: ['dev', '--ssr'],
@@ -223,5 +248,3 @@ export function getDebugConfigurationContribution() {
     ],
   };
 }
-1
-1

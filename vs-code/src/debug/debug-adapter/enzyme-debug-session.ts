@@ -46,6 +46,7 @@ export class EnzymeDebugSession {
 
   /**
    *
+   * @param _options
    */
   constructor(_options: SessionOptions = {}) {
     this.adapter = new EnzymeDebugAdapter();

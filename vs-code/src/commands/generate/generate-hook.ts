@@ -5,7 +5,7 @@ import { BaseCommand } from '../base-command';
 import type { CommandContext, CommandMetadata } from '../base-command';
 
 /**
- *
+ * Hook options interface
  */
 interface HookOptions {
   name: string;
@@ -22,7 +22,8 @@ interface HookOptions {
  */
 export class GenerateHookCommand extends BaseCommand {
   /**
-   *
+   * Get command metadata for registration
+   * @returns Command metadata object
    */
   getMetadata(): CommandMetadata {
     return {
@@ -39,8 +40,9 @@ export class GenerateHookCommand extends BaseCommand {
   }
 
   /**
-   *
-   * @param _context
+   * Execute the command
+   * @param _context - Command execution context
+   * @returns Promise that resolves when command completes
    */
   protected async executeCommand(_context: CommandContext): Promise<void> {
     const workspaceFolder = await this.ensureWorkspaceFolder();
@@ -78,6 +80,10 @@ export class GenerateHookCommand extends BaseCommand {
 
   /**
    *
+   */
+  /**
+   * Gather hook generation options from user
+   * @returns Promise resolving to hook options or undefined if cancelled
    */
   private async gatherHookOptions(): Promise<HookOptions | undefined> {
     // Get hook name (auto-prefix with 'use')

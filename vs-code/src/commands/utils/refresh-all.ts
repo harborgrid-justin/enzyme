@@ -9,7 +9,8 @@ import type { CommandContext, CommandMetadata } from '../base-command';
  */
 export class RefreshAllCommand extends BaseCommand {
   /**
-   *
+   * Get command metadata for registration
+   * @returns Command metadata object
    */
   getMetadata(): CommandMetadata {
     return {
@@ -25,8 +26,9 @@ export class RefreshAllCommand extends BaseCommand {
   }
 
   /**
-   *
-   * @param _context
+   * Execute the command
+   * @param _context - Command execution context
+   * @returns Promise that resolves when command completes
    */
   protected async executeCommand(_context: CommandContext): Promise<void> {
     await this.withProgress(

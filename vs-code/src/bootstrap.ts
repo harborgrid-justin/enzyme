@@ -57,7 +57,7 @@ import type { WorkspaceService } from './services/workspace-service';
  * This interface defines the public API that can be accessed by other extensions
  * or programmatic consumers of the Enzyme extension.
  *
- * @remarks
+ * @description
  * This API is returned from the activate() function and provides access to:
  * - Core services (container, event bus, logger, workspace, analysis)
  * - Lifecycle management
@@ -101,7 +101,7 @@ export interface EnzymeExtensionAPI {
  * @param context - The VS Code extension context
  * @returns A promise that resolves to the extension's public API
  *
- * @remarks
+ * @description
  * This is an alternative architecture to the simpler extension.ts implementation.
  * It provides:
  * - Full dependency injection with Container pattern
@@ -193,10 +193,7 @@ export async function bootstrap(context: vscode.ExtensionContext): Promise<Enzym
       providerRegistry.dispose();
       commandRegistry.dispose();
       await serviceRegistry.dispose();
-      // FIXED: Was a no-op statement, now properly disposes if dispose method exists
-      if (workspaceAnalyzer && typeof (workspaceAnalyzer as any).dispose === 'function') {
-        (workspaceAnalyzer as any).dispose();
-      }
+      // WorkspaceAnalyzer doesn't have a dispose method, no cleanup needed
       telemetryService.dispose();
       analysisService.dispose();
       workspaceService.dispose();
@@ -220,7 +217,13 @@ export async function bootstrap(context: vscode.ExtensionContext): Promise<Enzym
     lifecycleManager,
 
     getVersion(): string {
-      return context.extension.packageJSON.version;
+      try {
+         
+        const {version} = context.extension.packageJSON;
+        return typeof version === 'string' ? version : '0.0.0';
+      } catch {
+        return '0.0.0';
+      }
     },
 
     isReady(): boolean {
@@ -240,7 +243,7 @@ export async function bootstrap(context: vscode.ExtensionContext): Promise<Enzym
  * @returns A promise that resolves to the extension's public API
  * @throws Will show error message to user if activation fails
  *
- * @remarks
+ * @description
  * - This function is called by VS Code when the extension activates
  * - It delegates to the bootstrap() function for initialization
  * - Errors are caught, logged, and displayed to the user
@@ -270,7 +273,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Enzyme
  *
  * @returns A promise that resolves when deactivation is complete
  *
- * @remarks
+ * @description
  * The actual cleanup logic is in the disposal handler registered with
  * context.subscriptions in the bootstrap() function. This ensures proper
  * cleanup of:

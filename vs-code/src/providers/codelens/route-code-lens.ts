@@ -11,6 +11,7 @@ export class RouteCodeLensProvider implements vscode.CodeLensProvider {
    *
    * @param document
    * @param token
+   * @param _token
    */
   public provideCodeLenses(
     document: vscode.TextDocument,
@@ -122,7 +123,7 @@ export class RouteCodeLensProvider implements vscode.CodeLensProvider {
 
     // Extract guards
     const guardsMatch = /guards:\s*\[([^\]]+)]/.exec(routeText);
-    const guards = guardsMatch && guardsMatch[1]
+    const guards = guardsMatch?.[1]
       ? guardsMatch[1]
           .split(',')
           .map((g) => g.trim())
@@ -130,9 +131,9 @@ export class RouteCodeLensProvider implements vscode.CodeLensProvider {
       : undefined;
 
     const result: { path?: string; component?: string; guards?: string[] } = {};
-    if (path) result.path = path;
-    if (component) result.component = component;
-    if (guards) result.guards = guards;
+    if (path) {result.path = path;}
+    if (component) {result.component = component;}
+    if (guards) {result.guards = guards;}
 
     return result;
   }

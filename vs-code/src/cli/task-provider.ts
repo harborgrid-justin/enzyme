@@ -24,6 +24,7 @@ export class EnzymeTaskProvider implements vscode.TaskProvider {
 
   /**
    * Provide tasks for Enzyme commands
+   * @returns Array of Enzyme tasks
    */
   async provideTasks(): Promise<vscode.Task[]> {
     if (this.tasks.length > 0) {
@@ -61,6 +62,7 @@ export class EnzymeTaskProvider implements vscode.TaskProvider {
    * Resolve a task definition
    * SECURITY: Uses ProcessExecution instead of ShellExecution to prevent command injection
    * @param task
+   * @returns Resolved task or undefined
    */
   async resolveTask(task: vscode.Task): Promise<vscode.Task | undefined> {
     const definition = task.definition as EnzymeTaskDefinition;
@@ -74,7 +76,7 @@ export class EnzymeTaskProvider implements vscode.TaskProvider {
       return undefined;
     }
 
-    const args = definition.args || [];
+    const args = definition.args ?? [];
     const allArgs = [definition.command, ...args];
 
     // SECURITY: Use ProcessExecution with args array to prevent shell injection
@@ -98,6 +100,7 @@ export class EnzymeTaskProvider implements vscode.TaskProvider {
    * @param cliPath
    * @param args
    * @param group
+   * @returns VS Code task
    */
   private createTask(
     name: string,
@@ -148,6 +151,7 @@ export class EnzymeTaskProvider implements vscode.TaskProvider {
   /**
    * Get problem matchers for a command
    * @param command
+   * @returns Array of problem matcher identifiers
    */
   private getProblemMatchers(command: string): string[] {
     const matchers: Record<string, string[]> = {
@@ -158,11 +162,12 @@ export class EnzymeTaskProvider implements vscode.TaskProvider {
       typecheck: ['$tsc'],
     };
 
-    return matchers[command] || [];
+    return matchers[command] ?? [];
   }
 
   /**
    * Get workspace root
+   * @returns Workspace root path or null
    */
   private getWorkspaceRoot(): string | null {
     const folders = vscode.workspace.workspaceFolders;
@@ -174,6 +179,7 @@ export class EnzymeTaskProvider implements vscode.TaskProvider {
 /**
  * Register custom problem matchers for Enzyme
  * @param _context
+ * @returns void
  */
 export function registerProblemMatchers(_context: vscode.ExtensionContext): void {
   // Problem matcher for Enzyme build errors

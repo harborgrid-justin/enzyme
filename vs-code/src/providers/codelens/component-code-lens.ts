@@ -11,6 +11,7 @@ export class ComponentCodeLensProvider implements vscode.CodeLensProvider {
    *
    * @param document
    * @param token
+   * @param _token
    */
   public provideCodeLenses(
     document: vscode.TextDocument,
@@ -30,7 +31,7 @@ export class ComponentCodeLensProvider implements vscode.CodeLensProvider {
       let match;
       while ((match = pattern.exec(text)) !== null) {
         const componentName = match[1];
-        if (!componentName) continue;
+        if (!componentName) {continue;}
 
         const position = document.positionAt(match.index);
         const range = new vscode.Range(position, position);
@@ -86,6 +87,8 @@ export class ComponentCodeLensProvider implements vscode.CodeLensProvider {
    *
    * @param componentUri
    * @param componentName
+   * @param _componentUri
+   * @param _componentName
    */
   private getStoryPath(_componentUri: vscode.Uri, _componentName: string): string | null {
     // Check if any of these files exist (simplified - in real implementation, use fs)
@@ -97,6 +100,8 @@ export class ComponentCodeLensProvider implements vscode.CodeLensProvider {
    *
    * @param componentUri
    * @param componentName
+   * @param _componentUri
+   * @param _componentName
    */
   private getTestPath(_componentUri: vscode.Uri, _componentName: string): string | null {
     // Check if any of these files exist (simplified)

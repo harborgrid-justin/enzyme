@@ -11,7 +11,8 @@ export class OpenDocsCommand extends BaseCommand {
   private readonly DOCS_BASE_URL = 'https://github.com/harborgrid-justin/enzyme#readme';
 
   /**
-   *
+   * Get command metadata for registration
+   * @returns Command metadata object
    */
   getMetadata(): CommandMetadata {
     return {
@@ -27,8 +28,9 @@ export class OpenDocsCommand extends BaseCommand {
   }
 
   /**
-   *
-   * @param _context
+   * Execute the command
+   * @param _context - Command execution context
+   * @returns Promise that resolves when command completes
    */
   protected async executeCommand(_context: CommandContext): Promise<void> {
     // Show quick pick to select documentation section

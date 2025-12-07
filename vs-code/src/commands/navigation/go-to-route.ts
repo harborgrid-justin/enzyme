@@ -4,7 +4,7 @@ import { BaseCommand } from '../base-command';
 import type { CommandContext, CommandMetadata } from '../base-command';
 
 /**
- *
+ * Route definition interface
  */
 interface RouteDefinition {
   path: string;
@@ -20,7 +20,8 @@ interface RouteDefinition {
  */
 export class GoToRouteCommand extends BaseCommand {
   /**
-   *
+   * Get command metadata for registration
+   * @returns Command metadata object
    */
   getMetadata(): CommandMetadata {
     return {
@@ -36,8 +37,9 @@ export class GoToRouteCommand extends BaseCommand {
   }
 
   /**
-   *
-   * @param _context
+   * Execute the command
+   * @param _context - Command execution context
+   * @returns Promise that resolves when command completes
    */
   protected async executeCommand(_context: CommandContext): Promise<void> {
     const workspaceFolder = await this.ensureWorkspaceFolder();
@@ -117,7 +119,7 @@ export class GoToRouteCommand extends BaseCommand {
         let match;
         while ((match = pathRegex.exec(text)) !== null) {
           const routePath = match[1];
-          if (!routePath) continue;
+          if (!routePath) {continue;}
 
           const {line} = document.positionAt(match.index);
 

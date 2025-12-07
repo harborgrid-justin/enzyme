@@ -35,6 +35,7 @@ export class MigrationRunner {
 
   /**
    * Detect current Enzyme version
+   * @returns Promise resolving to current version string or null
    */
   async detectCurrentVersion(): Promise<string | null> {
     const workspaceRoot = this.getWorkspaceRoot();
@@ -45,11 +46,14 @@ export class MigrationRunner {
     try {
       const packageJsonPath = path.join(workspaceRoot, 'package.json');
       const content = await fs.readFile(packageJsonPath, 'utf-8');
-      const packageJson = JSON.parse(content);
+      const packageJson = JSON.parse(content) as {
+        dependencies?: Record<string, string>;
+        devDependencies?: Record<string, string>;
+      };
 
       return (
-        packageJson.dependencies?.['@enzyme/core'] ||
-        packageJson.devDependencies?.['@enzyme/core'] ||
+        packageJson.dependencies?.['@enzyme/core'] ??
+        packageJson.devDependencies?.['@enzyme/core'] ??
         null
       );
     } catch {
@@ -59,17 +63,19 @@ export class MigrationRunner {
 
   /**
    * Get available migrations
+   * @returns Promise resolving to array of available migrations
    */
   async getAvailableMigrations(): Promise<Migration[]> {
     try {
-      const result = await this.cliRunner.runJSON<{ migrations: Migration[] }>({
+      const result = await this.cliRunner.runJSON<{ migrations?: Migration[] }>({
         args: ['migrate', '--list'],
         timeout: 10000,
       });
 
-      return result.migrations || [];
+      return result.migrations ?? [];
     } catch (error) {
-      vscode.window.showErrorMessage(`Failed to fetch migrations: ${error}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      vscode.window.showErrorMessage(`Failed to fetch migrations: ${errorMessage}`);
       return [];
     }
   }
@@ -80,6 +86,7 @@ export class MigrationRunner {
    * @param options
    * @param options.dryRun
    * @param options.force
+   * @returns Promise resolving to migration result or null
    */
   async migrate(
     targetVersion?: string,
@@ -145,11 +152,7 @@ export class MigrationRunner {
       async (progress) => {
         progress.report({ message: 'Starting migration...', increment: 10 });
 
-        const args = ['migrate'];
-
-        if (targetVersion) {
-          args.push('--to', targetVersion);
-        }
+        const args = ['migrate', '--to', targetVersion];
 
         if (options.dryRun) {
           args.push('--dry-run');
@@ -187,12 +190,13 @@ export class MigrationRunner {
 
           return result;
         } catch (error) {
-          vscode.window.showErrorMessage(`Migration failed: ${error}`);
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          vscode.window.showErrorMessage(`Migration failed: ${errorMessage}`);
           return {
             success: false,
-            version: targetVersion || 'unknown',
+            version: targetVersion,
             changes: [],
-            errors: [String(error)],
+            errors: [errorMessage],
           };
         }
       }
@@ -201,6 +205,7 @@ export class MigrationRunner {
 
   /**
    * Rollback migration
+   * @returns Promise resolving to migration result or null
    */
   async rollback(): Promise<MigrationResult | null> {
     const confirm = await vscode.window.showWarningMessage(
@@ -239,12 +244,13 @@ export class MigrationRunner {
 
           return result;
         } catch (error) {
-          vscode.window.showErrorMessage(`Rollback failed: ${error}`);
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          vscode.window.showErrorMessage(`Rollback failed: ${errorMessage}`);
           return {
             success: false,
             version: 'unknown',
             changes: [],
-            errors: [String(error)],
+            errors: [errorMessage],
           };
         }
       }
@@ -254,6 +260,7 @@ export class MigrationRunner {
   /**
    * Dry run migration
    * @param targetVersion
+   * @returns Promise resolving to migration result or null
    */
   async dryRun(targetVersion?: string): Promise<MigrationResult | null> {
     return this.migrate(targetVersion, { dryRun: true });
@@ -277,10 +284,9 @@ export class MigrationRunner {
 
   /**
    * Get workspace root
+   * @returns Workspace root path or null
    */
   private getWorkspaceRoot(): string | null {
-    const folders = vscode.workspace.workspaceFolders;
-    const firstFolder = folders?.[0];
-    return firstFolder ? firstFolder.uri.fsPath : null;
+    return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? null;
   }
 }

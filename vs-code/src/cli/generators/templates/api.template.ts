@@ -1,8 +1,9 @@
 import type { GeneratorOptions, GeneratorTemplate } from '../index';
 
 /**
- *
- * @param options
+ * Generate API template files
+ * @param options - Generator configuration options
+ * @returns {GeneratorTemplate} The generated API template structure
  */
 export function apiTemplate(options: GeneratorOptions): GeneratorTemplate {
   const { name, path: basePath = 'src/api' } = options;
@@ -53,8 +54,9 @@ export function apiTemplate(options: GeneratorOptions): GeneratorTemplate {
 }
 
 /**
- *
- * @param name
+ * Generate API client class
+ * @param name - The name of the API
+ * @returns {string} The generated API client code
  */
 function generateAPI(name: string): string {
   return `import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
@@ -183,8 +185,9 @@ export const ${name.toLowerCase()}API = new ${name}API();
 }
 
 /**
- *
- * @param name
+ * Generate TypeScript types for API
+ * @param name - The name of the API
+ * @returns {string} The generated TypeScript types code
  */
 function generateTypes(name: string): string {
   return `// Entity types
@@ -260,8 +263,9 @@ export interface ${name}ErrorResponse {
 }
 
 /**
- *
- * @param name
+ * Generate API endpoints class
+ * @param name - The name of the API
+ * @returns {string} The generated endpoints code
  */
 function generateEndpoints(name: string): string {
   return `export class ${name}Endpoints {
@@ -300,8 +304,9 @@ function generateEndpoints(name: string): string {
 }
 
 /**
- *
- * @param name
+ * Generate mock data for testing
+ * @param name - The name of the API
+ * @returns {string} The generated mock data code
  */
 function generateMock(name: string): string {
   return `import { ${name}Entity, ${name}ListResponse, ${name}GetResponse } from './${name}.types';
@@ -348,8 +353,9 @@ export const ${name}MockHandlers = {
 }
 
 /**
- *
- * @param name
+ * Generate test file
+ * @param name - The name of the API
+ * @returns {string} The generated test code
  */
 function generateTest(name: string): string {
   return `import { ${name}API } from './${name}.api';
@@ -460,8 +466,9 @@ describe('${name}API', () => {
 }
 
 /**
- *
- * @param name
+ * Generate index barrel export
+ * @param name - The name of the API
+ * @returns {string} The generated index code
  */
 function generateIndex(name: string): string {
   return `export { ${name}API, ${name.toLowerCase()}API } from './${name}.api';

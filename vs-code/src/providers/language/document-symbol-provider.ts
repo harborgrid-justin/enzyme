@@ -8,8 +8,9 @@ import { getParser } from './parser';
 export class EnzymeDocumentSymbolProvider implements vscode.DocumentSymbolProvider {
   /**
    * Provide document symbols
-   * @param document
-   * @param token
+   * @param document - Document to provide symbols for
+   * @param _token - Cancellation token
+   * @returns Array of document symbols or undefined
    */
   public async provideDocumentSymbols(
     document: vscode.TextDocument,

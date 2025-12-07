@@ -10,7 +10,7 @@ import * as vscode from 'vscode';
 // =============================================================================
 
 /**
- *
+ * Property hover information definition
  */
 interface PropertyHoverInfo {
   name: string;
@@ -267,6 +267,7 @@ export class ConfigHoverProvider implements vscode.HoverProvider {
    * @param document
    * @param position
    * @param token
+   * @param _token
    */
   public provideHover(
     document: vscode.TextDocument,

@@ -4,7 +4,7 @@ import { BaseCommand } from '../base-command';
 import type { CommandContext, CommandMetadata } from '../base-command';
 
 /**
- *
+ * Route information interface
  */
 interface RouteInfo {
   path: string;
@@ -47,6 +47,10 @@ export class FindRouteConflictsCommand extends BaseCommand {
   /**
    *
    */
+  /**
+   * Get command metadata for registration
+   * @returns Command metadata object
+   */
   getMetadata(): CommandMetadata {
     return {
       id: 'enzyme.analysis.findRouteConflicts',
@@ -57,8 +61,9 @@ export class FindRouteConflictsCommand extends BaseCommand {
   }
 
   /**
-   *
-   * @param _context
+   * Execute the command
+   * @param _context - Command execution context
+   * @returns Promise that resolves when command completes
    */
   protected async executeCommand(_context: CommandContext): Promise<void> {
     const workspaceFolder = await this.ensureWorkspaceFolder();
@@ -136,7 +141,7 @@ export class FindRouteConflictsCommand extends BaseCommand {
 
         while ((match = pathRegex.exec(text)) !== null) {
           const routePath = match[1];
-          if (!routePath) continue;
+          if (!routePath) {continue;}
 
           const {line} = document.positionAt(match.index);
 
@@ -180,7 +185,7 @@ export class FindRouteConflictsCommand extends BaseCommand {
         const route1 = routes[i];
         const route2 = routes[j];
 
-        if (!route1 || !route2) continue;
+        if (!route1 || !route2) {continue;}
 
         // Exact duplicates
         if (route1.path === route2.path) {

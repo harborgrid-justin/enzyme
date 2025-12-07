@@ -11,6 +11,7 @@ export class FeatureCodeLensProvider implements vscode.CodeLensProvider {
    *
    * @param document
    * @param token
+   * @param _token
    */
   public provideCodeLenses(
     document: vscode.TextDocument,
@@ -128,7 +129,7 @@ export class FeatureCodeLensProvider implements vscode.CodeLensProvider {
 
     // Count routes
     const routesMatch = /routes:\s*\[([^\]]*)]/.exec(featureText);
-    const routeCount = routesMatch && routesMatch[1]
+    const routeCount = routesMatch?.[1]
       ? (routesMatch[1].match(/createRoute/g) || []).length
       : 0;
 

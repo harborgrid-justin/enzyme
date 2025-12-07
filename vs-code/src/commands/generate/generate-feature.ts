@@ -5,7 +5,7 @@ import { BaseCommand } from '../base-command';
 import type { CommandContext, CommandMetadata } from '../base-command';
 
 /**
- *
+ * Feature options interface
  */
 interface FeatureOptions {
   name: string;
@@ -23,7 +23,8 @@ interface FeatureOptions {
  */
 export class GenerateFeatureCommand extends BaseCommand {
   /**
-   *
+   * Get command metadata for registration
+   * @returns Command metadata object
    */
   getMetadata(): CommandMetadata {
     return {
@@ -40,8 +41,9 @@ export class GenerateFeatureCommand extends BaseCommand {
   }
 
   /**
-   *
-   * @param _context
+   * Execute the command
+   * @param _context - Command execution context
+   * @returns Promise that resolves when command completes
    */
   protected async executeCommand(_context: CommandContext): Promise<void> {
     const workspaceFolder = await this.ensureWorkspaceFolder();
@@ -82,6 +84,10 @@ export class GenerateFeatureCommand extends BaseCommand {
 
   /**
    *
+   */
+  /**
+   * Gather feature generation options from user
+   * @returns Promise resolving to feature options or undefined if cancelled
    */
   private async gatherFeatureOptions(): Promise<FeatureOptions | undefined> {
     // Get feature name

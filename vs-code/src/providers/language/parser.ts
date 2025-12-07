@@ -97,6 +97,7 @@ export class EnzymeParser {
   /**
    * Initialize parser with workspace configuration
    * @param workspaceRoot
+   * @param _workspaceRoot
    */
   public async initialize(_workspaceRoot: string): Promise<void> {
     // Parser initialization - reserved for future use
@@ -437,7 +438,7 @@ export class EnzymeParser {
                     property.initializer.properties.forEach(stateProperty => {
                       if (ts.isPropertyAssignment(stateProperty)) {
                         const stateName = stateProperty.name?.getText(sourceFile);
-                        if (!stateName || !stateProperty.initializer) return;
+                        if (!stateName || !stateProperty.initializer) {return;}
                         const stateType = this.inferType(stateProperty.initializer, sourceFile);
                         state[stateName] = stateType;
                       }
@@ -494,7 +495,7 @@ export class EnzymeParser {
 
         // Match patterns like apiClient.get(), RequestBuilder.post()
         const match = /\.(get|post|put|patch|delete|head|options)\(/.exec(callText);
-        if (match && match[1]) {
+        if (match?.[1]) {
           const method = match[1].toUpperCase();
           const position = document.positionAt(node.getStart(sourceFile));
           const range = new vscode.Range(
@@ -503,9 +504,9 @@ export class EnzymeParser {
           );
 
           let endpoint = '';
-          const firstArg = node.arguments[0];
-          if (node.arguments.length > 0 && firstArg) {
-            endpoint = firstArg.getText(sourceFile).replace(/["']/g, '');
+          const firstArgument = node.arguments[0];
+          if (node.arguments.length > 0 && firstArgument) {
+            endpoint = firstArgument.getText(sourceFile).replace(/["']/g, '');
           }
 
           apis.push({
@@ -540,7 +541,7 @@ export class EnzymeParser {
     }
 
     const propsParam = node.parameters[0];
-    if (!propsParam || !propsParam.type) {
+    if (!propsParam?.type) {
       return undefined;
     }
 
@@ -561,7 +562,7 @@ export class EnzymeParser {
     }
 
     const propsParam = node.parameters[0];
-    if (!propsParam || !propsParam.type) {
+    if (!propsParam?.type) {
       return undefined;
     }
 

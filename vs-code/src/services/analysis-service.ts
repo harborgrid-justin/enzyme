@@ -14,7 +14,7 @@ export class AnalysisService {
   private readonly eventEmitter: vscode.EventEmitter<AnalysisResult>;
 
   /**
-   *
+   * Private constructor for singleton pattern
    */
   private constructor() {
     this.eventEmitter = new vscode.EventEmitter<AnalysisResult>();
@@ -22,19 +22,20 @@ export class AnalysisService {
 
   /**
    * Get the singleton instance
+   * @returns AnalysisService instance
    */
   public static getInstance(): AnalysisService {
-    if (!AnalysisService.instance) {
-      AnalysisService.instance = new AnalysisService();
-    }
+     
+    AnalysisService.instance = AnalysisService.instance ?? new AnalysisService();
     return AnalysisService.instance;
   }
 
   /**
    * Analyze performance
-   * @param rootPath
+   * @param rootPath - Root path of the project
+   * @returns Promise resolving to analysis result
    */
-  public async analyzePerformance(rootPath: string): Promise<AnalysisResult> {
+  public analyzePerformance(rootPath: string): AnalysisResult {
     const result: AnalysisResult = {
       type: 'performance',
       timestamp: Date.now(),
@@ -55,9 +56,10 @@ export class AnalysisService {
 
   /**
    * Analyze security
-   * @param rootPath
+   * @param rootPath - Root path of the project
+   * @returns Analysis result
    */
-  public async analyzeSecurity(rootPath: string): Promise<AnalysisResult> {
+  public analyzeSecurity(rootPath: string): AnalysisResult {
     const result: AnalysisResult = {
       type: 'security',
       timestamp: Date.now(),
@@ -78,9 +80,10 @@ export class AnalysisService {
 
   /**
    * Analyze dependencies
-   * @param rootPath
+   * @param rootPath - Root path of the project
+   * @returns Analysis result
    */
-  public async analyzeDependencies(rootPath: string): Promise<AnalysisResult> {
+  public analyzeDependencies(rootPath: string): AnalysisResult {
     const result: AnalysisResult = {
       type: 'dependencies',
       timestamp: Date.now(),
@@ -101,14 +104,15 @@ export class AnalysisService {
 
   /**
    * Get code quality metrics
-   * @param _rootPath
+   * @param _rootPath - Root path of the project (unused)
+   * @returns Code quality metrics
    */
-  public async getCodeQualityMetrics(_rootPath: string): Promise<{
+  public getCodeQualityMetrics(_rootPath: string): {
     complexity: number;
     maintainability: number;
     testCoverage: number;
     duplicates: number;
-  }> {
+  } {
     // Placeholder implementation
     return {
       complexity: 5,
@@ -120,13 +124,14 @@ export class AnalysisService {
 
   /**
    * Get bundle analysis
-   * @param _rootPath
+   * @param _rootPath - Root path of the project (unused)
+   * @returns Bundle analysis information
    */
-  public async getBundleAnalysis(_rootPath: string): Promise<{
+  public getBundleAnalysis(_rootPath: string): {
     totalSize: number;
     chunks: Array<{ name: string; size: number }>;
     suggestions: string[];
-  }> {
+  } {
     // Placeholder implementation
     return {
       totalSize: 250000,
@@ -143,13 +148,14 @@ export class AnalysisService {
 
   /**
    * Generate analysis report
-   * @param rootPath
+   * @param rootPath - Root path of the project
+   * @returns Formatted report
    */
-  public async generateReport(rootPath: string): Promise<string> {
-    const performance = await this.analyzePerformance(rootPath);
-    const security = await this.analyzeSecurity(rootPath);
-    const dependencies = await this.analyzeDependencies(rootPath);
-    const metrics = await this.getCodeQualityMetrics(rootPath);
+  public generateReport(rootPath: string): string {
+    const performance = this.analyzePerformance(rootPath);
+    const security = this.analyzeSecurity(rootPath);
+    const dependencies = this.analyzeDependencies(rootPath);
+    const metrics = this.getCodeQualityMetrics(rootPath);
 
     return `
 # Enzyme Project Analysis Report
@@ -178,7 +184,8 @@ ${dependencies.recommendations.map(r => `- ${r}`).join('\n')}
 
   /**
    * Get cached analysis result
-   * @param key
+   * @param key - Cache key
+   * @returns Cached analysis result or undefined
    */
   public getCachedResult(key: string): AnalysisResult | undefined {
     return this.analysisCache.get(key);
@@ -193,7 +200,8 @@ ${dependencies.recommendations.map(r => `- ${r}`).join('\n')}
 
   /**
    * Subscribe to analysis events
-   * @param listener
+   * @param listener - Event listener callback
+   * @returns Disposable to unsubscribe
    */
   public onAnalysisCompleted(listener: (result: AnalysisResult) => void): vscode.Disposable {
     return this.eventEmitter.event(listener);

@@ -1,8 +1,9 @@
 import type { GeneratorOptions, GeneratorTemplate } from '../index';
 
 /**
- *
- * @param options
+ * Generate page template files
+ * @param options - Generator configuration options
+ * @returns {GeneratorTemplate} The generated page template structure
  */
 export function pageTemplate(options: GeneratorOptions): GeneratorTemplate {
   const { name, path: basePath = 'src/pages', skipTests } = options;
@@ -55,8 +56,9 @@ export function pageTemplate(options: GeneratorOptions): GeneratorTemplate {
 }
 
 /**
- *
- * @param name
+ * Generate page component
+ * @param name - The name of the page
+ * @returns {string} The generated page code
  */
 function generatePage(name: string): string {
   return `import React from 'react';
@@ -80,8 +82,9 @@ ${name}Page.displayName = '${name}Page';
 }
 
 /**
- *
- * @param name
+ * Generate TypeScript types for page
+ * @param name - The name of the page
+ * @returns {string} The generated types code
  */
 function generateTypes(name: string): string {
   return `export interface ${name}PageProps {
@@ -99,8 +102,9 @@ export interface ${name}PageParams {
 }
 
 /**
- *
- * @param name
+ * Generate router loader function
+ * @param name - The name of the page
+ * @returns {string} The generated loader code
  */
 function generateLoader(name: string): string {
   return `import { LoaderFunctionArgs } from 'react-router-dom';
@@ -121,8 +125,9 @@ export async function ${name.toLowerCase()}PageLoader({
 }
 
 /**
- *
- * @param name
+ * Generate error boundary component
+ * @param name - The name of the page
+ * @returns {string} The generated error boundary code
  */
 function generateErrorBoundary(name: string): string {
   return `import React from 'react';
@@ -153,8 +158,9 @@ ${name}PageError.displayName = '${name}PageError';
 }
 
 /**
- *
- * @param name
+ * Generate test file
+ * @param name - The name of the page
+ * @returns {string} The generated test code
  */
 function generateTest(name: string): string {
   return `import React from 'react';
@@ -187,8 +193,9 @@ describe('${name}Page', () => {
 }
 
 /**
- *
- * @param name
+ * Generate index barrel export
+ * @param name - The name of the page
+ * @returns {string} The generated index code
  */
 function generateIndex(name: string): string {
   return `export { ${name}Page } from './${name}Page';

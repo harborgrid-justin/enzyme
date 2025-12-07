@@ -9,6 +9,7 @@ import * as vscode from 'vscode';
  * @param command
  * @param args
  * @param timeout
+ * @returns Promise resolving to stdout and stderr output
  */
 async function execSafe(command: string, args: string[], timeout = 5000): Promise<{ stdout: string; stderr: string }> {
   return new Promise((resolve, reject) => {
@@ -20,11 +21,11 @@ async function execSafe(command: string, args: string[], timeout = 5000): Promis
     let stdout = '';
     let stderr = '';
 
-    child.stdout.on('data', (data) => {
+    child.stdout.on('data', (data: Buffer) => {
       stdout += data.toString();
     });
 
-    child.stderr.on('data', (data) => {
+    child.stderr.on('data', (data: Buffer) => {
       stderr += data.toString();
     });
 
@@ -69,6 +70,7 @@ export class CLIDetector {
   /**
    * Detect the Enzyme CLI installation
    * @param forceRefresh
+   * @returns CLI info or null if not found
    */
   async detect(forceRefresh = false): Promise<CLIInfo | null> {
     if (!forceRefresh && this.isCacheValid()) {
@@ -103,6 +105,7 @@ export class CLIDetector {
 
   /**
    * Get the CLI executable path
+   * @returns CLI executable path or null
    */
   async getExecutablePath(): Promise<string | null> {
     const info = await this.detect();
@@ -111,6 +114,7 @@ export class CLIDetector {
 
   /**
    * Get the CLI version
+   * @returns CLI version or null
    */
   async getVersion(): Promise<string | null> {
     const info = await this.detect();
@@ -120,6 +124,7 @@ export class CLIDetector {
   /**
    * Check if a specific feature is supported
    * @param feature
+   * @returns True if feature is supported, false otherwise
    */
   async supportsFeature(feature: string): Promise<boolean> {
     const info = await this.detect();
@@ -137,6 +142,7 @@ export class CLIDetector {
   /**
    * Detect local installation in node_modules
    * @param workspaceRoot
+   * @returns CLI info or null if not found
    */
   private async detectLocal(workspaceRoot: string | null): Promise<CLIInfo | null> {
     if (!workspaceRoot) {
@@ -197,8 +203,8 @@ export class CLIDetector {
   /**
    * SECURITY: Validate that a path looks like a legitimate executable path
    * This prevents path traversal and injection attacks
-   * @param pathStr
    * @param pathString
+   * @returns True if path is valid, false otherwise
    */
   private isValidExecutablePath(pathString: string): boolean {
     // Must be an absolute path
@@ -218,11 +224,7 @@ export class CLIDetector {
     }
 
     // Basic path format check
-    if (!/^[\w./-]+$/.test(pathString)) {
-      return false;
-    }
-
-    return true;
+    return /^[\w./-]+$/.test(pathString);
   }
 
   /**
@@ -255,6 +257,7 @@ export class CLIDetector {
 
   /**
    * Extract version using npx (separate method for security)
+   * @returns CLI version string
    */
   private async extractVersionNpx(): Promise<string> {
     try {
@@ -267,6 +270,7 @@ export class CLIDetector {
 
   /**
    * Detect features using npx (separate method for security)
+   * @returns Set of available CLI features
    */
   private async detectFeaturesNpx(): Promise<Set<string>> {
     const features = new Set<string>();
@@ -278,8 +282,9 @@ export class CLIDetector {
       const lines = stdout.split('\n');
       for (const line of lines) {
         const match = /^\s+(generate|add|remove|new|analyze|migrate|upgrade|docs|config|doctor)\s/.exec(line);
-        if (match?.[1]) {
-          features.add(match[1]);
+        const feature = match?.[1];
+        if (feature) {
+          features.add(feature);
         }
       }
 
@@ -339,8 +344,9 @@ export class CLIDetector {
       const lines = stdout.split('\n');
       for (const line of lines) {
         const match = /^\s+(generate|add|remove|new|analyze|migrate|upgrade|docs|config|doctor)\s/.exec(line);
-        if (match?.[1]) {
-          features.add(match[1]);
+        const feature = match?.[1];
+        if (feature) {
+          features.add(feature);
         }
       }
 
@@ -361,6 +367,7 @@ export class CLIDetector {
 
   /**
    * Get the workspace root directory
+   * @returns Workspace root path or null
    */
   private getWorkspaceRoot(): string | null {
     const folders = vscode.workspace.workspaceFolders;
@@ -370,11 +377,9 @@ export class CLIDetector {
 
   /**
    * Check if cache is still valid
+   * @returns True if cache is valid, false otherwise
    */
   private isCacheValid(): boolean {
-    if (!this.cache) {
-      return false;
-    }
-    return Date.now() - this.cacheTimestamp < this.CACHE_TTL;
+    return this.cache !== null && Date.now() - this.cacheTimestamp < this.CACHE_TTL;
   }
 }

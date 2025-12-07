@@ -8,6 +8,7 @@ export class ComponentQuickFixes {
    *
    * @param document
    * @param range
+   * @param _range
    * @param context
    */
   public provideQuickFixes(

@@ -27,8 +27,9 @@ export class GeneratorRunner {
 
   /**
    * generate code using CLI or fallback to direct generation
-   * @param type
-   * @param options
+   * @param type - The type of generator to use
+   * @param options - Generator configuration options
+   * @returns {Promise<GeneratorResult>} The result of the generation operation
    */
   async generate(type: GeneratorType, options: GeneratorOptions): Promise<GeneratorResult> {
     try {
@@ -46,8 +47,9 @@ export class GeneratorRunner {
 
   /**
    * generate using CLI
-   * @param type
-   * @param options
+   * @param type - The type of generator to use
+   * @param options - Generator configuration options
+   * @returns {Promise<GeneratorResult>} The result of the CLI generation
    */
   private async generateViaCLI(type: GeneratorType, options: GeneratorOptions): Promise<GeneratorResult> {
     const result = await this.cliRunner.generate(type, options.name, options);
@@ -69,8 +71,9 @@ export class GeneratorRunner {
   /**
    * SECURITY: Generate directly using templates with path validation
    * Uses VS Code fs API for security and validates all file paths
-   * @param type
-   * @param options
+   * @param type - The type of generator to use
+   * @param options - Generator configuration options
+   * @returns {Promise<GeneratorResult>} The result of the direct generation
    */
   private async generateDirect(type: GeneratorType, options: GeneratorOptions): Promise<GeneratorResult> {
     const templateFn = this.templates.get(type);
@@ -88,54 +91,11 @@ export class GeneratorRunner {
     const errors: string[] = [];
 
     for (const file of template.files) {
-      try {
-        // SECURITY: Sanitize file path to prevent path traversal
-        const sanitizedPath = sanitizePath(file.path, workspaceRoot);
-        if (!sanitizedPath) {
-          errors.push(`Invalid or unsafe file path: ${file.path}`);
-          continue;
-        }
-
-        // SECURITY: Build full path and verify it's within workspace
-        const fullPath = path.isAbsolute(sanitizedPath)
-          ? sanitizedPath
-          : path.join(workspaceRoot, sanitizedPath);
-
-        // SECURITY: Double-check the resolved path is within workspace
-        const normalizedFullPath = path.normalize(fullPath);
-        const normalizedWorkspace = path.normalize(workspaceRoot);
-        if (!normalizedFullPath.startsWith(normalizedWorkspace)) {
-          errors.push(`Path traversal detected: ${file.path}`);
-          continue;
-        }
-
-        const fileUri = vscode.Uri.file(fullPath);
-
-        // SECURITY: Check if file exists using VS Code fs API
-        if (file.skipIfExists) {
-          try {
-            await vscode.workspace.fs.stat(fileUri);
-            continue; // Skip existing file
-          } catch {
-            // File doesn't exist, proceed
-          }
-        }
-
-        // SECURITY: Create directory if needed using VS Code fs API
-        const dirUri = vscode.Uri.file(path.dirname(fullPath));
-        try {
-          await vscode.workspace.fs.createDirectory(dirUri);
-        } catch {
-          // Directory might already exist, which is fine
-        }
-
-        // SECURITY: Write file using VS Code fs API
-        const contentBuffer = Buffer.from(file.content, 'utf-8');
-        await vscode.workspace.fs.writeFile(fileUri, contentBuffer);
-        createdFiles.push(fullPath);
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        errors.push(`Failed to create ${file.path}: ${errorMessage}`);
+      const result = await this.processTemplateFile(file, workspaceRoot);
+      if (result.success && result.filePath) {
+        createdFiles.push(result.filePath);
+      } else if (result.error) {
+        errors.push(result.error);
       }
     }
 
@@ -148,6 +108,68 @@ export class GeneratorRunner {
       files: createdFiles,
       errors,
     };
+  }
+
+  /**
+   * SECURITY: Process a single template file with path validation
+   * @param file - The template file to process
+   * @param file.path - The file path
+   * @param file.content - The file content
+   * @param file.skipIfExists - Whether to skip if file exists
+   * @param workspaceRoot - The workspace root path
+   * @returns {Promise<{success: boolean, filePath?: string, error?: string}>} Processing result
+   */
+  private async processTemplateFile(
+    file: { path: string; content: string; skipIfExists?: boolean },
+    workspaceRoot: string
+  ): Promise<{ success: boolean; filePath?: string; error?: string }> {
+    try {
+      // SECURITY: Sanitize file path to prevent path traversal
+      const sanitizedPath = sanitizePath(file.path, workspaceRoot);
+      if (!sanitizedPath) {
+        return { success: false, error: `Invalid or unsafe file path: ${file.path}` };
+      }
+
+      // SECURITY: Build full path and verify it's within workspace
+      const fullPath = path.isAbsolute(sanitizedPath)
+        ? sanitizedPath
+        : path.join(workspaceRoot, sanitizedPath);
+
+      // SECURITY: Double-check the resolved path is within workspace
+      const normalizedFullPath = path.normalize(fullPath);
+      const normalizedWorkspace = path.normalize(workspaceRoot);
+      if (!normalizedFullPath.startsWith(normalizedWorkspace)) {
+        return { success: false, error: `Path traversal detected: ${file.path}` };
+      }
+
+      const fileUri = vscode.Uri.file(fullPath);
+
+      // SECURITY: Check if file exists using VS Code fs API
+      if (file.skipIfExists) {
+        try {
+          await vscode.workspace.fs.stat(fileUri);
+          return { success: false }; // Skip existing file
+        } catch {
+          // File doesn't exist, proceed
+        }
+      }
+
+      // SECURITY: Create directory if needed using VS Code fs API
+      const directoryUri = vscode.Uri.file(path.dirname(fullPath));
+      try {
+        await vscode.workspace.fs.createDirectory(directoryUri);
+      } catch {
+        // Directory might already exist, which is fine
+      }
+
+      // SECURITY: Write file using VS Code fs API
+      const contentBuffer = Buffer.from(file.content, 'utf-8');
+      await vscode.workspace.fs.writeFile(fileUri, contentBuffer);
+      return { success: true, filePath: fullPath };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      return { success: false, error: `Failed to create ${file.path}: ${errorMessage}` };
+    }
   }
 
   /**
@@ -164,7 +186,8 @@ export class GeneratorRunner {
 
   /**
    * Parse generated files from CLI output
-   * @param output
+   * @param output - The CLI output to parse
+   * @returns {string[]} Array of generated file paths
    */
   private parseGeneratedFiles(output: string): string[] {
     const files: string[] = [];
@@ -183,13 +206,15 @@ export class GeneratorRunner {
 
   /**
    * Substitute variables in template content
-   * @param content
-   * @param variables
+   * @param content - The template content
+   * @param variables - Key-value pairs for variable substitution
+   * @returns {string} The content with variables substituted
    */
   substituteVariables(content: string, variables: Record<string, string>): string {
     let result = content;
 
     for (const [key, value] of Object.entries(variables)) {
+      // SECURITY: Safe to use RegExp constructor here as key comes from controlled template variables
       const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
       result = result.replace(regex, value);
     }
@@ -199,6 +224,7 @@ export class GeneratorRunner {
 
   /**
    * Get workspace root
+   * @returns {string | null} The workspace root path or null if no workspace is open
    */
   private getWorkspaceRoot(): string | null {
     const folders = vscode.workspace.workspaceFolders;

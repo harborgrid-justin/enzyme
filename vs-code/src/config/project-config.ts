@@ -187,7 +187,7 @@ export class ProjectConfig {
 
       // Find export default
       const exportMatch = /export\s+default\s+({[\S\s]*?});?\s*$/m.exec(content);
-      if (exportMatch && exportMatch[1]) {
+      if (exportMatch?.[1]) {
         // Try to parse as JSON (with some cleanup)
         const configString = exportMatch[1]
           .replace(/([,{]\s*)(\w+):/g, '$1"$2":') // Add quotes to keys
@@ -199,7 +199,7 @@ export class ProjectConfig {
 
       // If export default not found, try to find defineConfig
       const defineConfigMatch = /defineConfig\(([\S\s]*?)\)/.exec(content);
-      if (defineConfigMatch && defineConfigMatch[1]) {
+      if (defineConfigMatch?.[1]) {
         const configString = defineConfigMatch[1]
           .replace(/([,{]\s*)(\w+):/g, '$1"$2":')
           .replace(/'/g, '"')

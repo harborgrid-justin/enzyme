@@ -5,7 +5,7 @@ import { BaseCommand } from '../base-command';
 import type { CommandContext, CommandMetadata } from '../base-command';
 
 /**
- *
+ * Bundle analysis result interface
  */
 interface BundleAnalysis {
   totalSize: number;
@@ -15,7 +15,7 @@ interface BundleAnalysis {
 }
 
 /**
- *
+ * Chunk information interface
  */
 interface ChunkInfo {
   name: string;
@@ -24,7 +24,7 @@ interface ChunkInfo {
 }
 
 /**
- *
+ * Dependency information interface
  */
 interface DependencyInfo {
   name: string;
@@ -38,7 +38,8 @@ interface DependencyInfo {
  */
 export class AnalyzeBundleCommand extends BaseCommand {
   /**
-   *
+   * Get command metadata for registration
+   * @returns Command metadata object
    */
   getMetadata(): CommandMetadata {
     return {
@@ -50,8 +51,9 @@ export class AnalyzeBundleCommand extends BaseCommand {
   }
 
   /**
-   *
-   * @param _context
+   * Execute the bundle analysis command
+   * @param _context - Command execution context
+   * @returns Promise that resolves when command completes
    */
   protected async executeCommand(_context: CommandContext): Promise<void> {
     const workspaceFolder = await this.ensureWorkspaceFolder();
@@ -105,8 +107,9 @@ export class AnalyzeBundleCommand extends BaseCommand {
   }
 
   /**
-   *
-   * @param workspaceFolder
+   * Build the project in a terminal
+   * @param workspaceFolder - The workspace folder to build
+   * @returns Promise that resolves when terminal is shown
    */
   private async buildProject(
     workspaceFolder: vscode.WorkspaceFolder
@@ -125,8 +128,9 @@ export class AnalyzeBundleCommand extends BaseCommand {
   }
 
   /**
-   *
-   * @param bundlePath
+   * Analyze the bundle at the given path
+   * @param bundlePath - Path to the bundle directory
+   * @returns Promise resolving to bundle analysis results
    */
   private async analyzeBundle(bundlePath: string): Promise<BundleAnalysis> {
     const analysis: BundleAnalysis = {
@@ -212,9 +216,10 @@ export class AnalyzeBundleCommand extends BaseCommand {
   }
 
   /**
-   *
-   * @param dir
-   * @param pattern
+   * Recursively find files matching a pattern
+   * @param dir - Directory to search
+   * @param pattern - Regular expression pattern to match filenames
+   * @returns Promise resolving to array of matching file paths
    */
   private async findFiles(
     dir: string,
@@ -243,8 +248,9 @@ export class AnalyzeBundleCommand extends BaseCommand {
   }
 
   /**
-   *
-   * @param file
+   * Estimate the number of modules in a file
+   * @param file - Path to the file to analyze
+   * @returns Promise resolving to estimated module count
    */
   private async estimateModuleCount(file: string): Promise<number> {
     try {
@@ -259,8 +265,9 @@ export class AnalyzeBundleCommand extends BaseCommand {
   }
 
   /**
-   *
-   * @param analysis
+   * Generate optimization recommendations based on bundle analysis
+   * @param analysis - The bundle analysis results
+   * @returns void
    */
   private generateBundleRecommendations(analysis: BundleAnalysis): void {
     const ONE_MB = 1024 * 1024;
@@ -295,8 +302,9 @@ export class AnalyzeBundleCommand extends BaseCommand {
   }
 
   /**
-   *
-   * @param analysis
+   * Display bundle analysis results in output channel
+   * @param analysis - The bundle analysis results to display
+   * @returns void
    */
   private displayBundleAnalysis(analysis: BundleAnalysis): void {
     this.outputChannel.appendLine('='.repeat(80));
@@ -352,8 +360,9 @@ export class AnalyzeBundleCommand extends BaseCommand {
   }
 
   /**
-   *
-   * @param bytes
+   * Format bytes into human-readable size string
+   * @param bytes - Number of bytes to format
+   * @returns Formatted size string (e.g., "1.23 MB")
    */
   private formatSize(bytes: number): string {
     const kb = bytes / 1024;
@@ -369,9 +378,10 @@ export class AnalyzeBundleCommand extends BaseCommand {
   }
 
   /**
-   *
-   * @param size
-   * @param maxSize
+   * Create a visual size bar for display
+   * @param size - Current size value
+   * @param maxSize - Maximum size value for comparison
+   * @returns String representation of a visual bar
    */
   private createSizeBar(size: number, maxSize: number): string {
     const barLength = 20;

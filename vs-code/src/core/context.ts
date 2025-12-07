@@ -371,7 +371,7 @@ export class EnzymeExtensionContext {
    */
   public async withProgress<R>(
     title: string,
-    task: (progress: vscode.Progress<{ message?: string; increment?: number }>, token: vscode.CancellationToken) => Thenable<R>
+    task: (progress: vscode.Progress<{ message?: string; increment?: number }>, token: vscode.CancellationToken) => Promise<R>
   ): Promise<R> {
     return await vscode.window.withProgress(
       {

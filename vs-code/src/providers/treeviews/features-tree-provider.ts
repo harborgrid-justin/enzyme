@@ -55,6 +55,7 @@ export class EnzymeFeaturesTreeProvider extends BaseTreeProvider<EnzymeFeatureIt
 
   /**
    * Get watch patterns for auto-refresh
+   * @returns Array of glob patterns to watch for feature file changes
    */
   protected override getWatchPatterns(): string[] {
     return [
@@ -67,6 +68,7 @@ export class EnzymeFeaturesTreeProvider extends BaseTreeProvider<EnzymeFeatureIt
 
   /**
    * Get root tree items (all features)
+   * @returns Array of feature items with metadata
    */
   protected async getRootItems(): Promise<Array<EnzymeFeatureItem | EnzymeCategoryItem>> {
     return this.getCachedOrFetch('features-root', async () => {
@@ -95,6 +97,7 @@ export class EnzymeFeaturesTreeProvider extends BaseTreeProvider<EnzymeFeatureIt
   /**
    * Get child items for a feature
    * @param element
+   * @returns Array of category items or route items for the feature
    */
   protected async getChildItems(
     element: EnzymeFeatureItem | EnzymeCategoryItem | EnzymeRouteItem
@@ -374,7 +377,7 @@ export class EnzymeFeaturesTreeProvider extends BaseTreeProvider<EnzymeFeatureIt
       .filter(Boolean)
       .join('/');
 
-    return `/${  urlPath}`;
+    return `/${urlPath}`;
   }
 
   /**
@@ -428,6 +431,7 @@ export class EnzymeFeaturesTreeProvider extends BaseTreeProvider<EnzymeFeatureIt
 
   /**
    * Get all discovered features
+   * @returns Array of all feature metadata
    */
   getFeatures(): FeatureMetadata[] {
     return [...this.features];

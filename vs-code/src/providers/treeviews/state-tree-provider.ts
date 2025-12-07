@@ -65,6 +65,7 @@ export class EnzymeStateTreeProvider extends BaseTreeProvider<EnzymeStoreItem | 
 
   /**
    * Get watch patterns for auto-refresh
+   * @returns Array of glob patterns to watch for state store file changes
    */
   protected override getWatchPatterns(): string[] {
     return [
@@ -77,6 +78,7 @@ export class EnzymeStateTreeProvider extends BaseTreeProvider<EnzymeStoreItem | 
 
   /**
    * Get root tree items
+   * @returns Array of store items with metadata
    */
   protected async getRootItems(): Promise<Array<EnzymeStoreItem | EnzymeCategoryItem>> {
     return this.getCachedOrFetch('stores-root', async () => {
@@ -263,6 +265,7 @@ export class EnzymeStateTreeProvider extends BaseTreeProvider<EnzymeStoreItem | 
    * Extract data for a specific slice
    * @param content
    * @param sliceName
+   * @param _sliceName
    */
   private extractSliceData(content: string, _sliceName: string): SliceMetadata | null {
     try {
@@ -287,6 +290,7 @@ export class EnzymeStateTreeProvider extends BaseTreeProvider<EnzymeStoreItem | 
    * Extract actions from a slice
    * @param content
    * @param sliceName
+   * @param _sliceName
    */
   private extractSliceActions(content: string, _sliceName: string): string[] {
     const actions: string[] = [];
@@ -307,6 +311,7 @@ export class EnzymeStateTreeProvider extends BaseTreeProvider<EnzymeStoreItem | 
    * Extract selectors from a slice
    * @param content
    * @param sliceName
+   * @param _sliceName
    */
   private extractSliceSelectors(content: string, _sliceName: string): string[] {
     const selectors: string[] = [];
@@ -327,6 +332,7 @@ export class EnzymeStateTreeProvider extends BaseTreeProvider<EnzymeStoreItem | 
    * Extract state keys from a slice
    * @param content
    * @param sliceName
+   * @param _sliceName
    */
   private extractSliceStateKeys(content: string, _sliceName: string): string[] {
     const keys: string[] = [];

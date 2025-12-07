@@ -176,7 +176,7 @@ export class ConfigValidator {
 
     // Try to extract config object
     const exportMatch = /export\s+default\s+([\S\s]*?)(?:;|\n|$)/.exec(cleanText);
-    if (exportMatch && exportMatch[1]) {
+    if (exportMatch?.[1]) {
       // Simple JSON parse (in production, use proper TS parser)
       const configString = exportMatch[1]
         .replace(/([,{]\s*)(\w+):/g, '$1"$2":')
@@ -208,7 +208,7 @@ export class ConfigValidator {
     const regex = new RegExp(`["']?${lastPath}["']?\\s*:`, 'g');
     const match = regex.exec(text);
 
-    if (match && match.index !== undefined) {
+    if (match?.index !== undefined) {
       const lines = text.slice(0, Math.max(0, match.index)).split('\n');
       const lastLine = lines[lines.length - 1];
       if (lastLine !== undefined) {
@@ -344,7 +344,7 @@ export class ConfigValidator {
     if (config.routes?.routes) {
       for (let i = 0; i < config.routes.routes.length; i++) {
         const route = config.routes.routes[i];
-        if (route && route.path && !route.path.startsWith('/')) {
+        if (route?.path && !route.path.startsWith('/')) {
           errors.push({
             message: 'Route path must start with /',
             path: ['routes', 'routes', i.toString(), 'path'],
@@ -439,7 +439,7 @@ export class ConfigValidatorProvider {
   private registerValidation(): void {
     // Validate on open
     this.disposables.push(
-      vscode.workspace.onDidOpenTextDocument((document) => {
+      vscode.workspace.onDidOpenTextDocument((document: vscode.TextDocument) => {
         if (this.isConfigFile(document)) {
           this.validator.validateDocument(document);
         }
@@ -448,7 +448,7 @@ export class ConfigValidatorProvider {
 
     // Validate on change
     this.disposables.push(
-      vscode.workspace.onDidChangeTextDocument((event) => {
+      vscode.workspace.onDidChangeTextDocument((event: vscode.TextDocumentChangeEvent) => {
         if (this.isConfigFile(event.document)) {
           this.validator.validateDocument(event.document);
         }
@@ -457,7 +457,7 @@ export class ConfigValidatorProvider {
 
     // Clear on close
     this.disposables.push(
-      vscode.workspace.onDidCloseTextDocument((document) => {
+      vscode.workspace.onDidCloseTextDocument((document: vscode.TextDocument) => {
         if (this.isConfigFile(document)) {
           this.validator.clearDiagnostics(document);
         }

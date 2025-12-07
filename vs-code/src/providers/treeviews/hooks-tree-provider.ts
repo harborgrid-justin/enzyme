@@ -68,6 +68,7 @@ export class EnzymeHooksTreeProvider extends BaseTreeProvider<EnzymeHookItem | E
 
   /**
    * Get watch patterns for auto-refresh
+   * @returns Array of glob patterns to watch for hook file changes
    */
   protected override getWatchPatterns(): string[] {
     return [
@@ -79,6 +80,7 @@ export class EnzymeHooksTreeProvider extends BaseTreeProvider<EnzymeHookItem | E
 
   /**
    * Get root tree items
+   * @returns Array of hook items and category items grouped by category
    */
   protected async getRootItems(): Promise<Array<EnzymeHookItem | EnzymeCategoryItem>> {
     return this.getCachedOrFetch('hooks-root', async () => {
@@ -96,6 +98,7 @@ export class EnzymeHooksTreeProvider extends BaseTreeProvider<EnzymeHookItem | E
   /**
    * Get child items
    * @param element
+   * @returns Array of hook items for the given category
    */
   protected async getChildItems(
     element: EnzymeHookItem | EnzymeCategoryItem
@@ -468,6 +471,7 @@ export class EnzymeHooksTreeProvider extends BaseTreeProvider<EnzymeHookItem | E
 
   /**
    * Get all discovered hooks
+   * @returns Array of all hook metadata
    */
   getHooks(): HookMetadata[] {
     return [...this.hooks];
@@ -476,6 +480,7 @@ export class EnzymeHooksTreeProvider extends BaseTreeProvider<EnzymeHookItem | E
   /**
    * Get hooks by category
    * @param category
+   * @returns Array of hooks in the specified category
    */
   getHooksByCategory(category: HookCategory): HookMetadata[] {
     return this.hooks.filter(h => h.category === category);
@@ -483,6 +488,7 @@ export class EnzymeHooksTreeProvider extends BaseTreeProvider<EnzymeHookItem | E
 
   /**
    * Get async hooks
+   * @returns Array of all async hooks
    */
   getAsyncHooks(): HookMetadata[] {
     return this.hooks.filter(h => h.isAsync);

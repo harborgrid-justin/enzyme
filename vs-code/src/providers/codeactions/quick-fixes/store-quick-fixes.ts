@@ -8,6 +8,7 @@ export class StoreQuickFixes {
    *
    * @param document
    * @param range
+   * @param _range
    * @param context
    */
   public provideQuickFixes(
@@ -130,7 +131,7 @@ const persistedStore = persist(store, {
     const text = document.getText(diagnostic.range);
     const optionsMatch = /createStore\s*<[^>]+>\s*\([^,]+,\s*({[^}]*})\s*\)/.exec(text);
 
-    if (optionsMatch && optionsMatch[1]) {
+    if (optionsMatch?.[1]) {
       // Add to existing options
       const optionsText = optionsMatch[1];
       const updatedOptions = optionsText.replace('}', `,\n  name: '${storeName}',\n}`);
@@ -150,7 +151,7 @@ const persistedStore = persist(store, {
     } else {
       // Add options object
       const callMatch = /createStore\s*<[^>]+>\s*\(([^)]+)\)/.exec(text);
-      if (callMatch && callMatch[1]) {
+      if (callMatch?.[1]) {
         const args = callMatch[1];
         const updatedCall = `${args}, { name: '${storeName}' }`;
 

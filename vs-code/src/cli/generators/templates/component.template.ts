@@ -1,8 +1,9 @@
 import type { GeneratorOptions, GeneratorTemplate } from '../index';
 
 /**
- *
- * @param options
+ * Generate component template files
+ * @param options - Generator configuration options
+ * @returns {GeneratorTemplate} The generated component template structure
  */
 export function componentTemplate(options: GeneratorOptions): GeneratorTemplate {
   const { name, path: basePath = 'src/components', skipTests, skipStories, skipStyles } = options;
@@ -59,8 +60,9 @@ export function componentTemplate(options: GeneratorOptions): GeneratorTemplate 
 }
 
 /**
- *
- * @param name
+ * Generate React component
+ * @param name - The name of the component
+ * @returns {string} The generated component code
  */
 function generateComponent(name: string): string {
   return `import React from 'react';
@@ -80,8 +82,9 @@ ${name}.displayName = '${name}';
 }
 
 /**
- *
- * @param name
+ * Generate TypeScript types for component
+ * @param name - The name of the component
+ * @returns {string} The generated types code
  */
 function generateTypes(name: string): string {
   return `export interface ${name}Props {
@@ -92,8 +95,9 @@ function generateTypes(name: string): string {
 }
 
 /**
- *
- * @param _name
+ * Generate styled-components styles
+ * @param _name - The name of the component (unused)
+ * @returns {string} The generated styles code
  */
 function generateStyles(_name: string): string {
   return `import styled from 'styled-components';
@@ -105,8 +109,9 @@ export const Container = styled.div\`
 }
 
 /**
- *
- * @param name
+ * Generate test file
+ * @param name - The name of the component
+ * @returns {string} The generated test code
  */
 function generateTest(name: string): string {
   return `import React from 'react';
@@ -128,8 +133,9 @@ describe('${name}', () => {
 }
 
 /**
- *
- * @param name
+ * Generate Storybook story
+ * @param name - The name of the component
+ * @returns {string} The generated story code
  */
 function generateStory(name: string): string {
   return `import type { Meta, StoryObj } from '@storybook/react';
@@ -163,13 +169,14 @@ export const WithCustomContent: Story = {
 `;
 }
 
+
 /**
- *
- * @param name
+ * Generate index barrel export
+ * @param name - The name of the component
+ * @returns {string} The generated index code
  */
 function generateIndex(name: string): string {
   return `export { ${name} } from './${name}';
 export type { ${name}Props } from './${name}.types';
 `;
-}1
-1
+}

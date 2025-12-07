@@ -47,6 +47,7 @@ export class EnzymeCodeActionProvider implements vscode.CodeActionProvider {
    * @param range
    * @param context
    * @param token
+   * @param _token
    */
   public provideCodeActions(
     document: vscode.TextDocument,

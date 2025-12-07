@@ -5,6 +5,7 @@
     "lib": ["ES2022", "DOM"],
     "module": "CommonJS",
     "moduleResolution": "node",
+    "types": ["node", "vscode", "mocha"],
 
     /* Emit */
     "outDir": "./out",

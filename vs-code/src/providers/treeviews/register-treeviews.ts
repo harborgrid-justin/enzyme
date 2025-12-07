@@ -32,23 +32,25 @@ class EnzymePerformanceTreeProvider implements vscode.TreeDataProvider<vscode.Tr
   }
 
   /**
-   *
+   * Refresh the tree view
    */
   refresh(): void {
     this._onDidChangeTreeData.fire();
   }
 
   /**
-   *
+   * Get tree item representation for VS Code
    * @param element
+   * @returns The tree item
    */
   getTreeItem(element: vscode.TreeItem): vscode.TreeItem {
     return element;
   }
 
   /**
-   *
+   * Get children of a tree item
    * @param element
+   * @returns Array of child tree items
    */
   async getChildren(element?: vscode.TreeItem): Promise<vscode.TreeItem[]> {
     if (!element) {
@@ -65,6 +67,7 @@ class EnzymePerformanceTreeProvider implements vscode.TreeDataProvider<vscode.Tr
 /**
  * Register all TreeView providers
  * @param enzymeContext
+ * @returns Array of disposables for cleanup
  */
 export function registerTreeViewProviders(
   enzymeContext: EnzymeExtensionContext

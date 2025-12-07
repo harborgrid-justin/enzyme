@@ -5,7 +5,7 @@ import { BaseCommand } from '../base-command';
 import type { CommandContext, CommandMetadata } from '../base-command';
 
 /**
- *
+ * API options interface
  */
 interface APIOptions {
   resourceName: string;
@@ -22,7 +22,8 @@ interface APIOptions {
  */
 export class GenerateAPICommand extends BaseCommand {
   /**
-   *
+   * Get command metadata for registration
+   * @returns Command metadata object
    */
   getMetadata(): CommandMetadata {
     return {
@@ -39,8 +40,9 @@ export class GenerateAPICommand extends BaseCommand {
   }
 
   /**
-   *
-   * @param _context
+   * Execute the command
+   * @param _context - Command execution context
+   * @returns Promise that resolves when command completes
    */
   protected async executeCommand(_context: CommandContext): Promise<void> {
     const workspaceFolder = await this.ensureWorkspaceFolder();
@@ -80,6 +82,10 @@ export class GenerateAPICommand extends BaseCommand {
 
   /**
    *
+   */
+  /**
+   * Gather API generation options from user
+   * @returns Promise resolving to API options or undefined if cancelled
    */
   private async gatherAPIOptions(): Promise<APIOptions | undefined> {
     // Get resource name

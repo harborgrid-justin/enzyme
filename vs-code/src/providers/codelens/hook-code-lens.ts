@@ -11,6 +11,7 @@ export class HookCodeLensProvider implements vscode.CodeLensProvider {
    *
    * @param document
    * @param token
+   * @param _token
    */
   public provideCodeLenses(
     document: vscode.TextDocument,

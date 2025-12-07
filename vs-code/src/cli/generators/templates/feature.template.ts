@@ -1,8 +1,9 @@
 import type { GeneratorOptions, GeneratorTemplate } from '../index';
 
 /**
- *
- * @param options
+ * Generate feature template files
+ * @param options - Generator configuration options
+ * @returns {GeneratorTemplate} The generated feature template structure
  */
 export function featureTemplate(options: GeneratorOptions): GeneratorTemplate {
   const { name, path: basePath = 'src/features' } = options;
@@ -65,8 +66,9 @@ export function featureTemplate(options: GeneratorOptions): GeneratorTemplate {
 }
 
 /**
- *
- * @param name
+ * Generate index barrel export
+ * @param name - The name of the feature
+ * @returns {string} The generated index code
  */
 function generateIndex(name: string): string {
   return `// Feature: ${name}
@@ -79,8 +81,9 @@ export * from './types';
 }
 
 /**
- *
- * @param name
+ * Generate feature registration
+ * @param name - The name of the feature
+ * @returns {string} The generated feature code
  */
 function generateFeature(name: string): string {
   return `import { Feature } from '@enzyme/core';
@@ -117,8 +120,9 @@ export const ${name}Feature: Feature = {
 }
 
 /**
- *
- * @param name
+ * Generate route configuration
+ * @param name - The name of the feature
+ * @returns {string} The generated routes code
  */
 function generateRoutes(name: string): string {
   return `import React from 'react';
@@ -145,8 +149,9 @@ export const ${name}Routes: RouteObject[] = [
 }
 
 /**
- *
- * @param name
+ * Generate Zustand store
+ * @param name - The name of the feature
+ * @returns {string} The generated store code
  */
 function generateStore(name: string): string {
   return `import { create } from 'zustand';
@@ -209,8 +214,9 @@ async function fetch${name}Items(): Promise<any[]> {
 }
 
 /**
- *
- * @param name
+ * Generate API client
+ * @param name - The name of the feature
+ * @returns {string} The generated API code
  */
 function generateAPI(name: string): string {
   return `import { APIClient } from '@enzyme/core';
@@ -257,8 +263,9 @@ export const ${name}API = new ${name}APIClient();
 }
 
 /**
- *
- * @param name
+ * Generate TypeScript types
+ * @param name - The name of the feature
+ * @returns {string} The generated types code
  */
 function generateTypes(name: string): string {
   return `export interface ${name}Item {
@@ -284,8 +291,9 @@ export interface ${name}Actions {
 }
 
 /**
- *
- * @param name
+ * Generate dashboard component
+ * @param name - The name of the feature
+ * @returns {string} The generated dashboard code
  */
 function generateDashboard(name: string): string {
   return `import React from 'react';
@@ -320,8 +328,9 @@ export const ${name}Dashboard: React.FC = () => {
 }
 
 /**
- *
- * @param name
+ * Generate custom hook
+ * @param name - The name of the feature
+ * @returns {string} The generated hook code
  */
 function generateHook(name: string): string {
   return `import { use${name}Store } from '../store/${name}.store';
