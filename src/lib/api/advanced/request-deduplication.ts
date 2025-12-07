@@ -137,10 +137,7 @@ export class RequestDeduplicator {
    * @param executor - Function to execute if not deduplicated
    * @returns Promise resolving to the result
    */
-  async dedupe<T>(
-    request: DeduplicationRequest,
-    executor: () => Promise<T>
-  ): Promise<T> {
+  async dedupe<T>(request: DeduplicationRequest, executor: () => Promise<T>): Promise<T> {
     this.stats.totalRequests++;
 
     // Check if we should dedupe this request
@@ -263,13 +260,10 @@ export class RequestDeduplicator {
   /**
    * Execute request and clean up cache.
    */
-  private async executeAndCleanup<T>(
-    key: string,
-    executor: () => Promise<T>
-  ): Promise<T> {
+  private async executeAndCleanup<T>(key: string, executor: () => Promise<T>): Promise<T> {
     try {
-      const result = await executor();
-      return result;
+
+      return await executor();
     } finally {
       // Remove from cache after completion
       // Use setTimeout to allow other subscribers to get the result
@@ -325,7 +319,7 @@ export class RequestDeduplicator {
       let hash = 0;
       for (let i = 0; i < str.length; i++) {
         const char = str.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
+        hash = (hash << 5) - hash + char;
         hash = hash & hash;
       }
       return hash.toString(36);
@@ -338,7 +332,7 @@ export class RequestDeduplicator {
    * Log debug message.
    */
   private log(message: string): void {
-    if (this.config.debug === true) {
+    if (this.config.debug) {
       // eslint-disable-next-line no-console
       console.log(`[RequestDeduplicator] ${message}`);
     }
@@ -355,9 +349,7 @@ export class RequestDeduplicator {
  * @param config - Deduplication configuration
  * @returns RequestDeduplicator instance
  */
-export function createRequestDeduplicator(
-  config?: DeduplicationConfig
-): RequestDeduplicator {
+export function createRequestDeduplicator(config?: DeduplicationConfig): RequestDeduplicator {
   return new RequestDeduplicator(config);
 }
 
@@ -371,9 +363,7 @@ export function createRequestDeduplicator(
  * @param config - Deduplication configuration
  * @returns Wrapped fetch function
  */
-export function createDeduplicatedFetch(
-  config?: DeduplicationConfig
-): typeof fetch {
+export function createDeduplicatedFetch(config?: DeduplicationConfig): typeof fetch {
   const dedup = new RequestDeduplicator(config);
 
   return async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -400,13 +390,13 @@ export function createDeduplicatedFetch(
  *
  * @param fn - Function to deduplicate
  * @param keyGenerator - Function to generate cache key from arguments
- * @param config - Deduplication configuration
+ * @param _config
  * @returns Deduplicated function
  */
 export function deduplicateFunction<TArgs extends unknown[], TResult>(
   fn: (...args: TArgs) => Promise<TResult>,
   keyGenerator: (...args: TArgs) => string,
-   
+
   _config?: Omit<DeduplicationConfig, 'keyGenerator'>
 ): (...args: TArgs) => Promise<TResult> {
   const cache = new Map<string, Promise<TResult>>();
@@ -441,25 +431,16 @@ export class ReactQueryDeduplicator extends RequestDeduplicator {
   /**
    * Create a query function with deduplication.
    */
-  createQueryFn<T>(
-    queryKey: unknown[],
-    fetcher: () => Promise<T>
-  ): () => Promise<T> {
+  createQueryFn<T>(queryKey: unknown[], fetcher: () => Promise<T>): () => Promise<T> {
     const key = JSON.stringify(queryKey);
 
-    return async () =>
-      this.dedupe(
-        { url: key, method: 'GET' },
-        fetcher
-      );
+    return async () => this.dedupe({ url: key, method: 'GET' }, fetcher);
   }
 }
 
 /**
  * Create a React Query compatible deduplicator.
  */
-export function createReactQueryDeduplicator(
-  config?: DeduplicationConfig
-): ReactQueryDeduplicator {
+export function createReactQueryDeduplicator(config?: DeduplicationConfig): ReactQueryDeduplicator {
   return new ReactQueryDeduplicator(config);
 }

@@ -80,10 +80,18 @@ infrastructure/
 
 ```typescript
 // Request flow through interceptors
-Request -> [Auth] -> [CSRF] -> [Logging] -> [Retry] -> Response
-                                                          |
-                                                          v
-                        [Cache] <- [Transform] <- [Error Handler]
+Request => [Auth]
+->
+[CSRF]
+->
+[Logging]
+->
+[Retry]
+->
+Response
+|
+v
+  [Cache] < -[Transform] < -[Error Handler]
 ```
 
 ```typescript
@@ -359,16 +367,16 @@ function App() {
 
 ### Provider Responsibilities
 
-| Provider | Responsibility |
-|----------|---------------|
-| `SecurityProvider` | CSP nonces, CSRF tokens, secure storage |
-| `GlobalErrorBoundary` | Top-level error catching and reporting |
-| `QueryClientProvider` | React Query cache and configuration |
-| `AuthProvider` | User state, tokens, auth methods |
-| `FeatureFlagProvider` | Feature flag evaluation |
-| `HydrationProvider` | Progressive hydration scheduling |
-| `ThemeProvider` | Theme tokens and mode switching |
-| `RouterProvider` | Route matching and navigation |
+| Provider              | Responsibility                          |
+|-----------------------|-----------------------------------------|
+| `SecurityProvider`    | CSP nonces, CSRF tokens, secure storage |
+| `GlobalErrorBoundary` | Top-level error catching and reporting  |
+| `QueryClientProvider` | React Query cache and configuration     |
+| `AuthProvider`        | User state, tokens, auth methods        |
+| `FeatureFlagProvider` | Feature flag evaluation                 |
+| `HydrationProvider`   | Progressive hydration scheduling        |
+| `ThemeProvider`       | Theme tokens and mode switching         |
+| `RouterProvider`      | Route matching and navigation           |
 
 ---
 

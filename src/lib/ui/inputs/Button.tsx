@@ -4,9 +4,15 @@
  * Uses theme tokens for consistent styling and accessibility
  */
 
-import React, { memo, useMemo, forwardRef, type CSSProperties, type ButtonHTMLAttributes } from 'react';
-import { tokens, colorTokens } from '../../theme/tokens';
-import { Spinner } from '../feedback/Spinner';
+import React, {
+  type ButtonHTMLAttributes,
+  type CSSProperties,
+  forwardRef,
+  memo,
+  useMemo,
+} from 'react';
+import { colorTokens, tokens } from '@/lib/theme';
+import { Spinner } from '@/lib/ui';
 
 // ============================================================================
 // Types
@@ -55,13 +61,16 @@ export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement
 /**
  * Size configurations
  */
-const sizeConfig: Record<ButtonSize, {
-  padding: string;
-  fontSize: string;
-  minHeight: string;
-  iconSize: number;
-  gap: string;
-}> = {
+const sizeConfig: Record<
+  ButtonSize,
+  {
+    padding: string;
+    fontSize: string;
+    minHeight: string;
+    iconSize: number;
+    gap: string;
+  }
+> = {
   sm: {
     padding: `${tokens.spacing.xs} ${tokens.spacing.sm}`,
     fontSize: tokens.fontSize.sm,
@@ -88,14 +97,17 @@ const sizeConfig: Record<ButtonSize, {
 /**
  * Variant styles
  */
-const variantStyles: Record<ButtonVariant, {
-  background: string;
-  color: string;
-  border: string;
-  hoverBackground: string;
-  hoverBorder: string;
-  activeBackground: string;
-}> = {
+const variantStyles: Record<
+  ButtonVariant,
+  {
+    background: string;
+    color: string;
+    border: string;
+    hoverBackground: string;
+    hoverBorder: string;
+    activeBackground: string;
+  }
+> = {
   primary: {
     background: colorTokens.primary.default,
     color: colorTokens.neutral.white,
@@ -213,107 +225,119 @@ if (typeof document !== 'undefined') {
 /**
  * Button component with forwardRef for ref forwarding
  */
-export const Button = memo(forwardRef<HTMLButtonElement, ButtonProps>((
-  {
-    variant = 'primary',
-    size = 'md',
-    fullWidth = false,
-    isLoading = false,
-    leftIcon,
-    rightIcon,
-    disabled,
-    children,
-    className,
-    style,
-    type = 'button',
-    'aria-label': ariaLabel,
-    ...props
-  },
-  ref
-): React.ReactElement => {
-  const isDisabled = (disabled ?? false) || isLoading;
-  const sizeProps = sizeConfig[size];
-  const variantProps = variantStyles[variant];
+export const Button = memo(
+  forwardRef<HTMLButtonElement, ButtonProps>(
+    (
+      {
+        variant = 'primary',
+        size = 'md',
+        fullWidth = false,
+        isLoading = false,
+        leftIcon,
+        rightIcon,
+        disabled,
+        children,
+        className,
+        style,
+        type = 'button',
+        'aria-label': ariaLabel,
+        ...props
+      },
+      ref
+    ): React.ReactElement => {
+      const isDisabled = (disabled ?? false) || isLoading;
+      const sizeProps = sizeConfig[size];
+      const variantProps = variantStyles[variant];
 
-  // Memoize computed button style
-  const buttonStyle = useMemo((): CSSProperties => {
-    const computedStyle: CSSProperties = {
-      ...baseButtonStyle,
-      padding: sizeProps.padding,
-      fontSize: sizeProps.fontSize,
-      minHeight: sizeProps.minHeight,
-      gap: sizeProps.gap,
-      backgroundColor: variantProps.background,
-      color: variantProps.color,
-      borderColor: variantProps.border,
-      width: fullWidth ? '100%' : undefined,
-      ...(isDisabled ? disabledStyle : {}),
-      ...style,
-    };
+      // Memoize computed button style
+      const buttonStyle = useMemo((): CSSProperties => {
+        return {
+          ...baseButtonStyle,
+          padding: sizeProps.padding,
+          fontSize: sizeProps.fontSize,
+          minHeight: sizeProps.minHeight,
+          gap: sizeProps.gap,
+          backgroundColor: variantProps.background,
+          color: variantProps.color,
+          borderColor: variantProps.border,
+          width: fullWidth ? '100%' : undefined,
+          ...(isDisabled ? disabledStyle : {}),
+          ...style,
+        };
+      }, [sizeProps, variantProps, fullWidth, isDisabled, style]);
 
-    return computedStyle;
-  }, [sizeProps, variantProps, fullWidth, isDisabled, style]);
+      // Determine spinner variant based on button variant
+      const spinnerVariant =
+        variant === 'primary' || variant === 'destructive' ? 'white' : 'primary';
+      const spinnerSize = size === 'lg' ? 'md' : 'sm';
 
-  // Determine spinner variant based on button variant
-  const spinnerVariant = variant === 'primary' || variant === 'destructive' ? 'white' : 'primary';
-  const spinnerSize = size === 'lg' ? 'md' : 'sm';
+      // Render icon with proper sizing
+      const renderIcon = (
+        icon: React.ReactNode,
+        position: 'left' | 'right'
+      ): React.ReactElement | null => {
+        if (icon === null || icon === undefined) return null;
 
-  // Render icon with proper sizing
-  const renderIcon = (icon: React.ReactNode, position: 'left' | 'right'): React.ReactElement | null => {
-    if (icon === null || icon === undefined) return null;
-
-    return (
-      <span
-        style={{
-          ...iconContainerStyle,
-          marginRight: (position === 'left' && (children !== null && children !== undefined)) ? sizeProps.gap : undefined,
-          marginLeft: (position === 'right' && (children !== null && children !== undefined)) ? sizeProps.gap : undefined,
-        }}
-        aria-hidden="true"
-      >
-        {icon}
-      </span>
-    );
-  };
-
-  // Content rendering
-  const content = (
-    <>
-      {(leftIcon !== null && leftIcon !== undefined) && renderIcon(leftIcon, 'left')}
-      {children}
-      {(rightIcon !== null && rightIcon !== undefined) && renderIcon(rightIcon, 'right')}
-    </>
-  );
-
-  return (
-    <button
-      ref={ref}
-      type={type}
-      className={className}
-      style={buttonStyle}
-      disabled={isDisabled}
-      aria-disabled={isDisabled}
-      aria-busy={isLoading}
-      aria-label={(() => {
-        if (ariaLabel !== undefined && ariaLabel !== '') return ariaLabel;
-        if (isLoading) return 'Loading...';
-        return undefined;
-      })()}
-      {...props}
-    >
-      {isLoading ? (
-        <span style={loadingContainerStyle}>
-          <span style={loadingContentStyle}>{content}</span>
-          <span style={loadingSpinnerStyle}>
-            <Spinner size={spinnerSize} variant={spinnerVariant} label="Loading" />
+        return (
+          <span
+            style={{
+              ...iconContainerStyle,
+              marginRight:
+                position === 'left' && children !== null && children !== undefined
+                  ? sizeProps.gap
+                  : undefined,
+              marginLeft:
+                position === 'right' && children !== null && children !== undefined
+                  ? sizeProps.gap
+                  : undefined,
+            }}
+            aria-hidden="true"
+          >
+            {icon}
           </span>
-        </span>
-      ) : (
-        content
-      )}
-    </button>
-  );
-}));
+        );
+      };
+
+      // Content rendering
+      const content = (
+        <>
+          {leftIcon !== null && leftIcon !== undefined && renderIcon(leftIcon, 'left')}
+          {children}
+          {rightIcon !== null && rightIcon !== undefined && renderIcon(rightIcon, 'right')}
+        </>
+      );
+
+      return (
+        <button
+          ref={ref}
+          type={type}
+          className={className}
+          style={buttonStyle}
+          disabled={isDisabled}
+          aria-disabled={isDisabled}
+          aria-busy={isLoading}
+          aria-label={(() => {
+            if (ariaLabel !== undefined && ariaLabel !== '') return ariaLabel;
+            if (isLoading) return 'Loading...';
+            return undefined;
+          })()}
+          {...props}
+        >
+          {isLoading ? (
+            <span style={loadingContainerStyle}>
+              <span style={loadingContentStyle}>{content}</span>
+              <span style={loadingSpinnerStyle}>
+                <Spinner size={spinnerSize} variant={spinnerVariant} label="Loading" />
+              </span>
+            </span>
+          ) : (
+            content
+          )}
+        </button>
+      );
+    }
+  )
+);
 
 Button.displayName = 'Button';
 
@@ -332,25 +356,26 @@ export interface IconButtonProps extends Omit<ButtonProps, 'leftIcon' | 'rightIc
   'aria-label': string;
 }
 
-export const IconButton = memo(forwardRef<HTMLButtonElement, IconButtonProps>((
-  { icon, size = 'md', style, ...props },
-  ref
-): React.ReactElement => {
-  // Square padding for icon buttons
-  const iconButtonStyle: CSSProperties = {
-    ...style,
-    padding: size === 'sm' ? tokens.spacing.xs : tokens.spacing.sm,
-    aspectRatio: '1',
-  };
+export const IconButton = memo(
+  forwardRef<HTMLButtonElement, IconButtonProps>(
+    ({ icon, size = 'md', style, ...props }, ref): React.ReactElement => {
+      // Square padding for icon buttons
+      const iconButtonStyle: CSSProperties = {
+        ...style,
+        padding: size === 'sm' ? tokens.spacing.xs : tokens.spacing.sm,
+        aspectRatio: '1',
+      };
 
-  return (
-    <Button ref={ref} size={size} style={iconButtonStyle} {...props}>
-      <span style={iconContainerStyle} aria-hidden="true">
-        {icon}
-      </span>
-    </Button>
-  );
-}));
+      return (
+        <Button ref={ref} size={size} style={iconButtonStyle} {...props}>
+          <span style={iconContainerStyle} aria-hidden="true">
+            {icon}
+          </span>
+        </Button>
+      );
+    }
+  )
+);
 
 IconButton.displayName = 'IconButton';
 
@@ -380,25 +405,30 @@ const gapMap: Record<'sm' | 'md' | 'lg', string> = {
   lg: tokens.spacing.md,
 };
 
-export const ButtonGroup = memo(({
-  children,
-  direction = 'horizontal',
-  gap = 'sm',
-  className,
-  style,
-}: ButtonGroupProps): React.ReactElement => {
-  const groupStyle = useMemo((): CSSProperties => ({
-    display: 'flex',
-    flexDirection: direction === 'vertical' ? 'column' : 'row',
-    gap: gapMap[gap],
-    ...style,
-  }), [direction, gap, style]);
+export const ButtonGroup = memo(
+  ({
+    children,
+    direction = 'horizontal',
+    gap = 'sm',
+    className,
+    style,
+  }: ButtonGroupProps): React.ReactElement => {
+    const groupStyle = useMemo(
+      (): CSSProperties => ({
+        display: 'flex',
+        flexDirection: direction === 'vertical' ? 'column' : 'row',
+        gap: gapMap[gap],
+        ...style,
+      }),
+      [direction, gap, style]
+    );
 
-  return (
-    <div className={className} style={groupStyle} role="group">
-      {children}
-    </div>
-  );
-});
+    return (
+      <div className={className} style={groupStyle} role="group">
+        {children}
+      </div>
+    );
+  }
+);
 
 ButtonGroup.displayName = 'ButtonGroup';

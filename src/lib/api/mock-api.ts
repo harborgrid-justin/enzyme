@@ -104,7 +104,7 @@ export class MockServer {
 
   constructor(config: MockServerConfig = {}) {
     this.config = {
-      baseUrl: (config.baseUrl != null && config.baseUrl !== '') ? config.baseUrl : '',
+      baseUrl: config.baseUrl != null && config.baseUrl !== '' ? config.baseUrl : '',
       defaultDelay: config.defaultDelay ?? [50, 200],
       defaultErrorRate: config.defaultErrorRate ?? 0,
       logging: config.logging ?? isDev(),
@@ -374,10 +374,7 @@ export class MockServer {
   /**
    * Intercept and handle fetch requests
    */
-  private async interceptFetch(
-    input: RequestInfo | URL,
-    init?: RequestInit
-  ): Promise<Response> {
+  private async interceptFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
     const startTime = Date.now();
 
     // Parse request
@@ -409,10 +406,7 @@ export class MockServer {
     let body: unknown;
     if (init?.body !== null && init?.body !== undefined) {
       try {
-        body =
-          typeof init.body === 'string'
-            ? JSON.parse(init.body)
-            : init.body;
+        body = typeof init.body === 'string' ? JSON.parse(init.body) : init.body;
       } catch {
         // eslint-disable-next-line prefer-destructuring
         body = init.body;
@@ -546,7 +540,6 @@ export class MockServer {
         }
       } else if (patternPart === '*') {
         // Wildcard match
-        continue;
       } else if (patternPart !== pathPart) {
         // Exact match failed
         return null;
@@ -632,11 +625,7 @@ export class MockServer {
   /**
    * Log request to history
    */
-  private logRequest(
-    request: MockRequest,
-    response: MockResponse,
-    startTime: number
-  ): void {
+  private logRequest(request: MockRequest, response: MockResponse, startTime: number): void {
     const duration = Date.now() - startTime;
 
     const logEntry: MockRequestLog = {
@@ -736,11 +725,7 @@ export const mockHandlers = {
   /**
    * Create error response
    */
-  error: (
-    status: number,
-    message: string,
-    options: { code?: string; details?: unknown } = {}
-  ) => {
+  error: (status: number, message: string, options: { code?: string; details?: unknown } = {}) => {
     return (): MockResponse => ({
       status,
       data: {
@@ -855,10 +840,7 @@ export const mockHandlers = {
   /**
    * Create paginated response
    */
-  paginated: <T>(
-    items: T[],
-    meta: { page: number; pageSize: number; total: number }
-  ) => {
+  paginated: <T>(items: T[], meta: { page: number; pageSize: number; total: number }) => {
     return (): MockResponse => ({
       status: 200,
       data: {
@@ -980,7 +962,16 @@ export const mockData = {
    */
   name: (): string => {
     const firstNames = ['John', 'Jane', 'Michael', 'Sarah', 'David', 'Emily', 'James', 'Emma'];
-    const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Davis', 'Miller', 'Wilson'];
+    const lastNames = [
+      'Smith',
+      'Johnson',
+      'Williams',
+      'Brown',
+      'Jones',
+      'Davis',
+      'Miller',
+      'Wilson',
+    ];
     return `${mockData.pick(firstNames)} ${mockData.pick(lastNames)}`;
   },
 

@@ -132,13 +132,11 @@ function ensureSkeletonAnimation(): void {
  * ```
  */
 export class CLSGuard implements CLSGuardInterface {
-  private _config: CLSGuardConfig;
   private readonly _reservations: Map<string, LayoutReservation>;
   private readonly _reservationElements: Map<string, HTMLElement>;
   private readonly _measurements: CLSMeasurement[];
   private readonly _callbacks: Set<(measurement: CLSMeasurement) => void>;
   private _observer: PerformanceObserver | null = null;
-  private _currentScore: number = 0;
   private _sessionEntries: LayoutShiftEntry[] = [];
   private _sessionStart: number = 0;
   private _destroyed: boolean = false;
@@ -157,12 +155,16 @@ export class CLSGuard implements CLSGuardInterface {
     ensureSkeletonAnimation();
   }
 
+  private _config: CLSGuardConfig;
+
   /**
    * Current configuration.
    */
   get config(): CLSGuardConfig {
     return this._config;
   }
+
+  private _currentScore: number = 0;
 
   /**
    * Current CLS score.
@@ -309,6 +311,47 @@ export class CLSGuard implements CLSGuardInterface {
   // ===========================================================================
   // PRIVATE METHODS
   // ===========================================================================
+
+  /**
+   * Gets the reservation element for a given ID.
+   *
+   * @param id - Reservation ID
+   * @returns The reservation element or undefined
+   */
+  getReservationElement(id: string): HTMLElement | undefined {
+    return this._reservationElements.get(id);
+  }
+
+  /**
+   * Inserts a reservation element at a specific location.
+   *
+   * @param id - Reservation ID
+   * @param container - Container element to insert into
+   * @param position - Insert position
+   */
+  insertReservationElement(
+    id: string,
+    container: HTMLElement,
+    position: 'prepend' | 'append' | 'before' | 'after' = 'append'
+  ): void {
+    const element = this._reservationElements.get(id);
+    if (!element) return;
+
+    switch (position) {
+      case 'prepend':
+        container.prepend(element);
+        break;
+      case 'append':
+        container.appendChild(element);
+        break;
+      case 'before':
+        container.parentNode?.insertBefore(element, container);
+        break;
+      case 'after':
+        container.parentNode?.insertBefore(element, container.nextSibling);
+        break;
+    }
+  }
 
   /**
    * Initializes the Performance Observer for CLS tracking.
@@ -460,47 +503,6 @@ export class CLSGuard implements CLSGuardInterface {
     }
 
     this._reservationElements.set(id, element);
-  }
-
-  /**
-   * Gets the reservation element for a given ID.
-   *
-   * @param id - Reservation ID
-   * @returns The reservation element or undefined
-   */
-  getReservationElement(id: string): HTMLElement | undefined {
-    return this._reservationElements.get(id);
-  }
-
-  /**
-   * Inserts a reservation element at a specific location.
-   *
-   * @param id - Reservation ID
-   * @param container - Container element to insert into
-   * @param position - Insert position
-   */
-  insertReservationElement(
-    id: string,
-    container: HTMLElement,
-    position: 'prepend' | 'append' | 'before' | 'after' = 'append'
-  ): void {
-    const element = this._reservationElements.get(id);
-    if (!element) return;
-
-    switch (position) {
-      case 'prepend':
-        container.prepend(element);
-        break;
-      case 'append':
-        container.appendChild(element);
-        break;
-      case 'before':
-        container.parentNode?.insertBefore(element, container);
-        break;
-      case 'after':
-        container.parentNode?.insertBefore(element, container.nextSibling);
-        break;
-    }
   }
 
   /**

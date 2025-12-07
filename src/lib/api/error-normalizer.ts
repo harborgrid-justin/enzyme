@@ -61,10 +61,7 @@ const DEFAULT_CODE_MAPPING: Record<string, ErrorCategory> = {
  * }
  * ```
  */
-export function normalizeError(
-  error: unknown,
-  config: ErrorNormalizationConfig = {}
-): ApiError {
+export function normalizeError(error: unknown, config: ErrorNormalizationConfig = {}): ApiError {
   // Already an ApiError
   if (isApiError(error)) {
     return error;
@@ -119,13 +116,17 @@ function normalizeHttpError(
     const serverError = response as ServerErrorResponse;
 
     // Extract message
-    if (serverError.message !== undefined && serverError.message !== null && serverError.message !== '') {
+    if (
+      serverError.message !== undefined &&
+      serverError.message !== null &&
+      serverError.message !== ''
+    ) {
       ({ message } = serverError);
     } else if (serverError.error !== undefined && serverError.error !== null) {
       message =
         typeof serverError.error === 'string'
           ? serverError.error
-          : serverError.error.message ?? message;
+          : (serverError.error.message ?? message);
     }
 
     // Extract code

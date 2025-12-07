@@ -77,12 +77,9 @@ export function usePortalContext(): UsePortalContextReturn {
   const portal = bridgeContext ?? domContext.portal;
 
   // Get layer z-index function
-  const getZIndex = useCallback(
-    (layer: ZIndexLayer): number => {
-      return getLayerZIndex(layer);
-    },
-    []
-  );
+  const getZIndex = useCallback((layer: ZIndexLayer): number => {
+    return getLayerZIndex(layer);
+  }, []);
 
   // Determine current layer
   const layer: ZIndexLayer = useMemo(() => {
@@ -374,7 +371,7 @@ export function useZIndexRegistration(layer: ZIndexLayer = 'base'): {
  *   );
  * }
  * ```
-*/
+ */
 export function useZIndexLayers(): Record<ZIndexLayer, number> {
-return Z_INDEX_LAYERS;
+  return Z_INDEX_LAYERS;
 }

@@ -23,13 +23,7 @@
  * ```
  */
 
-import type {
-  Variant,
-  VariantId,
-  VariantValueType,
-  JsonValue,
-  VariantAllocation,
-} from './types';
+import type { Variant, VariantId, VariantValueType, JsonValue, VariantAllocation } from './types';
 // import type { Mutable } from '../../utils/types';
 
 // ============================================================================
@@ -111,10 +105,7 @@ export class VariantManager {
   /**
    * Create a new variant.
    */
-  createVariant<T extends JsonValue>(
-    id: VariantId,
-    options: CreateVariantOptions<T>
-  ): Variant<T> {
+  createVariant<T extends JsonValue>(id: VariantId, options: CreateVariantOptions<T>): Variant<T> {
     const valueType = this.inferValueType(options.value);
 
     return {
@@ -240,10 +231,7 @@ export class VariantManager {
   /**
    * Coerce a value to the expected type.
    */
-  coerceValue<T extends JsonValue>(
-    value: unknown,
-    targetType: VariantValueType
-  ): T | null {
+  coerceValue<T extends JsonValue>(value: unknown, targetType: VariantValueType): T | null {
     try {
       switch (targetType) {
         case 'boolean':
@@ -320,27 +308,21 @@ export class VariantManager {
   /**
    * Get the control variant from a list.
    */
-  getControlVariant<T extends JsonValue>(
-    variants: readonly Variant<T>[]
-  ): Variant<T> | null {
+  getControlVariant<T extends JsonValue>(variants: readonly Variant<T>[]): Variant<T> | null {
     return variants.find((v) => v.isControl === true) ?? null;
   }
 
   /**
    * Get all treatment (non-control) variants.
    */
-  getTreatmentVariants<T extends JsonValue>(
-    variants: readonly Variant<T>[]
-  ): Variant<T>[] {
+  getTreatmentVariants<T extends JsonValue>(variants: readonly Variant<T>[]): Variant<T>[] {
     return variants.filter((v) => v.isControl !== true);
   }
 
   /**
    * Create equal allocations for variants.
    */
-  createEqualAllocations(
-    variants: readonly Variant[]
-  ): VariantAllocation[] {
+  createEqualAllocations(variants: readonly Variant[]): VariantAllocation[] {
     const percentage = 100 / variants.length;
     return variants.map((v) => ({
       variantId: v.id,
@@ -501,10 +483,7 @@ export const VariantSets = {
   /**
    * A/B test variants (control + treatment).
    */
-  abTest<T extends JsonValue>(
-    controlValue: T,
-    treatmentValue: T
-  ): [Variant<T>, Variant<T>] {
+  abTest<T extends JsonValue>(controlValue: T, treatmentValue: T): [Variant<T>, Variant<T>] {
     const manager = new VariantManager();
     return [
       manager.createVariant('control', {
@@ -548,10 +527,7 @@ export const VariantSets = {
   /**
    * Multi-value variants from a map.
    */
-  fromMap<T extends JsonValue>(
-    values: Record<string, T>,
-    controlId?: string
-  ): Variant<T>[] {
+  fromMap<T extends JsonValue>(values: Record<string, T>, controlId?: string): Variant<T>[] {
     const manager = new VariantManager();
     return Object.entries(values).map(([id, value]) =>
       manager.createVariant(id, {
@@ -564,10 +540,7 @@ export const VariantSets = {
   /**
    * Color variants for UI experiments.
    */
-  colors(
-    colors: Record<string, string>,
-    controlColor?: string
-  ): Variant<string>[] {
+  colors(colors: Record<string, string>, controlColor?: string): Variant<string>[] {
     const manager = new VariantManager();
     return Object.entries(colors).map(([name, value]) =>
       manager.createStringVariant(name, value, {
@@ -615,8 +588,7 @@ export function calculateVariantStats(
   }
 
   const mean = values.reduce((a, b) => a + b, 0) / n;
-  const variance =
-    values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / n;
+  const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / n;
   const stdDev = Math.sqrt(variance);
 
   // 95% confidence interval
@@ -644,8 +616,7 @@ export function compareVariants(
 ): VariantComparison {
   const relativeLift =
     control.conversionRate > 0
-      ? (treatment.conversionRate - control.conversionRate) /
-        control.conversionRate
+      ? (treatment.conversionRate - control.conversionRate) / control.conversionRate
       : 0;
 
   // Two-proportion z-test
@@ -696,9 +667,7 @@ function normalCDF(x: number): number {
   x = Math.abs(x) / Math.sqrt(2);
 
   const t = 1.0 / (1.0 + p * x);
-  const y =
-    1.0 -
-    ((((a5 * t + a4) * t + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+  const y = 1.0 - ((((a5 * t + a4) * t + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
 
   return 0.5 * (1.0 + sign * y);
 }

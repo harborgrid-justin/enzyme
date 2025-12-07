@@ -184,12 +184,7 @@ export function useKeyboardShortcuts(
   // Check if keyboard shortcuts are enabled via feature flag
   const keyboardShortcutsFeatureEnabled = useFeatureFlag(flagKeys.KEYBOARD_SHORTCUTS);
 
-  const {
-    preventDefault = true,
-    stopPropagation = false,
-    scope = null,
-    enabled = true,
-  } = options;
+  const { preventDefault = true, stopPropagation = false, scope = null, enabled = true } = options;
 
   // Combine feature flag with options.enabled
   const effectivelyEnabled = enabled && keyboardShortcutsFeatureEnabled;
@@ -244,7 +239,7 @@ export function useKeyboardShortcuts(
       }
 
       for (const shortcut of parsedShortcuts) {
-        if (enabledShortcuts[shortcut.id] !== true) continue;
+        if (!enabledShortcuts[shortcut.id]) continue;
 
         if (matchesKeyCombo(event, shortcut.parsed)) {
           if (preventDefault) {
@@ -265,7 +260,14 @@ export function useKeyboardShortcuts(
     return () => {
       element.removeEventListener('keydown', handleKeyDown as EventListener);
     };
-  }, [effectivelyEnabled, parsedShortcuts, enabledShortcuts, preventDefault, stopPropagation, scope]);
+  }, [
+    effectivelyEnabled,
+    parsedShortcuts,
+    enabledShortcuts,
+    preventDefault,
+    stopPropagation,
+    scope,
+  ]);
 
   const enableShortcut = useCallback((id: string) => {
     setEnabledShortcuts((prev) => ({ ...prev, [id]: true }));
@@ -276,7 +278,7 @@ export function useKeyboardShortcuts(
   }, []);
 
   const toggleShortcut = useCallback((id: string) => {
-    setEnabledShortcuts((prev) => ({ ...prev, [id]: prev[id] !== true }));
+    setEnabledShortcuts((prev) => ({ ...prev, [id]: !prev[id] }));
   }, []);
 
   return {
@@ -372,9 +374,7 @@ export function KeyboardShortcutsHelp({
                   borderBottom: '1px solid #f3f4f6',
                 }}
               >
-                <dt style={{ fontSize: '0.875rem', color: '#374151' }}>
-                  {shortcut.description}
-                </dt>
+                <dt style={{ fontSize: '0.875rem', color: '#374151' }}>{shortcut.description}</dt>
                 <dd style={{ margin: 0 }}>
                   <kbd
                     className="keyboard-hint"
@@ -393,10 +393,10 @@ export function KeyboardShortcutsHelp({
                   </kbd>
                 </dd>
               </div>
-          ))}
-        </dl>
-      </div>
-    ))}
-  </div>
-);
+            ))}
+          </dl>
+        </div>
+      ))}
+    </div>
+  );
 }

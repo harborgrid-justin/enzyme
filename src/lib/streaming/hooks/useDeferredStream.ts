@@ -39,11 +39,7 @@ import {
 
 import { useOptionalStreamContext } from '../StreamProvider';
 
-import {
-  type UseDeferredStreamOptions,
-  type UseDeferredStreamResult,
-  DeferReason,
-} from '../types';
+import { type UseDeferredStreamOptions, type UseDeferredStreamResult, DeferReason } from '../types';
 
 // ============================================================================
 // Default Options
@@ -87,12 +83,15 @@ function requestIdleCallbackPolyfill(
   const timeout = options?.timeout ?? 50;
   const start = Date.now();
 
-  return window.setTimeout(() => {
-    callback({
-      didTimeout: false,
-      timeRemaining: () => Math.max(0, 50 - (Date.now() - start)),
-    });
-  }, Math.min(timeout, 50)) as unknown as number;
+  return window.setTimeout(
+    () => {
+      callback({
+        didTimeout: false,
+        timeRemaining: () => Math.max(0, 50 - (Date.now() - start)),
+      });
+    },
+    Math.min(timeout, 50)
+  ) as unknown as number;
 }
 
 /**
@@ -158,9 +157,7 @@ function cancelIdleCallbackPolyfill(handle: number): void {
  * });
  * ```
  */
-export function useDeferredStream(
-  options: UseDeferredStreamOptions = {}
-): UseDeferredStreamResult {
+export function useDeferredStream(options: UseDeferredStreamOptions = {}): UseDeferredStreamResult {
   const {
     deferUntilVisible = DEFAULT_OPTIONS.deferUntilVisible,
     deferUntilIdle = DEFAULT_OPTIONS.deferUntilIdle,
@@ -221,7 +218,15 @@ export function useDeferredStream(
     if (deferUntilEvent && !eventFired) return DeferReason.WaitingForEvent;
 
     return null;
-  }, [isDeferred, deferUntilVisible, deferUntilIdle, deferUntilEvent, isVisible, isIdle, eventFired]);
+  }, [
+    isDeferred,
+    deferUntilVisible,
+    deferUntilIdle,
+    deferUntilEvent,
+    isVisible,
+    isIdle,
+    eventFired,
+  ]);
 
   // ==========================================================================
   // Manual Trigger
@@ -269,23 +274,29 @@ export function useDeferredStream(
   }, [deferUntilVisible, visibilityThreshold]);
 
   // Re-observe when element changes
-  const setRef = useCallback((element: HTMLElement | null) => {
-    elementRef.current = element;
+  const setRef = useCallback(
+    (element: HTMLElement | null) => {
+      elementRef.current = element;
 
-    if (element && observerRef.current && deferUntilVisible) {
-      observerRef.current.observe(element);
-    }
-  }, [deferUntilVisible]);
+      if (element && observerRef.current && deferUntilVisible) {
+        observerRef.current.observe(element);
+      }
+    },
+    [deferUntilVisible]
+  );
 
   // Create stable ref object
-  const refObject = useMemo(() => ({
-    get current() {
-      return elementRef.current;
-    },
-    set current(value: HTMLElement | null) {
-      setRef(value);
-    },
-  }), [setRef]);
+  const refObject = useMemo(
+    () => ({
+      get current() {
+        return elementRef.current;
+      },
+      set current(value: HTMLElement | null) {
+        setRef(value);
+      },
+    }),
+    [setRef]
+  );
 
   // ==========================================================================
   // Idle Callback
@@ -440,13 +451,11 @@ export function useExtendedDeferredStream(
 ): UseExtendedDeferredStreamResult {
   const base = useDeferredStream(options);
   const [startTime] = useState(() => Date.now());
-  const [timeRemaining, setTimeRemaining] = useState<number | null>(
-    options.maxDeferMs ?? null
-  );
+  const [timeRemaining, setTimeRemaining] = useState<number | null>(options.maxDeferMs ?? null);
   const [resetCount, setResetCount] = useState(0);
 
   useLayoutEffect(() => {
-    if ((options.maxDeferMs == null || options.maxDeferMs === 0) || !base.isDeferred) {
+    if (options.maxDeferMs == null || options.maxDeferMs === 0 || !base.isDeferred) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setTimeRemaining(null);
       return;
@@ -558,7 +567,7 @@ export function useDeferUntilEvent(
   options: Omit<UseDeferredStreamOptions, 'deferUntilEvent'> = {}
 ): UseDeferredStreamResult {
   return useDeferredStream({
-  ...options,
-  deferUntilEvent: eventName,
-});
+    ...options,
+    deferUntilEvent: eventName,
+  });
 }

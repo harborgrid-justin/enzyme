@@ -25,7 +25,7 @@
  * ```
  */
 
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { NormalizedEntities } from '../normalization/normalizer';
 import type {
   IntegrityChecker,
@@ -191,7 +191,7 @@ function hashState(entities: NormalizedEntities): string {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
+    hash = (hash << 5) - hash + char;
     hash = hash & hash;
   }
   return Math.abs(hash).toString(36);
@@ -247,7 +247,7 @@ function countEntities(entities: NormalizedEntities): Record<string, number> {
  * const drift = monitor.detectDrift(state.entities);
  * ```
  */
-export function createConsistencyMonitor(config: ConsistencyMonitorConfig): ConsistencyMonitor {
+function createConsistencyMonitor(config: ConsistencyMonitorConfig): ConsistencyMonitor {
   const {
     integrityChecker,
     checkInterval = 0,
@@ -344,7 +344,7 @@ export function createConsistencyMonitor(config: ConsistencyMonitorConfig): Cons
       }
 
       emit('check-complete', { report });
-      return await Promise.resolve(report);
+      return report;
     } catch (error) {
       setStatus('error');
       emit('error', { error });
@@ -356,13 +356,9 @@ export function createConsistencyMonitor(config: ConsistencyMonitorConfig): Cons
   /**
    * Repair violations
    */
-  function repair(
-    entities: NormalizedEntities,
-    options: RepairOptions = {}
-  ): RepairResult {
+  function repair(entities: NormalizedEntities, options: RepairOptions = {}): RepairResult {
     if (!lastReport) {
-      const report = integrityChecker.check(entities);
-      lastReport = report;
+      lastReport = integrityChecker.check(entities);
     }
 
     setStatus('repairing');
@@ -512,7 +508,7 @@ export function createConsistencyMonitor(config: ConsistencyMonitorConfig): Cons
     if (checkInterval > 0) {
       intervalId = setInterval(() => {
         if (getEntitiesFn) {
-          check(getEntitiesFn()).catch((error) => {
+          void check(getEntitiesFn()).catch((error: unknown) => {
             console.error('[ConsistencyMonitor] Check error:', error);
           });
         }
@@ -600,6 +596,8 @@ export function createConsistencyMonitor(config: ConsistencyMonitorConfig): Cons
   };
 }
 
+export default createConsistencyMonitor;
+
 // =============================================================================
 // REACT HOOKS
 // =============================================================================
@@ -655,7 +653,9 @@ export function useConsistencyMonitor(
 
   // Subscribe to monitor events
   useEffect(() => {
-    const unsubscribe = monitor.subscribe((event) => {
+
+
+    return monitor.subscribe((event) => {
       switch (event.type) {
         case 'status-change':
           setStatus((event.data as { status: MonitorStatus }).status);
@@ -668,8 +668,6 @@ export function useConsistencyMonitor(
           break;
       }
     });
-
-    return unsubscribe;
   }, [monitor]);
 
   // Check on mount
@@ -705,10 +703,7 @@ export function useConsistencyMonitor(
     [monitor]
   );
 
-  const violations = useMemo(
-    () => lastReport?.violations ?? [],
-    [lastReport]
-  );
+  const violations = useMemo(() => lastReport?.violations ?? [], [lastReport]);
 
   return {
     status,
@@ -752,7 +747,7 @@ export function useDriftDetection(
   }, [entities]);
 
   useEffect(() => {
-    const unsubscribe = monitor.subscribe((event) => {
+    return monitor.subscribe((event) => {
       if (event.type === 'drift-detected') {
         setDrift((event.data as { drift: DriftResult }).drift);
       }
@@ -760,8 +755,6 @@ export function useDriftDetection(
         setSnapshots(monitor.getSnapshots());
       }
     });
-
-    return unsubscribe;
   }, [monitor]);
 
   const detectDriftFn = useCallback(() => {

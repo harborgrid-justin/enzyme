@@ -23,6 +23,7 @@ import {
 } from 'react';
 import React from 'react';
 import { createPortal } from 'react-dom';
+import { isReactEnvironmentHealthy } from '@/lib/core/react-env';
 import { createModuleId } from './types';
 import { useOptionalModuleContext } from './ModuleBoundary';
 import { useModuleSystem } from './ModuleProviderExports';
@@ -163,20 +164,26 @@ export const ModuleSlot: FC<ModuleSlotProps> = ({
   const dataAttributes: Record<string, string> = {
     'data-module-slot': name,
     ...(data
-      ? Object.fromEntries(
-          Object.entries(data).map(([key, value]) => [`data-${key}`, value])
-        )
+      ? Object.fromEntries(Object.entries(data).map(([key, value]) => [`data-${key}`, value]))
       : {}),
   };
 
   // Don't render wrapper if no content
-  if (content == null && (className === undefined || className === null) && (style === undefined || style === null)) {
+  if (
+    content == null &&
+    (className === undefined || className === null) &&
+    (style === undefined || style === null)
+  ) {
     return null;
   }
 
   return (
     <Wrapper className={className} style={style} {...dataAttributes}>
-      {(fallback !== null && fallback !== undefined) ? <Suspense fallback={fallback}>{content}</Suspense> : content}
+      {fallback !== null && fallback !== undefined ? (
+        <Suspense fallback={fallback}>{content}</Suspense>
+      ) : (
+        content
+      )}
     </Wrapper>
   );
 };
@@ -264,18 +271,24 @@ export const DynamicModuleSlot: FC<DynamicModuleSlotProps> = ({
 
   // Render based on state
   if (state.status === 'loading') {
-    return <Wrapper className={className} style={style}>{fallback}</Wrapper>;
+    return (
+      <Wrapper className={className} style={style}>
+        {fallback}
+      </Wrapper>
+    );
   }
 
   if (state.status === 'error' && state.error) {
     const errorContent =
       typeof errorFallback === 'function'
         ? errorFallback(state.error)
-        : errorFallback ?? (
-            <div role="alert">Failed to load module: {state.error.message}</div>
-          );
+        : (errorFallback ?? <div role="alert">Failed to load module: {state.error.message}</div>);
 
-    return <Wrapper className={className} style={style}>{errorContent}</Wrapper>;
+    return (
+      <Wrapper className={className} style={style}>
+        {errorContent}
+      </Wrapper>
+    );
   }
 
   if (state.Component) {
@@ -315,7 +328,10 @@ export interface LazyModuleSlotProps {
 }
 
 // Create a cache for lazy components to avoid recreating them
-const lazyComponentCache = new Map<() => Promise<{ default: ComponentType<unknown> }>, ReturnType<typeof lazy>>();
+const lazyComponentCache = new Map<
+  () => Promise<{ default: ComponentType<unknown> }>,
+  ReturnType<typeof lazy>
+>();
 
 /**
  * Slot that lazily loads a component using React.lazy().
@@ -390,11 +406,7 @@ export const ModuleOutlet: FC<ModuleOutletProps> = ({
   const outletContent = context?.getSlot(`outlet:${name}`);
 
   return (
-    <Wrapper
-      className={className}
-      style={style}
-      data-module-outlet={name}
-    >
+    <Wrapper className={className} style={style} data-module-outlet={name}>
       {outletContent ?? children}
     </Wrapper>
   );
@@ -446,13 +458,7 @@ export const ConditionalModuleSlot: FC<ConditionalModuleSlotProps> = ({
     return <>{otherwise}</>;
   }
 
-  return (
-    <DynamicModuleSlot
-      moduleId={moduleId}
-      moduleProps={moduleProps}
-      fallback={fallback}
-    />
-  );
+  return <DynamicModuleSlot moduleId={moduleId} moduleProps={moduleProps} fallback={fallback} />;
 };
 
 ConditionalModuleSlot.displayName = 'ConditionalModuleSlot';
@@ -469,10 +475,22 @@ export interface ModulePortalSlotProps {
   target: string;
   /** Content to render in portal */
   children: ReactNode;
+  /**
+   * Whether to render children inline as fallback when portal cannot be created.
+   * This prevents blank pages when React environment issues occur.
+   * @default true
+   */
+  fallbackToInline?: boolean;
+  /**
+   * Custom fallback content to render when portal fails.
+   */
+  fallback?: ReactNode;
 }
 
 /**
  * Renders content into a portal target outside the module boundary.
+ * Includes fallback rendering to prevent blank pages when React
+ * environment issues occur (e.g., multiple React instances).
  *
  * @example
  * ```tsx
@@ -490,27 +508,100 @@ export interface ModulePortalSlotProps {
 export const ModulePortalSlot: FC<ModulePortalSlotProps> = ({
   target,
   children,
+  fallbackToInline = true,
+  fallback,
 }) => {
   const [targetElement, setTargetElement] = useState<Element | null>(null);
+  const [portalError, setPortalError] = useState<boolean>(false);
+  const [isEnvHealthy, setIsEnvHealthy] = useState<boolean | null>(null);
+
+  // Check React environment health
+  useEffect(() => {
+    try {
+      // Only check on client-side
+      if (typeof window === 'undefined') {
+        queueMicrotask(() => setIsEnvHealthy(true));
+        return;
+      }
+      const healthy = isReactEnvironmentHealthy();
+      queueMicrotask(() => setIsEnvHealthy(healthy));
+    } catch {
+      queueMicrotask(() => {
+        setIsEnvHealthy(false);
+        setPortalError(true);
+      });
+    }
+  }, []);
 
   useLayoutEffect(() => {
-    const element = document.getElementById(target);
-    if (element) {
-      // Use microtask to avoid synchronous setState in effect
-      void Promise.resolve().then(() => {
-        setTargetElement(element);
-      });
-    } else {
-      devWarn(`Portal target "${target}" not found`);
+    // Skip if environment is unhealthy
+    if (isEnvHealthy === false) {
+      queueMicrotask(() => setPortalError(true));
+      return;
     }
-  }, [target]);
 
+    try {
+      const element = document.getElementById(target);
+      if (element !== null) {
+        // Use microtask to avoid synchronous setState in effect
+        queueMicrotask(() => {
+          setTargetElement(element);
+        });
+      } else {
+        devWarn(`Portal target "${target}" not found`);
+        // Set error flag if target not found and fallback is enabled
+        if (fallbackToInline) {
+          queueMicrotask(() => setPortalError(true));
+        }
+      }
+    } catch (err) {
+      devWarn(`Portal creation failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      queueMicrotask(() => setPortalError(true));
+    }
+  }, [target, isEnvHealthy, fallbackToInline]);
+
+  // Render fallback if portal fails or environment is unhealthy
+  if (portalError || isEnvHealthy === false) {
+    if (fallback !== undefined) {
+      return <>{fallback}</>;
+    }
+    if (fallbackToInline) {
+      return (
+        <div data-portal-fallback="true" data-portal-target={target}>
+          {children}
+        </div>
+      );
+    }
+    return null;
+  }
+
+  // Render children inline while waiting for portal target
   if (!targetElement) {
+    if (fallbackToInline) {
+      return (
+        <div data-portal-pending="true" data-portal-target={target} style={{ display: 'contents' }}>
+          {children}
+        </div>
+      );
+    }
     return null;
   }
 
   // Use React.createPortal
-  return createPortal(children, targetElement);
+  try {
+    return createPortal(children, targetElement);
+  } catch (err) {
+    devWarn(`Portal rendering failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    // Fallback to inline rendering on portal error
+    if (fallbackToInline) {
+      return (
+        <div data-portal-error="true" data-portal-target={target}>
+          {children}
+        </div>
+      );
+    }
+    return null;
+  }
 };
 
 ModulePortalSlot.displayName = 'ModulePortalSlot';

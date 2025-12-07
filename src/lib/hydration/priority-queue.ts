@@ -19,7 +19,7 @@
  * @module hydration/priority-queue
  */
 
-import type { HydrationTask, HydrationPriority, HydrationBoundaryId } from './types';
+import type { HydrationBoundaryId, HydrationPriority, HydrationTask } from './types';
 import { PRIORITY_WEIGHTS } from './types';
 
 // ============================================================================
@@ -295,7 +295,12 @@ export class HydrationPriorityQueue {
       const parent = Math.floor((index - 1) / 2);
       const currentItem = this.heap[index];
       const parentItem = this.heap[parent];
-      if (index > 0 && currentItem !== undefined && parentItem !== undefined && this.config.comparator(currentItem, parentItem) < 0) {
+      if (
+        index > 0 &&
+        currentItem !== undefined &&
+        parentItem !== undefined &&
+        this.config.comparator(currentItem, parentItem) < 0
+      ) {
         this.bubbleUp(index);
       } else {
         this.bubbleDown(index);
@@ -332,11 +337,11 @@ export class HydrationPriorityQueue {
     }
 
     // Create updated task (immutable update)
-    const updatedTask: HydrationTask = {
+
+    this.heap[index] = {
       ...task,
       priority: newPriority,
     };
-    this.heap[index] = updatedTask;
 
     // Re-heapify based on priority change direction
     const oldWeight = PRIORITY_WEIGHTS[oldPriority];
@@ -519,7 +524,7 @@ export class HydrationPriorityQueue {
    * Bubbles down an element to maintain heap property.
    */
   private bubbleDown(index: number): void {
-    const {length} = this.heap;
+    const { length } = this.heap;
 
     while (true) {
       const leftChild = 2 * index + 1;
@@ -533,17 +538,11 @@ export class HydrationPriorityQueue {
 
       if (!currentTask || !smallestTask) break;
 
-      if (
-        leftTask &&
-        this.config.comparator(leftTask, smallestTask) < 0
-      ) {
+      if (leftTask && this.config.comparator(leftTask, smallestTask) < 0) {
         smallest = leftChild;
       }
 
-      if (
-        rightTask &&
-        this.config.comparator(rightTask, this.heap[smallest] ?? currentTask) < 0
-      ) {
+      if (rightTask && this.config.comparator(rightTask, this.heap[smallest] ?? currentTask) < 0) {
         smallest = rightChild;
       }
 
@@ -563,9 +562,9 @@ export class HydrationPriorityQueue {
     const temp = this.heap[i];
     const taskI = this.heap[j];
     const taskJ = temp;
-    
+
     if (!taskI || !taskJ) return;
-    
+
     this.heap[i] = taskI;
     this.heap[j] = taskJ;
 

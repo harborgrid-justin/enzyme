@@ -17,11 +17,11 @@ const featureRegistry: FeatureRegistry = new Map();
  */
 export function registerFeature(feature: FeatureRegistryEntry): void {
   const { metadata } = feature.config;
-  
+
   if (featureRegistry.has(metadata.id)) {
     console.warn(`Feature "${metadata.id}" is already registered. Overwriting...`);
   }
-  
+
   featureRegistry.set(metadata.id, feature);
 }
 
@@ -70,12 +70,12 @@ export function isFeatureRegistered(featureId: string): boolean {
 function generateFeatureRoute(feature: FeatureRegistryEntry): RouteObject {
   const { config, component: FeatureComponent } = feature;
   const { metadata, tabs } = config;
-  
+
   const baseRoute: RouteObject = {
     path: metadata.id,
     Component: FeatureComponent,
   };
-  
+
   // If feature has tabs, generate child routes
   if (tabs !== undefined && tabs !== null && tabs.length > 0) {
     baseRoute.children = tabs.map((tab) => ({
@@ -83,7 +83,7 @@ function generateFeatureRoute(feature: FeatureRegistryEntry): RouteObject {
       Component: FeatureComponent,
     }));
   }
-  
+
   return baseRoute;
 }
 
@@ -93,14 +93,14 @@ function generateFeatureRoute(feature: FeatureRegistryEntry): RouteObject {
  */
 export function getFeatureRoutes(): RouteObject[] {
   const features = getAllFeatures();
-  
+
   // Sort by order (lower = first)
   const sortedFeatures = features.sort((a, b) => {
     const orderA = a.config.metadata.order ?? 999;
     const orderB = b.config.metadata.order ?? 999;
     return orderA - orderB;
   });
-  
+
   return sortedFeatures.map(generateFeatureRoute);
 }
 
@@ -116,7 +116,7 @@ export function getFeatureNavItems(): Array<{
   order: number;
 }> {
   const features = getAllFeatures();
-  
+
   return features
     .map((feature) => {
       const navItem: {
@@ -131,11 +131,11 @@ export function getFeatureNavItems(): Array<{
         path: `/${feature.config.metadata.id}`,
         order: feature.config.metadata.order ?? 999,
       };
-      
+
       if (feature.config.metadata.icon !== undefined) {
         navItem.icon = feature.config.metadata.icon;
       }
-      
+
       return navItem;
     })
     .sort((a, b) => a.order - b.order);

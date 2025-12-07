@@ -132,21 +132,6 @@ export class DependencyResolver {
     }
   }
 
-  private ensureNode(flagId: FlagId): DependencyNode {
-    if (!this.graph.has(flagId)) {
-      this.graph.set(flagId, {
-        flagId,
-        dependencies: new Map(),
-        dependents: new Set(),
-      });
-    }
-    const node = this.graph.get(flagId);
-    if (node == null) {
-      throw new Error(`Failed to ensure node for flag ${flagId}`);
-    }
-    return node;
-  }
-
   /**
    * Add a dependency to the graph.
    */
@@ -238,84 +223,6 @@ export class DependencyResolver {
       implied,
       conflicts,
     };
-  }
-
-  private checkDependency(
-    dep: FlagDependency,
-    evaluator: FlagEvaluator
-  ): {
-    satisfied: boolean;
-    unsatisfied?: UnsatisfiedDependency;
-    implied?: boolean;
-    conflict?: boolean;
-  } {
-    const targetState = evaluator(dep.targetFlag);
-
-    switch (dep.type) {
-      case 'requires':
-        // Target flag must be enabled
-        if (!targetState.enabled) {
-          return {
-            satisfied: false,
-            unsatisfied: {
-              sourceFlag: dep.sourceFlag,
-              targetFlag: dep.targetFlag,
-              type: dep.type,
-              reason: `Required flag '${dep.targetFlag}' is not enabled`,
-              requiredVariant: dep.requiredVariant,
-            },
-          };
-        }
-        // Check variant if specified
-        if (
-          dep.requiredVariant != null &&
-          targetState.variantId !== dep.requiredVariant
-        ) {
-          return {
-            satisfied: false,
-            unsatisfied: {
-              sourceFlag: dep.sourceFlag,
-              targetFlag: dep.targetFlag,
-              type: dep.type,
-              reason: `Required variant '${dep.requiredVariant}' not matched`,
-              requiredVariant: dep.requiredVariant,
-              actualVariant: targetState.variantId,
-            },
-          };
-        }
-        return { satisfied: true };
-
-      case 'conflicts':
-        // Target flag must NOT be enabled
-        if (targetState.enabled) {
-          return {
-            satisfied: false,
-            conflict: true,
-            unsatisfied: {
-              sourceFlag: dep.sourceFlag,
-              targetFlag: dep.targetFlag,
-              type: dep.type,
-              reason: `Conflicting flag '${dep.targetFlag}' is enabled`,
-            },
-          };
-        }
-        return { satisfied: true };
-
-      case 'implies':
-        // Target flag should be enabled (but not a hard requirement)
-        if (!targetState.enabled) {
-          return { satisfied: true, implied: true };
-        }
-        return { satisfied: true };
-
-      case 'supersedes':
-        // This flag takes precedence over the target
-        // No validation needed, just informational
-        return { satisfied: true };
-
-      default:
-        return { satisfied: true };
-    }
   }
 
   /**
@@ -453,6 +360,99 @@ export class DependencyResolver {
     this.graph.clear();
     this.dependencies = [];
   }
+
+  private ensureNode(flagId: FlagId): DependencyNode {
+    if (!this.graph.has(flagId)) {
+      this.graph.set(flagId, {
+        flagId,
+        dependencies: new Map(),
+        dependents: new Set(),
+      });
+    }
+    const node = this.graph.get(flagId);
+    if (node == null) {
+      throw new Error(`Failed to ensure node for flag ${flagId}`);
+    }
+    return node;
+  }
+
+  private checkDependency(
+    dep: FlagDependency,
+    evaluator: FlagEvaluator
+  ): {
+    satisfied: boolean;
+    unsatisfied?: UnsatisfiedDependency;
+    implied?: boolean;
+    conflict?: boolean;
+  } {
+    const targetState = evaluator(dep.targetFlag);
+
+    switch (dep.type) {
+      case 'requires':
+        // Target flag must be enabled
+        if (!targetState.enabled) {
+          return {
+            satisfied: false,
+            unsatisfied: {
+              sourceFlag: dep.sourceFlag,
+              targetFlag: dep.targetFlag,
+              type: dep.type,
+              reason: `Required flag '${dep.targetFlag}' is not enabled`,
+              requiredVariant: dep.requiredVariant,
+            },
+          };
+        }
+        // Check variant if specified
+        if (
+          dep.requiredVariant != null &&
+          targetState.variantId !== dep.requiredVariant
+        ) {
+          return {
+            satisfied: false,
+            unsatisfied: {
+              sourceFlag: dep.sourceFlag,
+              targetFlag: dep.targetFlag,
+              type: dep.type,
+              reason: `Required variant '${dep.requiredVariant}' not matched`,
+              requiredVariant: dep.requiredVariant,
+              actualVariant: targetState.variantId,
+            },
+          };
+        }
+        return { satisfied: true };
+
+      case 'conflicts':
+        // Target flag must NOT be enabled
+        if (targetState.enabled) {
+          return {
+            satisfied: false,
+            conflict: true,
+            unsatisfied: {
+              sourceFlag: dep.sourceFlag,
+              targetFlag: dep.targetFlag,
+              type: dep.type,
+              reason: `Conflicting flag '${dep.targetFlag}' is enabled`,
+            },
+          };
+        }
+        return { satisfied: true };
+
+      case 'implies':
+        // Target flag should be enabled (but not a hard requirement)
+        if (!targetState.enabled) {
+          return { satisfied: true, implied: true };
+        }
+        return { satisfied: true };
+
+      case 'supersedes':
+        // This flag takes precedence over the target
+        // No validation needed, just informational
+        return { satisfied: true };
+
+      default:
+        return { satisfied: true };
+    }
+  }
 }
 
 // ============================================================================
@@ -463,7 +463,7 @@ export class DependencyResolver {
  * Fluent builder for creating flag dependencies.
  */
 export class DependencyBuilder {
-  private sourceFlag: FlagId;
+  private readonly sourceFlag: FlagId;
   private dependencies: FlagDependency[] = [];
 
   constructor(sourceFlag: FlagId) {

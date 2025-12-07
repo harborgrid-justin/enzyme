@@ -61,7 +61,11 @@ export function extractFeatureFlags(): string[] {
     const { access, tabs } = feature.config;
 
     // Main feature flag
-    if (access.featureFlag !== undefined && access.featureFlag !== null && access.featureFlag !== '') {
+    if (
+      access.featureFlag !== undefined &&
+      access.featureFlag !== null &&
+      access.featureFlag !== ''
+    ) {
       flags.add(access.featureFlag);
     }
 
@@ -184,7 +188,8 @@ export function useFeatureVisibility(): FeatureVisibility[] {
       }
 
       // Check main feature visibility (flag enabled)
-      const isVisible = access.featureFlag == null || access.featureFlag === '' || flagStatus[access.featureFlag] === true;
+      const isVisible =
+        access.featureFlag == null || access.featureFlag === '' || flagStatus[access.featureFlag] === true;
 
       // Check main feature access (roles/permissions)
       const isAccessible = hasFeatureAccess(access, roles, enabledFlags);
@@ -199,7 +204,9 @@ export function useFeatureVisibility(): FeatureVisibility[] {
 
       // Check tab access
       const tabVisibility: TabVisibility[] = (tabs ?? []).map((tab) => {
-        const tabVisible = tab.access?.featureFlag == null || tab.access?.featureFlag === '' ||
+        const tabVisible =
+          tab.access?.featureFlag == null ||
+          tab.access?.featureFlag === '' ||
           flagStatus[tab.access.featureFlag] === true;
 
         const tabAccessible = tab.access
@@ -241,9 +248,7 @@ export function useAccessibleFeatures(): FeatureRegistryEntry[] {
 
   return useMemo(() => {
     const accessibleIds = new Set(
-      visibility
-        .filter((v) => v.isVisible && v.isAccessible)
-        .map((v) => v.featureId)
+      visibility.filter((v) => v.isVisible && v.isAccessible).map((v) => v.featureId)
     );
 
     return features.filter((f) => accessibleIds.has(f.config.metadata.id));
@@ -258,11 +263,7 @@ export function useVisibleFeatures(): FeatureRegistryEntry[] {
   const visibility = useFeatureVisibility();
 
   return useMemo(() => {
-    const visibleIds = new Set(
-      visibility
-        .filter((v) => v.isVisible)
-        .map((v) => v.featureId)
-    );
+    const visibleIds = new Set(visibility.filter((v) => v.isVisible).map((v) => v.featureId));
 
     return features.filter((f) => visibleIds.has(f.config.metadata.id));
   }, [features, visibility]);
@@ -291,7 +292,10 @@ export function useIsFeatureAccessible(featureId: string): {
 /**
  * Hook to check if a specific tab is accessible within a feature
  */
-export function useIsTabAccessible(featureId: string, tabId: string): {
+export function useIsTabAccessible(
+  featureId: string,
+  tabId: string
+): {
   isAccessible: boolean;
   isVisible: boolean;
   reason?: TabVisibility['reason'];
@@ -324,9 +328,7 @@ export function useAccessibleTabs(featureId: string): FeatureTab[] {
     if (!featureVisibility) return [];
 
     const accessibleTabIds = new Set(
-      featureVisibility.tabs
-        .filter((t) => t.isVisible && t.isAccessible)
-        .map((t) => t.tabId)
+      featureVisibility.tabs.filter((t) => t.isVisible && t.isAccessible).map((t) => t.tabId)
     );
 
     return feature.config.tabs.filter((tab) => accessibleTabIds.has(tab.id));

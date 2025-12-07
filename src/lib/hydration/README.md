@@ -1,14 +1,21 @@
 # Hydration Module
 
-> **Purpose:** Auto-prioritized progressive hydration system for optimal Time to Interactive and Interaction to Next Paint performance.
+> **Purpose:** Auto-prioritized progressive hydration system for optimal Time to Interactive and Interaction to Next
+> Paint performance.
 
 ## Overview
 
-The Hydration module provides a world-class progressive hydration system for React applications. It intelligently schedules component hydration based on priority, visibility, and user interactions to minimize Time to Interactive (TTI) and achieve exceptional Interaction to Next Paint (INP) scores.
+The Hydration module provides a world-class progressive hydration system for React applications. It intelligently
+schedules component hydration based on priority, visibility, and user interactions to minimize Time to Interactive (TTI)
+and achieve exceptional Interaction to Next Paint (INP) scores.
 
-Unlike traditional hydration that blocks the main thread, this module uses a priority queue system combined with IntersectionObserver, requestIdleCallback, and event capture to hydrate components exactly when needed. It ensures critical above-the-fold content hydrates first, defers below-the-fold content until visible, and captures user interactions for replay after hydration.
+Unlike traditional hydration that blocks the main thread, this module uses a priority queue system combined with
+IntersectionObserver, requestIdleCallback, and event capture to hydrate components exactly when needed. It ensures
+critical above-the-fold content hydrates first, defers below-the-fold content until visible, and captures user
+interactions for replay after hydration.
 
-Perfect for content-heavy applications, SSR/SSG sites, or any application where initial page load performance is critical, this module can reduce TTI by 40% and achieve INP scores under 100ms.
+Perfect for content-heavy applications, SSR/SSG sites, or any application where initial page load performance is
+critical, this module can reduce TTI by 40% and achieve INP scores under 100ms.
 
 ## Key Features
 
@@ -80,11 +87,13 @@ function LoadingIndicator() {
 ## Exports
 
 ### Components
+
 - `HydrationProvider` - Context provider for hydration system
 - `HydrationBoundary` - Wrapper for components with hydration control
 - `LazyHydration` - Simplified lazy hydration wrapper
 
 ### Hooks
+
 - `useHydration` - Access hydration context
 - `useHydrationStatus` - Track hydration status of boundary
 - `useHydrationMetrics` - Access performance metrics
@@ -95,27 +104,33 @@ function LoadingIndicator() {
 - `useWaitForHydration` - Wait for hydration to complete
 
 ### Scheduler
+
 - `HydrationScheduler` - Core scheduling engine
 - `getHydrationScheduler()` - Get scheduler instance
 - `resetHydrationScheduler()` - Reset for testing
 
 ### Priority Queue
+
 - `HydrationPriorityQueue` - Priority queue implementation
 - `createPriorityQueue()` - Factory for queue instances
 
 ### Interaction Replay
+
 - `InteractionReplayManager` - Capture and replay interactions
 - `getInteractionReplayManager()` - Get manager instance
 
 ### Utilities
+
 - `initHydrationSystem()` - Initialize with config
 - `getHydrationMetrics()` - Get current metrics snapshot
 - `createBoundaryId()` - Generate unique boundary ID
 
 ### HOCs
+
 - `withHydrationBoundary` - HOC for boundary wrapper
 
 ### Types
+
 - `HydrationPriority` - Priority level ('critical' | 'high' | 'normal' | 'low' | 'idle')
 - `HydrationTrigger` - Trigger type ('immediate' | 'visible' | 'interaction' | 'idle')
 - `HydrationState` - Hydration state ('pending' | 'hydrating' | 'hydrated' | 'failed')
@@ -167,6 +182,7 @@ The hydration system uses a priority queue scheduler:
 ## Common Patterns
 
 ### Pattern 1: Progressive Page Hydration
+
 ```tsx
 import { HydrationBoundary } from '@/lib/hydration';
 
@@ -202,6 +218,7 @@ function BlogPost() {
 ```
 
 ### Pattern 2: Custom Hydration Logic
+
 ```tsx
 import { useDeferredHydration } from '@/lib/hydration';
 
@@ -229,6 +246,7 @@ function ExpensiveWidget() {
 ```
 
 ### Pattern 3: Monitoring Hydration Progress
+
 ```tsx
 import { useHydrationMetrics } from '@/lib/hydration';
 
@@ -247,6 +265,7 @@ function HydrationMonitor() {
 ```
 
 ### Pattern 4: Hydration with Interaction Replay
+
 ```tsx
 import { HydrationBoundary } from '@/lib/hydration';
 
@@ -271,6 +290,7 @@ function InteractiveForm() {
 ```
 
 ### Pattern 5: Conditional Hydration
+
 ```tsx
 import { useHydrationPriority } from '@/lib/hydration';
 
@@ -292,6 +312,7 @@ function AdaptiveComponent() {
 ```
 
 ### Pattern 6: Lazy Hydration Shorthand
+
 ```tsx
 import { LazyHydration } from '@/lib/hydration';
 
@@ -312,6 +333,7 @@ function Sidebar() {
 ## Configuration
 
 ### Provider Configuration
+
 ```tsx
 import { HydrationProvider } from '@/lib/hydration';
 
@@ -358,6 +380,7 @@ import { HydrationProvider } from '@/lib/hydration';
 ```
 
 ### Boundary Configuration
+
 ```tsx
 <HydrationBoundary
   // Priority (critical > high > normal > low > idle)
@@ -399,6 +422,7 @@ import { HydrationProvider } from '@/lib/hydration';
 ## Testing
 
 ### Testing with Hydration
+
 ```tsx
 import { render, waitFor } from '@testing-library/react';
 import { HydrationProvider, HydrationBoundary } from '@/lib/hydration';
@@ -436,25 +460,33 @@ describe('HydratedComponent', () => {
 ## Troubleshooting
 
 ### Issue: Component Not Hydrating
+
 **Solution:** Check priority and trigger conditions:
+
 ```tsx
 <HydrationBoundary priority="high" trigger="immediate">
 ```
 
 ### Issue: Hydration Too Slow
+
 **Solution:** Increase priority or use immediate trigger:
+
 ```tsx
 <HydrationBoundary priority="critical" trigger="immediate" aboveTheFold>
 ```
 
 ### Issue: Interactions Lost Before Hydration
+
 **Solution:** Enable interaction capture:
+
 ```tsx
 <HydrationBoundary captureInteractions>
 ```
 
 ### Issue: Memory Pressure from Many Boundaries
+
 **Solution:** Use lower priorities and idle trigger:
+
 ```tsx
 <HydrationBoundary priority="idle" trigger="idle">
 ```

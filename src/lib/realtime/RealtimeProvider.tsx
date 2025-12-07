@@ -16,10 +16,18 @@ import React, {
   useMemo,
   type ReactNode,
 } from 'react';
-import { RealtimeContext, type RealtimeContextValue, type ConnectionState } from '../contexts/RealtimeContext';
+import {
+  RealtimeContext,
+  type RealtimeContextValue,
+  type ConnectionState,
+} from '../contexts/RealtimeContext';
 import { WebSocketClient, createWebSocketClient, type WebSocketState } from './websocket-client';
 import { SSEClient, createSSEClient, type SSEState } from './sse-client';
-import { StreamQueryCacheUpdater, type StreamEvent, type CacheUpdateStrategy } from './stream-to-query-cache';
+import {
+  StreamQueryCacheUpdater,
+  type StreamEvent,
+  type CacheUpdateStrategy,
+} from './stream-to-query-cache';
 import { queryClient } from '../queries/queryClient';
 import { useFeatureFlag } from '../flags/useFeatureFlag';
 import { flagKeys } from '../flags/flag-keys';
@@ -121,7 +129,9 @@ export function RealtimeProvider({
 
     // Setup state change handler
     const client = clientRef.current;
-    const unsubState = client.onStateChange((state) => setConnectionState(mapToConnectionState(state)));
+    const unsubState = client.onStateChange((state) =>
+      setConnectionState(mapToConnectionState(state))
+    );
 
     // Setup message handler
     const unsubMessage = client.onMessage((data: unknown) => {
@@ -148,8 +158,13 @@ export function RealtimeProvider({
       unsubMessage();
       client.disconnect();
     };
-   
-  }, [realtimeEnabled, mergedConfig.type, mergedConfig.url, mergedConfig.autoConnect, mergedConfig.cacheStrategies]);
+  }, [
+    realtimeEnabled,
+    mergedConfig.type,
+    mergedConfig.url,
+    mergedConfig.autoConnect,
+    mergedConfig.cacheStrategies,
+  ]);
 
   /**
    * Connect to realtime server
@@ -157,7 +172,9 @@ export function RealtimeProvider({
    */
   const connect = useCallback(() => {
     if (!realtimeEnabled) {
-      console.warn('[RealtimeProvider] Cannot connect - real-time updates disabled via feature flag');
+      console.warn(
+        '[RealtimeProvider] Cannot connect - real-time updates disabled via feature flag'
+      );
       return;
     }
     clientRef.current?.connect();
@@ -173,39 +190,36 @@ export function RealtimeProvider({
   /**
    * Subscribe to a channel
    */
-  const subscribe = useCallback(
-    (channel: string, handler: (data: unknown) => void) => {
-      // Track handler locally
-      if (!channelHandlersRef.current.has(channel)) {
-        channelHandlersRef.current.set(channel, new Set());
-      }
+  const subscribe = useCallback((channel: string, handler: (data: unknown) => void) => {
+    // Track handler locally
+    if (!channelHandlersRef.current.has(channel)) {
+      channelHandlersRef.current.set(channel, new Set());
+    }
+    const handlers = channelHandlersRef.current.get(channel);
+    if (handlers) {
+      handlers.add(handler);
+    }
+
+    // Subscribe via client if WebSocket
+    let clientUnsub: (() => void) | undefined;
+    if (clientRef.current instanceof WebSocketClient) {
+      clientUnsub = clientRef.current.subscribe(channel, handler);
+    } else if (clientRef.current instanceof SSEClient) {
+      clientUnsub = clientRef.current.on(channel, handler);
+    }
+
+    // Return unsubscribe function
+    return () => {
       const handlers = channelHandlersRef.current.get(channel);
       if (handlers) {
-        handlers.add(handler);
-      }
-
-      // Subscribe via client if WebSocket
-      let clientUnsub: (() => void) | undefined;
-      if (clientRef.current instanceof WebSocketClient) {
-        clientUnsub = clientRef.current.subscribe(channel, handler);
-      } else if (clientRef.current instanceof SSEClient) {
-        clientUnsub = clientRef.current.on(channel, handler);
-      }
-
-      // Return unsubscribe function
-      return () => {
-        const handlers = channelHandlersRef.current.get(channel);
-        if (handlers) {
-          handlers.delete(handler);
-          if (handlers.size === 0) {
-            channelHandlersRef.current.delete(channel);
-          }
+        handlers.delete(handler);
+        if (handlers.size === 0) {
+          channelHandlersRef.current.delete(channel);
         }
-        clientUnsub?.();
-      };
-    },
-    []
-  );
+      }
+      clientUnsub?.();
+    };
+  }, []);
 
   /**
    * Send data to a channel (WebSocket only)
@@ -219,21 +233,20 @@ export function RealtimeProvider({
   }, []);
 
   // PERFORMANCE: Memoize context value to prevent unnecessary re-renders
-  const value: RealtimeContextValue = useMemo(() => ({
-    connectionState,
-    isConnected: connectionState === 'connected',
-    connect,
-    disconnect,
-    subscribe,
-    send,
-    realtimeEnabled,
-  }), [connectionState, connect, disconnect, subscribe, send, realtimeEnabled]);
-
-  return (
-    <RealtimeContext.Provider value={value}>
-      {children}
-    </RealtimeContext.Provider>
+  const value: RealtimeContextValue = useMemo(
+    () => ({
+      connectionState,
+      isConnected: connectionState === 'connected',
+      connect,
+      disconnect,
+      subscribe,
+      send,
+      realtimeEnabled,
+    }),
+    [connectionState, connect, disconnect, subscribe, send, realtimeEnabled]
   );
+
+  return <RealtimeContext.Provider value={value}>{children}</RealtimeContext.Provider>;
 }
 
 /**

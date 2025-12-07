@@ -47,10 +47,7 @@ const VALID_TRANSITIONS: Record<ModuleLifecycleState, ModuleLifecycleState[]> = 
     ModuleLifecycleState.SUSPENDED,
     ModuleLifecycleState.DISPOSED,
   ],
-  [ModuleLifecycleState.MOUNTING]: [
-    ModuleLifecycleState.MOUNTED,
-    ModuleLifecycleState.ERROR,
-  ],
+  [ModuleLifecycleState.MOUNTING]: [ModuleLifecycleState.MOUNTED, ModuleLifecycleState.ERROR],
   [ModuleLifecycleState.MOUNTED]: [
     ModuleLifecycleState.UNMOUNTING,
     ModuleLifecycleState.SUSPENDED,
@@ -61,14 +58,8 @@ const VALID_TRANSITIONS: Record<ModuleLifecycleState, ModuleLifecycleState[]> = 
     ModuleLifecycleState.UNMOUNTING,
     ModuleLifecycleState.DISPOSED,
   ],
-  [ModuleLifecycleState.UNMOUNTING]: [
-    ModuleLifecycleState.UNMOUNTED,
-    ModuleLifecycleState.ERROR,
-  ],
-  [ModuleLifecycleState.UNMOUNTED]: [
-    ModuleLifecycleState.MOUNTING,
-    ModuleLifecycleState.DISPOSED,
-  ],
+  [ModuleLifecycleState.UNMOUNTING]: [ModuleLifecycleState.UNMOUNTED, ModuleLifecycleState.ERROR],
+  [ModuleLifecycleState.UNMOUNTED]: [ModuleLifecycleState.MOUNTING, ModuleLifecycleState.DISPOSED],
   [ModuleLifecycleState.ERROR]: [
     ModuleLifecycleState.INITIALIZING,
     ModuleLifecycleState.MOUNTING,
@@ -286,61 +277,12 @@ export class VirtualModuleManager {
   // ==========================================================================
 
   /**
-   * Validates if a state transition is allowed.
-   * @param from - Current state
-   * @param to - Target state
-   * @returns Whether the transition is valid
-   */
-  private isValidTransition(
-    from: ModuleLifecycleState,
-    to: ModuleLifecycleState
-  ): boolean {
-    return VALID_TRANSITIONS[from]?.includes(to) ?? false;
-  }
-
-  /**
-   * Transitions to a new lifecycle state.
-   * @param to - Target state
-   * @throws Error if transition is invalid
-   */
-  private transitionTo(to: ModuleLifecycleState): void {
-    const from = this.state.lifecycleState;
-
-    if (!this.isValidTransition(from, to)) {
-      throw new Error(
-        `Invalid lifecycle transition: ${from} -> ${to} for module ${this.config.name}`
-      );
-    }
-
-    this.state = {
-      ...this.state,
-      lifecycleState: to,
-    };
-
-    // Emit corresponding lifecycle event
-    const eventMap: Partial<Record<ModuleLifecycleState, ModuleLifecycleEvent>> = {
-      [ModuleLifecycleState.INITIALIZED]: ModuleLifecycleEvent.AFTER_INIT,
-      [ModuleLifecycleState.MOUNTED]: ModuleLifecycleEvent.AFTER_MOUNT,
-      [ModuleLifecycleState.UNMOUNTED]: ModuleLifecycleEvent.AFTER_UNMOUNT,
-      [ModuleLifecycleState.ERROR]: ModuleLifecycleEvent.ERROR,
-      [ModuleLifecycleState.DISPOSED]: ModuleLifecycleEvent.DISPOSE,
-    };
-
-    const event = eventMap[to];
-    if (event) {
-      this.emitLifecycleEvent(event);
-    }
-  }
-
-  /**
    * Initializes the module.
    * @throws Error if initialization fails
    */
   async initialize(): Promise<void> {
     if (this.state.lifecycleState !== ModuleLifecycleState.REGISTERED) {
-      throw new Error(
-        `Cannot initialize module in state: ${this.state.lifecycleState}`
-      );
+      throw new Error(`Cannot initialize module in state: ${this.state.lifecycleState}`);
     }
 
     this.markPerf('init:start');
@@ -351,7 +293,7 @@ export class VirtualModuleManager {
 
       // Execute initialization hook
       if (this.hooks.onBeforeInit) {
-        await Promise.resolve(this.hooks.onBeforeInit());
+        await this.hooks.onBeforeInit();
       }
 
       // Resolve dependencies
@@ -359,7 +301,7 @@ export class VirtualModuleManager {
 
       // Execute after init hook
       if (this.hooks.onAfterInit) {
-        await Promise.resolve(this.hooks.onAfterInit());
+        await this.hooks.onAfterInit();
       }
 
       this.transitionTo(ModuleLifecycleState.INITIALIZED);
@@ -383,10 +325,8 @@ export class VirtualModuleManager {
       ModuleLifecycleState.UNMOUNTED,
     ] as const;
 
-    if (!validStates.includes(this.state.lifecycleState as typeof validStates[number])) {
-      throw new Error(
-        `Cannot mount module in state: ${this.state.lifecycleState}`
-      );
+    if (!validStates.includes(this.state.lifecycleState as (typeof validStates)[number])) {
+      throw new Error(`Cannot mount module in state: ${this.state.lifecycleState}`);
     }
 
     this.markPerf('mount:start');
@@ -396,7 +336,7 @@ export class VirtualModuleManager {
       this.emitLifecycleEvent(ModuleLifecycleEvent.BEFORE_MOUNT);
 
       if (this.hooks.onBeforeMount) {
-        await Promise.resolve(this.hooks.onBeforeMount());
+        await this.hooks.onBeforeMount();
       }
 
       this.container = container;
@@ -412,7 +352,7 @@ export class VirtualModuleManager {
       }
 
       if (this.hooks.onAfterMount) {
-        await Promise.resolve(this.hooks.onAfterMount());
+        await this.hooks.onAfterMount();
       }
 
       this.state = {
@@ -443,7 +383,7 @@ export class VirtualModuleManager {
       this.emitLifecycleEvent(ModuleLifecycleEvent.BEFORE_UNMOUNT);
 
       if (this.hooks.onBeforeUnmount) {
-        await Promise.resolve(this.hooks.onBeforeUnmount());
+        await this.hooks.onBeforeUnmount();
       }
 
       // Unmount child modules first
@@ -458,7 +398,7 @@ export class VirtualModuleManager {
       this.portals.clear();
 
       if (this.hooks.onAfterUnmount) {
-        await Promise.resolve(this.hooks.onAfterUnmount());
+        await this.hooks.onAfterUnmount();
       }
 
       this.state = {
@@ -477,12 +417,9 @@ export class VirtualModuleManager {
    * Suspends the module (lazy state).
    */
   async suspend(): Promise<void> {
-    const validStates = [
-      ModuleLifecycleState.INITIALIZED,
-      ModuleLifecycleState.MOUNTED,
-    ] as const;
+    const validStates = [ModuleLifecycleState.INITIALIZED, ModuleLifecycleState.MOUNTED] as const;
 
-    if (!validStates.includes(this.state.lifecycleState as typeof validStates[number])) {
+    if (!validStates.includes(this.state.lifecycleState as (typeof validStates)[number])) {
       return;
     }
 
@@ -511,7 +448,7 @@ export class VirtualModuleManager {
       this.emitLifecycleEvent(ModuleLifecycleEvent.DISPOSE);
 
       if (this.hooks.onDispose) {
-        await Promise.resolve(this.hooks.onDispose());
+        await this.hooks.onDispose();
       }
 
       // Dispose child modules
@@ -536,10 +473,6 @@ export class VirtualModuleManager {
       };
     }
   }
-
-  // ==========================================================================
-  // Error Handling
-  // ==========================================================================
 
   /**
    * Handles an error in the module.
@@ -586,6 +519,10 @@ export class VirtualModuleManager {
     };
   }
 
+  // ==========================================================================
+  // Error Handling
+  // ==========================================================================
+
   /**
    * Attempts to recover from error state.
    */
@@ -605,9 +542,305 @@ export class VirtualModuleManager {
     await this.initialize();
   }
 
+  /**
+   * Gets resolved dependencies.
+   */
+  getDependencies(): ReadonlyMap<ModuleId, VirtualModuleManager> {
+    return this.resolvedDependencies ?? new Map();
+  }
+
+  /**
+   * Registers a child module.
+   * @param child - Child module manager
+   */
+  registerChild(child: VirtualModuleManager): void {
+    if (this.children.has(child.id)) {
+      throw new Error(`Child module already registered: ${child.id} in ${this.config.name}`);
+    }
+
+    child.parent = this;
+    this.children.set(child.id, child);
+  }
+
   // ==========================================================================
   // Dependency Management
   // ==========================================================================
+
+  /**
+   * Unregisters a child module.
+   * @param moduleId - ID of child module
+   */
+  async unregisterChild(moduleId: ModuleId): Promise<void> {
+    const child = this.children.get(moduleId);
+    if (!child) {
+      return;
+    }
+
+    await child.dispose();
+    this.children.delete(moduleId);
+  }
+
+  /**
+   * Gets a child module by ID.
+   * @param moduleId - Child module ID
+   */
+  getChild(moduleId: ModuleId): VirtualModuleManager | null {
+    return this.children.get(moduleId) ?? null;
+  }
+
+  /**
+   * Sets content for a named slot.
+   * @param name - Slot name
+   * @param content - React content
+   */
+  setSlot(name: string, content: ReactNode): void {
+    const slotDef = this.config.slots?.find((s) => s.name === name);
+
+    if (slotDef?.accepts && content !== null) {
+      // Validate slot content type would happen here
+    }
+
+    const newSlots = new Map(this.state.slots);
+    newSlots.set(name, content);
+
+    this.state = {
+      ...this.state,
+      slots: newSlots,
+    };
+  }
+
+  // ==========================================================================
+  // Child Module Management
+  // ==========================================================================
+
+  /**
+   * Gets content from a named slot.
+   * @param name - Slot name
+   */
+  getSlot(name: string): ReactNode | null {
+    return this.state.slots.get(name) ?? null;
+  }
+
+  /**
+   * Clears a named slot.
+   * @param name - Slot name
+   */
+  clearSlot(name: string): void {
+    const newSlots = new Map(this.state.slots);
+    newSlots.delete(name);
+
+    this.state = {
+      ...this.state,
+      slots: newSlots,
+    };
+  }
+
+  /**
+   * Sets a module-scoped state value.
+   * @param key - State key
+   * @param value - State value
+   */
+  setModuleState<T>(key: string, value: T): void {
+    const newState = new Map(this.state.moduleState);
+    newState.set(key, value);
+
+    this.state = {
+      ...this.state,
+      moduleState: newState,
+    };
+  }
+
+  /**
+   * Gets a module-scoped state value.
+   * @param key - State key
+   */
+  getModuleState<T>(key: string): T | undefined {
+    return this.state.moduleState.get(key) as T | undefined;
+  }
+
+  // ==========================================================================
+  // Slot Management
+  // ==========================================================================
+
+  /**
+   * Clears all module-scoped state.
+   */
+  clearModuleState(): void {
+    this.state = {
+      ...this.state,
+      moduleState: new Map(),
+    };
+  }
+
+  /**
+   * Updates visibility state.
+   * @param isVisible - Whether module is visible
+   */
+  setVisibility(isVisible: boolean): void {
+    if (this.state.isVisible === isVisible) {
+      return;
+    }
+
+    this.state = {
+      ...this.state,
+      isVisible,
+    };
+  }
+
+  /**
+   * Sets the virtual DOM nodes.
+   * @param nodes - Virtual DOM nodes
+   */
+  setVDOM(nodes: VirtualNode[]): void {
+    this.vdom = nodes;
+    this.updateMetric('vNodeCount', this.countVNodes(nodes));
+  }
+
+  // ==========================================================================
+  // Module State Management
+  // ==========================================================================
+
+  /**
+   * Registers a portal root.
+   * @param name - Portal name
+   * @param element - Portal container element
+   */
+  registerPortal(name: string, element: Element): void {
+    this.portals.set(name, element);
+  }
+
+  /**
+   * Gets a portal root.
+   * @param name - Portal name
+   */
+  getPortal(name: string): Element | null {
+    return this.portals.get(name) ?? null;
+  }
+
+  /**
+   * Unregisters a portal.
+   * @param name - Portal name
+   */
+  unregisterPortal(name: string): void {
+    this.portals.delete(name);
+  }
+
+  // ==========================================================================
+  // Visibility Management
+  // ==========================================================================
+
+  /**
+   * Subscribes to a lifecycle event.
+   * @param event - Lifecycle event type
+   * @param handler - Event handler
+   * @returns Unsubscribe function
+   */
+  subscribe(event: ModuleLifecycleEvent, handler: () => void): () => void {
+    const listeners = this.listeners.get(event);
+    if (!listeners) {
+      return () => {};
+    }
+
+    listeners.add(handler);
+
+    return () => {
+      listeners.delete(handler);
+    };
+  }
+
+  // ==========================================================================
+  // VDOM Management
+  // ==========================================================================
+
+  /**
+   * Records a render.
+   * @param renderTime - Time taken to render (ms)
+   */
+  recordRender(renderTime: number): void {
+    const { renderCount, totalRenderTime, peakRenderTime } = this.state.metrics;
+
+    const newRenderCount = renderCount + 1;
+    const newTotalRenderTime = totalRenderTime + renderTime;
+    const newPeakRenderTime = Math.max(peakRenderTime, renderTime);
+    const newAvgRenderTime = newTotalRenderTime / newRenderCount;
+
+    this.state = {
+      ...this.state,
+      metrics: {
+        ...this.state.metrics,
+        renderCount: newRenderCount,
+        totalRenderTime: newTotalRenderTime,
+        avgRenderTime: newAvgRenderTime,
+        peakRenderTime: newPeakRenderTime,
+        lastMeasuredAt: Date.now(),
+      },
+    };
+  }
+
+  /**
+   * Exports the module to a VirtualModule interface.
+   */
+  toVirtualModule(): VirtualModule {
+    return {
+      config: this.config,
+      state: this.state,
+      vdom: this.vdom,
+      container: this.container,
+      portals: this.portals,
+      children: new Map(
+        Array.from(this.children.entries()).map(([id, manager]) => [id, manager.toVirtualModule()])
+      ),
+      parent: this.parent?.toVirtualModule() ?? null,
+    };
+  }
+
+  // ==========================================================================
+  // Portal Management
+  // ==========================================================================
+
+  /**
+   * Validates if a state transition is allowed.
+   * @param from - Current state
+   * @param to - Target state
+   * @returns Whether the transition is valid
+   */
+  private isValidTransition(from: ModuleLifecycleState, to: ModuleLifecycleState): boolean {
+    return VALID_TRANSITIONS[from]?.includes(to) ?? false;
+  }
+
+  /**
+   * Transitions to a new lifecycle state.
+   * @param to - Target state
+   * @throws Error if transition is invalid
+   */
+  private transitionTo(to: ModuleLifecycleState): void {
+    const from = this.state.lifecycleState;
+
+    if (!this.isValidTransition(from, to)) {
+      throw new Error(
+        `Invalid lifecycle transition: ${from} -> ${to} for module ${this.config.name}`
+      );
+    }
+
+    this.state = {
+      ...this.state,
+      lifecycleState: to,
+    };
+
+    // Emit corresponding lifecycle event
+    const eventMap: Partial<Record<ModuleLifecycleState, ModuleLifecycleEvent>> = {
+      [ModuleLifecycleState.INITIALIZED]: ModuleLifecycleEvent.AFTER_INIT,
+      [ModuleLifecycleState.MOUNTED]: ModuleLifecycleEvent.AFTER_MOUNT,
+      [ModuleLifecycleState.UNMOUNTED]: ModuleLifecycleEvent.AFTER_UNMOUNT,
+      [ModuleLifecycleState.ERROR]: ModuleLifecycleEvent.ERROR,
+      [ModuleLifecycleState.DISPOSED]: ModuleLifecycleEvent.DISPOSE,
+    };
+
+    const event = eventMap[to];
+    if (event) {
+      this.emitLifecycleEvent(event);
+    }
+  }
 
   /**
    * Resolves module dependencies using topological sort.
@@ -668,6 +901,10 @@ export class VirtualModuleManager {
     this.resolvedDependencies = resolved;
   }
 
+  // ==========================================================================
+  // Event Management
+  // ==========================================================================
+
   /**
    * Finds a dependency module.
    * @param moduleId - ID of the dependency
@@ -690,54 +927,6 @@ export class VirtualModuleManager {
   }
 
   /**
-   * Gets resolved dependencies.
-   */
-  getDependencies(): ReadonlyMap<ModuleId, VirtualModuleManager> {
-    return this.resolvedDependencies ?? new Map();
-  }
-
-  // ==========================================================================
-  // Child Module Management
-  // ==========================================================================
-
-  /**
-   * Registers a child module.
-   * @param child - Child module manager
-   */
-  registerChild(child: VirtualModuleManager): void {
-    if (this.children.has(child.id)) {
-      throw new Error(
-        `Child module already registered: ${child.id} in ${this.config.name}`
-      );
-    }
-
-    child.parent = this;
-    this.children.set(child.id, child);
-  }
-
-  /**
-   * Unregisters a child module.
-   * @param moduleId - ID of child module
-   */
-  async unregisterChild(moduleId: ModuleId): Promise<void> {
-    const child = this.children.get(moduleId);
-    if (!child) {
-      return;
-    }
-
-    await child.dispose();
-    this.children.delete(moduleId);
-  }
-
-  /**
-   * Gets a child module by ID.
-   * @param moduleId - Child module ID
-   */
-  getChild(moduleId: ModuleId): VirtualModuleManager | null {
-    return this.children.get(moduleId) ?? null;
-  }
-
-  /**
    * Finds container element for a child module.
    * @param moduleId - Child module ID
    */
@@ -751,120 +940,8 @@ export class VirtualModuleManager {
   }
 
   // ==========================================================================
-  // Slot Management
+  // Performance Measurement
   // ==========================================================================
-
-  /**
-   * Sets content for a named slot.
-   * @param name - Slot name
-   * @param content - React content
-   */
-  setSlot(name: string, content: ReactNode): void {
-    const slotDef = this.config.slots?.find((s) => s.name === name);
-
-    if (slotDef?.accepts && content !== null) {
-      // Validate slot content type would happen here
-    }
-
-    const newSlots = new Map(this.state.slots);
-    newSlots.set(name, content);
-
-    this.state = {
-      ...this.state,
-      slots: newSlots,
-    };
-  }
-
-  /**
-   * Gets content from a named slot.
-   * @param name - Slot name
-   */
-  getSlot(name: string): ReactNode | null {
-    return this.state.slots.get(name) ?? null;
-  }
-
-  /**
-   * Clears a named slot.
-   * @param name - Slot name
-   */
-  clearSlot(name: string): void {
-    const newSlots = new Map(this.state.slots);
-    newSlots.delete(name);
-
-    this.state = {
-      ...this.state,
-      slots: newSlots,
-    };
-  }
-
-  // ==========================================================================
-  // Module State Management
-  // ==========================================================================
-
-  /**
-   * Sets a module-scoped state value.
-   * @param key - State key
-   * @param value - State value
-   */
-  setModuleState<T>(key: string, value: T): void {
-    const newState = new Map(this.state.moduleState);
-    newState.set(key, value);
-
-    this.state = {
-      ...this.state,
-      moduleState: newState,
-    };
-  }
-
-  /**
-   * Gets a module-scoped state value.
-   * @param key - State key
-   */
-  getModuleState<T>(key: string): T | undefined {
-    return this.state.moduleState.get(key) as T | undefined;
-  }
-
-  /**
-   * Clears all module-scoped state.
-   */
-  clearModuleState(): void {
-    this.state = {
-      ...this.state,
-      moduleState: new Map(),
-    };
-  }
-
-  // ==========================================================================
-  // Visibility Management
-  // ==========================================================================
-
-  /**
-   * Updates visibility state.
-   * @param isVisible - Whether module is visible
-   */
-  setVisibility(isVisible: boolean): void {
-    if (this.state.isVisible === isVisible) {
-      return;
-    }
-
-    this.state = {
-      ...this.state,
-      isVisible,
-    };
-  }
-
-  // ==========================================================================
-  // VDOM Management
-  // ==========================================================================
-
-  /**
-   * Sets the virtual DOM nodes.
-   * @param nodes - Virtual DOM nodes
-   */
-  setVDOM(nodes: VirtualNode[]): void {
-    this.vdom = nodes;
-    this.updateMetric('vNodeCount', this.countVNodes(nodes));
-  }
 
   /**
    * Counts total virtual nodes recursively.
@@ -873,65 +950,11 @@ export class VirtualModuleManager {
     let count = nodes.length;
     for (const node of nodes) {
       if (Array.isArray(node.children)) {
-        const childNodes = node.children.filter(
-          (c): c is VirtualNode => typeof c !== 'string'
-        );
+        const childNodes = node.children.filter((c): c is VirtualNode => typeof c !== 'string');
         count += this.countVNodes(childNodes);
       }
     }
     return count;
-  }
-
-  // ==========================================================================
-  // Portal Management
-  // ==========================================================================
-
-  /**
-   * Registers a portal root.
-   * @param name - Portal name
-   * @param element - Portal container element
-   */
-  registerPortal(name: string, element: Element): void {
-    this.portals.set(name, element);
-  }
-
-  /**
-   * Gets a portal root.
-   * @param name - Portal name
-   */
-  getPortal(name: string): Element | null {
-    return this.portals.get(name) ?? null;
-  }
-
-  /**
-   * Unregisters a portal.
-   * @param name - Portal name
-   */
-  unregisterPortal(name: string): void {
-    this.portals.delete(name);
-  }
-
-  // ==========================================================================
-  // Event Management
-  // ==========================================================================
-
-  /**
-   * Subscribes to a lifecycle event.
-   * @param event - Lifecycle event type
-   * @param handler - Event handler
-   * @returns Unsubscribe function
-   */
-  subscribe(event: ModuleLifecycleEvent, handler: () => void): () => void {
-    const listeners = this.listeners.get(event);
-    if (!listeners) {
-      return () => {};
-    }
-
-    listeners.add(handler);
-
-    return () => {
-      listeners.delete(handler);
-    };
   }
 
   /**
@@ -952,10 +975,6 @@ export class VirtualModuleManager {
       }
     }
   }
-
-  // ==========================================================================
-  // Performance Measurement
-  // ==========================================================================
 
   /**
    * Marks a performance timestamp.
@@ -981,6 +1000,10 @@ export class VirtualModuleManager {
     return end - start;
   }
 
+  // ==========================================================================
+  // Serialization
+  // ==========================================================================
+
   /**
    * Updates a performance metric.
    * @param metric - Metric name
@@ -997,55 +1020,6 @@ export class VirtualModuleManager {
         [metric]: value,
         lastMeasuredAt: Date.now(),
       },
-    };
-  }
-
-  /**
-   * Records a render.
-   * @param renderTime - Time taken to render (ms)
-   */
-  recordRender(renderTime: number): void {
-    const { renderCount, totalRenderTime, peakRenderTime } = this.state.metrics;
-
-    const newRenderCount = renderCount + 1;
-    const newTotalRenderTime = totalRenderTime + renderTime;
-    const newPeakRenderTime = Math.max(peakRenderTime, renderTime);
-    const newAvgRenderTime = newTotalRenderTime / newRenderCount;
-
-    this.state = {
-      ...this.state,
-      metrics: {
-        ...this.state.metrics,
-        renderCount: newRenderCount,
-        totalRenderTime: newTotalRenderTime,
-        avgRenderTime: newAvgRenderTime,
-        peakRenderTime: newPeakRenderTime,
-        lastMeasuredAt: Date.now(),
-      },
-    };
-  }
-
-  // ==========================================================================
-  // Serialization
-  // ==========================================================================
-
-  /**
-   * Exports the module to a VirtualModule interface.
-   */
-  toVirtualModule(): VirtualModule {
-    return {
-      config: this.config,
-      state: this.state,
-      vdom: this.vdom,
-      container: this.container,
-      portals: this.portals,
-      children: new Map(
-        Array.from(this.children.entries()).map(([id, manager]) => [
-          id,
-          manager.toVirtualModule(),
-        ])
-      ),
-      parent: this.parent?.toVirtualModule() ?? null,
     };
   }
 }
@@ -1071,9 +1045,7 @@ export class VirtualModuleManager {
  * });
  * ```
  */
-export function createVirtualModule(
-  config: ModuleBoundaryConfig
-): VirtualModuleManager {
+export function createVirtualModule(config: ModuleBoundaryConfig): VirtualModuleManager {
   return new VirtualModuleManager(config);
 }
 
@@ -1088,7 +1060,7 @@ export function createVirtualModule(
  * ```
  */
 export function createValidatedModuleId(id: string): ModuleId {
-  if (!id || typeof id !== 'string') {
+  if (!id) {
     throw new Error('Module ID must be a non-empty string');
   }
 
@@ -1108,10 +1080,7 @@ export function createValidatedModuleId(id: string): ModuleId {
  * @param name - Module name
  * @returns Minimal module configuration
  */
-export function createMinimalConfig(
-  id: string,
-  name: string
-): ModuleBoundaryConfig {
+export function createMinimalConfig(id: string, name: string): ModuleBoundaryConfig {
   return {
     id: createValidatedModuleId(id),
     name,

@@ -82,7 +82,15 @@ interface CapturedInteraction {
 }
 
 interface HydrationBoundaryState {
-  hydrationState: 'idle' | 'loading' | 'complete' | 'error' | 'pending' | 'hydrated' | 'hydrating' | 'skipped';
+  hydrationState:
+    | 'idle'
+    | 'loading'
+    | 'complete'
+    | 'error'
+    | 'pending'
+    | 'hydrated'
+    | 'hydrating'
+    | 'skipped';
   error: Error | null;
   isClient: boolean;
 }
@@ -132,9 +140,7 @@ function DefaultErrorFallback({ error }: { error: Error }): React.JSX.Element {
       }}
     >
       <strong>Component Error</strong>
-      <p style={{ margin: '0.5rem 0 0', fontSize: '0.875em', opacity: 0.8 }}>
-        {error.message}
-      </p>
+      <p style={{ margin: '0.5rem 0 0', fontSize: '0.875em', opacity: 0.8 }}>{error.message}</p>
     </div>
   );
 }
@@ -176,10 +182,7 @@ export function HydrationBoundary({
   // ==========================================================================
 
   const reactId = useId();
-  const boundaryId = useMemo(
-    () => generateBoundaryId(providedId, reactId),
-    [providedId, reactId]
-  );
+  const boundaryId = useMemo(() => generateBoundaryId(providedId, reactId), [providedId, reactId]);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const hydrationCallbackRef = useRef<(() => Promise<void>) | null>(null);
@@ -220,30 +223,33 @@ export function HydrationBoundary({
    * INP Optimization: Instead of blocking all interactions with pointerEvents: 'none',
    * we capture them and replay after hydration completes.
    */
-  const captureInteraction = useCallback((event: React.MouseEvent | React.TouchEvent | React.KeyboardEvent) => {
-    // Only capture if not yet hydrated
-    if (state.hydrationState !== 'pending' && state.hydrationState !== 'hydrating') {
-      return;
-    }
+  const captureInteraction = useCallback(
+    (event: React.MouseEvent | React.TouchEvent | React.KeyboardEvent) => {
+      // Only capture if not yet hydrated
+      if (state.hydrationState !== 'pending' && state.hydrationState !== 'hydrating') {
+        return;
+      }
 
-    const captured: CapturedInteraction = {
-      type: event.type,
-      target: event.target,
-      timestamp: Date.now(),
-    };
+      const captured: CapturedInteraction = {
+        type: event.type,
+        target: event.target,
+        timestamp: Date.now(),
+      };
 
-    // Capture position for mouse/touch events
-    if ('clientX' in event) {
-      captured.clientX = event.clientX;
-      captured.clientY = event.clientY;
-    }
+      // Capture position for mouse/touch events
+      if ('clientX' in event) {
+        captured.clientX = event.clientX;
+        captured.clientY = event.clientY;
+      }
 
-    capturedInteractionsRef.current.push(captured);
+      capturedInteractionsRef.current.push(captured);
 
-    // Prevent the event from propagating during pre-hydration
-    event.preventDefault();
-    event.stopPropagation();
-  }, [state.hydrationState]);
+      // Prevent the event from propagating during pre-hydration
+      event.preventDefault();
+      event.stopPropagation();
+    },
+    [state.hydrationState]
+  );
 
   /**
    * Replay captured interactions after hydration completes.
@@ -646,15 +652,9 @@ export function LazyHydration<P extends object>({
   boundaryProps = {},
 }: LazyHydrationProps<P>): React.JSX.Element {
   // Create lazy component once with proper typing
-  const LazyComponent = useMemo(
-    () => lazy(factory),
-    [factory]
-  );
+  const LazyComponent = useMemo(() => lazy(factory), [factory]);
 
-  const {
-    placeholder = <DefaultPlaceholder />,
-    ...restBoundaryProps
-  } = boundaryProps;
+  const { placeholder = <DefaultPlaceholder />, ...restBoundaryProps } = boundaryProps;
 
   return (
     <HydrationBoundary {...restBoundaryProps} placeholder={placeholder}>
@@ -670,6 +670,3 @@ export function LazyHydration<P extends object>({
 // ============================================================================
 
 export type { HydrationBoundaryProps, WithHydrationBoundaryOptions, LazyHydrationProps };
-
-
-

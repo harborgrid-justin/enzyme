@@ -267,7 +267,11 @@ export function matchPathPattern(pattern: string, path: string): boolean {
       for (let i = 0; i < catchAllIndex; i++) {
         const patternPart = patternParts[i];
         const pathPart = pathParts[i];
-        if (patternPart !== undefined && patternPart !== '' && !matchSegment(patternPart, pathPart)) {
+        if (
+          patternPart !== undefined &&
+          patternPart !== '' &&
+          !matchSegment(patternPart, pathPart)
+        ) {
           return false;
         }
       }
@@ -339,10 +343,7 @@ function matchSegment(pattern: string, segment: string | undefined): boolean {
  * parsePathParams('/users/:id', '/posts/123'); // null
  * ```
  */
-export function parsePathParams(
-  pattern: string,
-  path: string
-): Record<string, string> | null {
+export function parsePathParams(pattern: string, path: string): Record<string, string> | null {
   if (!matchPathPattern(pattern, path)) {
     return null;
   }

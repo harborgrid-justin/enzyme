@@ -1,0 +1,44 @@
+node_modules/
+dist/
+*.local
+.env
+.env.*
+coverage/
+*.log
+.DS_Store
+
+# Test artifacts
+*.test.js
+*.spec.js
+__tests__/
+test/
+tests/
+
+# Build cache
+.tsbuildinfo
+*.tsbuildinfo
+
+# ESLint cache
+.eslintcache
+
+# OS generated files
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+temp/
+tmp/
+*.tmp
+
+# Development files
+*.local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local

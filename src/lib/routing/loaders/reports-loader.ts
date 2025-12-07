@@ -20,8 +20,8 @@ async function fetchReports(params: Record<string, unknown>): Promise<unknown> {
       if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
         queryParams[key] = value;
       } else {
-        // Convert other types to string
-        queryParams[key] = String(value);
+        // Convert other types to JSON string
+        queryParams[key] = JSON.stringify(value);
       }
     }
   });

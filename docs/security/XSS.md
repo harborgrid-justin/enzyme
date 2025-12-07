@@ -748,14 +748,24 @@ function Display() {
 }
 ```
 
-## See Also
+## Related Documentation
 
+### Security Module
+- [Security Overview](./README.md) - Complete security infrastructure
+- [CSP Management](./CSP.md) - Content Security Policy for XSS prevention
 - [CSRF Protection](./CSRF.md) - Cross-site request forgery protection
-- [CSP Management](./CSP.md) - Content Security Policy
 - [Secure Storage](./SECURE_STORAGE.md) - Encrypted client-side storage
-- [Security Overview](./README.md) - Security module overview
-- [OWASP XSS Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)
-- [DOMPurify Documentation](https://github.com/cure53/DOMPurify)
+
+### Application Security
+- [Security Best Practices](../SECURITY.md) - XSS prevention guidelines
+- [Authentication Module](../auth/README.md) - Secure authentication
+- [API Module](../api/README.md) - API response sanitization
+- [Configuration](../config/README.md) - Security configuration
+
+### External Resources
+- [OWASP XSS Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html) - Comprehensive XSS prevention guide
+- [DOMPurify Documentation](https://github.com/cure53/DOMPurify) - HTML sanitization library
+- [MDN Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP) - CSP for XSS mitigation
 
 ---
 

@@ -163,7 +163,7 @@ export class ContextBridgeImpl {
    * @param sourceValue - New source value
    */
   updateBridge<TSource>(id: string, sourceValue: TSource): void {
-    const entry = this.bridges.get(id) as BridgeEntry<TSource, unknown> | undefined;
+    const entry = this.bridges.get(id) as BridgeEntry<TSource> | undefined;
     if (!entry) return;
 
     const { definition } = entry;
@@ -223,6 +223,23 @@ export class ContextBridgeImpl {
   // ==========================================================================
 
   /**
+   * Disposes the bridge manager.
+   */
+  dispose(): void {
+    if (this.batchTimer) {
+      clearTimeout(this.batchTimer);
+      this.batchTimer = null;
+    }
+
+    for (const entry of this.bridges.values()) {
+      entry.subscribers.clear();
+    }
+
+    this.bridges.clear();
+    this.pendingUpdates.clear();
+  }
+
+  /**
    * Schedules batch processing.
    */
   private scheduleBatch(delay = this.batchWindow): void {
@@ -263,23 +280,6 @@ export class ContextBridgeImpl {
         console.error(`[ContextBridge] Subscriber error for ${id}:`, error);
       }
     }
-  }
-
-  /**
-   * Disposes the bridge manager.
-   */
-  dispose(): void {
-    if (this.batchTimer) {
-      clearTimeout(this.batchTimer);
-      this.batchTimer = null;
-    }
-
-    for (const entry of this.bridges.values()) {
-      entry.subscribers.clear();
-    }
-
-    this.bridges.clear();
-    this.pendingUpdates.clear();
   }
 }
 

@@ -275,7 +275,7 @@ export const DEFAULT_BUNDLE_BUDGETS: BudgetDefinition[] = [
     name: 'total-bundle',
     category: 'bundle',
     warningThreshold: 300 * 1024, // 300KB
-    errorThreshold: 500 * 1024,    // 500KB
+    errorThreshold: 500 * 1024, // 500KB
     criticalThreshold: 1024 * 1024, // 1MB
     unit: 'bytes',
     description: 'Total JavaScript bundle size',
@@ -285,7 +285,7 @@ export const DEFAULT_BUNDLE_BUDGETS: BudgetDefinition[] = [
     name: 'initial-bundle',
     category: 'bundle',
     warningThreshold: 150 * 1024, // 150KB
-    errorThreshold: 250 * 1024,    // 250KB
+    errorThreshold: 250 * 1024, // 250KB
     criticalThreshold: 400 * 1024, // 400KB
     unit: 'bytes',
     description: 'Initial JavaScript bundle size',
@@ -293,8 +293,8 @@ export const DEFAULT_BUNDLE_BUDGETS: BudgetDefinition[] = [
   {
     name: 'css-bundle',
     category: 'bundle',
-    warningThreshold: 50 * 1024,  // 50KB
-    errorThreshold: 100 * 1024,    // 100KB
+    warningThreshold: 50 * 1024, // 50KB
+    errorThreshold: 100 * 1024, // 100KB
     criticalThreshold: 200 * 1024, // 200KB
     unit: 'bytes',
     description: 'Total CSS bundle size',
@@ -329,8 +329,8 @@ export const DEFAULT_RUNTIME_BUDGETS: BudgetDefinition[] = [
   {
     name: 'memory-usage',
     category: 'memory',
-    warningThreshold: 50 * 1024 * 1024,  // 50MB
-    errorThreshold: 100 * 1024 * 1024,    // 100MB
+    warningThreshold: 50 * 1024 * 1024, // 50MB
+    errorThreshold: 100 * 1024 * 1024, // 100MB
     criticalThreshold: 200 * 1024 * 1024, // 200MB
     unit: 'bytes',
     description: 'JavaScript heap usage',
@@ -341,11 +341,7 @@ export const DEFAULT_RUNTIME_BUDGETS: BudgetDefinition[] = [
 const DEFAULT_CONFIG: BudgetEnforcerConfig = {
   enabled: true,
   mode: 'warn',
-  budgets: [
-    ...DEFAULT_VITALS_BUDGETS,
-    ...DEFAULT_BUNDLE_BUDGETS,
-    ...DEFAULT_RUNTIME_BUDGETS,
-  ],
+  budgets: [...DEFAULT_VITALS_BUDGETS, ...DEFAULT_BUNDLE_BUDGETS, ...DEFAULT_RUNTIME_BUDGETS],
   gracePeriod: 5000,
   violationThreshold: 3,
   alertCooldown: 60000,
@@ -450,9 +446,8 @@ export class BudgetEnforcer {
 
     const activeViolations = Array.from(this.violations.values());
     const overallCompliant = activeViolations.length === 0;
-    const complianceScore = this.budgetMap.size > 0
-      ? Math.round((compliantCount / this.budgetMap.size) * 100)
-      : 100;
+    const complianceScore =
+      this.budgetMap.size > 0 ? Math.round((compliantCount / this.budgetMap.size) * 100) : 100;
 
     return {
       id: this.generateId(),
@@ -553,7 +548,7 @@ export class BudgetEnforcer {
    * Get budgets by category
    */
   getBudgetsByCategory(category: BudgetCategory): BudgetDefinition[] {
-    return Array.from(this.budgetMap.values()).filter(b => b.category === category);
+    return Array.from(this.budgetMap.values()).filter((b) => b.category === category);
   }
 
   // ============================================================================
@@ -576,7 +571,11 @@ export class BudgetEnforcer {
 
     // Determine severity based on thresholds
     if (lowerIsBetter) {
-      if (budget.criticalThreshold !== null && budget.criticalThreshold !== undefined && value > budget.criticalThreshold) {
+      if (
+        budget.criticalThreshold !== null &&
+        budget.criticalThreshold !== undefined &&
+        value > budget.criticalThreshold
+      ) {
         severity = 'critical';
         threshold = budget.criticalThreshold;
         compliant = false;
@@ -591,7 +590,11 @@ export class BudgetEnforcer {
       }
     } else {
       // Higher is better (e.g., frame rate)
-      if ((budget.criticalThreshold !== null && budget.criticalThreshold !== undefined) && value < budget.criticalThreshold) {
+      if (
+        budget.criticalThreshold !== null &&
+        budget.criticalThreshold !== undefined &&
+        value < budget.criticalThreshold
+      ) {
         severity = 'critical';
         threshold = budget.criticalThreshold;
         compliant = false;
@@ -609,9 +612,8 @@ export class BudgetEnforcer {
     const overage = lowerIsBetter
       ? Math.max(0, value - budget.errorThreshold)
       : Math.max(0, budget.errorThreshold - value);
-    const overagePercent = budget.errorThreshold !== 0
-      ? (overage / budget.errorThreshold) * 100
-      : 0;
+    const overagePercent =
+      budget.errorThreshold !== 0 ? (overage / budget.errorThreshold) * 100 : 0;
 
     // Determine degradation actions
     if (!compliant && this.config.autoDegradation && budget.degradationActions) {
@@ -676,7 +678,9 @@ export class BudgetEnforcer {
       if (now - lastAlert > this.config.alertCooldown) {
         this.lastAlertTimes.set(budget.name, now);
         this.config.onViolation?.(violation);
-        this.log(`Budget violation: ${budget.name} = ${result.value} (threshold: ${result.threshold})`);
+        this.log(
+          `Budget violation: ${budget.name} = ${result.value} (threshold: ${result.threshold})`
+        );
       }
 
       // Execute degradations if in enforce mode
@@ -733,20 +737,20 @@ export class BudgetEnforcer {
     this.log(`Executing degradation: ${action}`);
   }
 
-  private getBudgetComplianceReport(name: string, budget: BudgetDefinition): BudgetComplianceReport {
+  private getBudgetComplianceReport(
+    name: string,
+    budget: BudgetDefinition
+  ): BudgetComplianceReport {
     const samples = this.samples.get(name) ?? [];
     const violation = this.violations.get(name);
 
-    const values = samples.map(s => s.value);
-    const compliantSamples = samples.filter(s => s.compliant);
+    const values = samples.map((s) => s.value);
+    const compliantSamples = samples.filter((s) => s.compliant);
     const currentValue = values.length > 0 ? values[values.length - 1] : 0;
-    const average = values.length > 0
-      ? values.reduce((sum, v) => sum + v, 0) / values.length
-      : 0;
+    const average = values.length > 0 ? values.reduce((sum, v) => sum + v, 0) / values.length : 0;
     const peak = values.length > 0 ? Math.max(...values) : 0;
-    const complianceRate = samples.length > 0
-      ? (compliantSamples.length / samples.length) * 100
-      : 100;
+    const complianceRate =
+      samples.length > 0 ? (compliantSamples.length / samples.length) * 100 : 100;
 
     const lowerIsBetter = budget.lowerIsBetter !== false;
     const safeCurrentValue = currentValue ?? 0;
@@ -782,11 +786,17 @@ export class BudgetEnforcer {
         switch (report.category) {
           case 'vitals':
             if (report.name === 'LCP') {
-              recommendations.push('Optimize LCP by preloading critical resources and using responsive images');
+              recommendations.push(
+                'Optimize LCP by preloading critical resources and using responsive images'
+              );
             } else if (report.name === 'CLS') {
-              recommendations.push('Reduce CLS by setting explicit dimensions on images and avoiding dynamic content insertion');
+              recommendations.push(
+                'Reduce CLS by setting explicit dimensions on images and avoiding dynamic content insertion'
+              );
             } else if (report.name === 'INP') {
-              recommendations.push('Improve INP by breaking up long tasks and optimizing event handlers');
+              recommendations.push(
+                'Improve INP by breaking up long tasks and optimizing event handlers'
+              );
             }
             break;
           case 'bundle':
@@ -803,14 +813,20 @@ export class BudgetEnforcer {
             break;
         }
       } else if (report.utilizationPercent > 80) {
-        recommendations.push(`${report.name} is at ${report.utilizationPercent.toFixed(0)}% of budget - consider optimization before it exceeds threshold`);
+        recommendations.push(
+          `${report.name} is at ${report.utilizationPercent.toFixed(0)}% of budget - consider optimization before it exceeds threshold`
+        );
       }
     }
 
     return [...new Set(recommendations)]; // Remove duplicates
   }
 
-  private generateMessage(budget: BudgetDefinition, value: number, severity: BudgetSeverity): string {
+  private generateMessage(
+    budget: BudgetDefinition,
+    value: number,
+    severity: BudgetSeverity
+  ): string {
     const formattedValue = this.formatValue(value, budget.unit);
     const formattedThreshold = this.formatValue(budget.errorThreshold, budget.unit);
 

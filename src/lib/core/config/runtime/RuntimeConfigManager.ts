@@ -447,9 +447,7 @@ export class RuntimeConfigManager {
 /**
  * Get the RuntimeConfigManager singleton instance.
  */
-export function getRuntimeConfigManager(
-  options?: RuntimeConfigOptions
-): RuntimeConfigManager {
+export function getRuntimeConfigManager(options?: RuntimeConfigOptions): RuntimeConfigManager {
   return RuntimeConfigManager.getInstance(options);
 }
 

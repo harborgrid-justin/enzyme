@@ -165,9 +165,7 @@ export class DependencyInjectorImpl implements DependencyContainer {
     if (options.dependencies) {
       for (const depId of options.dependencies) {
         if (!this.hasById(depId)) {
-          console.warn(
-            `[DI] Service ${contract.name} depends on unregistered service: ${depId}`
-          );
+          console.warn(`[DI] Service ${contract.name} depends on unregistered service: ${depId}`);
         }
       }
     }
@@ -406,10 +404,7 @@ export class DependencyInjectorImpl implements DependencyContainer {
    * @param context - Resolution context
    * @returns Resolved service
    */
-  private resolveWithContext<T>(
-    contract: ServiceContract<T>,
-    context: ResolutionContext
-  ): T {
+  private resolveWithContext<T>(contract: ServiceContract<T>, context: ResolutionContext): T {
     this.ensureNotDisposed();
 
     // Check for existing scoped instance
@@ -431,9 +426,7 @@ export class DependencyInjectorImpl implements DependencyContainer {
         return contract.defaultValue;
       }
 
-      throw new Error(
-        `Service not registered: ${contract.name} (${String(contract.id)})`
-      );
+      throw new Error(`Service not registered: ${contract.name} (${String(contract.id)})`);
     }
 
     return this.resolveEntry(entry, context);
@@ -454,9 +447,7 @@ export class DependencyInjectorImpl implements DependencyContainer {
 
     // Detect circular dependency
     if (context.resolving.has(entry.contract.id)) {
-      throw new Error(
-        `Circular dependency detected for service: ${entry.contract.name}`
-      );
+      throw new Error(`Circular dependency detected for service: ${entry.contract.name}`);
     }
 
     // Mark as resolving
@@ -524,9 +515,7 @@ export class DependencyInjectorImpl implements DependencyContainer {
 
     // Detect circular dependency
     if (context.resolving.has(entry.contract.id)) {
-      throw new Error(
-        `Circular dependency detected for service: ${entry.contract.name}`
-      );
+      throw new Error(`Circular dependency detected for service: ${entry.contract.name}`);
     }
 
     // Mark as resolving

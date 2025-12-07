@@ -68,28 +68,25 @@ export class SSEClient {
    * that couldn't be properly removed with removeEventListener
    */
   private boundEventHandlers: Map<string, (event: MessageEvent) => void> = new Map();
-  
+
   constructor(config: SSEClientConfig) {
     this.config = { ...defaultConfig, ...config };
   }
-  
+
   /**
    * Get current connection state
    */
   getState(): SSEState {
     return this.state;
   }
-  
+
   /**
    * Check if connected
    */
   isConnected(): boolean {
-    return (
-      this.state === 'connected' &&
-      this.eventSource?.readyState === EventSource.OPEN
-    );
+    return this.state === 'connected' && this.eventSource?.readyState === EventSource.OPEN;
   }
-  
+
   /**
    * Connect to SSE endpoint
    */
@@ -97,9 +94,9 @@ export class SSEClient {
     if (this.eventSource?.readyState === EventSource.OPEN) {
       return;
     }
-    
+
     this.setState('connecting');
-    
+
     try {
       this.eventSource = new EventSource(this.config.url, {
         withCredentials: this.config.withCredentials ?? false,
@@ -110,22 +107,22 @@ export class SSEClient {
       this.handleDisconnect();
     }
   }
-  
+
   /**
    * Disconnect from SSE endpoint
    */
   disconnect(): void {
     this.clearReconnectTimeout();
-    
+
     if (this.eventSource) {
       this.eventSource.close();
       this.eventSource = null;
     }
-    
+
     this.setState('disconnected');
     this.reconnectAttempts = 0;
   }
-  
+
   /**
    * Subscribe to messages of a specific event type
    *
@@ -163,14 +160,14 @@ export class SSEClient {
       }
     };
   }
-  
+
   /**
    * Subscribe to all 'message' events (default)
    */
   onMessage(handler: SSEMessageHandler): () => void {
     return this.on('message', handler);
   }
-  
+
   /**
    * Subscribe to errors
    */
@@ -178,7 +175,7 @@ export class SSEClient {
     this.errorHandlers.add(handler);
     return () => this.errorHandlers.delete(handler);
   }
-  
+
   /**
    * Subscribe to state changes
    */
@@ -186,40 +183,37 @@ export class SSEClient {
     this.stateChangeHandlers.add(handler);
     return () => this.stateChangeHandlers.delete(handler);
   }
-  
+
   /**
    * Setup EventSource event listeners
    */
   private setupEventListeners(): void {
     if (!this.eventSource) return;
-    
+
     this.eventSource.onopen = () => {
       this.setState('connected');
       this.reconnectAttempts = 0;
     };
-    
+
     this.eventSource.onerror = (event) => {
       console.error('[SSE] Error:', event);
       this.errorHandlers.forEach((handler) => handler(event));
-      
+
       if (this.eventSource?.readyState === EventSource.CLOSED) {
         this.handleDisconnect();
       }
     };
-    
+
     // Setup listeners for configured event types
     const eventTypes = [
-      ...new Set([
-        ...(this.config.eventTypes ?? ['message']),
-        ...this.messageHandlers.keys(),
-      ]),
+      ...new Set([...(this.config.eventTypes ?? ['message']), ...this.messageHandlers.keys()]),
     ];
-    
+
     eventTypes.forEach((eventType) => {
       this.addEventTypeListener(eventType);
     });
   }
-  
+
   /**
    * Add listener for specific event type
    *
@@ -239,7 +233,7 @@ export class SSEClient {
       this.eventSource.addEventListener(eventType, boundHandler as EventListener);
     }
   }
-  
+
   /**
    * Create event handler for event type
    */
@@ -254,19 +248,19 @@ export class SSEClient {
       } catch {
         // Keep as string if not valid JSON
       }
-      
+
       // Notify handlers for this event type
       const handlers = this.messageHandlers.get(eventType);
       handlers?.forEach((handler) => handler(data, eventType));
     };
   }
-  
+
   /**
    * Handle disconnection
    */
   private handleDisconnect(): void {
     this.eventSource = null;
-    
+
     if (
       this.config.reconnect === true &&
       this.reconnectAttempts < (this.config.maxReconnectAttempts ?? 10)
@@ -277,22 +271,22 @@ export class SSEClient {
       this.setState('disconnected');
     }
   }
-  
+
   /**
    * Schedule reconnection
    */
   private scheduleReconnect(): void {
     this.clearReconnectTimeout();
-    
-      const delay = this.calculateBackoff();
-      this.reconnectAttempts++;
-      
-       
-      console.info(`[SSE] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`);    this.reconnectTimeout = setTimeout(() => {
+
+    const delay = this.calculateBackoff();
+    this.reconnectAttempts++;
+
+    console.info(`[SSE] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`);
+    this.reconnectTimeout = setTimeout(() => {
       this.connect();
     }, delay);
   }
-  
+
   /**
    * Calculate exponential backoff delay
    */
@@ -302,7 +296,7 @@ export class SSEClient {
     const jitter = Math.random() * 1000;
     return Math.min(delay + jitter, 30000); // Max 30 seconds
   }
-  
+
   /**
    * Clear reconnect timeout
    */
@@ -312,7 +306,7 @@ export class SSEClient {
       this.reconnectTimeout = null;
     }
   }
-  
+
   /**
    * Update and broadcast state
    */
@@ -331,6 +325,6 @@ export function createSSEClient(
 ): SSEClient {
   const baseUrl = env.apiBaseUrl ?? '';
   const url = `${baseUrl}${path}`;
-  
+
   return new SSEClient({ url, ...config });
 }

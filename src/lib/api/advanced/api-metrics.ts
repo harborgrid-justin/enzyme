@@ -171,7 +171,7 @@ export class APIMetricsCollector {
   private metrics: RequestMetric[];
   private endpointCache: Map<string, number[]>;
   private collectionStartedAt: number;
-  private flushTimer?: ReturnType<typeof setInterval>;
+  private readonly flushTimer?: ReturnType<typeof setInterval>;
 
   /**
    * Create a new metrics collector.
@@ -306,7 +306,7 @@ export class APIMetricsCollector {
     const windowStart = Date.now() - this.config.windowMs;
 
     const relevantMetrics = this.metrics.filter(
-      m =>
+      (m) =>
         m.endpoint === endpoint &&
         (method == null || method === '' || m.method === method) &&
         m.timestamp >= windowStart
@@ -322,11 +322,11 @@ export class APIMetricsCollector {
     const windowStart = Date.now() - this.config.windowMs;
     const now = Date.now();
 
-    const relevantMetrics = this.metrics.filter(m => m.timestamp >= windowStart);
+    const relevantMetrics = this.metrics.filter((m) => m.timestamp >= windowStart);
 
-    const durations = relevantMetrics.map(m => m.duration).sort((a, b) => a - b);
-    const successCount = relevantMetrics.filter(m => m.success).length;
-    const endpoints = new Set(relevantMetrics.map(m => m.endpoint));
+    const durations = relevantMetrics.map((m) => m.duration).sort((a, b) => a - b);
+    const successCount = relevantMetrics.filter((m) => m.success).length;
+    const endpoints = new Set(relevantMetrics.map((m) => m.endpoint));
 
     const windowSeconds = (now - windowStart) / 1000;
 
@@ -334,17 +334,11 @@ export class APIMetricsCollector {
       totalRequests: relevantMetrics.length,
       totalSuccess: successCount,
       totalErrors: relevantMetrics.length - successCount,
-      successRate:
-        relevantMetrics.length > 0
-          ? successCount / relevantMetrics.length
-          : 1,
+      successRate: relevantMetrics.length > 0 ? successCount / relevantMetrics.length : 1,
       avgDuration:
-        durations.length > 0
-          ? durations.reduce((a, b) => a + b, 0) / durations.length
-          : 0,
+        durations.length > 0 ? durations.reduce((a, b) => a + b, 0) / durations.length : 0,
       p95Latency: this.percentile(durations, 95),
-      requestsPerSecond:
-        windowSeconds > 0 ? relevantMetrics.length / windowSeconds : 0,
+      requestsPerSecond: windowSeconds > 0 ? relevantMetrics.length / windowSeconds : 0,
       endpointCount: endpoints.size,
       collectionStartedAt: this.collectionStartedAt,
       windowMs: this.config.windowMs,
@@ -355,7 +349,7 @@ export class APIMetricsCollector {
    * Get metrics for all endpoints.
    */
   getAllEndpointMetrics(): EndpointMetrics[] {
-    const endpoints = new Set(this.metrics.map(m => `${m.method}:${m.endpoint}`));
+    const endpoints = new Set(this.metrics.map((m) => `${m.method}:${m.endpoint}`));
     const results: EndpointMetrics[] = [];
 
     for (const key of endpoints) {
@@ -375,7 +369,7 @@ export class APIMetricsCollector {
    */
   getSlowRequests(threshold: number, limit = 100): RequestMetric[] {
     return this.metrics
-      .filter(m => m.duration >= threshold)
+      .filter((m) => m.duration >= threshold)
       .sort((a, b) => b.duration - a.duration)
       .slice(0, limit);
   }
@@ -387,7 +381,7 @@ export class APIMetricsCollector {
    */
   getRecentErrors(limit = 100): RequestMetric[] {
     return this.metrics
-      .filter(m => !m.success)
+      .filter((m) => !m.success)
       .sort((a, b) => b.timestamp - a.timestamp)
       .slice(0, limit);
   }
@@ -398,7 +392,7 @@ export class APIMetricsCollector {
   getErrorDistribution(): Record<string, number> {
     const distribution: Record<string, number> = {};
 
-    for (const metric of this.metrics.filter(m => !m.success)) {
+    for (const metric of this.metrics.filter((m) => !m.success)) {
       const key = metric.error ?? `HTTP ${metric.status}`;
       distribution[key] = (distribution[key] ?? 0) + 1;
     }
@@ -439,17 +433,9 @@ export class APIMetricsCollector {
    * Export metrics as CSV.
    */
   exportCSV(): string {
-    const headers = [
-      'timestamp',
-      'endpoint',
-      'method',
-      'status',
-      'duration',
-      'success',
-      'error',
-    ];
+    const headers = ['timestamp', 'endpoint', 'method', 'status', 'duration', 'success', 'error'];
 
-    const rows = this.metrics.map(m => [
+    const rows = this.metrics.map((m) => [
       new Date(m.timestamp).toISOString(),
       m.endpoint,
       m.method,
@@ -459,7 +445,7 @@ export class APIMetricsCollector {
       m.error ?? '',
     ]);
 
-    return [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    return [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
   }
 
   /**
@@ -491,7 +477,7 @@ export class APIMetricsCollector {
    */
   private shouldExclude(endpoint: string): boolean {
     return this.config.excludeEndpoints.some(
-      pattern => endpoint.includes(pattern) || new RegExp(pattern).test(endpoint)
+      (pattern) => endpoint.includes(pattern) || new RegExp(pattern).test(endpoint)
     );
   }
 
@@ -505,16 +491,13 @@ export class APIMetricsCollector {
   /**
    * Aggregate metrics for an endpoint.
    */
-  private aggregateMetrics(
-    endpoint: string,
-    metrics: RequestMetric[]
-  ): EndpointMetrics {
+  private aggregateMetrics(endpoint: string, metrics: RequestMetric[]): EndpointMetrics {
     if (metrics.length === 0) {
       return this.emptyEndpointMetrics(endpoint);
     }
 
-    const durations = metrics.map(m => m.duration).sort((a, b) => a - b);
-    const successCount = metrics.filter(m => m.success).length;
+    const durations = metrics.map((m) => m.duration).sort((a, b) => a - b);
+    const successCount = metrics.filter((m) => m.success).length;
     const statusCodes: Record<number, number> = {};
     const errors: Record<string, number> = {};
 
@@ -526,7 +509,7 @@ export class APIMetricsCollector {
     }
 
     const windowStart = Date.now() - this.config.windowMs;
-    const recentMetrics = metrics.filter(m => m.timestamp >= windowStart);
+    const recentMetrics = metrics.filter((m) => m.timestamp >= windowStart);
     const windowSeconds = this.config.windowMs / 1000;
 
     const [minDuration] = durations;
@@ -547,7 +530,7 @@ export class APIMetricsCollector {
       p99Latency: this.percentile(durations, 99),
       statusCodes,
       errors,
-      lastRequestAt: Math.max(...metrics.map(m => m.timestamp)),
+      lastRequestAt: Math.max(...metrics.map((m) => m.timestamp)),
       requestsPerSecond: recentMetrics.length / windowSeconds,
     };
   }
@@ -613,9 +596,7 @@ export const consoleReporter: MetricsReporter = {
   report: (metric) => {
     const status = metric.success ? 'OK' : 'ERR';
     // eslint-disable-next-line no-console
-    console.log(
-      `[API] ${metric.method} ${metric.endpoint} ${status} ${metric.duration}ms`
-    );
+    console.log(`[API] ${metric.method} ${metric.endpoint} ${status} ${metric.duration}ms`);
   },
   flush: (metrics) => {
     // eslint-disable-next-line no-console

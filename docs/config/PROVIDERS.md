@@ -673,10 +673,25 @@ const [provider] = useState(() => {
 return <ConfigProvider {...provider} />;
 ```
 
-## See Also
+## Related Documentation
 
+### Configuration System
 - [README.md](./README.md) - Configuration overview
 - [HOOKS.md](./HOOKS.md) - Configuration hooks
 - [REGISTRY.md](./REGISTRY.md) - Configuration registry
 - [DYNAMIC.md](./DYNAMIC.md) - Dynamic configuration
+- [ENV.md](./ENV.md) - Environment configuration
 - [TYPES.md](./TYPES.md) - TypeScript types
+
+### State & Context
+- [State Providers](../state/STORES.md) - State provider patterns
+- [State System](../state/README.md) - State management integration
+
+### Auth & Features
+- [Auth Provider](../auth/AUTH_PROVIDER.md) - Authentication provider
+- [Auth System](../auth/README.md) - Auth integration
+- [Flag Provider](../flags/PROVIDER.md) - Feature flag provider
+
+### API Integration
+- [API Client](../api/README.md) - API client configuration
+- [API Advanced](../api/ADVANCED.md) - Advanced API patterns

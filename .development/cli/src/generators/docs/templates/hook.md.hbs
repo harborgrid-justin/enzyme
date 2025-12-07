@@ -1,0 +1,127 @@
+---
+title: {{name}}
+category: {{category}}
+type: hook
+generated: {{generated}}
+---
+
+# {{name}}
+
+{{#if deprecated}}
+> **⚠️ Deprecated**: {{deprecated}}
+{{/if}}
+
+{{#if description}}
+{{description}}
+{{/if}}
+
+## Table of Contents
+
+- [Signature](#signature)
+- [Parameters](#parameters)
+- [Returns](#returns)
+{{#if dependencies}}
+- [Dependencies](#dependencies)
+{{/if}}
+{{#if examples}}
+- [Examples](#examples)
+{{/if}}
+- [Usage Tips](#usage-tips)
+- [Common Patterns](#common-patterns)
+- [Troubleshooting](#troubleshooting)
+
+---
+
+## Signature
+
+```typescript
+function {{name}}({{#each parameters}}{{name}}{{#if optional}}?{{/if}}: {{type}}{{#unless @last}}, {{/unless}}{{/each}}): {{returnType}}
+```
+
+## Parameters
+
+{{#if parameters}}
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+{{#each parameters}}
+| `{{name}}` | `{{type}}` | {{#if optional}}❌{{else}}✅{{/if}} | {{#if defaultValue}}`{{defaultValue}}`{{else}}-{{/if}} | {{#if description}}{{description}}{{else}}-{{/if}} |
+{{/each}}
+{{else}}
+This hook does not accept any parameters.
+{{/if}}
+
+## Returns
+
+`{{returnType}}`
+
+{{#if returnDescription}}
+{{returnDescription}}
+{{/if}}
+
+{{#if dependencies}}
+## Dependencies
+
+This hook internally uses the following hooks:
+
+{{#each dependencies}}
+- {{#if isCustomHook}}[`{{this}}`](../{{slug this}}.md){{else}}`{{this}}`{{/if}}
+{{/each}}
+{{/if}}
+
+{{#if examples}}
+## Examples
+
+{{#each examples}}
+{{#if @index}}
+### Example {{add @index 1}}
+{{/if}}
+
+```tsx
+{{this}}
+```
+{{/each}}
+{{/if}}
+
+## Usage Tips
+
+- Call this hook at the top level of your component or custom hook.
+{{#if requiredParameters}}
+- This hook requires the following parameters: {{#each requiredParameters}}`{{name}}`{{#unless @last}}, {{/unless}}{{/each}}
+{{/if}}
+{{#if optionalParameters}}
+- Optional parameters can be omitted: {{#each optionalParameters}}`{{name}}`{{#unless @last}}, {{/unless}}{{/each}}
+{{/if}}
+{{#if usesEffects}}
+- This hook uses effects. Be aware of when it runs and re-runs.
+{{/if}}
+{{#if usesState}}
+- This hook manages state. Updates will trigger re-renders.
+{{/if}}
+{{#if usesMemo}}
+- This hook uses memoization for performance optimization.
+{{/if}}
+
+## Common Patterns
+
+Here are common ways to use this hook:
+
+- Basic usage in a functional component
+- Combining with other hooks for complex logic
+- Using in custom hooks to build higher-level abstractions
+
+## Troubleshooting
+
+Common issues and solutions:
+
+- **Hook not updating**: Ensure dependencies are correctly specified
+- **Unexpected re-renders**: Check if hook parameters are properly memoized
+- **Stale closures**: Make sure callback functions have correct dependencies
+- **Performance issues**: Consider using React DevTools Profiler to identify bottlenecks
+
+---
+
+**Source**: `{{filePath}}`
+
+{{#if since}}
+**Since**: {{since}}
+{{/if}}

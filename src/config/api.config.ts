@@ -336,8 +336,7 @@ export const QUERY_KEYS = {
     /** Analytics overview */
     OVERVIEW: (range: string) => ['analytics', 'overview', range] as const,
     /** Specific metric */
-    METRIC: (metricId: string, range: string) =>
-      ['analytics', 'metric', metricId, range] as const,
+    METRIC: (metricId: string, range: string) => ['analytics', 'metric', metricId, range] as const,
   },
 
   // ---------------------------------------------------------------------------
@@ -365,8 +364,7 @@ export const QUERY_KEYS = {
     /** Single entity detail */
     DETAIL: (id: string) => ['entities', 'detail', id] as const,
     /** Infinite scroll list */
-    INFINITE: (filters?: Record<string, unknown>) =>
-      ['entities', 'infinite', filters] as const,
+    INFINITE: (filters?: Record<string, unknown>) => ['entities', 'infinite', filters] as const,
   },
 
   // ---------------------------------------------------------------------------
@@ -783,8 +781,8 @@ export interface EnvironmentApiConfig {
  * Get API configuration for specific environment
  */
 export function getEnvironmentApiConfig(): EnvironmentApiConfig {
-  const {isDev} = env;
-  const {isProd} = env;
+  const { isDev } = env;
+  const { isProd } = env;
 
   return {
     baseUrl: env.apiBaseUrl,
@@ -925,10 +923,7 @@ export function getVersionedApiUrl(version: ApiVersion = API_VERSION): string {
 /**
  * Build versioned endpoint URL
  */
-export function buildVersionedUrl(
-  endpoint: string,
-  version: ApiVersion = API_VERSION
-): string {
+export function buildVersionedUrl(endpoint: string, version: ApiVersion = API_VERSION): string {
   const versionedBase = getVersionedApiUrl(version);
   const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
   return `${versionedBase}${path}`;

@@ -23,11 +23,7 @@
  * ```
  */
 
-import type {
-  FeatureFlag,
-  Segment,
-  SegmentId,
-} from '../advanced/types';
+import type { FeatureFlag, Segment, SegmentId } from '../advanced/types';
 import type {
   WritableFlagProvider,
   LocalProviderConfig,
@@ -266,105 +262,6 @@ export class LocalProvider implements WritableFlagProvider {
   // Storage Operations
   // ==========================================================================
 
-  private loadFromStorage(): void {
-    if (typeof window === 'undefined' || window.localStorage === null || window.localStorage === undefined) {
-      return;
-    }
-
-    try {
-      // Load flags
-      const flagsJson = localStorage.getItem(this.config.storageKey);
-      if (flagsJson !== null && flagsJson !== '') {
-        const flags = JSON.parse(flagsJson) as FeatureFlag[];
-        for (const flag of flags) {
-          this.flags.set(flag.key, this.deserializeFlag(flag));
-        }
-        this.log(`Loaded ${flags.length} flags from storage`);
-      }
-
-      // Load segments
-      const segmentsJson = localStorage.getItem(
-        `${this.config.storageKey}-segments`
-      );
-      if (segmentsJson !== null && segmentsJson !== '') {
-        const segments = JSON.parse(segmentsJson) as Segment[];
-        for (const segment of segments) {
-          this.segments.set(segment.id, this.deserializeSegment(segment));
-        }
-        this.log(`Loaded ${segments.length} segments from storage`);
-      }
-    } catch (error) {
-      this.log('Error loading from storage:', error);
-      this.stats = { ...this.stats, errorCount: this.stats.errorCount + 1 };
-    }
-  }
-
-  private saveToStorage(): void {
-    if (typeof window === 'undefined' || window.localStorage === null || window.localStorage === undefined) {
-      return;
-    }
-
-    try {
-      const flags = Array.from(this.flags.values());
-      localStorage.setItem(this.config.storageKey, JSON.stringify(flags));
-      this.log(`Saved ${flags.length} flags to storage`);
-    } catch (error) {
-      this.log('Error saving to storage:', error);
-      this.stats = { ...this.stats, errorCount: this.stats.errorCount + 1 };
-    }
-  }
-
-  private saveSegmentsToStorage(): void {
-    if (typeof window === 'undefined' || window.localStorage === null || window.localStorage === undefined) {
-      return;
-    }
-
-    try {
-      const segments = Array.from(this.segments.values());
-      localStorage.setItem(
-        `${this.config.storageKey}-segments`,
-        JSON.stringify(segments)
-      );
-    } catch (error) {
-      this.log('Error saving segments to storage:', error);
-    }
-  }
-
-  private deserializeFlag(flag: FeatureFlag): FeatureFlag {
-    // Convert date strings back to Date objects
-    return {
-      ...flag,
-      lifecycle: {
-        ...flag.lifecycle,
-        createdAt: new Date(flag.lifecycle.createdAt),
-        updatedAt: new Date(flag.lifecycle.updatedAt),
-        activatedAt: flag.lifecycle.activatedAt
-          ? new Date(flag.lifecycle.activatedAt)
-          : undefined,
-        deprecationDate: flag.lifecycle.deprecationDate
-          ? new Date(flag.lifecycle.deprecationDate)
-          : undefined,
-        removalDate: flag.lifecycle.removalDate
-          ? new Date(flag.lifecycle.removalDate)
-          : undefined,
-        reviewDate: flag.lifecycle.reviewDate
-          ? new Date(flag.lifecycle.reviewDate)
-          : undefined,
-      },
-    };
-  }
-
-  private deserializeSegment(segment: Segment): Segment {
-    return {
-      ...segment,
-      updatedAt: new Date(segment.updatedAt),
-    };
-  }
-
-  // ==========================================================================
-  // Status and Health
-  // ==========================================================================
-
   /**
    * Check if the provider is ready.
    */
@@ -396,10 +293,6 @@ export class LocalProvider implements WritableFlagProvider {
     return { ...this.stats };
   }
 
-  // ==========================================================================
-  // Subscription
-  // ==========================================================================
-
   /**
    * Subscribe to flag changes.
    */
@@ -410,18 +303,8 @@ export class LocalProvider implements WritableFlagProvider {
     };
   }
 
-  private emitChange(event: FlagChangeEvent): void {
-    for (const listener of this.listeners) {
-      try {
-        listener(event);
-      } catch (error) {
-        this.log('Error in change listener:', error);
-      }
-    }
-  }
-
   // ==========================================================================
-  // Shutdown
+  // Status and Health
   // ==========================================================================
 
   /**
@@ -432,26 +315,6 @@ export class LocalProvider implements WritableFlagProvider {
     this.listeners.clear();
     this.log('Provider shutdown');
     return Promise.resolve();
-  }
-
-  // ==========================================================================
-  // Utilities
-  // ==========================================================================
-
-  private updateStats(): void {
-    this.stats = {
-      ...this.stats,
-      flagCount: this.flags.size,
-      segmentCount: this.segments.size,
-      lastRefresh: new Date(),
-    };
-  }
-
-  private log(message: string, ...args: unknown[]): void {
-    if (this.config.debug) {
-      // eslint-disable-next-line no-console
-      console.log(`[LocalProvider] ${message}`, ...args);
-    }
   }
 
   /**
@@ -517,7 +380,143 @@ export class LocalProvider implements WritableFlagProvider {
       source: this.name,
     });
 
-    this.log(`Imported ${data.flags?.length ?? 0} flags and ${data.segments?.length ?? 0} segments`);
+    this.log(
+      `Imported ${data.flags?.length ?? 0} flags and ${data.segments?.length ?? 0} segments`
+    );
+  }
+
+  // ==========================================================================
+  // Subscription
+  // ==========================================================================
+
+  private loadFromStorage(): void {
+    if (
+      typeof window === 'undefined' ||
+      window.localStorage === null ||
+      window.localStorage === undefined
+    ) {
+      return;
+    }
+
+    try {
+      // Load flags
+      const flagsJson = localStorage.getItem(this.config.storageKey);
+      if (flagsJson !== null && flagsJson !== '') {
+        const flags = JSON.parse(flagsJson) as FeatureFlag[];
+        for (const flag of flags) {
+          this.flags.set(flag.key, this.deserializeFlag(flag));
+        }
+        this.log(`Loaded ${flags.length} flags from storage`);
+      }
+
+      // Load segments
+      const segmentsJson = localStorage.getItem(`${this.config.storageKey}-segments`);
+      if (segmentsJson !== null && segmentsJson !== '') {
+        const segments = JSON.parse(segmentsJson) as Segment[];
+        for (const segment of segments) {
+          this.segments.set(segment.id, this.deserializeSegment(segment));
+        }
+        this.log(`Loaded ${segments.length} segments from storage`);
+      }
+    } catch (error) {
+      this.log('Error loading from storage:', error);
+      this.stats = { ...this.stats, errorCount: this.stats.errorCount + 1 };
+    }
+  }
+
+  private saveToStorage(): void {
+    if (
+      typeof window === 'undefined' ||
+      window.localStorage === null ||
+      window.localStorage === undefined
+    ) {
+      return;
+    }
+
+    try {
+      const flags = Array.from(this.flags.values());
+      localStorage.setItem(this.config.storageKey, JSON.stringify(flags));
+      this.log(`Saved ${flags.length} flags to storage`);
+    } catch (error) {
+      this.log('Error saving to storage:', error);
+      this.stats = { ...this.stats, errorCount: this.stats.errorCount + 1 };
+    }
+  }
+
+  // ==========================================================================
+  // Shutdown
+  // ==========================================================================
+
+  private saveSegmentsToStorage(): void {
+    if (
+      typeof window === 'undefined' ||
+      window.localStorage === null ||
+      window.localStorage === undefined
+    ) {
+      return;
+    }
+
+    try {
+      const segments = Array.from(this.segments.values());
+      localStorage.setItem(`${this.config.storageKey}-segments`, JSON.stringify(segments));
+    } catch (error) {
+      this.log('Error saving segments to storage:', error);
+    }
+  }
+
+  // ==========================================================================
+  // Utilities
+  // ==========================================================================
+
+  private deserializeFlag(flag: FeatureFlag): FeatureFlag {
+    // Convert date strings back to Date objects
+    return {
+      ...flag,
+      lifecycle: {
+        ...flag.lifecycle,
+        createdAt: new Date(flag.lifecycle.createdAt),
+        updatedAt: new Date(flag.lifecycle.updatedAt),
+        activatedAt: flag.lifecycle.activatedAt ? new Date(flag.lifecycle.activatedAt) : undefined,
+        deprecationDate: flag.lifecycle.deprecationDate
+          ? new Date(flag.lifecycle.deprecationDate)
+          : undefined,
+        removalDate: flag.lifecycle.removalDate ? new Date(flag.lifecycle.removalDate) : undefined,
+        reviewDate: flag.lifecycle.reviewDate ? new Date(flag.lifecycle.reviewDate) : undefined,
+      },
+    };
+  }
+
+  private deserializeSegment(segment: Segment): Segment {
+    return {
+      ...segment,
+      updatedAt: new Date(segment.updatedAt),
+    };
+  }
+
+  private emitChange(event: FlagChangeEvent): void {
+    for (const listener of this.listeners) {
+      try {
+        listener(event);
+      } catch (error) {
+        this.log('Error in change listener:', error);
+      }
+    }
+  }
+
+  private updateStats(): void {
+    this.stats = {
+      ...this.stats,
+      flagCount: this.flags.size,
+      segmentCount: this.segments.size,
+      lastRefresh: new Date(),
+    };
+  }
+
+  private log(message: string, ...args: unknown[]): void {
+    if (this.config.debug) {
+      // eslint-disable-next-line no-console
+      console.log(`[LocalProvider] ${message}`, ...args);
+    }
   }
 }
 
@@ -528,8 +527,6 @@ export class LocalProvider implements WritableFlagProvider {
 /**
  * Create a local provider instance.
  */
-export function createLocalProvider(
-  config?: LocalProviderConfig
-): LocalProvider {
+export function createLocalProvider(config?: LocalProviderConfig): LocalProvider {
   return new LocalProvider(config);
 }

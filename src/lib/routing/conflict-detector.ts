@@ -1,7 +1,7 @@
 /**
  * @file Route Conflict Detection
  * @description Build-time detection of conflicting, ambiguous, and shadowed routes
- * 
+ *
  * This module wraps the core conflict detection utilities to work with
  * the DiscoveredRoute type from the routing system.
  */
@@ -76,9 +76,7 @@ function fromCoreResult(result: CoreConflictDetectionResult): ConflictDetectionR
  * Detect all route conflicts in a set of discovered routes
  * @see core/conflict-detector.ts for implementation details
  */
-export function detectRouteConflicts(
-  routes: readonly DiscoveredRoute[]
-): ConflictDetectionResult {
+export function detectRouteConflicts(routes: readonly DiscoveredRoute[]): ConflictDetectionResult {
   const conflictRoutes = routes.map(toConflictRoute);
   const result = coreDetectConflicts(conflictRoutes);
   return fromCoreResult(result);
@@ -126,9 +124,7 @@ export function calculateRouteSpecificity(route: DiscoveredRoute): number {
  * Sort routes by specificity (most specific first)
  * @see core/conflict-detector.ts for implementation details
  */
-export function sortRoutesBySpecificity(
-  routes: readonly DiscoveredRoute[]
-): DiscoveredRoute[] {
+export function sortRoutesBySpecificity(routes: readonly DiscoveredRoute[]): DiscoveredRoute[] {
   // Sort using core, then map back to original routes
   const routesArray = [...routes];
   const conflictRoutes = routesArray.map((r, i) => ({ ...toConflictRoute(r), _originalIndex: i }));
@@ -149,9 +145,7 @@ export function sortRoutesBySpecificity(
  * Detect nested dynamic route conflicts
  * @see core/conflict-detector.ts for implementation details
  */
-export function findNestedDynamicConflicts(
-  routes: readonly DiscoveredRoute[]
-): RouteConflict[] {
+export function findNestedDynamicConflicts(routes: readonly DiscoveredRoute[]): RouteConflict[] {
   const conflictRoutes = routes.map(toConflictRoute);
   return coreFindNestedDynamicConflicts(conflictRoutes) as RouteConflict[];
 }
@@ -172,9 +166,7 @@ export function findDeepNestingWarnings(
  * Detect index route conflicts
  * @see core/conflict-detector.ts for implementation details
  */
-export function findIndexLayoutConflicts(
-  routes: readonly DiscoveredRoute[]
-): RouteConflict[] {
+export function findIndexLayoutConflicts(routes: readonly DiscoveredRoute[]): RouteConflict[] {
   const conflictRoutes = routes.map(toConflictRoute);
   return coreFindIndexLayoutConflicts(conflictRoutes) as RouteConflict[];
 }
@@ -188,9 +180,7 @@ import type { RouteFixSuggestion } from './types';
 /**
  * Generate fix suggestions for detected conflicts
  */
-export function generateFixSuggestions(
-  conflicts: readonly RouteConflict[]
-): RouteFixSuggestion[] {
+export function generateFixSuggestions(conflicts: readonly RouteConflict[]): RouteFixSuggestion[] {
   const suggestions: RouteFixSuggestion[] = [];
 
   for (const conflict of conflicts) {
@@ -216,7 +206,7 @@ export function generateFixSuggestions(
 function generateDuplicateFixes(conflict: RouteConflict): RouteFixSuggestion[] {
   const suggestions: RouteFixSuggestion[] = [];
 
-  if (conflict.files.length >= 2 && (conflict.files[0] != null)) {
+  if (conflict.files.length >= 2 && conflict.files[0] != null) {
     // Suggest keeping the first file and removing duplicates
     for (let i = 1; i < conflict.files.length; i++) {
       const file = conflict.files[i];
@@ -250,10 +240,12 @@ function generateAmbiguousFixes(conflict: RouteConflict): RouteFixSuggestion[] {
 
   if (conflict.files.length >= 2) {
     // Extract param names from files
-    const paramPatterns = conflict.files.map((file) => {
-      const match = file.match(/\[([^\]]+)\]/);
-      return match ? match[1] : null;
-    }).filter(Boolean);
+    const paramPatterns = conflict.files
+      .map((file) => {
+        const match = file.match(/\[([^\]]+)\]/);
+        return match ? match[1] : null;
+      })
+      .filter(Boolean);
 
     if (paramPatterns.length > 0) {
       const [preferredParam] = paramPatterns;
@@ -280,9 +272,12 @@ function generateShadowFixes(conflict: RouteConflict): RouteFixSuggestion[] {
     const staticFile = conflict.files.find((f) => !f.includes('['));
     const dynamicFile = conflict.files.find((f) => f.includes('['));
 
-    if ((staticFile != null) && (dynamicFile != null)) {
+    if (staticFile != null && dynamicFile != null) {
       // Suggest renaming the static route to avoid shadowing
-      const staticNameMatch = staticFile.split('/').pop()?.replace(/\.(tsx?|jsx?)$/, '');
+      const staticNameMatch = staticFile
+        .split('/')
+        .pop()
+        ?.replace(/\.(tsx?|jsx?)$/, '');
       const staticName = staticNameMatch ?? '';
       const newName = `_${staticName}`;
 

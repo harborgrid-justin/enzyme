@@ -9,20 +9,9 @@
  */
 
 import type React from 'react';
-import {
-  useRef,
-  useState,
-  useCallback,
-  useMemo,
-  useEffect,
-} from 'react';
-import {
-  type ReactNode,
-} from 'react';
-import {
-  type UseModuleBoundaryReturn,
-  type ModuleSlotDefinition,
-} from '../types';
+import { useRef, useState, useCallback, useMemo, useEffect } from 'react';
+import { type ReactNode } from 'react';
+import { type UseModuleBoundaryReturn, type ModuleSlotDefinition } from '../types';
 import { useModuleContext, useOptionalModuleContext } from '../ModuleBoundary';
 import { useModuleHierarchy } from '../ModuleProviderExports';
 
@@ -355,11 +344,11 @@ export function useSlots(slotNames: string[]): Map<
       map.set(name, {
         content,
         fill: (newContent: ReactNode) => fillSlot(name, newContent),
-      clear: () => clearSlot(name),
-      isFilled: content !== null && content !== undefined,
-    });
-  }
+        clear: () => clearSlot(name),
+        isFilled: content !== null && content !== undefined,
+      });
+    }
 
-  return map;
-}, [slotNames, getSlot, fillSlot, clearSlot]);
+    return map;
+  }, [slotNames, getSlot, fillSlot, clearSlot]);
 }

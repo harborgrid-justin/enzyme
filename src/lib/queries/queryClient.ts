@@ -115,7 +115,7 @@ function createRetryFn(maxRetries: number) {
 
     // Check for HTTP status codes
     if (error != null && typeof error === 'object' && 'status' in error) {
-      const {status} = (error as { status: number });
+      const { status } = error as { status: number };
 
       // Never retry these
       if (NON_RETRYABLE_STATUS_CODES.has(status)) {
@@ -182,9 +182,7 @@ function createQueryErrorHandler(config: QueryClientConfig) {
     // Check if error toast should be shown
     if (meta?.showErrorToast !== false) {
       const message =
-        meta?.errorMessage ??
-        getErrorMessage(error) ??
-        'An error occurred while fetching data';
+        meta?.errorMessage ?? getErrorMessage(error) ?? 'An error occurred while fetching data';
 
       console.error('[Query Error]', message, {
         queryKey: query.queryKey,
@@ -204,12 +202,7 @@ function createQueryErrorHandler(config: QueryClientConfig) {
  * Handle global mutation errors
  */
 function createMutationErrorHandler(config: QueryClientConfig) {
-  return (
-    error: unknown,
-    _variables: unknown,
-    _context: unknown,
-    _mutation: unknown
-  ): void => {
+  return (error: unknown, _variables: unknown, _context: unknown, _mutation: unknown): void => {
     const message = getErrorMessage(error) ?? 'An error occurred';
 
     console.error('[Mutation Error]', message, { error });
@@ -417,8 +410,7 @@ export const queryKeys = {
   // User queries
   users: {
     all: ['users'] as const,
-    list: (filters?: Record<string, unknown>) =>
-      [...queryKeys.users.all, 'list', filters] as const,
+    list: (filters?: Record<string, unknown>) => [...queryKeys.users.all, 'list', filters] as const,
     detail: (id: string) => [...queryKeys.users.all, 'detail', id] as const,
     profile: () => [...queryKeys.users.all, 'profile'] as const,
     preferences: () => [...queryKeys.users.all, 'preferences'] as const,
@@ -577,9 +569,7 @@ export function createOptimisticHandlers<TData, TVariables>(
       const previousData = queryClient.getQueryData<TData>(queryKey);
 
       // Optimistically update
-      queryClient.setQueryData<TData>(queryKey, (old) =>
-        optimisticUpdater(old, variables)
-      );
+      queryClient.setQueryData<TData>(queryKey, (old) => optimisticUpdater(old, variables));
 
       // Return context with snapshot
       return { previousData };

@@ -34,10 +34,7 @@ export {
 // Feature Page Factory
 // ============================================================================
 
-export {
-  createFeaturePage,
-  createLazyFeaturePage,
-} from './createFeaturePage';
+export { createFeaturePage, createLazyFeaturePage } from './createFeaturePage';
 
 // ============================================================================
 // Feature Registry

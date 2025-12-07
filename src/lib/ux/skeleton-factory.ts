@@ -193,23 +193,26 @@ export class SkeletonFactory {
   /**
    * Create a text skeleton
    */
-  createText(options: {
-    lines?: number;
-    width?: string | number;
-    gap?: string | number;
-    lastLineWidth?: string;
-  } = {}): ReactElement {
+  createText(
+    options: {
+      lines?: number;
+      width?: string | number;
+      gap?: string | number;
+      lastLineWidth?: string;
+    } = {}
+  ): ReactElement {
     const lines = options.lines ?? 1;
     const elements: SkeletonElement[] = [];
 
     for (let i = 0; i < lines; i++) {
       const isLast = i === lines - 1;
-      const hasLastLineWidth = options.lastLineWidth !== null && options.lastLineWidth !== undefined && options.lastLineWidth !== '';
+      const hasLastLineWidth =
+        options.lastLineWidth !== null &&
+        options.lastLineWidth !== undefined &&
+        options.lastLineWidth !== '';
       elements.push({
         type: 'text',
-        width: isLast && hasLastLineWidth
-          ? options.lastLineWidth
-          : options.width ?? '100%',
+        width: isLast && hasLastLineWidth ? options.lastLineWidth : (options.width ?? '100%'),
         height: this.config.textHeight,
       });
     }
@@ -222,14 +225,15 @@ export class SkeletonFactory {
   /**
    * Create a paragraph skeleton
    */
-  createParagraph(options: {
-    lines?: number;
-    lineVariation?: boolean;
-  } = {}): ReactElement {
+  createParagraph(
+    options: {
+      lines?: number;
+      lineVariation?: boolean;
+    } = {}
+  ): ReactElement {
     const lines = options.lines ?? 4;
-    const widths = options.lineVariation === true
-      ? this.generateLineWidths(lines)
-      : Array(lines).fill('100%');
+    const widths =
+      options.lineVariation === true ? this.generateLineWidths(lines) : Array(lines).fill('100%');
 
     const elements: SkeletonElement[] = widths.map((width: string | number) => ({
       type: 'text',
@@ -243,10 +247,12 @@ export class SkeletonFactory {
   /**
    * Create an avatar skeleton
    */
-  createAvatar(options: {
-    size?: string | number;
-    shape?: 'circle' | 'square' | 'rounded';
-  } = {}): ReactElement {
+  createAvatar(
+    options: {
+      size?: string | number;
+      shape?: 'circle' | 'square' | 'rounded';
+    } = {}
+  ): ReactElement {
     const size = options.size ?? this.config.avatarSize;
     let borderRadius: string;
     if (options.shape === 'circle') {
@@ -270,17 +276,19 @@ export class SkeletonFactory {
   /**
    * Create a card skeleton
    */
-  createCard(options: {
-    hasImage?: boolean;
-    imageHeight?: string;
-    hasTitle?: boolean;
-    hasSubtitle?: boolean;
-    textLines?: number;
-    hasButton?: boolean;
-  } = {}): ReactElement {
+  createCard(
+    options: {
+      hasImage?: boolean;
+      imageHeight?: string;
+      hasTitle?: boolean;
+      hasSubtitle?: boolean;
+      textLines?: number;
+      hasButton?: boolean;
+    } = {}
+  ): ReactElement {
     const elements: SkeletonElement[] = [];
 
-    if (options.hasImage === undefined || options.hasImage === true) {
+    if (options.hasImage === undefined || options.hasImage) {
       elements.push({
         type: 'image',
         width: '100%',
@@ -289,7 +297,7 @@ export class SkeletonFactory {
       });
     }
 
-    if (options.hasTitle === undefined || options.hasTitle === true) {
+    if (options.hasTitle === undefined || options.hasTitle) {
       elements.push({
         type: 'heading',
         width: '70%',
@@ -328,11 +336,13 @@ export class SkeletonFactory {
   /**
    * Create a list skeleton
    */
-  createList(options: {
-    items?: number;
-    hasAvatar?: boolean;
-    hasSecondaryText?: boolean;
-  } = {}): ReactElement {
+  createList(
+    options: {
+      items?: number;
+      hasAvatar?: boolean;
+      hasSecondaryText?: boolean;
+    } = {}
+  ): ReactElement {
     const items = options.items ?? 5;
     const elements: SkeletonElement[] = [];
 
@@ -375,17 +385,19 @@ export class SkeletonFactory {
   /**
    * Create a table skeleton
    */
-  createTable(options: {
-    rows?: number;
-    columns?: number;
-    hasHeader?: boolean;
-  } = {}): ReactElement {
+  createTable(
+    options: {
+      rows?: number;
+      columns?: number;
+      hasHeader?: boolean;
+    } = {}
+  ): ReactElement {
     const rows = options.rows ?? 5;
     const columns = options.columns ?? 4;
     const elements: SkeletonElement[] = [];
 
     // Header
-    if (options.hasHeader === undefined || options.hasHeader === true) {
+    if (options.hasHeader === undefined || options.hasHeader) {
       const headerChildren: SkeletonElement[] = [];
       for (let col = 0; col < columns; col++) {
         headerChildren.push({
@@ -668,7 +680,9 @@ export class SkeletonFactory {
 
       const childContainerStyle: CSSProperties = {
         ...style,
-        ...(element.type === 'list' || (element.className?.includes('row') ?? false) ? rowStyle : containerStyle),
+        ...(element.type === 'list' || (element.className?.includes('row') ?? false)
+          ? rowStyle
+          : containerStyle),
       };
 
       return React.createElement(
@@ -694,11 +708,7 @@ export class SkeletonFactory {
           })
         );
 
-      return React.createElement(
-        React.Fragment,
-        { key: this.generateKey() },
-        ...repeatedElements
-      );
+      return React.createElement(React.Fragment, { key: this.generateKey() }, ...repeatedElements);
     }
 
     // Single element
@@ -716,15 +726,11 @@ export class SkeletonFactory {
     };
 
     if (element.width !== null && element.width !== undefined) {
-      style.width = typeof element.width === 'number'
-        ? `${element.width}px`
-        : element.width;
+      style.width = typeof element.width === 'number' ? `${element.width}px` : element.width;
     }
 
     if (element.height !== null && element.height !== undefined) {
-      style.height = typeof element.height === 'number'
-        ? `${element.height}px`
-        : element.height;
+      style.height = typeof element.height === 'number' ? `${element.height}px` : element.height;
     } else {
       // Apply default heights based on type
       switch (element.type) {
@@ -752,9 +758,10 @@ export class SkeletonFactory {
     }
 
     if (element.borderRadius !== null && element.borderRadius !== undefined) {
-      style.borderRadius = typeof element.borderRadius === 'number'
-        ? `${element.borderRadius}px`
-        : element.borderRadius;
+      style.borderRadius =
+        typeof element.borderRadius === 'number'
+          ? `${element.borderRadius}px`
+          : element.borderRadius;
     } else {
       // Apply default border radius based on type
       switch (element.type) {
@@ -773,9 +780,7 @@ export class SkeletonFactory {
     }
 
     if (element.gap !== null && element.gap !== undefined) {
-      style.gap = typeof element.gap === 'number'
-        ? `${element.gap}px`
-        : element.gap;
+      style.gap = typeof element.gap === 'number' ? `${element.gap}px` : element.gap;
     }
 
     // Apply flex-shrink for avatar and thumbnail
@@ -835,9 +840,7 @@ let factoryInstance: SkeletonFactory | null = null;
 /**
  * Get or create the global skeleton factory
  */
-export function getSkeletonFactory(
-  config?: Partial<SkeletonFactoryConfig>
-): SkeletonFactory {
+export function getSkeletonFactory(config?: Partial<SkeletonFactoryConfig>): SkeletonFactory {
   factoryInstance ??= new SkeletonFactory(config);
   return factoryInstance;
 }
@@ -856,35 +859,45 @@ export function resetSkeletonFactory(): void {
 /**
  * Create a text skeleton
  */
-export function createTextSkeleton(options?: Parameters<SkeletonFactory['createText']>[0]): ReactElement {
+export function createTextSkeleton(
+  options?: Parameters<SkeletonFactory['createText']>[0]
+): ReactElement {
   return getSkeletonFactory().createText(options);
 }
 
 /**
  * Create a paragraph skeleton
  */
-export function createParagraphSkeleton(options?: Parameters<SkeletonFactory['createParagraph']>[0]): ReactElement {
+export function createParagraphSkeleton(
+  options?: Parameters<SkeletonFactory['createParagraph']>[0]
+): ReactElement {
   return getSkeletonFactory().createParagraph(options);
 }
 
 /**
  * Create a card skeleton
  */
-export function createCardSkeleton(options?: Parameters<SkeletonFactory['createCard']>[0]): ReactElement {
+export function createCardSkeleton(
+  options?: Parameters<SkeletonFactory['createCard']>[0]
+): ReactElement {
   return getSkeletonFactory().createCard(options);
 }
 
 /**
  * Create a list skeleton
  */
-export function createListSkeleton(options?: Parameters<SkeletonFactory['createList']>[0]): ReactElement {
+export function createListSkeleton(
+  options?: Parameters<SkeletonFactory['createList']>[0]
+): ReactElement {
   return getSkeletonFactory().createList(options);
 }
 
 /**
  * Create a table skeleton
  */
-export function createTableSkeleton(options?: Parameters<SkeletonFactory['createTable']>[0]): ReactElement {
+export function createTableSkeleton(
+  options?: Parameters<SkeletonFactory['createTable']>[0]
+): ReactElement {
   return getSkeletonFactory().createTable(options);
 }
 

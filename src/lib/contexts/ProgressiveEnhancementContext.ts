@@ -77,4 +77,5 @@ export interface ProgressiveEnhancementContextValue {
 /**
  * Progressive enhancement context - extracted for Fast Refresh compliance
  */
-export const ProgressiveEnhancementContext = createContext<ProgressiveEnhancementContextValue | null>(null);
+export const ProgressiveEnhancementContext =
+  createContext<ProgressiveEnhancementContextValue | null>(null);

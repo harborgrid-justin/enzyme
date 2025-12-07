@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
 - Comprehensive library documentation
 - Example files for routing, auth, RBAC, and performance
 
@@ -18,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 #### New Features
+
 - **Progressive Hydration System** - Priority-based hydration with 5 levels (critical, high, normal, low, idle)
 - **Predictive Prefetching** - ML-based navigation prediction for faster page loads
 - **Performance Observatory** - Real-time performance dashboard component
@@ -26,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Feature Module Factory** - Complete plug-and-play feature system with auto-discovery
 
 #### New Hooks
+
 - `useHydration`, `useHydrationMetrics`, `useHydrationProgress`
 - `usePredictivePrefetch`, `usePerformanceBudget`, `useMemoryPressure`
 - `useNetworkQuality`, `useAdaptiveImageQuality`
@@ -33,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `useFeatureVisibility`, `useAccessibleFeatures`
 
 #### New Components
+
 - `HydrationProvider`, `HydrationBoundary`, `LazyHydration`
 - `PerformanceObservatory`, `PerformanceProvider`
 - `SecurityProvider`, `FlagGate`, `FlagGateAll`, `FlagGateAny`
@@ -41,50 +45,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 #### Breaking Changes
+
 - **React Query 5 Migration**
-  - `cacheTime` renamed to `gcTime`
-  - `useQuery` options restructured
-  - Mutation callbacks simplified
+    - `cacheTime` renamed to `gcTime`
+    - `useQuery` options restructured
+    - Mutation callbacks simplified
 
 - **Auth Guard Refactoring**
-  - `ProtectedRoute` replaced with `RequireAuth`, `RequireRole`, `RequirePermission`
-  - Guards are now composable and can be nested
+    - `ProtectedRoute` replaced with `RequireAuth`, `RequireRole`, `RequirePermission`
+    - Guards are now composable and can be nested
 
 - **Routing API Updates**
-  - `createTypedRouter` renamed to `createRouter`
-  - Route metadata structure updated
-  - Type-safe route builders enhanced
+    - `createTypedRouter` renamed to `createRouter`
+    - Route metadata structure updated
+    - Type-safe route builders enhanced
 
 - **Hook Renames**
-  - `useAuthentication` -> `useAuth`
-  - `useApiQuery` -> `useApiRequest`
-  - `useApiMutate` -> `useApiMutation`
-  - `useFlag` -> `useFeatureFlag`
-  - `FeatureGate` -> `FlagGate`
+    - `useAuthentication` -> `useAuth`
+    - `useApiQuery` -> `useApiRequest`
+    - `useApiMutate` -> `useApiMutation`
+    - `useFlag` -> `useFeatureFlag`
+    - `FeatureGate` -> `FlagGate`
 
 #### Non-Breaking Changes
+
 - Improved TypeScript types across all modules
 - Better tree-shaking support
 - Enhanced error messages
 - Performance optimizations
 
 ### Deprecated
+
 - `useAuthentication` (use `useAuth`)
 - `ProtectedRoute` (use `RequireAuth` + `RequireRole`)
 - `FeatureGate` (use `FlagGate`)
 
 ### Removed
+
 - Legacy `AppProvider` (use individual providers)
 - Old state management API (use Zustand-based API)
 - Deprecated routing utilities
 
 ### Fixed
+
 - Memory leak in WebSocket reconnection logic
 - Race condition in token refresh
 - Incorrect type inference in route builders
 - Performance regression in large lists
 
 ### Security
+
 - Added CSRF protection by default
 - Implemented Content Security Policy management
 - Added XSS prevention utilities
@@ -95,6 +105,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.0.0] - 2024-06-15
 
 ### Added
+
 - Zustand-based state management
 - React Query integration
 - Enhanced error boundaries with hierarchy
@@ -102,11 +113,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Network status tracking
 
 ### Changed
+
 - **Breaking**: Provider architecture restructured
 - **Breaking**: API client refactored
 - **Breaking**: State management completely rewritten
 
 ### Removed
+
 - Custom state management solution
 - Legacy fetch wrapper
 
@@ -115,6 +128,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2024-01-10
 
 ### Added
+
 - Initial release
 - Basic authentication system
 - Simple routing utilities
@@ -134,9 +148,9 @@ See [Migration Guide](./docs/MIGRATION.md) for detailed instructions.
 
 1. Update React Query to v5
 2. Rename hooks:
-   - `useAuthentication` -> `useAuth`
-   - `useApiQuery` -> `useApiRequest`
-   - `useApiMutate` -> `useApiMutation`
+    - `useAuthentication` -> `useAuth`
+    - `useApiQuery` -> `useApiRequest`
+    - `useApiMutate` -> `useApiMutation`
 3. Replace `ProtectedRoute` with `RequireAuth` and `RequireRole`
 4. Replace `FeatureGate` with `FlagGate`
 5. Update `cacheTime` to `gcTime` in query options
@@ -161,11 +175,11 @@ See [Migration Guide](./docs/MIGRATION.md) for detailed instructions.
 
 ## Support Policy
 
-| Version | Status | Support Until |
-|---------|--------|---------------|
-| 3.x | Current | Active |
-| 2.x | Maintenance | 2025-06-15 |
-| 1.x | End of Life | 2024-06-15 |
+| Version | Status      | Support Until |
+|---------|-------------|---------------|
+| 3.x     | Current     | Active        |
+| 2.x     | Maintenance | 2025-06-15    |
+| 1.x     | End of Life | 2024-06-15    |
 
 ---
 

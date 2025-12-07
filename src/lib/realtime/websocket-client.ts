@@ -57,30 +57,30 @@ export class WebSocketClient {
   private reconnectAttempts = 0;
   private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
   private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
-  
+
   private messageHandlers: Set<MessageHandler> = new Set();
   private errorHandlers: Set<ErrorHandler> = new Set();
   private stateChangeHandlers: Set<StateChangeHandler> = new Set();
   private channelHandlers: Map<string, Set<MessageHandler>> = new Map();
-  
+
   constructor(config: WebSocketClientConfig) {
     this.config = { ...defaultConfig, ...config };
   }
-  
+
   /**
    * Get current connection state
    */
   getState(): WebSocketState {
     return this.state;
   }
-  
+
   /**
    * Check if connected
    */
   isConnected(): boolean {
     return this.state === 'connected' && this.socket?.readyState === WebSocket.OPEN;
   }
-  
+
   /**
    * Connect to WebSocket server
    */
@@ -88,9 +88,9 @@ export class WebSocketClient {
     if (this.socket?.readyState === WebSocket.OPEN) {
       return;
     }
-    
+
     this.setState('connecting');
-    
+
     try {
       this.socket = new WebSocket(this.config.url, this.config.protocols);
       this.setupEventListeners();
@@ -99,23 +99,23 @@ export class WebSocketClient {
       this.handleDisconnect();
     }
   }
-  
+
   /**
    * Disconnect from WebSocket server
    */
   disconnect(): void {
     this.clearHeartbeat();
     this.clearReconnectTimeout();
-    
+
     if (this.socket) {
       this.socket.close(1000, 'Client disconnect');
       this.socket = null;
     }
-    
+
     this.setState('disconnected');
     this.reconnectAttempts = 0;
   }
-  
+
   /**
    * Send message to server
    */
@@ -124,7 +124,7 @@ export class WebSocketClient {
       console.warn('[WebSocket] Cannot send message: not connected');
       return;
     }
-    
+
     try {
       const message = typeof data === 'string' ? data : JSON.stringify(data);
       if (this.socket !== null) {
@@ -134,14 +134,14 @@ export class WebSocketClient {
       console.error('[WebSocket] Send error:', error);
     }
   }
-  
+
   /**
    * Send message to specific channel
    */
   sendToChannel(channel: string, data: unknown): void {
     this.send({ channel, data });
   }
-  
+
   /**
    * Subscribe to all messages
    */
@@ -149,7 +149,7 @@ export class WebSocketClient {
     this.messageHandlers.add(handler);
     return () => this.messageHandlers.delete(handler);
   }
-  
+
   /**
    * Subscribe to specific channel
    */
@@ -159,12 +159,12 @@ export class WebSocketClient {
       // Notify server of subscription
       this.send({ type: 'subscribe', channel });
     }
-    
+
     const handlers = this.channelHandlers.get(channel);
     if (handlers !== undefined) {
       handlers.add(handler);
     }
-    
+
     return () => {
       const handlers = this.channelHandlers.get(channel);
       if (handlers) {
@@ -177,7 +177,7 @@ export class WebSocketClient {
       }
     };
   }
-  
+
   /**
    * Subscribe to errors
    */
@@ -185,7 +185,7 @@ export class WebSocketClient {
     this.errorHandlers.add(handler);
     return () => this.errorHandlers.delete(handler);
   }
-  
+
   /**
    * Subscribe to state changes
    */
@@ -193,24 +193,24 @@ export class WebSocketClient {
     this.stateChangeHandlers.add(handler);
     return () => this.stateChangeHandlers.delete(handler);
   }
-  
+
   /**
    * Setup WebSocket event listeners
    */
   private setupEventListeners(): void {
     if (!this.socket) return;
-    
+
     this.socket.onopen = () => {
       this.setState('connected');
       this.reconnectAttempts = 0;
       this.startHeartbeat();
-      
+
       // Resubscribe to channels
       this.channelHandlers.forEach((_, channel) => {
         this.send({ type: 'subscribe', channel });
       });
     };
-    
+
     this.socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data as string) as {
@@ -218,12 +218,12 @@ export class WebSocketClient {
           channel?: string;
           data?: unknown;
         };
-        
+
         // Handle heartbeat response
         if (data.type === 'pong') {
           return;
         }
-        
+
         // Route to channel handlers
         if (data.channel !== undefined && this.channelHandlers.has(data.channel)) {
           const handlers = this.channelHandlers.get(data.channel);
@@ -231,7 +231,7 @@ export class WebSocketClient {
             handler(data.data);
           });
         }
-        
+
         // Notify all message handlers
         this.messageHandlers.forEach((handler) => handler(data));
       } catch {
@@ -239,25 +239,25 @@ export class WebSocketClient {
         this.messageHandlers.forEach((handler) => handler(event.data));
       }
     };
-    
+
     this.socket.onerror = (event) => {
       console.error('[WebSocket] Error:', event);
       this.errorHandlers.forEach((handler) => handler(event));
     };
-    
+
     this.socket.onclose = (event) => {
       console.info('[WebSocket] Closed:', event.code, event.reason);
       this.handleDisconnect();
     };
   }
-  
+
   /**
    * Handle disconnection
    */
   private handleDisconnect(): void {
     this.clearHeartbeat();
     this.socket = null;
-    
+
     if (
       this.config.reconnect === true &&
       this.reconnectAttempts < (this.config.maxReconnectAttempts ?? 10)
@@ -268,23 +268,23 @@ export class WebSocketClient {
       this.setState('disconnected');
     }
   }
-  
+
   /**
    * Schedule reconnection
    */
   private scheduleReconnect(): void {
     this.clearReconnectTimeout();
-    
+
     const delay = this.calculateBackoff();
     this.reconnectAttempts++;
-    
+
     console.info(`[WebSocket] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`);
-    
+
     this.reconnectTimeout = setTimeout(() => {
       this.connect();
     }, delay);
   }
-  
+
   /**
    * Calculate exponential backoff delay
    */
@@ -294,13 +294,13 @@ export class WebSocketClient {
     const jitter = Math.random() * 1000;
     return Math.min(delay + jitter, 30000); // Max 30 seconds
   }
-  
+
   /**
    * Start heartbeat interval
    */
   private startHeartbeat(): void {
     this.clearHeartbeat();
-    
+
     if (this.config.heartbeatInterval != null && this.config.heartbeatInterval > 0) {
       this.heartbeatInterval = setInterval(() => {
         if (this.isConnected()) {
@@ -309,7 +309,7 @@ export class WebSocketClient {
       }, this.config.heartbeatInterval);
     }
   }
-  
+
   /**
    * Clear heartbeat interval
    */
@@ -319,7 +319,7 @@ export class WebSocketClient {
       this.heartbeatInterval = null;
     }
   }
-  
+
   /**
    * Clear reconnect timeout
    */
@@ -329,7 +329,7 @@ export class WebSocketClient {
       this.reconnectTimeout = null;
     }
   }
-  
+
   /**
    * Update and broadcast state
    */
@@ -349,6 +349,6 @@ export function createWebSocketClient(
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   const host = env.wsUrl || `${protocol}//${window.location.host}`;
   const url = `${host}${path}`;
-  
+
   return new WebSocketClient({ url, ...config });
 }

@@ -22,8 +22,14 @@ import {
   type CSSProperties,
   type ReactNode,
 } from 'react';
-import { ContainerContext, type ContainerContextValue } from '../../contexts/ContainerContext';
-import type { AdaptiveContainerProps, BoxSpacing, ContainerBreakpoints, ContentDensity, Dimensions } from './types';
+import { ContainerContext, type ContainerContextValue } from '@/lib/contexts';
+import type {
+  AdaptiveContainerProps,
+  BoxSpacing,
+  ContainerBreakpoints,
+  ContentDensity,
+  Dimensions,
+} from './types';
 
 // =============================================================================
 // CONSTANTS
@@ -76,7 +82,10 @@ export function useContainerContext(): ContainerContextValue | null {
 /**
  * Determines size category based on width and breakpoints.
  */
-function getSizeCategory(width: number, breakpoints: ContainerBreakpoints): keyof ContainerBreakpoints {
+function getSizeCategory(
+  width: number,
+  breakpoints: ContainerBreakpoints
+): keyof ContainerBreakpoints {
   const { xs = 320, sm = 480, md = 768, lg = 1024, xl = 1280 } = breakpoints;
 
   if (width < xs) return 'xs';
@@ -262,7 +271,9 @@ const AdaptiveContainerComponent = ({
 
     // Adjust padding based on size category for better mobile experience
     if (isNarrow) {
-      const reducedPadding = normalizePadding(Math.max(8, (typeof padding === 'number' ? padding : 16) / 2));
+      const reducedPadding = normalizePadding(
+        Math.max(8, (typeof padding === 'number' ? padding : 16) / 2)
+      );
       baseStyles.padding = paddingToCSS(reducedPadding);
     }
 
@@ -270,12 +281,15 @@ const AdaptiveContainerComponent = ({
   }, [normalizedPadding, maxWidth, centered, isNarrow, padding, style]);
 
   // CSS custom properties for container queries
-  const cssVariables = useMemo<Record<string, string>>(() => ({
-    '--container-width': `${dimensions.width}px`,
-    '--container-height': `${dimensions.height}px`,
-    '--container-density': density,
-    '--container-size': sizeCategory,
-  }), [dimensions, density, sizeCategory]);
+  const cssVariables = useMemo<Record<string, string>>(
+    () => ({
+      '--container-width': `${dimensions.width}px`,
+      '--container-height': `${dimensions.height}px`,
+      '--container-density': density,
+      '--container-size': sizeCategory,
+    }),
+    [dimensions, density, sizeCategory]
+  );
 
   return (
     <ContainerContext.Provider value={contextValue}>

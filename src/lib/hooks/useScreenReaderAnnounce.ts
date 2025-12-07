@@ -6,7 +6,7 @@
  * Uses ARIA live regions to announce content changes without moving focus.
  */
 
-import { useCallback, useRef, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 /**
  * Announcement priority levels
@@ -109,35 +109,30 @@ export function useScreenReaderAnnounce(): (message: string, options?: AnnounceO
     };
   }, []);
 
-  const announce = useCallback(
-    (message: string, options: AnnounceOptions = {}) => {
-      const { priority = 'polite', clearAfter = 1000 } = options;
-      const region = getLiveRegion(priority);
+  return useCallback((message: string, options: AnnounceOptions = {}) => {
+    const { priority = 'polite', clearAfter = 1000 } = options;
+    const region = getLiveRegion(priority);
 
-      // Clear previous timeout
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
+    // Clear previous timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
 
-      // Clear and then set the message (forces re-announcement)
-      region.textContent = '';
+    // Clear and then set the message (forces re-announcement)
+    region.textContent = '';
 
-      // Small delay to ensure the clear is processed
-      requestAnimationFrame(() => {
-        region.textContent = message;
-      });
+    // Small delay to ensure the clear is processed
+    requestAnimationFrame(() => {
+      region.textContent = message;
+    });
 
-      // Optionally clear the message after a delay
-      if (clearAfter > 0) {
-        timeoutRef.current = setTimeout(() => {
-          region.textContent = '';
-        }, clearAfter);
-      }
-    },
-    []
-  );
-
-  return announce;
+    // Optionally clear the message after a delay
+    if (clearAfter > 0) {
+      timeoutRef.current = setTimeout(() => {
+        region.textContent = '';
+      }, clearAfter);
+    }
+  }, []);
 }
 
 /**
@@ -174,10 +169,7 @@ export function ScreenReaderAnnouncementRegion(): null {
  * }
  * ```
  */
-export function announceToScreenReader(
-  message: string,
-  options: AnnounceOptions = {}
-): void {
+export function announceToScreenReader(message: string, options: AnnounceOptions = {}): void {
   const { priority = 'polite', clearAfter = 1000 } = options;
   const region = getLiveRegion(priority);
 

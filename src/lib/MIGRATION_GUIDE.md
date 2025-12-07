@@ -21,7 +21,8 @@
 
 ### Overview
 
-Version 4.0.0 introduces significant performance optimizations, primarily around bundle size reduction through minimized barrel exports. The main changes are:
+Version 4.0.0 introduces significant performance optimizations, primarily around bundle size reduction through minimized
+barrel exports. The main changes are:
 
 1. **Minimized Main Index**: The main `@/lib` barrel export now only includes ~20 essential exports instead of 1,000+
 2. **Submodule Imports Required**: Most imports must now come from specific submodules
@@ -30,11 +31,11 @@ Version 4.0.0 introduces significant performance optimizations, primarily around
 
 ### Performance Impact
 
-| Metric | v3.x | v4.x | Improvement |
-|--------|------|------|-------------|
-| Initial Bundle | ~847KB | ~153KB | 82% smaller |
-| Parse Time (Mobile 3G) | ~3.5s | ~1.0s | 71% faster |
-| Lighthouse Score | +27 points | - | - |
+| Metric                 | v3.x       | v4.x   | Improvement |
+|------------------------|------------|--------|-------------|
+| Initial Bundle         | ~847KB     | ~153KB | 82% smaller |
+| Parse Time (Mobile 3G) | ~3.5s      | ~1.0s  | 71% faster  |
+| Lighthouse Score       | +27 points | -      | -           |
 
 ---
 
@@ -72,20 +73,20 @@ import { useSessionDuration, useIsSessionExpired } from '@/lib/state/hooks/useSe
 
 ### Quick Reference: Import Mapping
 
-| v3.x Import | v4.x Submodule |
-|-------------|----------------|
-| `useAuth`, `AuthProvider` | `@/lib/auth` |
-| `useFeatureFlag`, `FlagGate` | `@/lib/flags` |
-| `useApiRequest`, `apiClient` | `@/lib/api` |
-| `ErrorBoundary` | `@/lib/monitoring` |
-| `ThemeProvider`, `useTheme` | `@/lib/theme` |
-| `createRouter` | `@/lib/routing` |
-| `useStore`, `createSlice` | `@/lib/state` |
-| `HydrationProvider` | `@/lib/hydration` |
-| `StreamProvider` | `@/lib/streaming` |
-| `SecurityProvider` | `@/lib/security` |
-| `initializeApp` | `@/lib/system` |
-| `DeepPartial`, `Result` | `@/lib/shared/type-utils` |
+| v3.x Import                  | v4.x Submodule            |
+|------------------------------|---------------------------|
+| `useAuth`, `AuthProvider`    | `@/lib/auth`              |
+| `useFeatureFlag`, `FlagGate` | `@/lib/flags`             |
+| `useApiRequest`, `apiClient` | `@/lib/api`               |
+| `ErrorBoundary`              | `@/lib/monitoring`        |
+| `ThemeProvider`, `useTheme`  | `@/lib/theme`             |
+| `createRouter`               | `@/lib/routing`           |
+| `useStore`, `createSlice`    | `@/lib/state`             |
+| `HydrationProvider`          | `@/lib/hydration`         |
+| `StreamProvider`             | `@/lib/streaming`         |
+| `SecurityProvider`           | `@/lib/security`          |
+| `initializeApp`              | `@/lib/system`            |
+| `DeepPartial`, `Result`      | `@/lib/shared/type-utils` |
 
 ---
 
@@ -93,7 +94,8 @@ import { useSessionDuration, useIsSessionExpired } from '@/lib/state/hooks/useSe
 
 ### Session Time Selectors (IMPORTANT)
 
-The following selectors are **deprecated** because they use `Date.now()` inside the selector combiner, which breaks memoization:
+The following selectors are **deprecated** because they use `Date.now()` inside the selector combiner, which breaks
+memoization:
 
 ```typescript
 // DEPRECATED - Do not use
@@ -179,15 +181,15 @@ import { apiClient } from '@/lib/api';
 
 ### Scheduled for Removal in v5.0.0
 
-| Feature | Replacement | Notes |
-|---------|-------------|-------|
-| `@/lib/utils/eventEmitter` | `@/lib/shared/event-utils` | Wrapper re-export |
-| `@/lib/vdom/event-bus` | `@/lib/shared/event-utils` | Wrapper re-export |
-| `@/lib/coordination/event-bus` | `@/lib/shared/event-utils` | Wrapper re-export |
-| `@/lib/services/http` | `@/lib/api` | Legacy HTTP client |
-| `selectSessionDuration` | `useSessionDuration` | Memoization issue |
-| `selectTimeUntilExpiry` | `useTimeUntilExpiry` | Memoization issue |
-| `selectIsSessionExpired` | `useIsSessionExpired` | Memoization issue |
+| Feature                        | Replacement                | Notes              |
+|--------------------------------|----------------------------|--------------------|
+| `@/lib/utils/eventEmitter`     | `@/lib/shared/event-utils` | Wrapper re-export  |
+| `@/lib/vdom/event-bus`         | `@/lib/shared/event-utils` | Wrapper re-export  |
+| `@/lib/coordination/event-bus` | `@/lib/shared/event-utils` | Wrapper re-export  |
+| `@/lib/services/http`          | `@/lib/api`                | Legacy HTTP client |
+| `selectSessionDuration`        | `useSessionDuration`       | Memoization issue  |
+| `selectTimeUntilExpiry`        | `useTimeUntilExpiry`       | Memoization issue  |
+| `selectIsSessionExpired`       | `useIsSessionExpired`      | Memoization issue  |
 
 ### ESLint Enforcement Timeline
 
@@ -218,7 +220,8 @@ export { ThemeProvider, useTheme, Theme } from './theme';
 
 ### 2. Rules of Hooks Compliance
 
-The `useHydration` hook has been fixed to comply with React's Rules of Hooks. If you were relying on the conditional behavior, the API is unchanged but the internal implementation is now correct:
+The `useHydration` hook has been fixed to comply with React's Rules of Hooks. If you were relying on the conditional
+behavior, the API is unchanged but the internal implementation is now correct:
 
 ```typescript
 // Usage remains the same

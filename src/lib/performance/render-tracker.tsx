@@ -270,16 +270,13 @@ export class RenderTracker {
 
   private renderStack: string[] = [];
   private isEnabled = true;
-  private isProd = false;
+  private readonly isProd = false;
 
   /**
    * Private constructor for singleton pattern
    */
   private constructor(config: RenderTrackerConfig = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
-
-    // Detect production environment
-    this.isProd = typeof process !== 'undefined' && process.env?.NODE_ENV === 'production';
 
     // Disable in production unless explicitly enabled
     if (this.isProd && !this.config.enableInProduction) {
@@ -319,7 +316,7 @@ export class RenderTracker {
       state?: Record<string, unknown>;
     } = {}
   ): () => RenderEntry | null {
-    if (this.isEnabled === false || shouldSample(this.config.sampleRate) === false) {
+    if (!this.isEnabled || !shouldSample(this.config.sampleRate)) {
       return () => null;
     }
 
@@ -356,6 +353,316 @@ export class RenderTracker {
 
     // Return stop function
     return () => this.endRender(id, { propsChanged, stateChanged, props, state });
+  }
+
+  /**
+   * Start tracking an interaction (e.g., click, input)
+   */
+  public startInteraction(name: string): () => RenderInteraction | null {
+    if (!this.isEnabled) {
+      return () => null;
+    }
+
+    this.currentInteraction = {
+      id: generateId(),
+      name,
+      startTime: performance.now(),
+      renders: [],
+    };
+
+    return () => this.endInteraction();
+  }
+
+  /**
+   * Get render statistics for a component
+   */
+  public getComponentStats(componentName: string): ComponentRenderStats | null {
+    const renders = this.renderHistory.filter((r) => r.componentName === componentName);
+    if (renders.length === 0) return null;
+
+    const durations = renders.map((r) => r.duration).sort((a, b) => a - b);
+    const totalTime = durations.reduce((sum, d) => sum + d, 0);
+    const wastedCount = renders.filter((r) => r.isWasted).length;
+    const initialCount = renders.filter((r) => r.isInitial).length;
+
+    const rendersByReason: Record<RenderReason, number> = {
+      initial: 0,
+      'props-change': 0,
+      'state-change': 0,
+      'context-change': 0,
+      'parent-render': 0,
+      'hooks-change': 0,
+      'force-update': 0,
+      unknown: 0,
+    };
+
+    renders.forEach((r) => {
+      rendersByReason[r.reason]++;
+    });
+
+    const minDuration = durations[0] ?? 0;
+    const maxDuration = durations[durations.length - 1] ?? 0;
+    const lastRender = renders[renders.length - 1];
+    const lastDuration = lastRender?.duration ?? 0;
+
+    return {
+      componentName,
+      totalRenders: renders.length,
+      initialRenders: initialCount,
+      reRenders: renders.length - initialCount,
+      wastedRenders: wastedCount,
+      wastedRenderRate: (wastedCount / renders.length) * 100,
+      totalRenderTime: totalTime,
+      averageRenderTime: totalTime / renders.length,
+      minRenderTime: minDuration,
+      maxRenderTime: maxDuration,
+      p50RenderTime: percentile(durations, 50),
+      p95RenderTime: percentile(durations, 95),
+      isSlowComponent: percentile(durations, 50) > this.config.slowThreshold,
+      lastRenderTime: lastDuration,
+      rendersByReason,
+    };
+  }
+
+  /**
+   * Get all component statistics
+   */
+  public getAllComponentStats(): ComponentRenderStats[] {
+    const componentNames = new Set(this.renderHistory.map((r) => r.componentName));
+    const stats: ComponentRenderStats[] = [];
+
+    componentNames.forEach((name) => {
+      const stat = this.getComponentStats(name);
+      if (stat) stats.push(stat);
+    });
+
+    // Sort by total render time (most expensive first)
+    return stats.sort((a, b) => b.totalRenderTime - a.totalRenderTime);
+  }
+
+  /**
+   * Get slow components
+   */
+  public getSlowComponents(): ComponentRenderStats[] {
+    return this.getAllComponentStats().filter((s) => s.isSlowComponent);
+  }
+
+  /**
+   * Get components with wasted renders
+   */
+  public getWastedRenderComponents(): ComponentRenderStats[] {
+    return this.getAllComponentStats()
+      .filter((s) => s.wastedRenders > 0)
+      .sort((a, b) => b.wastedRenderRate - a.wastedRenderRate);
+  }
+
+  // ==========================================================================
+  // Interaction Tracking
+  // ==========================================================================
+
+  /**
+   * Build render waterfall for visualization
+   */
+  public buildWaterfall(
+    options: {
+      interactionId?: string;
+      startTime?: number;
+      endTime?: number;
+    } = {}
+  ): RenderWaterfallEntry[] {
+    let renders = [...this.renderHistory];
+
+    // Filter by interaction if specified
+    const { interactionId } = options;
+    if (interactionId !== undefined && interactionId !== null && interactionId !== '') {
+      const interaction = this.interactions.find((i) => i.id === interactionId);
+      if (interaction !== undefined && interaction !== null) {
+        // eslint-disable-next-line prefer-destructuring -- reassigning existing variable
+        renders = interaction.renders;
+      }
+    }
+
+    // Filter by time range
+    if (options.startTime !== undefined) {
+      const {startTime} = options;
+      renders = renders.filter((r) => r.startTime >= startTime);
+    }
+    if (options.endTime !== undefined) {
+      const {endTime} = options;
+      renders = renders.filter((r) => r.endTime <= endTime);
+    }
+
+    if (renders.length === 0) return [];
+
+    // Find root renders (no parent or parent not in list)
+    const renderIds = new Set(renders.map((r) => r.id));
+    const baseTime = renders.reduce((min, r) => Math.min(min, r.startTime), Infinity);
+
+    // Build tree structure
+    const buildEntry = (render: RenderEntry): RenderWaterfallEntry => {
+      const children = renders
+        .filter((r) => r.parentId === render.id)
+        .map(buildEntry);
+
+      return {
+        id: render.id,
+        componentName: render.componentName,
+        startOffset: render.startTime - baseTime,
+        duration: render.duration,
+        depth: render.depth,
+        phase: render.phase,
+        isWasted: render.isWasted,
+        children,
+      };
+    };
+
+    // Get root entries
+    const rootRenders = renders.filter(
+      (r) => r.parentId === undefined || !renderIds.has(r.parentId)
+    );
+
+    return rootRenders.map(buildEntry);
+  }
+
+  /**
+   * Export waterfall as JSON for visualization tools
+   */
+  public exportWaterfallJson(options?: Parameters<typeof this.buildWaterfall>[0]): string {
+    return JSON.stringify(this.buildWaterfall(options), null, 2);
+  }
+
+  // ==========================================================================
+  // Statistics & Analysis
+  // ==========================================================================
+
+  /**
+   * Get render history
+   */
+  public getHistory(): RenderEntry[] {
+    return [...this.renderHistory];
+  }
+
+  /**
+   * Get recent renders
+   */
+  public getRecentRenders(count: number = 50): RenderEntry[] {
+    return this.renderHistory.slice(-count);
+  }
+
+  /**
+   * Get interactions
+   */
+  public getInteractions(): RenderInteraction[] {
+    return [...this.interactions];
+  }
+
+  /**
+   * Clear all history
+   */
+  public clear(): void {
+    this.renderHistory.length = 0;
+    this.interactions.length = 0;
+    this.componentInstances.clear();
+    this.log('History cleared');
+  }
+
+  // ==========================================================================
+  // Waterfall Visualization
+  // ==========================================================================
+
+  /**
+   * Enable tracking
+   */
+  public enable(): void {
+    this.isEnabled = true;
+    this.log('Tracking enabled');
+  }
+
+  /**
+   * Disable tracking
+   */
+  public disable(): void {
+    this.isEnabled = false;
+    this.log('Tracking disabled');
+  }
+
+  // ==========================================================================
+  // History & Management
+  // ==========================================================================
+
+  /**
+   * Check if tracking is enabled
+   */
+  public isTrackingEnabled(): boolean {
+    return this.isEnabled;
+  }
+
+  /**
+   * Generate render performance report
+   */
+  public generateReport(): string {
+    const stats = this.getAllComponentStats();
+    const slowComponents = this.getSlowComponents();
+    const wastedComponents = this.getWastedRenderComponents();
+
+    const totalRenders = this.renderHistory.length;
+    const totalWasted = this.renderHistory.filter((r) => r.isWasted).length;
+    const wastedRate = totalRenders > 0 ? (totalWasted / totalRenders) * 100 : 0;
+
+    const lines = [
+      '='.repeat(60),
+      'RENDER PERFORMANCE REPORT',
+      '='.repeat(60),
+      '',
+      `Generated: ${new Date().toISOString()}`,
+      `Total Renders Tracked: ${totalRenders}`,
+      `Unique Components: ${stats.length}`,
+      `Wasted Render Rate: ${wastedRate.toFixed(1)}%`,
+      '',
+      '--- Slow Components ---',
+      '',
+    ];
+
+    if (slowComponents.length === 0) {
+      lines.push('  No slow components detected');
+    } else {
+      slowComponents.slice(0, 10).forEach((s) => {
+        lines.push(
+          `  - ${s.componentName}: avg ${formatDuration(s.averageRenderTime)}, ` +
+          `p95 ${formatDuration(s.p95RenderTime)}`
+        );
+      });
+    }
+
+    lines.push('');
+    lines.push('--- Components with Wasted Renders ---');
+    lines.push('');
+
+    if (wastedComponents.length === 0) {
+      lines.push('  No wasted renders detected');
+    } else {
+      wastedComponents.slice(0, 10).forEach((s) => {
+        lines.push(
+          `  - ${s.componentName}: ${s.wastedRenders} wasted (${s.wastedRenderRate.toFixed(1)}%)`
+        );
+      });
+    }
+
+    lines.push('');
+    lines.push('--- Top 10 Components by Render Time ---');
+    lines.push('');
+
+    stats.slice(0, 10).forEach((s, i) => {
+      lines.push(
+        `  ${i + 1}. ${s.componentName}: ${formatDuration(s.totalRenderTime)} total, ` +
+        `${s.totalRenders} renders`
+      );
+    });
+
+    lines.push('');
+    lines.push('='.repeat(60));
+
+    return lines.join('\n');
   }
 
   /**
@@ -432,7 +739,7 @@ export class RenderTracker {
       this.log(`Slow render: ${activeRender.componentName} (${formatDuration(duration)})`);
     }
 
-    if (isWasted === true) {
+    if (isWasted) {
       this.config.onWastedRender(entry);
       this.log(`Wasted render: ${activeRender.componentName}`);
     }
@@ -519,26 +826,8 @@ export class RenderTracker {
   }
 
   // ==========================================================================
-  // Interaction Tracking
+  // Reporting
   // ==========================================================================
-
-  /**
-   * Start tracking an interaction (e.g., click, input)
-   */
-  public startInteraction(name: string): () => RenderInteraction | null {
-    if (this.isEnabled === false) {
-      return () => null;
-    }
-
-    this.currentInteraction = {
-      id: generateId(),
-      name,
-      startTime: performance.now(),
-      renders: [],
-    };
-
-    return () => this.endInteraction();
-  }
 
   /**
    * End tracking an interaction
@@ -579,298 +868,6 @@ export class RenderTracker {
   }
 
   // ==========================================================================
-  // Statistics & Analysis
-  // ==========================================================================
-
-  /**
-   * Get render statistics for a component
-   */
-  public getComponentStats(componentName: string): ComponentRenderStats | null {
-    const renders = this.renderHistory.filter((r) => r.componentName === componentName);
-    if (renders.length === 0) return null;
-
-    const durations = renders.map((r) => r.duration).sort((a, b) => a - b);
-    const totalTime = durations.reduce((sum, d) => sum + d, 0);
-    const wastedCount = renders.filter((r) => r.isWasted).length;
-    const initialCount = renders.filter((r) => r.isInitial).length;
-
-    const rendersByReason: Record<RenderReason, number> = {
-      initial: 0,
-      'props-change': 0,
-      'state-change': 0,
-      'context-change': 0,
-      'parent-render': 0,
-      'hooks-change': 0,
-      'force-update': 0,
-      unknown: 0,
-    };
-
-    renders.forEach((r) => {
-      rendersByReason[r.reason]++;
-    });
-
-    const minDuration = durations[0] ?? 0;
-    const maxDuration = durations[durations.length - 1] ?? 0;
-    const lastRender = renders[renders.length - 1];
-    const lastDuration = lastRender?.duration ?? 0;
-
-    return {
-      componentName,
-      totalRenders: renders.length,
-      initialRenders: initialCount,
-      reRenders: renders.length - initialCount,
-      wastedRenders: wastedCount,
-      wastedRenderRate: (wastedCount / renders.length) * 100,
-      totalRenderTime: totalTime,
-      averageRenderTime: totalTime / renders.length,
-      minRenderTime: minDuration,
-      maxRenderTime: maxDuration,
-      p50RenderTime: percentile(durations, 50),
-      p95RenderTime: percentile(durations, 95),
-      isSlowComponent: percentile(durations, 50) > this.config.slowThreshold,
-      lastRenderTime: lastDuration,
-      rendersByReason,
-    };
-  }
-
-  /**
-   * Get all component statistics
-   */
-  public getAllComponentStats(): ComponentRenderStats[] {
-    const componentNames = new Set(this.renderHistory.map((r) => r.componentName));
-    const stats: ComponentRenderStats[] = [];
-
-    componentNames.forEach((name) => {
-      const stat = this.getComponentStats(name);
-      if (stat) stats.push(stat);
-    });
-
-    // Sort by total render time (most expensive first)
-    return stats.sort((a, b) => b.totalRenderTime - a.totalRenderTime);
-  }
-
-  /**
-   * Get slow components
-   */
-  public getSlowComponents(): ComponentRenderStats[] {
-    return this.getAllComponentStats().filter((s) => s.isSlowComponent);
-  }
-
-  /**
-   * Get components with wasted renders
-   */
-  public getWastedRenderComponents(): ComponentRenderStats[] {
-    return this.getAllComponentStats()
-      .filter((s) => s.wastedRenders > 0)
-      .sort((a, b) => b.wastedRenderRate - a.wastedRenderRate);
-  }
-
-  // ==========================================================================
-  // Waterfall Visualization
-  // ==========================================================================
-
-  /**
-   * Build render waterfall for visualization
-   */
-  public buildWaterfall(
-    options: {
-      interactionId?: string;
-      startTime?: number;
-      endTime?: number;
-    } = {}
-  ): RenderWaterfallEntry[] {
-    let renders = [...this.renderHistory];
-
-    // Filter by interaction if specified
-    const { interactionId } = options;
-    if (interactionId !== undefined && interactionId !== null && interactionId !== '') {
-      const interaction = this.interactions.find((i) => i.id === interactionId);
-      if (interaction !== undefined && interaction !== null) {
-        // eslint-disable-next-line prefer-destructuring -- reassigning existing variable
-        renders = interaction.renders;
-      }
-    }
-
-    // Filter by time range
-    if (options.startTime !== undefined) {
-      const {startTime} = options;
-      renders = renders.filter((r) => r.startTime >= startTime);
-    }
-    if (options.endTime !== undefined) {
-      const {endTime} = options;
-      renders = renders.filter((r) => r.endTime <= endTime);
-    }
-
-    if (renders.length === 0) return [];
-
-    // Find root renders (no parent or parent not in list)
-    const renderIds = new Set(renders.map((r) => r.id));
-    const baseTime = renders.reduce((min, r) => Math.min(min, r.startTime), Infinity);
-
-    // Build tree structure
-    const buildEntry = (render: RenderEntry): RenderWaterfallEntry => {
-      const children = renders
-        .filter((r) => r.parentId === render.id)
-        .map(buildEntry);
-
-      return {
-        id: render.id,
-        componentName: render.componentName,
-        startOffset: render.startTime - baseTime,
-        duration: render.duration,
-        depth: render.depth,
-        phase: render.phase,
-        isWasted: render.isWasted,
-        children,
-      };
-    };
-
-    // Get root entries
-    const rootRenders = renders.filter(
-      (r) => r.parentId === undefined || renderIds.has(r.parentId) === false
-    );
-
-    return rootRenders.map(buildEntry);
-  }
-
-  /**
-   * Export waterfall as JSON for visualization tools
-   */
-  public exportWaterfallJson(options?: Parameters<typeof this.buildWaterfall>[0]): string {
-    return JSON.stringify(this.buildWaterfall(options), null, 2);
-  }
-
-  // ==========================================================================
-  // History & Management
-  // ==========================================================================
-
-  /**
-   * Get render history
-   */
-  public getHistory(): RenderEntry[] {
-    return [...this.renderHistory];
-  }
-
-  /**
-   * Get recent renders
-   */
-  public getRecentRenders(count: number = 50): RenderEntry[] {
-    return this.renderHistory.slice(-count);
-  }
-
-  /**
-   * Get interactions
-   */
-  public getInteractions(): RenderInteraction[] {
-    return [...this.interactions];
-  }
-
-  /**
-   * Clear all history
-   */
-  public clear(): void {
-    this.renderHistory.length = 0;
-    this.interactions.length = 0;
-    this.componentInstances.clear();
-    this.log('History cleared');
-  }
-
-  /**
-   * Enable tracking
-   */
-  public enable(): void {
-    this.isEnabled = true;
-    this.log('Tracking enabled');
-  }
-
-  /**
-   * Disable tracking
-   */
-  public disable(): void {
-    this.isEnabled = false;
-    this.log('Tracking disabled');
-  }
-
-  /**
-   * Check if tracking is enabled
-   */
-  public isTrackingEnabled(): boolean {
-    return this.isEnabled;
-  }
-
-  // ==========================================================================
-  // Reporting
-  // ==========================================================================
-
-  /**
-   * Generate render performance report
-   */
-  public generateReport(): string {
-    const stats = this.getAllComponentStats();
-    const slowComponents = this.getSlowComponents();
-    const wastedComponents = this.getWastedRenderComponents();
-
-    const totalRenders = this.renderHistory.length;
-    const totalWasted = this.renderHistory.filter((r) => r.isWasted).length;
-    const wastedRate = totalRenders > 0 ? (totalWasted / totalRenders) * 100 : 0;
-
-    const lines = [
-      '='.repeat(60),
-      'RENDER PERFORMANCE REPORT',
-      '='.repeat(60),
-      '',
-      `Generated: ${new Date().toISOString()}`,
-      `Total Renders Tracked: ${totalRenders}`,
-      `Unique Components: ${stats.length}`,
-      `Wasted Render Rate: ${wastedRate.toFixed(1)}%`,
-      '',
-      '--- Slow Components ---',
-      '',
-    ];
-
-    if (slowComponents.length === 0) {
-      lines.push('  No slow components detected');
-    } else {
-      slowComponents.slice(0, 10).forEach((s) => {
-        lines.push(
-          `  - ${s.componentName}: avg ${formatDuration(s.averageRenderTime)}, ` +
-          `p95 ${formatDuration(s.p95RenderTime)}`
-        );
-      });
-    }
-
-    lines.push('');
-    lines.push('--- Components with Wasted Renders ---');
-    lines.push('');
-
-    if (wastedComponents.length === 0) {
-      lines.push('  No wasted renders detected');
-    } else {
-      wastedComponents.slice(0, 10).forEach((s) => {
-        lines.push(
-          `  - ${s.componentName}: ${s.wastedRenders} wasted (${s.wastedRenderRate.toFixed(1)}%)`
-        );
-      });
-    }
-
-    lines.push('');
-    lines.push('--- Top 10 Components by Render Time ---');
-    lines.push('');
-
-    stats.slice(0, 10).forEach((s, i) => {
-      lines.push(
-        `  ${i + 1}. ${s.componentName}: ${formatDuration(s.totalRenderTime)} total, ` +
-        `${s.totalRenders} renders`
-      );
-    });
-
-    lines.push('');
-    lines.push('='.repeat(60));
-
-    return lines.join('\n');
-  }
-
-  // ==========================================================================
   // Utilities
   // ==========================================================================
 
@@ -896,7 +893,7 @@ export class RenderTracker {
    * Debug logging
    */
   private log(message: string, ...args: unknown[]): void {
-    if (this.config.debug === true) {
+    if (this.config.debug) {
       console.info(`[RenderTracker] ${message}`, ...args);
     }
   }

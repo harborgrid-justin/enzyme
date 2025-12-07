@@ -1,7 +1,7 @@
 /**
  * @file Context Definitions
  * @description Centralized context definitions for Fast Refresh compliance.
- * 
+ *
  * Contexts are extracted into separate files to comply with Fast Refresh rules:
  * - Contexts must not be defined in files with components
  * - Each context should have a dedicated file
@@ -42,12 +42,22 @@ export { ConfigurableFeaturesContext } from './ConfigurableFeaturesContext';
 
 // Re-export types
 export type { LoadingContextValue, LoadingState, LoadingPhase } from './LoadingContext';
-export type { ProgressiveEnhancementContextValue, BrowserCapabilities } from './ProgressiveEnhancementContext';
-export type { ThemeContextValue, ThemeConfig, ColorScheme as ThemeColorScheme } from './ThemeContext';
+export type {
+  ProgressiveEnhancementContextValue,
+  BrowserCapabilities,
+} from './ProgressiveEnhancementContext';
+export type {
+  ThemeContextValue,
+  ThemeConfig,
+  ColorScheme as ThemeColorScheme,
+} from './ThemeContext';
 export type { SecurityContextValue, SanitizationLevel } from './SecurityContext';
 export type { StreamContextValue } from './StreamContext';
 export type { RealtimeContextValue, ConnectionState } from './RealtimeContext';
-export type { PerformanceObservatoryContextValue, PerformanceMetric } from './PerformanceObservatoryContext';
+export type {
+  PerformanceObservatoryContextValue,
+  PerformanceMetric,
+} from './PerformanceObservatoryContext';
 export type { ScrollContainer, ScrollPosition } from './ScrollContainerContext';
 export type { PortalContext } from './PortalBridgeContext';
 export type { DOMContext, ColorScheme as DOMColorScheme } from './DOMContext';
@@ -64,10 +74,21 @@ export type { AuthContextValue, User, UserRole } from './AuthContext';
 export type { ConfigContextValue, ConfigValue, ConfigRecord } from './ConfigContext';
 export type { ADContextValue, ADUser } from './ADContext';
 export type { ApiClientContextValue, HttpMethod, RequestOptions } from './ApiClientContext';
-export type { ModuleSystemContextValue, ModuleHierarchyContextValue, ModuleMetadata } from './ModuleContext';
+export type {
+  ModuleSystemContextValue,
+  ModuleHierarchyContextValue,
+  ModuleMetadata,
+} from './ModuleContext';
 export type { ModuleBoundaryContextValue } from './ModuleBoundaryContext';
 export type { ToastContextValue, Toast, ToastVariant, ToastPosition } from './ToastContext';
 export type { FlagConfigurableContextValue, FlagConfiguration } from './FlagConfigurableContext';
-export type { LibraryIntegrationContextValue, LibraryIntegration } from './LibraryIntegrationContext';
+export type {
+  LibraryIntegrationContextValue,
+  LibraryIntegration,
+} from './LibraryIntegrationContext';
 export type { FlagAnalyticsContextValue, FlagAnalyticsEvent } from './FlagAnalyticsContext';
-export type { ConfigurableFeaturesContextValue, FeatureDefinition, FeatureConfig } from './ConfigurableFeaturesContext';
+export type {
+  ConfigurableFeaturesContextValue,
+  FeatureDefinition,
+  FeatureConfig,
+} from './ConfigurableFeaturesContext';

@@ -145,6 +145,144 @@ class SystemManager {
   }
 
   /**
+   * Get system status
+   */
+  getStatus(): SystemStatus {
+    const memoryInfo = memoryManager.monitor.getMemoryInfo();
+    const queueStats = globalRequestQueue.getStats();
+    const vitals = webVitals.getVitals();
+    const longTaskStats = longTaskObserver.getStats();
+
+    // Clean hourly errors
+    const hourAgo = Date.now() - 3600000;
+    this.hourlyErrors = this.hourlyErrors.filter((t) => t > hourAgo);
+
+    return {
+      initialized: this._initialized,
+      environment: this.config?.environment ?? 'unknown',
+      uptime: Date.now() - this.initTime,
+      memory: memoryInfo
+        ? {
+            usedHeap: memoryInfo.usedHeap,
+            totalHeap: memoryInfo.totalHeap,
+            pressure: memoryInfo.pressure,
+          }
+        : null,
+      performance: {
+        webVitals: vitals as Record<string, number>,
+        longTaskCount: longTaskStats.count,
+      },
+      requestQueue: {
+        queued: queueStats.queued,
+        processing: queueStats.processing,
+      },
+      errors: {
+        total: this.errorCount,
+        lastHour: this.hourlyErrors.length,
+      },
+    };
+  }
+
+  /**
+   * Shutdown the system
+   */
+  shutdown(): void {
+    logger.info('[System] Shutting down...');
+
+    // Run cleanup functions
+    for (const cleanup of this.cleanupFns) {
+      try {
+        cleanup();
+      } catch (error) {
+        logger.error('[System] Cleanup error', { error });
+      }
+    }
+    this.cleanupFns = [];
+
+    // Dispose memory manager
+    memoryManager.dispose();
+
+    // Dispose performance monitor
+    performanceMonitor.dispose();
+
+    // Clear request queue
+    globalRequestQueue.clear();
+
+    this._initialized = false;
+    this.config = null;
+
+    logger.info('[System] Shutdown complete');
+  }
+
+  /**
+   * Health check
+   */
+  healthCheck(): {
+    healthy: boolean;
+    checks: Record<string, { status: 'pass' | 'warn' | 'fail'; message?: string }>;
+  } {
+    const checks: Record<string, { status: 'pass' | 'warn' | 'fail'; message?: string }> = {};
+
+    // Check initialization
+    checks.initialized = {
+      status: this._initialized ? 'pass' : 'fail',
+      message: this._initialized ? undefined : 'System not initialized',
+    };
+
+    // Check memory
+    const memoryInfo = memoryManager.monitor.getMemoryInfo();
+    if (memoryInfo !== null && memoryInfo !== undefined) {
+      let memoryStatus: 'pass' | 'warn' | 'fail';
+      if (memoryInfo.pressure === 'none') {
+        memoryStatus = 'pass';
+      } else if (memoryInfo.pressure === 'moderate') {
+        memoryStatus = 'warn';
+      } else {
+        memoryStatus = 'fail';
+      }
+
+      checks.memory = {
+        status: memoryStatus,
+        message: memoryInfo.pressure !== 'none' ? `Memory pressure: ${memoryInfo.pressure}` : undefined,
+      };
+    }
+
+    // Check error rate
+    const hourlyErrorRate = this.hourlyErrors.length;
+    let errorRateStatus: 'pass' | 'warn' | 'fail';
+    if (hourlyErrorRate < 10) {
+      errorRateStatus = 'pass';
+    } else if (hourlyErrorRate < 50) {
+      errorRateStatus = 'warn';
+    } else {
+      errorRateStatus = 'fail';
+    }
+    checks.errorRate = {
+      status: errorRateStatus,
+      message: hourlyErrorRate >= 10 ? `${hourlyErrorRate} errors in last hour` : undefined,
+    };
+
+    // Check request queue
+    const queueStats = globalRequestQueue.getStats();
+    let queueStatus: 'pass' | 'warn' | 'fail';
+    if (queueStats.queued < 50) {
+      queueStatus = 'pass';
+    } else if (queueStats.queued < 100) {
+      queueStatus = 'warn';
+    } else {
+      queueStatus = 'fail';
+    }
+    checks.requestQueue = {
+      status: queueStatus,
+      message: queueStats.queued >= 50 ? `${queueStats.queued} requests queued` : undefined,
+    };
+
+    const healthy = Object.values(checks).every((c) => c.status !== 'fail');
+
+    return { healthy, checks };
+  }
+
+  /**
    * Configure logging
    */
   private setupLogging(config: SystemConfig): void {
@@ -242,7 +380,7 @@ class SystemManager {
 
     // Configure and start memory monitoring
     const {monitor} = memoryManager;
-    
+
     if (config.memory?.onPressure) {
       const unsubscribe = monitor.onPressureChange(config.memory.onPressure);
       this.cleanupFns.push(unsubscribe);
@@ -386,144 +524,6 @@ class SystemManager {
     globalRequestQueue.clear();
 
     logger.debug('[System] Sensitive data cleared');
-  }
-
-  /**
-   * Get system status
-   */
-  getStatus(): SystemStatus {
-    const memoryInfo = memoryManager.monitor.getMemoryInfo();
-    const queueStats = globalRequestQueue.getStats();
-    const vitals = webVitals.getVitals();
-    const longTaskStats = longTaskObserver.getStats();
-
-    // Clean hourly errors
-    const hourAgo = Date.now() - 3600000;
-    this.hourlyErrors = this.hourlyErrors.filter((t) => t > hourAgo);
-
-    return {
-      initialized: this._initialized,
-      environment: this.config?.environment ?? 'unknown',
-      uptime: Date.now() - this.initTime,
-      memory: memoryInfo
-        ? {
-            usedHeap: memoryInfo.usedHeap,
-            totalHeap: memoryInfo.totalHeap,
-            pressure: memoryInfo.pressure,
-          }
-        : null,
-      performance: {
-        webVitals: vitals as Record<string, number>,
-        longTaskCount: longTaskStats.count,
-      },
-      requestQueue: {
-        queued: queueStats.queued,
-        processing: queueStats.processing,
-      },
-      errors: {
-        total: this.errorCount,
-        lastHour: this.hourlyErrors.length,
-      },
-    };
-  }
-
-  /**
-   * Shutdown the system
-   */
-  shutdown(): void {
-    logger.info('[System] Shutting down...');
-
-    // Run cleanup functions
-    for (const cleanup of this.cleanupFns) {
-      try {
-        cleanup();
-      } catch (error) {
-        logger.error('[System] Cleanup error', { error });
-      }
-    }
-    this.cleanupFns = [];
-
-    // Dispose memory manager
-    memoryManager.dispose();
-
-    // Dispose performance monitor
-    performanceMonitor.dispose();
-
-    // Clear request queue
-    globalRequestQueue.clear();
-
-    this._initialized = false;
-    this.config = null;
-
-    logger.info('[System] Shutdown complete');
-  }
-
-  /**
-   * Health check
-   */
-  healthCheck(): {
-    healthy: boolean;
-    checks: Record<string, { status: 'pass' | 'warn' | 'fail'; message?: string }>;
-  } {
-    const checks: Record<string, { status: 'pass' | 'warn' | 'fail'; message?: string }> = {};
-
-    // Check initialization
-    checks.initialized = {
-      status: this._initialized ? 'pass' : 'fail',
-      message: this._initialized ? undefined : 'System not initialized',
-    };
-
-    // Check memory
-    const memoryInfo = memoryManager.monitor.getMemoryInfo();
-    if (memoryInfo !== null && memoryInfo !== undefined) {
-      let memoryStatus: 'pass' | 'warn' | 'fail';
-      if (memoryInfo.pressure === 'none') {
-        memoryStatus = 'pass';
-      } else if (memoryInfo.pressure === 'moderate') {
-        memoryStatus = 'warn';
-      } else {
-        memoryStatus = 'fail';
-      }
-
-      checks.memory = {
-        status: memoryStatus,
-        message: memoryInfo.pressure !== 'none' ? `Memory pressure: ${memoryInfo.pressure}` : undefined,
-      };
-    }
-
-    // Check error rate
-    const hourlyErrorRate = this.hourlyErrors.length;
-    let errorRateStatus: 'pass' | 'warn' | 'fail';
-    if (hourlyErrorRate < 10) {
-      errorRateStatus = 'pass';
-    } else if (hourlyErrorRate < 50) {
-      errorRateStatus = 'warn';
-    } else {
-      errorRateStatus = 'fail';
-    }
-    checks.errorRate = {
-      status: errorRateStatus,
-      message: hourlyErrorRate >= 10 ? `${hourlyErrorRate} errors in last hour` : undefined,
-    };
-
-    // Check request queue
-    const queueStats = globalRequestQueue.getStats();
-    let queueStatus: 'pass' | 'warn' | 'fail';
-    if (queueStats.queued < 50) {
-      queueStatus = 'pass';
-    } else if (queueStats.queued < 100) {
-      queueStatus = 'warn';
-    } else {
-      queueStatus = 'fail';
-    }
-    checks.requestQueue = {
-      status: queueStatus,
-      message: queueStats.queued >= 50 ? `${queueStats.queued} requests queued` : undefined,
-    };
-
-    const healthy = Object.values(checks).every((c) => c.status !== 'fail');
-
-    return { healthy, checks };
   }
 }
 

@@ -3,6 +3,10 @@ import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
 
+// Claude.ai Optimization: Comprehensive testing config with coverage and type checking
+// Uses happy-dom for DOM simulation, includes src/ tests, excludes .development/
+// High coverage thresholds for enterprise quality assurance
+
 export default defineConfig({
   plugins: [react()],
   test: {
@@ -26,6 +30,7 @@ export default defineConfig({
       '.idea',
       '.git',
       '.cache',
+      '.development',
       'src/test/e2e/**',
     ],
 

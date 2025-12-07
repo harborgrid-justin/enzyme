@@ -1,14 +1,22 @@
 # Performance Module
 
-> **Purpose:** Comprehensive performance monitoring, optimization, and budgeting system for achieving world-class Core Web Vitals.
+> **Purpose:** Comprehensive performance monitoring, optimization, and budgeting system for achieving world-class Core
+> Web Vitals.
 
 ## Overview
 
-The Performance module provides a complete solution for measuring, monitoring, and optimizing React application performance. It automatically tracks Core Web Vitals (LCP, INP, CLS, FCP, TTFB), monitors long tasks, manages memory pressure, and enforces performance budgets with automatic degradation strategies.
+The Performance module provides a complete solution for measuring, monitoring, and optimizing React application
+performance. It automatically tracks Core Web Vitals (LCP, INP, CLS, FCP, TTFB), monitors long tasks, manages memory
+pressure, and enforces performance budgets with automatic degradation strategies.
 
-This module goes far beyond basic performance monitoring by providing predictive prefetching, intelligent render scheduling, memory optimization, critical CSS extraction, adaptive loading based on network conditions, and real-time performance dashboards. It includes both proactive optimization (budgets, lazy loading, code splitting) and reactive monitoring (RUM, regression detection, alerting).
+This module goes far beyond basic performance monitoring by providing predictive prefetching, intelligent render
+scheduling, memory optimization, critical CSS extraction, adaptive loading based on network conditions, and real-time
+performance dashboards. It includes both proactive optimization (budgets, lazy loading, code splitting) and reactive
+monitoring (RUM, regression detection, alerting).
 
-Perfect for teams committed to exceptional user experience, this module helps you meet Google's Core Web Vitals thresholds, identify performance regressions before they reach production, and automatically optimize your application based on device capabilities and network conditions.
+Perfect for teams committed to exceptional user experience, this module helps you meet Google's Core Web Vitals
+thresholds, identify performance regressions before they reach production, and automatically optimize your application
+based on device capabilities and network conditions.
 
 ## Key Features
 
@@ -75,17 +83,20 @@ function ExpensiveComponent() {
 ## Exports
 
 ### Initialization
+
 - `initPerformanceMonitoring()` - Start all monitoring systems
 - `startPerformanceMonitoring()` - Start specific monitors
 - `stopPerformanceMonitoring()` - Stop monitoring
 
 ### Core Monitors
+
 - `PerformanceMonitor` - Long tasks, memory, frame rate, resources
 - `VitalsCollector` - Core Web Vitals tracking
 - `RenderTracker` - Component render performance
 - `NetworkPerformanceAnalyzer` - Network timing and quality
 
 ### Budgets
+
 - `PerformanceBudgetManager` - Define and enforce budgets
 - `BudgetEnforcer` - Automatic enforcement with degradation
 - `usePerformanceBudget` - Hook for budget-aware components
@@ -93,11 +104,13 @@ function ExpensiveComponent() {
 - `useDegradedMode` - Access degradation state
 
 ### Components
+
 - `PerformanceObservatory` - Real-time dashboard
 - `PerformanceProvider` - Context provider
 - `RenderTracker` - HOC for render tracking
 
 ### Hooks
+
 - `usePerformanceBudget` - Monitor specific budget
 - `useRenderMetrics` - Component render stats
 - `useLongTaskDetector` - Detect long tasks
@@ -109,6 +122,7 @@ function ExpensiveComponent() {
 - `useIdleHydration` - Hydrate during idle time
 
 ### Optimization
+
 - `PredictivePrefetchEngine` - AI-driven prefetching
 - `RenderScheduler` - Schedule work in idle frames
 - `MemoryGuardian` - Memory leak prevention
@@ -117,11 +131,13 @@ function ExpensiveComponent() {
 - `IdleScheduler` - requestIdleCallback utilities
 
 ### Profiling
+
 - `PerformanceProfiler` - Record performance samples
 - `RegressionDetector` - Detect performance regressions
 - `RealUserMonitoring` - RUM with session tracking
 
 ### Utilities
+
 - `formatMetricValue()` - Format metrics for display
 - `calculateRating()` - Get metric rating (good/needs-improvement/poor)
 - `getNetworkQuality()` - Get network quality metrics
@@ -131,6 +147,7 @@ function ExpensiveComponent() {
 - `yieldToMain()` - Yield to main thread
 
 ### Types
+
 - `VitalMetricName` - Core Web Vitals metric names
 - `PerformanceRating` - Rating (good | needs-improvement | poor)
 - `PerformanceBudget` - Budget definition
@@ -176,6 +193,7 @@ The performance module uses a layered monitoring approach:
 ## Common Patterns
 
 ### Pattern 1: Budget-Aware Components
+
 ```tsx
 import { usePerformanceBudget } from '@/lib/performance';
 
@@ -193,6 +211,7 @@ function VideoPlayer() {
 ```
 
 ### Pattern 2: Adaptive Loading Based on Network
+
 ```tsx
 import { useNetworkQuality, useAdaptiveImageQuality } from '@/lib/performance';
 
@@ -221,6 +240,7 @@ function Dashboard() {
 ```
 
 ### Pattern 3: Predictive Prefetching
+
 ```tsx
 import { usePredictivePrefetch, PredictiveLink } from '@/lib/performance';
 
@@ -243,6 +263,7 @@ function Navigation() {
 ```
 
 ### Pattern 4: Deferred Rendering for Performance
+
 ```tsx
 import { useDeferredRender, useIdleHydration } from '@/lib/performance';
 
@@ -270,6 +291,7 @@ function BelowFold() {
 ```
 
 ### Pattern 5: Long Task Detection
+
 ```tsx
 import { useLongTaskDetector } from '@/lib/performance';
 
@@ -291,6 +313,7 @@ function DataGrid({ data }) {
 ```
 
 ### Pattern 6: Memory Pressure Awareness
+
 ```tsx
 import { useMemoryPressure, useMemoryCleanup } from '@/lib/performance';
 
@@ -319,6 +342,7 @@ function ImageGallery({ images }) {
 ## Configuration
 
 ### Performance Monitoring Configuration
+
 ```tsx
 import { initPerformanceMonitoring } from '@/lib/performance';
 
@@ -360,6 +384,7 @@ await initPerformanceMonitoring({
 ```
 
 ### Budget Configuration
+
 ```tsx
 import { PerformanceBudgetManager } from '@/lib/performance';
 
@@ -398,6 +423,7 @@ const budgetManager = new PerformanceBudgetManager({
 ## Testing
 
 ### Testing Performance
+
 ```tsx
 import { render, waitFor } from '@testing-library/react';
 import { VitalsCollector } from '@/lib/performance';
@@ -427,7 +453,9 @@ describe('Performance', () => {
 ## Troubleshooting
 
 ### Issue: High INP Score
+
 **Solution:** Identify and break up long tasks:
+
 ```tsx
 import { useLongTaskDetector, yieldToMain } from '@/lib/performance';
 
@@ -441,7 +469,9 @@ async function processLargeDataset(data) {
 ```
 
 ### Issue: Poor LCP Performance
+
 **Solution:** Use critical CSS and preload:
+
 ```tsx
 import { useCriticalCSS, preloadAsset } from '@/lib/performance';
 
@@ -458,7 +488,9 @@ function App() {
 ```
 
 ### Issue: Memory Leaks
+
 **Solution:** Use memory guardian:
+
 ```tsx
 import { useMemoryGuard } from '@/lib/performance';
 
@@ -473,7 +505,9 @@ function Component() {
 ```
 
 ### Issue: Slow Network Affecting UX
+
 **Solution:** Implement adaptive loading:
+
 ```tsx
 import { useNetworkQuality } from '@/lib/performance';
 

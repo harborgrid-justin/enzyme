@@ -1,0 +1,120 @@
+{
+  "Enzyme Store": {
+    "prefix": "enzyme-store",
+    "body": [
+      "import { create } from 'zustand';",
+      "import { devtools, persist } from 'zustand/middleware';",
+      "",
+      "interface ${1:Name}State {",
+      "  ${2:property}: ${3:string};",
+      "  set${1:Name}: (value: ${3:string}) => void;",
+      "}",
+      "",
+      "export const use${1:Name}Store = create<${1:Name}State>()(",
+      "  devtools(",
+      "    persist(",
+      "      (set) => ({",
+      "        ${2:property}: '',",
+      "        set${1:Name}: (value) => set({ ${2:property}: value }),",
+      "      }),",
+      "      { name: '${1/(.*)/${1:/downcase}/}-storage' }",
+      "    )",
+      "  )",
+      ");"
+    ],
+    "description": "Create an Enzyme Zustand store with devtools and persistence"
+  },
+  "Enzyme API Client": {
+    "prefix": "enzyme-api",
+    "body": [
+      "import { apiClient } from '@missionfabric-js/enzyme/api';",
+      "",
+      "interface ${1:Resource} {",
+      "  id: string;",
+      "  ${2:// Add properties}",
+      "}",
+      "",
+      "export const ${3:name}Api = {",
+      "  get${1:Resource}: (id: string) =>",
+      "    apiClient.get<${1:Resource}>(`/${1/(.*)/${1:/downcase}/}s/${id}`),",
+      "",
+      "  list${1:Resource}s: () =>",
+      "    apiClient.get<${1:Resource}[]>(`/${1/(.*)/${1:/downcase}/}s`),",
+      "",
+      "  create${1:Resource}: (data: Omit<${1:Resource}, 'id'>) =>",
+      "    apiClient.post<${1:Resource}>(`/${1/(.*)/${1:/downcase}/}s`, data),",
+      "",
+      "  update${1:Resource}: (id: string, data: Partial<${1:Resource}>) =>",
+      "    apiClient.patch<${1:Resource}>(`/${1/(.*)/${1:/downcase}/}s/${id}`, data),",
+      "",
+      "  delete${1:Resource}: (id: string) =>",
+      "    apiClient.del(`/${1/(.*)/${1:/downcase}/}s/${id}`),",
+      "};"
+    ],
+    "description": "Create an Enzyme API client"
+  },
+  "Enzyme Hook": {
+    "prefix": "enzyme-hook",
+    "body": [
+      "import { useState, useCallback } from 'react';",
+      "",
+      "export function use${1:Name}(${2:initialValue}: ${3:string}) {",
+      "  const [${4:value}, set${1:Name}] = useState<${3:string}>(${2:initialValue});",
+      "",
+      "  const update${1:Name} = useCallback((newValue: ${3:string}) => {",
+      "    set${1:Name}(newValue);",
+      "  }, []);",
+      "",
+      "  return {",
+      "    ${4:value},",
+      "    update${1:Name},",
+      "  };",
+      "}"
+    ],
+    "description": "Create an Enzyme custom hook"
+  },
+  "Enzyme Route": {
+    "prefix": "enzyme-route",
+    "body": [
+      "import { lazy } from 'react';",
+      "import type { RouteObject } from 'react-router-dom';",
+      "",
+      "export const ${1:name}Route: RouteObject = {",
+      "  path: '${2:/path}',",
+      "  Component: lazy(() => import('./${3:Component}')),",
+      "  ${4:// loader: async () => {",
+      "  //   // Load data",
+      "  // },",
+      "  // errorElement: <ErrorBoundary />,}",
+      "};"
+    ],
+    "description": "Define an Enzyme route using React Router"
+  },
+  "Enzyme Feature": {
+    "prefix": "enzyme-feature",
+    "body": [
+      "import { lazy } from 'react';",
+      "import type { FeatureConfig } from '@missionfabric-js/enzyme/feature';",
+      "",
+      "export const ${1:name}Feature: FeatureConfig = {",
+      "  metadata: {",
+      "    id: '${1:name}',",
+      "    name: '${2:Display Name}',",
+      "    description: '${3:Feature description}',",
+      "    icon: '${4:icon-name}',",
+      "    category: '${5:category}',",
+      "    version: '1.0.0',",
+      "    order: ${6:0},",
+      "  },",
+      "  access: {",
+      "    requireAuth: ${7:true},",
+      "    allowedRoles: [${8:'user'}],",
+      "    ${9:// permissions: [],",
+      "    // featureFlags: [],}",
+      "  },",
+      "  component: lazy(() => import('./components/${2:Display Name}Page')),",
+      "};"
+    ],
+    "description": "Define an Enzyme feature module"
+  }
+}

@@ -36,26 +36,26 @@
  */
 
 import {
-  type StreamConfig,
-  type EngineConfig,
-  type StreamChunk,
-  type StreamBoundaryData,
-  type QueueEntry,
-  type StreamError,
-  type StreamMetrics,
-  type BoundaryMetrics,
-  type StreamEventHandler,
-  type StreamEvent,
-  type TransformContext,
-  StreamState,
-  StreamPriority,
-  StreamErrorCode,
-  StreamEventType,
   BackpressureStrategy,
-  PRIORITY_VALUES,
+  type BoundaryMetrics,
+  createStreamError,
   DEFAULT_ENGINE_CONFIG,
   DEFAULT_METRICS,
-  createStreamError,
+  type EngineConfig,
+  PRIORITY_VALUES,
+  type QueueEntry,
+  type StreamBoundaryData,
+  type StreamChunk,
+  type StreamConfig,
+  type StreamError,
+  StreamErrorCode,
+  type StreamEvent,
+  type StreamEventHandler,
+  StreamEventType,
+  type StreamMetrics,
+  StreamPriority,
+  StreamState,
+  type TransformContext,
 } from './types';
 
 // Re-export for use in other modules
@@ -396,7 +396,7 @@ export class StreamingEngine {
   private readonly priorityQueue: PriorityQueue<QueueEntry>;
   private readonly buffer: StreamBuffer;
   private readonly eventHandlers: Set<StreamEventHandler> = new Set();
-  private metrics: StreamMetrics;
+  private readonly metrics: StreamMetrics;
   private activeStreams = 0;
   private isProcessing = false;
   private processingTimer: ReturnType<typeof setTimeout> | null = null;
@@ -424,6 +424,17 @@ export class StreamingEngine {
   // ==========================================================================
 
   /**
+   * Checks if streaming is supported in the current environment.
+   */
+  static isStreamingSupported(): boolean {
+    return (
+      typeof ReadableStream !== 'undefined' &&
+      typeof TransformStream !== 'undefined' &&
+      typeof AbortController !== 'undefined'
+    );
+  }
+
+  /**
    * Registers a new stream boundary with the engine.
    *
    * @param id - Unique identifier for the boundary
@@ -441,12 +452,11 @@ export class StreamingEngine {
    */
   registerBoundary(id: string, config: StreamConfig): void {
     if (this.boundaries.has(id)) {
-      const error: StreamError = createStreamError(
+      throw createStreamError(
         StreamErrorCode.ConfigError,
         `Boundary with ID "${id}" already exists`,
         { boundaryId: id }
       );
-      throw error;
     }
 
     const boundaryData: StreamBoundaryData = {
@@ -508,16 +518,16 @@ export class StreamingEngine {
     return this.boundaries.get(id);
   }
 
+  // ==========================================================================
+  // Public API - Lifecycle Management
+  // ==========================================================================
+
   /**
    * Returns all registered boundary IDs.
    */
   getBoundaryIds(): string[] {
     return Array.from(this.boundaries.keys());
   }
-
-  // ==========================================================================
-  // Public API - Lifecycle Management
-  // ==========================================================================
 
   /**
    * Starts streaming for a specific boundary.
@@ -533,21 +543,19 @@ export class StreamingEngine {
   start(id: string): void {
     const boundary = this.boundaries.get(id);
     if (!boundary) {
-      const error: StreamError = createStreamError(
-        StreamErrorCode.ConfigError,
-        `Boundary "${id}" not found`,
-        { boundaryId: id }
-      );
-      throw error;
+
+      throw createStreamError(StreamErrorCode.ConfigError, `Boundary "${id}" not found`, {
+        boundaryId: id,
+      });
     }
 
     if (!this.canTransitionTo(boundary.state, StreamState.Pending)) {
-      const error: StreamError = createStreamError(
+
+      throw createStreamError(
         StreamErrorCode.StateError,
         `Cannot start boundary "${id}" from state "${boundary.state}"`,
         { boundaryId: id }
       );
-      throw error;
     }
 
     this.transitionState(boundary, StreamState.Pending);
@@ -576,21 +584,19 @@ export class StreamingEngine {
   pause(id: string): void {
     const boundary = this.boundaries.get(id);
     if (!boundary) {
-      const error: StreamError = createStreamError(
-        StreamErrorCode.ConfigError,
-        `Boundary "${id}" not found`,
-        { boundaryId: id }
-      );
-      throw error;
+
+      throw createStreamError(StreamErrorCode.ConfigError, `Boundary "${id}" not found`, {
+        boundaryId: id,
+      });
     }
 
     if (!this.canTransitionTo(boundary.state, StreamState.Paused)) {
-      const error: StreamError = createStreamError(
+
+      throw createStreamError(
         StreamErrorCode.StateError,
         `Cannot pause boundary "${id}" from state "${boundary.state}"`,
         { boundaryId: id }
       );
-      throw error;
     }
 
     this.transitionState(boundary, StreamState.Paused);
@@ -608,21 +614,19 @@ export class StreamingEngine {
   resume(id: string): void {
     const boundary = this.boundaries.get(id);
     if (!boundary) {
-      const error: StreamError = createStreamError(
-        StreamErrorCode.ConfigError,
-        `Boundary "${id}" not found`,
-        { boundaryId: id }
-      );
-      throw error;
+
+      throw createStreamError(StreamErrorCode.ConfigError, `Boundary "${id}" not found`, {
+        boundaryId: id,
+      });
     }
 
     if (boundary.state !== StreamState.Paused) {
-      const error: StreamError = createStreamError(
+
+      throw createStreamError(
         StreamErrorCode.StateError,
         `Cannot resume boundary "${id}" from state "${boundary.state}"`,
         { boundaryId: id }
       );
-      throw error;
     }
 
     this.transitionState(boundary, StreamState.Streaming);
@@ -665,6 +669,10 @@ export class StreamingEngine {
     }
   }
 
+  // ==========================================================================
+  // Public API - Chunk Management
+  // ==========================================================================
+
   /**
    * Resets a boundary to idle state for restart.
    * @param id - Boundary identifier
@@ -689,10 +697,6 @@ export class StreamingEngine {
 
     this.log(`Reset boundary: ${id}`);
   }
-
-  // ==========================================================================
-  // Public API - Chunk Management
-  // ==========================================================================
 
   /**
    * Processes an incoming chunk for a boundary.
@@ -761,6 +765,10 @@ export class StreamingEngine {
     }
   }
 
+  // ==========================================================================
+  // Public API - Events & Metrics
+  // ==========================================================================
+
   /**
    * Delivers buffered chunks to the client.
    *
@@ -786,10 +794,6 @@ export class StreamingEngine {
 
     return delivered;
   }
-
-  // ==========================================================================
-  // Public API - Events & Metrics
-  // ==========================================================================
 
   /**
    * Subscribes to stream events.
@@ -831,17 +835,6 @@ export class StreamingEngine {
    */
   getConfig(): Readonly<EngineConfig> {
     return { ...this.config };
-  }
-
-  /**
-   * Checks if streaming is supported in the current environment.
-   */
-  static isStreamingSupported(): boolean {
-    return (
-      typeof ReadableStream !== 'undefined' &&
-      typeof TransformStream !== 'undefined' &&
-      typeof AbortController !== 'undefined'
-    );
   }
 
   /**
@@ -943,7 +936,10 @@ export class StreamingEngine {
     boundary.config.onStreamStart?.();
 
     // Set up timeout
-    if ((boundary.config.timeoutMs != null && boundary.config.timeoutMs > 0) || (this.config.globalTimeoutMs != null && this.config.globalTimeoutMs > 0)) {
+    if (
+      (boundary.config.timeoutMs != null && boundary.config.timeoutMs > 0) ||
+      (this.config.globalTimeoutMs != null && this.config.globalTimeoutMs > 0)
+    ) {
       const timeout = boundary.config.timeoutMs ?? this.config.globalTimeoutMs ?? 0;
       setTimeout(() => {
         if (this.isActiveState(boundary.state)) {
@@ -1100,29 +1096,17 @@ export class StreamingEngine {
     this.handleStreamError(boundary, error);
   }
 
-  private normalizeError(
-    error: unknown,
-    boundaryId: string,
-    chunkId?: string
-  ): StreamError {
+  private normalizeError(error: unknown, boundaryId: string, chunkId?: string): StreamError {
     if (error instanceof Error) {
-      return createStreamError(
-        StreamErrorCode.UnknownError,
-        error.message,
-        {
-          boundaryId,
-          chunkId,
-          cause: error,
-          stack: error.stack,
-        }
-      );
+      return createStreamError(StreamErrorCode.UnknownError, error.message, {
+        boundaryId,
+        chunkId,
+        cause: error,
+        stack: error.stack,
+      });
     }
 
-    return createStreamError(
-      StreamErrorCode.UnknownError,
-      String(error),
-      { boundaryId, chunkId }
-    );
+    return createStreamError(StreamErrorCode.UnknownError, String(error), { boundaryId, chunkId });
   }
 
   // ==========================================================================
@@ -1261,15 +1245,12 @@ export class StreamingEngine {
     const [firstChunk] = boundary.chunks;
     const metrics: BoundaryMetrics = {
       boundaryId: boundary.id,
-      timeToFirstChunk: firstChunk
-        ? firstChunk.timestamp - (boundary.startTime ?? 0)
-        : 0,
+      timeToFirstChunk: firstChunk ? firstChunk.timestamp - (boundary.startTime ?? 0) : 0,
       timeToComplete: duration,
       chunksReceived: boundary.chunks.length,
       bytesReceived: boundary.bytesReceived,
-      averageChunkSize: boundary.chunks.length > 0
-        ? boundary.bytesReceived / boundary.chunks.length
-        : 0,
+      averageChunkSize:
+        boundary.chunks.length > 0 ? boundary.bytesReceived / boundary.chunks.length : 0,
       retries: boundary.retryCount,
       successful: boundary.state === StreamState.Completed,
     };
@@ -1281,8 +1262,7 @@ export class StreamingEngine {
     const allTTFC = Array.from(this.metrics.boundaryMetrics.values()).map(
       (m) => m.timeToFirstChunk
     );
-    this.metrics.averageTimeToFirstChunk =
-      allTTFC.reduce((sum, t) => sum + t, 0) / allTTFC.length;
+    this.metrics.averageTimeToFirstChunk = allTTFC.reduce((sum, t) => sum + t, 0) / allTTFC.length;
   }
 
   // ==========================================================================

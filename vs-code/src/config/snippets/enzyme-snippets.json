@@ -1,0 +1,309 @@
+{
+  "Enzyme Component": {
+    "prefix": "enc",
+    "description": "Create an Enzyme component",
+    "body": [
+      "import { FC } from 'react';",
+      "",
+      "interface ${1:${TM_FILENAME_BASE}}Props {",
+      "  $2",
+      "}",
+      "",
+      "export const ${1:${TM_FILENAME_BASE}}: FC<${1:${TM_FILENAME_BASE}}Props> = ({ $3 }) => {",
+      "  return (",
+      "    <div className=\"$4\">",
+      "      $0",
+      "    </div>",
+      "  );",
+      "};"
+    ]
+  },
+  "Enzyme Functional Component": {
+    "prefix": "enfc",
+    "description": "Create a functional Enzyme component",
+    "body": [
+      "export function ${1:${TM_FILENAME_BASE}}() {",
+      "  return (",
+      "    <div className=\"$2\">",
+      "      $0",
+      "    </div>",
+      "  );",
+      "}"
+    ]
+  },
+  "Enzyme Hook": {
+    "prefix": "enhook",
+    "description": "Create a custom hook",
+    "body": [
+      "import { useState, useEffect } from 'react';",
+      "",
+      "export function use${1:${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}}($2) {",
+      "  const [${3:state}, set${3/(.*)/${1:/pascalcase}/}] = useState($4);",
+      "",
+      "  useEffect(() => {",
+      "    $5",
+      "  }, [$6]);",
+      "",
+      "  return { ${3:state}, set${3/(.*)/${1:/pascalcase}/} };",
+      "}"
+    ]
+  },
+  "Enzyme useState Hook": {
+    "prefix": "enuse",
+    "description": "Create a useState hook",
+    "body": [
+      "const [${1:state}, set${1/(.*)/${1:/pascalcase}/}] = useState<${2:type}>(${3:initialValue});"
+    ]
+  },
+  "Enzyme Route": {
+    "prefix": "enroute",
+    "description": "Create a route configuration",
+    "body": [
+      "{",
+      "  path: '${1:/path}',",
+      "  component: '${2:./pages/Component}',",
+      "  lazy: ${3:true},",
+      "  metadata: {",
+      "    title: '${4:Page Title}',",
+      "    description: '${5:Page description}'",
+      "  }",
+      "}$0"
+    ]
+  },
+  "Enzyme Route Guard": {
+    "prefix": "enguard",
+    "description": "Create a route guard",
+    "body": [
+      "{",
+      "  type: '${1|auth,role,permission,custom|}',",
+      "  config: {",
+      "    $2",
+      "  },",
+      "  redirect: '${3:/auth/login}'",
+      "}$0"
+    ]
+  },
+  "Enzyme Store (Zustand)": {
+    "prefix": "enstore",
+    "description": "Create a Zustand store",
+    "body": [
+      "import { create } from 'zustand';",
+      "import { devtools, persist } from 'zustand/middleware';",
+      "",
+      "interface ${1:${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}}State {",
+      "  ${2:value}: ${3:string};",
+      "  set${2/(.*)/${1:/pascalcase}/}: (${2:value}: ${3:string}) => void;",
+      "}",
+      "",
+      "export const use${1:${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}} = create<${1:${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}}State>()(",
+      "  devtools(",
+      "    persist(",
+      "      (set) => ({",
+      "        ${2:value}: ${4:''},",
+      "        set${2/(.*)/${1:/pascalcase}/}: (${2:value}) => set({ ${2:value} }),",
+      "      }),",
+      "      { name: '${5:store-name}' }",
+      "    )",
+      "  )",
+      ");"
+    ]
+  },
+  "Enzyme Slice": {
+    "prefix": "enslice",
+    "description": "Create a store slice",
+    "body": [
+      "export interface ${1:${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}}Slice {",
+      "  ${2:value}: ${3:string};",
+      "  set${2/(.*)/${1:/pascalcase}/}: (${2:value}: ${3:string}) => void;",
+      "}",
+      "",
+      "export const create${1:${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}}Slice = (set: any): ${1:${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}}Slice => ({",
+      "  ${2:value}: ${4:''},",
+      "  set${2/(.*)/${1:/pascalcase}/}: (${2:value}) => set({ ${2:value} }),",
+      "});"
+    ]
+  },
+  "Enzyme API Client": {
+    "prefix": "enapi",
+    "description": "Create an API client using Enzyme's apiClient",
+    "body": [
+      "import { apiClient } from '@missionfabric-js/enzyme/api';",
+      "",
+      "interface ${1:Item} {",
+      "  id: string;",
+      "  ${2:// Add properties}",
+      "}",
+      "",
+      "export const ${3:itemsApi} = {",
+      "  ${4:getItems}: () => apiClient.get<${1:Item}[]>('${5:/items}'),",
+      "  ${6:getItem}: (id: string) => apiClient.get<${1:Item}>(`${5:/items}/\\${id}`),",
+      "  ${7:createItem}: (data: Omit<${1:Item}, 'id'>) => apiClient.post<${1:Item}>('${5:/items}', data),",
+      "  ${8:updateItem}: (id: string, data: Partial<${1:Item}>) => apiClient.patch<${1:Item}>(`${5:/items}/\\${id}`, data),",
+      "  ${9:deleteItem}: (id: string) => apiClient.del(`${5:/items}/\\${id}`),",
+      "};"
+    ]
+  },
+  "Enzyme API Endpoint": {
+    "prefix": "enendpoint",
+    "description": "Create an API endpoint definition",
+    "body": [
+      "${1:endpoint}: {",
+      "  url: '${2:/api/path}',",
+      "  method: '${3|GET,POST,PUT,PATCH,DELETE|}',",
+      "  timeout: ${4:30000},",
+      "  retry: ${5:3},",
+      "}$0"
+    ]
+  },
+  "Enzyme Feature": {
+    "prefix": "enfeature",
+    "description": "Create a feature module",
+    "body": [
+      "export const ${1:feature}Config = {",
+      "  name: '${2:Feature Name}',",
+      "  routes: [",
+      "    {",
+      "      path: '/${3:feature}',",
+      "      component: './${1:feature}/pages/Index',",
+      "    },",
+      "  ],",
+      "  stores: {",
+      "    ${1:feature}: use${1/(.*)/${1:/pascalcase}/}Store,",
+      "  },",
+      "  api: {",
+      "    $4",
+      "  },",
+      "};"
+    ]
+  },
+  "Enzyme Config": {
+    "prefix": "enconfig",
+    "description": "Create enzyme configuration (Note: Enzyme doesn't require config file by default)",
+    "body": [
+      "/**",
+      " * Enzyme Configuration",
+      " * Note: Enzyme framework doesn't require a config file by default.",
+      " * Configuration is typically done through environment variables and",
+      " * framework-specific setup in src/config/",
+      " */",
+      "",
+      "export const config = {",
+      "  name: '${1:My App}',",
+      "  version: '${2:1.0.0}',",
+      "  environment: process.env.VITE_APP_ENV as '${3|development,staging,production|}',",
+      "",
+      "  api: {",
+      "    baseUrl: process.env.VITE_API_BASE_URL || '${4:https://api.example.com}',",
+      "    timeout: ${5:30000},",
+      "  },",
+      "",
+      "  auth: {",
+      "    enabled: ${6:true},",
+      "    tokenKey: process.env.VITE_AUTH_TOKEN_KEY || 'auth_token',",
+      "  },",
+      "",
+      "  devServer: {",
+      "    port: ${7:3000},",
+      "    host: '${8:localhost}',",
+      "  },",
+      "};"
+    ]
+  },
+  "Enzyme Query": {
+    "prefix": "enquery",
+    "description": "Create a React Query hook",
+    "body": [
+      "import { useQuery } from '@tanstack/react-query';",
+      "import { ${1:api} } from '${2:../api}';",
+      "",
+      "export function use${3:${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}}($4) {",
+      "  return useQuery({",
+      "    queryKey: ['${5:key}', $6],",
+      "    queryFn: () => ${1:api}.${7:getData}($8),",
+      "    $9",
+      "  });",
+      "}"
+    ]
+  },
+  "Enzyme Mutation": {
+    "prefix": "enmutation",
+    "description": "Create a React Query mutation hook",
+    "body": [
+      "import { useMutation, useQueryClient } from '@tanstack/react-query';",
+      "import { ${1:api} } from '${2:../api}';",
+      "",
+      "export function use${3:${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}}() {",
+      "  const queryClient = useQueryClient();",
+      "",
+      "  return useMutation({",
+      "    mutationFn: ${1:api}.${4:mutateData},",
+      "    onSuccess: () => {",
+      "      queryClient.invalidateQueries({ queryKey: ['${5:key}'] });",
+      "      $6",
+      "    },",
+      "  });",
+      "}"
+    ]
+  },
+  "Enzyme Context": {
+    "prefix": "encontext",
+    "description": "Create a React context",
+    "body": [
+      "import { createContext, useContext, ReactNode } from 'react';",
+      "",
+      "interface ${1:${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}}ContextValue {",
+      "  $2",
+      "}",
+      "",
+      "const ${1:${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}}Context = createContext<${1:${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}}ContextValue | undefined>(undefined);",
+      "",
+      "export function ${1:${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}}Provider({ children }: { children: ReactNode }) {",
+      "  const value: ${1:${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}}ContextValue = {",
+      "    $3",
+      "  };",
+      "",
+      "  return (",
+      "    <${1:${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}}Context.Provider value={value}>",
+      "      {children}",
+      "    </${1:${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}}Context.Provider>",
+      "  );",
+      "}",
+      "",
+      "export function use${1:${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}}() {",
+      "  const context = useContext(${1:${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}}Context);",
+      "  if (!context) {",
+      "    throw new Error('use${1:${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}} must be used within ${1:${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}}Provider');",
+      "  }",
+      "  return context;",
+      "}"
+    ]
+  },
+  "Enzyme Test": {
+    "prefix": "entest",
+    "description": "Create a component test",
+    "body": [
+      "import { describe, it, expect } from 'vitest';",
+      "import { render, screen } from '@testing-library/react';",
+      "import { ${1:${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}} } from './${1:${TM_FILENAME_BASE}}';",
+      "",
+      "describe('${1:${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}}', () => {",
+      "  it('${2:should render}', () => {",
+      "    render(<${1:${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}} $3 />);",
+      "    $0",
+      "  });",
+      "});"
+    ]
+  },
+  "Enzyme Feature Flag": {
+    "prefix": "enflag",
+    "description": "Create a feature flag",
+    "body": [
+      "{",
+      "  key: '${1:featureKey}',",
+      "  enabled: ${2:false},",
+      "  description: '${3:Feature description}',",
+      "  rolloutPercentage: ${4:0},",
+      "}$0"
+    ]
+  }
+}

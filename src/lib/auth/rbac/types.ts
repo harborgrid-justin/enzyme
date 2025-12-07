@@ -34,9 +34,9 @@ export type PermissionAction =
  * Permission scope levels.
  */
 export type PermissionScope =
-  | 'own'      // User's own resources only
-  | 'team'    // Team/department resources
-  | 'org'     // Organization-wide
+  | 'own' // User's own resources only
+  | 'team' // Team/department resources
+  | 'org' // Organization-wide
   | 'global'; // All resources (system-wide)
 
 /**
@@ -211,11 +211,7 @@ export type PolicyEffect = 'allow' | 'deny';
 /**
  * Policy evaluation result.
  */
-export type PolicyResult =
-  | 'allow'
-  | 'deny'
-  | 'not-applicable'
-  | 'indeterminate';
+export type PolicyResult = 'allow' | 'deny' | 'not-applicable' | 'indeterminate';
 
 /**
  * Access control policy definition (ABAC-style).
@@ -278,13 +274,7 @@ export interface PolicyResource {
  */
 export interface PolicyCondition {
   /** Condition type */
-  type:
-    | 'time'
-    | 'ip'
-    | 'location'
-    | 'attribute'
-    | 'context'
-    | 'custom';
+  type: 'time' | 'ip' | 'location' | 'attribute' | 'context' | 'custom';
   /** Operator for comparison */
   operator: string;
   /** Value to compare */

@@ -8,7 +8,13 @@ import { createContext } from 'react';
 /**
  * Configuration value type
  */
-export type ConfigValue = string | number | boolean | null | ConfigValue[] | { [key: string]: ConfigValue };
+export type ConfigValue =
+  | string
+  | number
+  | boolean
+  | null
+  | ConfigValue[]
+  | { [key: string]: ConfigValue };
 
 /**
  * Configuration record

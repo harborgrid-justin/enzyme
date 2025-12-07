@@ -108,87 +108,87 @@ interface NavItemProps {
 /**
  * Navigation item component - memoized for performance
  */
-const NavItem = memo(({
-  route,
-  isActive,
-  direction,
-  roles,
-}: NavItemProps): React.ReactElement | null => {
-  // Check feature flag - always call with consistent pattern to avoid Rules of Hooks violation
-  // Use sentinel value '__ALWAYS_ENABLED__' when no feature flag is specified
-  const flagEnabled = useFeatureFlag(route.featureFlag ?? '__ALWAYS_ENABLED__');
+const NavItem = memo(
+  ({ route, isActive, direction, roles }: NavItemProps): React.ReactElement | null => {
+    // Check feature flag - always call with consistent pattern to avoid Rules of Hooks violation
+    // Use sentinel value '__ALWAYS_ENABLED__' when no feature flag is specified
+    const flagEnabled = useFeatureFlag(route.featureFlag ?? '__ALWAYS_ENABLED__');
 
-  const isHorizontal = direction === 'horizontal';
+    const isHorizontal = direction === 'horizontal';
 
-  // Memoize link style based on direction and active state - MUST be before early returns
-  const linkStyle = useMemo((): CSSProperties => ({
-    display: 'flex',
-    alignItems: 'center',
-    gap: tokens.spacing.sm,
-    padding: isHorizontal ? `${tokens.spacing.sm} ${tokens.spacing.md}` : `${tokens.spacing.md} ${tokens.spacing.md}`,
-    color: isActive ? colorTokens.primary.default : colorTokens.text.secondary,
-    textDecoration: 'none',
-    borderRadius: tokens.radius.md,
-    backgroundColor: isActive ? colorTokens.interactive.selected : 'transparent',
-    fontWeight: isActive ? tokens.fontWeight.medium : tokens.fontWeight.normal,
-    fontSize: tokens.fontSize.sm,
-    whiteSpace: 'nowrap',
-  }), [isHorizontal, isActive]);
+    // Memoize link style based on direction and active state - MUST be before early returns
+    const linkStyle = useMemo(
+      (): CSSProperties => ({
+        display: 'flex',
+        alignItems: 'center',
+        gap: tokens.spacing.sm,
+        padding: isHorizontal
+          ? `${tokens.spacing.sm} ${tokens.spacing.md}`
+          : `${tokens.spacing.md} ${tokens.spacing.md}`,
+        color: isActive ? colorTokens.primary.default : colorTokens.text.secondary,
+        textDecoration: 'none',
+        borderRadius: tokens.radius.md,
+        backgroundColor: isActive ? colorTokens.interactive.selected : 'transparent',
+        fontWeight: isActive ? tokens.fontWeight.medium : tokens.fontWeight.normal,
+        fontSize: tokens.fontSize.sm,
+        whiteSpace: 'nowrap',
+      }),
+      [isHorizontal, isActive]
+    );
 
-  // Check visibility AFTER all hooks
-  if (route.featureFlag !== undefined && route.featureFlag !== '' && !flagEnabled) {
-    return null;
-  }
+    // Check visibility AFTER all hooks
+    if (route.featureFlag !== undefined && route.featureFlag !== '' && !flagEnabled) {
+      return null;
+    }
 
-  if (!hasRouteAccess(route, roles)) {
-    return null;
-  }
+    if (!hasRouteAccess(route, roles)) {
+      return null;
+    }
 
-  const content = (
-    <>
-      {route.icon !== undefined && <span style={iconContainerStyle}>{route.icon}</span>}
-      <span>{route.label}</span>
-      {(route.badge !== undefined && route.badge !== '') && (
-        <span style={badgeStyle}>
-          {route.badge}
-        </span>
-      )}
-    </>
-  );
+    const content = (
+      <>
+        {route.icon !== undefined && <span style={iconContainerStyle}>{route.icon}</span>}
+        <span>{route.label}</span>
+        {route.badge !== undefined && route.badge !== '' && (
+          <span style={badgeStyle}>{route.badge}</span>
+        )}
+      </>
+    );
 
-  if (route.external === true) {
-    return (
-      <a
-        href={route.path}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={linkStyle}
-        aria-label={`${route.label} (opens in new tab)`}
-      >
-        {content}
-        <svg
-          width="12"
-          height="12"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-          style={externalIconStyle}
-          aria-hidden="true"
-          focusable="false"
+    if (route.external === true) {
+      return (
+        <a
+          href={route.path}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={linkStyle}
+          aria-label={`${route.label} (opens in new tab)`}
         >
-          <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
-          <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
-        </svg>
-        <span style={srOnlyStyle}>(opens in new tab)</span>
-      </a>
+          {content}
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            style={externalIconStyle}
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
+            <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
+          </svg>
+          <span style={srOnlyStyle}>(opens in new tab)</span>
+        </a>
+      );
+    }
+
+    return (
+      <AppLink to={route.path} style={linkStyle}>
+        {content}
+      </AppLink>
     );
   }
-
-  return (
-    <AppLink to={route.path} style={linkStyle}>
-      {content}
-    </AppLink>
-  );
-});
+);
 
 NavItem.displayName = 'NavItem';
 
@@ -225,17 +225,22 @@ export function MainNav({
   const isHorizontal = direction === 'horizontal';
 
   // Memoize nav style
-  const navStyle = useMemo((): CSSProperties => ({
-    display: 'flex',
-    flexDirection: isHorizontal ? 'row' : 'column',
-    gap: isHorizontal ? '0.25rem' : '0.125rem',
-  }), [isHorizontal]);
+  const navStyle = useMemo(
+    (): CSSProperties => ({
+      display: 'flex',
+      flexDirection: isHorizontal ? 'row' : 'column',
+      gap: isHorizontal ? '0.25rem' : '0.125rem',
+    }),
+    [isHorizontal]
+  );
 
   // Memoize active state calculator
-  const getIsActive = useCallback((routePath: string): boolean => {
-    return currentPath === routePath ||
-      (currentPath?.startsWith(`${routePath}/`) ?? false);
-  }, [currentPath]);
+  const getIsActive = useCallback(
+    (routePath: string): boolean => {
+      return currentPath === routePath || (currentPath?.startsWith(`${routePath}/`) ?? false);
+    },
+    [currentPath]
+  );
 
   return (
     <nav

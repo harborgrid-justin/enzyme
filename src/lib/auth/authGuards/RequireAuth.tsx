@@ -33,22 +33,20 @@ interface RequireAuthProps {
  * </RequireAuth>
  * ```
  */
-export const RequireAuth = memo(({
-  children,
-  redirectTo = routes.login,
-  fallback
-}: RequireAuthProps) => {
-  const { isAuthenticated, isLoading } = useAuth();
-  const location = useLocation();
+export const RequireAuth = memo(
+  ({ children, redirectTo = routes.login, fallback }: RequireAuthProps) => {
+    const { isAuthenticated, isLoading } = useAuth();
+    const location = useLocation();
 
-  if (isLoading) {
-    return <AuthGuardLoading fallback={fallback} ariaLabel="Verifying authentication..." />;
+    if (isLoading) {
+      return <AuthGuardLoading fallback={fallback} ariaLabel="Verifying authentication..." />;
+    }
+
+    if (!isAuthenticated) {
+      // Redirect to login, preserving the intended destination
+      return <Navigate to={redirectTo} state={{ from: location }} replace />;
+    }
+
+    return <>{children}</>;
   }
-
-  if (!isAuthenticated) {
-    // Redirect to login, preserving the intended destination
-    return <Navigate to={redirectTo} state={{ from: location }} replace />;
-  }
-
-  return <>{children}</>;
-});
+);

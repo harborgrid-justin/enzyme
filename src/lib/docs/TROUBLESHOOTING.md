@@ -28,6 +28,7 @@
 ### Error: "Cannot find module '@/lib/...'"
 
 **Symptoms:**
+
 ```
 Error: Cannot find module '@/lib/api/api-client'
 or its corresponding type declarations.
@@ -36,6 +37,7 @@ or its corresponding type declarations.
 **Cause:** TypeScript path mapping not configured correctly.
 
 **Solution:**
+
 ```json
 // tsconfig.json
 {
@@ -50,6 +52,7 @@ or its corresponding type declarations.
 ```
 
 For Vite:
+
 ```typescript
 // vite.config.ts
 import { defineConfig } from 'vite';
@@ -70,6 +73,7 @@ export default defineConfig({
 ### Error: "Module not found: Can't resolve 'zustand'"
 
 **Symptoms:**
+
 ```
 Module not found: Error: Can't resolve 'zustand'
 ```
@@ -77,6 +81,7 @@ Module not found: Error: Can't resolve 'zustand'
 **Cause:** Missing dependency.
 
 **Solution:**
+
 ```bash
 # Install missing dependencies
 npm install zustand immer
@@ -93,6 +98,7 @@ npm list zustand
 ### Error: "Duplicate identifier 'useStore'"
 
 **Symptoms:**
+
 ```
 error TS2300: Duplicate identifier 'useStore'
 ```
@@ -100,6 +106,7 @@ error TS2300: Duplicate identifier 'useStore'
 **Cause:** Multiple store definitions or naming collision.
 
 **Solution:**
+
 ```typescript
 // Use namespaced imports
 import { useStore as useGlobalStore } from '@/lib/state/store';
@@ -114,6 +121,7 @@ export { useStore as useAppStore } from '@/lib/state/store';
 ### Error: "The inferred type cannot be named without a reference"
 
 **Symptoms:**
+
 ```
 error TS2742: The inferred type of 'useStore' cannot be named
 without a reference to 'node_modules/zustand/...'. This is likely
@@ -123,6 +131,7 @@ not portable. A type annotation is necessary.
 **Cause:** Missing type export from Zustand store.
 
 **Solution:**
+
 ```typescript
 // store.ts - Add explicit type exports
 import { create } from 'zustand';
@@ -143,6 +152,7 @@ export const useStore = create<StoreState>()((set) => ({
 ### Error: "Uncaught SyntaxError: Cannot use import statement outside a module"
 
 **Symptoms:**
+
 ```
 Uncaught SyntaxError: Cannot use import statement outside a module
 ```
@@ -150,6 +160,7 @@ Uncaught SyntaxError: Cannot use import statement outside a module
 **Cause:** Module not properly configured.
 
 **Solution:**
+
 ```json
 // package.json
 {
@@ -159,8 +170,8 @@ Uncaught SyntaxError: Cannot use import statement outside a module
 // Or in vite.config.ts
 export default defineConfig({
   build: {
-    target: 'esnext',
-  },
+    target: 'esnext'
+  }
 });
 ```
 
@@ -169,6 +180,7 @@ export default defineConfig({
 ### Error: "process is not defined"
 
 **Symptoms:**
+
 ```
 ReferenceError: process is not defined
 ```
@@ -176,6 +188,7 @@ ReferenceError: process is not defined
 **Cause:** Accessing Node.js process object in browser code.
 
 **Solution:**
+
 ```typescript
 // ❌ Don't use process directly
 if (process.env.NODE_ENV === 'development') {
@@ -203,6 +216,7 @@ export default defineConfig({
 ### Error: "React Hook called conditionally"
 
 **Symptoms:**
+
 ```
 Error: React Hook "useState" is called conditionally.
 React Hooks must be called in the exact same order in every
@@ -212,6 +226,7 @@ component render.
 **Cause:** Hook called inside conditional or loop.
 
 **Solution:**
+
 ```typescript
 // ❌ Bad: Conditional hook
 function Component({ shouldFetch }: { shouldFetch: boolean }) {
@@ -239,6 +254,7 @@ function Component({ shouldFetch }: { shouldFetch: boolean }) {
 ### Error: "Cannot read properties of undefined"
 
 **Symptoms:**
+
 ```
 TypeError: Cannot read properties of undefined (reading 'name')
 ```
@@ -246,21 +262,25 @@ TypeError: Cannot read properties of undefined (reading 'name')
 **Cause:** Accessing property on null/undefined value.
 
 **Solution:**
+
 ```typescript
 // ❌ Bad: No null check
 function UserName({ user }: { user: User }) {
-  return <div>{user.name}</div>; // Error if user is null
+  return <div>{ user.name } < /div>; /
+  / Error if user is null
 }
 
 // ✅ Good: Optional chaining and null checks
 function UserName({ user }: { user: User | null }) {
   if (!user) return null;
-  return <div>{user.name}</div>;
+  return <div>{ user.name } < /div>;
 }
 
 // Or use optional chaining
 function UserName({ user }: { user?: User }) {
-  return <div>{user?.name ?? 'Unknown'}</div>;
+  return <div>{ user?.name ?? 'Unknown'
+}
+  </div>;
 }
 ```
 
@@ -269,6 +289,7 @@ function UserName({ user }: { user?: User }) {
 ### Error: "Maximum update depth exceeded"
 
 **Symptoms:**
+
 ```
 Error: Maximum update depth exceeded. This can happen when a
 component repeatedly calls setState inside componentWillUpdate or
@@ -279,12 +300,13 @@ prevent infinite loops.
 **Cause:** setState called during render or in effect without dependencies.
 
 **Solution:**
+
 ```typescript
 // ❌ Bad: setState in render
 function Component() {
   const [count, setCount] = useState(0);
   setCount(count + 1); // Infinite loop!
-  return <div>{count}</div>;
+  return <div>{ count } < /div>;
 }
 
 // ❌ Bad: Missing dependency
@@ -295,7 +317,7 @@ function Component() {
     setCount(count + 1); // Infinite loop!
   }); // Missing deps
 
-  return <div>{count}</div>;
+  return <div>{ count } < /div>;
 }
 
 // ✅ Good: Proper effect dependencies
@@ -307,7 +329,7 @@ function Component() {
     setCount(1);
   }, []); // Empty deps
 
-  return <div>{count}</div>;
+  return <div>{ count } < /div>;
 }
 ```
 
@@ -316,6 +338,7 @@ function Component() {
 ### Error: "Can't perform a React state update on an unmounted component"
 
 **Symptoms:**
+
 ```
 Warning: Can't perform a React state update on an unmounted
 component. This is a no-op, but it indicates a memory leak in
@@ -325,6 +348,7 @@ your application.
 **Cause:** setState called after component unmounted.
 
 **Solution:**
+
 ```typescript
 // ❌ Bad: No cleanup
 function Component() {
@@ -334,7 +358,7 @@ function Component() {
     fetchData().then(setData); // May run after unmount
   }, []);
 
-  return <div>{data}</div>;
+  return <div>{ data } < /div>;
 }
 
 // ✅ Good: Check if mounted
@@ -352,7 +376,7 @@ function Component() {
     });
   }, [isMounted]);
 
-  return <div>{data}</div>;
+  return <div>{ data } < /div>;
 }
 
 // ✅ Better: Use abort controller
@@ -373,7 +397,7 @@ function Component() {
     return () => controller.abort();
   }, []);
 
-  return <div>{data}</div>;
+  return <div>{ data } < /div>;
 }
 ```
 
@@ -382,6 +406,7 @@ function Component() {
 ### Error: "Objects are not valid as a React child"
 
 **Symptoms:**
+
 ```
 Error: Objects are not valid as a React child (found: object with
 keys {name, email}). If you meant to render a collection of
@@ -391,25 +416,38 @@ children, use an array instead.
 **Cause:** Trying to render an object directly.
 
 **Solution:**
+
 ```typescript
 // ❌ Bad: Rendering object
 function Component({ user }: { user: User }) {
-  return <div>{user}</div>; // Error!
+  return <div>{ user } < /div>; /
+  / Error!
 }
 
 // ✅ Good: Render object properties
 function Component({ user }: { user: User }) {
   return (
     <div>
-      <p>Name: {user.name}</p>
-      <p>Email: {user.email}</p>
-    </div>
-  );
+      <p>Name
+:
+  {
+    user.name
+  }
+  </p>
+  < p > Email
+:
+  {
+    user.email
+  }
+  </p>
+  < /div>
+)
+  ;
 }
 
 // Or serialize for debugging
 function Component({ user }: { user: User }) {
-  return <pre>{JSON.stringify(user, null, 2)}</pre>;
+  return <pre>{ JSON.stringify(user, null, 2) } < /pre>;
 }
 ```
 
@@ -418,6 +456,7 @@ function Component({ user }: { user: User }) {
 ### Error: "Invalid hook call"
 
 **Symptoms:**
+
 ```
 Error: Invalid hook call. Hooks can only be called inside of the
 body of a function component.
@@ -426,6 +465,7 @@ body of a function component.
 **Cause:** Hook called outside of React component or custom hook.
 
 **Solution:**
+
 ```typescript
 // ❌ Bad: Hook in regular function
 function fetchUserData(id: string) {
@@ -447,7 +487,9 @@ function useUserData(id: string) {
 // ✅ Good: Use in component
 function UserComponent({ id }: { id: string }) {
   const data = useUserData(id);
-  return <div>{data?.name}</div>;
+  return <div>{ data?.name
+}
+  </div>;
 }
 ```
 
@@ -460,6 +502,7 @@ function UserComponent({ id }: { id: string }) {
 **Cause:** Too many re-renders or expensive computations.
 
 **Debug:**
+
 ```typescript
 // Add React DevTools Profiler
 import { Profiler } from 'react';
@@ -472,12 +515,14 @@ function onRenderCallback(
   console.log(`${id} (${phase}): ${actualDuration}ms`);
 }
 
-<Profiler id="UserList" onRender={onRenderCallback}>
-  <UserList />
-</Profiler>
+<Profiler id = "UserList"
+onRender = { onRenderCallback } >
+  <UserList / >
+  </Profiler>
 ```
 
 **Solution:**
+
 ```typescript
 // 1. Memoize expensive computations
 const sortedItems = useMemo(() => {
@@ -501,6 +546,7 @@ const deferredQuery = useDeferredValue(query);
 **Cause:** Missing cleanup or retained references.
 
 **Debug:**
+
 ```typescript
 // Check for memory leaks in DevTools
 // 1. Take heap snapshot
@@ -510,6 +556,7 @@ const deferredQuery = useDeferredValue(query);
 ```
 
 **Solution:**
+
 ```typescript
 // ✅ Always cleanup subscriptions
 useEffect(() => {
@@ -546,6 +593,7 @@ useEffect(() => {
 **Cause:** Importing entire libraries or no code splitting.
 
 **Debug:**
+
 ```bash
 # Analyze bundle
 npm run build
@@ -556,6 +604,7 @@ du -sh dist/*
 ```
 
 **Solution:**
+
 ```typescript
 // ❌ Bad: Import entire library
 import _ from 'lodash';
@@ -577,6 +626,7 @@ const module = await import('./heavy-module');
 ### Error: "Type 'X' is not assignable to type 'Y'"
 
 **Symptoms:**
+
 ```
 error TS2322: Type 'string | undefined' is not assignable to
 type 'string'.
@@ -585,6 +635,7 @@ type 'string'.
 **Cause:** Type mismatch, often from optional properties.
 
 **Solution:**
+
 ```typescript
 // ❌ Bad: No type guard
 function greet(name: string | undefined) {
@@ -613,6 +664,7 @@ function greet(name?: string) {
 ### Error: "Property does not exist on type"
 
 **Symptoms:**
+
 ```
 error TS2339: Property 'role' does not exist on type 'User'.
 ```
@@ -620,6 +672,7 @@ error TS2339: Property 'role' does not exist on type 'User'.
 **Cause:** Accessing property not defined in type.
 
 **Solution:**
+
 ```typescript
 // ❌ Bad: Missing property in type
 interface User {
@@ -651,6 +704,7 @@ if (hasRole(user)) {
 ### Error: "Argument of type 'X' is not assignable to parameter of type 'never'"
 
 **Symptoms:**
+
 ```
 error TS2345: Argument of type 'string' is not assignable to
 parameter of type 'never'.
@@ -659,6 +713,7 @@ parameter of type 'never'.
 **Cause:** TypeScript inferred type as never (impossible type).
 
 **Solution:**
+
 ```typescript
 // ❌ Bad: TypeScript infers never
 const items = []; // Type: never[]
@@ -678,6 +733,7 @@ items.push('hello'); // OK
 ### Error: "Cannot find name 'X'"
 
 **Symptoms:**
+
 ```
 error TS2304: Cannot find name 'process'.
 ```
@@ -685,6 +741,7 @@ error TS2304: Cannot find name 'process'.
 **Cause:** Missing type definitions or incorrect environment.
 
 **Solution:**
+
 ```bash
 # Install type definitions
 npm install --save-dev @types/node
@@ -719,6 +776,7 @@ interface ImportMeta {
 ### Error: "Hydration failed because the initial UI does not match"
 
 **Symptoms:**
+
 ```
 Error: Hydration failed because the initial UI does not match
 what was rendered on the server.
@@ -727,6 +785,7 @@ what was rendered on the server.
 **Cause:** Client and server render different content.
 
 **Solution:**
+
 ```typescript
 // ❌ Bad: Different content on server/client
 function Component() {
@@ -765,6 +824,7 @@ function Component() {
 **Cause:** Mismatch between server and client text.
 
 **Solution:**
+
 ```typescript
 // ❌ Bad: Random values
 function Component() {
@@ -794,6 +854,7 @@ function Component() {
 **Cause:** Accessing persisted store before hydration.
 
 **Solution:**
+
 ```typescript
 import { hasStoreHydrated, waitForHydration } from '@/lib/state/store';
 
@@ -808,10 +869,12 @@ function Component() {
   const theme = useStore((state) => state.theme);
 
   if (!hydrated) {
-    return <div>Loading...</div>;
+    return <div>Loading
+  ...
+    </div>;
   }
 
-  return <div className={theme}>Content</div>;
+  return <div className = { theme } > Content < /div>;
 }
 
 // ✅ Better: Use hydration hook
@@ -824,10 +887,12 @@ function Component() {
   const theme = useStore((state) => state.theme);
 
   if (!hydrated) {
-    return <div>Loading...</div>;
+    return <div>Loading
+  ...
+    </div>;
   }
 
-  return <div className={theme}>Content</div>;
+  return <div className = { theme } > Content < /div>;
 }
 ```
 
@@ -840,6 +905,7 @@ function Component() {
 **Cause:** Mutating state directly or wrong setState usage.
 
 **Solution:**
+
 ```typescript
 // ❌ Bad: Direct mutation
 const [items, setItems] = useState([1, 2, 3]);
@@ -861,6 +927,7 @@ useStore.setState((state) => {
 **Cause:** Function captures old state value.
 
 **Solution:**
+
 ```typescript
 // ❌ Bad: Captures stale count
 function Component() {
@@ -874,7 +941,7 @@ function Component() {
     return () => clearInterval(timer);
   }, []); // Empty deps
 
-  return <div>{count}</div>;
+  return <div>{ count } < /div>;
 }
 
 // ✅ Good: Functional update
@@ -889,7 +956,7 @@ function Component() {
     return () => clearInterval(timer);
   }, []);
 
-  return <div>{count}</div>;
+  return <div>{ count } < /div>;
 }
 
 // ✅ Good: Include in dependencies
@@ -904,7 +971,7 @@ function Component() {
     return () => clearInterval(timer);
   }, [count]); // Recreates timer with new count
 
-  return <div>{count}</div>;
+  return <div>{ count } < /div>;
 }
 ```
 
@@ -915,6 +982,7 @@ function Component() {
 **Cause:** Persistence not configured or blocked by browser.
 
 **Debug:**
+
 ```typescript
 // Check if localStorage is available
 try {
@@ -927,10 +995,12 @@ try {
 
 // Check store hydration
 import { hasStoreHydrated } from '@/lib/state/store';
+
 console.log('Store hydrated:', hasStoreHydrated());
 ```
 
 **Solution:**
+
 ```typescript
 // Check privacy mode
 if (typeof localStorage === 'undefined') {
@@ -961,6 +1031,7 @@ const useStore = create<StoreState>()(
 ### Error: "CORS policy: No 'Access-Control-Allow-Origin' header"
 
 **Symptoms:**
+
 ```
 Access to fetch at 'https://api.example.com/users' from origin
 'http://localhost:3000' has been blocked by CORS policy
@@ -969,6 +1040,7 @@ Access to fetch at 'https://api.example.com/users' from origin
 **Cause:** Server not configured to allow cross-origin requests.
 
 **Solution:**
+
 ```typescript
 // Development: Use proxy
 // vite.config.ts
@@ -1000,6 +1072,7 @@ app.use((req, res, next) => {
 ### Error: "401 Unauthorized"
 
 **Symptoms:**
+
 ```
 Error: Request failed with status code 401
 ```
@@ -1007,6 +1080,7 @@ Error: Request failed with status code 401
 **Cause:** Missing or invalid authentication token.
 
 **Solution:**
+
 ```typescript
 // Check token in store
 import { useStore } from '@/lib/state/store';
@@ -1034,6 +1108,7 @@ import { apiClient } from '@/lib/api';
 ### Error: "CSRF token mismatch"
 
 **Symptoms:**
+
 ```
 Error: CSRF validation failed: token mismatch
 ```
@@ -1041,6 +1116,7 @@ Error: CSRF validation failed: token mismatch
 **Cause:** CSRF token not included or invalid.
 
 **Solution:**
+
 ```typescript
 import { CSRFProtection } from '@/lib/security/csrf-protection';
 
@@ -1060,10 +1136,13 @@ function MyForm() {
 
   return (
     <form>
-      <input {...inputProps} />
-      {/* other fields */}
-    </form>
-  );
+      <input { ...inputProps }
+  />
+  {/* other fields */
+  }
+  </form>
+)
+  ;
 }
 ```
 
@@ -1072,6 +1151,7 @@ function MyForm() {
 ### Symptom: API Calls Not Working
 
 **Debug:**
+
 ```typescript
 // 1. Check network tab in DevTools
 // - Is request being sent?
@@ -1114,6 +1194,7 @@ console.log('API Base URL:', import.meta.env.VITE_API_URL);
 User gets logged out unexpectedly or sees authentication errors.
 
 **Debug:**
+
 ```typescript
 import { useStore } from '@/lib/state/store';
 
@@ -1127,6 +1208,7 @@ console.log('Session:', {
 ```
 
 **Solution:**
+
 ```typescript
 // Check refresh token endpoint
 import { refreshAccessToken } from '@/lib/auth/refresh';
@@ -1151,6 +1233,7 @@ try {
 **Cause:** Refresh token endpoint returning 401.
 
 **Solution:**
+
 ```typescript
 // Prevent infinite refresh loop
 let isRefreshing = false;
@@ -1191,6 +1274,7 @@ async function refreshToken() {
 **Cause:** Server not configured for SPA routing.
 
 **Solution:**
+
 ```nginx
 # Nginx configuration
 location / {
@@ -1213,6 +1297,7 @@ location / {
 ### Symptom: Route not matching
 
 **Debug:**
+
 ```typescript
 // Check route configuration
 import { useLocation, useParams } from 'react-router-dom';
@@ -1223,20 +1308,32 @@ function DebugRoute() {
 
   return (
     <pre>
-      {JSON.stringify({ location, params }, null, 2)}
-    </pre>
+      { JSON.stringify({ location, params }, null, 2) }
+    < /pre>
   );
 }
 ```
 
 **Solution:**
+
 ```typescript
 // Check route order (more specific first)
 <Routes>
-  <Route path="/users/:id/edit" element={<EditUser />} />
-  <Route path="/users/:id" element={<ViewUser />} />
-  <Route path="/users" element={<ListUsers />} />
-</Routes>
+  <Route path = "/users/:id/edit"
+element = { < EditUser / >
+}
+/>
+< Route
+path = "/users/:id"
+element = { < ViewUser / >
+}
+/>
+< Route
+path = "/users"
+element = { < ListUsers / >
+}
+/>
+< /Routes>
 
 // Check for typos in paths
 // /user vs /users
@@ -1250,6 +1347,7 @@ function DebugRoute() {
 ### Symptom: Feature flag not working
 
 **Debug:**
+
 ```typescript
 import { useFeatureFlag } from '@/lib/flags';
 
@@ -1260,11 +1358,17 @@ function Component() {
   console.log('Feature enabled:', isEnabled);
   console.log('All flags:', allFlags);
 
-  return <div>Feature: {isEnabled ? 'ON' : 'OFF'}</div>;
+  return <div>Feature
+:
+  {
+    isEnabled ? 'ON' : 'OFF'
+  }
+  </div>;
 }
 ```
 
 **Solution:**
+
 ```typescript
 // Check flag is registered
 import { registerFeatureFlag } from '@/lib/flags';
@@ -1289,11 +1393,13 @@ useStore.setState((state) => {
 ### Error: "Environment variable not defined"
 
 **Symptoms:**
+
 ```
 TypeError: Cannot read properties of undefined (reading 'VITE_API_URL')
 ```
 
 **Solution:**
+
 ```bash
 # Create .env file
 echo "VITE_API_URL=http://localhost:3000/api" > .env
@@ -1317,6 +1423,7 @@ const apiUrl = getEnvVar('API_URL'); // Automatically prefixes VITE_
 ### Symptom: Config not loaded
 
 **Debug:**
+
 ```typescript
 import { getAppConfig } from '@/lib/core/config';
 
@@ -1340,6 +1447,7 @@ console.log('Environment:', {
 Tests fail with window/document not defined.
 
 **Solution:**
+
 ```typescript
 // jest.config.js
 export default {
@@ -1360,6 +1468,7 @@ export default defineConfig({
 ### Error: "Cannot find module '@/...' from test file"
 
 **Solution:**
+
 ```typescript
 // vitest.config.ts
 export default defineConfig({
@@ -1383,11 +1492,13 @@ export default {
 ### Symptom: "Act" warnings in tests
 
 **Symptoms:**
+
 ```
 Warning: An update to Component inside a test was not wrapped in act(...)
 ```
 
 **Solution:**
+
 ```typescript
 import { act, renderHook } from '@testing-library/react';
 
@@ -1404,7 +1515,7 @@ test('updates state', async () => {
 
 // ✅ Use async utilities
 test('loads data', async () => {
-  render(<UserList />);
+  render(<UserList / >);
 
   // waitFor automatically wraps in act
   await waitFor(() => {
@@ -1420,6 +1531,7 @@ test('loads data', async () => {
 ### Error: "Failed to load module script"
 
 **Symptoms:**
+
 ```
 Failed to load module script: Expected a JavaScript module script
 but the server responded with a MIME type of "text/html"
@@ -1428,6 +1540,7 @@ but the server responded with a MIME type of "text/html"
 **Cause:** Server not serving files with correct MIME types.
 
 **Solution:**
+
 ```nginx
 # Nginx
 location ~* \.js$ {
@@ -1444,6 +1557,7 @@ location ~* \.css$ {
 ### Symptom: Build succeeds but app is blank
 
 **Debug:**
+
 ```bash
 # Check console for errors
 # Check network tab for 404s
@@ -1464,6 +1578,7 @@ console.log('Base URL:', import.meta.env.BASE_URL);
 **Cause:** .env files not included in build or wrong prefix.
 
 **Solution:**
+
 ```bash
 # Only VITE_ prefixed vars are exposed to client
 VITE_API_URL=https://api.prod.com  # ✅ Exposed
@@ -1499,9 +1614,10 @@ window.__STORE__ // Available in debug mode
 // Use profiler to find slow components
 import { Profiler } from 'react';
 
-<Profiler id="MyComponent" onRender={onRenderCallback}>
-  <MyComponent />
-</Profiler>
+<Profiler id = "MyComponent"
+onRender = { onRenderCallback } >
+  <MyComponent / >
+  </Profiler>
 
 // Use highlight updates to see re-renders
 // Settings > Highlight updates when components render
@@ -1587,6 +1703,7 @@ console.log('Duration:', measure.duration);
 Clear description of the issue
 
 **Steps to Reproduce:**
+
 1. Go to /users
 2. Click "Edit" button
 3. See error
@@ -1598,6 +1715,7 @@ Should show edit form
 Shows error: "Cannot read properties of undefined"
 
 **Environment:**
+
 - Browser: Chrome 120
 - OS: macOS 14
 - Node: 20.10.0
@@ -1607,12 +1725,13 @@ Shows error: "Cannot read properties of undefined"
 \`\`\`typescript
 // Minimal reproduction
 function EditUser({ id }: { id: string }) {
-  const user = useUser(id);
-  return <div>{user.name}</div>; // Error here
+const user = useUser(id);
+return <div>{user.name}</div>; // Error here
 }
 \`\`\`
 
 **Additional Context:**
+
 - This started after upgrading from 2.0.0 to 2.1.0
 - Works fine in development, only fails in production
 - Error happens for all users, not specific IDs

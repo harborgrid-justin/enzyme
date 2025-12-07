@@ -4,12 +4,7 @@
  */
 
 // Query client and keys
-export {
-  queryClient,
-  createQueryClient,
-  queryKeys,
-  type QueryKeys,
-} from './queryClient';
+export { queryClient, createQueryClient, queryKeys, type QueryKeys } from './queryClient';
 
 // Dashboard queries
 export {

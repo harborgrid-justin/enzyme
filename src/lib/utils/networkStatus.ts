@@ -140,128 +140,6 @@ export class NetworkMonitor {
   }
 
   /**
-   * Get the Network Information API connection object
-   */
-  private getConnection(): NetworkInformation | undefined {
-    if (typeof navigator === 'undefined') return undefined;
-
-    const nav = navigator as NavigatorWithConnection;
-    return nav.connection ?? nav.mozConnection ?? nav.webkitConnection;
-  }
-
-  /**
-   * Get current network status
-   */
-  private getNetworkStatus(): NetworkStatus {
-    const online = typeof navigator !== 'undefined' ? navigator.onLine : true;
-    const connection = this.getConnection();
-
-    return {
-      online,
-      type: (connection?.type as ConnectionType) ?? 'unknown',
-      effectiveType: connection?.effectiveType ?? '4g',
-      downlink: connection?.downlink ?? 10,
-      rtt: connection?.rtt ?? 50,
-      saveData: connection?.saveData ?? false,
-      timestamp: Date.now(),
-    };
-  }
-
-  /**
-   * Calculate network quality tier
-   */
-  private calculateQuality(status: NetworkStatus): NetworkQuality {
-    if (!status.online) return 'offline';
-
-    const { downlink, rtt, effectiveType } = status;
-
-    // Effective type mapping
-    if (effectiveType === 'slow-2g' || effectiveType === '2g') {
-      return 'poor';
-    }
-
-    // Quality based on measured values
-    if (downlink >= 5 && rtt <= 100) return 'excellent';
-    if (downlink >= this.config.goodDownlinkThreshold && rtt <= this.config.goodRttThreshold) return 'good';
-    if (effectiveType === '3g' || downlink >= 0.5) return 'fair';
-
-    return 'poor';
-  }
-
-  /**
-   * Setup event listeners
-   */
-  private setupListeners(): void {
-    if (typeof window === 'undefined') return;
-
-    // Online/offline events
-    window.addEventListener('online', this.handleOnline);
-    window.addEventListener('offline', this.handleOffline);
-
-    // Network Information API events
-    const connection = this.getConnection();
-    if (connection) {
-      connection.addEventListener('change', this.handleConnectionChange);
-    }
-  }
-
-  /**
-   * Handle online event
-   */
-  private handleOnline = (): void => {
-    logger.info('[Network] Online');
-    this.updateStatus();
-
-    globalEventBus.emitSync('network:online', undefined);
-  };
-
-  /**
-   * Handle offline event
-   */
-  private handleOffline = (): void => {
-    logger.warn('[Network] Offline');
-    this.updateStatus();
-
-    globalEventBus.emitSync('network:offline', undefined);
-  };
-
-  /**
-   * Handle connection change event
-   */
-  private handleConnectionChange = (): void => {
-    this.updateStatus();
-  };
-
-  /**
-   * Update status and notify callbacks
-   */
-  private updateStatus(): void {
-    const newStatus = this.getNetworkStatus();
-    const newQuality = this.calculateQuality(newStatus);
-
-    const statusChanged =
-      this.currentStatus.online !== newStatus.online ||
-      this.currentStatus.effectiveType !== newStatus.effectiveType ||
-      Math.abs(this.currentStatus.downlink - newStatus.downlink) > 0.5;
-
-    const qualityChanged = this.currentQuality !== newQuality;
-
-    this.currentStatus = newStatus;
-
-    if (statusChanged) {
-      this.statusCallbacks.forEach((cb) => cb(newStatus));
-    }
-
-    if (qualityChanged) {
-      this.currentQuality = newQuality;
-      this.qualityCallbacks.forEach((cb) => cb(newQuality));
-
-      globalEventBus.emitSync('network:qualityChange', { quality: newQuality });
-      logger.debug('[Network] Quality changed', { quality: newQuality });
-    }
-  }
-
-  /**
    * Start monitoring
    */
   start(): void {
@@ -425,6 +303,128 @@ export class NetworkMonitor {
     this.statusCallbacks.clear();
     this.qualityCallbacks.clear();
   }
+
+  /**
+   * Get the Network Information API connection object
+   */
+  private getConnection(): NetworkInformation | undefined {
+    if (typeof navigator === 'undefined') return undefined;
+
+    const nav = navigator as NavigatorWithConnection;
+    return nav.connection ?? nav.mozConnection ?? nav.webkitConnection;
+  }
+
+  /**
+   * Get current network status
+   */
+  private getNetworkStatus(): NetworkStatus {
+    const online = typeof navigator !== 'undefined' ? navigator.onLine : true;
+    const connection = this.getConnection();
+
+    return {
+      online,
+      type: (connection?.type as ConnectionType) ?? 'unknown',
+      effectiveType: connection?.effectiveType ?? '4g',
+      downlink: connection?.downlink ?? 10,
+      rtt: connection?.rtt ?? 50,
+      saveData: connection?.saveData ?? false,
+      timestamp: Date.now(),
+    };
+  }
+
+  /**
+   * Calculate network quality tier
+   */
+  private calculateQuality(status: NetworkStatus): NetworkQuality {
+    if (!status.online) return 'offline';
+
+    const { downlink, rtt, effectiveType } = status;
+
+    // Effective type mapping
+    if (effectiveType === 'slow-2g' || effectiveType === '2g') {
+      return 'poor';
+    }
+
+    // Quality based on measured values
+    if (downlink >= 5 && rtt <= 100) return 'excellent';
+    if (downlink >= this.config.goodDownlinkThreshold && rtt <= this.config.goodRttThreshold) return 'good';
+    if (effectiveType === '3g' || downlink >= 0.5) return 'fair';
+
+    return 'poor';
+  }
+
+  /**
+   * Setup event listeners
+   */
+  private setupListeners(): void {
+    if (typeof window === 'undefined') return;
+
+    // Online/offline events
+    window.addEventListener('online', this.handleOnline);
+    window.addEventListener('offline', this.handleOffline);
+
+    // Network Information API events
+    const connection = this.getConnection();
+    if (connection) {
+      connection.addEventListener('change', this.handleConnectionChange);
+    }
+  }
+
+  /**
+   * Handle online event
+   */
+  private handleOnline = (): void => {
+    logger.info('[Network] Online');
+    this.updateStatus();
+
+    globalEventBus.emitSync('network:online', undefined);
+  };
+
+  /**
+   * Handle offline event
+   */
+  private handleOffline = (): void => {
+    logger.warn('[Network] Offline');
+    this.updateStatus();
+
+    globalEventBus.emitSync('network:offline', undefined);
+  };
+
+  /**
+   * Handle connection change event
+   */
+  private handleConnectionChange = (): void => {
+    this.updateStatus();
+  };
+
+  /**
+   * Update status and notify callbacks
+   */
+  private updateStatus(): void {
+    const newStatus = this.getNetworkStatus();
+    const newQuality = this.calculateQuality(newStatus);
+
+    const statusChanged =
+      this.currentStatus.online !== newStatus.online ||
+      this.currentStatus.effectiveType !== newStatus.effectiveType ||
+      Math.abs(this.currentStatus.downlink - newStatus.downlink) > 0.5;
+
+    const qualityChanged = this.currentQuality !== newQuality;
+
+    this.currentStatus = newStatus;
+
+    if (statusChanged) {
+      this.statusCallbacks.forEach((cb) => cb(newStatus));
+    }
+
+    if (qualityChanged) {
+      this.currentQuality = newQuality;
+      this.qualityCallbacks.forEach((cb) => cb(newQuality));
+
+      globalEventBus.emitSync('network:qualityChange', { quality: newQuality });
+      logger.debug('[Network] Quality changed', { quality: newQuality });
+    }
+  }
 }
 
 // ============================================================================
@@ -467,42 +467,6 @@ export class NetworkAwareFetch {
   constructor(monitor: NetworkMonitor) {
     this.monitor = monitor;
     this.setupRecoveryHandler();
-  }
-
-  /**
-   * Setup handler for network recovery
-   */
-  private setupRecoveryHandler(): void {
-    this.unsubscribe = this.monitor.onStatusChange((status) => {
-      if (status.online && this.offlineQueue.length > 0) {
-        void this.processQueue();
-      }
-    });
-  }
-
-  /**
-   * Process queued requests
-   */
-  private async processQueue(): Promise<void> {
-    const queue = [...this.offlineQueue];
-    this.offlineQueue = [];
-
-    logger.info('[Network] Processing offline queue', { count: queue.length });
-
-    for (const request of queue) {
-      // Skip requests older than 5 minutes
-      if (Date.now() - request.timestamp > 300000) {
-        request.reject(new Error('Request expired in offline queue'));
-        continue;
-      }
-
-      try {
-        const response = await fetch(request.url, request.options);
-        request.resolve(response);
-      } catch (error) {
-        request.reject(error as Error);
-      }
-    }
   }
 
   /**
@@ -567,23 +531,6 @@ export class NetworkAwareFetch {
   }
 
   /**
-   * Queue request for later execution
-   */
-  private async queueRequest(url: string, options: NetworkAwareFetchOptions): Promise<Response> {
-    return new Promise((resolve, reject) => {
-      this.offlineQueue.push({
-        url,
-        options,
-        resolve,
-        reject,
-        timestamp: Date.now(),
-      });
-
-      logger.debug('[Network] Request queued', { url, queueSize: this.offlineQueue.length });
-    });
-  }
-
-  /**
    * Get queue size
    */
   getQueueSize(): number {
@@ -608,6 +555,59 @@ export class NetworkAwareFetch {
   dispose(): void {
     this.unsubscribe?.();
     this.clearQueue();
+  }
+
+  /**
+   * Setup handler for network recovery
+   */
+  private setupRecoveryHandler(): void {
+    this.unsubscribe = this.monitor.onStatusChange((status) => {
+      if (status.online && this.offlineQueue.length > 0) {
+        void this.processQueue();
+      }
+    });
+  }
+
+  /**
+   * Process queued requests
+   */
+  private async processQueue(): Promise<void> {
+    const queue = [...this.offlineQueue];
+    this.offlineQueue = [];
+
+    logger.info('[Network] Processing offline queue', { count: queue.length });
+
+    for (const request of queue) {
+      // Skip requests older than 5 minutes
+      if (Date.now() - request.timestamp > 300000) {
+        request.reject(new Error('Request expired in offline queue'));
+        continue;
+      }
+
+      try {
+        const response = await fetch(request.url, request.options);
+        request.resolve(response);
+      } catch (error) {
+        request.reject(error as Error);
+      }
+    }
+  }
+
+  /**
+   * Queue request for later execution
+   */
+  private async queueRequest(url: string, options: NetworkAwareFetchOptions): Promise<Response> {
+    return new Promise((resolve, reject) => {
+      this.offlineQueue.push({
+        url,
+        options,
+        resolve,
+        reject,
+        timestamp: Date.now(),
+      });
+
+      logger.debug('[Network] Request queued', { url, queueSize: this.offlineQueue.length });
+    });
   }
 }
 

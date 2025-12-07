@@ -266,10 +266,7 @@ export function setStorageItem<K extends keyof StorageValueMap>(
  * @param key - Storage key
  * @param storage - Storage type (default: localStorage)
  */
-export function removeStorageItem(
-  key: StorageKey,
-  storage: Storage = localStorage
-): void {
+export function removeStorageItem(key: StorageKey, storage: Storage = localStorage): void {
   try {
     storage.removeItem(key);
   } catch (error) {
@@ -284,10 +281,7 @@ export function removeStorageItem(
  * @param storage - Storage type (default: localStorage)
  * @returns True if key exists
  */
-export function hasStorageItem(
-  key: StorageKey,
-  storage: Storage = localStorage
-): boolean {
+export function hasStorageItem(key: StorageKey, storage: Storage = localStorage): boolean {
   try {
     return storage.getItem(key) !== null;
   } catch {
@@ -307,9 +301,7 @@ export function hasStorageItem(
  */
 export function clearAppStorage(): void {
   // Get all defined storage keys (non-prefix values)
-  const keysToRemove = Object.values(STORAGE_KEYS).filter(
-    (key) => !key.endsWith(':')
-  );
+  const keysToRemove = Object.values(STORAGE_KEYS).filter((key) => !key.endsWith(':'));
 
   // Remove each defined key
   keysToRemove.forEach((key) => {
@@ -333,10 +325,7 @@ export function clearAppStorage(): void {
  * @param prefix - Key prefix to match
  * @param storage - Storage type (default: localStorage)
  */
-export function clearPrefixedStorage(
-  prefix: string,
-  storage: Storage = localStorage
-): void {
+export function clearPrefixedStorage(prefix: string, storage: Storage = localStorage): void {
   try {
     const keysToRemove: string[] = [];
 
@@ -450,9 +439,7 @@ export function removePrefixedItem(prefix: string, id: string): void {
  * @param prefix - Storage prefix
  * @returns Array of [id, value] tuples
  */
-export function getAllPrefixedItems<T>(
-  prefix: string
-): Array<{ id: string; value: T }> {
+export function getAllPrefixedItems<T>(prefix: string): Array<{ id: string; value: T }> {
   const items: Array<{ id: string; value: T }> = [];
 
   for (let i = 0; i < localStorage.length; i++) {

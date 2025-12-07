@@ -758,6 +758,18 @@ const sampledOverhead = {
 
 ## Related Documentation
 
-- [Performance Observatory](./OBSERVATORY.md)
-- [Optimization Strategies](./README.md#optimization-strategies)
-- [Configuration Reference](./CONFIG.md)
+### Performance System
+- [README.md](./README.md) - Performance overview
+- [OBSERVATORY.md](./OBSERVATORY.md) - Performance dashboard
+- [MONITORING.md](./MONITORING.md) - Performance monitoring
+- [WEB_VITALS.md](./WEB_VITALS.md) - Core Web Vitals
+- [CONFIG.md](./CONFIG.md) - Configuration reference
+
+### Monitoring & State
+- [Monitoring System](../monitoring/README.md) - System monitoring
+- [State System](../state/README.md) - State performance
+- [State Hooks](../state/HOOKS.md) - Hook optimization
+
+### Hydration & Integration
+- [Hydration System](../hydration/README.md) - Render hydration
+- [Performance Integration](../integration/PERFORMANCE_MONITORING_HYDRATION.md) - Complete integration

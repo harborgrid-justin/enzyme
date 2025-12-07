@@ -212,14 +212,17 @@ export function AdaptiveStack({
 
       const itemId = generateItemId(index);
 
-      return cloneElement(child as ReactElement<{ 'data-layout-id'?: string; style?: CSSProperties }>, {
-        'data-layout-id': itemId,
-        style: {
-          ...(child.props as { style?: CSSProperties }).style,
-          // Add transition for child items during direction change
-          transition: isTransitioning ? 'all 0.3s ease-out' : undefined,
-        },
-      });
+      return cloneElement(
+        child as ReactElement<{ 'data-layout-id'?: string; style?: CSSProperties }>,
+        {
+          'data-layout-id': itemId,
+          style: {
+            ...(child.props as { style?: CSSProperties }).style,
+            // Add transition for child items during direction change
+            transition: isTransitioning ? 'all 0.3s ease-out' : undefined,
+          },
+        }
+      );
     });
   }, [children, isTransitioning]);
 

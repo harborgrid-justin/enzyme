@@ -142,7 +142,7 @@ type FullMiddleware = [
   ['zustand/immer', never],
   ['zustand/devtools', never],
   ['zustand/subscribeWithSelector', never],
-  ['zustand/persist', unknown]
+  ['zustand/persist', unknown],
 ];
 
 // ============================================================================
@@ -162,8 +162,8 @@ const storeCreator: StateCreator<StoreState, FullMiddleware> = (...args: SliceCr
   // use the same StateCreator pattern with compatible argument types
   const sliceArgs = args as unknown as Parameters<typeof uiSlice>;
   const ui = uiSlice(...sliceArgs);
-  const session = sessionSlice(...sliceArgs as unknown as Parameters<typeof sessionSlice>);
-  const settings = settingsSlice(...sliceArgs as unknown as Parameters<typeof settingsSlice>);
+  const session = sessionSlice(...(sliceArgs as unknown as Parameters<typeof sessionSlice>));
+  const settings = settingsSlice(...(sliceArgs as unknown as Parameters<typeof settingsSlice>));
 
   return {
     // Compose slices
@@ -184,7 +184,7 @@ const storeCreator: StateCreator<StoreState, FullMiddleware> = (...args: SliceCr
       );
     },
   };
-}
+};
 
 /**
  * Global store instance
@@ -307,7 +307,7 @@ export async function waitForHydration(timeoutMs = 5000): Promise<boolean> {
       cleanup();
       console.warn(
         `[Store] waitForHydration timed out after ${timeoutMs}ms. ` +
-        'This may indicate a persistence configuration issue.'
+          'This may indicate a persistence configuration issue.'
       );
       resolve(false);
     }, timeoutMs);
@@ -420,7 +420,7 @@ export function resetAllFeatureStores(clearRegistry = true): void {
   featureStores.forEach((store, _name) => {
     // Type the store's getState method properly
     type StoreWithReset = { reset?: () => void; _reset?: () => void };
-    const state = ((store as unknown as { getState: () => StoreWithReset }).getState)();
+    const state = (store as unknown as { getState: () => StoreWithReset }).getState();
     if (typeof state.reset === 'function') {
       state.reset();
     } else if (typeof state._reset === 'function') {

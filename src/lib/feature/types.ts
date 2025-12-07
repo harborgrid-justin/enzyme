@@ -12,22 +12,22 @@ import type { Role } from '../auth/types';
 export interface FeatureMetadata {
   /** Unique feature identifier */
   id: string;
-  
+
   /** Display name */
   name: string;
-  
+
   /** Description of the feature */
   description?: string;
-  
+
   /** Feature icon name */
   icon?: string;
-  
+
   /** Feature category for grouping */
   category?: string;
-  
+
   /** Sort order in navigation */
   order?: number;
-  
+
   /** Feature version */
   version?: string;
 }
@@ -38,19 +38,19 @@ export interface FeatureMetadata {
 export interface FeatureAccess {
   /** Required roles to access the feature */
   requiredRoles?: Role[];
-  
+
   /** Any of these roles grants access */
   allowedRoles?: Role[];
-  
+
   /** Specific permissions required */
   permissions?: string[];
-  
+
   /** Feature flag that must be enabled */
   featureFlag?: string;
-  
+
   /** Additional feature flags that must be enabled */
   requiredFlags?: string[];
-  
+
   /** Whether authentication is required */
   requireAuth?: boolean;
 }
@@ -61,22 +61,22 @@ export interface FeatureAccess {
 export interface FeatureTab {
   /** Tab identifier */
   id: string;
-  
+
   /** Tab display label */
   label: string;
-  
+
   /** Tab icon */
   icon?: string;
-  
+
   /** Route path for the tab */
   path?: string;
-  
+
   /** Whether tab is disabled */
   disabled?: boolean;
-  
+
   /** Tab-specific access restrictions */
   access?: FeatureAccess;
-  
+
   /** Badge count or indicator */
   badge?: number | string;
 }
@@ -87,28 +87,28 @@ export interface FeatureTab {
 export interface FeatureConfig {
   /** Feature metadata */
   metadata: FeatureMetadata;
-  
+
   /** Access configuration */
   access: FeatureAccess;
-  
+
   /** Tab definitions */
   tabs?: FeatureTab[];
-  
+
   /** Default tab ID */
   defaultTab?: string;
-  
+
   /** Loading component override */
   loadingFallback?: React.ReactNode;
-  
+
   /** Error component override */
   errorFallback?: React.ReactNode;
-  
+
   /** Whether to show breadcrumbs */
   showBreadcrumbs?: boolean;
-  
+
   /** Whether to show page title */
   showTitle?: boolean;
-  
+
   /** Additional page metadata */
   pageMetadata?: {
     title?: string;
@@ -122,19 +122,19 @@ export interface FeatureConfig {
 export interface FeatureViewModel<TData = unknown> {
   /** Loading state */
   isLoading: boolean;
-  
+
   /** Error state */
   error: Error | null;
-  
+
   /** Feature data */
   data: TData | null;
-  
+
   /** Current tab (if applicable) */
   activeTab?: string;
-  
+
   /** Tab change handler */
   setActiveTab?: (tab: string) => void;
-  
+
   /** Refresh data */
   refresh: () => void;
 }
@@ -145,7 +145,7 @@ export interface FeatureViewModel<TData = unknown> {
 export interface FeaturePageProps<TViewModel extends FeatureViewModel = FeatureViewModel> {
   /** Feature configuration */
   config: FeatureConfig;
-  
+
   /** View model instance */
   viewModel: TViewModel;
 }
@@ -156,7 +156,7 @@ export interface FeaturePageProps<TViewModel extends FeatureViewModel = FeatureV
 export interface FeatureViewProps<TViewModel extends FeatureViewModel = FeatureViewModel> {
   /** View model */
   viewModel: TViewModel;
-  
+
   /** Whether in loading state */
   isLoading?: boolean;
 }
@@ -166,20 +166,20 @@ export interface FeatureViewProps<TViewModel extends FeatureViewModel = FeatureV
  */
 export interface CreateFeatureOptions<
   TData = unknown,
-  TViewModel extends FeatureViewModel<TData> = FeatureViewModel<TData>
+  TViewModel extends FeatureViewModel<TData> = FeatureViewModel<TData>,
 > {
   /** Feature configuration */
   config: FeatureConfig;
-  
+
   /** View model hook */
   useViewModel: () => TViewModel;
-  
+
   /** View component */
   View: React.ComponentType<FeatureViewProps<TViewModel>>;
-  
+
   /** Custom loading component */
   Loading?: React.ComponentType;
-  
+
   /** Custom error component */
   Error?: React.ComponentType<{ error: Error; retry: () => void }>;
 }
@@ -211,33 +211,31 @@ export function hasFeatureAccess(
   }
 
   // Check feature flag
-  if (access.featureFlag != null && access.featureFlag !== '' && !enabledFlags.includes(access.featureFlag)) {
+  if (
+    access.featureFlag != null &&
+    access.featureFlag !== '' &&
+    !enabledFlags.includes(access.featureFlag)
+  ) {
     return false;
   }
 
   // Check required flags
   if (access.requiredFlags != null && access.requiredFlags.length > 0) {
-    const hasAllFlags = access.requiredFlags.every((flag) =>
-      enabledFlags.includes(flag)
-    );
+    const hasAllFlags = access.requiredFlags.every((flag) => enabledFlags.includes(flag));
     if (!hasAllFlags) return false;
   }
 
   // Check required roles (all must match)
   if (access.requiredRoles != null && access.requiredRoles.length > 0) {
-    const hasAllRoles = access.requiredRoles.every((role) =>
-      userRoles.includes(role)
-    );
+    const hasAllRoles = access.requiredRoles.every((role) => userRoles.includes(role));
     if (!hasAllRoles) return false;
   }
 
   // Check allowed roles (any must match)
   if (access.allowedRoles != null && access.allowedRoles.length > 0) {
-    const hasAnyRole = access.allowedRoles.some((role) =>
-      userRoles.includes(role)
-    );
+    const hasAnyRole = access.allowedRoles.some((role) => userRoles.includes(role));
     if (!hasAnyRole) return false;
   }
-  
+
   return true;
 }

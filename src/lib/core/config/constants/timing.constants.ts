@@ -54,16 +54,16 @@ export const HOUR: Milliseconds = ms(60 * MINUTE);
  */
 export const DEFAULT_NETWORK_CONFIG: NetworkConfig = {
   // Request timeouts
-  defaultTimeout: ms(30 * SECOND),        // Standard API requests
-  longTimeout: ms(2 * MINUTE),            // File uploads, report generation
-  shortTimeout: ms(10 * SECOND),          // Quick endpoints
-  healthCheckTimeout: ms(5 * SECOND),     // Health checks
+  defaultTimeout: ms(30 * SECOND), // Standard API requests
+  longTimeout: ms(2 * MINUTE), // File uploads, report generation
+  shortTimeout: ms(10 * SECOND), // Quick endpoints
+  healthCheckTimeout: ms(5 * SECOND), // Health checks
 
   // Retry configuration
   retryBaseDelay: ms(1 * SECOND),
   retryMaxDelay: ms(30 * SECOND),
   maxRetryAttempts: 3,
-  retryJitter: 0.25,                  // 25% jitter
+  retryJitter: 0.25, // 25% jitter
 
   // WebSocket configuration
   websocketPingInterval: ms(30 * SECOND),
@@ -96,9 +96,9 @@ export const DEFAULT_CACHE_CONFIG: CacheConfig = {
   extendedTTL: ms(1 * HOUR),
 
   // Cache management
-  maxSize: 1000,                      // Max LRU cache entries
-  staleWhileRevalidate: ms(1 * HOUR),     // Background revalidation window
-  gcInterval: ms(5 * MINUTE),             // Garbage collection interval
+  maxSize: 1000, // Max LRU cache entries
+  staleWhileRevalidate: ms(1 * HOUR), // Background revalidation window
+  gcInterval: ms(5 * MINUTE), // Garbage collection interval
   memoryPressureThreshold: 50 * 1024 * 1024, // 50MB
 } as const;
 
@@ -114,9 +114,9 @@ export const DEFAULT_FLAGS_CONFIG: FeatureFlagsConfig = {
   websocketPingInterval: ms(30 * SECOND),
   cacheTTL: ms(5 * MINUTE),
   maxFailures: 5,
-  jitter: 0.1,                        // 10% jitter
+  jitter: 0.1, // 10% jitter
   fetchTimeout: ms(10 * SECOND),
-  evaluationTimeout: ms(50),              // 50ms max for rule evaluation
+  evaluationTimeout: ms(50), // 50ms max for rule evaluation
   maxCachedFlags: 1000,
   storageKey: 'feature-flags',
 } as const;
@@ -129,12 +129,12 @@ export const DEFAULT_FLAGS_CONFIG: FeatureFlagsConfig = {
  * Default authentication timing configuration.
  */
 export const DEFAULT_AUTH_CONFIG: AuthConfig = {
-  tokenRefreshBuffer: ms(5 * MINUTE),     // Refresh 5 min before expiry
-  sessionTimeout: ms(30 * MINUTE),        // 30 min inactivity timeout
-  sessionCheckInterval: ms(1 * MINUTE),   // Check session every minute
+  tokenRefreshBuffer: ms(5 * MINUTE), // Refresh 5 min before expiry
+  sessionTimeout: ms(30 * MINUTE), // 30 min inactivity timeout
+  sessionCheckInterval: ms(1 * MINUTE), // Check session every minute
   defaultTokenLifetime: sec(3600), // 1 hour in seconds
-  logoutRedirectDelay: ms(1500),          // 1.5 seconds
-  lockoutDuration: ms(15 * MINUTE),       // 15 min lockout after failed attempts
+  logoutRedirectDelay: ms(1500), // 1.5 seconds
+  lockoutDuration: ms(15 * MINUTE), // 15 min lockout after failed attempts
   maxLoginAttempts: 5,
   tokenCheckInterval: ms(1 * MINUTE),
 } as const;
@@ -148,10 +148,10 @@ export const DEFAULT_AUTH_CONFIG: AuthConfig = {
  */
 export const DEFAULT_LAYOUTS_CONFIG: LayoutsConfig = {
   // Responsive defaults
-  defaultBreakpoint: px(768),             // Mobile/desktop breakpoint (px)
-  defaultGap: px(16),                     // Default spacing (px)
-  defaultPadding: px(16),                 // Default padding (px)
-  minColumnWidth: px(200),            // Grid minimum column width (px)
+  defaultBreakpoint: px(768), // Mobile/desktop breakpoint (px)
+  defaultGap: px(16), // Default spacing (px)
+  defaultPadding: px(16), // Default padding (px)
+  minColumnWidth: px(200), // Grid minimum column width (px)
 
   // CLS (Cumulative Layout Shift) timing
   clsEntryMaxAge: ms(5 * SECOND),
@@ -159,12 +159,12 @@ export const DEFAULT_LAYOUTS_CONFIG: LayoutsConfig = {
   clsMaxSessionWindow: ms(5 * SECOND),
 
   // Animation/transitions
-  morphTransitionDuration: ms(300),       // ms
+  morphTransitionDuration: ms(300), // ms
 
   // Event handling
-  resizeDebounce: ms(150),                // ms
-  scrollThrottle: ms(16),                 // ~60fps
-  scrollEdgeThreshold: px(5),             // px
+  resizeDebounce: ms(150), // ms
+  scrollThrottle: ms(16), // ~60fps
+  scrollEdgeThreshold: px(5), // px
 
   // Viewport intersection
   viewportThresholds: [0, 0.1, 0.25, 0.5, 0.75, 0.9, 1],
@@ -181,14 +181,14 @@ export const DEFAULT_VDOM_CONFIG: VDOMConfig = {
   // Pool management
   poolSize: 100,
   gcInterval: ms(5 * MINUTE),
-  memoryLimit: 100 * 1024 * 1024,     // 100MB
+  memoryLimit: 100 * 1024 * 1024, // 100MB
 
   // Batching
   maxBatchSize: 50,
 
   // Streaming
-  streamBufferSize: 64 * 1024,        // 64KB
-  streamHighWaterMark: 16 * 1024,     // 16KB
+  streamBufferSize: 64 * 1024, // 64KB
+  streamHighWaterMark: 16 * 1024, // 16KB
   streamTimeout: ms(1 * MINUTE),
   streamRetryDelay: ms(1 * SECOND),
 } as const;
@@ -208,7 +208,7 @@ export const DEFAULT_UI_CONFIG: UIConfig = {
   resizeDebounce: ms(150),
 
   // Throttle values
-  scrollThrottle: ms(16),                 // ~60fps
+  scrollThrottle: ms(16), // ~60fps
 
   // Animation durations
   animationFast: ms(100),
@@ -217,8 +217,8 @@ export const DEFAULT_UI_CONFIG: UIConfig = {
 
   // Feedback timing
   toastDuration: ms(5 * SECOND),
-  spinnerDelay: ms(200),                  // Prevent flash of spinner
-  skeletonMinDisplay: ms(500),            // Prevent flash of content
+  spinnerDelay: ms(200), // Prevent flash of spinner
+  skeletonMinDisplay: ms(500), // Prevent flash of content
 
   // Focus management
   focusTrapDelay: ms(50),
@@ -233,12 +233,12 @@ export const DEFAULT_UI_CONFIG: UIConfig = {
  */
 export const DEFAULT_MONITORING_CONFIG: MonitoringConfig = {
   metricsFlushInterval: ms(30 * SECOND),
-  samplingRate: 1.0,                  // 100% sampling in dev, adjust in prod
+  samplingRate: 1.0, // 100% sampling in dev, adjust in prod
   slowRequestThreshold: ms(1 * SECOND),
   latencyBuckets: [10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000],
   memoryCheckInterval: ms(30 * SECOND),
   fpsSamplingInterval: ms(100),
-  longTaskThreshold: ms(50),              // 50ms (Web Performance standard)
+  longTaskThreshold: ms(50), // 50ms (Web Performance standard)
   maxStoredMetrics: 1000,
 } as const;
 

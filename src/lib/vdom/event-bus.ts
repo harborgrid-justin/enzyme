@@ -105,12 +105,7 @@ export class ModuleEventBus {
   /**
    * Publish an event
    */
-  publish<T = unknown>(
-    eventType: string,
-    payload: T,
-    source: string,
-    target?: string
-  ): void {
+  publish<T = unknown>(eventType: string, payload: T, source: string, target?: string): void {
     const message: ModuleEventMessage<T> = {
       source,
       target,

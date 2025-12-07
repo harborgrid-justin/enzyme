@@ -26,11 +26,7 @@
  * ```
  */
 
-import type {
-  VariantId,
-  UserId,
-  JsonValue,
-} from '../advanced/types';
+import type { JsonValue, UserId, VariantId, } from '../advanced/types';
 // import type { Mutable } from '../../utils/types';
 
 // ============================================================================
@@ -268,10 +264,10 @@ function approximateTDistribution(t: number, df: number): number {
   // Simple approximation for large df
   if (df > 100) {
     // Use normal approximation
-    const z = t;
+
     // Approximate using error function
-    const p = 2 * (1 - normalCDF(Math.abs(z)));
-    return p;
+
+    return 2 * (1 - normalCDF(Math.abs(t)));
   }
 
   // For smaller df, use a simple approximation
@@ -433,16 +429,6 @@ export class FlagImpactAnalyzer {
     }
   }
 
-  private enforceMaxDataPoints(list: MetricDataPoint[]): void {
-    while (list.length > this.config.maxDataPoints) {
-      list.shift();
-    }
-  }
-
-  // ==========================================================================
-  // Metric Statistics
-  // ==========================================================================
-
   /**
    * Calculate statistics for a metric.
    */
@@ -460,6 +446,10 @@ export class FlagImpactAnalyzer {
     const values = filtered.map((dp) => dp.value);
     return this.calculateStats(name, values);
   }
+
+  // ==========================================================================
+  // Metric Statistics
+  // ==========================================================================
 
   /**
    * Calculate statistics for a metric by variant.
@@ -483,29 +473,6 @@ export class FlagImpactAnalyzer {
     const values = dataPoints.map((dp) => dp.value);
     return this.calculateStats(metric, values);
   }
-
-  private calculateStats(name: string, values: number[]): MetricStats {
-    const sorted = [...values].sort((a, b) => a - b);
-
-    return {
-      name,
-      count: values.length,
-      sum: values.reduce((sum, v) => sum + v, 0),
-      mean: mean(values),
-      median: percentile(values, 50),
-      stdDev: standardDeviation(values),
-      min: sorted[0] ?? 0,
-      max: sorted[sorted.length - 1] ?? 0,
-      p25: percentile(values, 25),
-      p75: percentile(values, 75),
-      p95: percentile(values, 95),
-      p99: percentile(values, 99),
-    };
-  }
-
-  // ==========================================================================
-  // Impact Analysis
-  // ==========================================================================
 
   /**
    * Compare two variants for a metric.
@@ -571,25 +538,6 @@ export class FlagImpactAnalyzer {
       isSignificant,
       recommendation,
     };
-  }
-
-  private getVariantValues(
-    flagKey: string,
-    metric: string,
-    variantId: VariantId
-  ): number[] {
-    const flagMap = this.flagMetrics.get(flagKey);
-    if (!flagMap) {
-      return [];
-    }
-
-    const key = `${metric}:${variantId}`;
-    const dataPoints = flagMap.get(key);
-    if (!dataPoints) {
-      return [];
-    }
-
-    return dataPoints.map((dp) => dp.value);
   }
 
   /**
@@ -685,104 +633,8 @@ export class FlagImpactAnalyzer {
     };
   }
 
-  private calculateImpactScore(comparisons: VariantComparison[]): number {
-    if (comparisons.length === 0) {
-      return 0;
-    }
-
-    let totalScore = 0;
-    let significantCount = 0;
-
-    for (const comparison of comparisons) {
-      if (comparison.isSignificant) {
-        significantCount++;
-        // Score based on relative difference (capped at -100 to 100)
-        const score = Math.max(-100, Math.min(100, comparison.relativeDiff));
-        totalScore += score;
-      }
-    }
-
-    if (significantCount === 0) {
-      return 0;
-    }
-
-    return Math.round(totalScore / significantCount);
-  }
-
-  private determineConfidence(
-    comparisons: VariantComparison[],
-    variantUsers: Record<VariantId, number>
-  ): 'low' | 'medium' | 'high' {
-    // Check sample sizes
-    const totalUsers = Object.values(variantUsers).reduce((sum, n) => sum + n, 0);
-    if (totalUsers < this.config.minSampleSize * 2) {
-      return 'low';
-    }
-
-    // Check significance
-    const significantCount = comparisons.filter((c) => c.isSignificant).length;
-    const significanceRatio = significantCount / comparisons.length;
-
-    if (significanceRatio >= 0.7 && totalUsers >= this.config.minSampleSize * 10) {
-      return 'high';
-    }
-
-    if (significanceRatio >= 0.3) {
-      return 'medium';
-    }
-
-    return 'low';
-  }
-
-  private generateSummary(
-    comparisons: VariantComparison[],
-    impactScore: number
-  ): string {
-    if (comparisons.length === 0) {
-      return 'No data available for analysis.';
-    }
-
-    const winners = comparisons.filter((c) => c.recommendation === 'winner');
-    const losers = comparisons.filter((c) => c.recommendation === 'loser');
-    const needsData = comparisons.filter(
-      (c) => c.recommendation === 'more_data_needed'
-    );
-
-    const parts: string[] = [];
-
-    if (winners.length > 0) {
-      parts.push(
-        `${winners.length} metric(s) show significant positive impact`
-      );
-    }
-
-    if (losers.length > 0) {
-      parts.push(`${losers.length} metric(s) show significant negative impact`);
-    }
-
-    if (needsData.length > 0) {
-      parts.push(`${needsData.length} metric(s) need more data`);
-    }
-
-    if (parts.length === 0) {
-      parts.push('No significant impact detected');
-    }
-
-    let impactDirection: string;
-    if (impactScore > 0) {
-      impactDirection = 'positive';
-    } else if (impactScore < 0) {
-      impactDirection = 'negative';
-    } else {
-      impactDirection = 'neutral';
-    }
-    parts.push(`Overall impact: ${impactDirection} (score: ${impactScore})`);
-
-    return `${parts.join('. ')  }.`;
-  }
-
   // ==========================================================================
-  // Queries
+  // Impact Analysis
   // ==========================================================================
 
   /**
@@ -837,10 +689,6 @@ export class FlagImpactAnalyzer {
     return Array.from(variants);
   }
 
-  // ==========================================================================
-  // Lifecycle
-  // ==========================================================================
-
   /**
    * Clear all data.
    */
@@ -858,16 +706,16 @@ export class FlagImpactAnalyzer {
     this.log(`Data cleared for flag: ${flagKey}`);
   }
 
+  // ==========================================================================
+  // Queries
+  // ==========================================================================
+
   /**
    * Enable or disable analysis.
    */
   setEnabled(enabled: boolean): void {
     (this.config as { enabled: boolean }).enabled = enabled;
   }
-
-  // ==========================================================================
-  // Export
-  // ==========================================================================
 
   /**
    * Export all data as JSON.
@@ -891,6 +739,154 @@ export class FlagImpactAnalyzer {
     }
 
     return { metrics, flagMetrics };
+  }
+
+  private enforceMaxDataPoints(list: MetricDataPoint[]): void {
+    while (list.length > this.config.maxDataPoints) {
+      list.shift();
+    }
+  }
+
+  private calculateStats(name: string, values: number[]): MetricStats {
+    const sorted = [...values].sort((a, b) => a - b);
+
+    return {
+      name,
+      count: values.length,
+      sum: values.reduce((sum, v) => sum + v, 0),
+      mean: mean(values),
+      median: percentile(values, 50),
+      stdDev: standardDeviation(values),
+      min: sorted[0] ?? 0,
+      max: sorted[sorted.length - 1] ?? 0,
+      p25: percentile(values, 25),
+      p75: percentile(values, 75),
+      p95: percentile(values, 95),
+      p99: percentile(values, 99),
+    };
+  }
+
+  // ==========================================================================
+  // Lifecycle
+  // ==========================================================================
+
+  private getVariantValues(
+    flagKey: string,
+    metric: string,
+    variantId: VariantId
+  ): number[] {
+    const flagMap = this.flagMetrics.get(flagKey);
+    if (!flagMap) {
+      return [];
+    }
+
+    const key = `${metric}:${variantId}`;
+    const dataPoints = flagMap.get(key);
+    if (!dataPoints) {
+      return [];
+    }
+
+    return dataPoints.map((dp) => dp.value);
+  }
+
+  private calculateImpactScore(comparisons: VariantComparison[]): number {
+    if (comparisons.length === 0) {
+      return 0;
+    }
+
+    let totalScore = 0;
+    let significantCount = 0;
+
+    for (const comparison of comparisons) {
+      if (comparison.isSignificant) {
+        significantCount++;
+        // Score based on relative difference (capped at -100 to 100)
+        const score = Math.max(-100, Math.min(100, comparison.relativeDiff));
+        totalScore += score;
+      }
+    }
+
+    if (significantCount === 0) {
+      return 0;
+    }
+
+    return Math.round(totalScore / significantCount);
+  }
+
+  private determineConfidence(
+    comparisons: VariantComparison[],
+    variantUsers: Record<VariantId, number>
+  ): 'low' | 'medium' | 'high' {
+    // Check sample sizes
+    const totalUsers = Object.values(variantUsers).reduce((sum, n) => sum + n, 0);
+    if (totalUsers < this.config.minSampleSize * 2) {
+      return 'low';
+    }
+
+    // Check significance
+    const significantCount = comparisons.filter((c) => c.isSignificant).length;
+    const significanceRatio = significantCount / comparisons.length;
+
+    if (significanceRatio >= 0.7 && totalUsers >= this.config.minSampleSize * 10) {
+      return 'high';
+    }
+
+    if (significanceRatio >= 0.3) {
+      return 'medium';
+    }
+
+    return 'low';
+  }
+
+  // ==========================================================================
+  // Export
+  // ==========================================================================
+
+  private generateSummary(
+    comparisons: VariantComparison[],
+    impactScore: number
+  ): string {
+    if (comparisons.length === 0) {
+      return 'No data available for analysis.';
+    }
+
+    const winners = comparisons.filter((c) => c.recommendation === 'winner');
+    const losers = comparisons.filter((c) => c.recommendation === 'loser');
+    const needsData = comparisons.filter(
+      (c) => c.recommendation === 'more_data_needed'
+    );
+
+    const parts: string[] = [];
+
+    if (winners.length > 0) {
+      parts.push(
+        `${winners.length} metric(s) show significant positive impact`
+      );
+    }
+
+    if (losers.length > 0) {
+      parts.push(`${losers.length} metric(s) show significant negative impact`);
+    }
+
+    if (needsData.length > 0) {
+      parts.push(`${needsData.length} metric(s) need more data`);
+    }
+
+    if (parts.length === 0) {
+      parts.push('No significant impact detected');
+    }
+
+    let impactDirection: string;
+    if (impactScore > 0) {
+      impactDirection = 'positive';
+    } else if (impactScore < 0) {
+      impactDirection = 'negative';
+    } else {
+      impactDirection = 'neutral';
+    }
+    parts.push(`Overall impact: ${impactDirection} (score: ${impactScore})`);
+
+    return `${parts.join('. ')  }.`;
   }
 
   // ==========================================================================

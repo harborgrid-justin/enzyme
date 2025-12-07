@@ -137,24 +137,21 @@ export function useFeatureFlag(
   const { userId, userRole, attributes, defaultValue = false } = options;
 
   // Build evaluation context
-  const context: FeatureFlagContext = useMemo(
-    () => {
-      let sessionId: string | undefined;
-      if (typeof window !== 'undefined') {
-        const storedSessionId = sessionStorage.getItem('session_id');
-        sessionId = (storedSessionId != null && storedSessionId !== '') ? storedSessionId : undefined;
-      }
+  const context: FeatureFlagContext = useMemo(() => {
+    let sessionId: string | undefined;
+    if (typeof window !== 'undefined') {
+      const storedSessionId = sessionStorage.getItem('session_id');
+      sessionId = storedSessionId != null && storedSessionId !== '' ? storedSessionId : undefined;
+    }
 
-      return {
-        userId,
-        userRole,
-        environment: (env.appEnv as ConfigEnvironment) ?? 'development',
-        attributes,
-        sessionId,
-      };
-    },
-    [userId, userRole, attributes]
-  );
+    return {
+      userId,
+      userRole,
+      environment: (env.appEnv as ConfigEnvironment) ?? 'development',
+      attributes,
+      sessionId,
+    };
+  }, [userId, userRole, attributes]);
 
   // Evaluate flag
   const result = useMemo<FeatureFlagResult>(() => {
@@ -444,7 +441,10 @@ export function useFeatureFlagOverride(): UseFeatureFlagOverrideResult {
  * }
  * ```
  */
-export function useRemoteConfig<T extends import('../types').ConfigValue>(key: string, defaultValue: T): T {
+export function useRemoteConfig<T extends import('../types').ConfigValue>(
+  key: string,
+  defaultValue: T
+): T {
   const { dynamicConfig, isInitialized } = useConfigContext();
   const [value, setValue] = useState<T>(defaultValue);
   const initializedRef = useRef(false);

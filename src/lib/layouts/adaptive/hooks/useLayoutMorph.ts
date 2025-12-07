@@ -9,7 +9,12 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
-import type { LayoutRect, LayoutState, MorphTransitionConfig, UseLayoutMorphReturn } from '../types';
+import type {
+  LayoutRect,
+  LayoutState,
+  MorphTransitionConfig,
+  UseLayoutMorphReturn,
+} from '../types';
 import { DEFAULT_MORPH_TRANSITION_CONFIG } from '../types';
 import { createMorphController } from '../morph-transition';
 

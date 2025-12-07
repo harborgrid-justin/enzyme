@@ -59,9 +59,7 @@ export interface UseCSRFTokenOptions {
  * }
  * ```
  */
-export function useCSRFToken(
-  options: UseCSRFTokenOptions = {}
-): UseCSRFTokenResult {
+export function useCSRFToken(options: UseCSRFTokenOptions = {}): UseCSRFTokenResult {
   const { refreshInterval, autoInitialize = true } = options;
 
   // State
@@ -70,8 +68,8 @@ export function useCSRFToken(
 
   // Get configuration
   const config = CSRFProtection.getConfig();
-  const {headerName} = config;
-  const {fieldName} = config;
+  const { headerName } = config;
+  const { fieldName } = config;
 
   // Initialize CSRF protection
   useEffect(() => {
@@ -93,7 +91,7 @@ export function useCSRFToken(
   }, [autoInitialize]);
 
   // Regenerate token function
-  const regenerate = useCallback((): Promise<string> => {
+  const regenerate = useCallback(async (): Promise<string> => {
     const newToken = CSRFProtection.regenerateToken();
     setToken(newToken);
     return Promise.resolve(newToken);
@@ -101,7 +99,12 @@ export function useCSRFToken(
 
   // Set up auto-refresh interval
   useEffect(() => {
-    if (!isInitialized || refreshInterval === undefined || refreshInterval === null || refreshInterval <= 0) {
+    if (
+      !isInitialized ||
+      refreshInterval === undefined ||
+      refreshInterval === null ||
+      refreshInterval <= 0
+    ) {
       return;
     }
 
@@ -268,8 +271,7 @@ export function useSecureFormSubmit(options: {
 
         onSuccess?.(response);
       } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : 'Form submission failed';
+        const errorMessage = err instanceof Error ? err.message : 'Form submission failed';
         setError(errorMessage);
         onError?.(err instanceof Error ? err : new Error(errorMessage));
       } finally {

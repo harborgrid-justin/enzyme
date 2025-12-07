@@ -163,9 +163,7 @@ export function detectConflicts(
  * @param routes - Routes to check
  * @returns Array of duplicate conflicts
  */
-export function findExactDuplicates(
-  routes: readonly RouteForConflictDetection[]
-): RouteConflict[] {
+export function findExactDuplicates(routes: readonly RouteForConflictDetection[]): RouteConflict[] {
   const conflicts: RouteConflict[] = [];
   const pathGroups = new Map<string, RouteForConflictDetection[]>();
 
@@ -204,9 +202,7 @@ export function findExactDuplicates(
  * @param routes - Routes to check
  * @returns Array of shadow conflicts
  */
-export function findDynamicShadows(
-  routes: readonly RouteForConflictDetection[]
-): RouteConflict[] {
+export function findDynamicShadows(routes: readonly RouteForConflictDetection[]): RouteConflict[] {
   const conflicts: RouteConflict[] = [];
 
   // Separate static and dynamic routes
@@ -214,9 +210,7 @@ export function findDynamicShadows(
     (r) => !r.segments.some((s) => s.type === 'dynamic' || s.type === 'catchAll')
   );
 
-  const dynamicRoutes = routes.filter((r) =>
-    r.segments.some((s) => s.type === 'dynamic')
-  );
+  const dynamicRoutes = routes.filter((r) => r.segments.some((s) => s.type === 'dynamic'));
 
   // Check each static route against dynamic routes
   for (const staticRoute of staticRoutes) {
@@ -255,7 +249,7 @@ function wouldShadow(dynamicPath: string, staticPath: string): boolean {
     const dynamicPart = dynamicParts[i];
     const staticPart = staticParts[i];
 
-    if ((dynamicPart == null) || (staticPart == null)) {
+    if (dynamicPart == null || staticPart == null) {
       continue;
     }
 
@@ -285,9 +279,7 @@ function wouldShadow(dynamicPath: string, staticPath: string): boolean {
  * @param routes - Routes to check
  * @returns Array of ambiguous conflicts
  */
-export function findAmbiguousRoutes(
-  routes: readonly RouteForConflictDetection[]
-): RouteConflict[] {
+export function findAmbiguousRoutes(routes: readonly RouteForConflictDetection[]): RouteConflict[] {
   const conflicts: RouteConflict[] = [];
 
   // Group routes by their "normalized" path (dynamic segments replaced)
@@ -358,9 +350,7 @@ export function findCatchAllConflicts(
 ): RouteConflict[] {
   const conflicts: RouteConflict[] = [];
 
-  const catchAllRoutes = routes.filter((r) =>
-    r.segments.some((s) => s.type === 'catchAll')
-  );
+  const catchAllRoutes = routes.filter((r) => r.segments.some((s) => s.type === 'catchAll'));
 
   // Multiple catch-all routes at the same path prefix is an error
   const catchAllByPrefix = new Map<string, RouteForConflictDetection[]>();
@@ -378,8 +368,7 @@ export function findCatchAllConflicts(
         type: 'exact',
         path: `${prefix}/*`,
         files: routeGroup.map((r) => r.filePath),
-        message:
-          `Multiple catch-all routes at "${prefix}/*". Only one catch-all route is allowed per path prefix.`,
+        message: `Multiple catch-all routes at "${prefix}/*". Only one catch-all route is allowed per path prefix.`,
         severity: 'error',
       });
     }
@@ -404,8 +393,8 @@ export function findNestedDynamicConflicts(
   routes: readonly RouteForConflictDetection[]
 ): RouteConflict[] {
   const conflicts: RouteConflict[] = [];
-  const dynamicRoutes = routes.filter((r) =>
-    r.segments.filter((s) => s.type === 'dynamic').length >= 2
+  const dynamicRoutes = routes.filter(
+    (r) => r.segments.filter((s) => s.type === 'dynamic').length >= 2
   );
 
   // Group by static prefix before first dynamic segment
@@ -571,13 +560,7 @@ export function generateConflictReport(conflicts: readonly RouteConflict[]): str
     return 'No route conflicts detected.';
   }
 
-  const lines: string[] = [
-    '',
-    '='.repeat(70),
-    '  ROUTE CONFLICT REPORT',
-    '='.repeat(70),
-    '',
-  ];
+  const lines: string[] = ['', '='.repeat(70), '  ROUTE CONFLICT REPORT', '='.repeat(70), ''];
 
   const errors = conflicts.filter((c) => c.severity === 'error');
   const warnings = conflicts.filter((c) => c.severity === 'warning');
@@ -668,9 +651,7 @@ export function calculateRouteSpecificity(route: RouteForConflictDetection): num
  * @param routes - Routes to sort
  * @returns Sorted routes array
  */
-export function sortBySpecificity<T extends RouteForConflictDetection>(
-  routes: readonly T[]
-): T[] {
+export function sortBySpecificity<T extends RouteForConflictDetection>(routes: readonly T[]): T[] {
   return [...routes].sort((a, b) => {
     const specA = calculateRouteSpecificity(a);
     const specB = calculateRouteSpecificity(b);

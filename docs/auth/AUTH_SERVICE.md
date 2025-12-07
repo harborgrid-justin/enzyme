@@ -760,9 +760,25 @@ interface SessionData {
    }
    ```
 
-## See Also
+## Related Documentation
 
-- [AUTH_PROVIDER.md](./AUTH_PROVIDER.md) - React auth provider
-- [HOOKS.md](./HOOKS.md) - Authentication hooks
-- [TYPES.md](./TYPES.md) - Type definitions
-- [GUARDS.md](./GUARDS.md) - Route protection
+### Authentication Module
+- [Authentication Module](./README.md) - Main authentication documentation
+- [Auth Overview](./OVERVIEW.md) - Architecture and token lifecycle
+- [Auth Provider](./AUTH_PROVIDER.md) - React context provider
+- [Auth Hooks](./HOOKS.md) - React hooks for authentication
+- [Route Guards](./GUARDS.md) - Protected routes and components
+- [RBAC System](./RBAC.md) - Role-Based Access Control
+- [Common Patterns](./PATTERNS.md) - Implementation examples
+- [Type Definitions](./TYPES.md) - TypeScript types
+- [Troubleshooting](./TROUBLESHOOTING.md) - Token and session issues
+
+### Security
+- [Security Module](../security/README.md) - Security infrastructure
+- [Secure Storage](../security/SECURE_STORAGE.md) - Encrypted token storage
+- [CSRF Protection](../security/CSRF.md) - Request forgery prevention
+- [Security Best Practices](../SECURITY.md) - Secure authentication guidelines
+
+### Integration
+- [API Module](../api/README.md) - API client with token injection
+- [State Management](../state/README.md) - Auth state synchronization

@@ -39,20 +39,12 @@ export const PERMISSION_ACTIONS: PermissionAction[] = [
 /**
  * CRUD actions subset.
  */
-export const CRUD_ACTIONS: PermissionAction[] = [
-  'create',
-  'read',
-  'update',
-  'delete',
-];
+export const CRUD_ACTIONS: PermissionAction[] = ['create', 'read', 'update', 'delete'];
 
 /**
  * Read-only actions.
  */
-export const READ_ONLY_ACTIONS: PermissionAction[] = [
-  'read',
-  'list',
-];
+export const READ_ONLY_ACTIONS: PermissionAction[] = ['read', 'list'];
 
 /**
  * Full access actions.
@@ -175,11 +167,7 @@ export class PermissionMatrixBuilder {
   /**
    * Deny specific actions for a role on a resource.
    */
-  denyActions(
-    roleId: string,
-    resource: string,
-    actions: PermissionAction[]
-  ): this {
+  denyActions(roleId: string, resource: string, actions: PermissionAction[]): this {
     return this.addEntry({
       roleId,
       resource,
@@ -213,7 +201,7 @@ export class PermissionMatrixBuilder {
    * Remove entries for a specific role.
    */
   removeRoleEntries(roleId: string): this {
-    this.entries = this.entries.filter(e => e.roleId !== roleId);
+    this.entries = this.entries.filter((e) => e.roleId !== roleId);
     return this;
   }
 
@@ -221,7 +209,7 @@ export class PermissionMatrixBuilder {
    * Remove entries for a specific resource.
    */
   removeResourceEntries(resource: string): this {
-    this.entries = this.entries.filter(e => e.resource !== resource);
+    this.entries = this.entries.filter((e) => e.resource !== resource);
     return this;
   }
 
@@ -302,9 +290,7 @@ export function createStandardMatrix(options: {
     roleId: guestRole,
     resource: '*',
     allowedActions: ['read'],
-    conditions: [
-      { field: 'isPublic', operator: 'equals', value: true },
-    ],
+    conditions: [{ field: 'isPublic', operator: 'equals', value: true }],
   });
 
   return builder.build();
@@ -367,9 +353,7 @@ export function createHealthcareMatrix(): PermissionMatrix {
       roleId: 'nurse',
       resource: 'patients',
       allowedActions: ['read', 'list', 'update'],
-      conditions: [
-        { field: 'unit', operator: 'equals', value: null, contextKey: 'assignedUnit' },
-      ],
+      conditions: [{ field: 'unit', operator: 'equals', value: null, contextKey: 'assignedUnit' }],
     })
     .addEntry({
       roleId: 'nurse',
@@ -508,7 +492,7 @@ export function filterEntriesByRole(
   matrix: PermissionMatrix,
   roleIds: string[]
 ): PermissionMatrixEntry[] {
-  return matrix.entries.filter(entry => roleIds.includes(entry.roleId));
+  return matrix.entries.filter((entry) => roleIds.includes(entry.roleId));
 }
 
 /**
@@ -522,9 +506,7 @@ export function filterEntriesByResource(
   matrix: PermissionMatrix,
   resource: string
 ): PermissionMatrixEntry[] {
-  return matrix.entries.filter(
-    entry => entry.resource === resource || entry.resource === '*'
-  );
+  return matrix.entries.filter((entry) => entry.resource === resource || entry.resource === '*');
 }
 
 /**
@@ -604,9 +586,7 @@ export function validatePermissionMatrix(matrix: PermissionMatrix): string[] {
 
     // Check for conflicting allow/deny
     if (entry.allowedActions != null && entry.deniedActions != null) {
-      const overlap = entry.allowedActions.filter(a =>
-        (entry.deniedActions ?? []).includes(a)
-      );
+      const overlap = entry.allowedActions.filter((a) => (entry.deniedActions ?? []).includes(a));
       if (overlap.length > 0) {
         errors.push(
           `Entry at index ${index}: conflicting allow/deny for actions: ${overlap.join(', ')}`

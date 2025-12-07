@@ -17,18 +17,15 @@ interface FlagGateProps {
  * Conditional renderer: <FlagGate flag="x" fallback="...">children</FlagGate>
  * Memoized for performance optimization.
  */
-export const FlagGate = memo(({
-  flag,
-  children,
-  fallback = null,
-  invert = false
-}: FlagGateProps) => {
-  const { isEnabled } = useFeatureFlagContext();
-  const flagEnabled = isEnabled(flag);
-  const shouldRender = invert ? !flagEnabled : flagEnabled;
+export const FlagGate = memo(
+  ({ flag, children, fallback = null, invert = false }: FlagGateProps) => {
+    const { isEnabled } = useFeatureFlagContext();
+    const flagEnabled = isEnabled(flag);
+    const shouldRender = invert ? !flagEnabled : flagEnabled;
 
-  return <>{shouldRender ? children : fallback}</>;
-});
+    return <>{shouldRender ? children : fallback}</>;
+  }
+);
 
 FlagGate.displayName = 'FlagGate';
 
@@ -39,24 +36,23 @@ FlagGate.displayName = 'FlagGate';
  * Note: Uses context-based flag checking to comply with Rules of Hooks.
  * Hooks must not be called inside loops, conditions, or nested functions.
  */
-export const FlagGateAll = memo(({
-  flags,
-  children,
-  fallback = null
-}: {
-  flags: (FlagKey | string)[];
-  children: ReactNode;
-  fallback?: ReactNode;
-}) => {
-  const { isEnabled } = useFeatureFlagContext();
+export const FlagGateAll = memo(
+  ({
+    flags,
+    children,
+    fallback = null,
+  }: {
+    flags: (FlagKey | string)[];
+    children: ReactNode;
+    fallback?: ReactNode;
+  }) => {
+    const { isEnabled } = useFeatureFlagContext();
 
-  const allEnabled = useMemo(
-    () => flags.every((flag) => isEnabled(flag)),
-    [flags, isEnabled]
-  );
+    const allEnabled = useMemo(() => flags.every((flag) => isEnabled(flag)), [flags, isEnabled]);
 
-  return <>{allEnabled ? children : fallback}</>;
-});
+    return <>{allEnabled ? children : fallback}</>;
+  }
+);
 
 FlagGateAll.displayName = 'FlagGateAll';
 
@@ -67,23 +63,22 @@ FlagGateAll.displayName = 'FlagGateAll';
  * Note: Uses context-based flag checking to comply with Rules of Hooks.
  * Hooks must not be called inside loops, conditions, or nested functions.
  */
-export const FlagGateAny = memo(({
-  flags,
-  children,
-  fallback = null
-}: {
-  flags: (FlagKey | string)[];
-  children: ReactNode;
-  fallback?: ReactNode;
-}) => {
-  const { isEnabled } = useFeatureFlagContext();
+export const FlagGateAny = memo(
+  ({
+    flags,
+    children,
+    fallback = null,
+  }: {
+    flags: (FlagKey | string)[];
+    children: ReactNode;
+    fallback?: ReactNode;
+  }) => {
+    const { isEnabled } = useFeatureFlagContext();
 
-  const anyEnabled = useMemo(
-    () => flags.some((flag) => isEnabled(flag)),
-    [flags, isEnabled]
-  );
+    const anyEnabled = useMemo(() => flags.some((flag) => isEnabled(flag)), [flags, isEnabled]);
 
-  return <>{anyEnabled ? children : fallback}</>;
-});
+    return <>{anyEnabled ? children : fallback}</>;
+  }
+);
 
 FlagGateAny.displayName = 'FlagGateAny';

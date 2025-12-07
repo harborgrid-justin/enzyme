@@ -1,6 +1,7 @@
 # Routing Guide
 
-> Complete guide to the Harbor React routing system including type-safe navigation, auto-discovery, guards, and advanced patterns.
+> Complete guide to the Harbor React routing system including type-safe navigation, auto-discovery, guards, and advanced
+> patterns.
 
 ## Table of Contents
 
@@ -452,15 +453,15 @@ src/
 
 ### Route Naming Conventions
 
-| Pattern | Description | Example |
-|---------|-------------|---------|
-| `index.tsx` | Index route | `/users/index.tsx` -> `/users` |
-| `[param].tsx` | Dynamic segment | `/users/[id].tsx` -> `/users/:id` |
-| `[...param].tsx` | Catch-all | `/blog/[...slug].tsx` -> `/blog/*` |
-| `[[param]].tsx` | Optional param | `/users/[[id]].tsx` -> `/users/:id?` |
-| `(group)/` | Route group | `/(admin)/` -> routes share layout |
-| `_layout.tsx` | Layout wrapper | Wraps sibling routes |
-| `_error.tsx` | Error boundary | Error UI for sibling routes |
+| Pattern          | Description     | Example                              |
+|------------------|-----------------|--------------------------------------|
+| `index.tsx`      | Index route     | `/users/index.tsx` -> `/users`       |
+| `[param].tsx`    | Dynamic segment | `/users/[id].tsx` -> `/users/:id`    |
+| `[...param].tsx` | Catch-all       | `/blog/[...slug].tsx` -> `/blog/*`   |
+| `[[param]].tsx`  | Optional param  | `/users/[[id]].tsx` -> `/users/:id?` |
+| `(group)/`       | Route group     | `/(admin)/` -> routes share layout   |
+| `_layout.tsx`    | Layout wrapper  | Wraps sibling routes                 |
+| `_error.tsx`     | Error boundary  | Error UI for sibling routes          |
 
 ### Using Auto-Discovery
 
@@ -794,13 +795,13 @@ if (!areRoutesValid(routes)) {
 
 ### Conflict Types
 
-| Type | Description | Example |
-|------|-------------|---------|
-| `duplicate` | Same path defined twice | `/users` and `/users` |
-| `shadow` | Static shadows dynamic | `/users/new` before `/users/:id` |
-| `ambiguous` | Multiple dynamic matches | `/users/:id` and `/users/:userId` |
-| `nested-dynamic` | Multiple dynamic in path | `/users/:id/posts/:postId` (OK but warned) |
-| `catch-all` | Catch-all before siblings | `/*` before `/about` |
+| Type             | Description               | Example                                    |
+|------------------|---------------------------|--------------------------------------------|
+| `duplicate`      | Same path defined twice   | `/users` and `/users`                      |
+| `shadow`         | Static shadows dynamic    | `/users/new` before `/users/:id`           |
+| `ambiguous`      | Multiple dynamic matches  | `/users/:id` and `/users/:userId`          |
+| `nested-dynamic` | Multiple dynamic in path  | `/users/:id/posts/:postId` (OK but warned) |
+| `catch-all`      | Catch-all before siblings | `/*` before `/about`                       |
 
 ### Auto-Fix Suggestions
 
@@ -1049,21 +1050,25 @@ class RouteRegistry {
 ## See Also
 
 ### Core Routing
+
 - [Routing Examples](./examples/routing-examples.md) - 25+ practical routing examples
 - [Auto-Routes Guide](../../docs/AUTO_ROUTES.md) - File-system based routing
 - [Layouts Guide](../../docs/LAYOUTS.md) - Layout and route composition
 
 ### Integration
+
 - [Authentication Guide](./AUTHENTICATION.md) - Route guards and protected routes
 - [API Documentation](../../docs/API.md) - Route-based data fetching
 - [State Management](../../docs/STATE.md) - Route state synchronization
 
 ### Optimization
+
 - [Performance Guide](../../docs/PERFORMANCE.md) - Route prefetching and code splitting
 - [Configuration Guide](../../docs/CONFIGURATION.md) - Route configuration options
 - [Architecture Overview](../../docs/ARCHITECTURE.md) - Routing architecture
 
 ### Reference
+
 - [Hooks Reference](../../docs/HOOKS_REFERENCE.md) - Routing hooks
 - [Documentation Index](./INDEX.md) - All library documentation
 - [Template Index](../../docs/INDEX.md) - Template documentation

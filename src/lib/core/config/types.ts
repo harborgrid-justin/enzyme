@@ -422,11 +422,7 @@ export interface LibraryConfig {
 /**
  * Cache strategy for endpoint responses.
  */
-export type CacheStrategy =
-  | 'no-cache'
-  | 'cache-first'
-  | 'network-first'
-  | 'stale-while-revalidate';
+export type CacheStrategy = 'no-cache' | 'cache-first' | 'network-first' | 'stale-while-revalidate';
 
 /**
  * Cache configuration for an endpoint.
@@ -549,11 +545,7 @@ export interface EndpointDefinition {
 /**
  * Endpoint change event types.
  */
-export type EndpointEventType =
-  | 'registered'
-  | 'updated'
-  | 'removed'
-  | 'health-changed';
+export type EndpointEventType = 'registered' | 'updated' | 'removed' | 'health-changed';
 
 /**
  * Endpoint change event.
@@ -807,8 +799,4 @@ export interface IEndpointRegistry {
 // Export All Types
 // =============================================================================
 
-export type {
-  Milliseconds as Ms,
-  DeepPartial as PartialConfig,
-  DeepReadonly as ReadonlyConfig,
-};
+export type { Milliseconds as Ms, DeepPartial as PartialConfig, DeepReadonly as ReadonlyConfig };

@@ -8,15 +8,10 @@
  * @module core/config/integration/AppConfigBridge
  */
 
-import type {
-  LibraryConfig,
-  DeepPartial,
-  NetworkConfig,
-  CacheConfig,
-} from '../types';
+import type { LibraryConfig, DeepPartial, NetworkConfig, CacheConfig } from '../types';
 
-import { getConfigRegistry } from '../registry/ConfigRegistry';
-import { getEndpointRegistry } from '../registry/EndpointRegistry';
+import { getConfigRegistry } from '@/lib/core';
+import { getEndpointRegistry } from '@/lib/core';
 
 // =============================================================================
 // App Config Types (from @/config)
@@ -341,7 +336,9 @@ export class AppConfigBridge {
     return config as Partial<CacheConfig>;
   }
 
-  private mapTimingToUIConfig(timing: Partial<AppTimingConfig>): Record<string, number | undefined> {
+  private mapTimingToUIConfig(
+    timing: Partial<AppTimingConfig>
+  ): Record<string, number | undefined> {
     const config: Record<string, number | undefined> = {};
     const debounce = timing.UI?.DEBOUNCE;
     const animation = timing.UI?.ANIMATION;
@@ -377,15 +374,19 @@ export class AppConfigBridge {
     const config: Record<string, number | undefined> = {};
 
     if (apiConfig.TIMEOUT != null) {
-      if (apiConfig.TIMEOUT.DEFAULT !== undefined) config.defaultTimeout = apiConfig.TIMEOUT.DEFAULT;
+      if (apiConfig.TIMEOUT.DEFAULT !== undefined)
+        config.defaultTimeout = apiConfig.TIMEOUT.DEFAULT;
       if (apiConfig.TIMEOUT.LONG !== undefined) config.longTimeout = apiConfig.TIMEOUT.LONG;
       if (apiConfig.TIMEOUT.SHORT !== undefined) config.shortTimeout = apiConfig.TIMEOUT.SHORT;
-      if (apiConfig.TIMEOUT.HEALTH !== undefined) config.healthCheckTimeout = apiConfig.TIMEOUT.HEALTH;
+      if (apiConfig.TIMEOUT.HEALTH !== undefined)
+        config.healthCheckTimeout = apiConfig.TIMEOUT.HEALTH;
     }
 
     if (apiConfig.RETRY != null) {
-      if (apiConfig.RETRY.ATTEMPTS !== undefined) config.maxRetryAttempts = apiConfig.RETRY.ATTEMPTS;
-      if (apiConfig.RETRY.BASE_DELAY !== undefined) config.retryBaseDelay = apiConfig.RETRY.BASE_DELAY;
+      if (apiConfig.RETRY.ATTEMPTS !== undefined)
+        config.maxRetryAttempts = apiConfig.RETRY.ATTEMPTS;
+      if (apiConfig.RETRY.BASE_DELAY !== undefined)
+        config.retryBaseDelay = apiConfig.RETRY.BASE_DELAY;
       if (apiConfig.RETRY.MAX_DELAY !== undefined) config.retryMaxDelay = apiConfig.RETRY.MAX_DELAY;
     }
 

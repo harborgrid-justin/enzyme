@@ -24,7 +24,7 @@ export const DEFAULT_CLIENT_CONFIG: Partial<ApiClientConfig> = {
   timeout: API_CONFIG.TIMEOUT.DEFAULT,
   headers: {
     'Content-Type': 'application/json',
-    'Accept': 'application/json',
+    Accept: 'application/json',
   },
   deduplicate: true,
   autoRefreshToken: true,

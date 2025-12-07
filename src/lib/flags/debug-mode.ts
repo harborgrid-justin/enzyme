@@ -83,7 +83,7 @@ export function isDebugModeEnabled(): boolean {
 
   // If no default is set, use environment check
   // This ensures debug mode works during bootstrap before providers mount
-  if (defaultValue === false) {
+  if (!defaultValue) {
     return process.env['NODE_ENV'] === 'development';
   }
 

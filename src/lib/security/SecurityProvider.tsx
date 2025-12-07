@@ -11,39 +11,31 @@
  */
 
 /* eslint-disable react-refresh/only-export-components */
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-  createContext,
-} from 'react';
+import React, { createContext, type ReactNode, useCallback, useEffect, useMemo, useRef, useState, } from 'react';
 import type {
-  SecurityContextValue,
-  SecurityContextState,
-  SecurityViolation,
+  SecureStorageInterface,
   SecurityConfiguration,
+  SecurityContextState,
+  SecurityContextValue,
   SecurityEvent,
   SecurityEventType,
-  SecureStorageInterface,
+  SecurityViolation,
 } from './types';
+import { securityConfig } from '@/config/security.config';
+import { CSPManager } from './csp-manager';
+import { CSRFProtection } from './csrf-protection';
+import {
+  generateEncryptionKey,
+  getSecureStorage,
+  initSecureStorage,
+  isSecureStorageAvailable,
+} from './secure-storage';
+import { ContentSanitizer } from '@/lib/vdom/security-sandbox';
 
 /**
  * Security context for React components
  */
 const SecurityContext = createContext<SecurityContextValue | null>(null);
-import { securityConfig } from '@/config/security.config';
-import { CSPManager } from './csp-manager';
-import { CSRFProtection } from './csrf-protection';
-import {
-  initSecureStorage,
-  getSecureStorage,
-  isSecureStorageAvailable,
-  generateEncryptionKey,
-} from './secure-storage';
-import { ContentSanitizer } from '@/lib/vdom/security-sandbox';
 
 // ============================================================================
 // Context
@@ -296,7 +288,10 @@ export function SecurityProvider({
       return;
     }
 
-    const removeHandler = CSPManager.addViolationHandler((violation) => {
+
+
+
+    return CSPManager.addViolationHandler((violation) => {
       const securityViolation: SecurityViolation = {
         id: generateViolationId(),
         type: 'csp',
@@ -309,8 +304,6 @@ export function SecurityProvider({
 
       handleViolation(securityViolation);
     });
-
-    return removeHandler;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config.csp.reportViolations]);
 
@@ -345,7 +338,7 @@ export function SecurityProvider({
       // Report to server if enabled
       // Note: Raw fetch is intentional - security reporting must be independent
       // and use keepalive for reliability when page is unloading
-      if (config.reportToServer === true && config.reportEndpoint != null && config.reportEndpoint !== '') {
+      if (config.reportToServer && config.reportEndpoint != null && config.reportEndpoint !== '') {
         void fetch(config.reportEndpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

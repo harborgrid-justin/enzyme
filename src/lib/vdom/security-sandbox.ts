@@ -397,6 +397,29 @@ export class ContentSanitizer {
   }
 
   /**
+   * Sanitizes plain text (escape HTML).
+   * @param text - Text to sanitize
+   * @returns Escaped text
+   */
+  sanitizeText(text: string): string {
+    return escapeHtml(text);
+  }
+
+  /**
+   * Validates content against dangerous patterns.
+   * @param content - Content to validate
+   * @returns Whether content is safe
+   */
+  validate(content: string): boolean {
+    for (const pattern of DANGEROUS_PATTERNS) {
+      if (pattern.test(content)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
    * Sanitizes HTML using DOM parsing.
    * @param html - HTML to sanitize
    * @returns Sanitized HTML
@@ -477,7 +500,7 @@ export class ContentSanitizer {
    * @returns Sanitized style string with only safe properties
    */
   private sanitizeStyle(style: string): string {
-    if (!style || typeof style !== 'string') {
+    if (!style) {
       return '';
     }
 
@@ -546,34 +569,9 @@ export class ContentSanitizer {
     }
 
     // Check for -o-link (Opera-specific, can execute JavaScript)
-    if (/-o-link/i.test(lowerValue)) {
-      return true;
-    }
+    return /-o-link/i.test(lowerValue);
 
-    return false;
-  }
 
-  /**
-   * Sanitizes plain text (escape HTML).
-   * @param text - Text to sanitize
-   * @returns Escaped text
-   */
-  sanitizeText(text: string): string {
-    return escapeHtml(text);
-  }
-
-  /**
-   * Validates content against dangerous patterns.
-   * @param content - Content to validate
-   * @returns Whether content is safe
-   */
-  validate(content: string): boolean {
-    for (const pattern of DANGEROUS_PATTERNS) {
-      if (pattern.test(content)) {
-        return false;
-      }
-    }
-    return true;
   }
 }
 
@@ -657,6 +655,21 @@ export class CSPManager {
   }
 
   /**
+   * Applies CSP meta tag to document.
+   */
+  applyMetaTag(): void {
+    const existing = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
+    if (existing) {
+      existing.remove();
+    }
+
+    const meta = document.createElement('meta');
+    meta.httpEquiv = 'Content-Security-Policy';
+    meta.content = this.generateHeader();
+    document.head.appendChild(meta);
+  }
+
+  /**
    * Checks if a source matches allowed sources.
    * @param source - Source to check
    * @param allowedSources - Allowed source patterns
@@ -694,21 +707,6 @@ export class CSPManager {
     }
 
     return false;
-  }
-
-  /**
-   * Applies CSP meta tag to document.
-   */
-  applyMetaTag(): void {
-    const existing = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
-    if (existing) {
-      existing.remove();
-    }
-
-    const meta = document.createElement('meta');
-    meta.httpEquiv = 'Content-Security-Policy';
-    meta.content = this.generateHeader();
-    document.head.appendChild(meta);
   }
 }
 
@@ -795,7 +793,7 @@ export class EventValidator {
   /**
    * Validates origin for cross-module messages.
    * @param sourceModuleId - Source module ID
-   * @param targetModuleId - Target module ID
+   * @param _targetModuleId
    * @param allowedOrigins - Allowed module origins
    * @returns Whether origin is valid
    */
@@ -979,41 +977,6 @@ export class SecuritySandbox {
   }
 
   /**
-   * Recursively sanitizes a value.
-   * @param value - Value to sanitize
-   * @returns Sanitized value
-   */
-  private sanitizeValue(value: unknown): unknown {
-    if (value === null || value === undefined) {
-      return value;
-    }
-
-    if (typeof value === 'string') {
-      return this.sanitize(value);
-    }
-
-    if (Array.isArray(value)) {
-      return value.map((item) => this.sanitizeValue(item));
-    }
-
-    if (typeof value === 'object') {
-      const sanitized: Record<string, unknown> = {};
-      for (const [key, val] of Object.entries(value)) {
-        // Sanitize both key and value
-        const sanitizedKey = this.sanitizeText(key);
-        sanitized[sanitizedKey] = this.sanitizeValue(val);
-      }
-      return sanitized;
-    }
-
-    return value;
-  }
-
-  // ==========================================================================
-  // Event Security
-  // ==========================================================================
-
-  /**
    * Checks if an event is allowed.
    * @param eventName - Event name
    * @returns Whether event is allowed
@@ -1031,6 +994,10 @@ export class SecuritySandbox {
 
     return allowed;
   }
+
+  // ==========================================================================
+  // Event Security
+  // ==========================================================================
 
   /**
    * Validates a cross-module message.
@@ -1063,16 +1030,16 @@ export class SecuritySandbox {
     return true;
   }
 
-  // ==========================================================================
-  // CSP Management
-  // ==========================================================================
-
   /**
    * Gets the current security nonce.
    */
   getNonce(): SecurityNonce {
     return this.cspManager.getNonce();
   }
+
+  // ==========================================================================
+  // CSP Management
+  // ==========================================================================
 
   /**
    * Generates CSP header.
@@ -1103,10 +1070,6 @@ export class SecuritySandbox {
     return allowed;
   }
 
-  // ==========================================================================
-  // Violation Management
-  // ==========================================================================
-
   /**
    * Reports a security violation.
    * @param violation - Violation details
@@ -1130,6 +1093,10 @@ export class SecuritySandbox {
     devWarn('[Security Violation]', fullViolation);
   }
 
+  // ==========================================================================
+  // Violation Management
+  // ==========================================================================
+
   /**
    * Gets all recorded violations.
    * @returns Array of violations
@@ -1145,10 +1112,6 @@ export class SecuritySandbox {
     this.violations.length = 0;
   }
 
-  // ==========================================================================
-  // Security Context
-  // ==========================================================================
-
   /**
    * Creates a security context for the module.
    * @returns Security context
@@ -1163,6 +1126,41 @@ export class SecuritySandbox {
       sanitize: (content: string) => this.sanitize(content),
       isEventAllowed: (eventName: string) => this.isEventAllowed(eventName),
     };
+  }
+
+  // ==========================================================================
+  // Security Context
+  // ==========================================================================
+
+  /**
+   * Recursively sanitizes a value.
+   * @param value - Value to sanitize
+   * @returns Sanitized value
+   */
+  private sanitizeValue(value: unknown): unknown {
+    if (value === null || value === undefined) {
+      return value;
+    }
+
+    if (typeof value === 'string') {
+      return this.sanitize(value);
+    }
+
+    if (Array.isArray(value)) {
+      return value.map((item) => this.sanitizeValue(item));
+    }
+
+    if (typeof value === 'object') {
+      const sanitized: Record<string, unknown> = {};
+      for (const [key, val] of Object.entries(value)) {
+        // Sanitize both key and value
+        const sanitizedKey = this.sanitizeText(key);
+        sanitized[sanitizedKey] = this.sanitizeValue(val);
+      }
+      return sanitized;
+    }
+
+    return value;
   }
 }
 

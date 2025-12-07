@@ -331,7 +331,14 @@ export {
 // Coordination Context
 // ============================================================================
 
-import type { CoordinationContextValue, KnownEventType, EventPayload, EventHandler, EventSubscriptionOptions, ServiceContract } from './types';
+import type {
+  CoordinationContextValue,
+  KnownEventType,
+  EventPayload,
+  EventHandler,
+  EventSubscriptionOptions,
+  ServiceContract,
+} from './types';
 import { createLibraryId } from './types';
 import { getCoordinationEventBus } from './event-bus';
 import { getGlobalContainer } from './dependency-injector';
@@ -426,19 +433,20 @@ export const CoordinationProvider: FC<CoordinationProviderComponentProps> = ({
   }, [autoInitialize, debug, onError, onReady]);
 
   // Create context value
-  const contextValue = useMemo<CoordinationContextValue>(() => ({
-    eventBus: getCoordinationEventBus() as unknown as import('./types').CoordinationEventBus,
-    container: getGlobalContainer(),
-    lifecycle: getLifecycleManager(),
-    stateCoordinator: getStateCoordinator({ debug }),
-    isInitialized,
-    version: '1.0.0',
-  }), [debug, isInitialized]);
+  const contextValue = useMemo<CoordinationContextValue>(
+    () => ({
+      eventBus: getCoordinationEventBus() as unknown as import('./types').CoordinationEventBus,
+      container: getGlobalContainer(),
+      lifecycle: getLifecycleManager(),
+      stateCoordinator: getStateCoordinator({ debug }),
+      isInitialized,
+      version: '1.0.0',
+    }),
+    [debug, isInitialized]
+  );
 
   return (
-    <CoordinationContext.Provider value={contextValue}>
-      {children}
-    </CoordinationContext.Provider>
+    <CoordinationContext.Provider value={contextValue}>{children}</CoordinationContext.Provider>
   );
 };
 
@@ -481,7 +489,7 @@ export function useCoordination(): CoordinationContextValue {
   if (!context) {
     throw new Error(
       'useCoordination must be used within a CoordinationProvider. ' +
-      'Wrap your component tree with <CoordinationProvider>.'
+        'Wrap your component tree with <CoordinationProvider>.'
     );
   }
 
@@ -719,9 +727,11 @@ export function withCoordination<P extends WithCoordinationProps>(
  * cleanup();
  * ```
  */
-export async function initCoordination(options: {
-  debug?: boolean;
-} = {}): Promise<() => Promise<void>> {
+export async function initCoordination(
+  options: {
+    debug?: boolean;
+  } = {}
+): Promise<() => Promise<void>> {
   const { debug = false } = options;
 
   // Initialize event bus

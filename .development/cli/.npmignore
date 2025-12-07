@@ -1,0 +1,51 @@
+# Source files (only include built dist)
+src/
+docs/
+
+# Configuration files
+.eslintrc*
+.prettierrc*
+.eslintcache
+.gitignore
+eslint.config.js
+tsconfig*.json
+
+# Development files
+*.md
+!README.md
+*.log
+*.tsbuildinfo
+.git/
+.github/
+node_modules/
+coverage/
+.nyc_output/
+
+# Test files
+__tests__/
+*.test.ts
+*.spec.ts
+test/
+tests/
+
+# Temporary files
+temp*
+tmp/
+*.tmp
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Lock files (consumers should generate their own)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# CLI-specific files to exclude
+templates/
+examples/

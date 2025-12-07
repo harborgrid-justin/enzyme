@@ -787,9 +787,24 @@ describe('Component', () => {
    };
    ```
 
-## See Also
+## Related Documentation
 
-- [AUTH_PROVIDER.md](./AUTH_PROVIDER.md) - Auth Provider
-- [HOOKS.md](./HOOKS.md) - Auth hooks
-- [RBAC.md](./RBAC.md) - RBAC system
-- [TYPES.md](./TYPES.md) - Type definitions
+### Authentication Module
+- [Authentication Module](./README.md) - Main authentication documentation
+- [Auth Overview](./OVERVIEW.md) - AD integration architecture
+- [Auth Provider](./AUTH_PROVIDER.md) - Provider with AD support
+- [Auth Hooks](./HOOKS.md) - useActiveDirectory hook
+- [RBAC System](./RBAC.md) - AD group to role mapping
+- [Common Patterns](./PATTERNS.md) - AD integration patterns
+- [Type Definitions](./TYPES.md) - AD-specific types
+- [Troubleshooting](./TROUBLESHOOTING.md) - AD authentication issues
+
+### Integration & Security
+- [Security Best Practices](../SECURITY.md) - Secure AD integration
+- [Configuration](../config/README.md) - AD configuration
+- [API Module](../api/README.md) - Microsoft Graph API integration
+
+### External Resources
+- [Microsoft Identity Platform](https://learn.microsoft.com/en-us/azure/active-directory/develop/)
+- [Azure AD Documentation](https://learn.microsoft.com/en-us/azure/active-directory/)
+- [Microsoft Graph API](https://learn.microsoft.com/en-us/graph/)

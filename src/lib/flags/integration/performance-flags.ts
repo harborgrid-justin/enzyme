@@ -240,8 +240,6 @@ integrationRegistry.register(performanceIntegration);
  * Performance flags helper class
  */
 class PerformanceFlagsHelper {
-  private getFlag: (flagKey: string) => boolean = () => false;
-
   setFlagGetter(getter: (flagKey: string) => boolean): void {
     this.getFlag = getter;
   }
@@ -330,6 +328,8 @@ class PerformanceFlagsHelper {
       [PERFORMANCE_FLAG_KEYS.PERF_DEGRADATION_ENABLED]: this.isDegradationEnabled(),
     };
   }
+
+  private getFlag: (flagKey: string) => boolean = () => false;
 }
 
 /**

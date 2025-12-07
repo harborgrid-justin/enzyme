@@ -5,13 +5,8 @@
  * @module config/hooks/useConfig
  */
 
-import { useCallback, useEffect, useState, useRef } from 'react';
-import type {
-  ConfigNamespace,
-  ConfigRecord,
-  ConfigChangeEvent,
-  DeepReadonly,
-} from '../types';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { ConfigChangeEvent, ConfigNamespace, ConfigRecord, DeepReadonly } from '../types';
 import { useConfigContext } from '../ConfigProvider';
 
 /**
@@ -143,9 +138,8 @@ export function useConfig<T extends ConfigRecord>(
     };
 
     // Subscribe to all changes in the namespace
-    const unsubscribe = subscribe(namespace, '*', handleChange);
 
-    return unsubscribe;
+    return subscribe(namespace, '*', handleChange);
   }, [namespace, subscribe, shouldSubscribe, getConfig, isEqual]);
 
   // Sync with context when initialized

@@ -1,0 +1,160 @@
+---
+title: {{title}}
+category: {{category}}
+type: api
+generated: {{generated}}
+---
+
+# {{title}}
+
+{{#if description}}
+{{description}}
+{{/if}}
+
+{{#if deprecated}}
+> **⚠️ Deprecated**: {{deprecated}}
+{{/if}}
+
+## Table of Contents
+
+{{#if functions}}
+- [Functions](#functions)
+{{#each functions}}
+  - [{{name}}](#{{slug name}})
+{{/each}}
+{{/if}}
+
+{{#if interfaces}}
+- [Interfaces](#interfaces)
+{{#each interfaces}}
+  - [{{name}}](#{{slug name}})
+{{/each}}
+{{/if}}
+
+{{#if types}}
+- [Types](#types)
+{{#each types}}
+  - [{{name}}](#{{slug name}})
+{{/each}}
+{{/if}}
+
+---
+
+{{#if functions}}
+## Functions
+
+{{#each functions}}
+### {{name}}
+
+{{#if isAsync}}
+![async](https://img.shields.io/badge/async-true-blue)
+{{/if}}
+{{#if isExported}}
+![exported](https://img.shields.io/badge/exported-true-green)
+{{/if}}
+
+{{#if deprecated}}
+> **⚠️ Deprecated**: {{deprecated}}
+{{/if}}
+
+{{#if documentation}}
+{{documentation}}
+{{/if}}
+
+#### Signature
+
+```typescript
+{{#if isAsync}}async {{/if}}function {{name}}{{#if typeParameters}}<{{join typeParameters ", "}}>{{/if}}({{#each parameters}}{{name}}{{#if optional}}?{{/if}}: {{type}}{{#unless @last}}, {{/unless}}{{/each}}): {{returnType}}
+```
+
+{{#if parameters}}
+#### Parameters
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+{{#each parameters}}
+| `{{name}}` | `{{type}}` | {{#if optional}}❌{{else}}✅{{/if}} | {{#if defaultValue}}`{{defaultValue}}`{{else}}-{{/if}} | {{#if description}}{{description}}{{else}}-{{/if}} |
+{{/each}}
+{{/if}}
+
+#### Returns
+
+`{{returnType}}`
+
+{{#if examples}}
+#### Examples
+
+{{#each examples}}
+```typescript
+{{this}}
+```
+{{/each}}
+{{/if}}
+
+{{#if since}}
+**Since**: {{since}}
+{{/if}}
+
+---
+
+{{/each}}
+{{/if}}
+
+{{#if interfaces}}
+## Interfaces
+
+{{#each interfaces}}
+### {{name}}
+
+{{#if isExported}}
+![exported](https://img.shields.io/badge/exported-true-green)
+{{/if}}
+
+{{#if deprecated}}
+> **⚠️ Deprecated**: {{deprecated}}
+{{/if}}
+
+{{#if documentation}}
+{{documentation}}
+{{/if}}
+
+{{#if extends}}
+**Extends**: {{#each extends}}`{{this}}`{{#unless @last}}, {{/unless}}{{/each}}
+{{/if}}
+
+{{#if properties}}
+#### Properties
+
+| Property | Type | Required | Readonly | Description |
+|----------|------|----------|----------|-------------|
+{{#each properties}}
+| `{{name}}` | `{{type}}` | {{#if optional}}❌{{else}}✅{{/if}} | {{#if readonly}}✅{{else}}❌{{/if}} | {{#if description}}{{description}}{{else}}-{{/if}} |
+{{/each}}
+{{/if}}
+
+{{#if examples}}
+#### Examples
+
+{{#each examples}}
+```typescript
+{{this}}
+```
+{{/each}}
+{{/if}}
+
+{{#if since}}
+**Since**: {{since}}
+{{/if}}
+
+---
+
+{{/each}}
+{{/if}}
+
+## Source
+
+**File**: `{{filePath}}`
+
+{{#if version}}
+**Version**: {{version}}
+{{/if}}

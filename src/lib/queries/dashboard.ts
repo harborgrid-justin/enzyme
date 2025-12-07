@@ -3,7 +3,12 @@
  * @description Query factories for dashboard data fetching using standardized apiClient
  */
 
-import { useQuery, useSuspenseQuery, type UseQueryOptions, type UseSuspenseQueryOptions } from '@tanstack/react-query';
+import {
+  useQuery,
+  useSuspenseQuery,
+  type UseQueryOptions,
+  type UseSuspenseQueryOptions,
+} from '@tanstack/react-query';
 import { queryKeys } from './queryClient';
 import { TIMING } from '@/config';
 import { apiClient } from '@/lib/api';
@@ -171,7 +176,9 @@ export function dashboardStatsSuspenseQueryOptions(): UseSuspenseQueryOptions<Da
 /**
  * Suspense query options factory for activity feed
  */
-export function activitySuspenseQueryOptions(page: number = 1): UseSuspenseQueryOptions<ActivityResponse> {
+export function activitySuspenseQueryOptions(
+  page: number = 1
+): UseSuspenseQueryOptions<ActivityResponse> {
   return {
     queryKey: queryKeys.dashboard.activity(page),
     queryFn: async () => fetchActivity(page),
@@ -199,14 +206,18 @@ export function useDashboardStatsSuspense(): ReturnType<typeof useSuspenseQuery<
 /**
  * Hook to fetch dashboard charts
  */
-export function useDashboardCharts(range: string = '7d'): ReturnType<typeof useQuery<DashboardCharts>> {
+export function useDashboardCharts(
+  range: string = '7d'
+): ReturnType<typeof useQuery<DashboardCharts>> {
   return useQuery(dashboardChartsQueryOptions(range));
 }
 
 /**
  * Hook to fetch dashboard charts with Suspense
  */
-export function useDashboardChartsSuspense(range: string = '7d'): ReturnType<typeof useSuspenseQuery<DashboardCharts>> {
+export function useDashboardChartsSuspense(
+  range: string = '7d'
+): ReturnType<typeof useSuspenseQuery<DashboardCharts>> {
   return useSuspenseQuery(dashboardChartsSuspenseQueryOptions(range));
 }
 
@@ -220,6 +231,8 @@ export function useActivity(page: number = 1): ReturnType<typeof useQuery<Activi
 /**
  * Hook to fetch activity feed with Suspense
  */
-export function useActivitySuspense(page: number = 1): ReturnType<typeof useSuspenseQuery<ActivityResponse>> {
+export function useActivitySuspense(
+  page: number = 1
+): ReturnType<typeof useSuspenseQuery<ActivityResponse>> {
   return useSuspenseQuery(activitySuspenseQueryOptions(page));
 }

@@ -186,7 +186,7 @@ function detectScreenReader(): boolean {
  * Focus manager for accessible navigation
  */
 export class FocusManager {
-  private options: Required<FocusManagementOptions>;
+  private readonly options: Required<FocusManagementOptions>;
   private previousFocus: HTMLElement | null = null;
   private focusHistory: HTMLElement[] = [];
 
@@ -343,7 +343,7 @@ export class FocusManager {
  * ARIA enhancement manager
  */
 export class ARIAEnhancer {
-  private rules: ARIAEnhancementRule[];
+  private readonly rules: ARIAEnhancementRule[];
   private observer: MutationObserver | null = null;
 
   constructor(rules: ARIAEnhancementRule[] = DEFAULT_ARIA_RULES) {
@@ -532,9 +532,9 @@ export function createSkipLink(targetId: string, text = 'Skip to main content'):
 export class AutoAccessibility {
   private static instance: AutoAccessibility;
   private config: Required<AutoAccessibilityConfig>;
-  private focusManager: FocusManager;
+  private readonly focusManager: FocusManager;
   private ariaEnhancer: ARIAEnhancer;
-  private preferences: AccessibilityPreferences;
+  private readonly preferences: AccessibilityPreferences;
   private keyboardNavActive = false;
   private cleanupFns: Array<() => void> = [];
 
@@ -622,6 +622,20 @@ export class AutoAccessibility {
   }
 
   /**
+   * Get preferences
+   */
+  getPreferences(): AccessibilityPreferences {
+    return { ...this.preferences, keyboardNavigation: this.keyboardNavActive };
+  }
+
+  /**
+   * Get focus manager
+   */
+  getFocusManager(): FocusManager {
+    return this.focusManager;
+  }
+
+  /**
    * Setup motion preference listener
    */
   private setupMotionListener(): void {
@@ -675,20 +689,6 @@ export class AutoAccessibility {
     document.body.insertBefore(skipLink, document.body.firstChild);
 
     this.cleanupFns.push(() => skipLink.remove());
-  }
-
-  /**
-   * Get preferences
-   */
-  getPreferences(): AccessibilityPreferences {
-    return { ...this.preferences, keyboardNavigation: this.keyboardNavActive };
-  }
-
-  /**
-   * Get focus manager
-   */
-  getFocusManager(): FocusManager {
-    return this.focusManager;
   }
 
   /**

@@ -1008,10 +1008,23 @@ When asking for help, include:
 
 ## See Also
 
+### Core Resources
 - [FAQ](./FAQ.md) - Frequently asked questions
 - [Documentation Index](./INDEX.md) - All documentation
 - [Examples](../src/lib/docs/examples/) - Code examples
 - [GitHub Issues](https://github.com/harborgrid-justin/white-cross/issues) - Report bugs
+
+### Module Documentation
+- [API Module](./api/README.md) - API troubleshooting
+- [Auth Module](./auth/README.md) - Authentication issues
+- [State Module](./state/README.md) - State management issues
+- [Routing Module](./routing/README.md) - Routing problems
+- [UI Module](./ui/README.md) - UI component issues
+- [Config Module](./config/README.md) - Configuration problems
+- [Security Module](./security/README.md) - Security issues
+- [Performance Module](./performance/README.md) - Performance problems
+- [Theme Module](./theme/README.md) - Theming issues
+- [Hooks Module](./hooks/README.md) - Hook troubleshooting
 
 ---
 

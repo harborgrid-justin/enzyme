@@ -4,7 +4,13 @@
  * @description HOC to wrap any component with local try/catch UI
  */
 
-import React, { Component, useRef, type ErrorInfo, type ReactNode, type ComponentType } from 'react';
+import React, {
+  Component,
+  useRef,
+  type ErrorInfo,
+  type ReactNode,
+  type ComponentType,
+} from 'react';
 import { ErrorReporter } from './ErrorReporter';
 import type { AppError } from './errorTypes';
 import { normalizeError, getUserFriendlyMessage } from './errorTypes';
@@ -70,7 +76,7 @@ function InlineErrorFallback({
           />
         </svg>
         <span>{getUserFriendlyMessage(error)}</span>
-        {(showReset === true) && (
+        {showReset && (
           <button
             onClick={onReset}
             style={{
@@ -103,32 +109,32 @@ function createErrorBoundary(
       super(props);
       this.state = { hasError: false, error: null };
     }
-    
+
     static getDerivedStateFromError(error: Error): ErrorBoundaryState {
       return { hasError: true, error: normalizeError(error) };
     }
-    
+
     override componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
       const appError = normalizeError(error);
-      
+
       ErrorReporter.reportError(error, {
         component: options.componentName,
         metadata: {
           componentStack: errorInfo.componentStack,
         },
       });
-      
+
       options.onError?.(appError, errorInfo);
     }
-    
+
     handleReset = (): void => {
       this.setState({ hasError: false, error: null });
     };
-    
+
     override render(): ReactNode {
       const { hasError, error } = this.state;
       const { children } = this.props;
-      
+
       if (hasError && error) {
         if (typeof options.fallback === 'function') {
           return options.fallback(error, this.handleReset);
@@ -137,7 +143,7 @@ function createErrorBoundary(
         if (options.fallback != null) {
           return options.fallback;
         }
-        
+
         return (
           <InlineErrorFallback
             error={error}
@@ -146,7 +152,7 @@ function createErrorBoundary(
           />
         );
       }
-      
+
       return children;
     }
   };
@@ -161,10 +167,7 @@ export function withErrorBoundary<P extends object>(
   options: WithErrorBoundaryOptions = {}
 ): ComponentType<P> {
   const componentName =
-    options.componentName ??
-    WrappedComponent.displayName ??
-    WrappedComponent.name ??
-    'Component';
+    options.componentName ?? WrappedComponent.displayName ?? WrappedComponent.name ?? 'Component';
 
   const ErrorBoundary = createErrorBoundary({
     ...options,
@@ -185,7 +188,9 @@ export function withErrorBoundary<P extends object>(
 // Pre-created error boundary components
 const boundaryCache = new Map<string, ComponentType<{ children: ReactNode }>>();
 
-function getCachedBoundary(options: WithErrorBoundaryOptions): ComponentType<{ children: ReactNode }> {
+function getCachedBoundary(
+  options: WithErrorBoundaryOptions
+): ComponentType<{ children: ReactNode }> {
   const cacheKey = JSON.stringify(options);
   let boundary = boundaryCache.get(cacheKey);
   if (!boundary) {

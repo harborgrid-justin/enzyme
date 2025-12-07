@@ -691,9 +691,20 @@ describe('ProtectedComponent', () => {
    };
    ```
 
-## See Also
+## Related Documentation
 
-- [AUTH_PROVIDER.md](./AUTH_PROVIDER.md) - Auth Provider
-- [HOOKS.md](./HOOKS.md) - Auth hooks
-- [GUARDS.md](./GUARDS.md) - Route guards
-- [TYPES.md](./TYPES.md) - Type definitions
+### Authentication Module
+- [Authentication Module](./README.md) - Main authentication documentation
+- [Auth Overview](./OVERVIEW.md) - Architecture and features
+- [Auth Provider](./AUTH_PROVIDER.md) - AuthProvider component
+- [Auth Hooks](./HOOKS.md) - React hooks including RBAC hooks
+- [Route Guards](./GUARDS.md) - RequireRole and RequirePermission components
+- [Common Patterns](./PATTERNS.md) - RBAC implementation patterns
+- [Type Definitions](./TYPES.md) - RBAC types and interfaces
+- [Troubleshooting](./TROUBLESHOOTING.md) - RBAC-specific issues
+
+### Security & Integration
+- [Security Best Practices](../SECURITY.md) - Authorization and access control
+- [Security Module](../security/README.md) - Security infrastructure
+- [API Module](../api/README.md) - Permission-based API access
+- [State Management](../state/README.md) - RBAC state management

@@ -765,15 +765,24 @@ function useInvalidateQueries(): (
 
 Returns a function to invalidate queries.
 
-## See Also
+## Related Documentation
 
+### Queries and Data Fetching
 - **[API Module](../api/README.md)** - HTTP client and API utilities
+- **[API Hooks](../api/HOOKS.md)** - React hooks for data fetching and mutations
+- **[Hooks Reference](../HOOKS_REFERENCE.md)** - Complete hooks API reference
+
+### Integration Guides
 - **[State Management](../state/README.md)** - Global state with Zustand
 - **[Realtime](../realtime/README.md)** - WebSocket and SSE integration
 - **[Performance](../performance/README.md)** - Performance optimization
+- **[Shared Utilities](../shared/README.md)** - Event bus and storage utilities
 
-## External Resources
+### Reference
+- **[Documentation Index](../INDEX.md)** - All documentation resources
+- **[Configuration](../config/README.md)** - Configuration options
 
-- [TanStack Query Documentation](https://tanstack.com/query/latest)
-- [React Query Best Practices](https://tkdodo.eu/blog/practical-react-query)
-- [Query Keys Best Practices](https://tkdodo.eu/blog/effective-react-query-keys)
+### External Resources
+- **[TanStack Query Documentation](https://tanstack.com/query/latest)** - Official React Query docs
+- **[React Query Best Practices](https://tkdodo.eu/blog/practical-react-query)** - Blog series
+- **[Query Keys Best Practices](https://tkdodo.eu/blog/effective-react-query-keys)** - Query key patterns

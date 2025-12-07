@@ -4,6 +4,10 @@ import dts from 'vite-plugin-dts';
 import { resolve } from 'path';
 import { readdirSync, statSync, existsSync } from 'fs';
 
+// Claude.ai Optimization: Enterprise Vite config for library building
+// Auto-discovers lib modules, creates dual ESM/CJS builds
+// Use @/ for src/ imports, excludes React and other externals
+
 // Function to get all lib subdirectories that have index files
 const getLibSubdirectories = () => {
   const libPath = resolve(__dirname, 'src/lib');

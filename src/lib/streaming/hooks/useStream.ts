@@ -28,23 +28,16 @@
  * ```
  */
 
-import {
-  useState,
-  useEffect,
-  useCallback,
-  useRef,
-  useMemo,
-  useLayoutEffect,
-} from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { useStreamContext, useOptionalStreamContext } from '../StreamProvider';
+import { useOptionalStreamContext, useStreamContext } from '../StreamProvider';
 
 import {
-  type UseStreamResult,
-  type StreamError,
   type StreamConfig,
-  StreamState,
+  type StreamError,
   StreamEventType,
+  StreamState,
+  type UseStreamResult,
 } from '../types';
 
 // ============================================================================
@@ -149,9 +142,7 @@ const DEFAULT_RESULT: UseStreamResult = {
  * stream.reset();
  * ```
  */
-export function useStream(
-  boundaryIdOrOptions?: string | UseStreamOptions
-): UseStreamResult {
+export function useStream(boundaryIdOrOptions?: string | UseStreamOptions): UseStreamResult {
   // Normalize arguments
   const options: UseStreamOptions = useMemo(() => {
     if (typeof boundaryIdOrOptions === 'string') {
@@ -160,14 +151,7 @@ export function useStream(
     return boundaryIdOrOptions ?? {};
   }, [boundaryIdOrOptions]);
 
-  const {
-    boundaryId,
-    config,
-    autoStart = false,
-    onStateChange,
-    onComplete,
-    onError,
-  } = options;
+  const { boundaryId, config, autoStart = false, onStateChange, onComplete, onError } = options;
 
   // Get streaming context (optional to support usage outside provider)
   const context = useOptionalStreamContext();
@@ -191,7 +175,13 @@ export function useStream(
     mountedRef.current = true;
 
     // Skip if no context or no boundary ID
-    if (context === null || context === undefined || boundaryId === undefined || boundaryId === null || boundaryId === '') {
+    if (
+      context === null ||
+      context === undefined ||
+      boundaryId === undefined ||
+      boundaryId === null ||
+      boundaryId === ''
+    ) {
       return;
     }
 
@@ -270,24 +260,55 @@ export function useStream(
   // ==========================================================================
 
   const start = useCallback(() => {
-    if (context === null || context === undefined || boundaryId === undefined || boundaryId === null || boundaryId === '') return;
+    if (
+      context === null ||
+      context === undefined ||
+      boundaryId === undefined ||
+      boundaryId === null ||
+      boundaryId === ''
+    )
+      return;
     context.startStream(boundaryId);
   }, [context, boundaryId]);
 
   const pause = useCallback(() => {
-    if (context === null || context === undefined || boundaryId === undefined || boundaryId === null || boundaryId === '') return;
+    if (
+      context === null ||
+      context === undefined ||
+      boundaryId === undefined ||
+      boundaryId === null ||
+      boundaryId === ''
+    )
+      return;
     context.pauseStream(boundaryId);
   }, [context, boundaryId]);
 
   const resume = useCallback(() => {
-    if (context === null || context === undefined || boundaryId === undefined || boundaryId === null || boundaryId === '') return;
+    if (
+      context === null ||
+      context === undefined ||
+      boundaryId === undefined ||
+      boundaryId === null ||
+      boundaryId === ''
+    )
+      return;
     context.resumeStream(boundaryId);
   }, [context, boundaryId]);
 
-  const abort = useCallback((reason?: string) => {
-    if (context === null || context === undefined || boundaryId === undefined || boundaryId === null || boundaryId === '') return;
-    context.abortStream(boundaryId, reason);
-  }, [context, boundaryId]);
+  const abort = useCallback(
+    (reason?: string) => {
+      if (
+        context === null ||
+        context === undefined ||
+        boundaryId === undefined ||
+        boundaryId === null ||
+        boundaryId === ''
+      )
+        return;
+      context.abortStream(boundaryId, reason);
+    },
+    [context, boundaryId]
+  );
 
   const reset = useCallback(() => {
     setState(StreamState.Idle);
@@ -410,7 +431,8 @@ export function useMultipleStreams(boundaryIds: string[]): UseMultipleStreamsRes
     setStates(initialStates);
 
     // Subscribe to updates
-    const unsubscribe = context.subscribe((event) => {
+
+    return context.subscribe((event) => {
       if (!boundaryIds.includes(event.boundaryId)) return;
 
       if (event.type === StreamEventType.StateChange) {
@@ -422,21 +444,15 @@ export function useMultipleStreams(boundaryIds: string[]): UseMultipleStreamsRes
         });
       }
     });
-
-    return unsubscribe;
   }, [context, boundaryIds]);
 
   const allComplete = useMemo(() => {
     if (states.size === 0) return false;
-    return Array.from(states.values()).every(
-      (s) => s === StreamState.Completed
-    );
+    return Array.from(states.values()).every((s) => s === StreamState.Completed);
   }, [states]);
 
   const hasErrors = useMemo(() => {
-    return Array.from(states.values()).some(
-      (s) => s === StreamState.Error
-    );
+    return Array.from(states.values()).some((s) => s === StreamState.Error);
   }, [states]);
 
   const activeCount = useMemo(() => {
@@ -446,9 +462,7 @@ export function useMultipleStreams(boundaryIds: string[]): UseMultipleStreamsRes
   }, [states]);
 
   const completedCount = useMemo(() => {
-    return Array.from(states.values()).filter(
-      (s) => s === StreamState.Completed
-    ).length;
+    return Array.from(states.values()).filter((s) => s === StreamState.Completed).length;
   }, [states]);
 
   const progress = useMemo(() => {
@@ -463,12 +477,15 @@ export function useMultipleStreams(boundaryIds: string[]): UseMultipleStreamsRes
     }
   }, [context, boundaryIds]);
 
-  const abortAll = useCallback((reason?: string) => {
-    if (!context) return;
-    for (const id of boundaryIds) {
-      context.abortStream(id, reason);
-    }
-  }, [context, boundaryIds]);
+  const abortAll = useCallback(
+    (reason?: string) => {
+      if (!context) return;
+      for (const id of boundaryIds) {
+        context.abortStream(id, reason);
+      }
+    },
+    [context, boundaryIds]
+  );
 
   return {
     states,
@@ -540,6 +557,6 @@ export function useAwaitStream(boundaryId: string): () => Promise<void> {
           reject(new Error('Stream aborted'));
         }
       });
-  });
-}, [context, boundaryId]);
+    });
+  }, [context, boundaryId]);
 }

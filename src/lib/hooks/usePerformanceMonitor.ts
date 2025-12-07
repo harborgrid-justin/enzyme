@@ -187,7 +187,9 @@ export function usePerformanceMonitor(options: UsePerformanceMonitorOptions = {}
     byType: Record<string, { count: number; size: number; duration: number }>;
     slowResources: PerformanceResourceTiming[];
   } => {
-    const resources = performance.getEntriesByType('resource') as unknown as PerformanceResourceTiming[];
+    const resources = performance.getEntriesByType(
+      'resource'
+    ) as unknown as PerformanceResourceTiming[];
 
     const stats = {
       totalResources: resources.length,
@@ -205,10 +207,10 @@ export function usePerformanceMonitor(options: UsePerformanceMonitorOptions = {}
       stats.byType[type].count++;
       stats.byType[type].size += resource.transferSize || 0;
       stats.byType[type].duration += resource.duration;
-      
+
       stats.totalSize += resource.transferSize || 0;
       stats.totalDuration += resource.duration;
-      
+
       // Track slow resources (> 1 second)
       if (resource.duration > 1000) {
         stats.slowResources.push(resource);
@@ -224,7 +226,7 @@ export function usePerformanceMonitor(options: UsePerformanceMonitorOptions = {}
 
     const handleMetric = (metric: Metric): void => {
       const value = Math.round(metric.value);
-      
+
       setMetrics((prev) => ({
         ...prev,
         [metric.name]: value,
@@ -251,7 +253,7 @@ export function usePerformanceMonitor(options: UsePerformanceMonitorOptions = {}
 
     const observer = new PerformanceObserver((list) => {
       const entries = list.getEntries() as PerformanceResourceTiming[];
-      
+
       setMetrics((prev) => ({
         ...prev,
         resourceTimings: [...prev.resourceTimings, ...entries],
@@ -283,7 +285,7 @@ export function usePerformanceMonitor(options: UsePerformanceMonitorOptions = {}
 
     const observer = new PerformanceObserver((list) => {
       const entries = list.getEntries();
-      
+
       setMetrics((prev) => ({
         ...prev,
         longTasks: [...prev.longTasks, ...entries],
@@ -336,11 +338,7 @@ export function usePerformanceMonitor(options: UsePerformanceMonitorOptions = {}
         // Check memory threshold
         const usageRatio = usage.usedJSHeapSize / usage.jsHeapSizeLimit;
         if (thresholds.memoryUsage != null && usageRatio > thresholds.memoryUsage) {
-          onThresholdExceeded?.(
-            'memoryUsage',
-            usageRatio * 100,
-            thresholds.memoryUsage * 100
-          );
+          onThresholdExceeded?.('memoryUsage', usageRatio * 100, thresholds.memoryUsage * 100);
         }
       }
     };

@@ -295,6 +295,13 @@ export class WatchMode {
   }
 
   /**
+   * Get the underlying discovery engine
+   */
+  getEngine(): DiscoveryEngine {
+    return this.engine;
+  }
+
+  /**
    * Start the file system watcher
    */
   private async startWatcher(): Promise<void> {
@@ -473,13 +480,6 @@ export class WatchMode {
     if (this.config.verbose === true) {
       console.info(`[WatchMode] ${message}`);
     }
-  }
-
-  /**
-   * Get the underlying discovery engine
-   */
-  getEngine(): DiscoveryEngine {
-    return this.engine;
   }
 }
 

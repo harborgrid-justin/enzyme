@@ -697,6 +697,17 @@ useEffect(() => {
 
 ## Related Documentation
 
-- [Web Vitals Guide](./README.md#core-web-vitals-targets)
-- [Performance Configuration](./CONFIG.md)
-- [Render Tracking](./RENDER_TRACKING.md)
+### Performance System
+- [README.md](./README.md) - Performance overview
+- [WEB_VITALS.md](./WEB_VITALS.md) - Core Web Vitals
+- [MONITORING.md](./MONITORING.md) - Performance monitoring
+- [RENDER_TRACKING.md](./RENDER_TRACKING.md) - Render tracking
+- [CONFIG.md](./CONFIG.md) - Performance configuration
+
+### Monitoring & Hydration
+- [Monitoring System](../monitoring/README.md) - System monitoring
+- [Error Boundaries](../monitoring/ERROR_BOUNDARIES.md) - Error tracking
+- [Hydration System](../hydration/README.md) - Hydration monitoring
+
+### Integration
+- [Performance Integration](../integration/PERFORMANCE_MONITORING_HYDRATION.md) - Complete integration

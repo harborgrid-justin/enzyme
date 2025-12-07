@@ -1,6 +1,7 @@
 # Configuration Guide
 
-> **Scope**: This document covers the Harbor React Library's configuration system (initialization options, runtime config).
+> **Scope**: This document covers the Harbor React Library's configuration system (initialization options, runtime
+> config).
 > For template-level configuration (`src/config/`), see [Template Configuration](../../../docs/CONFIGURATION.md).
 
 ## Table of Contents

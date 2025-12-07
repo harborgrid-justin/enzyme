@@ -13,6 +13,7 @@ Use this checklist when migrating existing code to use the new shared utilities.
 ## Pattern Detection
 
 ### Check for Manual Mounted Tracking
+
 ```tsx
 // OLD PATTERN - Search for:
 const isMountedRef = useRef(false);
@@ -25,11 +26,13 @@ useEffect(() => {
 import { useIsMounted } from '@/lib/hooks/shared';
 const isMounted = useIsMounted();
 ```
+
 - [ ] Search codebase for `isMountedRef` pattern
 - [ ] Replace with `useIsMounted()`
 - [ ] Update all `isMountedRef.current` to `isMounted()`
 
 ### Check for Callback Ref Pattern
+
 ```tsx
 // OLD PATTERN - Search for:
 const callbackRef = useRef(callback);
@@ -41,11 +44,13 @@ useEffect(() => {
 import { useLatestRef } from '@/lib/hooks/shared';
 const callbackRef = useLatestRef(callback);
 ```
+
 - [ ] Search for `useRef` + `useEffect` updating ref
 - [ ] Replace with `useLatestRef()`
 - [ ] Verify callback dependencies removed
 
 ### Check for Network API Access
+
 ```tsx
 // OLD PATTERN - Search for:
 const connection = navigator.connection;
@@ -55,11 +60,13 @@ const effectiveType = connection?.effectiveType;
 import { getNetworkInfo } from '@/lib/hooks/shared';
 const { effectiveType } = getNetworkInfo();
 ```
+
 - [ ] Search for `navigator.connection`
 - [ ] Replace with `getNetworkInfo()`
 - [ ] Add fallback handling if needed
 
 ### Check for Manual Buffering
+
 ```tsx
 // OLD PATTERN - Search for:
 const buffer = useRef([]);
@@ -74,6 +81,7 @@ const { add, flush } = useBuffer({
   onFlush: sendData
 });
 ```
+
 - [ ] Search for manual buffer implementations
 - [ ] Identify flush triggers (size, time)
 - [ ] Replace with `useBuffer()` config
@@ -82,29 +90,34 @@ const { add, flush } = useBuffer({
 ## Migration Steps
 
 ### 1. Update Imports
+
 - [ ] Add shared utility imports to files
 - [ ] Remove any local duplicate implementations
 - [ ] Update TypeScript types if needed
 
 ### 2. Replace Patterns
+
 - [ ] Replace mounted state tracking
-- [ ] Replace callback ref patterns  
+- [ ] Replace callback ref patterns
 - [ ] Replace network checks
 - [ ] Replace buffer implementations
 
 ### 3. Update Function Calls
+
 - [ ] Change `isMountedRef.current` to `isMounted()`
 - [ ] Change `callbackRef.current(args)` to `callbackRef.current(args)` (same, but from shared)
 - [ ] Update network quality checks
 - [ ] Update buffer add/flush calls
 
 ### 4. Clean Up
+
 - [ ] Remove duplicate implementations
 - [ ] Remove unused imports
 - [ ] Remove unused refs
 - [ ] Remove manual cleanup code
 
 ### 5. Testing
+
 - [ ] Run unit tests
 - [ ] Test mounted state behavior
 - [ ] Test async operations
@@ -131,6 +144,7 @@ const { add, flush } = useBuffer({
 Before submitting PR:
 
 ### Correctness
+
 - [ ] All imports are correct
 - [ ] Function calls use correct syntax (`isMounted()` not `isMounted`)
 - [ ] Refs accessed with `.current` where needed
@@ -138,18 +152,21 @@ Before submitting PR:
 - [ ] Network checks have proper fallbacks
 
 ### Performance
+
 - [ ] No unnecessary re-renders introduced
 - [ ] Callback deps properly optimized
 - [ ] Buffer sizes are reasonable
 - [ ] Network checks not called too frequently
 
 ### Testing
+
 - [ ] All tests pass
 - [ ] New tests added if needed
 - [ ] Edge cases covered
 - [ ] Unmount behavior verified
 
 ### Documentation
+
 - [ ] Code comments updated
 - [ ] JSDoc updated if public API
 - [ ] README updated if needed
@@ -158,6 +175,7 @@ Before submitting PR:
 ## Common Migration Patterns
 
 ### Pattern 1: Async Data Fetching
+
 ```tsx
 // BEFORE
 const isMountedRef = useRef(false);
@@ -187,6 +205,7 @@ const fetchData = async () => {
 ```
 
 ### Pattern 2: Debounced Callback
+
 ```tsx
 // BEFORE
 const onSearchRef = useRef(onSearch);
@@ -215,6 +234,7 @@ useEffect(() => {
 ```
 
 ### Pattern 3: Event Batching
+
 ```tsx
 // BEFORE
 const buffer = useRef([]);
@@ -284,6 +304,7 @@ Migration is complete when:
 ## Support
 
 Questions? See:
+
 - [Shared Utilities README](./README.md)
 - [Quick Reference](./QUICK_REFERENCE.md)
 - [Documentation Index](../../docs/INDEX.md) - All documentation resources

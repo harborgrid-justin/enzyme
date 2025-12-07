@@ -1,14 +1,20 @@
 # Security Module
 
-> **Purpose:** Enterprise-grade security infrastructure with XSS prevention, CSRF protection, CSP management, and encrypted storage.
+> **Purpose:** Enterprise-grade security infrastructure with XSS prevention, CSRF protection, CSP management, and
+> encrypted storage.
 
 ## Overview
 
-The Security module provides comprehensive defense-in-depth security features for React applications. It protects against common web vulnerabilities including Cross-Site Scripting (XSS), Cross-Site Request Forgery (CSRF), and injection attacks through automatic sanitization, token management, and Content Security Policy enforcement.
+The Security module provides comprehensive defense-in-depth security features for React applications. It protects
+against common web vulnerabilities including Cross-Site Scripting (XSS), Cross-Site Request Forgery (CSRF), and
+injection attacks through automatic sanitization, token management, and Content Security Policy enforcement.
 
-This module goes beyond basic security by providing context-aware encoding for different HTML contexts, encrypted local storage with automatic key rotation, CSP nonce generation for inline scripts, violation reporting, and React hooks that make security features easy to use without sacrificing developer experience.
+This module goes beyond basic security by providing context-aware encoding for different HTML contexts, encrypted local
+storage with automatic key rotation, CSP nonce generation for inline scripts, violation reporting, and React hooks that
+make security features easy to use without sacrificing developer experience.
 
-Perfect for applications handling sensitive data or requiring compliance with security standards (SOC2, PCI-DSS, HIPAA), this module provides battle-tested security utilities with minimal performance overhead and maximum protection.
+Perfect for applications handling sensitive data or requiring compliance with security standards (SOC2, PCI-DSS, HIPAA),
+this module provides battle-tested security utilities with minimal performance overhead and maximum protection.
 
 ## Key Features
 
@@ -87,10 +93,12 @@ function Settings() {
 ## Exports
 
 ### Components
+
 - `SecurityProvider` - Context provider for security features
 - `SecurityConsumer` - Context consumer
 
 ### XSS Prevention
+
 - `sanitizeHTML()` - Sanitize HTML content
 - `encodeHTML()` - Encode for HTML context
 - `encodeHTMLAttribute()` - Encode for HTML attributes
@@ -106,6 +114,7 @@ function Settings() {
 - `isValidURL()` - URL validation
 
 ### CSRF Protection
+
 - `CSRFProtection` - CSRF manager class
 - `generateOneTimeToken()` - Generate single-use token
 - `createSecureRequestInit()` - Add CSRF headers to fetch
@@ -115,6 +124,7 @@ function Settings() {
 - `createCSRFMetaProps()` - Meta tag props
 
 ### Content Security Policy
+
 - `CSPManager` - CSP configuration manager
 - `generateNonce()` - Generate CSP nonce
 - `parseCSPString()` - Parse CSP header
@@ -123,6 +133,7 @@ function Settings() {
 - `validateCSPPolicy()` - Validate CSP config
 
 ### Secure Storage
+
 - `SecureStorage` - Encrypted storage class
 - `createSecureLocalStorage()` - Encrypted localStorage
 - `createSecureSessionStorage()` - Encrypted sessionStorage
@@ -131,6 +142,7 @@ function Settings() {
 - `generateEncryptionKey()` - Generate encryption key
 
 ### Hooks
+
 - `useSecurityContext()` - Access security context
 - `useCSRFToken()` - CSRF token management
 - `useSecureFetch()` - Fetch with CSRF headers
@@ -146,6 +158,7 @@ function Settings() {
 - `useViolationReporter()` - Report security violations
 
 ### Types
+
 - `CSPPolicy` - CSP configuration type
 - `CSPDirective` - CSP directive names
 - `CSRFToken` - CSRF token structure
@@ -189,6 +202,7 @@ The security module provides defense in depth:
 ## Common Patterns
 
 ### Pattern 1: Safe User-Generated Content
+
 ```tsx
 import { useSanitizedContent } from '@/lib/security';
 
@@ -210,6 +224,7 @@ function BlogPost({ post }) {
 ```
 
 ### Pattern 2: CSRF-Protected Forms
+
 ```tsx
 import { useCSRFToken, useSecureFormSubmit } from '@/lib/security';
 
@@ -235,6 +250,7 @@ function CommentForm() {
 ```
 
 ### Pattern 3: Encrypted Sensitive Data
+
 ```tsx
 import { useSecureStorage } from '@/lib/security';
 
@@ -266,6 +282,7 @@ function APIKeyManager() {
 ```
 
 ### Pattern 4: CSP Nonce for Inline Scripts
+
 ```tsx
 import { useCSPNonce, useNonceScript } from '@/lib/security';
 
@@ -296,6 +313,7 @@ function CustomScript() {
 ```
 
 ### Pattern 5: Secure API Calls
+
 ```tsx
 import { useSecureFetch } from '@/lib/security';
 
@@ -319,6 +337,7 @@ function DataFetcher() {
 ```
 
 ### Pattern 6: Input Validation
+
 ```tsx
 import { useValidatedInput } from '@/lib/security';
 
@@ -353,6 +372,7 @@ function EmailInput() {
 ## Configuration
 
 ### Security Provider Configuration
+
 ```tsx
 import { SecurityProvider } from '@/lib/security';
 
@@ -397,6 +417,7 @@ import { SecurityProvider } from '@/lib/security';
 ```
 
 ### CSP Header Configuration
+
 ```tsx
 import { CSPManager, createStrictPolicy } from '@/lib/security';
 
@@ -417,6 +438,7 @@ const cspHeader = csp.getHeaderValue();
 ## Testing
 
 ### Testing with Security Context
+
 ```tsx
 import { render } from '@testing-library/react';
 import { SecurityProvider } from '@/lib/security';
@@ -441,6 +463,7 @@ describe('SecureForm', () => {
 ```
 
 ### Testing Sanitization
+
 ```tsx
 import { sanitizeHTML } from '@/lib/security';
 
@@ -473,14 +496,18 @@ describe('sanitizeHTML', () => {
 ## Troubleshooting
 
 ### Issue: CSP Blocking Inline Scripts
+
 **Solution:** Use nonce for inline scripts:
+
 ```tsx
 const { nonce } = useCSPNonce();
 <script nonce={nonce}>{inlineScript}</script>
 ```
 
 ### Issue: CSRF Token Missing
+
 **Solution:** Ensure SecurityProvider wraps your app:
+
 ```tsx
 <SecurityProvider>
   <App />
@@ -488,7 +515,9 @@ const { nonce } = useCSPNonce();
 ```
 
 ### Issue: Sanitization Removing Valid HTML
+
 **Solution:** Configure allowed tags and attributes:
+
 ```tsx
 const safe = useSanitizedContent(html, {
   allowedTags: ['p', 'br', 'strong', 'em', 'a'],
@@ -497,7 +526,9 @@ const safe = useSanitizedContent(html, {
 ```
 
 ### Issue: Encrypted Storage Not Working
+
 **Solution:** Ensure Web Crypto API is available (HTTPS required):
+
 ```tsx
 if (window.crypto && window.crypto.subtle) {
   const storage = createSecureLocalStorage();

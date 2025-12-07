@@ -5,7 +5,7 @@
  */
 
 // Re-export all type definitions
-export * from './dom';
+export type * from './dom';
 
 // Export a dummy type to prevent empty chunk
 export type LibTypesModule = 'types';

@@ -46,44 +46,46 @@ interface RequirePermissionProps {
  * </RequirePermission>
  * ```
  */
-export const RequirePermission = memo(({
-  children,
-  permission,
-  permissions,
-  anyPermission,
-  redirectTo = routes.dashboard,
-  fallback
-}: RequirePermissionProps) => {
-  const { isAuthenticated, isLoading, hasPermission, hasAnyPermission } = useAuth();
+export const RequirePermission = memo(
+  ({
+    children,
+    permission,
+    permissions,
+    anyPermission,
+    redirectTo = routes.dashboard,
+    fallback,
+  }: RequirePermissionProps) => {
+    const { isAuthenticated, isLoading, hasPermission, hasAnyPermission } = useAuth();
 
-  if (isLoading) {
-    return <AuthGuardLoading ariaLabel="Verifying permission authorization..." />;
+    if (isLoading) {
+      return <AuthGuardLoading ariaLabel="Verifying permission authorization..." />;
+    }
+
+    if (!isAuthenticated) {
+      return <Navigate to={routes.login} replace />;
+    }
+
+    // Check single permission
+    if (permission !== undefined && permission !== null && !hasPermission(permission)) {
+      if (fallback !== undefined && fallback !== null) return <>{fallback}</>;
+      return <Navigate to={redirectTo} replace />;
+    }
+
+    // Check all permissions required
+    if (permissions !== undefined && permissions !== null && !permissions.every(hasPermission)) {
+      if (fallback !== undefined && fallback !== null) return <>{fallback}</>;
+      return <Navigate to={redirectTo} replace />;
+    }
+
+    // Check any permission required
+    if (anyPermission !== undefined && anyPermission !== null && !hasAnyPermission(anyPermission)) {
+      if (fallback !== undefined && fallback !== null) return <>{fallback}</>;
+      return <Navigate to={redirectTo} replace />;
+    }
+
+    return <>{children}</>;
   }
-
-  if (!isAuthenticated) {
-    return <Navigate to={routes.login} replace />;
-  }
-
-  // Check single permission
-  if (permission !== undefined && permission !== null && !hasPermission(permission)) {
-    if (fallback !== undefined && fallback !== null) return <>{fallback}</>;
-    return <Navigate to={redirectTo} replace />;
-  }
-
-  // Check all permissions required
-  if (permissions !== undefined && permissions !== null && !permissions.every(hasPermission)) {
-    if (fallback !== undefined && fallback !== null) return <>{fallback}</>;
-    return <Navigate to={redirectTo} replace />;
-  }
-
-  // Check any permission required
-  if (anyPermission !== undefined && anyPermission !== null && !hasAnyPermission(anyPermission)) {
-    if (fallback !== undefined && fallback !== null) return <>{fallback}</>;
-    return <Navigate to={redirectTo} replace />;
-  }
-
-  return <>{children}</>;
-});
+);
 
 /**
  * HOC version of RequirePermission
@@ -96,7 +98,7 @@ export function withRequirePermission<P extends object>(
     permission?: Permission;
     permissions?: Permission[];
     anyPermission?: Permission[];
-    redirectTo?: string
+    redirectTo?: string;
   }
 ): React.ComponentType<P> {
   return function WithRequirePermission(props: P): React.ReactElement {

@@ -202,7 +202,7 @@ export class UnifiedErrorHandler {
   private static instance: UnifiedErrorHandler;
   private config: UnifiedErrorHandlerConfig;
   private errorBuffer: StructuredError[] = [];
-  private sessionId: string;
+  private readonly sessionId: string;
 
   private constructor(config: Partial<UnifiedErrorHandlerConfig> = {}) {
     this.config = {
@@ -331,6 +331,44 @@ export class UnifiedErrorHandler {
   }
 
   /**
+   * Sanitize error messages to remove PHI
+   */
+  sanitizeMessage(message: string): string {
+    let sanitized = message;
+
+    // Replace PHI patterns with generic placeholders
+    Object.entries(PHI_PATTERNS).forEach(([key, pattern]) => {
+      sanitized = sanitized.replace(pattern, `[${key.toUpperCase()}]`);
+    });
+
+    return sanitized;
+  }
+
+  /**
+   * Flush buffered errors to reporting endpoint
+   */
+  async flush(): Promise<void> {
+    if (this.errorBuffer.length === 0 || !this.config.enableReporting) {
+      return;
+    }
+
+    const batch = this.errorBuffer.splice(0, this.config.maxBatchSize);
+
+    try {
+      await fetch(this.config.reportingEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ errors: batch }),
+      });
+    } catch (error) {
+      // Silently fail if reporting fails (don't cascade errors)
+      if (env.isDev) {
+        console.warn('[ErrorHandler] Failed to report errors:', error);
+      }
+    }
+  }
+
+  /**
    * Categorize an error based on its message and type
    */
   private categorizeError(error: Error): ErrorCategory {
@@ -426,20 +464,6 @@ export class UnifiedErrorHandler {
   }
 
   /**
-   * Sanitize error messages to remove PHI
-   */
-  sanitizeMessage(message: string): string {
-    let sanitized = message;
-
-    // Replace PHI patterns with generic placeholders
-    Object.entries(PHI_PATTERNS).forEach(([key, pattern]) => {
-      sanitized = sanitized.replace(pattern, `[${key.toUpperCase()}]`);
-    });
-
-    return sanitized;
-  }
-
-  /**
    * Process error: log, audit, buffer, and report
    */
   private processError(error: StructuredError): void {
@@ -520,30 +544,6 @@ export class UnifiedErrorHandler {
   }
 
   /**
-   * Flush buffered errors to reporting endpoint
-   */
-  async flush(): Promise<void> {
-    if (this.errorBuffer.length === 0 || !this.config.enableReporting) {
-      return;
-    }
-
-    const batch = this.errorBuffer.splice(0, this.config.maxBatchSize);
-
-    try {
-      await fetch(this.config.reportingEndpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ errors: batch }),
-      });
-    } catch (error) {
-      // Silently fail if reporting fails (don't cascade errors)
-      if (env.isDev) {
-        console.warn('[ErrorHandler] Failed to report errors:', error);
-      }
-    }
-  }
-
-  /**
    * Generate unique error ID
    */
   private generateErrorId(): string {
@@ -597,6 +597,6 @@ export function getErrorHandler(): UnifiedErrorHandler {
  * ```
  */
 export function useErrorHandler(config?: Partial<UnifiedErrorHandlerConfig>): UnifiedErrorHandler {
-  const handler = UnifiedErrorHandler.getInstance(config);
-  return handler;
+
+  return UnifiedErrorHandler.getInstance(config);
 }

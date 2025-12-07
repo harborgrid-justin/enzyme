@@ -545,6 +545,30 @@ You can create custom button styles:
 
 ## See Also
 
-- [Feedback Components](/home/user/enzyme/docs/ui/FEEDBACK_COMPONENTS.md) - For loading spinners
-- [Theme Tokens](/home/user/enzyme/docs/theme/DESIGN_TOKENS.md) - For customization
-- [Layout Components](/home/user/enzyme/docs/ui/LAYOUT_COMPONENTS.md) - For page layouts
+- [Feedback Components](./FEEDBACK_COMPONENTS.md) - For loading spinners
+- [Theme Tokens](../theme/DESIGN_TOKENS.md) - For customization
+- [Layout Components](./LAYOUT_COMPONENTS.md) - For page layouts
+
+---
+
+## Related Documentation
+
+### UI Components
+- [UI Components Overview](./README.md) - Complete UI component library guide
+- [Data Components](./DATA_COMPONENTS.md) - Tables and data display
+- [Layout Components](./LAYOUT_COMPONENTS.md) - Page structure and containers
+- [Feedback Components](./FEEDBACK_COMPONENTS.md) - Loading, errors, and notifications
+- [Navigation Components](./NAVIGATION_COMPONENTS.md) - Menus and navigation
+
+### Theme & Styling
+- [Theme System](../theme/README.md) - Theme provider and color palettes
+- [Design Tokens](../theme/DESIGN_TOKENS.md) - Colors, spacing, typography, button variants
+- [Dark Mode](../theme/DARK_MODE.md) - Dark mode button styling
+
+### UX & Accessibility
+- [Loading States](../ux/LOADING_STATES.md) - Button loading states and patterns
+- [Accessibility](../ux/ACCESSIBILITY.md) - Button accessibility best practices
+
+### Integration
+- [Components Reference](../COMPONENTS_REFERENCE.md) - Complete button API reference
+- [Design System](../DESIGN_SYSTEM.md) - Button variants and design tokens

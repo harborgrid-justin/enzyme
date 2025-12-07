@@ -40,9 +40,7 @@
 
 import { useCallback, useMemo } from 'react';
 
-import {
-  useOptionalHydrationContext,
-} from '../HydrationProvider';
+import { useOptionalHydrationContext } from '../HydrationProvider';
 
 import type {
   HydrationContextValue,
@@ -108,10 +106,7 @@ export interface UseHydrationReturn {
    * @param boundaryId - ID of the boundary to update
    * @param priority - New priority level
    */
-  readonly updatePriority: (
-    boundaryId: HydrationBoundaryId,
-    priority: HydrationPriority
-  ) => void;
+  readonly updatePriority: (boundaryId: HydrationBoundaryId, priority: HydrationPriority) => void;
 
   /**
    * Gets the current hydration metrics snapshot.

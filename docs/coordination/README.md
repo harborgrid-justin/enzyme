@@ -601,3 +601,18 @@ function App() {
 ## API Reference
 
 See the [Advanced Features Overview](../advanced/README.md) for complete API documentation.
+
+## Related Documentation
+
+### Coordination Features
+- **[State Management](../state/README.md)** - Global state with Zustand
+- **[Shared Utilities](../shared/README.md)** - Event bus and utilities
+
+### Integration Guides
+- **[API Module](../api/README.md)** - API client integration
+- **[Hooks](../hooks/README.md)** - Custom hooks
+- **[Performance](../performance/README.md)** - Performance optimization
+
+### Reference
+- **[Documentation Index](../INDEX.md)** - All documentation resources
+- **[Architecture Guide](../ARCHITECTURE.md)** - System architecture

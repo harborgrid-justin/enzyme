@@ -163,21 +163,12 @@ export interface PerformanceSummary {
 /**
  * Profiler event type
  */
-export type ProfilerEventType =
-  | 'render'
-  | 'longTask'
-  | 'frameRate'
-  | 'memory'
-  | 'mark'
-  | 'measure';
+export type ProfilerEventType = 'render' | 'longTask' | 'frameRate' | 'memory' | 'mark' | 'measure';
 
 /**
  * Profiler event listener
  */
-export type ProfilerEventListener = (
-  type: ProfilerEventType,
-  entry: unknown
-) => void;
+export type ProfilerEventListener = (type: ProfilerEventType, entry: unknown) => void;
 
 // ============================================================================
 // Default Configuration
@@ -437,12 +428,16 @@ export class PerformanceProfiler {
    * Export profiling data as JSON
    */
   exportData(): string {
-    return JSON.stringify(this.getSnapshot(), (_key, value: unknown): unknown => {
-      if (value instanceof Set) {
-        return Array.from(value);
-      }
-      return value;
-    }, 2);
+    return JSON.stringify(
+      this.getSnapshot(),
+      (_key, value: unknown): unknown => {
+        if (value instanceof Set) {
+          return Array.from(value);
+        }
+        return value;
+      },
+      2
+    );
   }
 
   // ============================================================================
@@ -527,13 +522,13 @@ export class PerformanceProfiler {
 
   private startMemoryMonitoring(): void {
     const measureMemory = (): void => {
-      const {memory} = (performance as Performance & {
+      const { memory } = performance as Performance & {
         memory?: {
           usedJSHeapSize: number;
           totalJSHeapSize: number;
           jsHeapSizeLimit: number;
         };
-      });
+      };
 
       if (memory === undefined) {
         this.log('Memory API not available');
@@ -564,17 +559,14 @@ export class PerformanceProfiler {
     measureMemory(); // Initial measurement
   }
 
-  private calculateMemoryTrend(
-    currentUsage: number
-  ): 'increasing' | 'stable' | 'decreasing' {
+  private calculateMemoryTrend(currentUsage: number): 'increasing' | 'stable' | 'decreasing' {
     const recentSamples = this.memorySamples.slice(-5);
     if (recentSamples.length < 3) {
       return 'stable';
     }
 
     const avgRecent =
-      recentSamples.reduce((sum, s) => sum + s.usedJSHeapSize, 0) /
-      recentSamples.length;
+      recentSamples.reduce((sum, s) => sum + s.usedJSHeapSize, 0) / recentSamples.length;
     const diff = currentUsage - avgRecent;
     const threshold = avgRecent * 0.05; // 5% threshold
 
@@ -586,7 +578,9 @@ export class PerformanceProfiler {
   private markNavigationTimings(): void {
     if (typeof window === 'undefined') return;
 
-    const timing = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
+    const timing = performance.getEntriesByType('navigation')[0] as
+      | PerformanceNavigationTiming
+      | undefined;
     if (timing === undefined) return;
 
     this.mark('domInteractive', { source: 'navigation' });
@@ -597,15 +591,11 @@ export class PerformanceProfiler {
   private calculateSummary(): PerformanceSummary {
     const renderTimes = this.renders.map((r) => r.actualDuration);
     const avgRenderTime =
-      renderTimes.length > 0
-        ? renderTimes.reduce((a, b) => a + b, 0) / renderTimes.length
-        : 0;
+      renderTimes.length > 0 ? renderTimes.reduce((a, b) => a + b, 0) / renderTimes.length : 0;
 
     const fpsSamples = this.frameRateSamples.map((s) => s.fps);
     const avgFPS =
-      fpsSamples.length > 0
-        ? fpsSamples.reduce((a, b) => a + b, 0) / fpsSamples.length
-        : 60;
+      fpsSamples.length > 0 ? fpsSamples.reduce((a, b) => a + b, 0) / fpsSamples.length : 60;
 
     const lastMemorySample = this.memorySamples[this.memorySamples.length - 1];
     const memoryTrend =
@@ -616,16 +606,14 @@ export class PerformanceProfiler {
     // Detect potential memory leak (consistently increasing memory)
     const recentMemory = this.memorySamples.slice(-10);
     const potentialMemoryLeak =
-      recentMemory.length >= 10 &&
-      recentMemory.every((s) => s.trend === 'increasing');
+      recentMemory.length >= 10 && recentMemory.every((s) => s.trend === 'increasing');
 
     return {
       averageRenderTime: avgRenderTime,
       maxRenderTime: Math.max(...renderTimes, 0),
       totalRenders: this.renders.length,
-      slowRenders: this.renders.filter(
-        (r) => r.actualDuration > this.config.longTaskThreshold
-      ).length,
+      slowRenders: this.renders.filter((r) => r.actualDuration > this.config.longTaskThreshold)
+        .length,
       longTaskCount: this.longTasks.length,
       totalLongTaskTime: this.longTasks.reduce((sum, t) => sum + t.duration, 0),
       averageFPS: avgFPS,
@@ -668,9 +656,7 @@ let profilerInstance: PerformanceProfiler | null = null;
 /**
  * Get or create the global profiler instance
  */
-export function getPerformanceProfiler(
-  config?: Partial<ProfilerConfig>
-): PerformanceProfiler {
+export function getPerformanceProfiler(config?: Partial<ProfilerConfig>): PerformanceProfiler {
   profilerInstance ??= new PerformanceProfiler(config);
   return profilerInstance;
 }

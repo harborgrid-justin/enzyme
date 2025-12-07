@@ -390,6 +390,33 @@ export class BaseRouteGuard implements RouteGuard {
   }
 
   /**
+   * Check if guard applies to a route
+   */
+  appliesTo(path: string): boolean {
+    // Check exclusions first
+    if (this.exclude) {
+      for (const pattern of this.exclude) {
+        if (this.matchPattern(pattern, path)) {
+          return false;
+        }
+      }
+    }
+
+    // Check inclusions
+    if (this.routes && this.routes.length > 0) {
+      for (const pattern of this.routes) {
+        if (this.matchPattern(pattern, path)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    // No route restrictions = applies to all
+    return true;
+  }
+
+  /**
    * Get the handler for a timing
    */
   private getHandler(timing: GuardTiming): GuardFunction | undefined {
@@ -429,33 +456,6 @@ export class BaseRouteGuard implements RouteGuard {
           reject(error instanceof Error ? error : new Error(String(error)));
         });
     });
-  }
-
-  /**
-   * Check if guard applies to a route
-   */
-  appliesTo(path: string): boolean {
-    // Check exclusions first
-    if (this.exclude) {
-      for (const pattern of this.exclude) {
-        if (this.matchPattern(pattern, path)) {
-          return false;
-        }
-      }
-    }
-
-    // Check inclusions
-    if (this.routes && this.routes.length > 0) {
-      for (const pattern of this.routes) {
-        if (this.matchPattern(pattern, path)) {
-          return true;
-        }
-      }
-      return false;
-    }
-
-    // No route restrictions = applies to all
-    return true;
   }
 
   /**

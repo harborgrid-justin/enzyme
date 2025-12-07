@@ -124,8 +124,8 @@ export interface OfflineQueueEvents {
  * Simple IndexedDB wrapper for the offline queue
  */
 class QueueDatabase {
-  private dbName: string;
-  private storeName: string;
+  private readonly dbName: string;
+  private readonly storeName: string;
   private db: IDBDatabase | null = null;
   private dbVersion = 1;
 
@@ -174,17 +174,6 @@ class QueueDatabase {
       this.db.close();
       this.db = null;
     }
-  }
-
-  /**
-   * Get transaction store
-   */
-  private getStore(mode: IDBTransactionMode): IDBObjectStore {
-    if (!this.db) {
-      throw new Error('Database not open');
-    }
-    const transaction = this.db.transaction(this.storeName, mode);
-    return transaction.objectStore(this.storeName);
   }
 
   /**
@@ -314,6 +303,17 @@ class QueueDatabase {
 
     return expired.length;
   }
+
+  /**
+   * Get transaction store
+   */
+  private getStore(mode: IDBTransactionMode): IDBObjectStore {
+    if (!this.db) {
+      throw new Error('Database not open');
+    }
+    const transaction = this.db.transaction(this.storeName, mode);
+    return transaction.objectStore(this.storeName);
+  }
 }
 
 // ============================================================================
@@ -386,23 +386,6 @@ export class PersistentOfflineQueue {
     if (networkMonitor.isOnline() && this.options.autoProcess) {
       void this.processQueue();
     }
-  }
-
-  /**
-   * Ensure the queue is initialized
-   */
-  private ensureInitialized(): void {
-    if (!this.initialized || !this.db) {
-      throw new Error('Queue not initialized. Call init() first.');
-    }
-  }
-
-  /**
-   * Get the database instance (throws if not initialized)
-   */
-  private getDb(): QueueDatabase {
-    this.ensureInitialized();
-    return this.db as QueueDatabase;
   }
 
   /**
@@ -505,127 +488,6 @@ export class PersistentOfflineQueue {
       // Schedule next batch with a small delay
       setTimeout(() => void this.processQueue(), 100);
     }
-  }
-
-  /**
-   * Process a single queue item
-   *
-   * Note: This method intentionally uses raw fetch() rather than apiClient because:
-   * 1. Queued requests store their own headers/method/body from the original request
-   * 2. The offline queue replays exact requests that were made when offline
-   * 3. Using apiClient would re-apply interceptors/auth that may have changed
-   *
-   * @see {@link @/lib/api/api-client} for making new API calls
-   */
-  private async processItem(item: QueuedRequest): Promise<void> {
-    this.ensureInitialized();
-
-    // Mark as processing
-    await this.updateStatus(item.id, 'processing');
-
-    try {
-      // Raw fetch is intentional - replay exact request stored in queue
-      const response = await fetch(item.url, {
-        method: item.method,
-        headers: item.headers,
-        body: item.body ?? null,
-      });
-
-      if (response.ok) {
-        await this.updateStatus(item.id, 'completed');
-        globalEventBus.emitSync('offlineQueue:completed', {
-          id: item.id,
-          url: item.url,
-          response: response.status,
-        });
-      } else if (response.status >= 400 && response.status < 500) {
-        // Client error - don't retry
-        await this.updateStatus(item.id, 'failed', `HTTP ${response.status}`);
-        globalEventBus.emitSync('offlineQueue:failed', {
-          id: item.id,
-          url: item.url,
-          error: new Error(`HTTP ${response.status}`),
-        });
-      } else {
-        // Server error - retry
-        await this.handleRetry(item, `HTTP ${response.status}`);
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      await this.handleRetry(item, errorMessage);
-    }
-  }
-
-  /**
-   * Handle retry logic for failed requests
-   */
-  private async handleRetry(item: QueuedRequest, error: string): Promise<void> {
-    this.ensureInitialized();
-
-    const newRetryCount = item.retryCount + 1;
-
-    if (newRetryCount >= item.maxRetries) {
-      await this.updateStatus(item.id, 'failed', error);
-
-      globalEventBus.emitSync('offlineQueue:failed', {
-        id: item.id,
-        url: item.url,
-        error: new Error(error),
-        // retriesExhausted: true,
-      });
-
-      // Report to error monitoring
-      ErrorReporter.reportError(new Error(`Offline request failed: ${error}`), {
-        action: 'offline_queue_failed',
-        metadata: {
-          id: item.id,
-          url: item.url,
-          method: item.method,
-          retryCount: item.retryCount,
-          createdAt: new Date(item.createdAt).toISOString(),
-        },
-      });
-    } else {
-      // Update retry count and reset to pending
-      const updatedItem: QueuedRequest = {
-        ...item,
-        retryCount: newRetryCount,
-        status: 'pending',
-        lastError: error,
-      };
-      await this.getDb().put(updatedItem);
-
-      // Schedule retry with exponential backoff
-      const delay = this.options.retryDelayBase * Math.pow(2, newRetryCount);
-      setTimeout(() => void this.processQueue(), delay);
-    }
-  }
-
-  /**
-   * Update item status
-   */
-  private async updateStatus(
-    id: string,
-    status: QueueItemStatus,
-    error?: string
-  ): Promise<void> {
-    const db = this.getDb();
-
-    const item = await db.get(id);
-    if (item) {
-      await db.put({
-        ...item,
-        status,
-        ...(error !== undefined && { lastError: error }),
-      });
-    }
-  }
-
-  /**
-   * Clean expired items
-   */
-  private async cleanExpired(): Promise<void> {
-    await this.getDb().deleteExpired(Date.now());
   }
 
   /**
@@ -755,6 +617,144 @@ export class PersistentOfflineQueue {
     this.db?.close();
     this.db = null;
     this.initialized = false;
+  }
+
+  /**
+   * Ensure the queue is initialized
+   */
+  private ensureInitialized(): void {
+    if (!this.initialized || !this.db) {
+      throw new Error('Queue not initialized. Call init() first.');
+    }
+  }
+
+  /**
+   * Get the database instance (throws if not initialized)
+   */
+  private getDb(): QueueDatabase {
+    this.ensureInitialized();
+    return this.db as QueueDatabase;
+  }
+
+  /**
+   * Process a single queue item
+   *
+   * Note: This method intentionally uses raw fetch() rather than apiClient because:
+   * 1. Queued requests store their own headers/method/body from the original request
+   * 2. The offline queue replays exact requests that were made when offline
+   * 3. Using apiClient would re-apply interceptors/auth that may have changed
+   *
+   * @see {@link @/lib/api/api-client} for making new API calls
+   */
+  private async processItem(item: QueuedRequest): Promise<void> {
+    this.ensureInitialized();
+
+    // Mark as processing
+    await this.updateStatus(item.id, 'processing');
+
+    try {
+      // Raw fetch is intentional - replay exact request stored in queue
+      const response = await fetch(item.url, {
+        method: item.method,
+        headers: item.headers,
+        body: item.body ?? null,
+      });
+
+      if (response.ok) {
+        await this.updateStatus(item.id, 'completed');
+        globalEventBus.emitSync('offlineQueue:completed', {
+          id: item.id,
+          url: item.url,
+          response: response.status,
+        });
+      } else if (response.status >= 400 && response.status < 500) {
+        // Client error - don't retry
+        await this.updateStatus(item.id, 'failed', `HTTP ${response.status}`);
+        globalEventBus.emitSync('offlineQueue:failed', {
+          id: item.id,
+          url: item.url,
+          error: new Error(`HTTP ${response.status}`),
+        });
+      } else {
+        // Server error - retry
+        await this.handleRetry(item, `HTTP ${response.status}`);
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      await this.handleRetry(item, errorMessage);
+    }
+  }
+
+  /**
+   * Handle retry logic for failed requests
+   */
+  private async handleRetry(item: QueuedRequest, error: string): Promise<void> {
+    this.ensureInitialized();
+
+    const newRetryCount = item.retryCount + 1;
+
+    if (newRetryCount >= item.maxRetries) {
+      await this.updateStatus(item.id, 'failed', error);
+
+      globalEventBus.emitSync('offlineQueue:failed', {
+        id: item.id,
+        url: item.url,
+        error: new Error(error),
+        // retriesExhausted: true,
+      });
+
+      // Report to error monitoring
+      ErrorReporter.reportError(new Error(`Offline request failed: ${error}`), {
+        action: 'offline_queue_failed',
+        metadata: {
+          id: item.id,
+          url: item.url,
+          method: item.method,
+          retryCount: item.retryCount,
+          createdAt: new Date(item.createdAt).toISOString(),
+        },
+      });
+    } else {
+      // Update retry count and reset to pending
+      const updatedItem: QueuedRequest = {
+        ...item,
+        retryCount: newRetryCount,
+        status: 'pending',
+        lastError: error,
+      };
+      await this.getDb().put(updatedItem);
+
+      // Schedule retry with exponential backoff
+      const delay = this.options.retryDelayBase * Math.pow(2, newRetryCount);
+      setTimeout(() => void this.processQueue(), delay);
+    }
+  }
+
+  /**
+   * Update item status
+   */
+  private async updateStatus(
+    id: string,
+    status: QueueItemStatus,
+    error?: string
+  ): Promise<void> {
+    const db = this.getDb();
+
+    const item = await db.get(id);
+    if (item) {
+      await db.put({
+        ...item,
+        status,
+        ...(error !== undefined && { lastError: error }),
+      });
+    }
+  }
+
+  /**
+   * Clean expired items
+   */
+  private async cleanExpired(): Promise<void> {
+    await this.getDb().deleteExpired(Date.now());
   }
 }
 

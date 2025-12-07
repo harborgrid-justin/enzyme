@@ -48,7 +48,7 @@ export class CompositeProvider implements FlagProvider {
   readonly name: string;
   readonly priority: number;
 
-  private providers: FlagProvider[];
+  private readonly providers: FlagProvider[];
   private listeners = new Set<FlagChangeListener>();
   private ready = false;
   private config: Required<CompositeProviderConfig>;
@@ -135,78 +135,6 @@ export class CompositeProvider implements FlagProvider {
     }
   }
 
-  private async getFlagsWithPriority(): Promise<FeatureFlag[]> {
-    // Return flags from the first available (highest priority) provider
-    for (const provider of this.providers) {
-      if (!provider.isReady()) {
-        continue;
-      }
-
-      try {
-        const flags = await provider.getFlags();
-        if (flags.length > 0) {
-          this.log(`Using flags from provider: ${provider.name}`);
-          return [...flags];
-        }
-      } catch (error) {
-        this.log(`Provider ${provider.name} failed:`, error);
-      }
-    }
-
-    return [];
-  }
-
-  private async getFlagsWithMerge(): Promise<FeatureFlag[]> {
-    // Combine flags from all providers (higher priority wins on conflicts)
-    const flagMap = new Map<string, FeatureFlag>();
-
-    // Process in reverse order so higher priority overwrites
-    for (const provider of [...this.providers].reverse()) {
-      if (!provider.isReady()) {
-        continue;
-      }
-
-      try {
-        const flags = await provider.getFlags();
-        for (const flag of flags) {
-          flagMap.set(flag.key, flag);
-        }
-      } catch (error) {
-        this.log(`Provider ${provider.name} failed:`, error);
-        if (this.config.fallback === 'all-must-succeed') {
-          throw error;
-        }
-      }
-    }
-
-    return Array.from(flagMap.values());
-  }
-
-  private async getFlagsWithOverride(): Promise<FeatureFlag[]> {
-    // Start with empty, each provider overrides
-    const flagMap = new Map<string, FeatureFlag>();
-
-    for (const provider of this.providers) {
-      if (!provider.isReady()) {
-        continue;
-      }
-
-      try {
-        const flags = await provider.getFlags();
-        for (const flag of flags) {
-          flagMap.set(flag.key, flag);
-        }
-      } catch (error) {
-        this.log(`Provider ${provider.name} failed:`, error);
-        if (this.config.fallback === 'all-must-succeed') {
-          throw error;
-        }
-      }
-    }
-
-    return Array.from(flagMap.values());
-  }
-
   /**
    * Get a specific flag.
    */
@@ -229,10 +157,6 @@ export class CompositeProvider implements FlagProvider {
 
     return null;
   }
-
-  // ==========================================================================
-  // Segment Operations
-  // ==========================================================================
 
   /**
    * Get all segments from providers.
@@ -282,10 +206,6 @@ export class CompositeProvider implements FlagProvider {
     return null;
   }
 
-  // ==========================================================================
-  // Provider Management
-  // ==========================================================================
-
   /**
    * Add a provider.
    */
@@ -302,6 +222,10 @@ export class CompositeProvider implements FlagProvider {
 
     this.log(`Added provider: ${provider.name}`);
   }
+
+  // ==========================================================================
+  // Segment Operations
+  // ==========================================================================
 
   /**
    * Remove a provider.
@@ -321,25 +245,16 @@ export class CompositeProvider implements FlagProvider {
     return [...this.providers];
   }
 
+  // ==========================================================================
+  // Provider Management
+  // ==========================================================================
+
   /**
    * Get a provider by name.
    */
   getProvider(name: string): FlagProvider | undefined {
     return this.providers.find((p) => p.name === name);
   }
-
-  // ==========================================================================
-  // Provider Change Handling
-  // ==========================================================================
-
-  private handleProviderChange(event: FlagChangeEvent): void {
-    // Forward to listeners
-    this.emitChange(event);
-  }
-
-  // ==========================================================================
-  // Status and Health
-  // ==========================================================================
 
   /**
    * Check if the provider is ready.
@@ -389,6 +304,10 @@ export class CompositeProvider implements FlagProvider {
     return healths;
   }
 
+  // ==========================================================================
+  // Provider Change Handling
+  // ==========================================================================
+
   /**
    * Get aggregate statistics.
    */
@@ -416,7 +335,7 @@ export class CompositeProvider implements FlagProvider {
   }
 
   // ==========================================================================
-  // Subscription
+  // Status and Health
   // ==========================================================================
 
   /**
@@ -428,20 +347,6 @@ export class CompositeProvider implements FlagProvider {
       this.listeners.delete(listener);
     };
   }
-
-  private emitChange(event: FlagChangeEvent): void {
-    for (const listener of this.listeners) {
-      try {
-        listener(event);
-      } catch (error) {
-        this.log('Error in change listener:', error);
-      }
-    }
-  }
-
-  // ==========================================================================
-  // Shutdown
-  // ==========================================================================
 
   /**
    * Shutdown the provider and all child providers.
@@ -461,6 +366,101 @@ export class CompositeProvider implements FlagProvider {
     this.ready = false;
     this.listeners.clear();
     this.log('Composite provider shutdown');
+  }
+
+  private async getFlagsWithPriority(): Promise<FeatureFlag[]> {
+    // Return flags from the first available (highest priority) provider
+    for (const provider of this.providers) {
+      if (!provider.isReady()) {
+        continue;
+      }
+
+      try {
+        const flags = await provider.getFlags();
+        if (flags.length > 0) {
+          this.log(`Using flags from provider: ${provider.name}`);
+          return [...flags];
+        }
+      } catch (error) {
+        this.log(`Provider ${provider.name} failed:`, error);
+      }
+    }
+
+    return [];
+  }
+
+  private async getFlagsWithMerge(): Promise<FeatureFlag[]> {
+    // Combine flags from all providers (higher priority wins on conflicts)
+    const flagMap = new Map<string, FeatureFlag>();
+
+    // Process in reverse order so higher priority overwrites
+    for (const provider of [...this.providers].reverse()) {
+      if (!provider.isReady()) {
+        continue;
+      }
+
+      try {
+        const flags = await provider.getFlags();
+        for (const flag of flags) {
+          flagMap.set(flag.key, flag);
+        }
+      } catch (error) {
+        this.log(`Provider ${provider.name} failed:`, error);
+        if (this.config.fallback === 'all-must-succeed') {
+          throw error;
+        }
+      }
+    }
+
+    return Array.from(flagMap.values());
+  }
+
+  // ==========================================================================
+  // Subscription
+  // ==========================================================================
+
+  private async getFlagsWithOverride(): Promise<FeatureFlag[]> {
+    // Start with empty, each provider overrides
+    const flagMap = new Map<string, FeatureFlag>();
+
+    for (const provider of this.providers) {
+      if (!provider.isReady()) {
+        continue;
+      }
+
+      try {
+        const flags = await provider.getFlags();
+        for (const flag of flags) {
+          flagMap.set(flag.key, flag);
+        }
+      } catch (error) {
+        this.log(`Provider ${provider.name} failed:`, error);
+        if (this.config.fallback === 'all-must-succeed') {
+          throw error;
+        }
+      }
+    }
+
+    return Array.from(flagMap.values());
+  }
+
+  private handleProviderChange(event: FlagChangeEvent): void {
+    // Forward to listeners
+    this.emitChange(event);
+  }
+
+  // ==========================================================================
+  // Shutdown
+  // ==========================================================================
+
+  private emitChange(event: FlagChangeEvent): void {
+    for (const listener of this.listeners) {
+      try {
+        listener(event);
+      } catch (error) {
+        this.log('Error in change listener:', error);
+      }
+    }
   }
 
   // ==========================================================================

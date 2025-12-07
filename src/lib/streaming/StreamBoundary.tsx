@@ -36,21 +36,9 @@
 
 import type React from 'react';
 import type { ReactNode } from 'react';
-import {
-  Suspense,
-  useEffect,
-  useId,
-  useRef,
-  useState,
-  useCallback,
-  useMemo,
-  memo,
-} from 'react';
+import { Suspense, useEffect, useId, useRef, useState, useCallback, useMemo, memo } from 'react';
 
-import {
-  useStreamContext,
-  useOptionalStreamContext,
-} from './StreamProvider';
+import { useStreamContext, useOptionalStreamContext } from './StreamProvider';
 
 import {
   type StreamBoundaryProps,
@@ -119,11 +107,7 @@ function NonStreamingFallback({
     return <>{fallback}</>;
   }
 
-  return (
-    <Suspense fallback={<DefaultPlaceholder />}>
-      {children}
-    </Suspense>
-  );
+  return <Suspense fallback={<DefaultPlaceholder />}>{children}</Suspense>;
 }
 
 // ============================================================================
@@ -267,9 +251,7 @@ function StreamBoundaryWrapper({
         {fallback ?? (
           <div className="stream-boundary-error">
             <p>Failed to load content: {error.message}</p>
-            {error.retryable && (
-              <button onClick={handleRetry}>Retry</button>
-            )}
+            {error.retryable && <button onClick={handleRetry}>Retry</button>}
           </div>
         )}
       </div>
@@ -291,9 +273,7 @@ function StreamBoundaryWrapper({
         data-stream-state={state}
         data-stream-priority={priority}
       >
-        <Suspense fallback={placeholder ?? <DefaultPlaceholder />}>
-          {children}
-        </Suspense>
+        <Suspense fallback={placeholder ?? <DefaultPlaceholder />}>{children}</Suspense>
       </div>
     );
   }
@@ -407,9 +387,7 @@ function StreamBoundaryComponent({
         data-stream-id={boundaryId}
         data-stream-state="no-streaming"
       >
-        <NonStreamingFallback fallback={fallback}>
-          {children}
-        </NonStreamingFallback>
+        <NonStreamingFallback fallback={fallback}>{children}</NonStreamingFallback>
       </div>
     );
   }
@@ -484,14 +462,7 @@ export function CriticalStreamBoundary({
   ssr = true,
   ...props
 }: StreamBoundaryProps): React.ReactElement {
-  return (
-    <StreamBoundary
-      {...props}
-      priority={priority}
-      deferMs={deferMs}
-      ssr={ssr}
-    />
-  );
+  return <StreamBoundary {...props} priority={priority} deferMs={deferMs} ssr={ssr} />;
 }
 
 CriticalStreamBoundary.displayName = 'CriticalStreamBoundary';
@@ -515,13 +486,7 @@ export function DeferredStreamBoundary({
   deferMs = 100,
   ...props
 }: StreamBoundaryProps): React.ReactElement {
-  return (
-    <StreamBoundary
-      {...props}
-      priority={priority}
-      deferMs={deferMs}
-    />
-  );
+  return <StreamBoundary {...props} priority={priority} deferMs={deferMs} />;
 }
 
 DeferredStreamBoundary.displayName = 'DeferredStreamBoundary';
@@ -591,10 +556,7 @@ ConditionalStreamBoundary.displayName = 'ConditionalStreamBoundary';
  * ```
  */
 // eslint-disable-next-line react-refresh/only-export-components
-export function createBoundaryActivationScript(
-  boundaryId: string,
-  nonce?: string
-): string {
+export function createBoundaryActivationScript(boundaryId: string, nonce?: string): string {
   const script = `
     (function() {
       if (window.__STREAM_BOUNDARIES__) {
@@ -603,7 +565,7 @@ export function createBoundaryActivationScript(
     })();
   `.trim();
 
-  return (nonce != null && nonce !== '')
+  return nonce != null && nonce !== ''
     ? `<script nonce="${nonce}">${script}</script>`
     : `<script>${script}</script>`;
 }
@@ -621,10 +583,7 @@ export function createBoundaryActivationScript(
  * @returns HTML comment string
  */
 // eslint-disable-next-line react-refresh/only-export-components
-export function createBoundaryMarker(
-  boundaryId: string,
-  type: 'start' | 'end'
-): string {
+export function createBoundaryMarker(boundaryId: string, type: 'start' | 'end'): string {
   return `<!--stream:${type}:${boundaryId}-->`;
 }
 
@@ -632,7 +591,4 @@ export function createBoundaryMarker(
 // Exports
 // ============================================================================
 
-export {
-  DefaultPlaceholder,
-  NonStreamingFallback,
-};
+export { DefaultPlaceholder, NonStreamingFallback };

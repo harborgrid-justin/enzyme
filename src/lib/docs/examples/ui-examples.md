@@ -21,6 +21,7 @@
 ## Buttons
 
 ### Example 1: Button Variants
+
 **Use Case:** Different button styles for different actions
 **Difficulty:** ⭐ Basic
 
@@ -55,12 +56,14 @@ function ButtonExamples() {
 **Explanation:** Different variants communicate action importance and type.
 
 **See Also:**
+
 - [Example 2](#example-2-button-sizes)
 - [Button Component Docs](../components/BUTTON.md)
 
 ---
 
 ### Example 2: Button Sizes
+
 **Use Case:** Buttons for different contexts
 **Difficulty:** ⭐ Basic
 
@@ -83,6 +86,7 @@ function ButtonSizes() {
 ---
 
 ### Example 3: Icon Buttons
+
 **Use Case:** Buttons with icons
 **Difficulty:** ⭐ Basic
 
@@ -125,6 +129,7 @@ function IconButtons() {
 ---
 
 ### Example 4: Button States
+
 **Use Case:** Interactive states
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -178,6 +183,7 @@ function ButtonStates() {
 ## Forms and Inputs
 
 ### Example 5: Input Component
+
 **Use Case:** Standard form inputs
 **Difficulty:** ⭐ Basic
 
@@ -241,6 +247,7 @@ function InputExample() {
 ---
 
 ### Example 6: Select Component
+
 **Use Case:** Dropdown selection
 **Difficulty:** ⭐ Basic
 
@@ -292,6 +299,7 @@ function SelectExample() {
 ---
 
 ### Example 7: Checkbox and Radio
+
 **Use Case:** Boolean and single-choice inputs
 **Difficulty:** ⭐ Basic
 
@@ -369,6 +377,7 @@ function ChoiceInputs() {
 ---
 
 ### Example 8: Textarea Component
+
 **Use Case:** Multi-line text input
 **Difficulty:** ⭐ Basic
 
@@ -432,6 +441,7 @@ function TextareaExample() {
 ## Modals and Dialogs
 
 ### Example 9: Basic Modal
+
 **Use Case:** Standard modal dialog
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -477,6 +487,7 @@ function BasicModal() {
 ---
 
 ### Example 10: Confirmation Dialog
+
 **Use Case:** Confirm destructive actions
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -524,6 +535,7 @@ function DeleteConfirmation({ itemName, onConfirm }: ConfirmationProps) {
 ---
 
 ### Example 11: Form Modal
+
 **Use Case:** Modal with form submission
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -598,6 +610,7 @@ function CreateUserModal() {
 ## Tooltips and Popovers
 
 ### Example 12: Tooltip Component
+
 **Use Case:** Contextual help text
 **Difficulty:** ⭐ Basic
 
@@ -653,6 +666,7 @@ function TooltipExample() {
 ---
 
 ### Example 13: Popover Component
+
 **Use Case:** Interactive popup content
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -706,6 +720,7 @@ function PopoverExample() {
 ## Tables and Lists
 
 ### Example 14: Data Table
+
 **Use Case:** Display tabular data
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -761,6 +776,7 @@ function UserTable({ users }: { users: User[] }) {
 ---
 
 ### Example 15: Sortable Table
+
 **Use Case:** User-sortable columns
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -830,6 +846,7 @@ function SortableTable({ data }: { data: User[] }) {
 ---
 
 ### Example 16: List with Empty State
+
 **Use Case:** Handle empty data gracefully
 **Difficulty:** ⭐ Basic
 
@@ -881,6 +898,7 @@ function UserList({ users }: { users: User[] }) {
 ## Loading States
 
 ### Example 17: Skeleton Loaders
+
 **Use Case:** Content placeholders during loading
 **Difficulty:** ⭐ Basic
 
@@ -927,6 +945,7 @@ function ProductList({ isLoading, products }: Props) {
 ---
 
 ### Example 18: Spinner Component
+
 **Use Case:** Inline loading indicators
 **Difficulty:** ⭐ Basic
 
@@ -972,6 +991,7 @@ function SpinnerExamples() {
 ---
 
 ### Example 19: Progress Bar
+
 **Use Case:** Show progress of operations
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -1025,6 +1045,7 @@ function ProgressExamples() {
 ## Theming
 
 ### Example 20: Theme Provider
+
 **Use Case:** App-wide theming
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -1059,6 +1080,7 @@ function ThemeToggle() {
 ---
 
 ### Example 21: CSS Variables Theming
+
 **Use Case:** Dynamic theme customization
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -1104,6 +1126,7 @@ function ThemedButton() {
 ---
 
 ### Example 22: Custom Brand Colors
+
 **Use Case:** Override default theme
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -1146,6 +1169,7 @@ function BrandedApp() {
 ## Responsive Design
 
 ### Example 23: Responsive Grid
+
 **Use Case:** Adapt layout to screen size
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -1184,6 +1208,7 @@ function ResponsiveHeading() {
 ---
 
 ### Example 24: Mobile Navigation
+
 **Use Case:** Different nav for mobile/desktop
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -1244,6 +1269,7 @@ function Navigation() {
 ## Accessibility
 
 ### Example 25: Accessible Form
+
 **Use Case:** Fully accessible form components
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -1314,6 +1340,7 @@ function AccessibleForm() {
 ---
 
 ### Example 26: Focus Management
+
 **Use Case:** Keyboard navigation and focus
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -1385,6 +1412,7 @@ function ModalWithFocusManagement({ open, onClose }: ModalProps) {
 ---
 
 ### Example 27: Screen Reader Announcements
+
 **Use Case:** Live region updates for screen readers
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -1434,6 +1462,7 @@ function SearchResults({ query, results, isLoading }: SearchProps) {
 ---
 
 ### Example 28: Skip Navigation Link
+
 **Use Case:** Allow keyboard users to skip to main content
 **Difficulty:** ⭐ Basic
 
@@ -1469,6 +1498,7 @@ function Layout({ children }: { children: React.ReactNode }) {
 ## Best Practices
 
 ### Component Design
+
 - ✅ **DO** use semantic HTML elements
 - ✅ **DO** provide proper ARIA labels
 - ✅ **DO** ensure keyboard accessibility
@@ -1477,6 +1507,7 @@ function Layout({ children }: { children: React.ReactNode }) {
 - ❌ **DON'T** disable focus outlines without alternative
 
 ### Forms
+
 - ✅ **DO** associate labels with inputs
 - ✅ **DO** provide clear error messages
 - ✅ **DO** indicate required fields
@@ -1485,6 +1516,7 @@ function Layout({ children }: { children: React.ReactNode }) {
 - ❌ **DON'T** auto-submit without confirmation
 
 ### Loading States
+
 - ✅ **DO** show loading indicators
 - ✅ **DO** use skeletons for layout preservation
 - ✅ **DO** indicate progress when possible
@@ -1493,6 +1525,7 @@ function Layout({ children }: { children: React.ReactNode }) {
 - ❌ **DON'T** show generic spinners for everything
 
 ### Responsive Design
+
 - ✅ **DO** test on actual devices
 - ✅ **DO** use mobile-first approach
 - ✅ **DO** ensure touch targets are large enough (44x44px)
@@ -1505,6 +1538,7 @@ function Layout({ children }: { children: React.ReactNode }) {
 ## Anti-Patterns
 
 ### ❌ Missing Focus States
+
 ```tsx
 // BAD
 <button className="outline-none">Click Me</button>
@@ -1516,6 +1550,7 @@ function Layout({ children }: { children: React.ReactNode }) {
 ```
 
 ### ❌ Inaccessible Modals
+
 ```tsx
 // BAD
 <div className="modal" onClick={onClose}>
@@ -1534,6 +1569,7 @@ function Layout({ children }: { children: React.ReactNode }) {
 ```
 
 ### ❌ Non-Descriptive Buttons
+
 ```tsx
 // BAD
 <button>Click here</button>

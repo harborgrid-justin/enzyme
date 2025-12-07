@@ -26,7 +26,7 @@
  * ```
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 // =============================================================================
 // TYPES
@@ -35,13 +35,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 /**
  * Optimistic update status
  */
-export type OptimisticStatus =
-  | 'idle'
-  | 'pending'
-  | 'syncing'
-  | 'success'
-  | 'error'
-  | 'rolled-back';
+export type OptimisticStatus = 'idle' | 'pending' | 'syncing' | 'success' | 'error' | 'rolled-back';
 
 /**
  * Pending change record
@@ -186,9 +180,7 @@ function calculateRetryDelay(attempt: number, baseDelay: number): number {
 /**
  * React hook for optimistic updates
  */
-export function useOptimisticSync<T>(
-  config: OptimisticSyncConfig<T>
-): OptimisticSyncReturn<T> {
+export function useOptimisticSync<T>(config: OptimisticSyncConfig<T>): OptimisticSyncReturn<T> {
   const {
     initialData,
     fetcher,
@@ -229,9 +221,7 @@ export function useOptimisticSync<T>(
   }, []);
 
   // Derived state
-  const isPending = pendingChanges.some(
-    (c) => c.status === 'pending' || c.status === 'syncing'
-  );
+  const isPending = pendingChanges.some((c) => c.status === 'pending' || c.status === 'syncing');
   const isSyncing = pendingChanges.some((c) => c.status === 'syncing');
   const isStale = pendingChanges.length > 0;
 
@@ -271,9 +261,7 @@ export function useOptimisticSync<T>(
           // Schedule retry
           setPendingChanges((prev) =>
             prev.map((c) =>
-              c.id === change.id
-                ? { ...c, status: 'pending', retryCount: c.retryCount + 1 }
-                : c
+              c.id === change.id ? { ...c, status: 'pending', retryCount: c.retryCount + 1 } : c
             )
           );
 
@@ -332,10 +320,14 @@ export function useOptimisticSync<T>(
           }
 
           debounceTimer.current = setTimeout(() => {
-            void applyUpdate(payload).then((result) => { resolve(result); return result; }).catch((err: unknown) => {
-              const error = err instanceof Error ? err : new Error(String(err));
-              throw error;
-            });
+            void applyUpdate(payload)
+              .then((result) => {
+                resolve(result);
+                return result;
+              })
+              .catch((err: unknown) => {
+                throw err instanceof Error ? err : new Error(String(err));
+              });
           }, debounceMs);
         });
       }
@@ -408,10 +400,7 @@ export function useOptimisticSync<T>(
       // Get rollback data
       let rollbackData = change.snapshot;
       if (rollback) {
-        rollbackData = rollback(
-          change.snapshot,
-          new Error('Manual rollback')
-        );
+        rollbackData = rollback(change.snapshot, new Error('Manual rollback'));
       }
 
       // Remove change and restore data
@@ -424,10 +413,7 @@ export function useOptimisticSync<T>(
         setData(baseData);
       } else {
         // Apply remaining changes to confirmed data
-        const reappliedData = remainingChanges.reduce(
-          (acc, c) => merger(acc, c.payload),
-          baseData
-        );
+        const reappliedData = remainingChanges.reduce((acc, c) => merger(acc, c.payload), baseData);
         setData(reappliedData);
       }
 
@@ -457,9 +443,7 @@ export function useOptimisticSync<T>(
 
   // Retry failed changes
   const retryFailed = useCallback(async () => {
-    const failedChanges = pendingChanges.filter(
-      (c) => c.status === 'error' || c.retryCount > 0
-    );
+    const failedChanges = pendingChanges.filter((c) => c.status === 'error' || c.retryCount > 0);
 
     for (const change of failedChanges) {
       try {
@@ -676,9 +660,7 @@ export function useOptimisticList<T extends ListItem>(
 
         if (isMounted.current) {
           // Replace temp item with real item
-          setItems((prev) =>
-            prev.map((item) => (item.id === tempId ? createdItem : item))
-          );
+          setItems((prev) => prev.map((item) => (item.id === tempId ? createdItem : item)));
           setItems((prev) => [...prev, createdItem]);
           setPendingOps((prev) => prev.filter((o) => o.id !== op.id));
           onCreateSuccess?.(createdItem);
@@ -713,9 +695,7 @@ export function useOptimisticList<T extends ListItem>(
       const optimisticItem = { ...currentItem, ...updates };
 
       // Update optimistically
-      setItems((prev) =>
-        prev.map((item) => (item.id === id ? optimisticItem : item))
-      );
+      setItems((prev) => prev.map((item) => (item.id === id ? optimisticItem : item)));
 
       // Track operation
       const op: PendingListOperation<T> = {
@@ -741,12 +721,8 @@ export function useOptimisticList<T extends ListItem>(
         const updatedItem = await updateItem(id, updates);
 
         if (isMounted.current) {
-          setItems((prev) =>
-            prev.map((item) => (item.id === id ? updatedItem : item))
-          );
-          setItems((prev) =>
-            prev.map((item) => (item.id === id ? updatedItem : item))
-          );
+          setItems((prev) => prev.map((item) => (item.id === id ? updatedItem : item)));
+          setItems((prev) => prev.map((item) => (item.id === id ? updatedItem : item)));
           setPendingOps((prev) => prev.filter((o) => o.id !== op.id));
           onUpdateSuccess?.(updatedItem);
         }
@@ -757,9 +733,7 @@ export function useOptimisticList<T extends ListItem>(
 
         if (isMounted.current && op.retryCount >= maxRetries) {
           // Rollback
-          setItems((prev) =>
-            prev.map((item) => (item.id === id ? currentItem : item))
-          );
+          setItems((prev) => prev.map((item) => (item.id === id ? currentItem : item)));
           setPendingOps((prev) => prev.filter((o) => o.id !== op.id));
           onError?.(error, 'update');
         }
@@ -823,13 +797,16 @@ export function useOptimisticList<T extends ListItem>(
   );
 
   // Reset
-  const reset = useCallback((newItems?: T[]) => {
-    const resetItems = newItems ?? initialItems;
-    setItems(resetItems);
-    setItems(resetItems);
-    setPendingOps([]);
-    setError(null);
-  }, [initialItems]);
+  const reset = useCallback(
+    (newItems?: T[]) => {
+      const resetItems = newItems ?? initialItems;
+      setItems(resetItems);
+      setItems(resetItems);
+      setPendingOps([]);
+      setError(null);
+    },
+    [initialItems]
+  );
 
   return {
     // State

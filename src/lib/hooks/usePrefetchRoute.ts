@@ -12,10 +12,10 @@ import { useQueryClient } from '@tanstack/react-query';
 export interface PrefetchOptions {
   /** Delay before prefetching (ms) */
   delay?: number;
-  
+
   /** Only prefetch on hover */
   onHover?: boolean;
-  
+
   /** Stale time for prefetched data (ms) */
   staleTime?: number;
 }
@@ -31,10 +31,10 @@ export type RouteDataLoader = () => Promise<unknown>;
 export interface RoutePrefetchConfig {
   /** Query key for the route data */
   queryKey: readonly unknown[];
-  
+
   /** Data loader function */
   loader: RouteDataLoader;
-  
+
   /** Stale time override */
   staleTime?: number;
 }
@@ -45,7 +45,10 @@ export interface RoutePrefetchConfig {
 export function usePrefetchRoute(): {
   prefetch: (config: RoutePrefetchConfig, options?: PrefetchOptions) => Promise<void>;
   prefetchMany: (configs: RoutePrefetchConfig[], options?: PrefetchOptions) => Promise<void>;
-  createHoverHandlers: (config: RoutePrefetchConfig, options?: PrefetchOptions) => {
+  createHoverHandlers: (
+    config: RoutePrefetchConfig,
+    options?: PrefetchOptions
+  ) => {
     onMouseEnter: () => void;
     onMouseLeave: () => void;
     onFocus: () => void;
@@ -102,8 +105,9 @@ export function usePrefetchRoute(): {
         } catch (error) {
           // Silently fail prefetch - not critical
           // Only log in development
-          // eslint-disable-next-line no-console
-          if (process.env.NODE_ENV === 'development') console.debug('Route prefetch failed:', error);
+          if (process.env.NODE_ENV === 'development') {
+            console.info('Route prefetch failed:', error);
+          }
         }
       };
 
@@ -121,19 +125,17 @@ export function usePrefetchRoute(): {
     },
     [queryClient]
   );
-  
+
   /**
    * Prefetch multiple routes
    */
   const prefetchMany = useCallback(
     async (configs: RoutePrefetchConfig[], options: PrefetchOptions = {}) => {
-      await Promise.all(
-        configs.map(async (config) => prefetch(config, options))
-      );
+      await Promise.all(configs.map(async (config) => prefetch(config, options)));
     },
     [prefetch]
   );
-  
+
   /**
    * Create hover prefetch handlers
    */
@@ -161,25 +163,22 @@ export function usePrefetchRoute(): {
     },
     [prefetch]
   );
-  
+
   /**
    * Clear prefetch cache for a route
    */
-  const clearPrefetch = useCallback(
-    (queryKey: readonly unknown[]) => {
-      const routeKey = JSON.stringify(queryKey);
-      prefetchedRoutes.current.delete(routeKey);
-    },
-    []
-  );
-  
+  const clearPrefetch = useCallback((queryKey: readonly unknown[]) => {
+    const routeKey = JSON.stringify(queryKey);
+    prefetchedRoutes.current.delete(routeKey);
+  }, []);
+
   /**
    * Clear all prefetch cache
    */
   const clearAllPrefetch = useCallback(() => {
     prefetchedRoutes.current.clear();
   }, []);
-  
+
   return {
     prefetch,
     prefetchMany,

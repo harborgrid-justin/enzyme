@@ -12,11 +12,7 @@
  * @version 1.0.0
  */
 
-import type {
-  ZIndexLayer,
-  ZIndexContext,
-  ContextTrackingConfig,
-} from './types';
+import type { ZIndexLayer, ZIndexContext, ContextTrackingConfig } from './types';
 import { Z_INDEX_LAYERS, DEFAULT_TRACKING_CONFIG } from './types';
 
 // ============================================================================
@@ -163,15 +159,8 @@ export class ZIndexManager {
    * @param options - Registration options
    * @returns Registration object
    */
-  public register(
-    element: Element,
-    options: ZIndexRegistrationOptions = {}
-  ): ZIndexRegistration {
-    const {
-      layer = 'base',
-      priority = 0,
-      autoIncrement = true,
-    } = options;
+  public register(element: Element, options: ZIndexRegistrationOptions = {}): ZIndexRegistration {
+    const { layer = 'base', priority = 0, autoIncrement = true } = options;
 
     // Check if already registered
     const existingId = this.elementToId.get(element);
@@ -233,7 +222,7 @@ export class ZIndexManager {
     // Notify callbacks
     this.notifyChange(registration);
 
-    if (this.config.debug === true) {
+    if (this.config.debug) {
       // eslint-disable-next-line no-console -- debug logging
       console.debug('[ZIndexManager] Registered:', id, registration);
     }
@@ -255,7 +244,7 @@ export class ZIndexManager {
       id = this.elementToId.get(idOrElement);
     }
 
-    if ((id === undefined) || (id === '')) {
+    if (id === undefined || id === '') {
       return;
     }
 
@@ -277,7 +266,7 @@ export class ZIndexManager {
       }
     }
 
-    if (this.config.debug === true) {
+    if (this.config.debug) {
       // eslint-disable-next-line no-console -- debug logging
       console.debug('[ZIndexManager] Unregistered:', id);
     }
@@ -311,7 +300,8 @@ export class ZIndexManager {
 
     // Update priority
     if (options.priority !== undefined && options.priority !== existing.priority) {
-      const newZIndex = Z_INDEX_LAYERS[existing.layer] +
+      const newZIndex =
+        Z_INDEX_LAYERS[existing.layer] +
         (existing.zIndex - Z_INDEX_LAYERS[existing.layer]) +
         (options.priority - existing.priority);
 
@@ -343,7 +333,7 @@ export class ZIndexManager {
    */
   public getRegistration(element: Element): ZIndexRegistration | null {
     const id = this.elementToId.get(element);
-    if ((id === undefined) || (id === '')) {
+    if (id === undefined || id === '') {
       return null;
     }
     return this.registrations.get(id) ?? null;
@@ -527,7 +517,7 @@ export class ZIndexManager {
       this.layerOffsets.set(layer, 0);
     });
 
-    if (this.config.debug === true) {
+    if (this.config.debug) {
       // eslint-disable-next-line no-console -- debug logging
       console.debug('[ZIndexManager] Cleared all registrations');
     }
@@ -556,7 +546,7 @@ export class ZIndexManager {
     ids.sort((a, b) => {
       const regA = this.registrations.get(a);
       const regB = this.registrations.get(b);
-      if ((regA === undefined) || (regB === undefined)) return 0;
+      if (regA === undefined || regB === undefined) return 0;
       return regA.zIndex - regB.zIndex;
     });
   }
@@ -566,7 +556,7 @@ export class ZIndexManager {
    */
   private rebalanceLayer(layer: ZIndexLayer): void {
     const ids = this.layerRegistrations.get(layer);
-    if ((ids === undefined) || (ids.length === 0)) {
+    if (ids === undefined || ids.length === 0) {
       this.layerOffsets.set(layer, 0);
       return;
     }
@@ -588,7 +578,7 @@ export class ZIndexManager {
 
     this.layerOffsets.set(layer, offset);
 
-    if (this.config.debug === true) {
+    if (this.config.debug) {
       // eslint-disable-next-line no-console -- debug logging
       console.debug('[ZIndexManager] Rebalanced layer:', layer);
     }
@@ -634,11 +624,16 @@ export class ZIndexManager {
     }
 
     const style = getComputedStyle(element);
-    const {position} = style;
+    const { position } = style;
 
     // z-index on positioned element
-    if ((position === 'relative' || position === 'absolute' || position === 'fixed' || position === 'sticky') &&
-        style.zIndex !== 'auto') {
+    if (
+      (position === 'relative' ||
+        position === 'absolute' ||
+        position === 'fixed' ||
+        position === 'sticky') &&
+      style.zIndex !== 'auto'
+    ) {
       return true;
     }
 
@@ -648,9 +643,7 @@ export class ZIndexManager {
     }
 
     // transform, filter, perspective
-    if (style.transform !== 'none' ||
-        style.filter !== 'none' ||
-        style.perspective !== 'none') {
+    if (style.transform !== 'none' || style.filter !== 'none' || style.perspective !== 'none') {
       return true;
     }
 
@@ -665,23 +658,16 @@ export class ZIndexManager {
     }
 
     // will-change with certain values
-    const {willChange} = style;
-    if (willChange === 'transform' ||
-        willChange === 'opacity' ||
-        willChange === 'filter') {
+    const { willChange } = style;
+    if (willChange === 'transform' || willChange === 'opacity' || willChange === 'filter') {
       return true;
     }
 
     // contain
-    const {contain} = style;
-    if (contain === 'layout' ||
-        contain === 'paint' ||
-        contain === 'strict' ||
-        contain === 'content') {
-      return true;
-    }
-
-    return false;
+    const { contain } = style;
+    return (
+      contain === 'layout' || contain === 'paint' || contain === 'strict' || contain === 'content'
+    );
   }
 }
 

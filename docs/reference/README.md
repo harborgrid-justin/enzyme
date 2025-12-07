@@ -194,5 +194,21 @@ function Dashboard() {
 
 ---
 
+## Related Documentation
+
+### Module Documentation
+- [API Module](../api/README.md) - HTTP client and API utilities
+- [Auth Module](../auth/README.md) - Authentication and authorization
+- [State Module](../state/README.md) - State management with Zustand
+- [Routing Module](../routing/README.md) - Type-safe routing
+- [UI Module](../ui/README.md) - Component library
+- [Config Module](../config/README.md) - Configuration management
+- [Security Module](../security/README.md) - Security features
+- [Performance Module](../performance/README.md) - Performance monitoring
+- [Theme Module](../theme/README.md) - Theming system
+- [Hooks Module](../hooks/README.md) - Custom React hooks
+
+---
+
 **Last Updated:** 2025-11-29
 **Version:** 1.0.5

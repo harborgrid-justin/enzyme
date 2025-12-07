@@ -50,7 +50,7 @@ export interface RolloutResult {
  * Engine for evaluating percentage-based rollouts.
  */
 export class PercentageRolloutEngine {
-  private hashFunction: HashFunction;
+  private readonly hashFunction: HashFunction;
   private stickyBuckets = new Map<string, number>();
 
   constructor(hashFunction?: HashFunction) {
@@ -84,6 +84,35 @@ export class PercentageRolloutEngine {
 
   // ==========================================================================
   // Percentage Rollout
+  // ==========================================================================
+
+  /**
+   * Set a sticky bucket for a user/flag combination.
+   */
+  setStickyBucket(flagKey: string, hashKey: string, bucket: number): void {
+    this.stickyBuckets.set(`${flagKey}:${hashKey}`, bucket);
+  }
+
+  // ==========================================================================
+  // Scheduled Rollout
+  // ==========================================================================
+
+  /**
+   * Clear sticky buckets.
+   */
+  clearStickyBuckets(): void {
+    this.stickyBuckets.clear();
+  }
+
+  /**
+   * Get the bucket for a user/flag combination.
+   */
+  getBucket(flagKey: string, hashKey: string, salt?: string): number {
+    return this.hashFunction(`${flagKey}:${hashKey}`, salt ?? 'default');
+  }
+
+  // ==========================================================================
+  // Ring Rollout
   // ==========================================================================
 
   private evaluatePercentage(
@@ -128,10 +157,6 @@ export class PercentageRolloutEngine {
       percentage: rollout.percentage,
     };
   }
-
-  // ==========================================================================
-  // Scheduled Rollout
-  // ==========================================================================
 
   private evaluateScheduled(
     rollout: ScheduledRollout,
@@ -181,7 +206,7 @@ export class PercentageRolloutEngine {
   }
 
   // ==========================================================================
-  // Ring Rollout
+  // Canary Rollout
   // ==========================================================================
 
   private evaluateRing(
@@ -223,6 +248,10 @@ export class PercentageRolloutEngine {
     return { included: false, ring: rollout.currentRing };
   }
 
+  // ==========================================================================
+  // Experiment Rollout
+  // ==========================================================================
+
   private getRingPriority(
     ringId: string,
     rings: readonly { id: string; priority: number }[]
@@ -230,6 +259,10 @@ export class PercentageRolloutEngine {
     const ring = rings.find((r) => r.id === ringId);
     return ring?.priority ?? Infinity;
   }
+
+  // ==========================================================================
+  // Helpers
+  // ==========================================================================
 
   private isInRing(
     ringId: string,
@@ -240,10 +273,6 @@ export class PercentageRolloutEngine {
     const currentPriority = this.getRingPriority(currentRing, rings);
     return ringPriority <= currentPriority;
   }
-
-  // ==========================================================================
-  // Canary Rollout
-  // ==========================================================================
 
   private evaluateCanary(
     rollout: CanaryRollout,
@@ -273,10 +302,6 @@ export class PercentageRolloutEngine {
       isCanary,
     };
   }
-
-  // ==========================================================================
-  // Experiment Rollout
-  // ==========================================================================
 
   private evaluateExperiment(
     rollout: ExperimentRollout,
@@ -326,10 +351,6 @@ export class PercentageRolloutEngine {
     };
   }
 
-  // ==========================================================================
-  // Helpers
-  // ==========================================================================
-
   private getDefaultHashKey(context: EvaluationContext): string | null {
     return (
       context.user?.id ??
@@ -346,26 +367,5 @@ export class PercentageRolloutEngine {
     const nonControl = variants.find((v) => v.isControl !== true);
     const firstVariantId = variants[0]?.id;
     return nonControl?.id ?? firstVariantId ?? 'default';
-  }
-
-  /**
-   * Set a sticky bucket for a user/flag combination.
-   */
-  setStickyBucket(flagKey: string, hashKey: string, bucket: number): void {
-    this.stickyBuckets.set(`${flagKey}:${hashKey}`, bucket);
-  }
-
-  /**
-   * Clear sticky buckets.
-   */
-  clearStickyBuckets(): void {
-    this.stickyBuckets.clear();
-  }
-
-  /**
-   * Get the bucket for a user/flag combination.
-   */
-  getBucket(flagKey: string, hashKey: string, salt?: string): number {
-    return this.hashFunction(`${flagKey}:${hashKey}`, salt ?? 'default');
   }
 }

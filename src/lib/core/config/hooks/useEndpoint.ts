@@ -7,20 +7,13 @@
  * @module core/config/hooks/useEndpoint
  */
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ms } from '../../../shared/type-utils';
 
-import type {
-  EndpointDefinition,
-  EndpointHealth,
-  EndpointChangeEvent,
-} from '../types';
+import type { EndpointChangeEvent, EndpointDefinition, EndpointHealth } from '../types';
 
-import {
-  getEndpointRegistry,
-  getEndpoint,
-} from '../registry/EndpointRegistry';
+import { getEndpoint, getEndpointRegistry } from '../registry/EndpointRegistry';
 
 // =============================================================================
 // Endpoint Access Hooks
@@ -58,13 +51,12 @@ export function useEndpoint(name: string): EndpointDefinition | undefined {
     }
 
     const registry = getEndpointRegistry();
-    const unsubscribe = registry.subscribe((event) => {
+
+    return registry.subscribe((event) => {
       if (event.name === name) {
         setEndpoint(event.endpoint);
       }
     });
-
-    return unsubscribe;
   }, [name]);
 
   return endpoint;
@@ -80,11 +72,10 @@ export function useAllEndpoints(): readonly EndpointDefinition[] {
 
   useEffect(() => {
     const registry = getEndpointRegistry();
-    const unsubscribe = registry.subscribe(() => {
+
+    return registry.subscribe(() => {
       setEndpoints(registry.getAll());
     });
-
-    return unsubscribe;
   }, []);
 
   return endpoints;
@@ -100,11 +91,10 @@ export function useEndpointsByTag(tag: string): readonly EndpointDefinition[] {
 
   useEffect(() => {
     const registry = getEndpointRegistry();
-    const unsubscribe = registry.subscribe(() => {
+
+    return registry.subscribe(() => {
       setEndpoints(registry.getByTag(tag));
     });
-
-    return unsubscribe;
   }, [tag]);
 
   return endpoints;
@@ -170,7 +160,9 @@ export function useEndpointUrl(
  * }
  * ```
  */
-export function useEndpointUrlBuilder(name: string): (
+export function useEndpointUrlBuilder(
+  name: string
+): (
   params?: Record<string, string | number>,
   query?: Record<string, string | number | boolean>
 ) => string | null {
@@ -232,13 +224,12 @@ export function useEndpointHealth(name: string): EndpointHealth | undefined {
     }
 
     const registry = getEndpointRegistry();
-    const unsubscribe = registry.subscribe((event) => {
+
+    return registry.subscribe((event) => {
       if (event.name === name && event.type === 'health-changed') {
         setHealth(event.newHealth);
       }
     });
-
-    return unsubscribe;
   }, [name]);
 
   return health;
@@ -262,13 +253,12 @@ export function useUnhealthyEndpoints(): readonly string[] {
 
   useEffect(() => {
     const registry = getEndpointRegistry();
-    const unsubscribe = registry.subscribe((event) => {
+
+    return registry.subscribe((event) => {
       if (event.type === 'health-changed') {
         setUnhealthy(registry.getUnhealthyEndpoints());
       }
     });
-
-    return unsubscribe;
   }, []);
 
   return unhealthy;
@@ -284,13 +274,12 @@ export function useDegradedEndpoints(): readonly string[] {
 
   useEffect(() => {
     const registry = getEndpointRegistry();
-    const unsubscribe = registry.subscribe((event) => {
+
+    return registry.subscribe((event) => {
       if (event.type === 'health-changed') {
         setDegraded(registry.getDegradedEndpoints());
       }
     });
-
-    return unsubscribe;
   }, []);
 
   return degraded;
@@ -303,16 +292,19 @@ export function useDegradedEndpoints(): readonly string[] {
 /**
  * Hook to get endpoint registry statistics.
  */
-export function useEndpointStats(): ReturnType<typeof getEndpointRegistry>['getStats'] extends () => infer R ? R : never {
+export function useEndpointStats(): ReturnType<
+  typeof getEndpointRegistry
+>['getStats'] extends () => infer R
+  ? R
+  : never {
   const [stats, setStats] = useState(() => getEndpointRegistry().getStats());
 
   useEffect(() => {
     const registry = getEndpointRegistry();
-    const unsubscribe = registry.subscribe(() => {
+
+    return registry.subscribe(() => {
       setStats(registry.getStats());
     });
-
-    return unsubscribe;
   }, []);
 
   return stats;
@@ -332,8 +324,8 @@ export function useEndpointChangeTracking(
 ): void {
   useEffect(() => {
     const registry = getEndpointRegistry();
-    const unsubscribe = registry.subscribe(onChangeCallback);
-    return unsubscribe;
+
+    return registry.subscribe(onChangeCallback);
   }, [onChangeCallback]);
 }
 
@@ -345,11 +337,10 @@ export function useLastEndpointChange(): EndpointChangeEvent | null {
 
   useEffect(() => {
     const registry = getEndpointRegistry();
-    const unsubscribe = registry.subscribe((event) => {
+
+    return registry.subscribe((event) => {
       setLastChange(event);
     });
-
-    return unsubscribe;
   }, []);
 
   return lastChange;
@@ -382,10 +373,7 @@ export function useLastEndpointChange(): EndpointChangeEvent | null {
  * }
  * ```
  */
-export function useRegisterEndpoint(
-  definition: EndpointDefinition,
-  autoRemove = true
-): void {
+export function useRegisterEndpoint(definition: EndpointDefinition, autoRemove = true): void {
   useEffect(() => {
     const registry = getEndpointRegistry();
     registry.register(definition);

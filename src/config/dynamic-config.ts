@@ -188,25 +188,10 @@ export class DynamicConfigManager {
   /**
    * Subscribe to state changes
    */
-  public subscribeToState(
-    listener: (state: DynamicConfigState) => void
-  ): ConfigUnsubscribe {
+  public subscribeToState(listener: (state: DynamicConfigState) => void): ConfigUnsubscribe {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
   }
-
-  /**
-   * Update internal state and notify listeners
-   */
-  private updateState(partial: Partial<DynamicConfigInternalState>): void {
-    Object.assign(this.state, partial);
-    const publicState = this.getState();
-    this.listeners.forEach((listener) => listener(publicState));
-  }
-
-  // ---------------------------------------------------------------------------
-  // Remote Synchronization
-  // ---------------------------------------------------------------------------
 
   /**
    * Sync configuration with remote source
@@ -239,168 +224,9 @@ export class DynamicConfigManager {
     }
   }
 
-  /**
-   * Fetch configuration from remote source
-   */
-  private async fetchRemoteConfig(): Promise<RemoteConfigResponse> {
-    const source = env.featureFlagsSource;
-
-    switch (source) {
-      case 'remote':
-        return this.fetchFromRemoteAPI();
-      case 'launchdarkly':
-        return this.fetchFromLaunchDarkly();
-      default:
-        return { flags: {}, tests: {}, config: {} };
-    }
-  }
-
-  /**
-   * Fetch from remote API
-   */
-  private async fetchFromRemoteAPI(): Promise<RemoteConfigResponse> {
-    // This would be replaced with actual API call
-    // For now, return empty config
-    return Promise.resolve({ flags: {}, tests: {}, config: {} });
-  }
-
-  /**
-   * Fetch from LaunchDarkly
-   */
-  private async fetchFromLaunchDarkly(): Promise<RemoteConfigResponse> {
-    // This would integrate with LaunchDarkly SDK
-    // For now, return empty config
-    return Promise.resolve({ flags: {}, tests: {}, config: {} });
-  }
-
-  /**
-   * Apply remote configuration to registry
-   */
-  private async applyRemoteConfig(config: RemoteConfigResponse): Promise<void> {
-    // Apply feature flags
-    if (config.flags) {
-      Object.entries(config.flags).forEach(([key, value]) => {
-        this.flags.set(key, value);
-      });
-    }
-
-    // Apply A/B tests
-    if (config.tests) {
-      Object.entries(config.tests).forEach(([key, value]) => {
-        this.abTests.set(key, value);
-      });
-    }
-
-    // Apply general config
-    if (config.config) {
-      Object.entries(config.config).forEach(([namespace, values]) => {
-        Object.entries(values).forEach(([key, value]) => {
-          this.registry.set(
-            CONFIG_NAMESPACES.FEATURES,
-            `${namespace}.${key}`,
-            value,
-            { source: 'remote' }
-          );
-        });
-      });
-    }
-    return Promise.resolve();
-  }
-
-  /**
-   * Handle sync errors with retry logic
-   */
-  private handleError(error: unknown): void {
-    const syncError: ConfigSyncError = {
-      message: error instanceof Error ? error.message : String(error),
-      code: 'SYNC_FAILED',
-      timestamp: new Date().toISOString(),
-      retryCount: this.state.retryCount,
-    };
-
-    this.updateState({
-      syncing: false,
-      lastError: syncError,
-      connectionStatus: 'error',
-    });
-
-    // Retry with exponential backoff
-    if (this.state.retryCount < this.options.retry.maxAttempts) {
-      const delay = Math.min(
-        this.options.retry.baseDelay * Math.pow(2, this.state.retryCount),
-        this.options.retry.maxDelay
-      );
-
-      this.state.retryCount++;
-      setTimeout(() => { void this.syncWithRemote(); }, delay);
-    }
-  }
-
   // ---------------------------------------------------------------------------
-  // Caching
+  // Remote Synchronization
   // ---------------------------------------------------------------------------
-
-  /**
-   * Load configuration from cache
-   */
-  private async loadFromCache(): Promise<void> {
-    try {
-      const cached = localStorage.getItem('dynamic_config_cache');
-      if (cached != null) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        const { flags, tests, timestamp } = JSON.parse(cached);
-        const age = Date.now() - (timestamp as number);
-
-        if (age < this.options.cacheDuration) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-          Object.entries(flags ?? {}).forEach(([key, value]) => {
-            this.flags.set(key, value as FeatureFlagConfig);
-          });
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-          Object.entries(tests ?? {}).forEach(([key, value]) => {
-            this.abTests.set(key, value as ABTestConfig);
-          });
-        }
-      }
-    } catch (error) {
-      console.warn('[DynamicConfig] Failed to load from cache:', error);
-    }
-    return Promise.resolve();
-  }
-
-  /**
-   * Save configuration to cache
-   */
-  private async saveToCache(_config: RemoteConfigResponse): Promise<void> {
-    try {
-      const cacheData = {
-        flags: Object.fromEntries(this.flags),
-        tests: Object.fromEntries(this.abTests),
-        timestamp: Date.now(),
-      };
-      localStorage.setItem('dynamic_config_cache', JSON.stringify(cacheData));
-    } catch (error) {
-      console.warn('[DynamicConfig] Failed to save to cache:', error);
-    }
-    return Promise.resolve();
-  }
-
-  // ---------------------------------------------------------------------------
-  // Polling
-  // ---------------------------------------------------------------------------
-
-  /**
-   * Start polling for configuration updates
-   */
-  private startPolling(): void {
-    if (this.state.pollingInterval) {
-      return;
-    }
-
-    this.state.pollingInterval = setInterval(() => {
-      void this.syncWithRemote();
-    }, this.options.pollingInterval);
-  }
 
   /**
    * Stop polling
@@ -411,76 +237,6 @@ export class DynamicConfigManager {
       this.state.pollingInterval = undefined;
     }
   }
-
-  // ---------------------------------------------------------------------------
-  // WebSocket Connection
-  // ---------------------------------------------------------------------------
-
-  /**
-   * Connect to WebSocket for real-time updates
-   */
-  private connectWebSocket(): void {
-    if (this.state.webSocket) {
-      return;
-    }
-
-    try {
-      const {wsUrl} = env;
-      this.state.webSocket = new WebSocket(`${wsUrl}/config`);
-
-      this.state.webSocket.onopen = () => {
-        this.updateState({ connectionStatus: 'connected' });
-      };
-
-      this.state.webSocket.onmessage = (event) => {
-        try {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-          const update = JSON.parse(event.data) as ConfigUpdate;
-          this.handleConfigUpdate(update);
-        } catch (error) {
-          console.error('[DynamicConfig] Failed to parse WebSocket message:', error);
-        }
-      };
-
-      this.state.webSocket.onclose = () => {
-        this.updateState({ connectionStatus: 'disconnected' });
-        // Reconnect after delay
-        setTimeout(() => this.connectWebSocket(), 5000);
-      };
-
-      this.state.webSocket.onerror = () => {
-        this.updateState({ connectionStatus: 'error' });
-      };
-    } catch (error) {
-      console.error('[DynamicConfig] Failed to connect WebSocket:', error);
-    }
-  }
-
-  /**
-   * Handle real-time configuration update
-   */
-  private handleConfigUpdate(update: ConfigUpdate): void {
-    switch (update.type) {
-      case 'flag':
-        this.flags.set(update.key, update.value as FeatureFlagConfig);
-        break;
-      case 'test':
-        this.abTests.set(update.key, update.value as ABTestConfig);
-        break;
-      case 'config':
-        this.registry.set(
-          CONFIG_NAMESPACES.FEATURES,
-          update.key,
-          update.value as ConfigValue,
-          { source: 'remote' }
-        );
-        break;
-    }
-  }
-
-  // ---------------------------------------------------------------------------
-  // Feature Flags
-  // ---------------------------------------------------------------------------
 
   /**
    * Register a feature flag
@@ -510,10 +266,7 @@ export class DynamicConfigManager {
    * @param context - Evaluation context
    * @returns Evaluation result
    */
-  public evaluateFlag(
-    key: string,
-    context: FeatureFlagContext
-  ): FeatureFlagResult {
+  public evaluateFlag(key: string, context: FeatureFlagContext): FeatureFlagResult {
     const flag = this.flags.get(key);
 
     if (!flag) {
@@ -594,39 +347,8 @@ export class DynamicConfigManager {
     return this.evaluateFlag(key, fullContext).value;
   }
 
-  /**
-   * Calculate user bucket for rollout
-   */
-  private getUserBucket(userId: string, flagKey: string): number {
-    const hash = this.hashString(`${userId}:${flagKey}`);
-    return hash % 100;
-  }
-
-  /**
-   * Simple string hashing
-   */
-  private hashString(str: string): number {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash;
-    }
-    return Math.abs(hash);
-  }
-
-  /**
-   * Check minimum role requirement
-   */
-  private hasMinimumRole(userRole: string, requiredRole: string): boolean {
-    const roleHierarchy = ['user', 'moderator', 'admin', 'superadmin'];
-    const userIndex = roleHierarchy.indexOf(userRole);
-    const requiredIndex = roleHierarchy.indexOf(requiredRole);
-    return userIndex >= requiredIndex;
-  }
-
   // ---------------------------------------------------------------------------
-  // Flag Overrides
+  // Caching
   // ---------------------------------------------------------------------------
 
   /**
@@ -646,6 +368,10 @@ export class DynamicConfigManager {
     delete overrides[key];
     localStorage.setItem('feature_flag_overrides', JSON.stringify(overrides));
   }
+
+  // ---------------------------------------------------------------------------
+  // Polling
+  // ---------------------------------------------------------------------------
 
   /**
    * Get a specific override
@@ -668,6 +394,10 @@ export class DynamicConfigManager {
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // WebSocket Connection
+  // ---------------------------------------------------------------------------
+
   /**
    * Clear all overrides
    */
@@ -675,16 +405,16 @@ export class DynamicConfigManager {
     localStorage.removeItem('feature_flag_overrides');
   }
 
-  // ---------------------------------------------------------------------------
-  // A/B Testing
-  // ---------------------------------------------------------------------------
-
   /**
    * Register an A/B test
    */
   public registerTest(test: ABTestConfig): void {
     this.abTests.set(test.id, test);
   }
+
+  // ---------------------------------------------------------------------------
+  // Feature Flags
+  // ---------------------------------------------------------------------------
 
   /**
    * Get an A/B test definition
@@ -703,10 +433,7 @@ export class DynamicConfigManager {
   /**
    * Get user's assigned variant for a test
    */
-  public getVariant(
-    testId: string,
-    userId?: string
-  ): ABTestVariant | undefined {
+  public getVariant(testId: string, userId?: string): ABTestVariant | undefined {
     const test = this.abTests.get(testId);
     if (test?.status !== 'running') {
       return undefined;
@@ -742,17 +469,10 @@ export class DynamicConfigManager {
   /**
    * Get configuration for user's variant
    */
-  public getVariantConfig<T extends ConfigRecord>(
-    testId: string,
-    userId?: string
-  ): T | undefined {
+  public getVariantConfig<T extends ConfigRecord>(testId: string, userId?: string): T | undefined {
     const variant = this.getVariant(testId, userId);
     return variant?.config as T | undefined;
   }
-
-  // ---------------------------------------------------------------------------
-  // Configuration Hot-Reload
-  // ---------------------------------------------------------------------------
 
   /**
    * Force reload configuration from remote
@@ -793,6 +513,271 @@ export class DynamicConfigManager {
   ): ConfigUnsubscribe {
     return this.registry.subscribe(namespace, key, listener);
   }
+
+  // ---------------------------------------------------------------------------
+  // Flag Overrides
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Update internal state and notify listeners
+   */
+  private updateState(partial: Partial<DynamicConfigInternalState>): void {
+    Object.assign(this.state, partial);
+    const publicState = this.getState();
+    this.listeners.forEach((listener) => listener(publicState));
+  }
+
+  /**
+   * Fetch configuration from remote source
+   */
+  private async fetchRemoteConfig(): Promise<RemoteConfigResponse> {
+    const source = env.featureFlagsSource;
+
+    switch (source) {
+      case 'remote':
+        return this.fetchFromRemoteAPI();
+      case 'launchdarkly':
+        return this.fetchFromLaunchDarkly();
+      default:
+        return { flags: {}, tests: {}, config: {} };
+    }
+  }
+
+  /**
+   * Fetch from remote API
+   */
+  private async fetchFromRemoteAPI(): Promise<RemoteConfigResponse> {
+    // This would be replaced with actual API call
+    // For now, return empty config
+    return Promise.resolve({ flags: {}, tests: {}, config: {} });
+  }
+
+  /**
+   * Fetch from LaunchDarkly
+   */
+  private async fetchFromLaunchDarkly(): Promise<RemoteConfigResponse> {
+    // This would integrate with LaunchDarkly SDK
+    // For now, return empty config
+    return Promise.resolve({ flags: {}, tests: {}, config: {} });
+  }
+
+  /**
+   * Apply remote configuration to registry
+   */
+  private async applyRemoteConfig(config: RemoteConfigResponse): Promise<void> {
+    // Apply feature flags
+    if (config.flags) {
+      Object.entries(config.flags).forEach(([key, value]) => {
+        this.flags.set(key, value);
+      });
+    }
+
+    // Apply A/B tests
+    if (config.tests) {
+      Object.entries(config.tests).forEach(([key, value]) => {
+        this.abTests.set(key, value);
+      });
+    }
+
+    // Apply general config
+    if (config.config) {
+      Object.entries(config.config).forEach(([namespace, values]) => {
+        Object.entries(values).forEach(([key, value]) => {
+          this.registry.set(CONFIG_NAMESPACES.FEATURES, `${namespace}.${key}`, value, {
+            source: 'remote',
+          });
+        });
+      });
+    }
+    return Promise.resolve();
+  }
+
+  // ---------------------------------------------------------------------------
+  // A/B Testing
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Handle sync errors with retry logic
+   */
+  private handleError(error: unknown): void {
+    const syncError: ConfigSyncError = {
+      message: error instanceof Error ? error.message : String(error),
+      code: 'SYNC_FAILED',
+      timestamp: new Date().toISOString(),
+      retryCount: this.state.retryCount,
+    };
+
+    this.updateState({
+      syncing: false,
+      lastError: syncError,
+      connectionStatus: 'error',
+    });
+
+    // Retry with exponential backoff
+    if (this.state.retryCount < this.options.retry.maxAttempts) {
+      const delay = Math.min(
+        this.options.retry.baseDelay * Math.pow(2, this.state.retryCount),
+        this.options.retry.maxDelay
+      );
+
+      this.state.retryCount++;
+      setTimeout(() => {
+        void this.syncWithRemote();
+      }, delay);
+    }
+  }
+
+  /**
+   * Load configuration from cache
+   */
+  private async loadFromCache(): Promise<void> {
+    try {
+      const cached = localStorage.getItem('dynamic_config_cache');
+      if (cached != null) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        const { flags, tests, timestamp } = JSON.parse(cached);
+        const age = Date.now() - (timestamp as number);
+
+        if (age < this.options.cacheDuration) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+          Object.entries(flags ?? {}).forEach(([key, value]) => {
+            this.flags.set(key, value as FeatureFlagConfig);
+          });
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+          Object.entries(tests ?? {}).forEach(([key, value]) => {
+            this.abTests.set(key, value as ABTestConfig);
+          });
+        }
+      }
+    } catch (error) {
+      console.warn('[DynamicConfig] Failed to load from cache:', error);
+    }
+    return Promise.resolve();
+  }
+
+  /**
+   * Save configuration to cache
+   */
+  private async saveToCache(_config: RemoteConfigResponse): Promise<void> {
+    try {
+      const cacheData = {
+        flags: Object.fromEntries(this.flags),
+        tests: Object.fromEntries(this.abTests),
+        timestamp: Date.now(),
+      };
+      localStorage.setItem('dynamic_config_cache', JSON.stringify(cacheData));
+    } catch (error) {
+      console.warn('[DynamicConfig] Failed to save to cache:', error);
+    }
+    return Promise.resolve();
+  }
+
+  /**
+   * Start polling for configuration updates
+   */
+  private startPolling(): void {
+    if (this.state.pollingInterval) {
+      return;
+    }
+
+    this.state.pollingInterval = setInterval(() => {
+      void this.syncWithRemote();
+    }, this.options.pollingInterval);
+  }
+
+  /**
+   * Connect to WebSocket for real-time updates
+   */
+  private connectWebSocket(): void {
+    if (this.state.webSocket) {
+      return;
+    }
+
+    try {
+      const { wsUrl } = env;
+      this.state.webSocket = new WebSocket(`${wsUrl}/config`);
+
+      this.state.webSocket.onopen = () => {
+        this.updateState({ connectionStatus: 'connected' });
+      };
+
+      this.state.webSocket.onmessage = (event) => {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+          const update = JSON.parse(event.data) as ConfigUpdate;
+          this.handleConfigUpdate(update);
+        } catch (error) {
+          console.error('[DynamicConfig] Failed to parse WebSocket message:', error);
+        }
+      };
+
+      this.state.webSocket.onclose = () => {
+        this.updateState({ connectionStatus: 'disconnected' });
+        // Reconnect after delay
+        setTimeout(() => this.connectWebSocket(), 5000);
+      };
+
+      this.state.webSocket.onerror = () => {
+        this.updateState({ connectionStatus: 'error' });
+      };
+    } catch (error) {
+      console.error('[DynamicConfig] Failed to connect WebSocket:', error);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Configuration Hot-Reload
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Handle real-time configuration update
+   */
+  private handleConfigUpdate(update: ConfigUpdate): void {
+    switch (update.type) {
+      case 'flag':
+        this.flags.set(update.key, update.value as FeatureFlagConfig);
+        break;
+      case 'test':
+        this.abTests.set(update.key, update.value as ABTestConfig);
+        break;
+      case 'config':
+        this.registry.set(CONFIG_NAMESPACES.FEATURES, update.key, update.value as ConfigValue, {
+          source: 'remote',
+        });
+        break;
+    }
+  }
+
+  /**
+   * Calculate user bucket for rollout
+   */
+  private getUserBucket(userId: string, flagKey: string): number {
+    const hash = this.hashString(`${userId}:${flagKey}`);
+    return hash % 100;
+  }
+
+  /**
+   * Simple string hashing
+   */
+  private hashString(str: string): number {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = (hash << 5) - hash + char;
+      hash = hash & hash;
+    }
+    return Math.abs(hash);
+  }
+
+  /**
+   * Check minimum role requirement
+   */
+  private hasMinimumRole(userRole: string, requiredRole: string): boolean {
+    const roleHierarchy = ['user', 'moderator', 'admin', 'superadmin'];
+    const userIndex = roleHierarchy.indexOf(userRole);
+    const requiredIndex = roleHierarchy.indexOf(requiredRole);
+    return userIndex >= requiredIndex;
+  }
 }
 
 // =============================================================================
@@ -820,9 +805,7 @@ let dynamicConfigInstance: DynamicConfigManager | null = null;
 /**
  * Get or create the dynamic configuration manager
  */
-export function getDynamicConfig(
-  options?: DynamicConfigOptions
-): DynamicConfigManager {
+export function getDynamicConfig(options?: DynamicConfigOptions): DynamicConfigManager {
   dynamicConfigInstance ??= new DynamicConfigManager(options);
   return dynamicConfigInstance;
 }
@@ -830,9 +813,7 @@ export function getDynamicConfig(
 /**
  * Initialize dynamic configuration
  */
-export async function initializeDynamicConfig(
-  options?: DynamicConfigOptions
-): Promise<void> {
+export async function initializeDynamicConfig(options?: DynamicConfigOptions): Promise<void> {
   const manager = getDynamicConfig(options);
   await manager.initialize();
 }
@@ -840,20 +821,14 @@ export async function initializeDynamicConfig(
 /**
  * Evaluate a feature flag (convenience function)
  */
-export function evaluateFeatureFlag(
-  key: string,
-  context?: Partial<FeatureFlagContext>
-): boolean {
+export function evaluateFeatureFlag(key: string, context?: Partial<FeatureFlagContext>): boolean {
   return getDynamicConfig().isFlagEnabled(key, context);
 }
 
 /**
  * Get A/B test variant (convenience function)
  */
-export function getABTestVariant(
-  testId: string,
-  userId?: string
-): ABTestVariant | undefined {
+export function getABTestVariant(testId: string, userId?: string): ABTestVariant | undefined {
   return getDynamicConfig().getVariant(testId, userId);
 }
 

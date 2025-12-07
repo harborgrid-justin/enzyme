@@ -561,11 +561,11 @@ export const DEFAULT_CLS_GUARD_CONFIG: CLSGuardConfig = {
  * Layout reservation strategies.
  */
 export type ReservationStrategy =
-  | 'skeleton'      // Show skeleton placeholder
-  | 'dimensions'    // Reserve exact dimensions
-  | 'aspect-ratio'  // Reserve with aspect ratio
-  | 'minimum'       // Reserve minimum dimensions
-  | 'none';         // No reservation
+  | 'skeleton' // Show skeleton placeholder
+  | 'dimensions' // Reserve exact dimensions
+  | 'aspect-ratio' // Reserve with aspect ratio
+  | 'minimum' // Reserve minimum dimensions
+  | 'none'; // No reservation
 
 /**
  * Layout reservation specification.
@@ -923,7 +923,11 @@ export interface CLSGuardInterface {
   readonly config: CLSGuardConfig;
   readonly currentScore: number;
   configure(config: Partial<CLSGuardConfig>): void;
-  createReservation(id: string, dimensions: Dimensions, strategy?: ReservationStrategy): LayoutReservation;
+  createReservation(
+    id: string,
+    dimensions: Dimensions,
+    strategy?: ReservationStrategy
+  ): LayoutReservation;
   releaseReservation(id: string): void;
   measureCLS(): CLSMeasurement;
   observeCLS(callback: (measurement: CLSMeasurement) => void): () => void;

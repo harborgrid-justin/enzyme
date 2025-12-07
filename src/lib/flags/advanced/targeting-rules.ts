@@ -106,7 +106,7 @@ export interface ConditionResult {
  * Engine for evaluating targeting rules against evaluation context.
  */
 export class TargetingRulesEngine {
-  private debug: boolean;
+  private readonly debug: boolean;
 
   constructor(options: { debug?: boolean } = {}) {
     this.debug = options.debug ?? false;
@@ -115,10 +115,7 @@ export class TargetingRulesEngine {
   /**
    * Evaluate targeting rules and return the first matching variant.
    */
-  evaluate(
-    rules: readonly TargetingRule[],
-    context: EvaluationContext
-  ): TargetingResult {
+  evaluate(rules: readonly TargetingRule[], context: EvaluationContext): TargetingResult {
     const startTime = performance.now();
     const evaluatedRules: RuleEvaluation[] = [];
 
@@ -184,11 +181,7 @@ export class TargetingRulesEngine {
 
     // Evaluate conditions
     const conditionResults: ConditionResult[] = [];
-    const matched = this.evaluateConditionGroup(
-      rule.conditions,
-      context,
-      conditionResults
-    );
+    const matched = this.evaluateConditionGroup(rule.conditions, context, conditionResults);
 
     return {
       ruleId: rule.id,
@@ -207,7 +200,7 @@ export class TargetingRulesEngine {
     context: EvaluationContext,
     results: ConditionResult[]
   ): boolean {
-    const {conditions} = group;
+    const { conditions } = group;
 
     if (group.operator === 'and') {
       return conditions.every((condition) =>
@@ -230,18 +223,10 @@ export class TargetingRulesEngine {
   ): boolean {
     if ('operator' in conditionOrGroup && 'conditions' in conditionOrGroup) {
       // It's a nested group
-      return this.evaluateConditionGroup(
-        conditionOrGroup,
-        context,
-        results
-      );
+      return this.evaluateConditionGroup(conditionOrGroup, context, results);
     } else {
       // It's a condition
-      return this.evaluateCondition(
-        conditionOrGroup,
-        context,
-        results
-      );
+      return this.evaluateCondition(conditionOrGroup, context, results);
     }
   }
 
@@ -280,10 +265,7 @@ export class TargetingRulesEngine {
    * Resolve an attribute path to a value.
    * Supports dot notation: "user.custom.department"
    */
-  private resolveAttributePath(
-    path: string,
-    context: EvaluationContext
-  ): JsonValue | undefined {
+  private resolveAttributePath(path: string, context: EvaluationContext): JsonValue | undefined {
     const parts = path.split('.');
     let current: unknown = context;
 
@@ -423,9 +405,7 @@ export class TargetingRulesEngine {
     }
 
     if (Array.isArray(actual)) {
-      return actual.some((item) =>
-        this.equals(item, expected, caseSensitive)
-      );
+      return actual.some((item) => this.equals(item, expected, caseSensitive));
     }
 
     return false;
@@ -598,10 +578,7 @@ export class TargetingRulesEngine {
   // Schedule Evaluation
   // ==========================================================================
 
-  private isWithinSchedule(
-    schedule: RuleSchedule,
-    context: EvaluationContext
-  ): boolean {
+  private isWithinSchedule(schedule: RuleSchedule, context: EvaluationContext): boolean {
     const now = context.timestamp ?? new Date();
     const timezone = schedule.timezone ?? 'UTC';
 

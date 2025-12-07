@@ -565,9 +565,7 @@ export interface EventSubscriptionOptions {
 /**
  * Event handler type.
  */
-export type EventHandler<T = unknown> = (
-  message: ModuleEventMessage<T>
-) => void | Promise<void>;
+export type EventHandler<T = unknown> = (message: ModuleEventMessage<T>) => void | Promise<void>;
 
 /**
  * Subscription handle for cleanup.
@@ -834,10 +832,7 @@ export interface ModuleContextValue {
   /** Trigger hydration */
   readonly hydrate: () => Promise<void>;
   /** Subscribe to lifecycle events */
-  readonly subscribe: (
-    event: ModuleLifecycleEvent,
-    handler: () => void
-  ) => () => void;
+  readonly subscribe: (event: ModuleLifecycleEvent, handler: () => void) => () => void;
 }
 
 /**
@@ -1082,19 +1077,15 @@ export const DEFAULT_SECURITY_CONFIG: ModuleSecurityConfig = {
 // eslint-disable-next-line no-redeclare -- Valid TypeScript pattern for const/type with same name
 export type VNodeType = (typeof VNodeType)[keyof typeof VNodeType];
 // eslint-disable-next-line no-redeclare -- Valid TypeScript pattern for const/type with same name
-export type ModuleLifecycleState =
-  (typeof ModuleLifecycleState)[keyof typeof ModuleLifecycleState];
+export type ModuleLifecycleState = (typeof ModuleLifecycleState)[keyof typeof ModuleLifecycleState];
 // eslint-disable-next-line no-redeclare -- Valid TypeScript pattern for const/type with same name
-export type ModuleLifecycleEvent =
-  (typeof ModuleLifecycleEvent)[keyof typeof ModuleLifecycleEvent];
+export type ModuleLifecycleEvent = (typeof ModuleLifecycleEvent)[keyof typeof ModuleLifecycleEvent];
 // eslint-disable-next-line no-redeclare -- Valid TypeScript pattern for const/type with same name
 export type HydrationState = (typeof HydrationState)[keyof typeof HydrationState];
 // eslint-disable-next-line no-redeclare -- Valid TypeScript pattern for const/type with same name
-export type HydrationPriority =
-  (typeof HydrationPriority)[keyof typeof HydrationPriority];
+export type HydrationPriority = (typeof HydrationPriority)[keyof typeof HydrationPriority];
 // eslint-disable-next-line no-redeclare -- Valid TypeScript pattern for const/type with same name
-export type HydrationTrigger =
-  (typeof HydrationTrigger)[keyof typeof HydrationTrigger];
+export type HydrationTrigger = (typeof HydrationTrigger)[keyof typeof HydrationTrigger];
 // eslint-disable-next-line no-redeclare -- Valid TypeScript pattern for const/type with same name
 export type EventPriority = (typeof EventPriority)[keyof typeof EventPriority];
 // eslint-disable-next-line no-redeclare -- Valid TypeScript pattern for const/type with same name

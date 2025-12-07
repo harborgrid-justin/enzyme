@@ -196,10 +196,7 @@ export {
   performFLIP,
 } from './morph-transition';
 
-export {
-  ConstraintSolver,
-  createConstraintSolver,
-} from './constraint-solver';
+export { ConstraintSolver, createConstraintSolver } from './constraint-solver';
 
 export {
   CLSGuard,
@@ -212,22 +209,11 @@ export {
 // COMPONENT EXPORTS
 // =============================================================================
 
-export {
-  AdaptiveLayout,
-  AdaptiveLayoutContext,
-  useAdaptiveLayoutContext,
-} from './AdaptiveLayout';
+export { AdaptiveLayout, AdaptiveLayoutContext, useAdaptiveLayoutContext } from './AdaptiveLayout';
 
-export {
-  AdaptiveGrid,
-} from './AdaptiveGrid';
+export { AdaptiveGrid } from './AdaptiveGrid';
 
-export {
-  AdaptiveStack,
-  HStack,
-  VStack,
-  ResponsiveStack,
-} from './AdaptiveStack';
+export { AdaptiveStack, HStack, VStack, ResponsiveStack } from './AdaptiveStack';
 
 export {
   AdaptiveContainer,
@@ -237,10 +223,7 @@ export {
   useContainerValue,
 } from './AdaptiveContainer';
 
-export {
-  MorphTransition,
-  AnimatedPresence,
-} from './MorphTransition';
+export { MorphTransition, AnimatedPresence } from './MorphTransition';
 
 // =============================================================================
 // HOOK EXPORTS

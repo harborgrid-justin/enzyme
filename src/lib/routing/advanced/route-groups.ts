@@ -254,66 +254,6 @@ export class RouteGroupManager {
   }
 
   /**
-   * Compute inherited properties from parent groups
-   */
-  private computeInheritedProperties(config: RouteGroupConfig): {
-    guards: readonly RouteGroupGuard[];
-    middleware: readonly RouteGroupMiddleware[];
-    meta: RouteGroupMeta;
-  } {
-    const guards: RouteGroupGuard[] = [];
-    const middleware: RouteGroupMiddleware[] = [];
-    let meta: RouteGroupMeta = {};
-
-    // Walk up the parent chain
-    const parentChain = this.getParentChain(config.parent);
-
-    for (const parent of parentChain) {
-      guards.push(...(parent.guards ?? []));
-      middleware.push(...(parent.middleware ?? []));
-      meta = this.mergeMeta(meta, parent.meta ?? {});
-    }
-
-    // Add own guards, middleware, and meta
-    guards.push(...(config.guards ?? []));
-    middleware.push(...(config.middleware ?? []));
-    meta = this.mergeMeta(meta, config.meta ?? {});
-
-    return { guards, middleware, meta };
-  }
-
-  /**
-   * Get parent group chain (from root to immediate parent)
-   */
-  private getParentChain(parentName: string | undefined): RouteGroup[] {
-    const chain: RouteGroup[] = [];
-    let current = parentName;
-
-    while (current != null && current !== '') {
-      const group = this.groups.get(current);
-      if (!group) break;
-      chain.unshift(group); // Add to beginning
-      current = group.parent;
-    }
-
-    return chain;
-  }
-
-  /**
-   * Merge metadata objects
-   */
-  private mergeMeta(base: RouteGroupMeta, override: RouteGroupMeta): RouteGroupMeta {
-    return {
-      ...base,
-      ...override,
-      roles: [...(base.roles ?? []), ...(override.roles ?? [])],
-      permissions: [...(base.permissions ?? []), ...(override.permissions ?? [])],
-      seo: { ...base.seo, ...override.seo },
-      custom: { ...base.custom, ...override.custom },
-    };
-  }
-
-  /**
    * Unregister a route group
    *
    * @param name - Group name
@@ -569,6 +509,74 @@ export class RouteGroupManager {
   }
 
   /**
+   * Clear all groups and assignments
+   */
+  clearAll(): void {
+    this.groups.clear();
+    this.routeAssignments.clear();
+  }
+
+  /**
+   * Compute inherited properties from parent groups
+   */
+  private computeInheritedProperties(config: RouteGroupConfig): {
+    guards: readonly RouteGroupGuard[];
+    middleware: readonly RouteGroupMiddleware[];
+    meta: RouteGroupMeta;
+  } {
+    const guards: RouteGroupGuard[] = [];
+    const middleware: RouteGroupMiddleware[] = [];
+    let meta: RouteGroupMeta = {};
+
+    // Walk up the parent chain
+    const parentChain = this.getParentChain(config.parent);
+
+    for (const parent of parentChain) {
+      guards.push(...(parent.guards ?? []));
+      middleware.push(...(parent.middleware ?? []));
+      meta = this.mergeMeta(meta, parent.meta ?? {});
+    }
+
+    // Add own guards, middleware, and meta
+    guards.push(...(config.guards ?? []));
+    middleware.push(...(config.middleware ?? []));
+    meta = this.mergeMeta(meta, config.meta ?? {});
+
+    return { guards, middleware, meta };
+  }
+
+  /**
+   * Get parent group chain (from root to immediate parent)
+   */
+  private getParentChain(parentName: string | undefined): RouteGroup[] {
+    const chain: RouteGroup[] = [];
+    let current = parentName;
+
+    while (current != null && current !== '') {
+      const group = this.groups.get(current);
+      if (!group) break;
+      chain.unshift(group); // Add to beginning
+      current = group.parent;
+    }
+
+    return chain;
+  }
+
+  /**
+   * Merge metadata objects
+   */
+  private mergeMeta(base: RouteGroupMeta, override: RouteGroupMeta): RouteGroupMeta {
+    return {
+      ...base,
+      ...override,
+      roles: [...(base.roles ?? []), ...(override.roles ?? [])],
+      permissions: [...(base.permissions ?? []), ...(override.permissions ?? [])],
+      seo: { ...base.seo, ...override.seo },
+      custom: { ...base.custom, ...override.custom },
+    };
+  }
+
+  /**
    * Get group and all its descendants
    */
   private getGroupWithDescendants(groupName: string): string[] {
@@ -582,14 +590,6 @@ export class RouteGroupManager {
     }
 
     return result;
-  }
-
-  /**
-   * Clear all groups and assignments
-   */
-  clearAll(): void {
-    this.groups.clear();
-    this.routeAssignments.clear();
   }
 }
 

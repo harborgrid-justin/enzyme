@@ -35,14 +35,7 @@ import React from 'react';
  * ```
  */
 
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useMemo,
-  type ReactNode,
-} from 'react';
+import { createContext, useContext, useState, useEffect, useMemo, type ReactNode } from 'react';
 
 // =============================================================================
 // Types
@@ -142,9 +135,7 @@ export interface IntegrationMetadata {
  */
 export interface IntegrationRegistry {
   /** Register a library integration */
-  register<TConfig extends Record<string, unknown>>(
-    integration: LibraryIntegration<TConfig>
-  ): void;
+  register<TConfig extends Record<string, unknown>>(integration: LibraryIntegration<TConfig>): void;
   /** Unregister a library integration */
   unregister(libraryId: LibraryId): void;
   /** Get integration by library ID */
@@ -509,7 +500,7 @@ export function LibraryIntegrationProvider({
         const integration = integrationRegistry.get(libraryId);
         if (!integration) return true; // Default to enabled if not registered
         const config = integration.getConfig(flags);
-        return (config as { enabled?: boolean }).enabled !== false;
+        return (config as { enabled?: boolean }).enabled ?? true;
       },
 
       getRegisteredLibraries(): LibraryId[] {
@@ -562,11 +553,11 @@ export function useLibraryFlags<TConfig extends Record<string, unknown>>(
 
     // Get initial config
     setTimeout(() => {
-      setConfig((context).getLibraryConfig<TConfig>(libraryId));
+      setConfig(context.getLibraryConfig<TConfig>(libraryId));
     }, 0);
 
     // Subscribe to updates
-    return (context).subscribeToLibrary<TConfig>(libraryId, (newConfig: TConfig) => {
+    return context.subscribeToLibrary<TConfig>(libraryId, (newConfig: TConfig) => {
       setTimeout(() => {
         setConfig(newConfig);
       }, 0);
@@ -587,9 +578,7 @@ export function useLibraryFeature(libraryId: LibraryId, featureKey: string): boo
 /**
  * Hook to subscribe to multiple library configs
  */
-export function useMultiLibraryFlags<
-  TConfigs extends Record<LibraryId, Record<string, unknown>>
->(
+export function useMultiLibraryFlags<TConfigs extends Record<LibraryId, Record<string, unknown>>>(
   libraryIds: (keyof TConfigs)[]
 ): Partial<TConfigs> {
   const context = useContext(LibraryIntegrationContext);
@@ -713,6 +702,3 @@ export function createFlagImpactReport(flagKey: string): {
 
   return { affectedLibraries, configChanges };
 }
-
-
-

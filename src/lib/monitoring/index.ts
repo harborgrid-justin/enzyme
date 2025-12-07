@@ -34,6 +34,8 @@ export {
 export {
   ErrorReporter,
   initErrorReporter,
+  cleanupErrorHandlers,
+  resetErrorReporter,
   setUserContext,
   setErrorContext,
   clearErrorContext,
@@ -47,10 +49,7 @@ export {
 // =============================================================================
 // ERROR BOUNDARIES
 // =============================================================================
-export {
-  GlobalErrorBoundary,
-  type GlobalErrorBoundaryProps,
-} from './GlobalErrorBoundary';
+export { GlobalErrorBoundary, type GlobalErrorBoundaryProps } from './GlobalErrorBoundary';
 
 export {
   QueryErrorBoundary,
@@ -127,3 +126,17 @@ export {
   type SessionData,
   type CrashAnalyticsConfig,
 } from './CrashAnalytics';
+
+// =============================================================================
+// PROVIDER ERROR BOUNDARIES
+// =============================================================================
+export {
+  ProviderErrorBoundary,
+  withProviderErrorBoundary,
+  AuthProviderBoundary,
+  ConfigProviderBoundary,
+  RealtimeProviderBoundary,
+  SecurityProviderBoundary,
+  type ProviderErrorBoundaryConfig,
+  type ProviderErrorBoundaryProps,
+} from './ProviderErrorBoundary';

@@ -51,21 +51,30 @@ export function extractCacheHints(headers: ResponseHeaders): CacheHints {
   // Parse Cache-Control directives
   const directives = parseCacheControlHeader(cacheControl);
 
-  const hints: CacheHints = {
+  return {
     cacheable: directives['no-store'] === undefined && directives['no-cache'] === undefined,
-    maxAge: (directives['max-age'] !== undefined && directives['max-age'] !== null && directives['max-age'] !== '') ? parseInt(directives['max-age'], 10) : undefined,
-    staleWhileRevalidate: (directives['stale-while-revalidate'] !== undefined && directives['stale-while-revalidate'] !== null && directives['stale-while-revalidate'] !== '')
-      ? parseInt(directives['stale-while-revalidate'], 10)
-      : undefined,
+    maxAge:
+      directives['max-age'] !== undefined &&
+      directives['max-age'] !== null &&
+      directives['max-age'] !== ''
+        ? parseInt(directives['max-age'], 10)
+        : undefined,
+    staleWhileRevalidate:
+      directives['stale-while-revalidate'] !== undefined &&
+      directives['stale-while-revalidate'] !== null &&
+      directives['stale-while-revalidate'] !== ''
+        ? parseInt(directives['stale-while-revalidate'], 10)
+        : undefined,
     etag,
-    lastModified: (lastModified !== undefined && lastModified !== null && lastModified !== '') ? new Date(lastModified) : undefined,
+    lastModified:
+      lastModified !== undefined && lastModified !== null && lastModified !== ''
+        ? new Date(lastModified)
+        : undefined,
     mustRevalidate: 'must-revalidate' in directives,
     isPrivate: 'private' in directives,
     noStore: 'no-store' in directives,
     noCache: 'no-cache' in directives,
   };
-
-  return hints;
 }
 
 /**
@@ -80,7 +89,8 @@ function parseCacheControlHeader(header: string): Record<string, string> {
 
   for (const part of parts) {
     const [key, value] = part.split('=').map((s) => s.trim());
-    if (key !== undefined && key !== null && key !== '') directives[key.toLowerCase()] = value ?? 'true';
+    if (key !== undefined && key !== null && key !== '')
+      directives[key.toLowerCase()] = value ?? 'true';
   }
 
   return directives;
@@ -100,7 +110,8 @@ export function buildCacheInfo(
     fromCache,
     hitType: fromCache ? 'memory' : undefined,
     age,
-    expiresAt: hints.maxAge !== undefined && hints.maxAge > 0 ? Date.now() + hints.maxAge * 1000 : undefined,
+    expiresAt:
+      hints.maxAge !== undefined && hints.maxAge > 0 ? Date.now() + hints.maxAge * 1000 : undefined,
     etag: hints.etag,
   };
 }

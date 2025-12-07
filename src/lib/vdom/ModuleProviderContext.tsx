@@ -8,11 +8,7 @@
  */
 
 import { createContext, type ReactNode } from 'react';
-import {
-  type ModuleId,
-  type ModuleProviderConfig,
-  type ModulePerformanceMetrics,
-} from './types';
+import { type ModuleId, type ModuleProviderConfig, type ModulePerformanceMetrics } from './types';
 import { type VDOMPool } from './vdom-pool';
 import { type ModuleRegistry } from './module-registry';
 import { type ModuleLoader } from './module-loader';

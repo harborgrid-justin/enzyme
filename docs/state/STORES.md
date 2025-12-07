@@ -741,21 +741,27 @@ Track store performance with DevTools:
 
 ## Related Documentation
 
-### State Management Core
-- [Core Utilities](./CORE.md) - Store and slice factories
-- [Slices](./SLICES.md) - UI, Session, Settings slices
-- [Hooks](./HOOKS.md) - React hooks for state access
-- [Selectors](./SELECTORS.md) - Memoized selector patterns
-- [Types](./TYPES.md) - TypeScript type definitions
-- [README](./README.md) - State management overview
+### State Management
+- [README.md](./README.md) - State management overview
+- [CORE.md](./CORE.md) - Store and slice factories
+- [SLICES.md](./SLICES.md) - Slice documentation
+- [SELECTORS.md](./SELECTORS.md) - Selector patterns
+- [HOOKS.md](./HOOKS.md) - React hooks
+- [SYNC.md](./SYNC.md) - Multi-tab synchronization
+- [TYPES.md](./TYPES.md) - Type definitions
 
-### Persistence & Performance
+### Configuration & Persistence
+- [Config Registry](../config/REGISTRY.md) - Similar registry pattern for config
+- [Config Providers](../config/PROVIDERS.md) - Provider patterns
+- [Config Dynamic](../config/DYNAMIC.md) - Runtime configuration updates
+
+### Data Management & Routing
+- [API Client](../api/README.md) - API integration with stores
+- [API Hooks](../api/HOOKS.md) - Data fetching and caching
+- [Routing State](../integration/ROUTING_STATE_GUARDS.md) - Route-based state management
+
+### Performance & Architecture
 - [Hydration Guide](../HYDRATION.md) - State hydration patterns and SSR
 - [Performance Guide](../PERFORMANCE.md) - Store optimization strategies
-- [Sync](./SYNC.md) - Multi-tab synchronization
-
-### Advanced Topics
-- [State Management Guide](../STATE.md) - Dual-state approach pattern
 - [Architecture](../ARCHITECTURE.md) - System design patterns
 - [Testing Guide](../TESTING.md) - Testing stores and components
-- [Migration Guide](../MIGRATION.md) - Migrating from Redux

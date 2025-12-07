@@ -28,9 +28,7 @@ export const ModuleHierarchyProvider: FC<{
   );
 
   return (
-    <ModuleHierarchyContext.Provider value={value}>
-      {children}
-    </ModuleHierarchyContext.Provider>
+    <ModuleHierarchyContext.Provider value={value}>{children}</ModuleHierarchyContext.Provider>
   );
 };
 

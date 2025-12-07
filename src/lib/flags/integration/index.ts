@@ -412,9 +412,7 @@ import { performanceFlags } from './performance-flags';
 /**
  * Initialize all library flag integrations
  */
-export function initFlagIntegrations(
-  getFlag: (flagKey: string) => boolean
-): () => void {
+export function initFlagIntegrations(getFlag: (flagKey: string) => boolean): () => void {
   // Set flag getters for all domain helpers
   apiFlags.setFlagGetter(getFlag);
   routingFlags.setFlagGetter(getFlag);

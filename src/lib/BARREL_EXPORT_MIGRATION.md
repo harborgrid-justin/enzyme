@@ -2,7 +2,8 @@
 
 ## Overview
 
-**Version 4.0.0** introduces a critical performance optimization by minimizing the main barrel export (`@/lib/index.ts`). This guide explains the changes, why they matter, and how to migrate your code.
+**Version 4.0.0** introduces a critical performance optimization by minimizing the main barrel export (
+`@/lib/index.ts`). This guide explains the changes, why they matter, and how to migrate your code.
 
 ## Table of Contents
 
@@ -49,13 +50,13 @@ import { useAuth } from '@/lib';
 
 ### Real-World Impact
 
-| Metric | Before (v3.x) | After (v4.0) | Improvement |
-|--------|---------------|--------------|-------------|
-| **Initial Bundle Size** | 847 KB | 153 KB | **-82%** |
-| **Parse Time (Mobile 3G)** | 2.1s | 0.6s | **-71%** |
-| **Build Time** | 18.3s | 9.1s | **-50%** |
-| **Tree-Shaking** | ❌ Ineffective | ✅ Full | 100% |
-| **Lighthouse Score** | 67 | 94 | **+27** |
+| Metric                     | Before (v3.x) | After (v4.0) | Improvement |
+|----------------------------|---------------|--------------|-------------|
+| **Initial Bundle Size**    | 847 KB        | 153 KB       | **-82%**    |
+| **Parse Time (Mobile 3G)** | 2.1s          | 0.6s         | **-71%**    |
+| **Build Time**             | 18.3s         | 9.1s         | **-50%**    |
+| **Tree-Shaking**           | ❌ Ineffective | ✅ Full       | 100%        |
+| **Lighthouse Score**       | 67            | 94           | **+27**     |
 
 ---
 
@@ -70,6 +71,7 @@ import { useAuth } from '@/lib';
 ```
 
 **Bundle includes:**
+
 - ✅ `useAuth` (2 KB)
 - ❌ All auth exports (45 KB)
 - ❌ All monitoring exports (78 KB)
@@ -86,6 +88,7 @@ import { useAuth } from '@/lib/auth';
 ```
 
 **Bundle includes:**
+
 - ✅ `useAuth` (2 KB)
 - ✅ Auth context provider (8 KB)
 - ✅ Auth types (0 KB - types only)
@@ -95,14 +98,14 @@ import { useAuth } from '@/lib/auth';
 
 ### Core Web Vitals Impact
 
-| Metric | Before | After | Status |
-|--------|--------|-------|--------|
-| **LCP** (Largest Contentful Paint) | 3.8s | 1.4s | ✅ Good |
-| **FID** (First Input Delay) | 180ms | 45ms | ✅ Good |
-| **CLS** (Cumulative Layout Shift) | 0.08 | 0.04 | ✅ Good |
-| **FCP** (First Contentful Paint) | 2.4s | 1.1s | ✅ Good |
-| **TTFB** (Time to First Byte) | 890ms | 620ms | ✅ Good |
-| **TTI** (Time to Interactive) | 4.2s | 2.1s | ✅ Good |
+| Metric                             | Before | After | Status |
+|------------------------------------|--------|-------|--------|
+| **LCP** (Largest Contentful Paint) | 3.8s   | 1.4s  | ✅ Good |
+| **FID** (First Input Delay)        | 180ms  | 45ms  | ✅ Good |
+| **CLS** (Cumulative Layout Shift)  | 0.08   | 0.04  | ✅ Good |
+| **FCP** (First Contentful Paint)   | 2.4s   | 1.1s  | ✅ Good |
+| **TTFB** (Time to First Byte)      | 890ms  | 620ms | ✅ Good |
+| **TTI** (Time to Interactive)      | 4.2s   | 2.1s  | ✅ Good |
 
 ---
 
@@ -121,6 +124,7 @@ npm run migrate:barrel-imports
 ```
 
 **What it does:**
+
 - Scans all `.ts`, `.tsx`, `.js`, `.jsx` files
 - Identifies imports from `@/lib`
 - Maps each import to its correct submodule
@@ -195,6 +199,7 @@ import {
 **Module:** `@/lib/auth`
 
 **Exports:**
+
 - Core: `useAuth`, `AuthProvider`, `authService`
 - Guards: `RequireAuth`, `RequireRole`, `RequirePermission`
 - RBAC: `RBACProvider`, `useRBAC`, `usePermissions`
@@ -216,6 +221,7 @@ import { useFeatureFlag, FlagGate, FeatureFlagProvider } from '@/lib/flags';
 **Module:** `@/lib/flags`
 
 **Exports:**
+
 - Hooks: `useFeatureFlag`, `useFeatureFlags`, `useFeatureFlagValue`
 - Components: `FlagGate`, `FeatureFlagProvider`
 - Utils: `flagKeys`, `isFlagEnabled`
@@ -248,6 +254,7 @@ import {
 **Module:** `@/lib/performance`
 
 **Exports:**
+
 - Initialization: `initPerformanceMonitoring`, `startPerformanceMonitoring`
 - Providers: `PerformanceProvider`, `PerformanceObservatory`
 - Hooks: `usePerformanceMonitor`, `useLongTaskDetector`, `useMemoryPressure`, `useNetworkQuality`
@@ -281,6 +288,7 @@ import {
 **Module:** `@/lib/monitoring`
 
 **Exports:**
+
 - Boundaries: `ErrorBoundary`, `GlobalErrorBoundary`, `QueryErrorBoundary`
 - Hooks: `useErrorBoundary`, `useErrorTrigger`
 - Services: `ErrorReporter`, `reportError`, `addBreadcrumb`
@@ -313,6 +321,7 @@ import {
 **Module:** `@/lib/hooks`
 
 **Exports:**
+
 - Mounted: `useIsMounted`, `useMountedState`
 - Refs: `useLatestRef`, `useLatestCallback`
 - Theme: `useTheme`, `useSystemThemePreference`
@@ -338,6 +347,7 @@ import { Modal } from '@/lib/ui/overlays';
 **Module:** `@/lib/ui`
 
 **Submodules:**
+
 - `@/lib/ui/feedback` - Spinner, Toast, Alert, Progress
 - `@/lib/ui/inputs` - Button, Input, Select, Checkbox
 - `@/lib/ui/overlays` - Modal, Drawer, Tooltip, Popover
@@ -369,6 +379,7 @@ import {
 **Module:** `@/lib/ux`
 
 **Exports:**
+
 - Loading: `LoadingProvider`, `LoadingIndicator`, `useLoading`
 - Skeletons: `SkeletonFactory`, `createTextSkeleton`, `createCardSkeleton`
 - Optimistic: `OptimisticUpdateManager`, `applyOptimistic`
@@ -403,6 +414,7 @@ import {
 **Module:** `@/lib/utils`
 
 **Exports:**
+
 - Logging: `logger`, `configureLogger`, `logPerformance`
 - Time: `parseDate`, `formatDate`, `formatDuration`
 - Type Guards: `isDefined`, `isString`, `isNumber`, `isArray`
@@ -437,6 +449,7 @@ import {
 **Module:** `@/lib/security`
 
 **Exports:**
+
 - Provider: `SecurityProvider`, `useSecurityContext`
 - CSP: `CSPManager`, `generateNonce`, `useCSPNonce`
 - CSRF: `CSRFProtection`, `useCSRFToken`, `createProtectedFormHandler`
@@ -458,6 +471,7 @@ import { RouteRegistry } from '@/lib/routing';
 **Module:** `@/lib/routing`
 
 **Exports:**
+
 - Registry: `RouteRegistry`, `registerRoute`
 - Types: `RouteMetadata`, `RouteParams`
 
@@ -476,6 +490,7 @@ import { createQueryKeyFactory } from '@/lib/queries';
 **Module:** `@/lib/queries`
 
 **Exports:**
+
 - Factory: `createQueryKeyFactory`
 - Client: `queryClient`
 
@@ -502,6 +517,7 @@ import {
 **Module:** `@/lib/hydration`
 
 **Exports:**
+
 - Provider: `HydrationProvider`, `useHydrationContext`
 - Boundary: `HydrationBoundary`, `LazyHydration`
 - Hooks: `useHydration`, `useHydrationStatus`, `useIsHydrated`
@@ -525,6 +541,7 @@ import { initializeApp } from '@/lib';
 **Module:** `@/lib/system`
 
 **Exports:**
+
 - Init: `initializeApp`, `bootstrapApp`
 - Types: `AppConfig`, `SystemConfig`
 
@@ -797,6 +814,7 @@ git commit -am "refactor: migrate from barrel export to submodule imports"
 ### Error: "Module not found"
 
 **Problem:**
+
 ```
 Module not found: Error: Can't resolve '@/lib'
 ```
@@ -814,6 +832,7 @@ grep -r "export.*YourExportName" src/lib/*/index.ts
 ### Error: Type imports still referencing main index
 
 **Problem:**
+
 ```typescript
 import type { User, Role } from '@/lib'; // Error
 ```
@@ -874,22 +893,26 @@ Bundle size didn't decrease as expected.
 ## Timeline
 
 ### v4.0.0 (Current) - Minimized Index
+
 - ✅ Main index reduced from 1,134 to 218 lines
 - ✅ Only 20 essential exports remain
 - ⚠️ ESLint warnings for main index imports
 - 📖 Migration guide and codemods available
 
 ### v4.1.0 (Q1 2025) - Enhanced Tooling
+
 - 🔧 Improved codemod with better type handling
 - 🔍 Bundle analyzer integration
 - 📊 Performance budgets enforced in CI
 
 ### v5.0.0 (Q2 2025) - Deprecation
+
 - ❌ ESLint errors (not warnings) for main index imports
 - 🚨 Runtime deprecation warnings in development
 - 📝 Updated documentation everywhere
 
 ### v6.0.0 (Q4 2025) - Removal
+
 - ⛔ Main index removed entirely
 - 🎯 All imports must use submodules
 - 🔥 Breaking change - major version bump

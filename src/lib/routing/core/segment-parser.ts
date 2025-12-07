@@ -158,9 +158,7 @@ export function parseRouteSegment(
   const [grpOpen, grpClose] = cfg.groupBrackets;
 
   // Catch-all routes: [[...slug]].tsx
-  const catchAllPattern = new RegExp(
-    `^\\${optOpen}\\${cfg.catchAllPrefix}([\\w-]+)\\${optClose}$`
-  );
+  const catchAllPattern = new RegExp(`^\\${optOpen}\\${cfg.catchAllPrefix}([\\w-]+)\\${optClose}$`);
   const catchAllMatch = nameWithoutExt.match(catchAllPattern);
   const catchAllParam = catchAllMatch?.[1];
   if (catchAllParam !== undefined && catchAllParam !== '') {
@@ -174,9 +172,7 @@ export function parseRouteSegment(
   }
 
   // Optional dynamic routes: [[id]].tsx
-  const optionalPattern = new RegExp(
-    `^\\${optOpen}([\\w-]+)\\${optClose}$`
-  );
+  const optionalPattern = new RegExp(`^\\${optOpen}([\\w-]+)\\${optClose}$`);
   const optionalMatch = nameWithoutExt.match(optionalPattern);
   const optionalParam = optionalMatch?.[1];
   if (optionalParam !== undefined && optionalParam !== '') {
@@ -190,9 +186,7 @@ export function parseRouteSegment(
   }
 
   // Dynamic routes: [id].tsx
-  const dynamicPattern = new RegExp(
-    `^\\${dynOpen}([\\w-]+)\\${dynClose}$`
-  );
+  const dynamicPattern = new RegExp(`^\\${dynOpen}([\\w-]+)\\${dynClose}$`);
   const dynamicMatch = nameWithoutExt.match(dynamicPattern);
   const dynamicParam = dynamicMatch?.[1];
   if (dynamicParam !== undefined && dynamicParam !== '') {
@@ -206,9 +200,7 @@ export function parseRouteSegment(
   }
 
   // Route groups: (auth)/
-  const groupPattern = new RegExp(
-    `^\\${grpOpen}([\\w-]+)\\${grpClose}$`
-  );
+  const groupPattern = new RegExp(`^\\${grpOpen}([\\w-]+)\\${grpClose}$`);
   const groupMatch = nameWithoutExt.match(groupPattern);
   if (groupMatch) {
     return {
@@ -315,9 +307,7 @@ export function isUrlSegment(segment: ParsedRouteSegment): boolean {
  * @returns Array of parameter names
  */
 export function extractSegmentParams(segments: readonly ParsedRouteSegment[]): string[] {
-  return segments
-    .filter((s) => s.paramName !== undefined)
-    .map((s) => s.paramName as string);
+  return segments.filter((s) => s.paramName !== undefined).map((s) => s.paramName as string);
 }
 
 /**
@@ -332,10 +322,7 @@ export function extractSegmentParams(segments: readonly ParsedRouteSegment[]): s
  * generateRouteId(segments, '/users/:id'); // 'USERS_BY_ID'
  * ```
  */
-export function generateRouteId(
-  segments: readonly ParsedRouteSegment[],
-  urlPath?: string
-): string {
+export function generateRouteId(segments: readonly ParsedRouteSegment[], urlPath?: string): string {
   const path = urlPath ?? segmentsToUrlPath(segments);
 
   if (path === '/') return 'INDEX';

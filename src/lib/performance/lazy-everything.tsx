@@ -167,11 +167,11 @@ const DEFAULT_MIN_LOADING_TIME = 100;
  */
 class ObserverPool {
   private static instance: ObserverPool;
+  private static readonly CLEANUP_INTERVAL = 30000; // 30 seconds
   private observers: Map<string, IntersectionObserver> = new Map();
   private entries: Map<Element, ObserverEntry> = new Map();
   private callbacks: Map<Element, (isIntersecting: boolean) => void> = new Map();
   private cleanupIntervalId: ReturnType<typeof setInterval> | null = null;
-  private static readonly CLEANUP_INTERVAL = 30000; // 30 seconds
 
   private constructor() {
     // Start periodic cleanup for orphaned entries
@@ -192,6 +192,57 @@ class ObserverPool {
       // Type-safe null assignment
       (ObserverPool as unknown as { instance: ObserverPool | null }).instance = null;
     }
+  }
+
+  /**
+   * Observe an element
+   */
+  observe(
+    element: Element,
+    callback: (isIntersecting: boolean) => void,
+    options: { threshold?: number; rootMargin?: string } = {}
+  ): () => void {
+    const threshold = options.threshold ?? DEFAULT_THRESHOLD;
+    const rootMargin = options.rootMargin ?? DEFAULT_ROOT_MARGIN;
+
+    const observer = this.getObserver(threshold, rootMargin);
+    this.callbacks.set(element, callback);
+    this.entries.set(element, { element, callback, threshold, rootMargin });
+    observer.observe(element);
+
+    return () => this.unobserve(element, threshold, rootMargin);
+  }
+
+  /**
+   * Unobserve an element
+   */
+  unobserve(element: Element, threshold: number, rootMargin: string): void {
+    const key = this.getKey(threshold, rootMargin);
+    const observer = this.observers.get(key);
+
+    if (observer !== undefined) {
+      observer.unobserve(element);
+      this.callbacks.delete(element);
+      this.entries.delete(element);
+    }
+  }
+
+  /**
+   * Disconnect all observers and clean up resources
+   */
+  disconnectAll(): void {
+    this.stopCleanupInterval();
+    this.observers.forEach((observer) => observer.disconnect());
+    this.observers.clear();
+    this.callbacks.clear();
+    this.entries.clear();
+  }
+
+  /**
+   * Get current entry count (for debugging/monitoring)
+   */
+  getEntryCount(): number {
+    return this.entries.size;
   }
 
   /**
@@ -260,7 +311,7 @@ class ObserverPool {
   private getObserver(threshold: number, rootMargin: string): IntersectionObserver {
     const key = this.getKey(threshold, rootMargin);
 
-    if (this.observers.has(key) === false) {
+    if (!this.observers.has(key)) {
       const observer = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
@@ -279,57 +330,6 @@ class ObserverPool {
     }
     return obs;
   }
-
-  /**
-   * Observe an element
-   */
-  observe(
-    element: Element,
-    callback: (isIntersecting: boolean) => void,
-    options: { threshold?: number; rootMargin?: string } = {}
-  ): () => void {
-    const threshold = options.threshold ?? DEFAULT_THRESHOLD;
-    const rootMargin = options.rootMargin ?? DEFAULT_ROOT_MARGIN;
-
-    const observer = this.getObserver(threshold, rootMargin);
-    this.callbacks.set(element, callback);
-    this.entries.set(element, { element, callback, threshold, rootMargin });
-    observer.observe(element);
-
-    return () => this.unobserve(element, threshold, rootMargin);
-  }
-
-  /**
-   * Unobserve an element
-   */
-  unobserve(element: Element, threshold: number, rootMargin: string): void {
-    const key = this.getKey(threshold, rootMargin);
-    const observer = this.observers.get(key);
-
-    if (observer !== undefined) {
-      observer.unobserve(element);
-      this.callbacks.delete(element);
-      this.entries.delete(element);
-    }
-  }
-
-  /**
-   * Disconnect all observers and clean up resources
-   */
-  disconnectAll(): void {
-    this.stopCleanupInterval();
-    this.observers.forEach((observer) => observer.disconnect());
-    this.observers.clear();
-    this.callbacks.clear();
-    this.entries.clear();
-  }
-
-  /**
-   * Get current entry count (for debugging/monitoring)
-   */
-  getEntryCount(): number {
-    return this.entries.size;
-  }
 }
 
 // ============================================================================
@@ -342,7 +342,7 @@ class ObserverPool {
 export function getNetworkTier(): NetworkTier {
   if (typeof navigator === 'undefined') return 'high';
 
-  if (navigator.onLine === false) return 'offline';
+  if (!navigator.onLine) return 'offline';
 
   const {connection} = (navigator as Navigator & {
     connection?: {
@@ -408,7 +408,7 @@ class ModulePreloader {
       ? config.module
       : config.module.toString();
 
-    if (this.loadedModules.has(moduleId) === true || this.loadingModules.has(moduleId) === true) {
+    if (this.loadedModules.has(moduleId) || this.loadingModules.has(moduleId)) {
       return;
     }
 
@@ -420,10 +420,27 @@ class ModulePreloader {
   }
 
   /**
+   * Check if module is loaded
+   */
+  isLoaded(moduleId: string): boolean {
+    return this.loadedModules.has(moduleId);
+  }
+
+  /**
+   * Clear all preloaded modules (for testing)
+   */
+  reset(): void {
+    this.preloadQueue = [];
+    this.loadedModules.clear();
+    this.loadingModules.clear();
+    this.isProcessing = false;
+  }
+
+  /**
    * Process preload queue during idle time
    */
   private processQueue(): void {
-    if (this.isProcessing === true || this.preloadQueue.length === 0) return;
+    if (this.isProcessing || this.preloadQueue.length === 0) return;
 
     this.isProcessing = true;
 
@@ -464,7 +481,7 @@ class ModulePreloader {
       ? config.module
       : config.module.toString();
 
-    if (this.loadingModules.has(moduleId) === true) return;
+    if (this.loadingModules.has(moduleId)) return;
     this.loadingModules.add(moduleId);
 
     try {
@@ -480,23 +497,6 @@ class ModulePreloader {
     } finally {
       this.loadingModules.delete(moduleId);
     }
-  }
-
-  /**
-   * Check if module is loaded
-   */
-  isLoaded(moduleId: string): boolean {
-    return this.loadedModules.has(moduleId);
-  }
-
-  /**
-   * Clear all preloaded modules (for testing)
-   */
-  reset(): void {
-    this.preloadQueue = [];
-    this.loadedModules.clear();
-    this.loadingModules.clear();
-    this.isProcessing = false;
   }
 }
 
@@ -676,7 +676,7 @@ export function LazyImage({
 
   // Observe viewport intersection
   useEffect(() => {
-    if (strategy !== 'viewport' || isInView === true) return;
+    if (strategy !== 'viewport' || isInView) return;
 
     const element = containerRef.current;
     if (element === null) return;
@@ -693,7 +693,7 @@ export function LazyImage({
 
   // Preload image
   useEffect(() => {
-    if (isInView === false || isLoaded === true) return;
+    if (!isInView || isLoaded) return;
 
     const img = new Image();
 
@@ -743,11 +743,11 @@ export function LazyImage({
     width: '100%',
     height: '100%',
     objectFit: 'cover',
-    opacity: isLoaded === true ? 1 : 0,
+    opacity: isLoaded ? 1 : 0,
     transition: 'opacity 0.3s ease',
   };
 
-  if (hasError === true) {
+  if (hasError) {
     return (
       <div
         ref={containerRef}
@@ -768,7 +768,7 @@ export function LazyImage({
           aria-hidden="true"
         />
       )}
-      {isInView === true && (
+      {isInView && (
         <img
           ref={imgRef}
           src={src}
@@ -817,14 +817,14 @@ export function useLazyVisible(options: {
     const element = ref.current;
     if (element === null) return;
 
-    if (triggerOnce === true && hasBeenVisible === true) return;
+    if (triggerOnce && hasBeenVisible) return;
 
     const pool = ObserverPool.getInstance();
     return pool.observe(
       element,
       (intersecting) => {
         setIsVisible(intersecting);
-        if (intersecting === true) setHasBeenVisible(true);
+        if (intersecting) setHasBeenVisible(true);
       },
       { rootMargin, threshold }
     );
@@ -898,7 +898,7 @@ export async function preloadComponent<P extends object>(
  * Preload multiple components in parallel
  */
 export async function preloadComponents(
-  configs: Array<LazyComponentConfig<unknown>>
+  configs: Array<LazyComponentConfig>
 ): Promise<void> {
   await Promise.all(configs.map(preloadComponent));
 }

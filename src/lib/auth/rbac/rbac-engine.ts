@@ -92,7 +92,7 @@ export class RBACEngine {
   private userAttributes: Record<string, unknown> = {};
   private resolvedPermissions: Set<string> = new Set();
   private auditHandlers: Set<RBACAuditHandler> = new Set();
-  private debug: boolean;
+  private readonly debug: boolean;
 
   /**
    * Create a new RBAC engine.
@@ -313,7 +313,7 @@ export class RBACEngine {
    * Check resource-level permission.
    *
    * @param resourceType - Resource type
-   * @param resourceId - Resource ID
+   * @param _resourceId
    * @param action - Action to perform
    * @param context - Additional context
    * @returns Whether access is allowed
@@ -421,6 +421,23 @@ export class RBACEngine {
   }
 
   /**
+   * Clear all caches.
+   */
+  clearCache(): void {
+    this.permissionCache.clear();
+    this.evaluationCache.clear();
+    this.cacheExpiry = 0;
+  }
+
+  /**
+   * Register an audit handler.
+   */
+  onAudit(handler: RBACAuditHandler): () => void {
+    this.auditHandlers.add(handler);
+    return () => this.auditHandlers.delete(handler);
+  }
+
+  /**
    * Evaluate policies for a request.
    */
   private evaluatePolicies(request: AccessRequest): EvaluationResult {
@@ -429,13 +446,13 @@ export class RBACEngine {
 
     for (const policySet of this.config.policySets ?? []) {
       // Check if policy set target matches
-      if (this.matchesPolicyTarget(policySet.target, request) === false) {
+      if (!this.matchesPolicyTarget(policySet.target, request)) {
         continue;
       }
 
       // Evaluate each policy in the set
       for (const policy of policySet.policies) {
-        if (policy.enabled !== true) continue;
+        if (!policy.enabled) continue;
 
         const matches = this.evaluatePolicy(policy, request);
         if (matches) {
@@ -494,7 +511,7 @@ export class RBACEngine {
       const subjectMatch = policy.subjects.some(subject =>
         this.matchesPolicySubject(subject, request)
       );
-      if (subjectMatch === false) return false;
+      if (!subjectMatch) return false;
     }
 
     // Check resources
@@ -502,7 +519,7 @@ export class RBACEngine {
       const resourceMatch = policy.resources.some(resource =>
         this.matchesPolicyResource(resource, request)
       );
-      if (resourceMatch === false) return false;
+      if (!resourceMatch) return false;
     }
 
     // Check actions
@@ -510,7 +527,7 @@ export class RBACEngine {
       const actionMatch = policy.actions.some(
         action => action === WILDCARD || action === request.action
       );
-      if (actionMatch === false) return false;
+      if (!actionMatch) return false;
     }
 
     // Check conditions
@@ -518,7 +535,7 @@ export class RBACEngine {
       const conditionsMatch = policy.conditions.every(condition =>
         this.evaluatePolicyCondition(condition, request)
       );
-      if (conditionsMatch === false) return false;
+      if (!conditionsMatch) return false;
     }
 
     return true;
@@ -763,7 +780,7 @@ export class RBACEngine {
       case 'in':
         return (condition.value as string[]).includes(clientIP);
       case 'notIn':
-        return (condition.value as string[]).includes(clientIP) === false;
+        return !(condition.value as string[]).includes(clientIP);
       case 'cidr':
         // Would need CIDR matching implementation
         return true;
@@ -793,13 +810,17 @@ export class RBACEngine {
       case 'in':
         return (condition.value as unknown[]).includes(value);
       case 'notIn':
-        return (condition.value as unknown[]).includes(value) === false;
+        return !(condition.value as unknown[]).includes(value);
       case 'exists':
         return value !== undefined;
       default:
         return true;
     }
   }
+
+  // ===========================================================================
+  // Private Helper Methods
+  // ===========================================================================
 
   /**
    * Evaluate context-based condition.
@@ -884,10 +905,6 @@ export class RBACEngine {
       'no_applicable_entry'
     );
   }
-
-  // ===========================================================================
-  // Private Helper Methods
-  // ===========================================================================
 
   /**
    * Index roles for quick lookup.
@@ -1052,23 +1069,6 @@ export class RBACEngine {
   }
 
   /**
-   * Clear all caches.
-   */
-  clearCache(): void {
-    this.permissionCache.clear();
-    this.evaluationCache.clear();
-    this.cacheExpiry = 0;
-  }
-
-  /**
-   * Register an audit handler.
-   */
-  onAudit(handler: RBACAuditHandler): () => void {
-    this.auditHandlers.add(handler);
-    return () => this.auditHandlers.delete(handler);
-  }
-
-  /**
    * Emit an audit event.
    */
   private auditCheck(request: AccessRequest, result: EvaluationResult): void {
@@ -1098,7 +1098,7 @@ export class RBACEngine {
    * Log debug message.
    */
   private log(message: string, ...args: unknown[]): void {
-    if (this.debug === true) {
+    if (this.debug) {
       console.info(`[RBACEngine] ${message}`, ...args);
     }
   }

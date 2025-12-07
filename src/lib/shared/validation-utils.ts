@@ -6,13 +6,7 @@
  * @module shared/validation-utils
  */
 
-import {
-  isString,
-  isArray,
-  isObject,
-  isNonEmptyString,
-  isFiniteNumber,
-} from './type-utils';
+import { isString, isArray, isObject, isNonEmptyString, isFiniteNumber } from './type-utils';
 
 // =============================================================================
 // Types
@@ -142,11 +136,7 @@ export function validateLength(
 /**
  * Validate string matches pattern.
  */
-export function validatePattern(
-  value: string,
-  pattern: RegExp,
-  message: string
-): ValidationResult {
+export function validatePattern(value: string, pattern: RegExp, message: string): ValidationResult {
   if (!pattern.test(value)) {
     return invalidResult(message);
   }
@@ -156,10 +146,7 @@ export function validatePattern(
 /**
  * Validate email format.
  */
-export function validateEmail(
-  value: string,
-  fieldName = 'Email'
-): ValidationResult {
+export function validateEmail(value: string, fieldName = 'Email'): ValidationResult {
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailPattern.test(value)) {
     return invalidResult(`${fieldName} must be a valid email address`);
@@ -170,10 +157,7 @@ export function validateEmail(
 /**
  * Validate URL format.
  */
-export function validateUrl(
-  value: string,
-  fieldName = 'URL'
-): ValidationResult {
+export function validateUrl(value: string, fieldName = 'URL'): ValidationResult {
   try {
     new URL(value);
     return validResult();
@@ -185,10 +169,7 @@ export function validateUrl(
 /**
  * Validate phone number format (basic).
  */
-export function validatePhone(
-  value: string,
-  fieldName = 'Phone'
-): ValidationResult {
+export function validatePhone(value: string, fieldName = 'Phone'): ValidationResult {
   const phonePattern = /^[+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]*$/;
   if (!phonePattern.test(value) || value.replace(/\D/g, '').length < 7) {
     return invalidResult(`${fieldName} must be a valid phone number`);
@@ -199,12 +180,8 @@ export function validatePhone(
 /**
  * Validate UUID format.
  */
-export function validateUuid(
-  value: string,
-  fieldName = 'ID'
-): ValidationResult {
-  const uuidPattern =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+export function validateUuid(value: string, fieldName = 'ID'): ValidationResult {
+  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   if (!uuidPattern.test(value)) {
     return invalidResult(`${fieldName} must be a valid UUID`);
   }
@@ -214,15 +191,10 @@ export function validateUuid(
 /**
  * Validate slug format (lowercase letters, numbers, hyphens).
  */
-export function validateSlug(
-  value: string,
-  fieldName = 'Slug'
-): ValidationResult {
+export function validateSlug(value: string, fieldName = 'Slug'): ValidationResult {
   const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
   if (!slugPattern.test(value)) {
-    return invalidResult(
-      `${fieldName} must contain only lowercase letters, numbers, and hyphens`
-    );
+    return invalidResult(`${fieldName} must contain only lowercase letters, numbers, and hyphens`);
   }
   return validResult();
 }
@@ -230,10 +202,7 @@ export function validateSlug(
 /**
  * Validate alphanumeric string.
  */
-export function validateAlphanumeric(
-  value: string,
-  fieldName = 'Field'
-): ValidationResult {
+export function validateAlphanumeric(value: string, fieldName = 'Field'): ValidationResult {
   const pattern = /^[a-zA-Z0-9]+$/;
   if (!pattern.test(value)) {
     return invalidResult(`${fieldName} must contain only letters and numbers`);
@@ -263,11 +232,7 @@ export function validateNumberRange(
 /**
  * Validate minimum value.
  */
-export function validateMin(
-  value: number,
-  min: number,
-  fieldName = 'Value'
-): ValidationResult {
+export function validateMin(value: number, min: number, fieldName = 'Value'): ValidationResult {
   if (value < min) {
     return invalidResult(`${fieldName} must be at least ${min}`);
   }
@@ -277,11 +242,7 @@ export function validateMin(
 /**
  * Validate maximum value.
  */
-export function validateMax(
-  value: number,
-  max: number,
-  fieldName = 'Value'
-): ValidationResult {
+export function validateMax(value: number, max: number, fieldName = 'Value'): ValidationResult {
   if (value > max) {
     return invalidResult(`${fieldName} must be at most ${max}`);
   }
@@ -291,10 +252,7 @@ export function validateMax(
 /**
  * Validate positive number.
  */
-export function validatePositive(
-  value: number,
-  fieldName = 'Value'
-): ValidationResult {
+export function validatePositive(value: number, fieldName = 'Value'): ValidationResult {
   if (value <= 0) {
     return invalidResult(`${fieldName} must be positive`);
   }
@@ -304,10 +262,7 @@ export function validatePositive(
 /**
  * Validate non-negative number.
  */
-export function validateNonNegative(
-  value: number,
-  fieldName = 'Value'
-): ValidationResult {
+export function validateNonNegative(value: number, fieldName = 'Value'): ValidationResult {
   if (value < 0) {
     return invalidResult(`${fieldName} must not be negative`);
   }
@@ -317,10 +272,7 @@ export function validateNonNegative(
 /**
  * Validate integer.
  */
-export function validateInteger(
-  value: number,
-  fieldName = 'Value'
-): ValidationResult {
+export function validateInteger(value: number, fieldName = 'Value'): ValidationResult {
   if (!Number.isInteger(value)) {
     return invalidResult(`${fieldName} must be a whole number`);
   }
@@ -334,10 +286,7 @@ export function validateInteger(
 /**
  * Validate array is not empty.
  */
-export function validateArrayNotEmpty(
-  value: unknown[],
-  fieldName = 'List'
-): ValidationResult {
+export function validateArrayNotEmpty(value: unknown[], fieldName = 'List'): ValidationResult {
   if (value.length === 0) {
     return invalidResult(`${fieldName} must not be empty`);
   }
@@ -416,10 +365,7 @@ export function validateUnique<T>(
 /**
  * Validate date is not in the past.
  */
-export function validateFutureDate(
-  value: Date,
-  fieldName = 'Date'
-): ValidationResult {
+export function validateFutureDate(value: Date, fieldName = 'Date'): ValidationResult {
   if (value.getTime() <= Date.now()) {
     return invalidResult(`${fieldName} must be in the future`);
   }
@@ -429,10 +375,7 @@ export function validateFutureDate(
 /**
  * Validate date is not in the future.
  */
-export function validatePastDate(
-  value: Date,
-  fieldName = 'Date'
-): ValidationResult {
+export function validatePastDate(value: Date, fieldName = 'Date'): ValidationResult {
   if (value.getTime() >= Date.now()) {
     return invalidResult(`${fieldName} must be in the past`);
   }
@@ -519,10 +462,7 @@ class ValidatorBuilder<T> {
   /**
    * Add a conditional validator.
    */
-  when(
-    condition: (value: T) => boolean,
-    validator: Validator<T>
-  ): ValidatorBuilder<T> {
+  when(condition: (value: T) => boolean, validator: Validator<T>): ValidatorBuilder<T> {
     this.validators.push((value) => {
       if (condition(value)) {
         return validator(value);
@@ -619,10 +559,7 @@ export function validateSchema(
 
     // Nested object schema
     if (fieldSchema.schema && isObject(value)) {
-      const nestedResult = validateSchema(
-        value,
-        fieldSchema.schema
-      );
+      const nestedResult = validateSchema(value, fieldSchema.schema);
       if (!nestedResult.valid) {
         for (const [nestedField, nestedErrors] of Object.entries(nestedResult.errors)) {
           errors[`${field}.${nestedField}`] = nestedErrors;
@@ -632,13 +569,11 @@ export function validateSchema(
 
     // Array item schema
     if (fieldSchema.items !== undefined && isArray(value)) {
-      (value).forEach((item, index) => {
+      value.forEach((item, index) => {
         if (fieldSchema.items?.type !== undefined && !checkType(item, fieldSchema.items.type)) {
           const key = `${field}[${index}]`;
           errors[key] = errors[key] ?? [];
-          if (fieldSchema.items?.type !== undefined) {
-            errors[key].push(`Item must be of type ${fieldSchema.items.type}`);
-          }
+          errors[key].push(`Item must be of type ${fieldSchema.items.type}`);
         }
       });
     }

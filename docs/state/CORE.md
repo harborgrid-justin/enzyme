@@ -869,22 +869,28 @@ persist: {
 ## Related Documentation
 
 ### State Management Core
-- [Stores](./STORES.md) - Global store structure and usage
-- [Slices](./SLICES.md) - Built-in UI, Session, Settings slices
-- [Selectors](./SELECTORS.md) - Selector patterns and examples
-- [Hooks](./HOOKS.md) - React hooks for state access
-- [Types](./TYPES.md) - TypeScript type definitions
-- [README](./README.md) - State management overview
+- [README.md](./README.md) - State management overview
+- [STORES.md](./STORES.md) - Store architecture patterns
+- [SLICES.md](./SLICES.md) - Slice composition
+- [SELECTORS.md](./SELECTORS.md) - Selector patterns
+- [HOOKS.md](./HOOKS.md) - React hooks
+- [SYNC.md](./SYNC.md) - Multi-tab synchronization
+- [TYPES.md](./TYPES.md) - Type definitions
 
-### Persistence & Hydration
+### Configuration & Features
+- [Config System](../config/README.md) - Configuration management
+- [Config Registry](../config/REGISTRY.md) - Configuration storage and discovery
+- [Config Dynamic](../config/DYNAMIC.md) - Runtime configuration updates
+- [Feature Flags](../flags/README.md) - Feature flag integration
+
+### Routing & Data
+- [Routing Core](../routing/CORE.md) - Routing patterns with state
+- [Route Loaders](../routing/LOADERS.md) - Data loading integration
+- [API Hooks](../api/HOOKS.md) - API data fetching with state
+- [API Client](../api/README.md) - HTTP client integration
+
+### Integration & Performance
+- [Routing State Integration](../integration/ROUTING_STATE_GUARDS.md) - Routing with state
 - [Hydration Guide](../HYDRATION.md) - State hydration patterns and SSR
 - [Performance Guide](../PERFORMANCE.md) - Optimization strategies
-
-### Advanced Topics
-- [Sync](./SYNC.md) - Multi-tab synchronization with BroadcastChannel
 - [Architecture](../ARCHITECTURE.md) - System design patterns
-- [Migration Guide](../MIGRATION.md) - Migrating from Redux
-
-### External Resources
-- [Zustand Documentation](https://github.com/pmndrs/zustand) - Official Zustand docs
-- [Immer Documentation](https://immerjs.github.io/immer/) - Immer guide

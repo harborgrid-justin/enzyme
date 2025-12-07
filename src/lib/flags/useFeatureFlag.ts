@@ -36,7 +36,7 @@ export function useFeatureFlags(): {
  */
 export function useFeatureFlagsStatus(flagKeys: (FlagKey | string)[]): Record<string, boolean> {
   const { isEnabled } = useFeatureFlagContext();
-  
+
   return flagKeys.reduce(
     (acc, key) => {
       acc[key] = isEnabled(key);

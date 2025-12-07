@@ -105,7 +105,10 @@ export interface ConflictResolverConfig {
   /** Default resolution strategy */
   strategy: ConflictStrategy;
   /** Field-level strategies */
-  fieldStrategies?: Record<string, FieldStrategy | ((local: unknown, remote: unknown, base?: unknown) => unknown)>;
+  fieldStrategies?: Record<
+    string,
+    FieldStrategy | ((local: unknown, remote: unknown, base?: unknown) => unknown)
+  >;
   /** Fields to ignore in merge */
   ignoreFields?: string[];
   /** Fields that should always use server value */
@@ -136,7 +139,10 @@ export interface ConflictResolver<T = unknown> {
   /** Get conflicts without resolving */
   detectConflicts: (local: T, remote: T, base?: T) => Conflict[];
   /** Compare vector clocks */
-  compareVersions: (localClock: VectorClock, remoteClock: VectorClock) => 'equal' | 'local-newer' | 'remote-newer' | 'concurrent';
+  compareVersions: (
+    localClock: VectorClock,
+    remoteClock: VectorClock
+  ) => 'equal' | 'local-newer' | 'remote-newer' | 'concurrent';
   /** Merge vector clocks */
   mergeClocks: (localClock: VectorClock, remoteClock: VectorClock) => VectorClock;
   /** Get conflict history */
@@ -316,7 +322,8 @@ export function threeWayMerge<T extends Record<string, unknown>>(
       setAtPath(result as T, path, localValue);
     } else {
       // Conflict - both changed to different values
-      const fieldStrategy = fieldStrategies[pathStr] ?? fieldStrategies[path[0] as string] ?? 'server';
+      const fieldStrategy =
+        fieldStrategies[pathStr] ?? fieldStrategies[path[0] as string] ?? 'server';
 
       let resolvedValue: unknown;
       let resolution: string;
@@ -332,7 +339,7 @@ export function threeWayMerge<T extends Record<string, unknown>>(
           break;
         case 'merge':
           if (typeof localValue === 'object' && typeof remoteValue === 'object') {
-            resolvedValue = { ...remoteValue as object, ...localValue as object };
+            resolvedValue = { ...(remoteValue as object), ...(localValue as object) };
             resolution = 'merged';
           } else {
             resolvedValue = remoteValue;
@@ -341,7 +348,9 @@ export function threeWayMerge<T extends Record<string, unknown>>(
           break;
         case 'concat':
           if (Array.isArray(localValue) && Array.isArray(remoteValue)) {
-            resolvedValue = [...new Set([...remoteValue as unknown[], ...localValue as unknown[]])];
+            resolvedValue = [
+              ...new Set([...(remoteValue as unknown[]), ...(localValue as unknown[])]),
+            ];
             resolution = 'concatenated';
           } else {
             resolvedValue = remoteValue;
@@ -349,7 +358,11 @@ export function threeWayMerge<T extends Record<string, unknown>>(
           }
           break;
         case 'sum':
-          if (typeof localValue === 'number' && typeof remoteValue === 'number' && typeof baseValue === 'number') {
+          if (
+            typeof localValue === 'number' &&
+            typeof remoteValue === 'number' &&
+            typeof baseValue === 'number'
+          ) {
             resolvedValue = baseValue + (localValue - baseValue) + (remoteValue - baseValue);
             resolution = 'summed';
           } else {
@@ -486,7 +499,10 @@ export function createConflictResolver<T extends Record<string, unknown>>(
   const history: ConflictResolutionResult<T>[] = [];
 
   // Build effective field strategies
-  const effectiveFieldStrategies: Record<string, FieldStrategy | ((local: unknown, remote: unknown, base?: unknown) => unknown)> = { ...fieldStrategies };
+  const effectiveFieldStrategies: Record<
+    string,
+    FieldStrategy | ((local: unknown, remote: unknown, base?: unknown) => unknown)
+  > = { ...fieldStrategies };
   for (const field of serverFields) {
     effectiveFieldStrategies[field] = 'server';
   }
@@ -523,8 +539,8 @@ export function createConflictResolver<T extends Record<string, unknown>>(
         break;
 
       case 'latest-wins': {
-        const localTs = getAtPath(local, [timestampField]) as number || 0;
-        const remoteTs = getAtPath(remote, [timestampField]) as number || 0;
+        const localTs = (getAtPath(local, [timestampField]) as number) || 0;
+        const remoteTs = (getAtPath(remote, [timestampField]) as number) || 0;
         result = {
           data: deepClone(localTs > remoteTs ? local : remote),
           hasConflicts: false,
@@ -619,7 +635,8 @@ export function createConflictResolver<T extends Record<string, unknown>>(
         continue;
       }
 
-      const fieldStrategy = effectiveFieldStrategies[pathStr] ??
+      const fieldStrategy =
+        effectiveFieldStrategies[pathStr] ??
         effectiveFieldStrategies[path[0] as string] ??
         'server';
 
@@ -636,8 +653,8 @@ export function createConflictResolver<T extends Record<string, unknown>>(
             resolution = 'client-wins';
             break;
           case 'latest': {
-            const localTs = getAtPath(local, [timestampField]) as number || 0;
-            const remoteTs = getAtPath(remote, [timestampField]) as number || 0;
+            const localTs = (getAtPath(local, [timestampField]) as number) || 0;
+            const remoteTs = (getAtPath(remote, [timestampField]) as number) || 0;
             resolvedValue = localTs > remoteTs ? localValue : remoteValue;
             resolution = localTs > remoteTs ? 'local-latest' : 'remote-latest';
             break;
@@ -730,7 +747,9 @@ export function createConflictResolver<T extends Record<string, unknown>>(
     mergeClocks: mergeVectorClocks,
 
     getHistory: () => [...history],
-    clearHistory: () => { history.length = 0; },
+    clearHistory: () => {
+      history.length = 0;
+    },
   };
 }
 
@@ -753,8 +772,9 @@ export const clientWinsResolver = <T extends Record<string, unknown>>(): Conflic
 /**
  * Latest-wins resolver
  */
-export const latestWinsResolver = <T extends Record<string, unknown>>(timestampField = 'updatedAt'): ConflictResolver<T> =>
-  createConflictResolver<T>({ strategy: 'latest-wins', timestampField });
+export const latestWinsResolver = <T extends Record<string, unknown>>(
+  timestampField = 'updatedAt'
+): ConflictResolver<T> => createConflictResolver<T>({ strategy: 'latest-wins', timestampField });
 
 /**
  * Three-way merge resolver

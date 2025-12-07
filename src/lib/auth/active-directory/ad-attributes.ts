@@ -8,7 +8,7 @@
  */
 
 import type { ADUserAttributes, ADUser } from './types';
-import type { User } from '../types';
+import type { User } from '@/lib';
 
 // =============================================================================
 // Types
@@ -97,7 +97,8 @@ export const DEFAULT_ATTRIBUTE_MAPPINGS: AttributeMapping[] = [
     source: 'email',
     target: 'email',
     required: true,
-    extract: (source) => (source.email != null && source.email !== '') ? source.email : (source.upn ?? undefined),
+    extract: (source) =>
+      source.email != null && source.email !== '' ? source.email : (source.upn ?? undefined),
   },
   {
     source: 'givenName',
@@ -117,7 +118,7 @@ export const DEFAULT_ATTRIBUTE_MAPPINGS: AttributeMapping[] = [
   {
     source: 'createdDateTime',
     target: 'createdAt',
-    transform: (value) => (value != null && value !== '') ? value : new Date().toISOString(),
+    transform: (value) => (value != null && value !== '' ? value : new Date().toISOString()),
   },
 ];
 
@@ -178,7 +179,8 @@ export const HEALTHCARE_ATTRIBUTE_MAPPINGS: AttributeMapping[] = [
     target: 'npi',
     extract: (source) => source.extensionAttributes?.['extension_npi'],
     validate: (value) => ({
-      valid: value == null || /^\d{10}$/.test(typeof value === 'string' ? value : JSON.stringify(value)),
+      valid:
+        value == null || /^\d{10}$/.test(typeof value === 'string' ? value : JSON.stringify(value)),
       error: 'NPI must be a 10-digit number',
     }),
   },
@@ -188,7 +190,9 @@ export const HEALTHCARE_ATTRIBUTE_MAPPINGS: AttributeMapping[] = [
     target: 'deaNumber',
     extract: (source) => source.extensionAttributes?.['extension_deaNumber'],
     validate: (value) => ({
-      valid: value == null || /^[A-Z]{2}\d{7}$/.test(typeof value === 'string' ? value : JSON.stringify(value)),
+      valid:
+        value == null ||
+        /^[A-Z]{2}\d{7}$/.test(typeof value === 'string' ? value : JSON.stringify(value)),
       error: 'DEA number must be 2 letters followed by 7 digits',
     }),
   },
@@ -222,7 +226,7 @@ export const HEALTHCARE_ATTRIBUTE_MAPPINGS: AttributeMapping[] = [
  * ```
  */
 export class ADAttributeMapper {
-  private config: AttributeMappingConfig;
+  private readonly config: AttributeMappingConfig;
 
   /**
    * Create a new attribute mapper.
@@ -265,9 +269,14 @@ export class ADAttributeMapper {
         }
 
         // Apply validation if present
-        if (mapping.validate !== undefined && mapping.validate !== null && value !== undefined && value !== null) {
+        if (
+          mapping.validate !== undefined &&
+          mapping.validate !== null &&
+          value !== undefined &&
+          value !== null
+        ) {
           const validation = mapping.validate(value, sourceKey);
-          if (validation.valid !== true) {
+          if (!validation.valid) {
             errors.push({
               attribute: sourceKey,
               error: validation.error ?? `Validation failed for ${sourceKey}`,
@@ -294,7 +303,11 @@ export class ADAttributeMapper {
         }
 
         // Use default value if needed
-        if ((value === undefined || value === null) && (mapping.defaultValue !== undefined && mapping.defaultValue !== null)) {
+        if (
+          (value === undefined || value === null) &&
+          mapping.defaultValue !== undefined &&
+          mapping.defaultValue !== null
+        ) {
           value = mapping.defaultValue;
         }
 
@@ -311,7 +324,12 @@ export class ADAttributeMapper {
     }
 
     // Process extension attribute mappings
-    if (this.config.extensionMappings !== undefined && this.config.extensionMappings !== null && source.extensionAttributes !== undefined && source.extensionAttributes !== null) {
+    if (
+      this.config.extensionMappings !== undefined &&
+      this.config.extensionMappings !== null &&
+      source.extensionAttributes !== undefined &&
+      source.extensionAttributes !== null
+    ) {
       for (const [extAttr, targetAttr] of Object.entries(this.config.extensionMappings)) {
         const value = source.extensionAttributes[extAttr];
         if (value !== undefined && value !== null) {
@@ -339,10 +357,8 @@ export class ADAttributeMapper {
     }
 
     // Determine success based on required attribute errors
-    const hasRequiredErrors = errors.some(error =>
-      this.config.mappings.some(
-        m => m.source === error.attribute && (m.required === true)
-      )
+    const hasRequiredErrors = errors.some((error) =>
+      this.config.mappings.some((m) => m.source === error.attribute && m.required === true)
     );
 
     return {
@@ -363,11 +379,11 @@ export class ADAttributeMapper {
     const result = this.mapAttributes(adUser.adAttributes);
 
     return {
-      id: result.attributes['id'] as string || adUser.adAttributes.objectId,
-      email: result.attributes['email'] as string || adUser.email,
-      firstName: result.attributes['firstName'] as string || adUser.firstName,
-      lastName: result.attributes['lastName'] as string || adUser.lastName,
-      displayName: result.attributes['displayName'] as string || adUser.displayName,
+      id: (result.attributes['id'] as string) || adUser.adAttributes.objectId,
+      email: (result.attributes['email'] as string) || adUser.email,
+      firstName: (result.attributes['firstName'] as string) || adUser.firstName,
+      lastName: (result.attributes['lastName'] as string) || adUser.lastName,
+      displayName: (result.attributes['displayName'] as string) || adUser.displayName,
       avatarUrl: adUser.avatarUrl,
       roles: adUser.roles,
       permissions: adUser.permissions,
@@ -377,7 +393,7 @@ export class ADAttributeMapper {
         adObjectId: adUser.adAttributes.objectId,
         adProvider: adUser.adProvider,
       },
-      createdAt: result.attributes['createdAt'] as string || adUser.createdAt,
+      createdAt: (result.attributes['createdAt'] as string) || adUser.createdAt,
       updatedAt: adUser.updatedAt,
     };
   }
@@ -397,9 +413,7 @@ export class ADAttributeMapper {
    * @param source - Source attribute name to remove
    */
   removeMapping(source: string): void {
-    this.config.mappings = this.config.mappings.filter(
-      m => m.source !== source
-    );
+    this.config.mappings = this.config.mappings.filter((m) => m.source !== source);
   }
 
   /**
@@ -442,8 +456,7 @@ export const attributeTransformers = {
   /**
    * Normalize email to lowercase.
    */
-  normalizeEmail: (value: string | undefined): string | undefined =>
-    value?.toLowerCase().trim(),
+  normalizeEmail: (value: string | undefined): string | undefined => value?.toLowerCase().trim(),
 
   /**
    * Format display name (proper case).
@@ -452,7 +465,7 @@ export const attributeTransformers = {
     if (value === undefined || value === null || value === '') return value;
     return value
       .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join(' ');
   },
 
@@ -496,7 +509,10 @@ export const attributeTransformers = {
   parseArray: (value: string | string[] | undefined): string[] => {
     if (value === undefined || value === null) return [];
     if (Array.isArray(value)) return value;
-    return value.split(',').map(item => item.trim()).filter(Boolean);
+    return value
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean);
   },
 
   /**
@@ -556,7 +572,8 @@ export const attributeValidators = {
   /**
    * Validate string length.
    */
-  maxLength: (max: number) =>
+  maxLength:
+    (max: number) =>
     (value: string | undefined, attr: string): { valid: boolean; error?: string } => {
       if (value === undefined || value === null || value === '') return { valid: true };
       return {
@@ -576,12 +593,16 @@ export const attributeValidators = {
   /**
    * Validate against regex pattern.
    */
-  pattern: (regex: RegExp, message: string) =>
+  pattern:
+    (regex: RegExp, message: string) =>
     (value: string | undefined, attr: string): { valid: boolean; error?: string } => {
       if (value === undefined || value === null || value === '') return { valid: true };
       return {
         valid: regex.test(value),
-        error: (message !== undefined && message !== null && message !== '') ? message : `${attr} does not match required pattern`,
+        error:
+          message !== undefined && message !== null && message !== ''
+            ? message
+            : `${attr} does not match required pattern`,
       };
     },
 } as const;

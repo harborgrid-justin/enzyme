@@ -976,8 +976,22 @@ export function createApiClient(config: ApiClientConfig): ApiClient {
 }
 ```
 
-## See Also
+## Related Documentation
 
-- [Hooks Documentation](./HOOKS.md) - React hooks for API requests
-- [Advanced Features](./ADVANCED.md) - Gateway, orchestration, metrics
-- [Types Reference](./TYPES.md) - Complete TypeScript types
+### API Documentation
+- **[API Module Overview](./README.md)** - Complete API module guide
+- **[Hooks](./HOOKS.md)** - React hooks for data fetching and mutations
+- **[Types](./TYPES.md)** - TypeScript type reference
+- **[Interceptors](./INTERCEPTORS.md)** - Request/response interceptors
+- **[Advanced Features](./ADVANCED.md)** - API Gateway, rate limiting, metrics
+- **[Auto Generation](./AUTO_GENERATION.md)** - Auto-generate REST APIs
+
+### Integration Guides
+- **[Queries Module](../queries/README.md)** - React Query integration
+- **[State Management](../state/README.md)** - Global state integration
+- **[Shared Utilities](../shared/README.md)** - Event bus and storage utilities
+- **[Configuration](../config/README.md)** - API configuration options
+
+### Reference
+- **[Hooks Reference](../HOOKS_REFERENCE.md)** - Complete hooks API reference
+- **[Performance Guide](../performance/README.md)** - API performance optimization

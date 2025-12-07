@@ -139,10 +139,7 @@ export class CoordinationEventBus {
    * @param event - Event name
    * @param payload - Event payload
    */
-  publish<E extends CoordinationEventName>(
-    event: E,
-    payload: CoordinationEvents[E]
-  ): void {
+  publish<E extends CoordinationEventName>(event: E, payload: CoordinationEvents[E]): void {
     if (this.debug) {
       console.info(`[CoordinationEventBus] ${event}`, payload);
     }
@@ -206,7 +203,7 @@ export class CoordinationEventBus {
     events: E[],
     handler: CoordinationEventHandler<E>
   ): (() => void)[] {
-    return events.map(event => this.subscribe(event, handler));
+    return events.map((event) => this.subscribe(event, handler));
   }
 
   /**
@@ -256,7 +253,7 @@ export class CoordinationEventBus {
     return {
       totalPublished: 0, // Could track this with a counter if needed
       totalDelivered: 0, // Could track this with a counter if needed
-      totalFailures: 0,  // Could track this with a counter if needed
+      totalFailures: 0, // Could track this with a counter if needed
       activeSubscriptions: totalSubscriptions,
     };
   }

@@ -20,7 +20,10 @@ import React, {
   type ReactNode,
   type CSSProperties,
 } from 'react';
-import { PerformanceObservatoryContext, type PerformanceObservatoryContextValue } from '../contexts/PerformanceObservatoryContext';
+import {
+  PerformanceObservatoryContext,
+  type PerformanceObservatoryContextValue,
+} from '../contexts/PerformanceObservatoryContext';
 import {
   getVitalsCollector,
   type VitalMetricEntry,
@@ -246,9 +249,7 @@ function MetricGauge({
         </span>
       </div>
 
-      <div style={styles.metricValue}>
-        {entry != null ? formatMetricValue(name, value) : '--'}
-      </div>
+      <div style={styles.metricValue}>{entry != null ? formatMetricValue(name, value) : '--'}</div>
 
       <div style={styles.gaugeContainer}>
         <div style={gaugeFillStyle} />
@@ -257,9 +258,7 @@ function MetricGauge({
         <div style={poorMarkerStyle} />
       </div>
 
-      <div style={styles.metricTarget}>
-        Target: {getMetricTarget(name)}
-      </div>
+      <div style={styles.metricTarget}>Target: {getMetricTarget(name)}</div>
     </div>
   );
 }
@@ -268,15 +267,12 @@ function MetricGauge({
  * Resource breakdown component
  */
 function ResourceBreakdown({ stats }: { stats: ResourceStats }): React.JSX.Element {
-  const sortedTypes = Object.entries(stats.byType)
-    .sort(([, a], [, b]) => b.size - a.size);
+  const sortedTypes = Object.entries(stats.byType).sort(([, a], [, b]) => b.size - a.size);
 
   return (
     <div style={styles.resourceSection}>
       <div style={styles.sectionTitle}>Resources ({stats.total})</div>
-      <div style={styles.resourceTotal}>
-        Total: {formatBytes(stats.totalSize)}
-      </div>
+      <div style={styles.resourceTotal}>Total: {formatBytes(stats.totalSize)}</div>
       <div style={styles.resourceList}>
         {sortedTypes.slice(0, 5).map(([type, data]) => (
           <div key={type} style={styles.resourceItem}>
@@ -288,17 +284,13 @@ function ResourceBreakdown({ stats }: { stats: ResourceStats }): React.JSX.Eleme
       </div>
       {stats.slowResources.length > 0 && (
         <div style={styles.slowResources}>
-          <div style={styles.slowResourcesTitle}>
-            Slow Resources ({stats.slowResources.length})
-          </div>
+          <div style={styles.slowResourcesTitle}>Slow Resources ({stats.slowResources.length})</div>
           {stats.slowResources.slice(0, 3).map((resource, i) => (
             <div key={i} style={styles.slowResourceItem}>
               <span style={styles.slowResourceName}>
                 {resource.name.split('/').pop()?.slice(0, 30)}
               </span>
-              <span style={styles.slowResourceDuration}>
-                {Math.round(resource.duration)}ms
-              </span>
+              <span style={styles.slowResourceDuration}>{Math.round(resource.duration)}ms</span>
             </div>
           ))}
         </div>
@@ -328,9 +320,7 @@ function LongTasksMonitor({ tasks }: { tasks: LongTaskEntry[] }): React.JSX.Elem
       {recentTasks.map((task, i) => (
         <div key={i} style={styles.longTaskItem}>
           <span style={styles.longTaskDuration}>{Math.round(task.duration)}ms</span>
-          <span style={styles.longTaskTime}>
-            at {Math.round(task.startTime)}ms
-          </span>
+          <span style={styles.longTaskTime}>at {Math.round(task.startTime)}ms</span>
         </div>
       ))}
     </div>
@@ -358,9 +348,7 @@ function ScoreDisplay({
 
   return (
     <div style={styles.scoreContainer}>
-      <div style={scoreCircleStyle}>
-        {score}
-      </div>
+      <div style={scoreCircleStyle}>{score}</div>
       <div style={styles.scoreLabel}>Performance Score</div>
     </div>
   );
@@ -432,13 +420,7 @@ export function PerformanceObservatory({
         title="Open Performance Observatory"
       >
         <span style={styles.collapsedIcon}>
-          {snapshot != null ? (
-            <span style={scoreColorStyle}>
-              {snapshot.score}
-            </span>
-          ) : (
-            'P'
-          )}
+          {snapshot != null ? <span style={scoreColorStyle}>{snapshot.score}</span> : 'P'}
         </span>
       </button>
     );
@@ -455,13 +437,8 @@ export function PerformanceObservatory({
       <div style={styles.header}>
         <span style={styles.title}>Performance Observatory</span>
         <div style={styles.headerActions}>
-          <span style={styles.status}>
-            {isCollecting ? 'Collecting' : 'Idle'}
-          </span>
-          <button
-            onClick={() => setIsCollapsed(true)}
-            style={styles.closeButton}
-          >
+          <span style={styles.status}>{isCollecting ? 'Collecting' : 'Idle'}</span>
+          <button onClick={() => setIsCollapsed(true)} style={styles.closeButton}>
             x
           </button>
         </div>
@@ -470,11 +447,7 @@ export function PerformanceObservatory({
       {/* Tabs */}
       <div style={styles.tabs}>
         {(['vitals', 'resources', 'tasks'] as const).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            style={getTabStyle(tab)}
-          >
+          <button key={tab} onClick={() => setActiveTab(tab)} style={getTabStyle(tab)}>
             {tab.charAt(0).toUpperCase() + tab.slice(1)}
           </button>
         ))}
@@ -484,16 +457,10 @@ export function PerformanceObservatory({
       <div style={styles.content}>
         {activeTab === 'vitals' && (
           <>
-            {snapshot != null && (
-              <ScoreDisplay score={snapshot.score} rating={snapshot.rating} />
-            )}
+            {snapshot != null && <ScoreDisplay score={snapshot.score} rating={snapshot.rating} />}
             <div style={styles.metricsGrid}>
               {(['LCP', 'INP', 'CLS', 'FCP', 'TTFB'] as VitalMetricName[]).map((name) => (
-                <MetricGauge
-                  key={name}
-                  name={name}
-                  entry={snapshot?.[name]}
-                />
+                <MetricGauge key={name} name={name} entry={snapshot?.[name]} />
               ))}
             </div>
           </>
@@ -510,9 +477,7 @@ export function PerformanceObservatory({
       <div style={styles.footer}>
         <span style={styles.footerPath}>{snapshot?.path ?? '/'}</span>
         <span style={styles.footerTime}>
-          {snapshot != null
-            ? new Date(snapshot.timestamp).toLocaleTimeString()
-            : '--'}
+          {snapshot != null ? new Date(snapshot.timestamp).toLocaleTimeString() : '--'}
         </span>
       </div>
     </div>

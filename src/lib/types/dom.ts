@@ -14,7 +14,15 @@
  */
 export interface NetworkInformation {
   /** Connection type */
-  readonly type?: 'bluetooth' | 'cellular' | 'ethernet' | 'none' | 'wifi' | 'wimax' | 'other' | 'unknown';
+  readonly type?:
+    | 'bluetooth'
+    | 'cellular'
+    | 'ethernet'
+    | 'none'
+    | 'wifi'
+    | 'wimax'
+    | 'other'
+    | 'unknown';
   /** Effective connection type based on measured network performance */
   readonly effectiveType?: '4g' | '3g' | '2g' | 'slow-2g';
   /** Effective bandwidth estimate in Mbps */
@@ -144,22 +152,17 @@ export interface NavigatorWithDeviceMemory extends Navigator {
 /**
  * Extended navigator combining all non-standard APIs
  */
-export type ExtendedNavigator =
-  & Navigator
-  & Partial<NavigatorWithConnection>
-  & Partial<NavigatorWithStorage>
-  & Partial<NavigatorWithDeviceMemory>;
+export type ExtendedNavigator = Navigator &
+  Partial<NavigatorWithConnection> &
+  Partial<NavigatorWithStorage> &
+  Partial<NavigatorWithDeviceMemory>;
 
 /**
  * Extended performance combining all non-standard APIs
  */
-export type ExtendedPerformance =
-  & Performance
-  & Partial<PerformanceWithMemory>;
+export type ExtendedPerformance = Performance & Partial<PerformanceWithMemory>;
 
 /**
  * Extended window combining all non-standard APIs
  */
-export type ExtendedWindow =
-  & Window
-  & Partial<WindowWithIdleCallback>;
+export type ExtendedWindow = Window & Partial<WindowWithIdleCallback>;

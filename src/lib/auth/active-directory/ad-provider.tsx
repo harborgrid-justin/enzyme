@@ -26,20 +26,19 @@ import type {
   ADGroup,
   ADTokens,
   ADAuthError,
-
   ADLogoutOptions,
   TokenAcquisitionRequest,
   TokenRefreshResult,
   ADUserAttributes,
   ADAuthEvent,
 } from './types';
-import type { Role, Permission } from '../types';
-import { createADClient } from './ad-client';
-import { createTokenHandler } from './ad-token-handler';
-import { type ADGroupMapper, createGroupMapper } from './ad-groups';
-import { type ADAttributeMapper, createAttributeMapper } from './ad-attributes';
+import type { Role, Permission } from '@/lib';
+import { createADClient } from '@/lib/auth';
+import { createTokenHandler } from '@/lib/auth';
+import { type ADGroupMapper, createGroupMapper } from '@/lib/auth';
+import { type ADAttributeMapper, createAttributeMapper } from '@/lib/auth';
 import { createSSOManager } from './ad-sso';
-import { validateADConfig } from './ad-config';
+import { validateADConfig } from '@/lib/auth';
 
 // =============================================================================
 // Context
@@ -297,7 +296,10 @@ export function ADProvider({
       createADClient(config, {
         onTokenRefresh: (tokens) => {
           dispatch({ type: 'TOKEN_REFRESH_SUCCESS', payload: tokens });
-          emitEventRef.current?.({ type: 'token_refreshed', correlationId: generateCorrelationId() });
+          emitEventRef.current?.({
+            type: 'token_refreshed',
+            correlationId: generateCorrelationId(),
+          });
         },
         onAuthError: (error) => {
           dispatch({ type: 'TOKEN_REFRESH_FAILURE', payload: error });
@@ -549,6 +551,7 @@ export function ADProvider({
       const correlationId = generateCorrelationId();
       emitEvent({ type: 'logout_initiated', correlationId });
 
+      await Promise.resolve(); // Satisfy require-await lint rule
       try {
         // End SSO session
         if (ssoManager != null) {
@@ -663,7 +666,7 @@ export function ADProvider({
   }, []);
 
   const forceReauth = useCallback(async () => {
-    logout({ localOnly: true });
+    await logout({ localOnly: true });
     await login({ prompt: 'login', scopes: getDefaultScopes(config) });
   }, [logout, login, config]);
 
@@ -673,7 +676,7 @@ export function ADProvider({
 
   // Auto-initialize on mount
   useEffect(() => {
-    if (isADEnabled === true && configValidation.valid === true) {
+    if (isADEnabled && configValidation.valid) {
       void initialize();
     }
   }, [isADEnabled, configValidation.valid, initialize]);
@@ -749,12 +752,12 @@ export function ADProvider({
   }
 
   // Show loading during initialization
-  if (state.isAuthenticating === true && state.isAuthenticated === false && loadingComponent != null) {
+  if (state.isAuthenticating && !state.isAuthenticated && loadingComponent != null) {
     return <>{loadingComponent}</>;
   }
 
   // Feature flag is disabled
-  if (isADEnabled === false) {
+  if (!isADEnabled) {
     return <>{children}</>;
   }
 
@@ -846,10 +849,7 @@ function applyMappings(
   attributeMapper: ADAttributeMapper
 ): ADUser {
   // Apply group to role mapping
-  const { role, permissions } = groupMapper.mapUserGroups(
-    user.adGroups,
-    user
-  );
+  const { role, permissions } = groupMapper.mapUserGroups(user.adGroups, user);
 
   // Apply attribute mapping
   const mappedUser = attributeMapper.mapToUser(user);
@@ -859,7 +859,7 @@ function applyMappings(
     ...mappedUser,
     roles: role ? [role] : [],
     permissions,
-  effectivePermissions: permissions,
-  adGroups: user.adGroups,
-};
+    effectivePermissions: permissions,
+    adGroups: user.adGroups,
+  };
 }

@@ -162,19 +162,6 @@ class AuthService {
   }
 
   /**
-   * Gets the secure storage instance, initializing with session key if needed.
-   *
-   * SECURITY: Uses cryptographically secure session key for encryption.
-   */
-  private getSecureStorage(): SecureStorage {
-    if (!this.secureStorage) {
-      const encryptionKey = getSessionEncryptionKey();
-      this.secureStorage = createSecureLocalStorage(encryptionKey);
-    }
-    return this.secureStorage;
-  }
-
-  /**
    * Checks if the user is currently rate limited.
    *
    * SECURITY: Returns true if too many failed attempts have occurred.
@@ -212,51 +199,6 @@ class AuthService {
   }
 
   /**
-   * Records a failed authentication attempt and applies rate limiting.
-   *
-   * SECURITY: Implements exponential backoff to slow down brute force attacks.
-   */
-  private recordFailedAttempt(): void {
-    const now = Date.now();
-
-    // Start tracking if this is first attempt in window
-    if (this.rateLimitState.failedAttempts === 0) {
-      this.rateLimitState.firstAttemptTime = now;
-    }
-
-    this.rateLimitState.failedAttempts++;
-
-    // Apply exponential backoff after max attempts
-    if (this.rateLimitState.failedAttempts >= RATE_LIMIT_CONFIG.MAX_ATTEMPTS) {
-      // Calculate delay: baseDelay * 2^(attempts - maxAttempts)
-      const exponent = this.rateLimitState.failedAttempts - RATE_LIMIT_CONFIG.MAX_ATTEMPTS;
-      const delay = Math.min(
-        RATE_LIMIT_CONFIG.BASE_DELAY_MS * Math.pow(2, exponent),
-        RATE_LIMIT_CONFIG.MAX_DELAY_MS
-      );
-      this.rateLimitState.lockedUntil = now + delay;
-
-      console.warn(
-        `[AuthService] Rate limit applied. Too many failed attempts. ` +
-        `Locked for ${Math.ceil(delay / 1000)} seconds.`
-      );
-    }
-  }
-
-  /**
-   * Resets the rate limiting state after successful authentication.
-   *
-   * SECURITY: Called after successful login to clear failed attempt counter.
-   */
-  private resetRateLimit(): void {
-    this.rateLimitState = {
-      failedAttempts: 0,
-      firstAttemptTime: 0,
-      lockedUntil: null,
-    };
-  }
-
-  /**
    * Initialize the auth service by loading tokens from secure storage.
    * This should be called once during app initialization.
    *
@@ -268,27 +210,6 @@ class AuthService {
     // Ensure session security is initialized
     getSessionEncryptionKey();
     await this.loadTokensToCache();
-  }
-
-  /**
-   * Load tokens from secure storage into memory cache.
-   * This enables synchronous access for performance-critical paths.
-   *
-   * SECURITY: Uses lazily-initialized secure storage with session key.
-   */
-  private async loadTokensToCache(): Promise<void> {
-    const storage = this.getSecureStorage();
-    const [accessResult, refreshResult, expiryResult] = await Promise.all([
-      storage.getItem<string>(SECURE_TOKEN_KEYS.ACCESS_TOKEN),
-      storage.getItem<string>(SECURE_TOKEN_KEYS.REFRESH_TOKEN),
-      storage.getItem<number>(SECURE_TOKEN_KEYS.TOKEN_EXPIRY),
-    ]);
-
-    this.tokenCache = {
-      accessToken: accessResult.success ? accessResult.data ?? null : null,
-      refreshToken: refreshResult.success ? refreshResult.data ?? null : null,
-      expiresAt: expiryResult.success ? expiryResult.data ?? null : null,
-    };
   }
 
   /**
@@ -452,7 +373,7 @@ class AuthService {
   async getAccessTokenAsync(): Promise<string | null> {
     const storage = this.getSecureStorage();
     const result = await storage.getItem<string>(SECURE_TOKEN_KEYS.ACCESS_TOKEN);
-    if (result.success === true && result.data !== undefined && result.data !== null) {
+    if (result.success && result.data !== undefined && result.data !== null) {
       this.tokenCache.accessToken = result.data;
       return result.data;
     }
@@ -470,11 +391,90 @@ class AuthService {
   async getRefreshTokenAsync(): Promise<string | null> {
     const storage = this.getSecureStorage();
     const result = await storage.getItem<string>(SECURE_TOKEN_KEYS.REFRESH_TOKEN);
-    if (result.success === true && result.data !== undefined && result.data !== null) {
+    if (result.success && result.data !== undefined && result.data !== null) {
       this.tokenCache.refreshToken = result.data;
       return result.data;
     }
     return null;
+  }
+
+  /**
+   * Gets the secure storage instance, initializing with session key if needed.
+   *
+   * SECURITY: Uses cryptographically secure session key for encryption.
+   */
+  private getSecureStorage(): SecureStorage {
+    if (!this.secureStorage) {
+      const encryptionKey = getSessionEncryptionKey();
+      this.secureStorage = createSecureLocalStorage(encryptionKey);
+    }
+    return this.secureStorage;
+  }
+
+  /**
+   * Records a failed authentication attempt and applies rate limiting.
+   *
+   * SECURITY: Implements exponential backoff to slow down brute force attacks.
+   */
+  private recordFailedAttempt(): void {
+    const now = Date.now();
+
+    // Start tracking if this is first attempt in window
+    if (this.rateLimitState.failedAttempts === 0) {
+      this.rateLimitState.firstAttemptTime = now;
+    }
+
+    this.rateLimitState.failedAttempts++;
+
+    // Apply exponential backoff after max attempts
+    if (this.rateLimitState.failedAttempts >= RATE_LIMIT_CONFIG.MAX_ATTEMPTS) {
+      // Calculate delay: baseDelay * 2^(attempts - maxAttempts)
+      const exponent = this.rateLimitState.failedAttempts - RATE_LIMIT_CONFIG.MAX_ATTEMPTS;
+      const delay = Math.min(
+        RATE_LIMIT_CONFIG.BASE_DELAY_MS * Math.pow(2, exponent),
+        RATE_LIMIT_CONFIG.MAX_DELAY_MS
+      );
+      this.rateLimitState.lockedUntil = now + delay;
+
+      console.warn(
+        `[AuthService] Rate limit applied. Too many failed attempts. ` +
+        `Locked for ${Math.ceil(delay / 1000)} seconds.`
+      );
+    }
+  }
+
+  /**
+   * Resets the rate limiting state after successful authentication.
+   *
+   * SECURITY: Called after successful login to clear failed attempt counter.
+   */
+  private resetRateLimit(): void {
+    this.rateLimitState = {
+      failedAttempts: 0,
+      firstAttemptTime: 0,
+      lockedUntil: null,
+    };
+  }
+
+  /**
+   * Load tokens from secure storage into memory cache.
+   * This enables synchronous access for performance-critical paths.
+   *
+   * SECURITY: Uses lazily-initialized secure storage with session key.
+   */
+  private async loadTokensToCache(): Promise<void> {
+    const storage = this.getSecureStorage();
+    const [accessResult, refreshResult, expiryResult] = await Promise.all([
+      storage.getItem<string>(SECURE_TOKEN_KEYS.ACCESS_TOKEN),
+      storage.getItem<string>(SECURE_TOKEN_KEYS.REFRESH_TOKEN),
+      storage.getItem<number>(SECURE_TOKEN_KEYS.TOKEN_EXPIRY),
+    ]);
+
+    this.tokenCache = {
+      accessToken: accessResult.success ? accessResult.data ?? null : null,
+      refreshToken: refreshResult.success ? refreshResult.data ?? null : null,
+      expiresAt: expiryResult.success ? expiryResult.data ?? null : null,
+    };
   }
 
   /**
@@ -497,11 +497,11 @@ class AuthService {
     ]);
 
     // Check for storage failures
-    if (accessResult.success !== true || refreshResult.success !== true || expiryResult.success !== true) {
+    if (!accessResult.success || !refreshResult.success || !expiryResult.success) {
       const errors = [
-        accessResult.success !== true ? `Access token: ${accessResult.error}` : null,
-        refreshResult.success !== true ? `Refresh token: ${refreshResult.error}` : null,
-        expiryResult.success !== true ? `Expiry: ${expiryResult.error}` : null,
+        !accessResult.success ? `Access token: ${accessResult.error}` : null,
+        !refreshResult.success ? `Refresh token: ${refreshResult.error}` : null,
+        !expiryResult.success ? `Expiry: ${expiryResult.error}` : null,
       ].filter((error): error is string => error !== null).join('; ');
 
       console.error('[AuthService] Failed to store tokens securely:', errors);
@@ -525,10 +525,10 @@ class AuthService {
    */
   private clearTokens(): void {
     const storage = this.getSecureStorage();
-    // Clear from secure storage
-    storage.removeItem(SECURE_TOKEN_KEYS.ACCESS_TOKEN);
-    storage.removeItem(SECURE_TOKEN_KEYS.REFRESH_TOKEN);
-    storage.removeItem(SECURE_TOKEN_KEYS.TOKEN_EXPIRY);
+    // Clear from secure storage (fire and forget with void)
+    void storage.removeItem(SECURE_TOKEN_KEYS.ACCESS_TOKEN);
+    void storage.removeItem(SECURE_TOKEN_KEYS.REFRESH_TOKEN);
+    void storage.removeItem(SECURE_TOKEN_KEYS.TOKEN_EXPIRY);
 
     // Clear in-memory cache
     this.tokenCache = {

@@ -114,7 +114,11 @@ export interface ResourceClient<T extends { id: string | number }> {
   replace(id: string | number, data: Omit<T, 'id'>): Promise<T>;
   delete(id: string | number): Promise<void>;
   batchDelete(ids: (string | number)[]): Promise<void>;
-  customGet<R>(path: string, params?: Record<string, string | number | boolean | undefined>, options?: { cache?: boolean }): Promise<R>;
+  customGet<R>(
+    path: string,
+    params?: Record<string, string | number | boolean | undefined>,
+    options?: { cache?: boolean }
+  ): Promise<R>;
   customPost<R>(path: string, body?: unknown, config?: Partial<HttpRequestConfig>): Promise<R>;
   invalidateCache(): void;
 }
@@ -158,27 +162,22 @@ export const createApiClient = createResourceClient;
 export function createResourceClient<T extends { id: string | number }>(
   config: ResourceClientConfig
 ): ResourceClient<T> {
-  const {
-    basePath,
-    cache = requestCache,
-    cacheTtl = 5 * 60 * 1000,
-    enableCache = true,
-  } = config;
-  
+  const { basePath, cache = requestCache, cacheTtl = 5 * 60 * 1000, enableCache = true } = config;
+
   /**
    * Build full URL
    */
   function buildUrl(path: string = ''): string {
     return `${basePath}${path}`;
   }
-  
+
   /**
    * Build cache key
    */
   function buildCacheKey(path: string, params?: unknown): string {
     return cache.generateKey(buildUrl(path), params as Record<string, unknown>);
   }
-  
+
   return {
     /**
      * Get all items using apiClient
@@ -191,7 +190,7 @@ export function createResourceClient<T extends { id: string | number }>(
       const useCache = options?.cache ?? enableCache;
       const cacheKey = buildCacheKey('', params);
 
-      if (useCache === true) {
+      if (useCache) {
         const cached = cache.get<PaginatedResponse<T>>(cacheKey);
         if (cached !== null && cached !== undefined) return cached;
       }
@@ -207,43 +206,39 @@ export function createResourceClient<T extends { id: string | number }>(
         pageSize: response.data.meta?.pageSize ?? params?.pageSize ?? 20,
         hasMore:
           response.data.meta?.total != null &&
-          (params?.page ?? 1) * (params?.pageSize ?? 20) <
-            response.data.meta.total,
+          (params?.page ?? 1) * (params?.pageSize ?? 20) < response.data.meta.total,
       };
 
-      if (useCache === true) {
+      if (useCache) {
         cache.set(cacheKey, result, cacheTtl);
       }
 
       return result;
     },
-    
+
     /**
      * Get single item by ID using apiClient
      * @throws {ApiError} When the request fails
      */
-    async getById(
-      id: string | number,
-      options?: { cache?: boolean }
-    ): Promise<T> {
+    async getById(id: string | number, options?: { cache?: boolean }): Promise<T> {
       const useCache = options?.cache ?? enableCache;
       const cacheKey = buildCacheKey(`/${id}`);
 
-      if (useCache === true) {
+      if (useCache) {
         const cached = cache.get<T>(cacheKey);
         if (cached !== null && cached !== undefined) return cached;
       }
 
       const response = await apiClient.get<ResourceApiResponse<T>>(buildUrl(`/${id}`));
-      const {data} = response.data;
+      const { data } = response.data;
 
-      if (useCache === true) {
+      if (useCache) {
         cache.set(cacheKey, data, cacheTtl);
       }
 
       return data;
     },
-    
+
     /**
      * Create new item using apiClient
      * @throws {ApiError} When the request fails
@@ -256,16 +251,13 @@ export function createResourceClient<T extends { id: string | number }>(
 
       return response.data.data;
     },
-    
+
     /**
      * Update existing item using apiClient
      * @throws {ApiError} When the request fails
      */
     async update(id: string | number, data: Partial<T>): Promise<T> {
-      const response = await apiClient.patch<ResourceApiResponse<T>>(
-        buildUrl(`/${id}`),
-        data
-      );
+      const response = await apiClient.patch<ResourceApiResponse<T>>(buildUrl(`/${id}`), data);
 
       // Invalidate caches
       cache.delete(buildCacheKey(`/${id}`));
@@ -273,16 +265,13 @@ export function createResourceClient<T extends { id: string | number }>(
 
       return response.data.data;
     },
-    
+
     /**
      * Replace existing item using apiClient
      * @throws {ApiError} When the request fails
      */
     async replace(id: string | number, data: Omit<T, 'id'>): Promise<T> {
-      const response = await apiClient.put<ResourceApiResponse<T>>(
-        buildUrl(`/${id}`),
-        data
-      );
+      const response = await apiClient.put<ResourceApiResponse<T>>(buildUrl(`/${id}`), data);
 
       // Invalidate caches
       cache.delete(buildCacheKey(`/${id}`));
@@ -290,7 +279,7 @@ export function createResourceClient<T extends { id: string | number }>(
 
       return response.data.data;
     },
-    
+
     /**
      * Delete item using apiClient
      * @throws {ApiError} When the request fails
@@ -302,19 +291,19 @@ export function createResourceClient<T extends { id: string | number }>(
       cache.delete(buildCacheKey(`/${id}`));
       cache.invalidatePattern(new RegExp(`^${basePath}$`));
     },
-    
+
     /**
      * Batch delete items using apiClient
      * @throws {ApiError} When any delete request fails
      */
     async batchDelete(ids: (string | number)[]): Promise<void> {
-      await Promise.all(ids.map(async id => apiClient.delete(buildUrl(`/${id}`))));
+      await Promise.all(ids.map(async (id) => apiClient.delete(buildUrl(`/${id}`))));
 
       // Invalidate caches
-      ids.forEach(id => cache.delete(buildCacheKey(`/${id}`)));
+      ids.forEach((id) => cache.delete(buildCacheKey(`/${id}`)));
       cache.invalidatePattern(new RegExp(`^${basePath}$`));
     },
-    
+
     /**
      * Custom GET request using apiClient
      * @throws {ApiError} When the request fails
@@ -327,7 +316,7 @@ export function createResourceClient<T extends { id: string | number }>(
       const useCache = options?.cache ?? enableCache;
       const cacheKey = buildCacheKey(path, params);
 
-      if (useCache === true) {
+      if (useCache) {
         const cached = cache.get<R>(cacheKey);
         if (cached !== null && cached !== undefined) return cached;
       }
@@ -335,15 +324,15 @@ export function createResourceClient<T extends { id: string | number }>(
       const response = await apiClient.get<ResourceApiResponse<R>>(buildUrl(path), {
         params,
       });
-      const {data} = response.data;
+      const { data } = response.data;
 
-      if (useCache === true) {
+      if (useCache) {
         cache.set(cacheKey, data, cacheTtl);
       }
 
       return data;
     },
-    
+
     /**
      * Custom POST request using apiClient
      * @throws {ApiError} When the request fails
@@ -353,13 +342,10 @@ export function createResourceClient<T extends { id: string | number }>(
       body?: unknown,
       _config?: Partial<HttpRequestConfig>
     ): Promise<R> {
-      const response = await apiClient.post<ResourceApiResponse<R>>(
-        buildUrl(path),
-        body
-      );
+      const response = await apiClient.post<ResourceApiResponse<R>>(buildUrl(path), body);
       return response.data.data;
     },
-    
+
     /**
      * Invalidate all caches for this client
      */

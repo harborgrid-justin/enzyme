@@ -4,11 +4,7 @@
  */
 
 import type { Dirent } from 'fs';
-import type {
-  DiscoveredRoute,
-  ParsedRouteSegment,
-  DiscoveryConfig,
-} from './types';
+import type { DiscoveredRoute, ParsedRouteSegment, DiscoveryConfig } from './types';
 
 // =============================================================================
 // Re-export core segment parsing utilities
@@ -86,10 +82,7 @@ function hasValidExtension(filename: string, extensions: readonly string[]): boo
 /**
  * Build layout map from discovered routes
  */
-function buildLayoutMap(
-  routes: DiscoveredRoute[],
-  _scanPath: string
-): Map<string, string> {
+function buildLayoutMap(routes: DiscoveredRoute[], _scanPath: string): Map<string, string> {
   const layoutMap = new Map<string, string>();
 
   for (const route of routes) {
@@ -160,13 +153,7 @@ export async function scanRouteFiles(
     }
 
     // Recursively scan directory
-    const discoveredFiles = await scanDirectory(
-      fullScanPath,
-      fullScanPath,
-      config,
-      path,
-      fs
-    );
+    const discoveredFiles = await scanDirectory(fullScanPath, fullScanPath, config, path, fs);
 
     routes.push(...discoveredFiles);
   }
@@ -219,13 +206,13 @@ async function scanDirectory(
   }
 
   for (const entry of entries) {
-    const entryName = typeof entry.name === 'string' ? entry.name : String(entry.name);
+    const entryName = entry.name;
     const entryPath = path.join(dirPath, entryName);
     const relativePath = path.relative(basePath, entryPath);
 
     if (entry.isDirectory()) {
       // Skip ignored directories
-      if (shouldIgnore(`${relativePath  }/`, config.ignorePatterns)) {
+      if (shouldIgnore(`${relativePath}/`, config.ignorePatterns)) {
         continue;
       }
 
@@ -248,22 +235,21 @@ async function scanDirectory(
       const parsedSegments = parseDirectoryPath(dirRelative, entryName);
       const segments: readonly ParsedRouteSegment[] = parsedSegments;
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       const isLayout = Array.from(segments).some((s) => s.type === 'layout');
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
       const lastSegment = Array.from(segments)[segments.length - 1];
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+
       const isIndex = lastSegment?.type === 'index';
 
       const route: DiscoveredRoute = {
         filePath: entryPath,
         relativePath,
         urlPath: segmentsToUrlPath(parsedSegments),
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
         segments,
         isLayout,
         isIndex,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+
         depth: Array.from(segments).filter((s) => s.type !== 'group').length,
       };
 
@@ -419,11 +405,7 @@ export async function scanRouteFilesParallel(
   config: DiscoveryConfig,
   options: ParallelScanOptions = {}
 ): Promise<DiscoveredRoute[]> {
-  const {
-    maxConcurrency = 4,
-    scanTimeout = 30000,
-    onProgress,
-  } = options;
+  const { maxConcurrency = 4, scanTimeout = 30000, onProgress } = options;
 
   const startTime = Date.now();
 
@@ -459,13 +441,13 @@ export async function scanRouteFilesParallel(
     }
 
     for (const entry of entries) {
-      const entryName = typeof entry.name === 'string' ? entry.name : String(entry.name);
+      const entryName = entry.name;
       const entryPath = path.join(dirPath, entryName);
       const relativePath = path.relative(basePath, entryPath);
 
       if (entry.isDirectory()) {
         // Skip ignored directories
-        if (shouldIgnore(`${relativePath  }/`, config.ignorePatterns)) {
+        if (shouldIgnore(`${relativePath}/`, config.ignorePatterns)) {
           continue;
         }
 
@@ -488,22 +470,21 @@ export async function scanRouteFilesParallel(
         const parsedSegments = parseDirectoryPath(dirRelative, entryName);
         const segments: readonly ParsedRouteSegment[] = parsedSegments;
 
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         const isLayout = Array.from(segments).some((s) => s.type === 'layout');
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
         const lastSegment = Array.from(segments)[segments.length - 1];
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+
         const isIndex = lastSegment?.type === 'index';
 
         const route: DiscoveredRoute = {
           filePath: entryPath,
           relativePath,
           urlPath: segmentsToUrlPath(parsedSegments),
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
           segments,
           isLayout,
           isIndex,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+
           depth: Array.from(segments).filter((s) => s.type !== 'group').length,
         };
 
@@ -520,13 +501,15 @@ export async function scanRouteFilesParallel(
         const item = dirQueue.shift();
         if (item) {
           inProgress.add(item.dirPath);
-          processDirectory(item.dirPath, item.basePath).then(() => {
-            inProgress.delete(item.dirPath);
-            scannedDirs++;
-          }).catch(() => {
-            inProgress.delete(item.dirPath);
-            scannedDirs++;
-          });
+          processDirectory(item.dirPath, item.basePath)
+            .then(() => {
+              inProgress.delete(item.dirPath);
+              scannedDirs++;
+            })
+            .catch(() => {
+              inProgress.delete(item.dirPath);
+              scannedDirs++;
+            });
         }
       }
 
@@ -620,9 +603,7 @@ export function applyIncrementalChanges(
 
   for (const change of changes) {
     // Check if file is in a scanned path
-    const isInScanPath = config.scanPaths.some((sp) =>
-      change.filePath.includes(sp)
-    );
+    const isInScanPath = config.scanPaths.some((sp) => change.filePath.includes(sp));
 
     if (!isInScanPath) continue;
 
@@ -634,9 +615,7 @@ export function applyIncrementalChanges(
     switch (change.type) {
       case 'add': {
         // Parse the new route
-        const basePath = config.scanPaths.find((sp) =>
-          change.filePath.includes(sp)
-        );
+        const basePath = config.scanPaths.find((sp) => change.filePath.includes(sp));
         if (basePath === undefined || basePath === null) break;
 
         const relativePath = change.filePath.split(basePath)[1]?.replace(/^[/\\]/, '') ?? '';
@@ -645,22 +624,22 @@ export function applyIncrementalChanges(
 
         const parsedSegments = parseDirectoryPath(dirRelative, filename);
         const segments: readonly ParsedRouteSegment[] = parsedSegments;
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+
         const isLayout = Array.from(segments).some((s) => s.type === 'layout');
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
         const lastSegment = Array.from(segments)[segments.length - 1];
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+
         const isIndex = lastSegment?.type === 'index';
 
         const route: DiscoveredRoute = {
           filePath: change.filePath,
           relativePath,
           urlPath: segmentsToUrlPath(parsedSegments),
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
           segments,
           isLayout,
           isIndex,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+
           depth: Array.from(segments).filter((s) => s.type !== 'group').length,
         };
 
@@ -742,9 +721,7 @@ export function calculateDiscoveryStats(
 /**
  * Build a layout tree from discovered routes
  */
-export function buildLayoutTree(
-  routes: DiscoveredRoute[]
-): import('./types').RouteLayoutTree {
+export function buildLayoutTree(routes: DiscoveredRoute[]): import('./types').RouteLayoutTree {
   const layouts = routes.filter((r) => r.isLayout);
   const nonLayouts = routes.filter((r) => !r.isLayout);
 
@@ -786,7 +763,9 @@ export function buildLayoutTree(
   }
 
   // Find root layouts (no parent)
-  const rootLayouts = sortedLayouts.filter((l) => l.parentLayout === undefined || l.parentLayout === null);
+  const rootLayouts = sortedLayouts.filter(
+    (l) => l.parentLayout === undefined || l.parentLayout === null
+  );
 
   if (rootLayouts.length === 0) {
     return {

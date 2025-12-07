@@ -5,9 +5,9 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React, { type ReactElement, type ReactNode } from 'react';
-import type { FeatureRegistryEntry, FeatureConfig, FeatureAccess } from '../types';
+import type { FeatureAccess, FeatureConfig, FeatureRegistryEntry } from '../types';
 import { FeatureDIContainer, FeatureDIProvider } from '../featureDI';
-import { vi, type Mock, expect } from 'vitest';
+import { expect, type Mock, vi } from 'vitest';
 
 /**
  * Simple render result type
@@ -80,10 +80,7 @@ export function FeatureTestWrapper({
   return React.createElement(
     QueryClientProvider,
     { client: queryClient },
-    React.createElement(
-      FeatureDIProvider,
-      { container: diContainer, children }
-    )
+    React.createElement(FeatureDIProvider, { container: diContainer, children })
   );
 }
 
@@ -102,15 +99,12 @@ export function createFeatureRenderer(
     const diContainer = mergedOptions.diContainer ?? new FeatureDIContainer();
 
     return {
-      element: React.createElement(
-        FeatureTestWrapper,
-        {
-          ...mergedOptions,
-          queryClient,
-          diContainer,
-          children: ui,
-        }
-      ),
+      element: React.createElement(FeatureTestWrapper, {
+        ...mergedOptions,
+        queryClient,
+        diContainer,
+        children: ui,
+      }),
       queryClient,
       diContainer,
     };
@@ -137,9 +131,7 @@ export interface MockFeatureOptions {
 /**
  * Create a mock feature for testing
  */
-export function createMockFeature(
-  overrides: MockFeatureOptions = {}
-): FeatureRegistryEntry {
+export function createMockFeature(overrides: MockFeatureOptions = {}): FeatureRegistryEntry {
   const {
     id = 'mock-feature',
     name = 'Mock Feature',
@@ -227,9 +219,7 @@ export function createMockEntities<T extends Partial<MockEntityBase>>(
   count: number,
   factory: (index: number) => T
 ): Array<MockEntityBase & T> {
-  return Array.from({ length: count }, (_, index) =>
-    createMockEntity(factory(index))
-  );
+  return Array.from({ length: count }, (_, index) => createMockEntity(factory(index)));
 }
 
 // ============================================================================
@@ -267,9 +257,7 @@ type MockFn = Mock | ((...args: unknown[]) => unknown);
 /**
  * Create a mock service with typed methods
  */
-export function createMockService<
-  T extends Record<string, (...args: unknown[]) => unknown>
->(
+export function createMockService<T extends Record<string, (...args: unknown[]) => unknown>>(
   implementations: Partial<{
     [K in keyof T]: MockFn;
   }>
@@ -279,9 +267,9 @@ export function createMockService<
   for (const [key, impl] of Object.entries(implementations)) {
     const typedKey = key as keyof T;
     if (typeof impl === 'function' && 'mockImplementation' in impl) {
-      service[typedKey] = impl as Mock;
+      service[typedKey] = impl as unknown as Mock;
     } else {
-      service[typedKey] = vi.fn().mockImplementation(impl as MockFn);
+      service[typedKey] = vi.fn().mockImplementation(impl as MockFn) as unknown as Mock;
     }
   }
 
@@ -389,8 +377,7 @@ export function createFeatureTestFixture<TData>(
 
   const mockApi: Record<string, Mock> = {};
 
-  const methods =
-    options.apiMethods ?? ['getAll', 'getById', 'create', 'update', 'delete'];
+  const methods = options.apiMethods ?? ['getAll', 'getById', 'create', 'update', 'delete'];
 
   methods.forEach((method) => {
     mockApi[method] = vi.fn();
@@ -399,12 +386,8 @@ export function createFeatureTestFixture<TData>(
   // Setup default implementations
   if (mockApi.getAll) {
     mockApi.getAll.mockResolvedValue({
-      items: Array.isArray(options.initialData)
-        ? options.initialData
-        : [options.initialData],
-      total: Array.isArray(options.initialData)
-        ? options.initialData.length
-        : 1,
+      items: Array.isArray(options.initialData) ? options.initialData : [options.initialData],
+      total: Array.isArray(options.initialData) ? options.initialData.length : 1,
       page: 1,
       pageSize: 20,
     });
@@ -455,10 +438,7 @@ export function assertQueryCache<T>(
 /**
  * Clear specific query from cache
  */
-export function clearQueryCache(
-  queryClient: QueryClient,
-  queryKey: readonly unknown[]
-): void {
+export function clearQueryCache(queryClient: QueryClient, queryKey: readonly unknown[]): void {
   queryClient.removeQueries({ queryKey });
 }
 
@@ -485,8 +465,7 @@ export function createFeatureSnapshot(
   const snapshot: Record<string, unknown> = {};
 
   queryKeys.forEach((key) => {
-    const data = queryClient.getQueryData(key);
-    snapshot[JSON.stringify(key)] = data;
+    snapshot[JSON.stringify(key)] = queryClient.getQueryData(key);
   });
 
   return snapshot;
@@ -510,9 +489,7 @@ export function compareSnapshots(
   const removed = Array.from(keys1).filter((k) => !keys2.has(k));
   const changed = Array.from(keys1)
     .filter((k) => keys2.has(k))
-    .filter(
-      (k) => JSON.stringify(snapshot1[k]) !== JSON.stringify(snapshot2[k])
-    );
+    .filter((k) => JSON.stringify(snapshot1[k]) !== JSON.stringify(snapshot2[k]));
 
   return { added, removed, changed };
 }
@@ -563,9 +540,7 @@ export function generateId(prefix = ''): string {
 /**
  * Generate a random date within a range
  */
-export function generateDate(
-  options: { min?: Date; max?: Date } = {}
-): string {
+export function generateDate(options: { min?: Date; max?: Date } = {}): string {
   const min = options.min?.getTime() ?? Date.now() - 30 * 24 * 60 * 60 * 1000;
   const max = options.max?.getTime() ?? Date.now();
   const timestamp = min + Math.random() * (max - min);
@@ -581,10 +556,7 @@ export const testData = {
 
   string: (length = 10): string => {
     const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    return Array.from(
-      { length },
-      () => chars[Math.floor(Math.random() * chars.length)]
-    ).join('');
+    return Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
   },
 
   number: (min = 0, max = 100): number => {
@@ -593,8 +565,7 @@ export const testData = {
 
   boolean: (): boolean => Math.random() > 0.5,
 
-  email: (): string =>
-    `test-${generateId()}@example.com`,
+  email: (): string => `test-${generateId()}@example.com`,
 
   name: (): string => {
     const firstNames = ['John', 'Jane', 'Bob', 'Alice', 'Charlie'];

@@ -157,40 +157,19 @@ export function useRBAC(): UseRBACReturn {
   // Shorthand Helpers
   // ===========================================================================
 
-  const canCreate = useCallback(
-    (resource: string) => canAccess(resource, 'create'),
-    [canAccess]
-  );
+  const canCreate = useCallback((resource: string) => canAccess(resource, 'create'), [canAccess]);
 
-  const canRead = useCallback(
-    (resource: string) => canAccess(resource, 'read'),
-    [canAccess]
-  );
+  const canRead = useCallback((resource: string) => canAccess(resource, 'read'), [canAccess]);
 
-  const canUpdate = useCallback(
-    (resource: string) => canAccess(resource, 'update'),
-    [canAccess]
-  );
+  const canUpdate = useCallback((resource: string) => canAccess(resource, 'update'), [canAccess]);
 
-  const canDelete = useCallback(
-    (resource: string) => canAccess(resource, 'delete'),
-    [canAccess]
-  );
+  const canDelete = useCallback((resource: string) => canAccess(resource, 'delete'), [canAccess]);
 
-  const canManage = useCallback(
-    (resource: string) => canAccess(resource, 'manage'),
-    [canAccess]
-  );
+  const canManage = useCallback((resource: string) => canAccess(resource, 'manage'), [canAccess]);
 
-  const isAdmin = useMemo(
-    () => hasAnyRole(['admin', 'super_admin', 'system_admin']),
-    [hasAnyRole]
-  );
+  const isAdmin = useMemo(() => hasAnyRole(['admin', 'super_admin', 'system_admin']), [hasAnyRole]);
 
-  const isManager = useMemo(
-    () => hasAnyRole(['manager', 'admin', 'super_admin']),
-    [hasAnyRole]
-  );
+  const isManager = useMemo(() => hasAnyRole(['manager', 'admin', 'super_admin']), [hasAnyRole]);
 
   return {
     // State
@@ -306,15 +285,8 @@ export function useRoles(): {
   isAdmin: boolean;
   isManager: boolean;
 } {
-  const {
-    userRoles,
-    hasRole,
-    hasAnyRole,
-    hasAllRoles,
-    getRoleDefinitions,
-    isAdmin,
-    isManager,
-  } = useRBAC();
+  const { userRoles, hasRole, hasAnyRole, hasAllRoles, getRoleDefinitions, isAdmin, isManager } =
+    useRBAC();
 
   return {
     roles: userRoles,
@@ -353,7 +325,11 @@ export function useResourceAccess(resourceType: string): {
   resourceType: string;
   canAccess: (action: PermissionAction) => boolean;
   checkResource: (resourceId: string, action: PermissionAction) => boolean;
-  evaluateAccess: (resourceId: string, action: string, context?: Record<string, unknown>) => EvaluationResult;
+  evaluateAccess: (
+    resourceId: string,
+    action: string,
+    context?: Record<string, unknown>
+  ) => EvaluationResult;
   canCreate: () => boolean;
   canRead: () => boolean;
   canUpdate: () => boolean;
@@ -421,10 +397,7 @@ export function useResourceAccess(resourceType: string): {
 export function usePermissionGate(permission: Permission): { allowed: boolean; loading: boolean } {
   const { loading, hasPermission } = useRBAC();
 
-  const allowed = useMemo(
-    () => hasPermission(permission),
-    [hasPermission, permission]
-  );
+  const allowed = useMemo(() => hasPermission(permission), [hasPermission, permission]);
 
   return { allowed, loading };
 }
@@ -488,7 +461,7 @@ export function useAccessChecks<
     | { role: string }
     | { roles: string[] }
     | { resource: string; action: PermissionAction }
-  >
+  >,
 >(checks: T): Record<keyof T, boolean> {
   const { hasPermission, hasRole, hasAnyRole, canAccess } = useRBAC();
 
@@ -507,7 +480,6 @@ export function useAccessChecks<
       }
     }
 
-
-  return results as Record<keyof T, boolean>;
-}, [checks, hasPermission, hasRole, hasAnyRole, canAccess]);
+    return results as Record<keyof T, boolean>;
+  }, [checks, hasPermission, hasRole, hasAnyRole, canAccess]);
 }

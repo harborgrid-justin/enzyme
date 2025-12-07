@@ -29,20 +29,11 @@
  * ```
  */
 
-import {
-  useState,
-  useEffect,
-  useRef,
-  useMemo,
-} from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 
 import { useOptionalStreamContext } from '../StreamProvider';
 
-import {
-  type UseStreamStatusResult,
-  StreamState,
-  StreamEventType,
-} from '../types';
+import { type UseStreamStatusResult, StreamState, StreamEventType } from '../types';
 
 // ============================================================================
 // Status Messages
@@ -154,11 +145,7 @@ export function useStreamStatus(
   boundaryId: string,
   options: UseStreamStatusOptions = {}
 ): UseStreamStatusResult {
-  const {
-    updateInterval = 100,
-    trackElapsedTime = true,
-    formatStatusMessage,
-  } = options;
+  const { updateInterval = 100, trackElapsedTime = true, formatStatusMessage } = options;
 
   const context = useOptionalStreamContext();
 
@@ -324,7 +311,14 @@ export function useStreamStatus(
     }
 
     return STATUS_MESSAGES[state];
-  }, [state, elapsedTime, bytesTransferred, chunksReceived, estimatedTimeRemaining, formatStatusMessage]);
+  }, [
+    state,
+    elapsedTime,
+    bytesTransferred,
+    chunksReceived,
+    estimatedTimeRemaining,
+    formatStatusMessage,
+  ]);
 
   // ==========================================================================
   // Return Result
@@ -465,12 +459,13 @@ export function useExtendedStreamStatus(
     [baseStatus.estimatedTimeRemaining]
   );
 
-  const isActive = baseStatus.state === StreamState.Streaming ||
-                   baseStatus.state === StreamState.Paused;
+  const isActive =
+    baseStatus.state === StreamState.Streaming || baseStatus.state === StreamState.Paused;
 
-  const hasEnded = baseStatus.state === StreamState.Completed ||
-                   baseStatus.state === StreamState.Error ||
-                   baseStatus.state === StreamState.Aborted;
+  const hasEnded =
+    baseStatus.state === StreamState.Completed ||
+    baseStatus.state === StreamState.Error ||
+    baseStatus.state === StreamState.Aborted;
 
   return {
     ...baseStatus,
@@ -479,7 +474,7 @@ export function useExtendedStreamStatus(
     formattedBytes,
     formattedElapsed,
     formattedETA,
-  isActive,
-  hasEnded,
-};
+    isActive,
+    hasEnded,
+  };
 }

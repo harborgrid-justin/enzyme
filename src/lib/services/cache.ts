@@ -161,25 +161,6 @@ export class RequestCache {
   }
   
   /**
-   * Evict oldest entry
-   */
-  private evictOldest(): void {
-    let oldestKey: string | null = null;
-    let oldestTime = Infinity;
-    
-    for (const [key, entry] of this.cache.entries()) {
-      if (entry.timestamp < oldestTime) {
-        oldestTime = entry.timestamp;
-        oldestKey = key;
-      }
-    }
-    
-    if (oldestKey !== null && oldestKey !== '') {
-      this.cache.delete(oldestKey);
-    }
-  }
-  
-  /**
    * Execute with deduplication
    */
   async dedupe<T>(
@@ -192,11 +173,11 @@ export class RequestCache {
     if (cached !== undefined) {
       return cached;
     }
-    
+
     // Check for pending request
-    if (this.config.deduplication === true) {
+    if (this.config.deduplication) {
       const pending = this.pending.get(key) as PendingRequest<T> | undefined;
-      
+
       if (pending !== undefined) {
         const timeSincePending = Date.now() - pending.timestamp;
         if (timeSincePending < this.config.deduplicationWindow) {
@@ -204,24 +185,24 @@ export class RequestCache {
         }
       }
     }
-    
+
     // Execute fetcher
     const promise = fetcher();
-    
+
     // Store pending request
-    if (this.config.deduplication === true) {
+    if (this.config.deduplication) {
       this.pending.set(key, {
         promise,
         timestamp: Date.now(),
       });
     }
-    
+
     try {
       const data = await promise;
-      
+
       // Cache result
       this.set(key, data, options?.ttl);
-      
+
       return data;
     } finally {
       // Clean up pending
@@ -234,7 +215,7 @@ export class RequestCache {
    */
   invalidatePattern(pattern: string | RegExp): void {
     const regex = typeof pattern === 'string' ? new RegExp(pattern) : pattern;
-    
+
     for (const key of this.cache.keys()) {
       if (regex.test(key)) {
         this.cache.delete(key);
@@ -255,6 +236,25 @@ export class RequestCache {
       maxEntries: this.config.maxEntries,
       pendingRequests: this.pending.size,
     };
+  }
+  
+  /**
+   * Evict oldest entry
+   */
+  private evictOldest(): void {
+    let oldestKey: string | null = null;
+    let oldestTime = Infinity;
+
+    for (const [key, entry] of this.cache.entries()) {
+      if (entry.timestamp < oldestTime) {
+        oldestTime = entry.timestamp;
+        oldestKey = key;
+      }
+    }
+
+    if (oldestKey !== null && oldestKey !== '') {
+      this.cache.delete(oldestKey);
+    }
   }
 }
 

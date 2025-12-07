@@ -7,12 +7,7 @@
  * @module auth/rbac/resource-permissions
  */
 
-import type {
-  ResourcePermission,
-  ResourceACL,
-  PermissionAction,
-
-} from './types';
+import type { ResourcePermission, ResourceACL, PermissionAction } from './types';
 
 // =============================================================================
 // Constants
@@ -185,7 +180,7 @@ export class ResourcePermissionManager {
 
     // Update owner's permission entry
     const ownerEntry = acl.entries.find(
-      e => e.granteeType === 'user' && e.granteeId === oldOwner && e.permissionLevel === 'owner'
+      (e) => e.granteeType === 'user' && e.granteeId === oldOwner && e.permissionLevel === 'owner'
     );
     if (ownerEntry) {
       ownerEntry.granteeId = newOwner;
@@ -194,11 +189,16 @@ export class ResourcePermissionManager {
     }
 
     // Demote old owner to manager
-    this.grantPermission(resourceType, resourceId, {
-      granteeType: 'user',
-      granteeId: oldOwner,
-      permissionLevel: 'manage',
-    }, grantor);
+    this.grantPermission(
+      resourceType,
+      resourceId,
+      {
+        granteeType: 'user',
+        granteeId: oldOwner,
+        permissionLevel: 'manage',
+      },
+      grantor
+    );
 
     acl.version++;
     acl.updatedAt = new Date().toISOString();
@@ -270,9 +270,8 @@ export class ResourcePermissionManager {
     if (!acl) return;
 
     const index = acl.entries.findIndex(
-      e =>
-        e.granteeType === granteeType &&
-        (granteeType === 'everyone' || e.granteeId === granteeId)
+      (e) =>
+        e.granteeType === granteeType && (granteeType === 'everyone' || e.granteeId === granteeId)
     );
 
     if (index !== -1) {
@@ -461,10 +460,10 @@ export class ResourcePermissionManager {
     const permissions = this.permissionsByGrantee.get(granteeKey) ?? [];
 
     return permissions
-      .filter(p => (resourceType == null || resourceType === '') || p.resourceType === resourceType)
-      .filter(p => !this.isExpired(p))
-      .map(p => p.resourceId ?? '')
-      .filter(id => id !== '');
+      .filter((p) => resourceType == null || resourceType === '' || p.resourceType === resourceType)
+      .filter((p) => !this.isExpired(p))
+      .map((p) => p.resourceId ?? '')
+      .filter((id) => id !== '');
   }
 
   /**
@@ -474,14 +473,11 @@ export class ResourcePermissionManager {
    * @param resourceId - Resource ID
    * @returns Array of user permissions
    */
-  getResourcePermissions(
-    resourceType: string,
-    resourceId: string
-  ): ResourcePermission[] {
+  getResourcePermissions(resourceType: string, resourceId: string): ResourcePermission[] {
     const acl = this.getACL(resourceType, resourceId);
     if (!acl) return [];
 
-    return acl.entries.filter(e => !this.isExpired(e));
+    return acl.entries.filter((e) => !this.isExpired(e));
   }
 
   // ===========================================================================
@@ -502,19 +498,13 @@ export class ResourcePermissionManager {
     granteeType: ResourcePermission['granteeType'],
     granteeId?: string
   ): string {
-    return granteeType === 'everyone'
-      ? 'everyone'
-      : `${granteeType}:${granteeId}`;
+    return granteeType === 'everyone' ? 'everyone' : `${granteeType}:${granteeId}`;
   }
 
   /**
    * Get or create ACL for a resource.
    */
-  private getOrCreateACL(
-    resourceType: string,
-    resourceId: string,
-    owner?: string
-  ): ResourceACL {
+  private getOrCreateACL(resourceType: string, resourceId: string, owner?: string): ResourceACL {
     let acl = this.getACL(resourceType, resourceId);
     acl ??= this.createACL(resourceType, resourceId, owner ?? 'system');
     return acl;
@@ -529,7 +519,7 @@ export class ResourcePermissionManager {
     granteeId?: string
   ): ResourcePermission | undefined {
     return acl.entries.find(
-      e =>
+      (e) =>
         e.granteeType === granteeType &&
         (granteeType === 'everyone' || e.granteeId === granteeId) &&
         !this.isExpired(e)
@@ -539,13 +529,12 @@ export class ResourcePermissionManager {
   /**
    * Check if an action is allowed by a permission.
    */
-  private actionAllowed(
-    permission: ResourcePermission,
-    action: PermissionAction
-  ): boolean {
+  private actionAllowed(permission: ResourcePermission, action: PermissionAction): boolean {
     // Check specific actions if defined
     if ((permission.actions?.length ?? 0) > 0) {
-      return (permission.actions ?? []).includes(action) || (permission.actions ?? []).includes('*');
+      return (
+        (permission.actions ?? []).includes(action) || (permission.actions ?? []).includes('*')
+      );
     }
 
     // Check against level-based actions
@@ -575,10 +564,7 @@ export class ResourcePermissionManager {
    * Index a permission for quick lookup by grantee.
    */
   private indexPermission(permission: ResourcePermission): void {
-    const granteeKey = this.getGranteeKey(
-      permission.granteeType,
-      permission.granteeId
-    );
+    const granteeKey = this.getGranteeKey(permission.granteeType, permission.granteeId);
 
     if (!this.permissionsByGrantee.has(granteeKey)) {
       this.permissionsByGrantee.set(granteeKey, []);
@@ -594,17 +580,12 @@ export class ResourcePermissionManager {
    * Remove a permission from the index.
    */
   private removePermissionIndex(permission: ResourcePermission): void {
-    const granteeKey = this.getGranteeKey(
-      permission.granteeType,
-      permission.granteeId
-    );
+    const granteeKey = this.getGranteeKey(permission.granteeType, permission.granteeId);
 
     const permissions = this.permissionsByGrantee.get(granteeKey);
     if (permissions) {
       const index = permissions.findIndex(
-        p =>
-          p.resourceType === permission.resourceType &&
-          p.resourceId === permission.resourceId
+        (p) => p.resourceType === permission.resourceType && p.resourceId === permission.resourceId
       );
       if (index !== -1) {
         permissions.splice(index, 1);
@@ -651,9 +632,7 @@ export function levelGrantsAction(
  * @param action - Action to check
  * @returns Minimum required level
  */
-export function getMinimumLevelForAction(
-  action: PermissionAction
-): keyof typeof PERMISSION_LEVELS {
+export function getMinimumLevelForAction(action: PermissionAction): keyof typeof PERMISSION_LEVELS {
   for (const [level, actions] of Object.entries(LEVEL_ACTIONS)) {
     if (actions.includes(action) || actions.includes('*')) {
       return level as keyof typeof PERMISSION_LEVELS;

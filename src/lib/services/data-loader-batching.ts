@@ -435,11 +435,19 @@ export class RequestDeduplicator {
   constructor(config: DeduplicatorConfig = {}) {
     this.config = {
       window: config.window ?? 100,
-      getKey: config.getKey ?? ((url, options) => {
-        const method = (options?.method !== null && options?.method !== undefined && options?.method !== '') ? options.method : 'GET';
-        const body = (options?.body !== null && options?.body !== undefined) ? JSON.stringify(options.body) : '';
-        return `${method}:${url}:${body}`;
-      }),
+      getKey:
+        config.getKey ??
+        ((url, options) => {
+          const method =
+            options?.method !== null && options?.method !== undefined && options?.method !== ''
+              ? options.method
+              : 'GET';
+          const body =
+            options?.body !== null && options?.body !== undefined
+              ? JSON.stringify(options.body)
+              : '';
+          return `${method}:${url}:${body}`;
+        }),
     };
   }
 
@@ -463,8 +471,7 @@ export class RequestDeduplicator {
     });
 
     try {
-      const result = await promise;
-      return result;
+      return await promise;
     } finally {
       // Clean up after request completes (with slight delay for coalescing)
       setTimeout(() => {
@@ -494,7 +501,7 @@ export class RequestDeduplicator {
       if (!response.ok) {
         throw new Error(`Request failed: ${response.status}`);
       }
-      return response.json() as T;
+      return (await response.json()) as T;
     });
   }
 
@@ -630,6 +637,13 @@ export class GraphQLBatcher {
   }
 
   /**
+   * Flush pending queries immediately
+   */
+  async flush(): Promise<void> {
+    await this.executeBatch();
+  }
+
+  /**
    * Schedule batch execution
    */
   private scheduleBatch(): void {
@@ -696,13 +710,6 @@ export class GraphQLBatcher {
         deferred.reject(error as Error);
       }
     }
-  }
-
-  /**
-   * Flush pending queries immediately
-   */
-  async flush(): Promise<void> {
-    await this.executeBatch();
   }
 }
 

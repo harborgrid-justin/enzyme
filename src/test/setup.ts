@@ -8,7 +8,7 @@
 
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
-import { afterEach, beforeAll, afterAll, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, vi } from 'vitest';
 
 // ============================================================================
 // Global Setup
@@ -19,7 +19,7 @@ beforeAll(() => {
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
     value: vi.fn().mockImplementation((query: string) => {
-      const mediaQueryList = {
+      return {
         matches: false,
         media: query,
         onchange: null as ((this: MediaQueryList, ev: MediaQueryListEvent) => unknown) | null,
@@ -29,7 +29,6 @@ beforeAll(() => {
         removeEventListener: vi.fn(),
         dispatchEvent: vi.fn().mockReturnValue(true),
       };
-      return mediaQueryList;
     }),
   });
 

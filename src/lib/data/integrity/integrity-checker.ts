@@ -181,7 +181,10 @@ export interface RepairOptions {
   /** Dry run (return changes without applying) */
   dryRun?: boolean;
   /** Custom repair handlers */
-  handlers?: Record<string, (violation: IntegrityViolation, entities: NormalizedEntities) => NormalizedEntities>;
+  handlers?: Record<
+    string,
+    (violation: IntegrityViolation, entities: NormalizedEntities) => NormalizedEntities
+  >;
 }
 
 /**
@@ -207,9 +210,17 @@ export interface IntegrityChecker {
   /** Run integrity check */
   check: (entities: NormalizedEntities) => IntegrityReport;
   /** Check specific entity */
-  checkEntity: (entityType: string, entityId: string, entities: NormalizedEntities) => IntegrityViolation[];
+  checkEntity: (
+    entityType: string,
+    entityId: string,
+    entities: NormalizedEntities
+  ) => IntegrityViolation[];
   /** Repair violations */
-  repair: (entities: NormalizedEntities, report: IntegrityReport, options?: RepairOptions) => RepairResult;
+  repair: (
+    entities: NormalizedEntities,
+    report: IntegrityReport,
+    options?: RepairOptions
+  ) => RepairResult;
   /** Add constraint */
   addConstraint: (constraint: ConstraintDefinition) => void;
   /** Add relation */
@@ -292,9 +303,10 @@ export function createIntegrityChecker(config: IntegrityCheckerConfig): Integrit
                 },
                 repair: {
                   action: relation.onDelete === 'cascade' ? 'delete' : 'update',
-                  data: relation.onDelete === 'set-null'
-                    ? { [relation.field]: value.filter((id: string) => id !== refId) }
-                    : undefined,
+                  data:
+                    relation.onDelete === 'set-null'
+                      ? { [relation.field]: value.filter((id: string) => id !== refId) }
+                      : undefined,
                 },
               });
             }
@@ -303,7 +315,10 @@ export function createIntegrityChecker(config: IntegrityCheckerConfig): Integrit
       } else {
         // Single relation
         if (value !== null && value !== undefined) {
-          const valueStr = (typeof value !== 'string' && typeof value !== 'number' && typeof value !== 'boolean') ? JSON.stringify(value) : String(value);
+          const valueStr =
+            typeof value !== 'string' && typeof value !== 'number' && typeof value !== 'boolean'
+              ? JSON.stringify(value)
+              : String(value);
           if (!entities[relation.to]?.[valueStr]) {
             violations.push({
               type: 'referential',
@@ -409,7 +424,10 @@ export function createIntegrityChecker(config: IntegrityCheckerConfig): Integrit
               referencedIds.get(relation.to)?.add(String(refId));
             }
           } else if (value !== null && value !== undefined) {
-            const valueStr = (typeof value !== 'string' && typeof value !== 'number' && typeof value !== 'boolean') ? JSON.stringify(value) : String(value);
+            const valueStr =
+              typeof value !== 'string' && typeof value !== 'number' && typeof value !== 'boolean'
+                ? JSON.stringify(value)
+                : String(value);
             referencedIds.get(relation.to)?.add(valueStr);
           }
         }
@@ -462,12 +480,13 @@ export function createIntegrityChecker(config: IntegrityCheckerConfig): Integrit
           entityType: result.entityType,
           entityId: result.entityId ?? '',
           message: `[${rule.name}] ${result.description}`,
-          repair: result.suggestion != null && result.suggestion !== ''
-            ? {
-                action: 'update',
-                data: { suggestion: result.suggestion },
-              }
-            : undefined,
+          repair:
+            result.suggestion != null && result.suggestion !== ''
+              ? {
+                  action: 'update',
+                  data: { suggestion: result.suggestion },
+                }
+              : undefined,
         });
       }
     }
@@ -574,13 +593,16 @@ export function createIntegrityChecker(config: IntegrityCheckerConfig): Integrit
     report: IntegrityReport,
     options: RepairOptions = {}
   ): RepairResult {
-    let repairedEntities: NormalizedEntities = JSON.parse(JSON.stringify(entities)) as NormalizedEntities;
+    let repairedEntities: NormalizedEntities = JSON.parse(
+      JSON.stringify(entities)
+    ) as NormalizedEntities;
     const repairs: RepairResult['repairs'] = [];
     const remaining: IntegrityViolation[] = [];
 
-    const violationsToFix = options.errorsOnly === true
-      ? report.violations.filter((v) => v.severity === 'error')
-      : report.violations;
+    const violationsToFix =
+      options.errorsOnly === true
+        ? report.violations.filter((v) => v.severity === 'error')
+        : report.violations;
 
     for (const violation of violationsToFix) {
       // Check for custom handler
@@ -702,10 +724,7 @@ export function createIntegrityChecker(config: IntegrityCheckerConfig): Integrit
 /**
  * Create duplicate detection rule
  */
-export function createDuplicateDetectionRule(
-  entityType: string,
-  fields: string[]
-): AnomalyRule {
+export function createDuplicateDetectionRule(entityType: string, fields: string[]): AnomalyRule {
   return {
     name: `duplicate-${entityType}`,
     entity: entityType,
@@ -718,10 +737,14 @@ export function createDuplicateDetectionRule(
       const seen = new Map<string, string>();
 
       for (const [id, entity] of Object.entries(entityMap)) {
-        const key = fields.map((f) => {
-          const val = entity[f] ?? '';
-          return (typeof val !== 'string' && typeof val !== 'number' && typeof val !== 'boolean') ? JSON.stringify(val) : String(val);
-        }).join('|');
+        const key = fields
+          .map((f) => {
+            const val = entity[f] ?? '';
+            return typeof val !== 'string' && typeof val !== 'number' && typeof val !== 'boolean'
+              ? JSON.stringify(val)
+              : String(val);
+          })
+          .join('|');
         const existing = seen.get(key);
 
         if (existing != null && existing !== '') {
@@ -840,10 +863,7 @@ export function createConsistencyRule(
 /**
  * Create unique field constraint
  */
-export function createUniqueConstraint(
-  entityType: string,
-  field: string
-): ConstraintDefinition {
+export function createUniqueConstraint(entityType: string, field: string): ConstraintDefinition {
   const seenValues = new Map<string, string>();
 
   return {
@@ -851,7 +871,12 @@ export function createUniqueConstraint(
     entity: entityType,
     validate: (entity, entities) => {
       const fieldVal = entity[field] ?? '';
-      const value = (typeof fieldVal !== 'string' && typeof fieldVal !== 'number' && typeof fieldVal !== 'boolean') ? JSON.stringify(fieldVal) : String(fieldVal);
+      const value =
+        typeof fieldVal !== 'string' &&
+        typeof fieldVal !== 'number' &&
+        typeof fieldVal !== 'boolean'
+          ? JSON.stringify(fieldVal)
+          : String(fieldVal);
       const entityId = String(entity.id);
 
       // Rebuild seen values each check for consistency
@@ -861,7 +886,12 @@ export function createUniqueConstraint(
         for (const [id, e] of Object.entries(entityMap)) {
           if (id === entityId) continue;
           const eFieldVal = e[field] ?? '';
-          const eValue = (typeof eFieldVal !== 'string' && typeof eFieldVal !== 'number' && typeof eFieldVal !== 'boolean') ? JSON.stringify(eFieldVal) : String(eFieldVal);
+          const eValue =
+            typeof eFieldVal !== 'string' &&
+            typeof eFieldVal !== 'number' &&
+            typeof eFieldVal !== 'boolean'
+              ? JSON.stringify(eFieldVal)
+              : String(eFieldVal);
           seenValues.set(eValue, id);
         }
       }
@@ -873,7 +903,11 @@ export function createUniqueConstraint(
       let valueStr: string;
       if (fieldVal == null) {
         valueStr = 'null';
-      } else if (typeof fieldVal === 'string' || typeof fieldVal === 'number' || typeof fieldVal === 'boolean') {
+      } else if (
+        typeof fieldVal === 'string' ||
+        typeof fieldVal === 'number' ||
+        typeof fieldVal === 'boolean'
+      ) {
         valueStr = String(fieldVal);
       } else {
         valueStr = JSON.stringify(fieldVal);
@@ -900,8 +934,7 @@ export function createRangeConstraint(
       const value = entity[field];
       if (typeof value !== 'number') return true;
       if (min !== undefined && value < min) return false;
-      if (max !== undefined && value > max) return false;
-      return true;
+      return !(max !== undefined && value > max);
     },
     message: (entity) => {
       const bounds = [];
@@ -964,7 +997,11 @@ export function createEnumConstraint(
       let valueStr: string;
       if (fieldVal == null) {
         valueStr = 'null';
-      } else if (typeof fieldVal === 'string' || typeof fieldVal === 'number' || typeof fieldVal === 'boolean') {
+      } else if (
+        typeof fieldVal === 'string' ||
+        typeof fieldVal === 'number' ||
+        typeof fieldVal === 'boolean'
+      ) {
         valueStr = String(fieldVal);
       } else {
         valueStr = JSON.stringify(fieldVal);

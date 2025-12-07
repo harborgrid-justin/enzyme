@@ -327,10 +327,7 @@ export function matchesRoute(path: string, pattern: string): boolean {
  * // Returns: { id: 'abc' }
  * ```
  */
-export function extractParams(
-  path: string,
-  pattern: string
-): Record<string, string> | null {
+export function extractParams(path: string, pattern: string): Record<string, string> | null {
   const pathParts = path.split('/');
   const patternParts = pattern.split('/');
 
@@ -626,9 +623,7 @@ export function getNavItems(): Array<{
  * @param path - Current route path
  * @returns Array of breadcrumb items from root to current
  */
-export function buildBreadcrumbs(
-  path: string
-): Array<{ path: string; label: string }> {
+export function buildBreadcrumbs(path: string): Array<{ path: string; label: string }> {
   const breadcrumbs: Array<{ path: string; label: string }> = [];
   let currentPath: string | undefined = path;
 

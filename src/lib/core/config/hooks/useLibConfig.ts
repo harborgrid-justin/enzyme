@@ -9,21 +9,21 @@
  * @module core/config/hooks
  */
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type {
-  LibraryConfig,
-  DeepReadonly,
-  ConfigPath,
-  ConfigChangeEvent,
-  NetworkConfig,
-  CacheConfig,
-  FeatureFlagsConfig,
   AuthConfig,
+  CacheConfig,
+  ConfigChangeEvent,
+  ConfigPath,
+  DeepReadonly,
+  FeatureFlagsConfig,
   LayoutsConfig,
-  VDOMConfig,
-  UIConfig,
+  LibraryConfig,
   MonitoringConfig,
+  NetworkConfig,
+  UIConfig,
+  VDOMConfig,
 } from '../types';
 
 import {
@@ -59,11 +59,11 @@ export function useLibConfig(): DeepReadonly<LibraryConfig> {
   const [config, setConfig] = useState(() => getLibConfig());
 
   useEffect(() => {
-    const unsubscribe = subscribeToLibConfig(() => {
+
+
+    return subscribeToLibConfig(() => {
       setConfig(getLibConfig());
     });
-
-    return unsubscribe;
   }, []);
 
   return config;
@@ -162,11 +162,11 @@ export function useLibConfigValue<T>(path: ConfigPath, defaultValue?: T): T {
 
   useEffect(() => {
     const registry = getConfigRegistry();
-    const unsubscribe = registry.subscribeToPath(path, () => {
+
+
+    return registry.subscribeToPath(path, () => {
       setValue(getLibConfigValue(path, defaultValue));
     });
-
-    return unsubscribe;
   }, [path, defaultValue]);
 
   return value;
@@ -195,10 +195,7 @@ export function useLibConfigValue<T>(path: ConfigPath, defaultValue?: T): T {
  * }
  * ```
  */
-export function useLibConfigState<T>(
-  path: ConfigPath,
-  defaultValue?: T
-): [T, (value: T) => void] {
+export function useLibConfigState<T>(path: ConfigPath, defaultValue?: T): [T, (value: T) => void] {
   const value = useLibConfigValue(path, defaultValue);
 
   const setValue = useCallback(
@@ -304,8 +301,8 @@ export function useConfigChangeTracking(
   onChangeCallback: (event: ConfigChangeEvent) => void
 ): void {
   useEffect(() => {
-    const unsubscribe = subscribeToLibConfig(onChangeCallback);
-    return unsubscribe;
+
+    return subscribeToLibConfig(onChangeCallback);
   }, [onChangeCallback]);
 }
 
@@ -316,11 +313,11 @@ export function useLastConfigChange(): ConfigChangeEvent | null {
   const [lastChange, setLastChange] = useState<ConfigChangeEvent | null>(null);
 
   useEffect(() => {
-    const unsubscribe = subscribeToLibConfig((event) => {
+
+
+    return subscribeToLibConfig((event) => {
       setLastChange(event);
     });
-
-    return unsubscribe;
   }, []);
 
   return lastChange;
@@ -348,9 +345,7 @@ export function useLastConfigChange(): ConfigChangeEvent | null {
  * }
  * ```
  */
-export function useLibConfigSelector<T>(
-  selector: (config: DeepReadonly<LibraryConfig>) => T
-): T {
+export function useLibConfigSelector<T>(selector: (config: DeepReadonly<LibraryConfig>) => T): T {
   const config = useLibConfig();
   return useMemo(() => selector(config), [config, selector]);
 }
@@ -366,11 +361,11 @@ export function useLibConfigExists(path: ConfigPath): boolean {
   const [exists, setExists] = useState(() => getConfigRegistry().has(path));
 
   useEffect(() => {
-    const unsubscribe = subscribeToLibConfig(() => {
+
+
+    return subscribeToLibConfig(() => {
       setExists(getConfigRegistry().has(path));
     });
-
-    return unsubscribe;
   }, [path]);
 
   return exists;
@@ -383,11 +378,11 @@ export function useLibConfigPaths(): string[] {
   const [paths, setPaths] = useState<string[]>(() => getConfigRegistry().getAllPaths());
 
   useEffect(() => {
-    const unsubscribe = subscribeToLibConfig(() => {
+
+
+    return subscribeToLibConfig(() => {
       setPaths(getConfigRegistry().getAllPaths());
     });
-
-    return unsubscribe;
   }, []);
 
   return paths;

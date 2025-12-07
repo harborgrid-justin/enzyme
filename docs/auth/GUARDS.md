@@ -576,9 +576,19 @@ describe('RequireAuth', () => {
    </RequireAuth>
    ```
 
-## See Also
+## Related Documentation
 
-- [AUTH_PROVIDER.md](./AUTH_PROVIDER.md) - Auth Provider
-- [HOOKS.md](./HOOKS.md) - Auth hooks
-- [RBAC.md](./RBAC.md) - RBAC system
-- [TYPES.md](./TYPES.md) - Type definitions
+### Authentication Module
+- [Authentication Module](./README.md) - Main authentication documentation
+- [Auth Overview](./OVERVIEW.md) - Architecture and guard design
+- [Auth Provider](./AUTH_PROVIDER.md) - Provider that powers guards
+- [Auth Hooks](./HOOKS.md) - Hooks for programmatic checks
+- [RBAC System](./RBAC.md) - Role and permission system
+- [Common Patterns](./PATTERNS.md) - Guard usage patterns
+- [Type Definitions](./TYPES.md) - Guard prop types
+- [Troubleshooting](./TROUBLESHOOTING.md) - Guard-related issues
+
+### Related Systems
+- [Routing Module](../routing/README.md) - Route metadata and navigation
+- [Security Best Practices](../SECURITY.md) - Access control guidelines
+- [State Management](../state/README.md) - Auth state in routes

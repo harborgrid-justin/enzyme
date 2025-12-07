@@ -776,6 +776,17 @@ if (!window.localStorage) {
 
 ## Related Documentation
 
-- [Lazy Loading](./LAZY_LOADING.md)
-- [Performance Observatory](./OBSERVATORY.md)
-- [Configuration Reference](./CONFIG.md)
+### Performance System
+- [README.md](./README.md) - Performance overview
+- [LAZY_LOADING.md](./LAZY_LOADING.md) - Lazy loading patterns
+- [OBSERVATORY.md](./OBSERVATORY.md) - Performance dashboard
+- [MONITORING.md](./MONITORING.md) - Performance monitoring
+- [CONFIG.md](./CONFIG.md) - Configuration reference
+
+### Routing & Hydration
+- [Routing](../routing/README.md) - Route prefetching
+- [Hydration System](../hydration/README.md) - Prefetch with hydration
+
+### Integration
+- [Performance Integration](../integration/PERFORMANCE_MONITORING_HYDRATION.md) - Integration patterns
+- [Monitoring System](../monitoring/README.md) - Prefetch monitoring

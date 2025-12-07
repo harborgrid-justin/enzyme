@@ -106,7 +106,7 @@ interface QueuedRequest<T> {
 export class RateLimiter {
   private config: Required<RateLimitConfig>;
   private windows: Map<string, { count: number; resetAt: number }>;
-  private queue: Map<string, QueuedRequest<unknown>[]>;
+  private readonly queue: Map<string, QueuedRequest<unknown>[]>;
   private serverLimits: Map<string, { remaining: number; resetAt: number }>;
   private processing: Set<string>;
 
@@ -238,6 +238,176 @@ export class RateLimiter {
   // ===========================================================================
 
   /**
+   * Update rate limits from server response headers.
+   *
+   * @param endpoint - Request endpoint
+   * @param headers - Response headers
+   */
+  updateFromHeaders(endpoint: string, headers: RateLimitHeaders): void {
+    const key = this.config.keyGenerator(endpoint);
+
+    const remaining = headers['x-ratelimit-remaining'];
+    const reset = headers['x-ratelimit-reset'];
+    const retryAfter = headers['retry-after'];
+
+    if (remaining !== undefined || reset !== undefined) {
+      let resetAt: number;
+
+      if (retryAfter != null && retryAfter !== '') {
+        // Retry-After can be seconds or HTTP date
+        const seconds = parseInt(retryAfter, 10);
+        if (!isNaN(seconds)) {
+          resetAt = Date.now() + seconds * 1000;
+        } else {
+          resetAt = new Date(retryAfter).getTime();
+        }
+      } else if (reset != null && reset !== '') {
+        // Reset can be Unix timestamp (seconds) or milliseconds
+        const resetValue = parseInt(reset, 10);
+        resetAt = resetValue > 1e12 ? resetValue : resetValue * 1000;
+      } else {
+        resetAt = Date.now() + this.config.windowMs;
+      }
+
+      this.serverLimits.set(key, {
+        remaining: (remaining != null && remaining !== '') ? parseInt(remaining, 10) : 0,
+        resetAt,
+      });
+    }
+  }
+
+  /**
+   * Handle 429 Too Many Requests response.
+   *
+   * @param endpoint - Request endpoint
+   * @param retryAfter - Retry-After header value
+   */
+  handle429(endpoint: string, retryAfter?: string): void {
+    const key = this.config.keyGenerator(endpoint);
+
+    let resetAt: number;
+
+    if (retryAfter != null && retryAfter !== '') {
+      const seconds = parseInt(retryAfter, 10);
+      if (!isNaN(seconds)) {
+        resetAt = Date.now() + seconds * 1000;
+      } else {
+        resetAt = new Date(retryAfter).getTime();
+      }
+    } else {
+      // Default to 60 seconds
+      resetAt = Date.now() + 60000;
+    }
+
+    this.serverLimits.set(key, {
+      remaining: 0,
+      resetAt,
+    });
+  }
+
+  /**
+   * Get rate limit status for an endpoint.
+   *
+   * @param endpoint - Request endpoint
+   * @returns Rate limit status
+   */
+  getStatus(endpoint: string): RateLimitStatus {
+    const key = this.config.keyGenerator(endpoint);
+    const window = this.windows.get(key);
+    const serverLimit = this.serverLimits.get(key);
+    const keyQueue = this.queue.get(key);
+
+    const now = Date.now();
+
+    // Check server limits first
+    if (serverLimit && now < serverLimit.resetAt) {
+      return {
+        remaining: serverLimit.remaining,
+        limit: this.config.maxRequests,
+        resetIn: serverLimit.resetAt - now,
+        isLimited: serverLimit.remaining <= 0,
+        queueSize: keyQueue?.length ?? 0,
+      };
+    }
+
+    // Check client limits
+    if (window && now < window.resetAt) {
+      return {
+        remaining: Math.max(0, this.config.maxRequests - window.count),
+        limit: this.config.maxRequests,
+        resetIn: window.resetAt - now,
+        isLimited: window.count >= this.config.maxRequests,
+        queueSize: keyQueue?.length ?? 0,
+      };
+    }
+
+    return {
+      remaining: this.config.maxRequests,
+      limit: this.config.maxRequests,
+      resetIn: 0,
+      isLimited: false,
+      queueSize: keyQueue?.length ?? 0,
+    };
+  }
+
+  // ===========================================================================
+  // Server Rate Limit Handling
+  // ===========================================================================
+
+  /**
+   * Clear rate limit tracking for an endpoint.
+   *
+   * @param endpoint - Request endpoint
+   */
+  clear(endpoint: string): void {
+    const key = this.config.keyGenerator(endpoint);
+    this.windows.delete(key);
+    this.serverLimits.delete(key);
+
+    // Reject queued requests
+    const keyQueue = this.queue.get(key);
+    if (keyQueue) {
+      for (const entry of keyQueue) {
+        entry.reject(new Error('Rate limiter cleared'));
+      }
+      this.queue.delete(key);
+    }
+  }
+
+  /**
+   * Clear all rate limit tracking.
+   */
+  clearAll(): void {
+    // Reject all queued requests
+    for (const [, keyQueue] of this.queue) {
+      for (const entry of keyQueue) {
+        entry.reject(new Error('Rate limiter cleared'));
+      }
+    }
+
+    this.windows.clear();
+    this.serverLimits.clear();
+    this.queue.clear();
+  }
+
+  /**
+   * Get all tracked endpoints.
+   */
+  getTrackedEndpoints(): string[] {
+    return Array.from(
+      new Set([
+        ...this.windows.keys(),
+        ...this.serverLimits.keys(),
+        ...this.queue.keys(),
+      ])
+    );
+  }
+
+  // ===========================================================================
+  // Status & Management
+  // ===========================================================================
+
+  /**
    * Enqueue a request for later execution.
    */
   private async enqueue<T>(key: string, fn: () => Promise<T>): Promise<T> {
@@ -333,49 +503,6 @@ export class RateLimiter {
     return window.resetAt - now;
   }
 
-  // ===========================================================================
-  // Server Rate Limit Handling
-  // ===========================================================================
-
-  /**
-   * Update rate limits from server response headers.
-   *
-   * @param endpoint - Request endpoint
-   * @param headers - Response headers
-   */
-  updateFromHeaders(endpoint: string, headers: RateLimitHeaders): void {
-    const key = this.config.keyGenerator(endpoint);
-
-    const remaining = headers['x-ratelimit-remaining'];
-    const reset = headers['x-ratelimit-reset'];
-    const retryAfter = headers['retry-after'];
-
-    if (remaining !== undefined || reset !== undefined) {
-      let resetAt: number;
-
-      if (retryAfter != null && retryAfter !== '') {
-        // Retry-After can be seconds or HTTP date
-        const seconds = parseInt(retryAfter, 10);
-        if (!isNaN(seconds)) {
-          resetAt = Date.now() + seconds * 1000;
-        } else {
-          resetAt = new Date(retryAfter).getTime();
-        }
-      } else if (reset != null && reset !== '') {
-        // Reset can be Unix timestamp (seconds) or milliseconds
-        const resetValue = parseInt(reset, 10);
-        resetAt = resetValue > 1e12 ? resetValue : resetValue * 1000;
-      } else {
-        resetAt = Date.now() + this.config.windowMs;
-      }
-
-      this.serverLimits.set(key, {
-        remaining: (remaining != null && remaining !== '') ? parseInt(remaining, 10) : 0,
-        resetAt,
-      });
-    }
-  }
-
   /**
    * Check if server has imposed rate limit.
    */
@@ -392,133 +519,6 @@ export class RateLimiter {
     }
 
     return limit.remaining <= 0;
-  }
-
-  /**
-   * Handle 429 Too Many Requests response.
-   *
-   * @param endpoint - Request endpoint
-   * @param retryAfter - Retry-After header value
-   */
-  handle429(endpoint: string, retryAfter?: string): void {
-    const key = this.config.keyGenerator(endpoint);
-
-    let resetAt: number;
-
-    if (retryAfter != null && retryAfter !== '') {
-      const seconds = parseInt(retryAfter, 10);
-      if (!isNaN(seconds)) {
-        resetAt = Date.now() + seconds * 1000;
-      } else {
-        resetAt = new Date(retryAfter).getTime();
-      }
-    } else {
-      // Default to 60 seconds
-      resetAt = Date.now() + 60000;
-    }
-
-    this.serverLimits.set(key, {
-      remaining: 0,
-      resetAt,
-    });
-  }
-
-  // ===========================================================================
-  // Status & Management
-  // ===========================================================================
-
-  /**
-   * Get rate limit status for an endpoint.
-   *
-   * @param endpoint - Request endpoint
-   * @returns Rate limit status
-   */
-  getStatus(endpoint: string): RateLimitStatus {
-    const key = this.config.keyGenerator(endpoint);
-    const window = this.windows.get(key);
-    const serverLimit = this.serverLimits.get(key);
-    const keyQueue = this.queue.get(key);
-
-    const now = Date.now();
-
-    // Check server limits first
-    if (serverLimit && now < serverLimit.resetAt) {
-      return {
-        remaining: serverLimit.remaining,
-        limit: this.config.maxRequests,
-        resetIn: serverLimit.resetAt - now,
-        isLimited: serverLimit.remaining <= 0,
-        queueSize: keyQueue?.length ?? 0,
-      };
-    }
-
-    // Check client limits
-    if (window && now < window.resetAt) {
-      return {
-        remaining: Math.max(0, this.config.maxRequests - window.count),
-        limit: this.config.maxRequests,
-        resetIn: window.resetAt - now,
-        isLimited: window.count >= this.config.maxRequests,
-        queueSize: keyQueue?.length ?? 0,
-      };
-    }
-
-    return {
-      remaining: this.config.maxRequests,
-      limit: this.config.maxRequests,
-      resetIn: 0,
-      isLimited: false,
-      queueSize: keyQueue?.length ?? 0,
-    };
-  }
-
-  /**
-   * Clear rate limit tracking for an endpoint.
-   *
-   * @param endpoint - Request endpoint
-   */
-  clear(endpoint: string): void {
-    const key = this.config.keyGenerator(endpoint);
-    this.windows.delete(key);
-    this.serverLimits.delete(key);
-
-    // Reject queued requests
-    const keyQueue = this.queue.get(key);
-    if (keyQueue) {
-      for (const entry of keyQueue) {
-        entry.reject(new Error('Rate limiter cleared'));
-      }
-      this.queue.delete(key);
-    }
-  }
-
-  /**
-   * Clear all rate limit tracking.
-   */
-  clearAll(): void {
-    // Reject all queued requests
-    for (const [, keyQueue] of this.queue) {
-      for (const entry of keyQueue) {
-        entry.reject(new Error('Rate limiter cleared'));
-      }
-    }
-
-    this.windows.clear();
-    this.serverLimits.clear();
-    this.queue.clear();
-  }
-
-  /**
-   * Get all tracked endpoints.
-   */
-  getTrackedEndpoints(): string[] {
-    return Array.from(
-      new Set([
-        ...this.windows.keys(),
-        ...this.serverLimits.keys(),
-        ...this.queue.keys(),
-      ])
-    );
   }
 
   // ===========================================================================

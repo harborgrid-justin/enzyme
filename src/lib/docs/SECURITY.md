@@ -1,6 +1,7 @@
 # Security Guide
 
-> **Scope**: This document covers comprehensive security practices, patterns, and implementations for the Harbor React Library.
+> **Scope**: This document covers comprehensive security practices, patterns, and implementations for the Harbor React
+> Library.
 > For general best practices, see [Best Practices Guide](./BEST_PRACTICES.md).
 
 ## Table of Contents
@@ -63,7 +64,8 @@
 
 ### Overview
 
-CSRF (Cross-Site Request Forgery) protection prevents unauthorized commands from being transmitted from a user that the application trusts.
+CSRF (Cross-Site Request Forgery) protection prevents unauthorized commands from being transmitted from a user that the
+application trusts.
 
 ### Automatic CSRF Protection
 
@@ -750,7 +752,12 @@ function FileUpload() {
     uploadFile(file);
   };
 
-  return <input type="file" onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} />;
+  return <input type = "file"
+  onChange = {(e)
+=>
+  e.target.files?.[0] && handleFile(e.target.files[0])
+}
+  />;
 }
 ```
 
@@ -1365,7 +1372,8 @@ class ClientRateLimiter {
   constructor(
     private maxRequests: number,
     private windowMs: number
-  ) {}
+  ) {
+  }
 
   async checkLimit(key: string): Promise<void> {
     const now = Date.now();
@@ -1513,64 +1521,64 @@ const securityChecklist = [
 ### Pre-Deployment Security Review
 
 - [ ] **Authentication**
-  - [ ] Tokens stored securely (HttpOnly cookies or in-memory)
-  - [ ] Token refresh mechanism implemented
-  - [ ] Password requirements enforced
-  - [ ] Login rate limiting enabled
+    - [ ] Tokens stored securely (HttpOnly cookies or in-memory)
+    - [ ] Token refresh mechanism implemented
+    - [ ] Password requirements enforced
+    - [ ] Login rate limiting enabled
 
 - [ ] **Authorization**
-  - [ ] Server-side permission checks
-  - [ ] Resource-based authorization
-  - [ ] Least privilege principle applied
+    - [ ] Server-side permission checks
+    - [ ] Resource-based authorization
+    - [ ] Least privilege principle applied
 
 - [ ] **Input Validation**
-  - [ ] All user input validated
-  - [ ] File upload validation
-  - [ ] URL validation
-  - [ ] SQL injection prevention (parameterized queries)
+    - [ ] All user input validated
+    - [ ] File upload validation
+    - [ ] URL validation
+    - [ ] SQL injection prevention (parameterized queries)
 
 - [ ] **Output Encoding**
-  - [ ] HTML escaping for user content
-  - [ ] URL encoding where needed
-  - [ ] JSON encoding for API responses
+    - [ ] HTML escaping for user content
+    - [ ] URL encoding where needed
+    - [ ] JSON encoding for API responses
 
 - [ ] **XSS Prevention**
-  - [ ] No dangerouslySetInnerHTML without sanitization
-  - [ ] Content Security Policy configured
-  - [ ] User-generated content sanitized
+    - [ ] No dangerouslySetInnerHTML without sanitization
+    - [ ] Content Security Policy configured
+    - [ ] User-generated content sanitized
 
 - [ ] **CSRF Protection**
-  - [ ] CSRF tokens on all mutations
-  - [ ] SameSite cookies configured
-  - [ ] Origin validation enabled
+    - [ ] CSRF tokens on all mutations
+    - [ ] SameSite cookies configured
+    - [ ] Origin validation enabled
 
 - [ ] **Data Protection**
-  - [ ] HTTPS enforced
-  - [ ] Sensitive data not in localStorage
-  - [ ] Encryption for sensitive storage
-  - [ ] Secure data transmission
+    - [ ] HTTPS enforced
+    - [ ] Sensitive data not in localStorage
+    - [ ] Encryption for sensitive storage
+    - [ ] Secure data transmission
 
 - [ ] **API Security**
-  - [ ] Rate limiting implemented
-  - [ ] API keys server-side only
-  - [ ] Request validation
-  - [ ] Error messages don't leak information
+    - [ ] Rate limiting implemented
+    - [ ] API keys server-side only
+    - [ ] Request validation
+    - [ ] Error messages don't leak information
 
 - [ ] **Security Headers**
-  - [ ] CSP configured
-  - [ ] HSTS enabled
-  - [ ] X-Frame-Options set
-  - [ ] X-Content-Type-Options set
+    - [ ] CSP configured
+    - [ ] HSTS enabled
+    - [ ] X-Frame-Options set
+    - [ ] X-Content-Type-Options set
 
 - [ ] **Audit & Monitoring**
-  - [ ] Security events logged
-  - [ ] Error tracking configured
-  - [ ] Anomaly detection enabled
+    - [ ] Security events logged
+    - [ ] Error tracking configured
+    - [ ] Anomaly detection enabled
 
 - [ ] **Dependencies**
-  - [ ] npm audit passing
-  - [ ] Dependencies up to date
-  - [ ] No known vulnerabilities
+    - [ ] npm audit passing
+    - [ ] Dependencies up to date
+    - [ ] No known vulnerabilities
 
 ---
 
@@ -1584,10 +1592,10 @@ If you discover a security vulnerability, please:
 2. **Do NOT** discuss publicly before disclosure
 
 3. **Email** security@example.com with:
-   - Description of the vulnerability
-   - Steps to reproduce
-   - Potential impact
-   - Suggested fix (if any)
+    - Description of the vulnerability
+    - Steps to reproduce
+    - Potential impact
+    - Suggested fix (if any)
 
 4. **Wait** for confirmation and coordinated disclosure
 

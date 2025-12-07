@@ -477,51 +477,6 @@ export class SmartDefaultsManager {
   }
 
   /**
-   * Calculate all defaults
-   */
-  private calculateDefaults(): SmartDefaults {
-    const deviceTier = detectDeviceTier();
-    const networkTier = detectNetworkTier();
-    const preferences = detectUserPreferences();
-
-    return {
-      deviceTier,
-      networkTier,
-      preferences,
-      animation: calculateAnimationDefaults(deviceTier, preferences),
-      image: calculateImageDefaults(deviceTier, networkTier, preferences),
-      fetch: calculateFetchDefaults(networkTier, preferences),
-      performance: calculatePerformanceDefaults(deviceTier, networkTier),
-      render: calculateRenderDefaults(deviceTier),
-    };
-  }
-
-  /**
-   * Setup listeners for changes
-   */
-  private setupListeners(): void {
-    if (typeof window === 'undefined') return;
-
-    // Network changes
-    const { connection } = navigator as Navigator & {
-      connection?: EventTarget;
-    };
-
-    if (connection) {
-      connection.addEventListener('change', () => this.recalculate());
-    }
-
-    // Online/offline
-    window.addEventListener('online', () => this.recalculate());
-    window.addEventListener('offline', () => this.recalculate());
-
-    // Preference changes
-    window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', () => this.recalculate());
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => this.recalculate());
-    window.matchMedia('(prefers-contrast: more)').addEventListener('change', () => this.recalculate());
-  }
-
-  /**
    * Recalculate defaults
    */
   recalculate(): void {
@@ -565,6 +520,51 @@ export class SmartDefaultsManager {
   subscribe(callback: (defaults: SmartDefaults) => void): () => void {
     this.updateCallbacks.add(callback);
     return () => this.updateCallbacks.delete(callback);
+  }
+
+  /**
+   * Calculate all defaults
+   */
+  private calculateDefaults(): SmartDefaults {
+    const deviceTier = detectDeviceTier();
+    const networkTier = detectNetworkTier();
+    const preferences = detectUserPreferences();
+
+    return {
+      deviceTier,
+      networkTier,
+      preferences,
+      animation: calculateAnimationDefaults(deviceTier, preferences),
+      image: calculateImageDefaults(deviceTier, networkTier, preferences),
+      fetch: calculateFetchDefaults(networkTier, preferences),
+      performance: calculatePerformanceDefaults(deviceTier, networkTier),
+      render: calculateRenderDefaults(deviceTier),
+    };
+  }
+
+  /**
+   * Setup listeners for changes
+   */
+  private setupListeners(): void {
+    if (typeof window === 'undefined') return;
+
+    // Network changes
+    const { connection } = navigator as Navigator & {
+      connection?: EventTarget;
+    };
+
+    if (connection) {
+      connection.addEventListener('change', () => this.recalculate());
+    }
+
+    // Online/offline
+    window.addEventListener('online', () => this.recalculate());
+    window.addEventListener('offline', () => this.recalculate());
+
+    // Preference changes
+    window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', () => this.recalculate());
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => this.recalculate());
+    window.matchMedia('(prefers-contrast: more)').addEventListener('change', () => this.recalculate());
   }
 
   /**

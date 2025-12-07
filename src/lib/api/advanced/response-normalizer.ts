@@ -358,6 +358,24 @@ export class ResponseNormalizer {
   }
 
   /**
+   * Update configuration.
+   */
+  setConfig(config: Partial<ResponseFormatConfig>): void {
+    this.config = { ...this.config, ...config };
+  }
+
+  // ===========================================================================
+  // Extraction Methods
+  // ===========================================================================
+
+  /**
+   * Get current configuration.
+   */
+  getConfig(): ResponseFormatConfig {
+    return { ...this.config };
+  }
+
+  /**
    * Normalize a single error.
    */
   private normalizeError(error: unknown): NormalizedError {
@@ -386,10 +404,6 @@ export class ResponseNormalizer {
       context: this.extractErrorContext(error),
     };
   }
-
-  // ===========================================================================
-  // Extraction Methods
-  // ===========================================================================
 
   /**
    * Extract data from response.
@@ -524,6 +538,10 @@ export class ResponseNormalizer {
     return Object.keys(normalizedLinks).length > 0 ? normalizedLinks : undefined;
   }
 
+  // ===========================================================================
+  // Utility Methods
+  // ===========================================================================
+
   /**
    * Extract included/embedded resources.
    */
@@ -582,10 +600,6 @@ export class ResponseNormalizer {
     return Object.keys(context).length > 0 ? context : undefined;
   }
 
-  // ===========================================================================
-  // Utility Methods
-  // ===========================================================================
-
   /**
    * Get nested value from object using dot notation.
    */
@@ -616,20 +630,6 @@ export class ResponseNormalizer {
   private isErrorObject(value: unknown): boolean {
     if (!this.isObject(value)) return false;
     return 'message' in value || 'error' in value || 'code' in value;
-  }
-
-  /**
-   * Update configuration.
-   */
-  setConfig(config: Partial<ResponseFormatConfig>): void {
-    this.config = { ...this.config, ...config };
-  }
-
-  /**
-   * Get current configuration.
-   */
-  getConfig(): ResponseFormatConfig {
-    return { ...this.config };
   }
 }
 

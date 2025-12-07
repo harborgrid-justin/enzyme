@@ -1,0 +1,143 @@
+/**
+ * @file TreeView Registration
+ * @description Registers all TreeView providers for the Enzyme extension
+ */
+
+import * as vscode from 'vscode';
+import { EnzymeExtensionContext } from '../../core/context';
+import { ViewOrchestrator } from '../../orchestration/view-orchestrator';
+import { logger } from '../../core/logger';
+import {
+  EnzymeFeaturesTreeProvider,
+  EnzymeRoutesTreeProvider,
+  EnzymeComponentsTreeProvider,
+  EnzymeStateTreeProvider,
+  EnzymeHooksTreeProvider,
+  EnzymeAPITreeProvider,
+} from './index';
+
+/**
+ * Performance TreeView provider placeholder
+ * TODO: Implement full performance metrics tree
+ */
+class EnzymePerformanceTreeProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
+  private _onDidChangeTreeData = new vscode.EventEmitter<vscode.TreeItem | undefined | null | void>();
+  readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
+
+  constructor(private context: vscode.ExtensionContext) {}
+
+  refresh(): void {
+    this._onDidChangeTreeData.fire();
+  }
+
+  getTreeItem(element: vscode.TreeItem): vscode.TreeItem {
+    return element;
+  }
+
+  async getChildren(element?: vscode.TreeItem): Promise<vscode.TreeItem[]> {
+    if (!element) {
+      // Root items - placeholder for now
+      const item = new vscode.TreeItem('Performance Metrics', vscode.TreeItemCollapsibleState.None);
+      item.description = 'Coming Soon';
+      item.iconPath = new vscode.ThemeIcon('pulse');
+      return [item];
+    }
+    return [];
+  }
+}
+
+/**
+ * Register all TreeView providers
+ */
+export function registerTreeViewProviders(
+  enzymeContext: EnzymeExtensionContext
+): vscode.Disposable[] {
+  logger.info('Registering TreeView providers');
+
+  const context = enzymeContext.getVSCodeContext();
+  const disposables: vscode.Disposable[] = [];
+
+  try {
+    // Get or create ViewOrchestrator
+    const viewOrchestrator = ViewOrchestrator.getInstance();
+
+    // Features TreeView
+    const featuresProvider = new EnzymeFeaturesTreeProvider(context);
+    const featuresView = viewOrchestrator.registerTreeView(
+      'features-tree',
+      'enzyme.views.features',
+      featuresProvider as vscode.TreeDataProvider<unknown>
+    );
+    disposables.push(featuresView);
+    logger.info('Features TreeView registered');
+
+    // Routes TreeView
+    const routesProvider = new EnzymeRoutesTreeProvider(context);
+    const routesView = viewOrchestrator.registerTreeView(
+      'routes-tree',
+      'enzyme.views.routes',
+      routesProvider as vscode.TreeDataProvider<unknown>
+    );
+    disposables.push(routesView);
+    logger.info('Routes TreeView registered');
+
+    // Components TreeView
+    const componentsProvider = new EnzymeComponentsTreeProvider(context);
+    const componentsView = viewOrchestrator.registerTreeView(
+      'components-tree',
+      'enzyme.views.components',
+      componentsProvider as vscode.TreeDataProvider<unknown>
+    );
+    disposables.push(componentsView);
+    logger.info('Components TreeView registered');
+
+    // State Stores TreeView
+    const stateProvider = new EnzymeStateTreeProvider(context);
+    const stateView = viewOrchestrator.registerTreeView(
+      'state-tree',
+      'enzyme.views.stores',
+      stateProvider as vscode.TreeDataProvider<unknown>
+    );
+    disposables.push(stateView);
+    logger.info('State Stores TreeView registered');
+
+    // API Clients TreeView
+    const apiProvider = new EnzymeAPITreeProvider(context);
+    const apiView = viewOrchestrator.registerTreeView(
+      'api-tree',
+      'enzyme.views.api',
+      apiProvider as vscode.TreeDataProvider<unknown>
+    );
+    disposables.push(apiView);
+    logger.info('API Clients TreeView registered');
+
+    // Performance TreeView
+    const performanceProvider = new EnzymePerformanceTreeProvider(context);
+    const performanceView = viewOrchestrator.registerTreeView(
+      'performance-tree',
+      'enzyme.views.performance',
+      performanceProvider as vscode.TreeDataProvider<unknown>
+    );
+    disposables.push(performanceView);
+    logger.info('Performance TreeView registered');
+
+    // Store providers in context for later access
+    enzymeContext.registerDisposable({
+      dispose: () => {
+        featuresProvider.dispose();
+        routesProvider.dispose();
+        componentsProvider.dispose();
+        stateProvider.dispose();
+        apiProvider.dispose();
+      }
+    });
+
+    logger.success('All TreeView providers registered successfully');
+
+  } catch (error) {
+    logger.error('Failed to register TreeView providers', error);
+    throw error;
+  }
+
+  return disposables;
+}

@@ -123,9 +123,8 @@ export interface ConfigSchema<T extends z.ZodTypeAny = z.ZodTypeAny> {
 /**
  * Infer the TypeScript type from a ConfigSchema
  */
-export type InferConfigType<S extends ConfigSchema> = S extends ConfigSchema<infer T>
-  ? z.infer<T>
-  : never;
+export type InferConfigType<S extends ConfigSchema> =
+  S extends ConfigSchema<infer T> ? z.infer<T> : never;
 
 /**
  * Configuration validation result

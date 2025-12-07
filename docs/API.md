@@ -855,6 +855,16 @@ describe('useProducts', () => {
 - [Hooks Reference](./HOOKS_REFERENCE.md) - Data fetching hooks
 - [Documentation Index](./INDEX.md) - Complete documentation map
 
+### Module Documentation
+- [API Module](./api/README.md) - HTTP client and API utilities
+- [Auth Module](./auth/README.md) - API authentication
+- [State Module](./state/README.md) - Server state management
+- [Routing Module](./routing/README.md) - Route-based data loading
+- [Config Module](./config/README.md) - API configuration
+- [Security Module](./security/README.md) - API security
+- [Performance Module](./performance/README.md) - API performance
+- [Hooks Module](./hooks/README.md) - Data fetching hooks
+
 ---
 
 <p align="center">

@@ -281,10 +281,7 @@ function DataTableInner<T>({
   caption,
 }: DataTableProps<T>): React.ReactElement {
   // Filter visible columns - memoized
-  const visibleColumns = useMemo(
-    () => columns.filter((col) => col.hidden !== true),
-    [columns]
-  );
+  const visibleColumns = useMemo(() => columns.filter((col) => col.hidden !== true), [columns]);
 
   // Handle sort click - stable callback
   const handleSort = useCallback(
@@ -330,84 +327,109 @@ function DataTableInner<T>({
   // Check if all rows are selected - memoized
   const allSelected = useMemo(() => {
     if (data.length === 0) return false;
-    return data.every((row) =>
-      selectedKeys.includes(getRowKey(row, rowKey))
-    );
+    return data.every((row) => selectedKeys.includes(getRowKey(row, rowKey)));
   }, [data, rowKey, selectedKeys]);
 
   // Page size options - static
   const pageSizeOptions = useMemo(() => [10, 25, 50, 100], []);
 
   // Memoized sticky header style extension
-  const stickyStyleExtension = useMemo((): Partial<CSSProperties> => ({
-    position: stickyHeader ? 'sticky' : undefined,
-    top: stickyHeader ? 0 : undefined,
-    zIndex: stickyHeader ? 1 : undefined,
-  }), [stickyHeader]);
+  const stickyStyleExtension = useMemo(
+    (): Partial<CSSProperties> => ({
+      position: stickyHeader ? 'sticky' : undefined,
+      top: stickyHeader ? 0 : undefined,
+      zIndex: stickyHeader ? 1 : undefined,
+    }),
+    [stickyHeader]
+  );
 
   // Memoized selection header cell style
-  const selectionHeaderStyle = useMemo((): CSSProperties => ({
-    ...baseHeaderCellStyle,
-    width: '3rem',
-    textAlign: 'center',
-    ...stickyStyleExtension,
-  }), [stickyStyleExtension]);
+  const selectionHeaderStyle = useMemo(
+    (): CSSProperties => ({
+      ...baseHeaderCellStyle,
+      width: '3rem',
+      textAlign: 'center',
+      ...stickyStyleExtension,
+    }),
+    [stickyStyleExtension]
+  );
 
   // Generate header cell styles based on column config - memoized per-column
-  const getHeaderCellStyle = useCallback((column: Column<T>): CSSProperties => ({
-    ...baseHeaderCellStyle,
-    textAlign: column.align ?? 'left',
-    width: column.width,
-    minWidth: column.minWidth,
-    cursor: (column.sortable ?? false) ? 'pointer' : 'default',
-    userSelect: (column.sortable ?? false) ? 'none' : undefined,
-    ...stickyStyleExtension,
-  }), [stickyStyleExtension]);
+  const getHeaderCellStyle = useCallback(
+    (column: Column<T>): CSSProperties => ({
+      ...baseHeaderCellStyle,
+      textAlign: column.align ?? 'left',
+      width: column.width,
+      minWidth: column.minWidth,
+      cursor: (column.sortable ?? false) ? 'pointer' : 'default',
+      userSelect: (column.sortable ?? false) ? 'none' : undefined,
+      ...stickyStyleExtension,
+    }),
+    [stickyStyleExtension]
+  );
 
   // Generate content justification based on alignment - memoized
-  const getContentJustification = useCallback((align?: 'left' | 'center' | 'right'): CSSProperties => {
-    let justifyContent: 'flex-start' | 'center' | 'flex-end' = 'flex-start';
-    if (align === 'center') {
-      justifyContent = 'center';
-    } else if (align === 'right') {
-      justifyContent = 'flex-end';
-    }
-    return {
-      ...headerCellContentStyle,
-      justifyContent,
-    };
-  }, []);
+  const getContentJustification = useCallback(
+    (align?: 'left' | 'center' | 'right'): CSSProperties => {
+      let justifyContent: 'flex-start' | 'center' | 'flex-end' = 'flex-start';
+      if (align === 'center') {
+        justifyContent = 'center';
+      } else if (align === 'right') {
+        justifyContent = 'flex-end';
+      }
+      return {
+        ...headerCellContentStyle,
+        justifyContent,
+      };
+    },
+    []
+  );
 
   // Generate row style based on selection and click handler - memoized factory
-  const getRowStyle = useCallback((isSelected: boolean, hasClickHandler: boolean): CSSProperties => ({
-    ...baseRowStyle,
-    cursor: hasClickHandler ? 'pointer' : 'default',
-    backgroundColor: isSelected ? colorTokens.interactive.selected : undefined,
-  }), []);
+  const getRowStyle = useCallback(
+    (isSelected: boolean, hasClickHandler: boolean): CSSProperties => ({
+      ...baseRowStyle,
+      cursor: hasClickHandler ? 'pointer' : 'default',
+      backgroundColor: isSelected ? colorTokens.interactive.selected : undefined,
+    }),
+    []
+  );
 
   // Generate cell style based on alignment - memoized
-  const getCellStyle = useCallback((align?: 'left' | 'center' | 'right'): CSSProperties => ({
-    ...baseCellStyle,
-    textAlign: align ?? 'left',
-  }), []);
+  const getCellStyle = useCallback(
+    (align?: 'left' | 'center' | 'right'): CSSProperties => ({
+      ...baseCellStyle,
+      textAlign: align ?? 'left',
+    }),
+    []
+  );
 
   // Pre-computed button styles to avoid creating new objects on each call
-  const enabledButtonStyle = useMemo((): CSSProperties => ({
-    ...baseButtonStyle,
-    cursor: 'pointer',
-    opacity: 1,
-  }), []);
+  const enabledButtonStyle = useMemo(
+    (): CSSProperties => ({
+      ...baseButtonStyle,
+      cursor: 'pointer',
+      opacity: 1,
+    }),
+    []
+  );
 
-  const disabledButtonStyle = useMemo((): CSSProperties => ({
-    ...baseButtonStyle,
-    cursor: 'not-allowed',
-    opacity: 0.5,
-  }), []);
+  const disabledButtonStyle = useMemo(
+    (): CSSProperties => ({
+      ...baseButtonStyle,
+      cursor: 'not-allowed',
+      opacity: 0.5,
+    }),
+    []
+  );
 
   // Returns pre-computed style reference instead of creating new object
-  const getButtonStyle = useCallback((disabled: boolean): CSSProperties => {
-    return disabled ? disabledButtonStyle : enabledButtonStyle;
-  }, [disabledButtonStyle, enabledButtonStyle]);
+  const getButtonStyle = useCallback(
+    (disabled: boolean): CSSProperties => {
+      return disabled ? disabledButtonStyle : enabledButtonStyle;
+    },
+    [disabledButtonStyle, enabledButtonStyle]
+  );
 
   // Calculate pagination state - memoized
   const paginationState = useMemo(() => {
@@ -420,44 +442,56 @@ function DataTableInner<T>({
   }, [pagination]);
 
   // Stable header click handler using data-* attributes
-  const handleHeaderClick = useCallback((event: React.MouseEvent<HTMLTableCellElement>) => {
-    const {columnKey} = event.currentTarget.dataset;
-    const isSortable = event.currentTarget.dataset.sortable === 'true';
-    if (columnKey !== undefined && columnKey !== '' && isSortable) {
-      handleSort(columnKey);
-    }
-  }, [handleSort]);
-
-  // Stable header keydown handler using data-* attributes
-  const handleHeaderKeyDown = useCallback((event: React.KeyboardEvent<HTMLTableCellElement>) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      const {columnKey} = event.currentTarget.dataset;
+  const handleHeaderClick = useCallback(
+    (event: React.MouseEvent<HTMLTableCellElement>) => {
+      const { columnKey } = event.currentTarget.dataset;
       const isSortable = event.currentTarget.dataset.sortable === 'true';
       if (columnKey !== undefined && columnKey !== '' && isSortable) {
-        event.preventDefault();
         handleSort(columnKey);
       }
-    }
-  }, [handleSort]);
+    },
+    [handleSort]
+  );
+
+  // Stable header keydown handler using data-* attributes
+  const handleHeaderKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLTableCellElement>) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        const { columnKey } = event.currentTarget.dataset;
+        const isSortable = event.currentTarget.dataset.sortable === 'true';
+        if (columnKey !== undefined && columnKey !== '' && isSortable) {
+          event.preventDefault();
+          handleSort(columnKey);
+        }
+      }
+    },
+    [handleSort]
+  );
 
   // Stable row click handler using data-* attributes
-  const handleRowClick = useCallback((event: React.MouseEvent<HTMLTableRowElement>) => {
-    const {rowIndex} = event.currentTarget.dataset;
-    if (rowIndex !== undefined && onRowClick) {
-      const row = data[Number(rowIndex)];
-      if (row !== undefined) {
-        onRowClick(row);
+  const handleRowClick = useCallback(
+    (event: React.MouseEvent<HTMLTableRowElement>) => {
+      const { rowIndex } = event.currentTarget.dataset;
+      if (rowIndex !== undefined && onRowClick) {
+        const row = data[Number(rowIndex)];
+        if (row !== undefined) {
+          onRowClick(row);
+        }
       }
-    }
-  }, [data, onRowClick]);
+    },
+    [data, onRowClick]
+  );
 
   // Stable selection change handler using data-* attributes
-  const handleSelectionClick = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const {rowKey} = event.currentTarget.dataset;
-    if (rowKey !== undefined && rowKey !== '') {
-      handleSelectRow(rowKey);
-    }
-  }, [handleSelectRow]);
+  const handleSelectionClick = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const { rowKey } = event.currentTarget.dataset;
+      if (rowKey !== undefined && rowKey !== '') {
+        handleSelectRow(rowKey);
+      }
+    },
+    [handleSelectRow]
+  );
 
   // Stop propagation handler for selection cell - stable
   const stopPropagation = useCallback((event: React.MouseEvent) => {
@@ -465,9 +499,12 @@ function DataTableInner<T>({
   }, []);
 
   // Stable page size change handler
-  const handlePageSizeChangeEvent = useCallback((event: React.ChangeEvent<HTMLSelectElement>) => {
-    onPageSizeChange?.(Number(event.target.value));
-  }, [onPageSizeChange]);
+  const handlePageSizeChangeEvent = useCallback(
+    (event: React.ChangeEvent<HTMLSelectElement>) => {
+      onPageSizeChange?.(Number(event.target.value));
+    },
+    [onPageSizeChange]
+  );
 
   // Stable previous page handler
   const handlePrevPage = useCallback(() => {
@@ -488,10 +525,8 @@ function DataTableInner<T>({
       {/* Table container */}
       <div style={tableContainerStyle}>
         <table style={tableStyle}>
-          {(caption !== undefined && caption !== '') && (
-            <caption style={captionStyle}>
-              {caption}
-            </caption>
+          {caption !== undefined && caption !== '' && (
+            <caption style={captionStyle}>{caption}</caption>
           )}
 
           {/* Header */}
@@ -571,10 +606,7 @@ function DataTableInner<T>({
             {/* Empty state */}
             {!isLoading && data.length === 0 && (
               <tr>
-                <td
-                  colSpan={visibleColumns.length + (selectable ? 1 : 0)}
-                  style={emptyCellStyle}
-                >
+                <td colSpan={visibleColumns.length + (selectable ? 1 : 0)} style={emptyCellStyle}>
                   {emptyState ?? 'No data available'}
                 </td>
               </tr>
@@ -595,10 +627,7 @@ function DataTableInner<T>({
                   >
                     {/* Selection checkbox */}
                     {selectable && (
-                      <td
-                        style={selectionCellStyle}
-                        onClick={stopPropagation}
-                      >
+                      <td style={selectionCellStyle} onClick={stopPropagation}>
                         <input
                           type="checkbox"
                           checked={isSelected}
@@ -620,17 +649,18 @@ function DataTableInner<T>({
                         cellContent = '';
                       } else if (typeof value === 'object') {
                         cellContent = JSON.stringify(value);
-                      } else if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+                      } else if (
+                        typeof value === 'string' ||
+                        typeof value === 'number' ||
+                        typeof value === 'boolean'
+                      ) {
                         cellContent = String(value);
                       } else {
                         cellContent = '';
                       }
 
                       return (
-                        <td
-                          key={column.key}
-                          style={getCellStyle(column.align)}
-                        >
+                        <td key={column.key} style={getCellStyle(column.align)}>
                           {cellContent}
                         </td>
                       );
@@ -699,4 +729,6 @@ DataTableInner.displayName = 'DataTable';
 /**
  * Memoized DataTable component with preserved generic signature
  */
-export const DataTable = memo(DataTableInner) as <T>(props: DataTableProps<T>) => React.ReactElement;
+export const DataTable = memo(DataTableInner) as <T>(
+  props: DataTableProps<T>
+) => React.ReactElement;

@@ -191,6 +191,30 @@ export class PermissionGuard extends BaseRouteGuard {
   }
 
   /**
+   * Get required permissions
+   */
+  getRequiredPermissions(): readonly Permission[] {
+    return this.permConfig.requiredPermissions;
+  }
+
+  /**
+   * Get match strategy
+   */
+  getMatchStrategy(): PermissionMatchStrategy {
+    return this.permConfig.matchStrategy ?? 'any';
+  }
+
+  /**
+   * Check permissions without full guard execution
+   */
+  async checkPermissions(
+    userPermissions: readonly Permission[],
+    context: GuardContext
+  ): Promise<PermissionCheckResult> {
+    return this.performPermissionCheck(userPermissions, context);
+  }
+
+  /**
    * Expand permissions with aliases
    */
   private expandPermissionsWithAliases(
@@ -341,11 +365,9 @@ export class PermissionGuard extends BaseRouteGuard {
     }
 
     // Check for resource-level wildcard
-    if (userPerms.has(`*${separator}*`)) {
-      return true;
-    }
+    return userPerms.has(`*${separator}*`);
 
-    return false;
+
   }
 
   /**
@@ -367,30 +389,6 @@ export class PermissionGuard extends BaseRouteGuard {
         strategy: checkResult.strategy,
       },
     });
-  }
-
-  /**
-   * Get required permissions
-   */
-  getRequiredPermissions(): readonly Permission[] {
-    return this.permConfig.requiredPermissions;
-  }
-
-  /**
-   * Get match strategy
-   */
-  getMatchStrategy(): PermissionMatchStrategy {
-    return this.permConfig.matchStrategy ?? 'any';
-  }
-
-  /**
-   * Check permissions without full guard execution
-   */
-  async checkPermissions(
-    userPermissions: readonly Permission[],
-    context: GuardContext
-  ): Promise<PermissionCheckResult> {
-    return this.performPermissionCheck(userPermissions, context);
   }
 }
 
@@ -549,11 +547,9 @@ export function hasPermission(
 
   // Resource wildcard (e.g., posts:* matches posts:read)
   const [resource] = permission.split(separator);
-  if (resource !== undefined && resource !== null && resource !== '' && userPermissions.includes(`${resource}${separator}*`)) {
-    return true;
-  }
+  return resource !== undefined && resource !== null && resource !== '' && userPermissions.includes(`${resource}${separator}*`);
 
-  return false;
+
 }
 
 /**

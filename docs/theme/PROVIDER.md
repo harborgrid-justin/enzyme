@@ -506,6 +506,27 @@ See example implementations:
 
 ## See Also
 
-- [Theme System Overview](/home/user/enzyme/docs/theme/README.md)
-- [Design Tokens](/home/user/enzyme/docs/theme/DESIGN_TOKENS.md)
-- [Type Definitions](/home/user/enzyme/docs/theme/TYPES.md)
+- [Theme System Overview](./README.md)
+- [Design Tokens](./DESIGN_TOKENS.md)
+- [Type Definitions](./TYPES.md)
+
+---
+
+## Related Documentation
+
+### Theme System
+- [Theme System Overview](./README.md) - Complete theme system guide
+- [Design Tokens](./DESIGN_TOKENS.md) - Colors, spacing, typography tokens
+- [Type Definitions](./TYPES.md) - TypeScript theme types
+- [Dark Mode](./DARK_MODE.md) - Dark mode implementation
+
+### UI & Components
+- [UI Components](../ui/README.md) - Theme-aware components
+- [Design System](../DESIGN_SYSTEM.md) - Design tokens and styling patterns
+
+### Configuration & Setup
+- [Getting Started](../GETTING_STARTED.md) - Initial setup guide
+- [Feature Flags](../flags/README.md) - Dark mode feature flag
+
+### Integration
+- [UI + Theme Integration](../integration/UI_THEME_HOOKS_ACCESSIBILITY.md) - Theme provider integration

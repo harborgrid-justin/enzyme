@@ -1201,20 +1201,26 @@ All defaults are SSR-safe (fallback to safe defaults if APIs unavailable).
 
 ## Related Documentation
 
-### State Management Core
-- [Hooks](./HOOKS.md) - React hooks for accessing slices
-- [Selectors](./SELECTORS.md) - Memoized selector patterns
-- [Stores](./STORES.md) - Store architecture and persistence
-- [Core](./CORE.md) - Creating custom slices
-- [Types](./TYPES.md) - TypeScript type definitions
-- [README](./README.md) - State management overview
+### State Management
+- [README.md](./README.md) - State management overview
+- [CORE.md](./CORE.md) - Store and slice factories
+- [STORES.md](./STORES.md) - Store patterns
+- [SELECTORS.md](./SELECTORS.md) - Selector patterns
+- [HOOKS.md](./HOOKS.md) - React hooks
+- [SYNC.md](./SYNC.md) - Multi-tab synchronization
+- [TYPES.md](./TYPES.md) - Type definitions
 
-### Integration Points
-- [Auth Module](../../src/lib/auth/README.md) - Session slice integration
-- [Theme Module](../../src/lib/theme/README.md) - Settings slice integration
-- [Routing](../NAVIGATION.md) - Navigation history integration
+### Configuration & Features
+- [Config System](../config/README.md) - Configuration architecture similar to slices
+- [Config Hooks](../config/HOOKS.md) - Using config with state slices
+- [Feature Flags](../flags/README.md) - Feature-gated slice functionality
 
-### Best Practices
+### Routing & API
+- [Routing Core](../routing/CORE.md) - Route-based slice patterns
+- [Route Loaders](../routing/LOADERS.md) - Loading data into slices
+- [API Client](../api/README.md) - API integration with slices
+
+### Performance & Integration
 - [Performance Guide](../PERFORMANCE.md) - Slice optimization
 - [Architecture](../ARCHITECTURE.md) - System design patterns
 - [Testing Guide](../TESTING.md) - Testing slices

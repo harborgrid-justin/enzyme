@@ -11,13 +11,13 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 export interface DebounceOptions {
   /** Debounce delay in milliseconds */
   delay?: number;
-  
+
   /** Leading edge trigger */
   leading?: boolean;
-  
+
   /** Trailing edge trigger */
   trailing?: boolean;
-  
+
   /** Maximum wait time before forced update */
   maxWait?: number;
 }
@@ -31,7 +31,7 @@ export function useDebouncedValue<T>(
   options: Omit<DebounceOptions, 'delay'> = {}
 ): T {
   const { leading = false, trailing = true, maxWait } = options;
-  
+
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
   const lastValue = useRef<T>(value);
   const lastCallTime = useRef<number | null>(null);
@@ -43,10 +43,11 @@ export function useDebouncedValue<T>(
   useEffect(() => {
     return () => {
       if (timerId.current !== null && timerId.current !== undefined) clearTimeout(timerId.current);
-      if (maxTimerId.current !== null && maxTimerId.current !== undefined) clearTimeout(maxTimerId.current);
+      if (maxTimerId.current !== null && maxTimerId.current !== undefined)
+        clearTimeout(maxTimerId.current);
     };
   }, []);
-  
+
   useEffect(() => {
     const now = Date.now();
     const isInvoking = shouldInvoke(now);
@@ -60,15 +61,17 @@ export function useDebouncedValue<T>(
         // or delay the setState to avoid synchronous setState in effect
         lastInvokeTime.current = now;
         // Delay setState slightly to avoid synchronous update
-        Promise.resolve().then(() => {
-          setDebouncedValue(value);
-        }).catch(() => {
-          // Ignore errors in cleanup
-        });
+        Promise.resolve()
+          .then(() => {
+            setDebouncedValue(value);
+          })
+          .catch(() => {
+            // Ignore errors in cleanup
+          });
         startMaxWaitTimer();
       }
     }
-    
+
     // Reset debounce timer
     if (timerId.current !== null && timerId.current !== undefined) clearTimeout(timerId.current);
 
@@ -85,13 +88,11 @@ export function useDebouncedValue<T>(
         }
       }, delay);
     }
-    
+
     function shouldInvoke(time: number): boolean {
-      const timeSinceLastCall = lastCallTime.current === null 
-        ? delay 
-        : time - lastCallTime.current;
+      const timeSinceLastCall = lastCallTime.current === null ? delay : time - lastCallTime.current;
       const timeSinceLastInvoke = time - lastInvokeTime.current;
-      
+
       return (
         lastCallTime.current === null ||
         timeSinceLastCall >= delay ||
@@ -99,7 +100,7 @@ export function useDebouncedValue<T>(
         (maxWait !== undefined && timeSinceLastInvoke >= maxWait)
       );
     }
-    
+
     function startMaxWaitTimer(): void {
       if (maxWait !== undefined && maxTimerId.current === null) {
         maxTimerId.current = setTimeout(() => {
@@ -111,10 +112,8 @@ export function useDebouncedValue<T>(
         }, maxWait);
       }
     }
-    
-     
   }, [value, delay, leading, trailing, maxWait]);
-  
+
   return debouncedValue;
 }
 
@@ -132,24 +131,25 @@ export function useDebouncedCallback<T extends (...args: unknown[]) => unknown>(
   pending: () => boolean;
 } {
   const { leading = false, trailing = true, maxWait } = options;
-  
+
   const callbackRef = useRef(callback);
   const timerId = useRef<ReturnType<typeof setTimeout> | null>(null);
   const maxTimerId = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastArgs = useRef<Parameters<T> | null>(null);
   const lastInvokeTime = useRef<number>(0);
   const leadingInvoked = useRef(false);
-  
+
   // Update callback ref
   useEffect(() => {
     callbackRef.current = callback;
   }, [callback]);
-  
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (timerId.current !== null && timerId.current !== undefined) clearTimeout(timerId.current);
-      if (maxTimerId.current !== null && maxTimerId.current !== undefined) clearTimeout(maxTimerId.current);
+      if (maxTimerId.current !== null && maxTimerId.current !== undefined)
+        clearTimeout(maxTimerId.current);
     };
   }, []);
 
@@ -160,7 +160,7 @@ export function useDebouncedCallback<T extends (...args: unknown[]) => unknown>(
       lastInvokeTime.current = Date.now();
     }
   }, []);
-  
+
   const cancel = useCallback(() => {
     if (timerId.current !== null && timerId.current !== undefined) {
       clearTimeout(timerId.current);
@@ -175,16 +175,19 @@ export function useDebouncedCallback<T extends (...args: unknown[]) => unknown>(
   }, []);
 
   const flush = useCallback(() => {
-    if ((timerId.current !== null && timerId.current !== undefined) || (maxTimerId.current !== null && maxTimerId.current !== undefined)) {
+    if (
+      (timerId.current !== null && timerId.current !== undefined) ||
+      (maxTimerId.current !== null && maxTimerId.current !== undefined)
+    ) {
       invokeCallback();
       cancel();
     }
   }, [invokeCallback, cancel]);
-  
+
   const pending = useCallback(() => {
     return timerId.current !== null || maxTimerId.current !== null;
   }, []);
-  
+
   const debouncedCallback = useCallback(
     (...args: Parameters<T>) => {
       lastArgs.current = args;
@@ -234,7 +237,7 @@ export function useDebouncedCallback<T extends (...args: unknown[]) => unknown>(
     },
     [delay, leading, trailing, maxWait, invokeCallback]
   );
-  
+
   return useMemo(
     () => ({
       callback: debouncedCallback,
@@ -252,7 +255,7 @@ export function useDebouncedCallback<T extends (...args: unknown[]) => unknown>(
 export function useThrottledValue<T>(value: T, limit: number = 300): T {
   const [throttledValue, setThrottledValue] = useState<T>(value);
   const lastRun = useRef<number>(0);
-  
+
   useEffect(() => {
     const now = Date.now();
     const timeSinceLastRun = lastRun.current === 0 ? limit : now - lastRun.current;
@@ -260,11 +263,13 @@ export function useThrottledValue<T>(value: T, limit: number = 300): T {
     if (timeSinceLastRun >= limit) {
       lastRun.current = now;
       // Use microtask to avoid setState in effect
-      Promise.resolve().then(() => {
-        setThrottledValue(value);
-      }).catch(() => {
-        // Ignore errors in cleanup
-      });
+      Promise.resolve()
+        .then(() => {
+          setThrottledValue(value);
+        })
+        .catch(() => {
+          // Ignore errors in cleanup
+        });
       return undefined;
     } else {
       const timeoutId = setTimeout(() => {
@@ -275,6 +280,6 @@ export function useThrottledValue<T>(value: T, limit: number = 300): T {
       return () => clearTimeout(timeoutId);
     }
   }, [value, limit]);
-  
+
   return throttledValue;
 }

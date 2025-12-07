@@ -220,9 +220,21 @@ const navigate = useTypedNavigate();
 const handlers = usePrefetchHandlers('/dashboard');
 ```
 
-## See Also
+## Related Documentation
 
-- [Full Documentation](/home/user/enzyme/docs/hooks/README.md)
-- [Migration Checklist](/home/user/enzyme/docs/hooks/MIGRATION_CHECKLIST.md)
-- [Documentation Index](/home/user/enzyme/docs/INDEX.md) - All documentation resources
-- [Performance Guide](/home/user/enzyme/docs/PERFORMANCE.md) - Performance optimization
+### Hooks Documentation
+- **[Hooks Overview](./README.md)** - Complete hooks module guide
+- **[Migration Checklist](./MIGRATION_CHECKLIST.md)** - Migrate from manual implementations
+- **[Hooks Reference](../HOOKS_REFERENCE.md)** - Complete hooks API reference
+
+### Integration with Other Modules
+- **[API Module](../api/README.md)** - API request hooks (useApiRequest, useApiMutation)
+- **[API Hooks](../api/HOOKS.md)** - Detailed API hooks documentation
+- **[State Management](../state/README.md)** - State hooks (useStore, useSelector)
+- **[Performance](../performance/README.md)** - Performance monitoring hooks
+- **[Queries Module](../queries/README.md)** - React Query integration hooks
+- **[Shared Utilities](../shared/README.md)** - Shared hook utilities
+
+### Reference
+- **[Documentation Index](../INDEX.md)** - All documentation resources
+- **[Performance Guide](../PERFORMANCE.md)** - Performance optimization

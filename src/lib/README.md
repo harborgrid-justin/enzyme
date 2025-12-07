@@ -1,6 +1,7 @@
 # Harbor React Library
 
-> Enterprise-grade React infrastructure library providing authentication, routing, state management, performance monitoring, and security features.
+> Enterprise-grade React infrastructure library providing authentication, routing, state management, performance
+> monitoring, and security features.
 
 ## Table of Contents
 
@@ -188,90 +189,90 @@ lib/
 
 ### Authentication (`@/lib/auth`)
 
-| Export | Type | Description |
-|--------|------|-------------|
-| `AuthProvider` | Component | Context provider for auth state |
-| `useAuth` | Hook | Access auth state and methods |
-| `useHasRole` | Hook | Check if user has specific role |
-| `useHasPermission` | Hook | Check if user has permission |
-| `RequireAuth` | Component | Route guard requiring authentication |
-| `RequireRole` | Component | Route guard requiring specific roles |
-| `RequirePermission` | Component | Route guard requiring permissions |
-| `authService` | Service | Auth operations (login, logout, refresh) |
+| Export              | Type      | Description                              |
+|---------------------|-----------|------------------------------------------|
+| `AuthProvider`      | Component | Context provider for auth state          |
+| `useAuth`           | Hook      | Access auth state and methods            |
+| `useHasRole`        | Hook      | Check if user has specific role          |
+| `useHasPermission`  | Hook      | Check if user has permission             |
+| `RequireAuth`       | Component | Route guard requiring authentication     |
+| `RequireRole`       | Component | Route guard requiring specific roles     |
+| `RequirePermission` | Component | Route guard requiring permissions        |
+| `authService`       | Service   | Auth operations (login, logout, refresh) |
 
 ### API (`@/lib/api`)
 
-| Export | Type | Description |
-|--------|------|-------------|
-| `apiClient` | Instance | Pre-configured HTTP client |
-| `createApiClient` | Factory | Create custom API client |
-| `useApiRequest` | Hook | Fetch data with React Query |
-| `useApiMutation` | Hook | Mutate data with React Query |
-| `useApiHealth` | Hook | Monitor API health status |
-| `RequestBuilder` | Class | Fluent request construction |
-| `mockServer` | Instance | Development mock server |
+| Export            | Type     | Description                  |
+|-------------------|----------|------------------------------|
+| `apiClient`       | Instance | Pre-configured HTTP client   |
+| `createApiClient` | Factory  | Create custom API client     |
+| `useApiRequest`   | Hook     | Fetch data with React Query  |
+| `useApiMutation`  | Hook     | Mutate data with React Query |
+| `useApiHealth`    | Hook     | Monitor API health status    |
+| `RequestBuilder`  | Class    | Fluent request construction  |
+| `mockServer`      | Instance | Development mock server      |
 
 ### Routing (`@/lib/routing`)
 
-| Export | Type | Description |
-|--------|------|-------------|
-| `createRouter` | Factory | Create type-safe router |
-| `RouteRegistry` | Class | Runtime route management |
-| `createRouteBuilder` | Factory | Type-safe route building |
-| `useTypedNavigate` | Hook | Type-safe navigation |
-| `usePrefetchHandlers` | Hook | Route prefetch on hover |
+| Export                 | Type     | Description                  |
+|------------------------|----------|------------------------------|
+| `createRouter`         | Factory  | Create type-safe router      |
+| `RouteRegistry`        | Class    | Runtime route management     |
+| `createRouteBuilder`   | Factory  | Type-safe route building     |
+| `useTypedNavigate`     | Hook     | Type-safe navigation         |
+| `usePrefetchHandlers`  | Hook     | Route prefetch on hover      |
 | `detectRouteConflicts` | Function | Validate route configuration |
 
 ### Feature Flags (`@/lib/flags`)
 
-| Export | Type | Description |
-|--------|------|-------------|
-| `FeatureFlagProvider` | Component | Flag context provider |
-| `useFeatureFlag` | Hook | Check single flag |
-| `useFeatureFlags` | Hook | Check multiple flags |
-| `FlagGate` | Component | Conditional rendering |
-| `withFeatureFlag` | HOC | Feature-gated component |
-| `flagKeys` | Object | Type-safe flag keys |
+| Export                | Type      | Description             |
+|-----------------------|-----------|-------------------------|
+| `FeatureFlagProvider` | Component | Flag context provider   |
+| `useFeatureFlag`      | Hook      | Check single flag       |
+| `useFeatureFlags`     | Hook      | Check multiple flags    |
+| `FlagGate`            | Component | Conditional rendering   |
+| `withFeatureFlag`     | HOC       | Feature-gated component |
+| `flagKeys`            | Object    | Type-safe flag keys     |
 
 ### Security (`@/lib/security`)
 
-| Export | Type | Description |
-|--------|------|-------------|
-| `SecurityProvider` | Component | Security context provider |
-| `useCSRFToken` | Hook | Get CSRF token for forms |
-| `useSecureStorage` | Hook | Encrypted localStorage |
-| `useSanitizedContent` | Hook | XSS-safe content |
-| `CSPManager` | Class | Content Security Policy |
-| `sanitizeHTML` | Function | HTML sanitization |
+| Export                | Type      | Description               |
+|-----------------------|-----------|---------------------------|
+| `SecurityProvider`    | Component | Security context provider |
+| `useCSRFToken`        | Hook      | Get CSRF token for forms  |
+| `useSecureStorage`    | Hook      | Encrypted localStorage    |
+| `useSanitizedContent` | Hook      | XSS-safe content          |
+| `CSPManager`          | Class     | Content Security Policy   |
+| `sanitizeHTML`        | Function  | HTML sanitization         |
 
 ### Performance (`@/lib/performance`)
 
-| Export | Type | Description |
-|--------|------|-------------|
-| `initPerformanceMonitoring` | Function | Initialize monitoring |
-| `VitalsCollector` | Class | Web Vitals collection |
-| `PerformanceObservatory` | Component | Performance dashboard |
-| `usePredictivePrefetch` | Hook | AI-driven prefetching |
-| `usePerformanceBudget` | Hook | Budget-aware rendering |
-| `useMemoryPressure` | Hook | Memory monitoring |
+| Export                      | Type      | Description            |
+|-----------------------------|-----------|------------------------|
+| `initPerformanceMonitoring` | Function  | Initialize monitoring  |
+| `VitalsCollector`           | Class     | Web Vitals collection  |
+| `PerformanceObservatory`    | Component | Performance dashboard  |
+| `usePredictivePrefetch`     | Hook      | AI-driven prefetching  |
+| `usePerformanceBudget`      | Hook      | Budget-aware rendering |
+| `useMemoryPressure`         | Hook      | Memory monitoring      |
 
 ### Hydration (`@/lib/hydration`)
 
-| Export | Type | Description |
-|--------|------|-------------|
-| `HydrationProvider` | Component | Hydration scheduler |
-| `HydrationBoundary` | Component | Priority-based hydration |
-| `useHydration` | Hook | Hydration control |
-| `useHydrationMetrics` | Hook | Hydration telemetry |
+| Export                | Type      | Description              |
+|-----------------------|-----------|--------------------------|
+| `HydrationProvider`   | Component | Hydration scheduler      |
+| `HydrationBoundary`   | Component | Priority-based hydration |
+| `useHydration`        | Hook      | Hydration control        |
+| `useHydrationMetrics` | Hook      | Hydration telemetry      |
 
 ### State (`@/lib/state`)
 
-| Export | Type | Description |
-|--------|------|-------------|
-| `createAppStore` | Factory | Create global store |
-| `createSlice` | Factory | Create state slice |
+| Export               | Type    | Description          |
+|----------------------|---------|----------------------|
+| `createAppStore`     | Factory | Create global store  |
+| `createSlice`        | Factory | Create state slice   |
 | `createFeatureStore` | Factory | Feature-scoped store |
-| `createSelector` | Factory | Memoized selectors |
+| `createSelector`     | Factory | Memoized selectors   |
 
 ---
 
@@ -463,39 +464,39 @@ function CommentForm({ postId }) {
 
 ### Core Documentation
 
-| Document | Description |
-|----------|-------------|
-| [Architecture](./docs/ARCHITECTURE.md) | System architecture deep dive |
-| [API Reference](./docs/API.md) | API handling patterns |
-| [Configuration](./docs/CONFIGURATION.md) | Configuration management |
-| [Migration](./docs/MIGRATION.md) | Version migration guide |
+| Document                                 | Description                   |
+|------------------------------------------|-------------------------------|
+| [Architecture](./docs/ARCHITECTURE.md)   | System architecture deep dive |
+| [API Reference](./docs/API.md)           | API handling patterns         |
+| [Configuration](./docs/CONFIGURATION.md) | Configuration management      |
+| [Migration](./docs/MIGRATION.md)         | Version migration guide       |
 
 ### Feature Guides
 
-| Document | Description |
-|----------|-------------|
-| [Authentication](./docs/AUTHENTICATION.md) | Auth and SSO guide |
-| [RBAC](./docs/RBAC.md) | Role-based access control |
-| [Routing](./docs/ROUTING.md) | Complete routing guide |
-| [Feature Flags](./docs/FEATURE-FLAGS.md) | Feature flag system |
-| [Performance](./docs/PERFORMANCE.md) | Performance optimization |
+| Document                                   | Description               |
+|--------------------------------------------|---------------------------|
+| [Authentication](./docs/AUTHENTICATION.md) | Auth and SSO guide        |
+| [RBAC](./docs/RBAC.md)                     | Role-based access control |
+| [Routing](./docs/ROUTING.md)               | Complete routing guide    |
+| [Feature Flags](./docs/FEATURE-FLAGS.md)   | Feature flag system       |
+| [Performance](./docs/PERFORMANCE.md)       | Performance optimization  |
 
 ### Examples
 
-| Document | Description |
-|----------|-------------|
-| [Routing Examples](./docs/examples/routing-examples.md) | 25+ routing examples |
-| [Auth Examples](./docs/examples/auth-examples.md) | 25+ authentication examples |
-| [RBAC Examples](./docs/examples/rbac-examples.md) | 25+ RBAC examples |
-| [Performance Examples](./docs/examples/performance-examples.md) | 25+ performance examples |
+| Document                                                        | Description                 |
+|-----------------------------------------------------------------|-----------------------------|
+| [Routing Examples](./docs/examples/routing-examples.md)         | 25+ routing examples        |
+| [Auth Examples](./docs/examples/auth-examples.md)               | 25+ authentication examples |
+| [RBAC Examples](./docs/examples/rbac-examples.md)               | 25+ RBAC examples           |
+| [Performance Examples](./docs/examples/performance-examples.md) | 25+ performance examples    |
 
 ### Shared Utilities
 
-| Document | Description |
-|----------|-------------|
-| [Shared Hook Utilities](./hooks/shared/README.md) | Reusable hook utilities |
-| [Quick Reference](./hooks/shared/QUICK_REFERENCE.md) | Quick API lookup |
-| [Migration Checklist](./hooks/shared/MIGRATION_CHECKLIST.md) | Migration guide |
+| Document                                                     | Description             |
+|--------------------------------------------------------------|-------------------------|
+| [Shared Hook Utilities](./hooks/shared/README.md)            | Reusable hook utilities |
+| [Quick Reference](./hooks/shared/QUICK_REFERENCE.md)         | Quick API lookup        |
+| [Migration Checklist](./hooks/shared/MIGRATION_CHECKLIST.md) | Migration guide         |
 
 ---
 

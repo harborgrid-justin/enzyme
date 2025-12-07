@@ -4,7 +4,7 @@
  */
 
 import { createContext } from 'react';
-import type { AuthContextValue, User, Role } from '../auth/types';
+import type { AuthContextValue, User, Role } from '@/lib/auth';
 
 /**
  * User role type

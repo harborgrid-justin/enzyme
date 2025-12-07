@@ -11,28 +11,18 @@
  * @module config/ConfigProvider
  */
 
-import React, {
-  useEffect,
-  useMemo,
-  useCallback,
-  useState,
-  type ReactNode,
-} from 'react';
+import React, { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import type {
+  ConfigChangeListener,
   ConfigNamespace,
   ConfigRecord,
-  ConfigValue,
-  ConfigChangeListener,
   ConfigUnsubscribe,
-  DynamicConfigState,
   ConfigValidationStatus,
-  ConfigValidationResult as _ConfigValidationResult,
+  ConfigValue,
+  DynamicConfigState,
 } from './types';
 import { getConfigRegistry } from './config-registry';
-import {
-  getDynamicConfig,
-  initializeDynamicConfig,
-} from './dynamic-config';
+import { getDynamicConfig, initializeDynamicConfig } from './dynamic-config';
 import { initializeConfigDiscovery } from './config-discovery';
 import { env } from './env';
 import { ConfigContext, type ConfigContextValue } from './config-context';
@@ -159,11 +149,9 @@ export function ConfigProvider({
 
   // Subscribe to dynamic config state changes
   useEffect(() => {
-    const unsubscribe = dynamicConfig.subscribeToState((state) => {
+    return dynamicConfig.subscribeToState((state) => {
       setDynamicState(state);
     });
-
-    return unsubscribe;
   }, [dynamicConfig]);
 
   // Context value callbacks
@@ -278,11 +266,7 @@ export function ConfigProvider({
     return <>{loadingComponent}</>;
   }
 
-  return (
-    <ConfigContext.Provider value={contextValue}>
-      {children}
-    </ConfigContext.Provider>
-  );
+  return <ConfigContext.Provider value={contextValue}>{children}</ConfigContext.Provider>;
 }
 
 ConfigProvider.displayName = 'ConfigProvider';
@@ -292,4 +276,3 @@ ConfigProvider.displayName = 'ConfigProvider';
 // =============================================================================
 
 export type { ConfigValidationStatus };
-

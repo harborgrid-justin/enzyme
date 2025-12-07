@@ -1,4 +1,7 @@
 {
+  // Claude.ai Optimization: Enterprise TypeScript config with maximum strictness
+  // Use @/* for src/ imports, supports React JSX, modern ES2022 features
+  // Excludes .development/ and demo code for cleaner type checking
   "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
     // ==========================================================================
@@ -71,6 +74,6 @@
     "types": ["vite/client", "vitest/globals", "node"]
   },
   "include": ["src", "test"],
-  "exclude": ["node_modules", "dist", "coverage", "**/*.stories.tsx", "*.config.ts"],
+  "exclude": ["node_modules", "dist", "coverage", ".development", "**/*.stories.tsx", "*.config.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

@@ -22,6 +22,7 @@
 ## CSRF Protection
 
 ### Example 1: CSRF Token Implementation
+
 **Use Case:** Protect state-changing operations
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -75,11 +76,13 @@ function CreatePost() {
 **Explanation:** CSRF tokens prevent malicious sites from making authenticated requests on behalf of users.
 
 **See Also:**
+
 - [OWASP CSRF Guide](https://owasp.org/www-community/attacks/csrf)
 
 ---
 
 ### Example 2: SameSite Cookie Configuration
+
 **Use Case:** Browser-level CSRF protection
 **Difficulty:** ⭐ Basic
 
@@ -125,6 +128,7 @@ function AuthService() {
 ## XSS Prevention
 
 ### Example 3: Safe HTML Rendering
+
 **Use Case:** Prevent XSS in user-generated content
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -166,6 +170,7 @@ function MarkdownContent({ markdown }: { markdown: string }) {
 ---
 
 ### Example 4: URL Sanitization
+
 **Use Case:** Prevent javascript: protocol attacks
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -225,6 +230,7 @@ function UserProfile({ website }: { website: string }) {
 ---
 
 ### Example 5: Input Escaping
+
 **Use Case:** Safely display user input
 **Difficulty:** ⭐ Basic
 
@@ -255,6 +261,7 @@ function escapeHtml(text: string): string {
 ## Content Security Policy
 
 ### Example 6: CSP Meta Tag
+
 **Use Case:** Define allowed content sources
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -289,6 +296,7 @@ function SecurityHeaders() {
 ---
 
 ### Example 7: CSP Nonce for Inline Scripts
+
 **Use Case:** Allow specific inline scripts with CSP
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -329,6 +337,7 @@ function AppShell({ nonce }: { nonce: string }) {
 ## Secure Storage
 
 ### Example 8: Secure Token Storage
+
 **Use Case:** Store auth tokens securely
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -390,6 +399,7 @@ export const secureStorage = {
 ---
 
 ### Example 9: Secure Session Storage
+
 **Use Case:** Temporary sensitive data storage
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -466,6 +476,7 @@ function useSecureFormDraft() {
 ## Input Sanitization
 
 ### Example 10: Form Input Validation
+
 **Use Case:** Validate and sanitize user inputs
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -518,6 +529,7 @@ function ProfileForm() {
 ---
 
 ### Example 11: SQL Injection Prevention
+
 **Use Case:** Safe database queries
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -563,6 +575,7 @@ async function findUserWithPrisma(username: string) {
 ---
 
 ### Example 12: Path Traversal Prevention
+
 **Use Case:** Secure file access
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -614,6 +627,7 @@ app.get('/api/files/:filename', async (req, res) => {
 ## Authentication Security
 
 ### Example 13: Secure Password Hashing
+
 **Use Case:** Store passwords securely
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -677,6 +691,7 @@ async function loginUser(email: string, password: string) {
 ---
 
 ### Example 14: JWT Security
+
 **Use Case:** Secure token-based authentication
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -754,6 +769,7 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
 ---
 
 ### Example 15: Rate Limiting Authentication
+
 **Use Case:** Prevent brute force attacks
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -822,6 +838,7 @@ async function login(credentials: Credentials) {
 ## Security Headers
 
 ### Example 16: Security Headers Configuration
+
 **Use Case:** Set security-related HTTP headers
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -900,6 +917,7 @@ app.use((req, res, next) => {
 ---
 
 ### Example 17: CORS Configuration
+
 **Use Case:** Secure cross-origin requests
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -951,6 +969,7 @@ async function apiCall() {
 ## Audit Logging
 
 ### Example 18: Security Event Logging
+
 **Use Case:** Track security-relevant events
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -1049,6 +1068,7 @@ function checkForBruteForce(ip: string) {
 ---
 
 ### Example 19: Data Access Logging
+
 **Use Case:** Track access to sensitive data
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -1107,6 +1127,7 @@ app.get('/api/users/:id', requireAuth, auditDataAccess('user'), getUser);
 ## Rate Limiting
 
 ### Example 20: API Rate Limiting
+
 **Use Case:** Prevent API abuse
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -1162,6 +1183,7 @@ class RateLimitError extends Error {
 ---
 
 ### Example 21: User-Based Rate Limiting
+
 **Use Case:** Per-user request limits
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -1237,6 +1259,7 @@ async function rateLimitMiddleware(req: Request, res: Response, next: NextFuncti
 ## Data Encryption
 
 ### Example 22: Field-Level Encryption
+
 **Use Case:** Encrypt sensitive database fields
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -1298,6 +1321,7 @@ prisma.$use(async (params, next) => {
 ---
 
 ### Example 23: End-to-End Encryption
+
 **Use Case:** Client-side encryption for maximum privacy
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -1353,6 +1377,7 @@ async function readSecureMessage(encryptedMessage: string) {
 ---
 
 ### Example 24: Secure File Upload
+
 **Use Case:** Validate and sanitize uploaded files
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -1454,6 +1479,7 @@ app.post('/api/upload', requireAuth, upload.single('file'), async (req, res) => 
 ---
 
 ### Example 25: Dependency Security Scanning
+
 **Use Case:** Automated vulnerability detection
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -1524,6 +1550,7 @@ jobs:
 ---
 
 ### Example 26: Environment Variable Security
+
 **Use Case:** Secure configuration management
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -1589,6 +1616,7 @@ export const publicConfig = {
 ---
 
 ### Example 27: Secure API Key Management
+
 **Use Case:** Manage API keys securely
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -1689,6 +1717,7 @@ async function requireApiKey(req: Request, res: Response, next: NextFunction) {
 ---
 
 ### Example 28: Security Monitoring Dashboard
+
 **Use Case:** Monitor security events in real-time
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -1786,6 +1815,7 @@ function SecurityEventTable({ events }: { events: SecurityEvent[] }) {
 ## Best Practices
 
 ### General Security
+
 - ✅ **DO** follow principle of least privilege
 - ✅ **DO** validate all user inputs
 - ✅ **DO** use HTTPS everywhere in production
@@ -1795,6 +1825,7 @@ function SecurityEventTable({ events }: { events: SecurityEvent[] }) {
 - ❌ **DON'T** expose sensitive data in error messages
 
 ### Authentication & Authorization
+
 - ✅ **DO** use strong password requirements
 - ✅ **DO** implement MFA for sensitive operations
 - ✅ **DO** use secure session management
@@ -1803,6 +1834,7 @@ function SecurityEventTable({ events }: { events: SecurityEvent[] }) {
 - ❌ **DON'T** use predictable session IDs
 
 ### Data Protection
+
 - ✅ **DO** encrypt sensitive data at rest
 - ✅ **DO** use HTTPS for data in transit
 - ✅ **DO** sanitize user inputs
@@ -1811,6 +1843,7 @@ function SecurityEventTable({ events }: { events: SecurityEvent[] }) {
 - ❌ **DON'T** expose internal implementation details
 
 ### Security Headers
+
 - ✅ **DO** implement CSP
 - ✅ **DO** set security headers
 - ✅ **DO** configure CORS properly
@@ -1823,6 +1856,7 @@ function SecurityEventTable({ events }: { events: SecurityEvent[] }) {
 ## Anti-Patterns
 
 ### ❌ Storing Secrets in Code
+
 ```tsx
 // BAD
 const API_KEY = 'sk_live_1234567890abcdef';
@@ -1832,6 +1866,7 @@ const API_KEY = process.env.API_KEY;
 ```
 
 ### ❌ Client-Side Only Validation
+
 ```tsx
 // BAD - Client validation can be bypassed
 function handleSubmit(data) {
@@ -1851,6 +1886,7 @@ async function handleSubmit(data) {
 ```
 
 ### ❌ Exposing Error Details
+
 ```tsx
 // BAD
 catch (error) {
@@ -1865,6 +1901,7 @@ catch (error) {
 ```
 
 ### ❌ Using Weak Cryptography
+
 ```tsx
 // BAD
 const hash = crypto.createHash('md5').update(password).digest('hex');

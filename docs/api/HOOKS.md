@@ -1060,8 +1060,22 @@ const updateUser = usePatch('/users/:id', {
 });
 ```
 
-## See Also
+## Related Documentation
 
-- [API Client](./API_CLIENT.md) - HTTP client documentation
-- [Types Reference](./TYPES.md) - Complete TypeScript types
-- [Advanced Features](./ADVANCED.md) - Gateway, orchestration, metrics
+### API Documentation
+- **[API Module Overview](./README.md)** - Complete API module guide
+- **[API Client](./API_CLIENT.md)** - HTTP client, configuration, and utilities
+- **[Types](./TYPES.md)** - TypeScript type reference
+- **[Interceptors](./INTERCEPTORS.md)** - Request/response interceptors
+- **[Advanced Features](./ADVANCED.md)** - API Gateway, rate limiting, metrics
+
+### Integration Guides
+- **[Queries Module](../queries/README.md)** - React Query integration and query key factories
+- **[Hooks Module](../hooks/README.md)** - Additional custom hooks
+- **[State Management](../state/README.md)** - Global state integration
+- **[Realtime Module](../realtime/README.md)** - WebSocket and SSE integration
+
+### Reference
+- **[Hooks Reference](../HOOKS_REFERENCE.md)** - Complete hooks API reference
+- **[Hooks Quick Reference](../hooks/QUICK_REFERENCE.md)** - Quick lookup for all hooks
+- **[Performance Guide](../performance/README.md)** - Performance optimization tips

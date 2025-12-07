@@ -102,22 +102,6 @@ export class PerformanceMonitor {
   }
 
   /**
-   * Start periodic flush timer
-   */
-  private startFlushTimer(): void {
-    this.flushTimer = setInterval(() => {
-      void this.flush();
-    }, this.config.flushInterval);
-  }
-
-  /**
-   * Check if metric should be sampled
-   */
-  private shouldSample(): boolean {
-    return this.config.enabled === true && Math.random() < (this.config.sampleRate ?? 1);
-  }
-
-  /**
    * Record a timing metric
    */
   timing(
@@ -216,21 +200,6 @@ export class PerformanceMonitor {
       tags: { ...this.config.defaultTags, ...tags },
       unit: 'ms',
     });
-  }
-
-  /**
-   * Record histogram internally
-   */
-  private recordHistogram(name: string, value: number): void {
-    const values = this.histograms.get(name) ?? [];
-    values.push(value);
-
-    // Keep last 1000 values
-    if (values.length > 1000) {
-      values.shift();
-    }
-
-    this.histograms.set(name, values);
   }
 
   /**
@@ -335,29 +304,6 @@ export class PerformanceMonitor {
   }
 
   /**
-   * Add metric to buffer
-   */
-  private addMetric(metric: PerformanceMetric): void {
-    this.buffer.push(metric);
-
-    if (this.buffer.length >= this.config.bufferSize) {
-      void this.flush();
-    }
-  }
-
-  /**
-   * Generate key from name and tags
-   */
-  private getKey(name: string, tags?: Record<string, string>): string {
-    if (!tags) return name;
-    const tagStr = Object.entries(tags)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([k, v]) => `${k}=${v}`)
-      .join(',');
-    return `${name}:${tagStr}`;
-  }
-
-  /**
    * Flush metrics buffer
    */
   async flush(): Promise<void> {
@@ -411,6 +357,60 @@ export class PerformanceMonitor {
     void this.flush();
     this.reset();
   }
+
+  /**
+   * Start periodic flush timer
+   */
+  private startFlushTimer(): void {
+    this.flushTimer = setInterval(() => {
+      void this.flush();
+    }, this.config.flushInterval);
+  }
+
+  /**
+   * Check if metric should be sampled
+   */
+  private shouldSample(): boolean {
+    return this.config.enabled && Math.random() < (this.config.sampleRate ?? 1);
+  }
+
+  /**
+   * Record histogram internally
+   */
+  private recordHistogram(name: string, value: number): void {
+    const values = this.histograms.get(name) ?? [];
+    values.push(value);
+
+    // Keep last 1000 values
+    if (values.length > 1000) {
+      values.shift();
+    }
+
+    this.histograms.set(name, values);
+  }
+
+  /**
+   * Add metric to buffer
+   */
+  private addMetric(metric: PerformanceMetric): void {
+    this.buffer.push(metric);
+
+    if (this.buffer.length >= this.config.bufferSize) {
+      void this.flush();
+    }
+  }
+
+  /**
+   * Generate key from name and tags
+   */
+  private getKey(name: string, tags?: Record<string, string>): string {
+    if (!tags) return name;
+    const tagStr = Object.entries(tags)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([k, v]) => `${k}=${v}`)
+      .join(',');
+    return `${name}:${tagStr}`;
+  }
 }
 
 /**
@@ -458,6 +458,38 @@ export class WebVitalsCollector {
 
     // Collect first input delay
     this.observeFirstInput();
+  }
+
+  /**
+   * Get current vitals
+   */
+  getVitals(): WebVitals {
+    // Calculate TTFB
+    if (typeof window !== 'undefined' && window.performance !== undefined) {
+      const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
+      if (navigation !== undefined) {
+        this.vitals.TTFB = navigation.responseStart - navigation.requestStart;
+      }
+    }
+    return { ...this.vitals };
+  }
+
+  /**
+   * Subscribe to vitals updates
+   */
+  subscribe(callback: (vitals: WebVitals) => void): () => void {
+    this.callbacks.add(callback);
+    return () => this.callbacks.delete(callback);
+  }
+
+  /**
+   * Stop collecting
+   */
+  stop(): void {
+    if (this.observer) {
+      this.observer.disconnect();
+      this.observer = null;
+    }
   }
 
   /**
@@ -544,28 +576,6 @@ export class WebVitalsCollector {
   }
 
   /**
-   * Get current vitals
-   */
-  getVitals(): WebVitals {
-    // Calculate TTFB
-    if (typeof window !== 'undefined' && window.performance !== undefined) {
-      const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
-      if (navigation !== undefined) {
-        this.vitals.TTFB = navigation.responseStart - navigation.requestStart;
-      }
-    }
-    return { ...this.vitals };
-  }
-
-  /**
-   * Subscribe to vitals updates
-   */
-  subscribe(callback: (vitals: WebVitals) => void): () => void {
-    this.callbacks.add(callback);
-    return () => this.callbacks.delete(callback);
-  }
-
-  /**
    * Notify subscribers
    */
   private notify(): void {
@@ -576,16 +586,6 @@ export class WebVitalsCollector {
       } catch (error) {
         console.error('[WebVitalsCollector] Callback error:', error);
       }
-    }
-  }
-
-  /**
-   * Stop collecting
-   */
-  stop(): void {
-    if (this.observer) {
-      this.observer.disconnect();
-      this.observer = null;
     }
   }
 }
@@ -719,19 +719,6 @@ export class LongTaskObserver {
   }
 
   /**
-   * Notify callbacks
-   */
-  private notifyCallbacks(task: { startTime: number; duration: number; attribution: string }): void {
-    for (const callback of this.callbacks) {
-      try {
-        callback(task);
-      } catch (error) {
-        console.error('[LongTaskObserver] Callback error:', error);
-      }
-    }
-  }
-
-  /**
    * Get all recorded long tasks
    */
   getTasks(): Array<{ startTime: number; duration: number; attribution: string }> {
@@ -767,6 +754,19 @@ export class LongTaskObserver {
    */
   clear(): void {
     this.tasks = [];
+  }
+
+  /**
+   * Notify callbacks
+   */
+  private notifyCallbacks(task: { startTime: number; duration: number; attribution: string }): void {
+    for (const callback of this.callbacks) {
+      try {
+        callback(task);
+      } catch (error) {
+        console.error('[LongTaskObserver] Callback error:', error);
+      }
+    }
   }
 }
 

@@ -304,6 +304,27 @@ await fetch('/api/update', {
 - Ensure providers are in correct order
 - Add error boundaries around new features
 
+## Related Documentation
+
+### Integration Guides
+- [AUTH_SECURITY_STATE.md](./AUTH_SECURITY_STATE.md) - Authentication, security, and state integration
+- [FEATURE_FLAGS_ERROR_BOUNDARIES_FULLSTACK.md](./FEATURE_FLAGS_ERROR_BOUNDARIES_FULLSTACK.md) - Feature flags and error boundaries
+- [PERFORMANCE_MONITORING_HYDRATION.md](./PERFORMANCE_MONITORING_HYDRATION.md) - Performance and hydration integration
+- [REALTIME_QUERIES_SERVICES.md](./REALTIME_QUERIES_SERVICES.md) - Real-time updates and queries
+- [ROUTING_STATE_GUARDS.md](./ROUTING_STATE_GUARDS.md) - Routing with state and guards
+- [UI_THEME_HOOKS_ACCESSIBILITY.md](./UI_THEME_HOOKS_ACCESSIBILITY.md) - UI, theme, and accessibility
+
+### Core Modules
+- [State Management](../state/README.md) - State system overview
+- [Configuration](../config/README.md) - Configuration system
+- [Routing](../routing/README.md) - Routing system
+- [Authentication](../auth/README.md) - Auth system
+- [Feature Flags](../flags/README.md) - Feature flag system
+- [Performance](../performance/README.md) - Performance optimization
+- [API Client](../api/README.md) - API integration
+- [Monitoring](../monitoring/README.md) - Error and performance monitoring
+- [Hydration](../hydration/README.md) - Progressive hydration
+
 ---
 
 *Harbor React Framework v2.0 | Last updated: 2024*

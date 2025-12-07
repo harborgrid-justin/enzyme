@@ -215,8 +215,6 @@ integrationRegistry.register(routingIntegration);
  * Routing flags helper class
  */
 class RoutingFlagsHelper {
-  private getFlag: (flagKey: string) => boolean = () => false;
-
   setFlagGetter(getter: (flagKey: string) => boolean): void {
     this.getFlag = getter;
   }
@@ -295,6 +293,8 @@ class RoutingFlagsHelper {
       [ROUTING_FLAG_KEYS.ROUTING_LOADING_STATES_ENABLED]: this.isLoadingStatesEnabled(),
     };
   }
+
+  private getFlag: (flagKey: string) => boolean = () => false;
 }
 
 /**

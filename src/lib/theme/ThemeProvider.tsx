@@ -4,7 +4,7 @@ import React, {
   useEffect,
   useCallback,
   useMemo,
-  type ReactNode
+  type ReactNode,
 } from 'react';
 import { ThemeContext, type ThemeContextValue } from '../contexts/ThemeContext';
 import { lightPalette } from './palettes/light';
@@ -72,7 +72,7 @@ export function ThemeProvider({ children, defaultTheme }: ThemeProviderProps): R
   // Listen for system theme changes
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    
+
     const handleChange = (): void => {
       if (theme === 'system') {
         const newResolved = getSystemTheme();
@@ -87,46 +87,52 @@ export function ThemeProvider({ children, defaultTheme }: ThemeProviderProps): R
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, [theme]);
 
-  const setTheme = useCallback((newTheme: Theme) => {
-    // If dark mode is disabled, ignore attempts to set dark/system themes
-    if (!darkModeEnabled && (newTheme === 'dark' || newTheme === 'system')) {
-      console.warn('[ThemeProvider] Dark mode is disabled via feature flag. Ignoring theme change.');
-      return;
-    }
-    setThemeState(newTheme);
-    localStorage.setItem(THEME_STORAGE_KEY, newTheme);
-  }, [darkModeEnabled]);
+  const setTheme = useCallback(
+    (newTheme: Theme) => {
+      // If dark mode is disabled, ignore attempts to set dark/system themes
+      if (!darkModeEnabled && (newTheme === 'dark' || newTheme === 'system')) {
+        console.warn(
+          '[ThemeProvider] Dark mode is disabled via feature flag. Ignoring theme change.'
+        );
+        return;
+      }
+      setThemeState(newTheme);
+      localStorage.setItem(THEME_STORAGE_KEY, newTheme);
+    },
+    [darkModeEnabled]
+  );
 
   const toggleTheme = useCallback(() => {
     // If dark mode is disabled, do nothing
     if (!darkModeEnabled) {
-      console.warn('[ThemeProvider] Dark mode is disabled via feature flag. Theme toggle is disabled.');
+      console.warn(
+        '[ThemeProvider] Dark mode is disabled via feature flag. Theme toggle is disabled.'
+      );
       return;
     }
     setTheme(resolvedTheme === 'light' ? 'dark' : 'light');
   }, [darkModeEnabled, resolvedTheme, setTheme]);
 
-  const palette = useMemo(() =>
-    resolvedTheme === 'dark' ? darkPalette : lightPalette,
+  const palette = useMemo(
+    () => (resolvedTheme === 'dark' ? darkPalette : lightPalette),
     [resolvedTheme]
   );
 
   // PERFORMANCE: Memoize context value to prevent unnecessary re-renders
-  const value: ThemeContextValue = useMemo(() => ({
-    theme,
-    resolvedTheme,
-    setTheme,
-    toggleTheme,
-    palette,
-    tokens,
-    darkModeEnabled,
-  }), [theme, resolvedTheme, setTheme, toggleTheme, palette, darkModeEnabled]);
-
-  return (
-    <ThemeContext.Provider value={value}>
-      {children}
-    </ThemeContext.Provider>
+  const value: ThemeContextValue = useMemo(
+    () => ({
+      theme,
+      resolvedTheme,
+      setTheme,
+      toggleTheme,
+      palette,
+      tokens,
+      darkModeEnabled,
+    }),
+    [theme, resolvedTheme, setTheme, toggleTheme, palette, darkModeEnabled]
   );
+
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
 /**

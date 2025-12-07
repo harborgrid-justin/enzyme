@@ -178,6 +178,16 @@ export class MemoryGuardian {
   // ============================================================================
 
   /**
+   * Format bytes for display
+   */
+  static formatBytes(bytes: number): string {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
+  }
+
+  /**
    * Start memory monitoring
    */
   startMonitoring(): void {
@@ -279,14 +289,6 @@ export class MemoryGuardian {
   }
 
   /**
-   * Notify pressure change callbacks
-   */
-  private notifyPressureChange(level: MemoryPressureLevel): void {
-    this.log(`Memory pressure changed to: ${level}`);
-    this.pressureCallbacks.forEach((callback) => callback(level));
-  }
-
-  /**
    * Subscribe to pressure changes
    */
   onPressureChange(callback: (level: MemoryPressureLevel) => void): () => void {
@@ -367,27 +369,6 @@ export class MemoryGuardian {
   }
 
   /**
-   * Hint garbage collection (non-blocking)
-   */
-  private hintGC(): void {
-    // Use requestIdleCallback to hint GC during idle time
-    if (typeof requestIdleCallback !== 'undefined') {
-      requestIdleCallback(() => {
-        // Trigger minor GC by creating and releasing objects
-        const temp: unknown[] = [];
-        for (let i = 0; i < 1000; i++) {
-          temp.push({});
-        }
-        temp.length = 0;
-      });
-    }
-  }
-
-  // ============================================================================
-  // Component Memory Budgets
-  // ============================================================================
-
-  /**
    * Set memory budget for a component
    */
   setComponentBudget(
@@ -401,6 +382,10 @@ export class MemoryGuardian {
     });
   }
 
+  // ============================================================================
+  // Component Memory Budgets
+  // ============================================================================
+
   /**
    * Update component memory usage
    */
@@ -412,31 +397,11 @@ export class MemoryGuardian {
   }
 
   /**
-   * Check all component budgets
-   */
-  private checkComponentBudgets(): void {
-    for (const budget of this.componentBudgets.values()) {
-      const usageRatio = budget.currentBytes / budget.maxBytes;
-
-      if (usageRatio >= 1) {
-        this.log(`Component ${budget.componentId} exceeded memory budget`);
-        budget.onExceed?.();
-      } else if (usageRatio >= budget.warningThreshold) {
-        this.log(`Component ${budget.componentId} approaching memory limit: ${(usageRatio * 100).toFixed(1)}%`);
-      }
-    }
-  }
-
-  /**
    * Remove component budget
    */
   removeComponentBudget(componentId: string): void {
     this.componentBudgets.delete(componentId);
   }
-
-  // ============================================================================
-  // Subscription Tracking
-  // ============================================================================
 
   /**
    * Track a subscription for automatic cleanup
@@ -484,6 +449,10 @@ export class MemoryGuardian {
     return false;
   }
 
+  // ============================================================================
+  // Subscription Tracking
+  // ============================================================================
+
   /**
    * Clean up subscriptions for a context
    */
@@ -495,23 +464,6 @@ export class MemoryGuardian {
         cleaned++;
       }
     }
-    return cleaned;
-  }
-
-  /**
-   * Clean stale subscriptions (older than 5 minutes)
-   */
-  private cleanStaleSubscriptions(): number {
-    const staleThreshold = Date.now() - 5 * 60 * 1000;
-    let cleaned = 0;
-
-    for (const [id, subscription] of this.subscriptions) {
-      if (subscription.createdAt < staleThreshold || subscription.cleaned) {
-        this.subscriptions.delete(id);
-        cleaned++;
-      }
-    }
-
     return cleaned;
   }
 
@@ -536,10 +488,6 @@ export class MemoryGuardian {
 
     return stats;
   }
-
-  // ============================================================================
-  // Memory Leak Detection
-  // ============================================================================
 
   /**
    * Detect potential memory leaks
@@ -577,10 +525,6 @@ export class MemoryGuardian {
     return { potentialLeaks, growthRate, suggestions };
   }
 
-  // ============================================================================
-  // Utilities
-  // ============================================================================
-
   /**
    * Get memory trend
    */
@@ -597,13 +541,69 @@ export class MemoryGuardian {
   }
 
   /**
-   * Format bytes for display
+   * Notify pressure change callbacks
    */
-  static formatBytes(bytes: number): string {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-    return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
+  private notifyPressureChange(level: MemoryPressureLevel): void {
+    this.log(`Memory pressure changed to: ${level}`);
+    this.pressureCallbacks.forEach((callback) => callback(level));
+  }
+
+  // ============================================================================
+  // Memory Leak Detection
+  // ============================================================================
+
+  /**
+   * Hint garbage collection (non-blocking)
+   */
+  private hintGC(): void {
+    // Use requestIdleCallback to hint GC during idle time
+    if (typeof requestIdleCallback !== 'undefined') {
+      requestIdleCallback(() => {
+        // Trigger minor GC by creating and releasing objects
+        const temp: unknown[] = [];
+        for (let i = 0; i < 1000; i++) {
+          temp.push({});
+        }
+        temp.length = 0;
+      });
+    }
+  }
+
+  // ============================================================================
+  // Utilities
+  // ============================================================================
+
+  /**
+   * Check all component budgets
+   */
+  private checkComponentBudgets(): void {
+    for (const budget of this.componentBudgets.values()) {
+      const usageRatio = budget.currentBytes / budget.maxBytes;
+
+      if (usageRatio >= 1) {
+        this.log(`Component ${budget.componentId} exceeded memory budget`);
+        budget.onExceed?.();
+      } else if (usageRatio >= budget.warningThreshold) {
+        this.log(`Component ${budget.componentId} approaching memory limit: ${(usageRatio * 100).toFixed(1)}%`);
+      }
+    }
+  }
+
+  /**
+   * Clean stale subscriptions (older than 5 minutes)
+   */
+  private cleanStaleSubscriptions(): number {
+    const staleThreshold = Date.now() - 5 * 60 * 1000;
+    let cleaned = 0;
+
+    for (const [id, subscription] of this.subscriptions) {
+      if (subscription.createdAt < staleThreshold || subscription.cleaned) {
+        this.subscriptions.delete(id);
+        cleaned++;
+      }
+    }
+
+    return cleaned;
   }
 
   /**

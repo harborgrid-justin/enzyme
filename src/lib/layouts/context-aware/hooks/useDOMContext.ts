@@ -11,15 +11,8 @@
 import type React from 'react';
 import { useRef, useEffect, useCallback, useMemo, useState, type RefObject } from 'react';
 
-import type {
-  DOMContext,
-  UseDOMContextReturn,
-  LayoutAncestor,
-} from '../types';
-import {
-  useDOMContextValue,
-  useDOMContextRefresh,
-} from '../DOMContextProvider';
+import type { DOMContext, UseDOMContextReturn, LayoutAncestor } from '../types';
+import { useDOMContextValue, useDOMContextRefresh } from '../DOMContextProvider';
 import { getDOMContextTracker } from '../dom-context';
 
 // ============================================================================
@@ -111,9 +104,7 @@ export function useDOMContext(): UseDOMContextReturn {
  * }
  * ```
  */
-export function useDOMContextWithElement(
-  elementRef: RefObject<HTMLElement>
-): {
+export function useDOMContextWithElement(elementRef: RefObject<HTMLElement>): {
   ancestors: readonly LayoutAncestor[];
   bounds: ReturnType<typeof getDOMContextTracker.prototype.getBounds> | null;
   layoutType: ReturnType<typeof getDOMContextTracker.prototype.getLayoutType> | null;
@@ -136,7 +127,7 @@ export function useDOMContextWithElement(
   useEffect(() => {
     const element = elementRef.current;
     const timeoutId = setTimeout(() => {
-      if ((element === null) || context.isSSR) {
+      if (element === null || context.isSSR) {
         setElementInfo({
           ancestors: [] as readonly LayoutAncestor[],
           bounds: null,

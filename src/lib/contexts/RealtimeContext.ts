@@ -8,7 +8,12 @@ import { createContext } from 'react';
 /**
  * WebSocket/SSE connection state
  */
-export type ConnectionState = 'disconnected' | 'connecting' | 'connected' | 'reconnecting' | 'error';
+export type ConnectionState =
+  | 'disconnected'
+  | 'connecting'
+  | 'connected'
+  | 'reconnecting'
+  | 'error';
 
 /**
  * Realtime context value

@@ -986,9 +986,19 @@ Make type optional.
 type Optional<T> = T | undefined;
 ```
 
-## See Also
+## Related Documentation
 
-- [API Client](./API_CLIENT.md) - Core HTTP client
-- [Hooks](./HOOKS.md) - React hooks
-- [Advanced Features](./ADVANCED.md) - Enterprise features
-- [Interceptors](./INTERCEPTORS.md) - Request/response interceptors
+### API Documentation
+- **[API Module Overview](./README.md)** - Complete API module guide
+- **[API Client](./API_CLIENT.md)** - HTTP client and configuration
+- **[Hooks](./HOOKS.md)** - React hooks for data fetching
+- **[Interceptors](./INTERCEPTORS.md)** - Request/response interceptors
+- **[Advanced Features](./ADVANCED.md)** - Enterprise-grade features
+
+### Type Documentation
+- **[Types Module](../types/README.md)** - DOM extensions and browser API types
+- **[Shared Utilities](../shared/README.md)** - Shared type utilities
+
+### Reference
+- **[TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/)** - TypeScript reference
+- **[Fetch API Types](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)** - Standard web types

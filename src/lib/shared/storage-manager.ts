@@ -157,7 +157,10 @@ export class StorageManager {
       const entry: StorageEntry<T> = {
         value,
         timestamp: Date.now(),
-        expiresAt: (options.ttl !== undefined && options.ttl !== null && options.ttl > 0) ? Date.now() + options.ttl : undefined,
+        expiresAt:
+          options.ttl !== undefined && options.ttl !== null && options.ttl > 0
+            ? Date.now() + options.ttl
+            : undefined,
         encryption: options.encryption ?? EncryptionAlgorithm.None,
         version: 1,
         containsPHI: options.containsPHI ?? false,
@@ -195,7 +198,12 @@ export class StorageManager {
       const entry = JSON.parse(serialized) as StorageEntry<T>;
 
       // Check expiration
-      if (entry.expiresAt !== null && entry.expiresAt !== undefined && entry.expiresAt > 0 && entry.expiresAt < Date.now()) {
+      if (
+        entry.expiresAt !== null &&
+        entry.expiresAt !== undefined &&
+        entry.expiresAt > 0 &&
+        entry.expiresAt < Date.now()
+      ) {
         localStorage.removeItem(key);
         return undefined;
       }
@@ -314,7 +322,6 @@ export class StorageManager {
    * Get a value from memory
    *
    * @param key - Storage key
-   * @param options - Storage options
    * @returns The stored value, or undefined if not found
    */
   getMemoryItem<T = unknown>(key: string): T | undefined {
@@ -362,7 +369,10 @@ export class StorageManager {
       const entry: StorageEntry<T> = {
         value,
         timestamp: Date.now(),
-        expiresAt: (options.ttl !== undefined && options.ttl !== null && options.ttl > 0) ? Date.now() + options.ttl : undefined,
+        expiresAt:
+          options.ttl !== undefined && options.ttl !== null && options.ttl > 0
+            ? Date.now() + options.ttl
+            : undefined,
         encryption: options.encryption ?? EncryptionAlgorithm.None,
         version: 1,
         containsPHI: options.containsPHI ?? false,
@@ -373,8 +383,12 @@ export class StorageManager {
         const store = transaction.objectStore('storage');
         const request = store.put({ key, ...entry });
 
-        request.onerror = () => { reject(new Error(request.error?.message ?? 'Unknown error')); };
-        request.onsuccess = () => { resolve(); };
+        request.onerror = () => {
+          reject(new Error(request.error?.message ?? 'Unknown error'));
+        };
+        request.onsuccess = () => {
+          resolve();
+        };
       });
     } catch (error) {
       this.handleError(`Failed to set IndexedDB item "${key}"`, error, options.throwOnError);
@@ -388,7 +402,10 @@ export class StorageManager {
    * @param options - Storage options
    * @returns The stored value, or undefined if not found or expired
    */
-  async getItemAsync<T = unknown>(key: string, options: StorageOptions = {}): Promise<T | undefined> {
+  async getItemAsync<T = unknown>(
+    key: string,
+    options: StorageOptions = {}
+  ): Promise<T | undefined> {
     try {
       const db = await this.openDatabase();
 
@@ -397,7 +414,9 @@ export class StorageManager {
         const store = transaction.objectStore('storage');
         const request = store.get(key);
 
-        request.onerror = () => { reject(new Error(request.error?.message ?? 'Unknown error')); };
+        request.onerror = () => {
+          reject(new Error(request.error?.message ?? 'Unknown error'));
+        };
         request.onsuccess = () => {
           const result = request.result as unknown;
           if (result === null || result === undefined) {
@@ -413,7 +432,12 @@ export class StorageManager {
           const typedResult = result as StoredItem;
 
           // Check expiration
-          if (typedResult.expiresAt !== null && typedResult.expiresAt !== undefined && typedResult.expiresAt > 0 && typedResult.expiresAt < Date.now()) {
+          if (
+            typedResult.expiresAt !== null &&
+            typedResult.expiresAt !== undefined &&
+            typedResult.expiresAt > 0 &&
+            typedResult.expiresAt < Date.now()
+          ) {
             void this.removeItemAsync(key).catch(() => {
               /* ignore cleanup errors */
             });
@@ -444,8 +468,12 @@ export class StorageManager {
         const store = transaction.objectStore('storage');
         const request = store.delete(key);
 
-        request.onerror = () => { reject(new Error(request.error?.message ?? 'Unknown error')); };
-        request.onsuccess = () => { resolve(); };
+        request.onerror = () => {
+          reject(new Error(request.error?.message ?? 'Unknown error'));
+        };
+        request.onsuccess = () => {
+          resolve();
+        };
       });
     } catch (error) {
       this.handleError(`Failed to remove IndexedDB item "${key}"`, error, true);
@@ -504,8 +532,12 @@ export class StorageManager {
         const store = transaction.objectStore('storage');
         const request = store.clear();
 
-        request.onerror = () => { reject(new Error(request.error?.message ?? 'Unknown error')); };
-        request.onsuccess = () => { resolve(); };
+        request.onerror = () => {
+          reject(new Error(request.error?.message ?? 'Unknown error'));
+        };
+        request.onsuccess = () => {
+          resolve();
+        };
       });
     } catch (error) {
       this.handleError('Failed to clear IndexedDB', error, false);
@@ -518,7 +550,11 @@ export class StorageManager {
   private validateAccess(storageType: 'localStorage' | 'sessionStorage', key: string): void {
     if (storageType === 'localStorage') {
       // Check whitelist
-      if (this.accessControl.localstorageWhitelist !== undefined && this.accessControl.localstorageWhitelist !== null && this.accessControl.localstorageWhitelist.length > 0) {
+      if (
+        this.accessControl.localstorageWhitelist !== undefined &&
+        this.accessControl.localstorageWhitelist !== null &&
+        this.accessControl.localstorageWhitelist.length > 0
+      ) {
         if (!this.accessControl.localstorageWhitelist.includes(key)) {
           throw new Error(`Key "${key}" is not in localStorage whitelist`);
         }
@@ -532,7 +568,11 @@ export class StorageManager {
 
     if (storageType === 'sessionStorage') {
       // Check whitelist
-      if (this.accessControl.sessionstoragWhitelist !== undefined && this.accessControl.sessionstoragWhitelist !== null && this.accessControl.sessionstoragWhitelist.length > 0) {
+      if (
+        this.accessControl.sessionstoragWhitelist !== undefined &&
+        this.accessControl.sessionstoragWhitelist !== null &&
+        this.accessControl.sessionstoragWhitelist.length > 0
+      ) {
         if (!this.accessControl.sessionstoragWhitelist.includes(key)) {
           throw new Error(`Key "${key}" is not in sessionStorage whitelist`);
         }
@@ -564,8 +604,12 @@ export class StorageManager {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(this.dbName, this.dbVersion);
 
-      request.onerror = () => { reject(new Error(request.error?.message ?? 'Unknown error')); };
-      request.onsuccess = () => { resolve(request.result); };
+      request.onerror = () => {
+        reject(new Error(request.error?.message ?? 'Unknown error'));
+      };
+      request.onsuccess = () => {
+        resolve(request.result);
+      };
 
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;

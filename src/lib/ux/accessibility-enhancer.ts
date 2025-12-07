@@ -131,14 +131,10 @@ export function initAnnouncer(): void {
 /**
  * Announce a message to screen readers
  */
-export function announce(
-  message: string,
-  priority: AnnouncementPriority = 'polite'
-): void {
+export function announce(message: string, priority: AnnouncementPriority = 'polite'): void {
   initAnnouncer();
 
-  const element =
-    priority === 'assertive' ? assertiveAnnouncerElement : announcerElement;
+  const element = priority === 'assertive' ? assertiveAnnouncerElement : announcerElement;
 
   if (!element) return;
 
@@ -343,9 +339,7 @@ export function createFocusTrap(options: FocusTrapOptions): FocusTrapController 
 
     // Return focus
     if (returnFocus && previouslyFocused) {
-      const target =
-        typeof returnFocus === 'boolean' ? previouslyFocused : returnFocus;
-      target?.focus();
+      previouslyFocused?.focus();
     }
   };
 
@@ -367,21 +361,12 @@ export function createFocusTrap(options: FocusTrapOptions): FocusTrapController 
 /**
  * Create a roving tabindex controller
  */
-export function createRovingTabindex(
-  options: RovingTabindexOptions
-): {
+export function createRovingTabindex(options: RovingTabindexOptions): {
   init: () => void;
   destroy: () => void;
   setFocusedIndex: (index: number) => void;
 } {
-  const {
-    container,
-    itemSelector,
-    orientation,
-    loop = true,
-    initialIndex = 0,
-    onFocus,
-  } = options;
+  const { container, itemSelector, orientation, loop = true, initialIndex = 0, onFocus } = options;
 
   let currentIndex = initialIndex;
   let items: HTMLElement[] = [];
@@ -526,11 +511,7 @@ export function installSkipLinks(): void {
 /**
  * Set ARIA expanded state
  */
-export function setExpanded(
-  element: HTMLElement,
-  expanded: boolean,
-  controlledId?: string
-): void {
+export function setExpanded(element: HTMLElement, expanded: boolean, controlledId?: string): void {
   element.setAttribute('aria-expanded', String(expanded));
   if (controlledId) {
     element.setAttribute('aria-controls', controlledId);
@@ -606,9 +587,7 @@ export function prefersReducedMotion(): boolean {
 /**
  * Subscribe to reduced motion preference changes
  */
-export function onReducedMotionChange(
-  callback: (prefersReduced: boolean) => void
-): () => void {
+export function onReducedMotionChange(callback: (prefersReduced: boolean) => void): () => void {
   if (typeof window === 'undefined') return () => {};
 
   const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -684,11 +663,7 @@ export function checkContrast(
 export function hexToRgb(hex: string): [number, number, number] | null {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return result?.[1] && result[2] && result[3]
-    ? [
-        parseInt(result[1], 16),
-        parseInt(result[2], 16),
-        parseInt(result[3], 16),
-      ]
+    ? [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)]
     : null;
 }
 

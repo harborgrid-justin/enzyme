@@ -30,13 +30,8 @@
  * ```
  */
 
-import { useCallback, useMemo, useState, useEffect } from 'react';
-import {
-  useQueryClient,
-  type QueryKey,
-  type QueryState,
-  type Query,
-} from '@tanstack/react-query';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { type Query, type QueryKey, type QueryState, useQueryClient } from '@tanstack/react-query';
 import type { CacheStats } from '../types';
 
 // =============================================================================
@@ -334,9 +329,7 @@ export function useApiCache(): UseApiCacheResult {
         }
 
         if (filter.fetching !== undefined) {
-          queries = queries.filter(
-            (q) => (q.state.fetchStatus === 'fetching') === filter.fetching
-          );
+          queries = queries.filter((q) => (q.state.fetchStatus === 'fetching') === filter.fetching);
         }
 
         if (filter.predicate) {
@@ -466,10 +459,7 @@ export function useApiCache(): UseApiCacheResult {
  * }
  * ```
  */
-export function useCacheMonitor(options?: {
-  interval?: number;
-  autoStart?: boolean;
-}): {
+export function useCacheMonitor(options?: { interval?: number; autoStart?: boolean }): {
   stats: CacheStats;
   isMonitoring: boolean;
   startMonitoring: () => void;
@@ -495,15 +485,19 @@ export function useCacheMonitor(options?: {
   // Subscribe to cache changes
   useEffect(() => {
     if (isMonitoring) {
-      const unsubscribe = subscribe(refresh);
-      return unsubscribe;
+      return subscribe(refresh);
     }
     return undefined;
   }, [isMonitoring, subscribe, refresh]);
 
   // Polling interval
   useEffect(() => {
-    if (isMonitoring === true && options?.interval !== undefined && options.interval !== null && options.interval > 0) {
+    if (
+      isMonitoring &&
+      options?.interval !== undefined &&
+      options.interval !== null &&
+      options.interval > 0
+    ) {
       const timer = setInterval(refresh, options.interval);
       return () => clearInterval(timer);
     }
@@ -534,7 +528,9 @@ export function useCacheMonitor(options?: {
  * }
  * ```
  */
-export function useCacheEntry<TData = unknown>(queryKey: QueryKey): {
+export function useCacheEntry<TData = unknown>(
+  queryKey: QueryKey
+): {
   entry: CacheEntryInfo<TData> | null;
   isLoaded: boolean;
   isStale: boolean;
@@ -542,9 +538,7 @@ export function useCacheEntry<TData = unknown>(queryKey: QueryKey): {
   refresh: () => void;
 } {
   const { getEntry, subscribe } = useApiCache();
-  const [entry, setEntry] = useState<CacheEntryInfo<TData> | null>(() =>
-    getEntry<TData>(queryKey)
-  );
+  const [entry, setEntry] = useState<CacheEntryInfo<TData> | null>(() => getEntry<TData>(queryKey));
 
   const refresh = useCallback(() => {
     setEntry(getEntry<TData>(queryKey));
@@ -552,8 +546,7 @@ export function useCacheEntry<TData = unknown>(queryKey: QueryKey): {
 
   // Subscribe to changes
   useEffect(() => {
-    const unsubscribe = subscribe(refresh);
-    return unsubscribe;
+    return subscribe(refresh);
   }, [subscribe, refresh]);
 
   // Update when query key changes

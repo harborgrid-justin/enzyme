@@ -1,0 +1,121 @@
+---
+title: {{name}}
+category: {{category}}
+type: component
+generated: {{generated}}
+---
+
+# {{name}}
+
+{{#if isDefaultExport}}
+![default export](https://img.shields.io/badge/default%20export-true-blue)
+{{/if}}
+
+{{#if deprecated}}
+> **⚠️ Deprecated**: {{deprecated}}
+{{/if}}
+
+{{#if description}}
+{{description}}
+{{/if}}
+
+## Table of Contents
+
+- [Props](#props)
+{{#if examples}}
+- [Examples](#examples)
+{{/if}}
+{{#if hooks}}
+- [Hooks Used](#hooks-used)
+{{/if}}
+{{#if relatedComponents}}
+- [Related Components](#related-components)
+{{/if}}
+- [Usage Tips](#usage-tips)
+- [Accessibility](#accessibility)
+
+---
+
+## Props
+
+{{#if props}}
+{{#if props.properties}}
+| Property | Type | Required | Default | Description |
+|----------|------|----------|---------|-------------|
+{{#each props.properties}}
+| `{{name}}` | `{{type}}` | {{#if optional}}❌{{else}}✅{{/if}} | {{#if defaultValue}}`{{defaultValue}}`{{else}}-{{/if}} | {{#if description}}{{description}}{{else}}-{{/if}} |
+{{/each}}
+{{else}}
+This component does not accept any props.
+{{/if}}
+{{else}}
+This component does not accept any props.
+{{/if}}
+
+---
+
+{{#if examples}}
+## Examples
+
+{{#each examples}}
+{{#if @index}}
+### Example {{add @index 1}}
+{{/if}}
+
+```tsx
+{{this}}
+```
+{{/each}}
+{{/if}}
+
+{{#if hooks}}
+## Hooks Used
+
+This component uses the following hooks:
+
+{{#each hooks}}
+- `{{this}}`
+{{/each}}
+{{/if}}
+
+{{#if relatedComponents}}
+## Related Components
+
+{{#each relatedComponents}}
+- [`{{this}}`](../{{slug this}}.md)
+{{/each}}
+{{/if}}
+
+## Usage Tips
+
+- Always provide meaningful props to ensure the component works as expected.
+{{#if props}}
+{{#if props.requiredProps}}
+- This component requires the following props: {{#each props.requiredProps}}`{{name}}`{{#unless @last}}, {{/unless}}{{/each}}
+{{/if}}
+{{/if}}
+{{#if usesEffects}}
+- This component may trigger side effects. Consider its lifecycle carefully.
+{{/if}}
+
+## Accessibility
+
+Ensure this component is accessible by following these guidelines:
+
+- Provide appropriate ARIA labels when necessary
+- Ensure keyboard navigation works correctly
+- Test with screen readers
+- Maintain proper color contrast ratios
+- Use semantic HTML elements
+
+{{#if hasAriaProps}}
+**Note**: This component supports ARIA props for enhanced accessibility.
+{{/if}}
+
+---
+
+**Source**: `{{filePath}}`
+
+{{#if since}}
+**Since**: {{since}}
+{{/if}}

@@ -112,7 +112,7 @@ export const DEFAULT_BREAKPOINTS: Breakpoint[] = [
  */
 export class ResponsiveManager {
   private config: Required<ResponsiveConfig>;
-  private breakpoints: Breakpoint[];
+  private readonly breakpoints: Breakpoint[];
   private currentBreakpoint: string = '';
   private listeners: Set<ResponsiveCallback> = new Set();
   private resizeObserver: ResizeObserver | null = null;
@@ -196,19 +196,6 @@ export class ResponsiveManager {
       deviceMemory: nav.deviceMemory ?? null,
       hardwareConcurrency: navigator.hardwareConcurrency ?? null,
     };
-  }
-
-  /**
-   * Get color scheme preference
-   */
-  private getColorScheme(): 'light' | 'dark' | 'no-preference' {
-    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      return 'dark';
-    }
-    if (window.matchMedia('(prefers-color-scheme: light)').matches) {
-      return 'light';
-    }
-    return 'no-preference';
   }
 
   /**
@@ -373,6 +360,19 @@ export class ResponsiveManager {
 
     this.listeners.clear();
     this.mediaQueryLists.clear();
+  }
+
+  /**
+   * Get color scheme preference
+   */
+  private getColorScheme(): 'light' | 'dark' | 'no-preference' {
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      return 'dark';
+    }
+    if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+      return 'light';
+    }
+    return 'no-preference';
   }
 
   // ============================================================================

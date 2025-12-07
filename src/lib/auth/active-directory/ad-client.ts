@@ -9,27 +9,25 @@
  */
 
 import type {
+  ADAuthError,
   ADConfig,
+  ADGroup,
   ADTokens,
   ADUser,
-  ADGroup,
   ADUserAttributes,
+  GraphAPIError,
   GraphAPIRequest,
   GraphAPIResponse,
-  GraphAPIError,
-
   TokenRefreshResult,
-  ADAuthError,
-
 } from './types';
 
-import { getAuthorityUrl, getConfiguredScopes } from './ad-config';
+import { getAuthorityUrl, getConfiguredScopes } from '@/lib/auth';
 import { ms } from '../../shared/type-utils';
 import {
-  GRAPH_API,
-  DEFAULT_TIMEOUT,
-  DEFAULT_RETRY_BASE_DELAY,
   DEFAULT_MAX_RETRY_ATTEMPTS,
+  DEFAULT_RETRY_BASE_DELAY,
+  DEFAULT_TIMEOUT,
+  GRAPH_API,
 } from '@/lib/core/config/constants';
 
 // =============================================================================
@@ -75,12 +73,12 @@ export const GRAPH_ENDPOINTS = {
  * ```
  */
 export class ADClient {
-  private config: ADConfig;
+  private readonly config: ADConfig;
   private tokens: ADTokens | null = null;
   private tokenRefreshPromise: Promise<TokenRefreshResult> | null = null;
-  private onTokenRefresh?: (tokens: ADTokens) => void;
-  private onAuthError?: (error: ADAuthError) => void;
-  private debug: boolean;
+  private readonly onTokenRefresh?: (tokens: ADTokens) => void;
+  private readonly onAuthError?: (error: ADAuthError) => void;
+  private readonly debug: boolean;
 
   /**
    * Create a new AD client instance.
@@ -168,10 +166,186 @@ export class ADClient {
     this.tokenRefreshPromise = this.performTokenRefresh();
 
     try {
-      const result = await this.tokenRefreshPromise;
-      return result;
+
+      return await this.tokenRefreshPromise;
     } finally {
       this.tokenRefreshPromise = null;
+    }
+  }
+
+  /**
+   * Make a request to the Microsoft Graph API.
+   *
+   * @param request - Graph API request configuration
+   * @returns Graph API response
+   */
+  async graphRequest<T = unknown>(request: GraphAPIRequest): Promise<GraphAPIResponse<T>> {
+    const version = request.version ?? GRAPH_DEFAULT_VERSION;
+    const method = request.method ?? 'GET';
+    const url = this.buildGraphUrl(request.endpoint, version, request.query);
+
+    // Ensure we have valid tokens
+    if (this.isTokenExpired()) {
+      const refreshResult = await this.refreshTokens();
+      if (!refreshResult.success) {
+        throw new GraphAPIClientError(
+          'token_expired',
+          'Token expired and refresh failed',
+          refreshResult.error
+        );
+      }
+    }
+
+    const accessToken = this.tokens?.accessToken;
+    if (accessToken == null) {
+      throw new GraphAPIClientError('no_token', 'No access token available');
+    }
+
+    const headers: Record<string, string> = {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+      ...request.headers,
+    };
+
+    const fetchOptions: RequestInit = {
+      method,
+      headers,
+      body: (request.body != null) ? JSON.stringify(request.body) : undefined,
+    };
+
+    return this.executeWithRetry<T>(url, fetchOptions, (request.timeout !== null && request.timeout !== undefined && request.timeout !== 0) ? ms(request.timeout) : undefined);
+  }
+
+  /**
+   * Get the current authenticated user's profile from Graph API.
+   *
+   * @returns Current user with AD attributes
+   */
+  async getCurrentUser(): Promise<ADUser> {
+    const [userResponse, groupsResponse] = await Promise.all([
+      this.graphRequest<GraphUserProfile>({
+        endpoint: GRAPH_ENDPOINTS.ME,
+        query: {
+          $select: [
+            'id',
+            'userPrincipalName',
+            'displayName',
+            'givenName',
+            'surname',
+            'mail',
+            'jobTitle',
+            'department',
+            'officeLocation',
+            'mobilePhone',
+            'businessPhones',
+            'employeeId',
+            'companyName',
+            'userType',
+            'accountEnabled',
+            'createdDateTime',
+            'onPremisesSamAccountName',
+            'onPremisesDomainName',
+          ].join(','),
+        },
+      }),
+      this.getUserGroupsInternal(),
+    ]);
+
+    const profile = userResponse.data;
+
+
+    return this.mapGraphUserToADUser(profile, groupsResponse);
+  }
+
+  // ===========================================================================
+  // Graph API Operations
+  // ===========================================================================
+
+  /**
+   * Get a user by their ID or UPN.
+   *
+   * @param userId - User ID or UPN
+   * @returns User profile
+   */
+  async getUser(userId: string): Promise<ADUser> {
+    const [userResponse, groupsResponse] = await Promise.all([
+      this.graphRequest<GraphUserProfile>({
+        endpoint: `${GRAPH_ENDPOINTS.USERS}/${encodeURIComponent(userId)}`,
+      }),
+      this.graphRequest<GraphGroupListResponse>({
+        endpoint: `${GRAPH_ENDPOINTS.USERS}/${encodeURIComponent(userId)}/memberOf`,
+      }),
+    ]);
+
+    const groups = this.mapGraphGroups(groupsResponse.data.value);
+
+    return this.mapGraphUserToADUser(userResponse.data, groups);
+  }
+
+  /**
+   * Get the current user's profile photo.
+   *
+   * @returns Photo as blob URL or null
+   */
+  async getUserPhoto(): Promise<string | null> {
+    try {
+      const accessToken = this.tokens?.accessToken;
+      if (accessToken == null) {
+        return null;
+      }
+
+      const response = await fetch(
+        `${GRAPH_BASE_URL}/${GRAPH_DEFAULT_VERSION}${GRAPH_ENDPOINTS.ME_PHOTO}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        return null;
+      }
+
+      const blob = await response.blob();
+      return URL.createObjectURL(blob);
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Get the current user's group memberships.
+   *
+   * @param transitive - Include transitive (nested) memberships
+   * @returns Array of AD groups
+   */
+  async getUserGroups(transitive = false): Promise<ADGroup[]> {
+    return this.getUserGroupsInternal(transitive);
+  }
+
+  /**
+   * Check if user is a member of a specific group.
+   *
+   * @param groupId - Group ID to check
+   * @param transitive - Check transitive membership
+   * @returns Whether user is a member
+   */
+  async checkGroupMembership(groupId: string, transitive = true): Promise<boolean> {
+    try {
+      const response = await this.graphRequest<{ value: boolean }>({
+        endpoint: `/me/checkMemberGroups`,
+        method: 'POST',
+        body: {
+          groupIds: [groupId],
+        },
+      });
+
+      return response.data.value;
+    } catch {
+      // Fall back to fetching all groups
+      const groups = await this.getUserGroups(transitive);
+      return groups.some(g => g.id === groupId);
     }
   }
 
@@ -212,7 +386,7 @@ export class ADClient {
         },
         body: new URLSearchParams({
           grant_type: 'refresh_token',
-          refresh_token: refreshToken as string,
+          refresh_token: refreshToken,
           client_id: this.getClientId(),
           scope: getConfiguredScopes(this.config).join(' '),
         }),
@@ -267,6 +441,10 @@ export class ADClient {
     }
   }
 
+  // ===========================================================================
+  // User Operations
+  // ===========================================================================
+
   /**
    * Get the client ID from configuration.
    */
@@ -281,53 +459,6 @@ export class ADClient {
       default:
         return '';
     }
-  }
-
-  // ===========================================================================
-  // Graph API Operations
-  // ===========================================================================
-
-  /**
-   * Make a request to the Microsoft Graph API.
-   *
-   * @param request - Graph API request configuration
-   * @returns Graph API response
-   */
-  async graphRequest<T = unknown>(request: GraphAPIRequest): Promise<GraphAPIResponse<T>> {
-    const version = request.version ?? GRAPH_DEFAULT_VERSION;
-    const method = request.method ?? 'GET';
-    const url = this.buildGraphUrl(request.endpoint, version, request.query);
-
-    // Ensure we have valid tokens
-    if (this.isTokenExpired()) {
-      const refreshResult = await this.refreshTokens();
-      if (!refreshResult.success) {
-        throw new GraphAPIClientError(
-          'token_expired',
-          'Token expired and refresh failed',
-          refreshResult.error
-        );
-      }
-    }
-
-    const accessToken = this.tokens?.accessToken;
-    if (accessToken == null) {
-      throw new GraphAPIClientError('no_token', 'No access token available');
-    }
-
-    const headers: Record<string, string> = {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-      ...request.headers,
-    };
-
-    const fetchOptions: RequestInit = {
-      method,
-      headers,
-      body: (request.body != null) ? JSON.stringify(request.body) : undefined,
-    };
-
-    return this.executeWithRetry<T>(url, fetchOptions, (request.timeout !== null && request.timeout !== undefined && request.timeout !== 0) ? ms(request.timeout) : undefined);
   }
 
   /**
@@ -426,13 +557,17 @@ export class ADClient {
         // Retry on network errors
         if (attempt < MAX_RETRIES - 1) {
           await this.delay(RETRY_DELAY * (attempt + 1));
-          continue;
+
         }
       }
     }
 
     throw lastError ?? new Error('Request failed after max retries');
   }
+
+  // ===========================================================================
+  // Group Operations
+  // ===========================================================================
 
   /**
    * Extract pagination information from Graph API response.
@@ -467,105 +602,6 @@ export class ADClient {
     }
   }
 
-  // ===========================================================================
-  // User Operations
-  // ===========================================================================
-
-  /**
-   * Get the current authenticated user's profile from Graph API.
-   *
-   * @returns Current user with AD attributes
-   */
-  async getCurrentUser(): Promise<ADUser> {
-    const [userResponse, groupsResponse] = await Promise.all([
-      this.graphRequest<GraphUserProfile>({
-        endpoint: GRAPH_ENDPOINTS.ME,
-        query: {
-          $select: [
-            'id', 'userPrincipalName', 'displayName', 'givenName', 'surname',
-            'mail', 'jobTitle', 'department', 'officeLocation', 'mobilePhone',
-            'businessPhones', 'employeeId', 'companyName', 'userType',
-            'accountEnabled', 'createdDateTime', 'onPremisesSamAccountName',
-            'onPremisesDomainName'
-          ].join(','),
-        },
-      }),
-      this.getUserGroupsInternal(),
-    ]);
-
-    const profile = userResponse.data;
-    const groups = groupsResponse;
-
-    return this.mapGraphUserToADUser(profile, groups);
-  }
-
-  /**
-   * Get a user by their ID or UPN.
-   *
-   * @param userId - User ID or UPN
-   * @returns User profile
-   */
-  async getUser(userId: string): Promise<ADUser> {
-    const [userResponse, groupsResponse] = await Promise.all([
-      this.graphRequest<GraphUserProfile>({
-        endpoint: `${GRAPH_ENDPOINTS.USERS}/${encodeURIComponent(userId)}`,
-      }),
-      this.graphRequest<GraphGroupListResponse>({
-        endpoint: `${GRAPH_ENDPOINTS.USERS}/${encodeURIComponent(userId)}/memberOf`,
-      }),
-    ]);
-
-    const groups = this.mapGraphGroups(groupsResponse.data.value);
-
-    return this.mapGraphUserToADUser(userResponse.data, groups);
-  }
-
-  /**
-   * Get the current user's profile photo.
-   *
-   * @returns Photo as blob URL or null
-   */
-  async getUserPhoto(): Promise<string | null> {
-    try {
-      const accessToken = this.tokens?.accessToken;
-      if (accessToken == null) {
-        return null;
-      }
-
-      const response = await fetch(
-        `${GRAPH_BASE_URL}/${GRAPH_DEFAULT_VERSION}${GRAPH_ENDPOINTS.ME_PHOTO}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        return null;
-      }
-
-      const blob = await response.blob();
-      return URL.createObjectURL(blob);
-    } catch {
-      return null;
-    }
-  }
-
-  // ===========================================================================
-  // Group Operations
-  // ===========================================================================
-
-  /**
-   * Get the current user's group memberships.
-   *
-   * @param transitive - Include transitive (nested) memberships
-   * @returns Array of AD groups
-   */
-  async getUserGroups(transitive = false): Promise<ADGroup[]> {
-    return this.getUserGroupsInternal(transitive);
-  }
-
   /**
    * Internal method to get user groups.
    */
@@ -593,31 +629,6 @@ export class ADClient {
     } while (nextLink != null && nextLink !== '');
 
     return this.mapGraphGroups(allGroups);
-  }
-
-  /**
-   * Check if user is a member of a specific group.
-   *
-   * @param groupId - Group ID to check
-   * @param transitive - Check transitive membership
-   * @returns Whether user is a member
-   */
-  async checkGroupMembership(groupId: string, transitive = true): Promise<boolean> {
-    try {
-      const response = await this.graphRequest<{ value: boolean }>({
-        endpoint: `/me/checkMemberGroups`,
-        method: 'POST',
-        body: {
-          groupIds: [groupId],
-        },
-      });
-
-      return response.data.value;
-    } catch {
-      // Fall back to fetching all groups
-      const groups = await this.getUserGroups(transitive);
-      return groups.some(g => g.id === groupId);
-    }
   }
 
   // ===========================================================================
@@ -748,7 +759,7 @@ export class ADClient {
    * Log debug messages.
    */
   private log(message: string, ...args: unknown[]): void {
-    if (this.debug === true) {
+    if (this.debug) {
       // eslint-disable-next-line no-console
       console.log(`[ADClient] ${message}`, ...args);
     }

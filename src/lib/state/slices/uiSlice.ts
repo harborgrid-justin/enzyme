@@ -159,7 +159,10 @@ function generateToastId(): string {
  * - ui/openModal
  * - ui/addToast
  */
-export const uiSlice = createSlice<UIState, UIActions & Record<string, (...args: never[]) => unknown>>({
+export const uiSlice = createSlice<
+  UIState,
+  UIActions & Record<string, (...args: never[]) => unknown>
+>({
   name: 'ui',
   initialState: initialUIState,
   actions: (set, get) => ({

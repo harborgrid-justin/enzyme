@@ -14,18 +14,18 @@
  */
 
 import type {
-  HTMLEncodingContext,
-  SanitizationOptions,
   DangerousContentResult,
   DangerousThreatType,
-  ThreatDetail,
+  HTMLEncodingContext,
   SafeHTMLResult,
+  SanitizationOptions,
   SanitizedHTML,
   TagTransformer,
+  ThreatDetail,
 } from './types';
 import {
-  ALLOWED_HTML_TAGS,
   ALLOWED_HTML_ATTRIBUTES,
+  ALLOWED_HTML_TAGS,
   ALLOWED_URL_SCHEMES,
 } from '@/config/security.config';
 
@@ -258,32 +258,123 @@ const DANGEROUS_TAGS: ReadonlySet<string> = new Set([
  */
 const DANGEROUS_ATTRIBUTES: ReadonlySet<string> = new Set([
   // Event handlers
-  'onabort', 'onafterprint', 'onanimationend', 'onanimationiteration',
-  'onanimationstart', 'onauxclick', 'onbeforecopy', 'onbeforecut',
-  'onbeforeinput', 'onbeforepaste', 'onbeforeprint', 'onbeforeunload',
-  'onblur', 'oncancel', 'oncanplay', 'oncanplaythrough', 'onchange',
-  'onclick', 'onclose', 'oncontextmenu', 'oncopy', 'oncuechange',
-  'oncut', 'ondblclick', 'ondrag', 'ondragend', 'ondragenter',
-  'ondragleave', 'ondragover', 'ondragstart', 'ondrop', 'ondurationchange',
-  'onemptied', 'onended', 'onerror', 'onfocus', 'onfocusin', 'onfocusout',
-  'onformdata', 'onfullscreenchange', 'onfullscreenerror', 'ongotpointercapture',
-  'onhashchange', 'oninput', 'oninvalid', 'onkeydown', 'onkeypress',
-  'onkeyup', 'onlanguagechange', 'onload', 'onloadeddata', 'onloadedmetadata',
-  'onloadstart', 'onlostpointercapture', 'onmessage', 'onmessageerror',
-  'onmousedown', 'onmouseenter', 'onmouseleave', 'onmousemove', 'onmouseout',
-  'onmouseover', 'onmouseup', 'onmousewheel', 'onoffline', 'ononline',
-  'onpagehide', 'onpageshow', 'onpaste', 'onpause', 'onplay', 'onplaying',
-  'onpointercancel', 'onpointerdown', 'onpointerenter', 'onpointerleave',
-  'onpointermove', 'onpointerout', 'onpointerover', 'onpointerup',
-  'onpopstate', 'onprogress', 'onratechange', 'onrejectionhandled',
-  'onreset', 'onresize', 'onscroll', 'onsearch', 'onseeked', 'onseeking',
-  'onselect', 'onselectionchange', 'onselectstart', 'onshow', 'onstalled',
-  'onstorage', 'onsubmit', 'onsuspend', 'ontimeupdate', 'ontoggle',
-  'ontouchcancel', 'ontouchend', 'ontouchmove', 'ontouchstart',
-  'ontransitioncancel', 'ontransitionend', 'ontransitionrun', 'ontransitionstart',
-  'onunhandledrejection', 'onunload', 'onvolumechange', 'onwaiting',
-  'onwebkitanimationend', 'onwebkitanimationiteration', 'onwebkitanimationstart',
-  'onwebkittransitionend', 'onwheel',
+  'onabort',
+  'onafterprint',
+  'onanimationend',
+  'onanimationiteration',
+  'onanimationstart',
+  'onauxclick',
+  'onbeforecopy',
+  'onbeforecut',
+  'onbeforeinput',
+  'onbeforepaste',
+  'onbeforeprint',
+  'onbeforeunload',
+  'onblur',
+  'oncancel',
+  'oncanplay',
+  'oncanplaythrough',
+  'onchange',
+  'onclick',
+  'onclose',
+  'oncontextmenu',
+  'oncopy',
+  'oncuechange',
+  'oncut',
+  'ondblclick',
+  'ondrag',
+  'ondragend',
+  'ondragenter',
+  'ondragleave',
+  'ondragover',
+  'ondragstart',
+  'ondrop',
+  'ondurationchange',
+  'onemptied',
+  'onended',
+  'onerror',
+  'onfocus',
+  'onfocusin',
+  'onfocusout',
+  'onformdata',
+  'onfullscreenchange',
+  'onfullscreenerror',
+  'ongotpointercapture',
+  'onhashchange',
+  'oninput',
+  'oninvalid',
+  'onkeydown',
+  'onkeypress',
+  'onkeyup',
+  'onlanguagechange',
+  'onload',
+  'onloadeddata',
+  'onloadedmetadata',
+  'onloadstart',
+  'onlostpointercapture',
+  'onmessage',
+  'onmessageerror',
+  'onmousedown',
+  'onmouseenter',
+  'onmouseleave',
+  'onmousemove',
+  'onmouseout',
+  'onmouseover',
+  'onmouseup',
+  'onmousewheel',
+  'onoffline',
+  'ononline',
+  'onpagehide',
+  'onpageshow',
+  'onpaste',
+  'onpause',
+  'onplay',
+  'onplaying',
+  'onpointercancel',
+  'onpointerdown',
+  'onpointerenter',
+  'onpointerleave',
+  'onpointermove',
+  'onpointerout',
+  'onpointerover',
+  'onpointerup',
+  'onpopstate',
+  'onprogress',
+  'onratechange',
+  'onrejectionhandled',
+  'onreset',
+  'onresize',
+  'onscroll',
+  'onsearch',
+  'onseeked',
+  'onseeking',
+  'onselect',
+  'onselectionchange',
+  'onselectstart',
+  'onshow',
+  'onstalled',
+  'onstorage',
+  'onsubmit',
+  'onsuspend',
+  'ontimeupdate',
+  'ontoggle',
+  'ontouchcancel',
+  'ontouchend',
+  'ontouchmove',
+  'ontouchstart',
+  'ontransitioncancel',
+  'ontransitionend',
+  'ontransitionrun',
+  'ontransitionstart',
+  'onunhandledrejection',
+  'onunload',
+  'onvolumechange',
+  'onwaiting',
+  'onwebkitanimationend',
+  'onwebkitanimationiteration',
+  'onwebkitanimationstart',
+  'onwebkittransitionend',
+  'onwheel',
   // Other dangerous attributes
   'formaction',
   'xlink:href',
@@ -382,10 +473,7 @@ export function encodeURLParam(input: string): string {
  * @param context - The encoding context
  * @returns Encoded string
  */
-export function encodeForContext(
-  input: string,
-  context: HTMLEncodingContext
-): string {
+export function encodeForContext(input: string, context: HTMLEncodingContext): string {
   switch (context) {
     case 'html-content':
       return encodeHTML(input);
@@ -401,8 +489,8 @@ export function encodeForContext(
       return encodeURLParam(input);
     default: {
       // Exhaustive check
-      const _exhaustive: never = context;
-      return _exhaustive;
+
+      return context;
     }
   }
 }
@@ -425,9 +513,7 @@ export function decodeHTML(input: string): string {
   result = result.replace(/&#x([0-9a-f]+);?/gi, (_, hex: string) =>
     String.fromCharCode(parseInt(hex, 16))
   );
-  result = result.replace(/&#(\d+);?/g, (_, dec: string) =>
-    String.fromCharCode(parseInt(dec, 10))
-  );
+  result = result.replace(/&#(\d+);?/g, (_, dec: string) => String.fromCharCode(parseInt(dec, 10)));
 
   return result;
 }
@@ -457,10 +543,7 @@ const DEFAULT_SANITIZATION_OPTIONS: Required<SanitizationOptions> = {
  * @param options - Sanitization options
  * @returns Safe HTML result
  */
-export function sanitizeHTML(
-  input: string,
-  options: SanitizationOptions = {}
-): SafeHTMLResult {
+export function sanitizeHTML(input: string, options: SanitizationOptions = {}): SafeHTMLResult {
   const opts = { ...DEFAULT_SANITIZATION_OPTIONS, ...options };
   const removedItems: string[] = [];
   const warnings: string[] = [];
@@ -494,10 +577,7 @@ export function sanitizeHTML(
 
   // Parse and sanitize
   const parser = new DOMParser();
-  const doc = parser.parseFromString(
-    `<div id="sanitize-root">${html}</div>`,
-    'text/html'
-  );
+  const doc = parser.parseFromString(`<div id="sanitize-root">${html}</div>`, 'text/html');
   const root = doc.getElementById('sanitize-root');
 
   if (!root) {
@@ -618,11 +698,7 @@ function sanitizeAttributes(
 
     // Validate URL attributes
     if (isUrlAttribute(attrName)) {
-      const sanitizedUrl = sanitizeUrl(
-        attr.value,
-        opts.allowedSchemes,
-        opts.allowDataUrls
-      );
+      const sanitizedUrl = sanitizeUrl(attr.value, opts.allowedSchemes, opts.allowDataUrls);
       if (sanitizedUrl === null) {
         attributesToRemove.push(attrName);
         removedItems.push(`${attrName}="${attr.value}" (invalid URL)`);
@@ -641,10 +717,7 @@ function sanitizeAttributes(
 /**
  * Check if a tag is allowed
  */
-function isAllowedTag(
-  tagName: string,
-  allowedTags: readonly string[]
-): boolean {
+function isAllowedTag(tagName: string, allowedTags: readonly string[]): boolean {
   // Dangerous tags are never allowed
   if (DANGEROUS_TAGS.has(tagName)) {
     return false;
@@ -662,11 +735,7 @@ function isDangerousAttribute(attrName: string): boolean {
   }
 
   // Check for event handlers (on*)
-  if (attrName.startsWith('on')) {
-    return true;
-  }
-
-  return false;
+  return attrName.startsWith('on');
 }
 
 /**
@@ -685,20 +754,13 @@ function isAllowedAttribute(
 
   // Check tag-specific attributes
   const tagAttrs = allowedAttributes[tagName];
-  if (tagAttrs && matchesAttributePattern(attrName, tagAttrs)) {
-    return true;
-  }
-
-  return false;
+  return !!(tagAttrs && matchesAttributePattern(attrName, tagAttrs));
 }
 
 /**
  * Check if attribute matches any pattern in the list
  */
-function matchesAttributePattern(
-  attrName: string,
-  patterns: readonly string[]
-): boolean {
+function matchesAttributePattern(attrName: string, patterns: readonly string[]): boolean {
   for (const pattern of patterns) {
     if (pattern.endsWith('*')) {
       const prefix = pattern.slice(0, -1);
@@ -716,9 +778,7 @@ function matchesAttributePattern(
  * Check if attribute is a URL attribute
  */
 function isUrlAttribute(attrName: string): boolean {
-  return ['href', 'src', 'action', 'formaction', 'data', 'poster', 'srcset'].includes(
-    attrName
-  );
+  return ['href', 'src', 'action', 'formaction', 'data', 'poster', 'srcset'].includes(attrName);
 }
 
 /**
@@ -894,9 +954,7 @@ export function createSafeHTMLProps(
  * @param content - The HTML content
  * @returns Plain text props
  */
-export function createTextOnlyProps(
-  content: string
-): { children: string } {
+export function createTextOnlyProps(content: string): { children: string } {
   const text = stripTags(decodeHTML(content));
   return { children: text };
 }
@@ -908,10 +966,7 @@ export function createTextOnlyProps(
 /**
  * Validate that a string is safe for the given context
  */
-export function isContextSafe(
-  input: string,
-  context: HTMLEncodingContext
-): boolean {
+export function isContextSafe(input: string, context: HTMLEncodingContext): boolean {
   switch (context) {
     case 'html-content':
       return !/<[^>]*>/g.test(input);
@@ -934,7 +989,8 @@ export function isContextSafe(
  */
 export function isValidEmail(email: string): boolean {
   // RFC 5322 compliant regex (simplified)
-  const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+  const emailRegex =
+    /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
   return emailRegex.test(email);
 }
 
@@ -988,9 +1044,7 @@ export function isSanitizedHTML(value: unknown): value is SanitizedHTML {
 export function assertSanitizedHTML(content: string): SanitizedHTML {
   const result = detectDangerousContent(content);
   if (result.isDangerous) {
-    throw new Error(
-      `Content contains dangerous patterns: ${result.threats.join(', ')}`
-    );
+    throw new Error(`Content contains dangerous patterns: ${result.threats.join(', ')}`);
   }
   return content as SanitizedHTML;
 }

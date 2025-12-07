@@ -190,7 +190,7 @@ export function MorphTransition({
       setIsAnimating(true);
 
       const startTime = performance.now();
-      const {duration} = mergedConfig;
+      const { duration } = mergedConfig;
 
       const animate = (currentTime: number): void => {
         const elapsed = currentTime - startTime - mergedConfig.delay;
@@ -264,8 +264,8 @@ export function MorphTransition({
       const dw = prevRect.width / currentRect.width;
       const dh = prevRect.height / currentRect.height;
 
-      const hasChanged = Math.abs(dx) > 1 || Math.abs(dy) > 1 ||
-        Math.abs(dw - 1) > 0.01 || Math.abs(dh - 1) > 0.01;
+      const hasChanged =
+        Math.abs(dx) > 1 || Math.abs(dy) > 1 || Math.abs(dw - 1) > 0.01 || Math.abs(dh - 1) > 0.01;
 
       if (hasChanged && mergedConfig.interruptible) {
         // Apply inverted transform
@@ -305,12 +305,13 @@ export function MorphTransition({
     // Forward ref if child has one - child is stable from Children.only
     const childElement = Children.only(children);
     if (isValidElement(childElement)) {
-      const childRef = (childElement as ReactElement<{ ref?: (el: HTMLElement | null) => void }>).props.ref;
+      const childRef = (childElement as ReactElement<{ ref?: (el: HTMLElement | null) => void }>)
+        .props.ref;
       if (typeof childRef === 'function') {
         childRef(el);
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Don't render if not visible
@@ -324,26 +325,32 @@ export function MorphTransition({
     return child;
   }
 
-  return cloneElement(child as ReactElement<{
-    ref?: (el: HTMLElement | null) => void;
-    'data-layout-id'?: string;
-    'data-morph-animating'?: boolean;
-    'data-morph-exiting'?: boolean;
-    className?: string;
-    style?: CSSProperties;
-  }>, {
-    ref: refCallback,
-    'data-layout-id': layoutId,
-    'data-morph-animating': isAnimating,
-    'data-morph-exiting': isExiting,
-    className: className != null && className !== '' ? `${(child.props as { className?: string }).className ?? ''} ${className}`.trim() : (child.props as { className?: string }).className,
-    style: {
-      ...(child.props as { style?: CSSProperties }).style,
-      ...style,
-      // Ensure GPU acceleration
-      willChange: isAnimating ? 'transform, opacity' : undefined,
-    },
-  });
+  return cloneElement(
+    child as ReactElement<{
+      ref?: (el: HTMLElement | null) => void;
+      'data-layout-id'?: string;
+      'data-morph-animating'?: boolean;
+      'data-morph-exiting'?: boolean;
+      className?: string;
+      style?: CSSProperties;
+    }>,
+    {
+      ref: refCallback,
+      'data-layout-id': layoutId,
+      'data-morph-animating': isAnimating,
+      'data-morph-exiting': isExiting,
+      className:
+        className != null && className !== ''
+          ? `${(child.props as { className?: string }).className ?? ''} ${className}`.trim()
+          : (child.props as { className?: string }).className,
+      style: {
+        ...(child.props as { style?: CSSProperties }).style,
+        ...style,
+        // Ensure GPU acceleration
+        willChange: isAnimating ? 'transform, opacity' : undefined,
+      },
+    }
+  );
 }
 
 // =============================================================================
@@ -421,7 +428,11 @@ export function AnimatedPresence({
         // Keep exiting children in the render
         const exitingChildren: ReactNode[] = [];
         Children.forEach(previousChildren, (child) => {
-          if (isValidElement(child) && child.key !== null && newExitingKeys.has(String(child.key))) {
+          if (
+            isValidElement(child) &&
+            child.key !== null &&
+            newExitingKeys.has(String(child.key))
+          ) {
             // Clone with present=false to trigger exit animation
             exitingChildren.push(
               cloneElement(child as ReactElement<{ present?: boolean; key: string }>, {

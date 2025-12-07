@@ -90,10 +90,7 @@ export interface RouteQuery {
  * buildRoutePath('/users/:id', { id: '123' });
  * ```
  */
-export function buildPath<T extends keyof RouteParams>(
-  path: T,
-  params: RouteParams[T]
-): string {
+export function buildPath<T extends keyof RouteParams>(path: T, params: RouteParams[T]): string {
   // Inline implementation to avoid circular dependency and require()
   let result = path as string;
   for (const [key, value] of Object.entries(params)) {
@@ -116,7 +113,10 @@ export function buildPathWithQuery<T extends keyof RouteQuery>(
   const searchParams = new URLSearchParams();
   for (const [key, value] of Object.entries(query)) {
     if (value !== undefined && value !== null) {
-      const stringValue = typeof value === 'object' ? JSON.stringify(value) : String(value as string | number | boolean);
+      const stringValue =
+        typeof value === 'object'
+          ? JSON.stringify(value)
+          : String(value as string | number | boolean);
       searchParams.set(key, stringValue);
     }
   }
@@ -127,9 +127,7 @@ export function buildPathWithQuery<T extends keyof RouteQuery>(
 /**
  * Parse query parameters from a URL
  */
-export function parseQuery<T extends keyof RouteQuery>(
-  search: string
-): Partial<RouteQuery[T]> {
+export function parseQuery<T extends keyof RouteQuery>(search: string): Partial<RouteQuery[T]> {
   const params = new URLSearchParams(search);
   const result: Record<string, string> = {};
 

@@ -316,7 +316,11 @@ export {
 // =============================================================================
 
 import { scanApiRoutes, type ScannedApiRoute, type ApiScannerConfig } from './route-scanner';
-import { generateApiEndpoints, type GeneratedEndpoint, type ApiGeneratorConfig } from './api-generator';
+import {
+  generateApiEndpoints,
+  type GeneratedEndpoint,
+  type ApiGeneratorConfig,
+} from './api-generator';
 import {
   type EndpointRegistry,
   createEndpointRegistry,
@@ -341,7 +345,8 @@ export interface AutoApiOptions {
   /** Registry configuration */
   readonly registry?: Partial<EndpointRegistryConfig>;
   /** RBAC configuration */
-  readonly rbac?: Partial<RBACIntegrationConfig> & Pick<RBACIntegrationConfig, 'checkPermission' | 'checkRole'>;
+  readonly rbac?: Partial<RBACIntegrationConfig> &
+    Pick<RBACIntegrationConfig, 'checkPermission' | 'checkRole'>;
 }
 
 /**
@@ -385,9 +390,7 @@ export interface AutoApiResult {
  */
 export async function initializeAutoApi(options: AutoApiOptions): Promise<AutoApiResult> {
   // Create RBAC integration if configured
-  const rbac = options.rbac
-    ? createRBACIntegration(options.rbac)
-    : undefined;
+  const rbac = options.rbac ? createRBACIntegration(options.rbac) : undefined;
 
   // Create registry
   const registry = createEndpointRegistry({

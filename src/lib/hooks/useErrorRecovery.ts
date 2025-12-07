@@ -10,8 +10,8 @@
  * - Error toast management
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { normalizeError, isRetryableError, type AppError } from '../monitoring/errorTypes';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { type AppError, isRetryableError, normalizeError } from '../monitoring/errorTypes';
 import { ErrorReporter } from '../monitoring/ErrorReporter';
 import { networkMonitor } from '../utils/networkStatus';
 import { useIsMounted } from './shared/useIsMounted';
@@ -297,11 +297,7 @@ export function useNetworkAwareOperation<T>(
     onlineTimeout?: number;
   } = {}
 ): NetworkAwareOperationResult<T> {
-  const {
-    requiresNetwork = true,
-    waitForOnline = true,
-    onlineTimeout = 30000,
-  } = options;
+  const { requiresNetwork = true, waitForOnline = true, onlineTimeout = 30000 } = options;
 
   const [isOnline, setIsOnline] = useState(() => networkMonitor.isOnline());
   const [isWaiting, setIsWaiting] = useState(false);
@@ -509,8 +505,8 @@ export function useSafeCallback<Args extends unknown[], Return>(
       setError(null);
 
       try {
-        const result = await callback(...args);
-        return result;
+
+        return await callback(...args);
       } catch (err) {
         const appError = normalizeError(err);
         setError(appError);
@@ -815,18 +811,15 @@ export function useErrorContext(context: ErrorContext): {
     });
   }, []);
 
-  const createContextualError = useCallback(
-    (error: unknown): AppError => {
-      const appError = normalizeError(error);
-      return {
-        ...appError,
-        context: {
-          ...contextRef.current,
-        },
-      } as AppError;
-    },
-    []
-  );
+  const createContextualError = useCallback((error: unknown): AppError => {
+    const appError = normalizeError(error);
+    return {
+      ...appError,
+      context: {
+        ...contextRef.current,
+      },
+    } as AppError;
+  }, []);
 
   return {
     context,

@@ -33,6 +33,10 @@ afterEach(() => {
 export class TestStorage {
   private store: Map<string, string> = new Map();
 
+  get length(): number {
+    return this.store.size;
+  }
+
   getItem(key: string): string | null {
     return this.store.get(key) ?? null;
   }
@@ -47,10 +51,6 @@ export class TestStorage {
 
   clear(): void {
     this.store.clear();
-  }
-
-  get length(): number {
-    return this.store.size;
   }
 
   key(index: number): string | null {

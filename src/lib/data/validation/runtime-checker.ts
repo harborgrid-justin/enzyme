@@ -44,7 +44,9 @@ export type Brand<T, B extends string> = T & { [BRAND]: B };
 /**
  * Create a branded value
  */
-export function brand<T extends Brand<unknown, string>>(value: T extends Brand<infer U, string> ? U : never): T {
+export function brand<T extends Brand<unknown, string>>(
+  value: T extends Brand<infer U, string> ? U : never
+): T {
   return value as T;
 }
 
@@ -216,7 +218,9 @@ export function isSet<T = unknown>(value: unknown): value is Set<T> {
  * Check if value is a Promise
  */
 export function isPromise<T = unknown>(value: unknown): value is Promise<T> {
-  return value instanceof Promise || (isObject(value) && isFunction((value as { then?: unknown }).then));
+  return (
+    value instanceof Promise || (isObject(value) && isFunction((value as { then?: unknown }).then))
+  );
 }
 
 /**
@@ -349,20 +353,14 @@ export function isJSONString(value: unknown): value is string {
 /**
  * Check if object has a specific key
  */
-export function hasKey<K extends string>(
-  value: unknown,
-  key: K
-): value is Record<K, unknown> {
+export function hasKey<K extends string>(value: unknown, key: K): value is Record<K, unknown> {
   return isObject(value) && key in value;
 }
 
 /**
  * Check if object has specific keys
  */
-export function hasKeys<K extends string>(
-  value: unknown,
-  keys: K[]
-): value is Record<K, unknown> {
+export function hasKeys<K extends string>(value: unknown, keys: K[]): value is Record<K, unknown> {
   return isObject(value) && keys.every((key) => key in value);
 }
 
@@ -383,7 +381,9 @@ export function hasKeyOfType<K extends string, T>(
 export function isShapeOf<T extends Record<string, TypeGuard<unknown>>>(
   shape: T
 ): TypeGuard<{ [K in keyof T]: T[K] extends TypeGuard<infer U> ? U : never }> {
-  return (value: unknown): value is { [K in keyof T]: T[K] extends TypeGuard<infer U> ? U : never } => {
+  return (
+    value: unknown
+  ): value is { [K in keyof T]: T[K] extends TypeGuard<infer U> ? U : never } => {
     if (!isObject(value)) return false;
     for (const [key, guard] of Object.entries(shape)) {
       if (!guard(value[key])) return false;
@@ -460,10 +460,7 @@ export class AssertionError extends Error {
 /**
  * Create an assertion function from a type guard
  */
-export function createAssertion<T>(
-  guard: TypeGuard<T>,
-  defaultMessage: string
-): TypeAssertion<T> {
+export function createAssertion<T>(guard: TypeGuard<T>, defaultMessage: string): TypeAssertion<T> {
   return (value: unknown, message?: string): asserts value is T => {
     if (!guard(value)) {
       throw new AssertionError(message ?? defaultMessage, value);
@@ -476,7 +473,11 @@ export function createAssertion<T>(
  */
 export function assertString(value: unknown, message?: string): asserts value is string {
   if (!isString(value)) {
-    throw new AssertionError(message ?? `Expected string, received ${typeof value}`, value, 'string');
+    throw new AssertionError(
+      message ?? `Expected string, received ${typeof value}`,
+      value,
+      'string'
+    );
   }
 }
 
@@ -485,7 +486,11 @@ export function assertString(value: unknown, message?: string): asserts value is
  */
 export function assertNumber(value: unknown, message?: string): asserts value is number {
   if (!isNumber(value)) {
-    throw new AssertionError(message ?? `Expected number, received ${typeof value}`, value, 'number');
+    throw new AssertionError(
+      message ?? `Expected number, received ${typeof value}`,
+      value,
+      'number'
+    );
   }
 }
 
@@ -494,7 +499,11 @@ export function assertNumber(value: unknown, message?: string): asserts value is
  */
 export function assertBoolean(value: unknown, message?: string): asserts value is boolean {
   if (!isBoolean(value)) {
-    throw new AssertionError(message ?? `Expected boolean, received ${typeof value}`, value, 'boolean');
+    throw new AssertionError(
+      message ?? `Expected boolean, received ${typeof value}`,
+      value,
+      'boolean'
+    );
   }
 }
 
@@ -506,7 +515,11 @@ export function assertObject(
   message?: string
 ): asserts value is Record<string, unknown> {
   if (!isObject(value)) {
-    throw new AssertionError(message ?? `Expected object, received ${typeof value}`, value, 'object');
+    throw new AssertionError(
+      message ?? `Expected object, received ${typeof value}`,
+      value,
+      'object'
+    );
   }
 }
 
@@ -548,7 +561,13 @@ export function assertType<T>(
  * Assert condition is truthy
  */
 export function assert(condition: unknown, message?: string): asserts condition {
-  if (condition === false || condition === null || condition === undefined || condition === '' || condition === 0) {
+  if (
+    condition === false ||
+    condition === null ||
+    condition === undefined ||
+    condition === '' ||
+    condition === 0
+  ) {
     throw new AssertionError(message ?? 'Assertion failed', condition);
   }
 }
@@ -585,11 +604,7 @@ export function narrowAndTransform<T, U>(
 /**
  * Create a safe accessor for object properties
  */
-export function safeGet<T>(
-  obj: unknown,
-  key: string,
-  guard: TypeGuard<T>
-): T | undefined {
+export function safeGet<T>(obj: unknown, key: string, guard: TypeGuard<T>): T | undefined {
   if (!isObject(obj)) return undefined;
   const value = obj[key];
   return guard(value) ? value : undefined;
@@ -598,11 +613,7 @@ export function safeGet<T>(
 /**
  * Create a deep safe accessor
  */
-export function safeGetPath<T>(
-  obj: unknown,
-  path: string[],
-  guard: TypeGuard<T>
-): T | undefined {
+export function safeGetPath<T>(obj: unknown, path: string[], guard: TypeGuard<T>): T | undefined {
   let current: unknown = obj;
 
   for (const key of path) {
@@ -664,7 +675,9 @@ export function checkAll<T extends Record<string, [unknown, TypeGuard<unknown>]>
 
   return {
     success: errors.length === 0,
-    values: values as { [K in keyof T]: T[K][1] extends TypeGuard<infer U> ? U | undefined : never },
+    values: values as {
+      [K in keyof T]: T[K][1] extends TypeGuard<infer U> ? U | undefined : never;
+    },
     errors,
   };
 }
@@ -720,7 +733,9 @@ export function record<T>(valueGuard: TypeGuard<T>): TypeGuard<Record<string, T>
 export function tuple<T extends TypeGuard<unknown>[]>(
   ...guards: T
 ): TypeGuard<{ [K in keyof T]: T[K] extends TypeGuard<infer U> ? U : never }> {
-  return (value: unknown): value is { [K in keyof T]: T[K] extends TypeGuard<infer U> ? U : never } => {
+  return (
+    value: unknown
+  ): value is { [K in keyof T]: T[K] extends TypeGuard<infer U> ? U : never } => {
     if (!isArray(value)) return false;
     if (value.length !== guards.length) return false;
     return guards.every((guard, index) => guard(value[index]));

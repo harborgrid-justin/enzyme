@@ -645,6 +645,22 @@ import { ... } from '@missionfabric-js/enzyme/vdom';
 
 ---
 
+## Related Documentation
+
+### Module Documentation
+- [API Module](../api/README.md) - HTTP client, requests, responses
+- [Auth Module](../auth/README.md) - Authentication, RBAC, permissions
+- [State Module](../state/README.md) - Zustand state management
+- [Routing Module](../routing/README.md) - Type-safe routing
+- [UI Module](../ui/README.md) - UI component library
+- [Config Module](../config/README.md) - Configuration system
+- [Security Module](../security/README.md) - Security utilities
+- [Performance Module](../performance/README.md) - Performance tools
+- [Theme Module](../theme/README.md) - Theming and design tokens
+- [Hooks Module](../hooks/README.md) - Custom React hooks collection
+
+---
+
 **Total Exports:** 400+
 **Last Updated:** 2025-11-29
 **Version:** 1.0.5

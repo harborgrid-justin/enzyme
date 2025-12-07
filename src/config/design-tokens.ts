@@ -69,7 +69,8 @@ export const COLORS = {
     primary: 'bg-primary-600 text-white',
     primaryHover: 'hover:bg-primary-700',
     primaryLight: 'bg-primary-50 text-primary-700 dark:bg-primary-900 dark:text-primary-200',
-    primaryOutline: 'border border-primary-600 text-primary-600 dark:border-primary-400 dark:text-primary-400',
+    primaryOutline:
+      'border border-primary-600 text-primary-600 dark:border-primary-400 dark:text-primary-400',
   },
 
   // Semantic colors
@@ -107,19 +108,28 @@ export const COLORS = {
  * Consistent styling for status indicators across the app
  */
 export const STATUS_BADGES = {
-  success: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-  warning: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-  error: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+  success:
+    'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+  warning:
+    'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+  error:
+    'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
   info: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-  neutral: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
-  primary: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200',
+  neutral:
+    'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+  primary:
+    'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200',
 
   // Entity-specific status badges
   entity: {
-    active: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-    inactive: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
-    pending: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-    archived: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+    active:
+      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+    inactive:
+      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+    pending:
+      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+    archived:
+      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
   },
 } as const;
 
@@ -128,9 +138,11 @@ export const STATUS_BADGES = {
  * Consistent styling for icon wrappers
  */
 export const ICON_CONTAINERS = {
-  primary: 'h-12 w-12 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center',
+  primary:
+    'h-12 w-12 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center',
   success: 'h-12 w-12 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center',
-  warning: 'h-12 w-12 rounded-full bg-yellow-100 dark:bg-yellow-900 flex items-center justify-center',
+  warning:
+    'h-12 w-12 rounded-full bg-yellow-100 dark:bg-yellow-900 flex items-center justify-center',
   error: 'h-12 w-12 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center',
   info: 'h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center',
   neutral: 'h-12 w-12 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center',
@@ -219,9 +231,12 @@ export const LAYOUTS = {
  * Reusable card styling patterns
  */
 export const CARDS = {
-  default: 'bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700',
-  elevated: 'bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700',
-  interactive: 'bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow cursor-pointer',
+  default:
+    'bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700',
+  elevated:
+    'bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700',
+  interactive:
+    'bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow cursor-pointer',
   flat: 'bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700',
 } as const;
 
@@ -233,7 +248,8 @@ export const INPUT_STATES = {
   default: 'border-gray-300 dark:border-gray-600 focus:border-primary-500 focus:ring-primary-500',
   error: 'border-red-300 dark:border-red-600 focus:border-red-500 focus:ring-red-500',
   success: 'border-green-300 dark:border-green-600 focus:border-green-500 focus:ring-green-500',
-  disabled: 'bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700 cursor-not-allowed opacity-60',
+  disabled:
+    'bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700 cursor-not-allowed opacity-60',
 } as const;
 
 /**
@@ -242,9 +258,12 @@ export const INPUT_STATES = {
  */
 export const BUTTON_VARIANTS = {
   primary: 'bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500',
-  secondary: 'bg-gray-200 text-gray-900 hover:bg-gray-300 focus:ring-gray-500 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600',
-  outline: 'border border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-primary-500 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800',
-  ghost: 'text-gray-700 hover:bg-gray-100 focus:ring-gray-500 dark:text-gray-300 dark:hover:bg-gray-800',
+  secondary:
+    'bg-gray-200 text-gray-900 hover:bg-gray-300 focus:ring-gray-500 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600',
+  outline:
+    'border border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-primary-500 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800',
+  ghost:
+    'text-gray-700 hover:bg-gray-100 focus:ring-gray-500 dark:text-gray-300 dark:hover:bg-gray-800',
   danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
   success: 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500',
   warning: 'bg-yellow-600 text-white hover:bg-yellow-700 focus:ring-yellow-500',
@@ -297,7 +316,7 @@ export const ANIMATIONS = {
     fast: 'transition-all duration-100 ease-in-out',
     slow: 'transition-all duration-300 ease-in-out',
   },
-  
+
   hover: {
     scale: 'hover:scale-105 transition-transform duration-200',
     lift: 'hover:-translate-y-1 transition-transform duration-200',
@@ -315,7 +334,8 @@ export const ANIMATIONS = {
  */
 export const A11Y = {
   focusRing: 'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500',
-  focusVisible: 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary-500',
+  focusVisible:
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary-500',
   srOnly: 'sr-only',
   notSrOnly: 'not-sr-only',
 } as const;
@@ -550,7 +570,8 @@ export const DIVIDERS = {
   /** Dashed horizontal */
   dashed: 'border-t border-dashed border-gray-200 dark:border-gray-700',
   /** With text (use with content) */
-  withText: 'flex items-center gap-4 before:flex-1 before:border-t before:border-gray-200 dark:before:border-gray-700 after:flex-1 after:border-t after:border-gray-200 dark:after:border-gray-700',
+  withText:
+    'flex items-center gap-4 before:flex-1 before:border-t before:border-gray-200 dark:before:border-gray-700 after:flex-1 after:border-t after:border-gray-200 dark:after:border-gray-700',
 } as const;
 
 /**
@@ -563,7 +584,8 @@ export const SCROLLBAR = {
   /** Thin scrollbar */
   thin: 'scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent',
   /** Default scrollbar */
-  default: 'scrollbar scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-gray-100 dark:scrollbar-track-gray-800',
+  default:
+    'scrollbar scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-gray-100 dark:scrollbar-track-gray-800',
 } as const;
 
 /**
@@ -576,7 +598,8 @@ export const FOCUS_RING = {
   /** Focus ring without offset */
   noOffset: 'focus:outline-none focus:ring-2 focus:ring-primary-500',
   /** Focus visible only */
-  visible: 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2',
+  visible:
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2',
   /** Error state focus */
   error: 'focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2',
   /** Within (for focus-within) */
@@ -662,7 +685,7 @@ export const conditionalToken = (
   condition: boolean,
   trueToken: string,
   falseToken?: string
-): string => (condition ? trueToken : falseToken ?? '');
+): string => (condition ? trueToken : (falseToken ?? ''));
 
 /**
  * Status to badge mapping helper
@@ -676,7 +699,16 @@ export const conditionalToken = (
  * ```
  */
 export const getStatusBadge = (
-  status: 'active' | 'inactive' | 'pending' | 'archived' | 'success' | 'warning' | 'error' | 'info' | string
+  status:
+    | 'active'
+    | 'inactive'
+    | 'pending'
+    | 'archived'
+    | 'success'
+    | 'warning'
+    | 'error'
+    | 'info'
+    | string
 ): string => {
   const statusMap: Record<string, string> = {
     active: STATUS_BADGES.success,

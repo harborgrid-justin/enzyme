@@ -16,7 +16,7 @@
 /* eslint-disable @typescript-eslint/strict-boolean-expressions */
 
 import type React from 'react';
-import { createElement, type ReactNode, type ComponentType } from 'react';
+import { type ComponentType, createElement, type ReactNode } from 'react';
 import { isDev, isTest } from '@/lib/core/config/env-helper';
 
 // ============================================================================
@@ -222,7 +222,9 @@ export function detectEnvironment(): EnvironmentInfo {
  * Detect available features based on environment
  */
 export function detectAvailableFeatures(env: EnvironmentInfo): AutoSetupFeatures {
-  const features: AutoSetupFeatures = {
+
+
+  return {
     performance: true,
     errorTracking: true,
     analytics: env.type === 'production',
@@ -232,8 +234,6 @@ export function detectAvailableFeatures(env: EnvironmentInfo): AutoSetupFeatures
     theming: env.isBrowser,
     hydration: env.isSSR || (env.isBrowser && document.querySelector('[data-ssr]') !== null),
   };
-
-  return features;
 }
 
 // ============================================================================
@@ -249,8 +249,8 @@ export function composeProviders(
   // Filter enabled providers and sort by priority
   const activeProviders = providers
     .filter((p) => {
-      const enabled = typeof p.enabled === 'function' ? p.enabled() : p.enabled ?? true;
-      return enabled;
+
+      return typeof p.enabled === 'function' ? p.enabled() : p.enabled ?? true;
     })
     .sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
 
@@ -272,8 +272,8 @@ export function composeProviders(
 export class AutoSetup {
   private static instance: AutoSetup;
   private config: AutoSetupConfig;
-  private environment: EnvironmentInfo;
-  private features: AutoSetupFeatures;
+  private readonly environment: EnvironmentInfo;
+  private readonly features: AutoSetupFeatures;
   private providers: ProviderConfig[] = [];
   private cleanupFns: Array<() => void> = [];
   private isInitialized = false;
@@ -342,6 +342,55 @@ export class AutoSetup {
   }
 
   /**
+   * Cleanup all initialized features
+   */
+  cleanup(): void {
+    this.cleanupFns.forEach((fn) => {
+      try {
+        fn();
+      } catch {
+        // Ignore cleanup errors
+      }
+    });
+    this.cleanupFns = [];
+
+    if (this.config.onCleanup) {
+      this.config.onCleanup();
+    }
+
+    this.isInitialized = false;
+  }
+
+  /**
+   * Re-initialize
+   */
+  async reinit(): Promise<void> {
+    this.cleanup();
+    await this.init();
+  }
+
+  /**
+   * Add a provider
+   */
+  addProvider(config: ProviderConfig): void {
+    this.providers.push(config);
+  }
+
+  /**
+   * Get environment info
+   */
+  getEnvironment(): EnvironmentInfo {
+    return { ...this.environment };
+  }
+
+  /**
+   * Get active features
+   */
+  getFeatures(): AutoSetupFeatures {
+    return { ...this.features };
+  }
+
+  /**
    * Initialize features
    */
   private async initializeFeatures(): Promise<void> {
@@ -387,34 +436,6 @@ export class AutoSetup {
   }
 
   /**
-   * Cleanup all initialized features
-   */
-  cleanup(): void {
-    this.cleanupFns.forEach((fn) => {
-      try {
-        fn();
-      } catch {
-        // Ignore cleanup errors
-      }
-    });
-    this.cleanupFns = [];
-
-    if (this.config.onCleanup) {
-      this.config.onCleanup();
-    }
-
-    this.isInitialized = false;
-  }
-
-  /**
-   * Re-initialize
-   */
-  async reinit(): Promise<void> {
-    this.cleanup();
-    await this.init();
-  }
-
-  /**
    * Get the result
    */
   private getResult(): AutoSetupResult {
@@ -425,27 +446,6 @@ export class AutoSetup {
       cleanup: () => this.cleanup(),
       reinit: async () => this.reinit(),
     };
-  }
-
-  /**
-   * Add a provider
-   */
-  addProvider(config: ProviderConfig): void {
-    this.providers.push(config);
-  }
-
-  /**
-   * Get environment info
-   */
-  getEnvironment(): EnvironmentInfo {
-    return { ...this.environment };
-  }
-
-  /**
-   * Get active features
-   */
-  getFeatures(): AutoSetupFeatures {
-    return { ...this.features };
   }
 
   /**

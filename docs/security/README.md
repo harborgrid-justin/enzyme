@@ -864,20 +864,37 @@ For in-depth information on specific security features:
 - **[XSS.md](./XSS.md)** - XSS prevention, sanitization, context-aware encoding
 - **[SECURE_STORAGE.md](./SECURE_STORAGE.md)** - Encrypted storage, key management, TTL support
 
-## See Also
+## Related Documentation
 
-### Internal Documentation
-- [Authentication Module](../auth/README.md) - Secure authentication with token storage
-- [API Module](../api/README.md) - API client with CSRF protection
-- [Feature Flags](../flags/README.md) - Feature-flag driven security
+### Security Module Documentation
+- [CSRF Protection](./CSRF.md) - Cross-site request forgery prevention in detail
+- [XSS Prevention](./XSS.md) - Cross-site scripting protection techniques
+- [CSP Management](./CSP.md) - Content Security Policy configuration
+- [Secure Storage](./SECURE_STORAGE.md) - Encrypted client-side storage
+
+### Authentication & Authorization
+- [Authentication Module](../auth/README.md) - Complete authentication system
+- [Auth Service](../auth/AUTH_SERVICE.md) - Secure token management
+- [RBAC System](../auth/RBAC.md) - Role-based access control
+- [Auth Guards](../auth/GUARDS.md) - Route protection components
+- [Auth Patterns](../auth/PATTERNS.md) - Security-aware auth patterns
+
+### Integration
+- [Auth-Security-State Integration](../integration/AUTH_SECURITY_STATE.md) - Integrated security usage
+- [API Module](../api/README.md) - API client with CSRF and token management
 - [Configuration](../config/README.md) - Security configuration management
 
+### General Documentation
+- [Security Best Practices](../SECURITY.md) - Application-level security guidelines
+- [Getting Started](../GETTING_STARTED.md) - Quick start with security features
+- [Architecture Overview](../ARCHITECTURE.md) - System architecture
+
 ### External Resources
-- [OWASP Top 10](https://owasp.org/www-project-top-ten/)
+- [OWASP Top 10](https://owasp.org/www-project-top-ten/) - Top web application security risks
 - [OWASP XSS Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)
 - [OWASP CSRF Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html)
-- [CSP Documentation](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP)
-- [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API)
+- [CSP Documentation](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP) - MDN CSP reference
+- [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API) - Client-side encryption
 
 ---
 

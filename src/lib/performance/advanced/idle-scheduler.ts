@@ -24,12 +24,7 @@ export type IdleTaskPriority = 'critical' | 'high' | 'normal' | 'low';
 /**
  * Task status
  */
-export type IdleTaskStatus =
-  | 'pending'
-  | 'running'
-  | 'completed'
-  | 'cancelled'
-  | 'failed';
+export type IdleTaskStatus = 'pending' | 'running' | 'completed' | 'cancelled' | 'failed';
 
 /**
  * Idle task definition
@@ -269,13 +264,9 @@ export class IdleScheduler {
       failedTasks: entries.filter((e) => e.status === 'failed').length,
       cancelledTasks: entries.filter((e) => e.status === 'cancelled').length,
       averageWaitTime:
-        waitTimes.length > 0
-          ? waitTimes.reduce((a, b) => a + b, 0) / waitTimes.length
-          : 0,
+        waitTimes.length > 0 ? waitTimes.reduce((a, b) => a + b, 0) / waitTimes.length : 0,
       averageExecutionTime:
-        execTimes.length > 0
-          ? execTimes.reduce((a, b) => a + b, 0) / execTimes.length
-          : 0,
+        execTimes.length > 0 ? execTimes.reduce((a, b) => a + b, 0) / execTimes.length : 0,
     };
   }
 
@@ -296,7 +287,7 @@ export class IdleScheduler {
    * Stop the scheduler
    */
   stop(): void {
-    if (this.isRunning === false) {
+    if (!this.isRunning) {
       return;
     }
 
@@ -329,7 +320,7 @@ export class IdleScheduler {
   // ============================================================================
 
   private ensureSchedulerRunning(): void {
-    if (this.isRunning === false) {
+    if (!this.isRunning) {
       this.start();
     } else if (this.idleCallbackId === null && this.fallbackTimer === null) {
       this.scheduleIdleCallback();
@@ -337,20 +328,22 @@ export class IdleScheduler {
   }
 
   private scheduleIdleCallback(): void {
-    if (this.isRunning === false) {
+    if (!this.isRunning) {
       return;
     }
 
     if (this.hasIdleCallback()) {
-      this.idleCallbackId = (window as Window & typeof globalThis & {
-        requestIdleCallback: (
-          callback: (deadline: IdleDeadline) => void,
-          options?: { timeout?: number }
-        ) => number;
-      }).requestIdleCallback(
-        (deadline) => this.processIdleCallback(deadline),
-        { timeout: this.getMinTaskTimeout() }
-      );
+      this.idleCallbackId = (
+        window as Window &
+          typeof globalThis & {
+            requestIdleCallback: (
+              callback: (deadline: IdleDeadline) => void,
+              options?: { timeout?: number }
+            ) => number;
+          }
+      ).requestIdleCallback((deadline) => this.processIdleCallback(deadline), {
+        timeout: this.getMinTaskTimeout(),
+      });
     } else if (this.config.enableFallback) {
       this.fallbackTimer = setTimeout(() => {
         this.processFallback();
@@ -366,10 +359,7 @@ export class IdleScheduler {
 
     for (const entry of pendingTasks) {
       // Check if we have enough time
-      if (
-        !deadline.didTimeout &&
-        deadline.timeRemaining() < this.config.minRemainingTime
-      ) {
+      if (!deadline.didTimeout && deadline.timeRemaining() < this.config.minRemainingTime) {
         break;
       }
 
@@ -433,9 +423,7 @@ export class IdleScheduler {
       entry.completedAt = Date.now();
       entry.result = result;
 
-      this.log(
-        `Task completed: ${task.name} (${entry.completedAt - (entry.startedAt ?? 0)}ms)`
-      );
+      this.log(`Task completed: ${task.name} (${entry.completedAt - (entry.startedAt ?? 0)}ms)`);
 
       task.onComplete?.(result);
     } catch (error) {
@@ -454,8 +442,7 @@ export class IdleScheduler {
       .filter((entry) => entry.status === 'pending')
       .sort((a, b) => {
         // Sort by priority first, then by creation time
-        const priorityDiff =
-          PRIORITY_WEIGHTS[a.task.priority] - PRIORITY_WEIGHTS[b.task.priority];
+        const priorityDiff = PRIORITY_WEIGHTS[a.task.priority] - PRIORITY_WEIGHTS[b.task.priority];
         if (priorityDiff !== 0) {
           return priorityDiff;
         }
@@ -485,17 +472,17 @@ export class IdleScheduler {
   }
 
   private hasIdleCallback(): boolean {
-    return (
-      typeof window !== 'undefined' &&
-      'requestIdleCallback' in window
-    );
+    return typeof window !== 'undefined' && 'requestIdleCallback' in window;
   }
 
   private cancelIdleCallback(id: number): void {
     if (this.hasIdleCallback()) {
-      (window as Window & typeof globalThis & {
-        cancelIdleCallback: (handle: number) => void;
-      }).cancelIdleCallback(id);
+      (
+        window as Window &
+          typeof globalThis & {
+            cancelIdleCallback: (handle: number) => void;
+          }
+      ).cancelIdleCallback(id);
     }
   }
 
@@ -520,9 +507,7 @@ let schedulerInstance: IdleScheduler | null = null;
 /**
  * Get or create the global idle scheduler instance
  */
-export function getIdleScheduler(
-  config?: Partial<IdleSchedulerConfig>
-): IdleScheduler {
+export function getIdleScheduler(config?: Partial<IdleSchedulerConfig>): IdleScheduler {
   schedulerInstance ??= new IdleScheduler(config);
   return schedulerInstance;
 }
@@ -574,7 +559,7 @@ export function* createYieldingIterator<T>(
     yield i + 1;
 
     // Yield control if deadline is approaching
-    if (deadline.didTimeout === false && deadline.timeRemaining() < 2) {
+    if (!deadline.didTimeout && deadline.timeRemaining() < 2) {
       return;
     }
   }
@@ -596,7 +581,7 @@ export async function processInIdleChunks<T>(
       const end = Math.min(processed + chunkSize, items.length);
 
       while (processed < end) {
-        if (deadline.didTimeout === false && deadline.timeRemaining() < 2) {
+        if (!deadline.didTimeout && deadline.timeRemaining() < 2) {
           break;
         }
         const item = items[processed];
@@ -622,12 +607,9 @@ export function debounceToIdle<T extends (...args: unknown[]) => void>(
       scheduler.cancel(taskId);
     }
 
-    taskId = scheduler.schedule(
-      () => {
-        fn(...args);
-        taskId = null;
-      },
-      options
-    );
+    taskId = scheduler.schedule(() => {
+      fn(...args);
+      taskId = null;
+    }, options);
   };
 }

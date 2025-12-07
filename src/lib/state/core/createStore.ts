@@ -54,7 +54,7 @@ type FullMiddleware = [
   ['zustand/immer', never],
   ['zustand/devtools', never],
   ['zustand/subscribeWithSelector', never],
-  ['zustand/persist', unknown]
+  ['zustand/persist', unknown],
 ];
 
 /**
@@ -63,7 +63,7 @@ type FullMiddleware = [
 type NoPersistMiddleware = [
   ['zustand/immer', never],
   ['zustand/devtools', never],
-  ['zustand/subscribeWithSelector', never]
+  ['zustand/subscribeWithSelector', never],
 ];
 
 // ============================================================================
@@ -91,12 +91,7 @@ type NoPersistMiddleware = [
  * ```
  */
 export function createAppStore<TState extends object>(
-  initializer: StateCreator<
-    TState & HydrationState & ResetState,
-    FullMiddleware,
-    [],
-    TState
-  >,
+  initializer: StateCreator<TState & HydrationState & ResetState, FullMiddleware, [], TState>,
   config: AppStoreConfig<TState>
 ): ReturnType<typeof create<TState & HydrationState & ResetState>> {
   const {
@@ -109,10 +104,11 @@ export function createAppStore<TState extends object>(
   // Build initial state reference for reset
   let initialState: TState | null = null;
 
-  const storeCreator: StateCreator<
-    TState & HydrationState & ResetState,
-    FullMiddleware
-  > = (set, get, api) => {
+  const storeCreator: StateCreator<TState & HydrationState & ResetState, FullMiddleware> = (
+    set,
+    get,
+    api
+  ) => {
     const sliceState = initializer(set, get, api);
 
     // Capture initial state for reset capability
@@ -136,11 +132,9 @@ export function createAppStore<TState extends object>(
       // Reset capability for logout/clear
       _reset: () => {
         if (initialState) {
-          set(
-            () => ({ ...initialState } as TState & HydrationState & ResetState),
-            true,
-            { type: '@@RESET/STORE' }
-          );
+          set(() => ({ ...initialState }) as TState & HydrationState & ResetState, true, {
+            type: '@@RESET/STORE',
+          });
         }
       },
     };
@@ -183,10 +177,12 @@ export function createAppStore<TState extends object>(
   return create<TState & HydrationState & ResetState>()(
     immer(
       devtools(
-        subscribeWithSelector(storeCreator as unknown as StateCreator<
-          TState & HydrationState & ResetState,
-          NoPersistMiddleware
-        >),
+        subscribeWithSelector(
+          storeCreator as unknown as StateCreator<
+            TState & HydrationState & ResetState,
+            NoPersistMiddleware
+          >
+        ),
         {
           name,
           enabled: enableDevtools,
@@ -217,7 +213,12 @@ export function createAppStore<TState extends object>(
  * ```
  */
 export function createSimpleStore<TState extends object>(
-  initializer: StateCreator<TState, [['zustand/immer', never], ['zustand/devtools', never]], [], TState>,
+  initializer: StateCreator<
+    TState,
+    [['zustand/immer', never], ['zustand/devtools', never]],
+    [],
+    TState
+  >,
   name: string,
   enableDevtools = process.env['NODE_ENV'] === 'development'
 ): ReturnType<typeof create<TState>> {
@@ -260,9 +261,13 @@ export function createMinimalStore<TState extends object>(
 /**
  * Wait for store hydration to complete
  */
-export async function waitForHydration<TState extends HydrationState>(
-  store: { getState: () => TState; subscribe: (selector: (state: TState) => boolean, callback: (value: boolean) => void) => () => void }
-): Promise<void> {
+export async function waitForHydration<TState extends HydrationState>(store: {
+  getState: () => TState;
+  subscribe: (
+    selector: (state: TState) => boolean,
+    callback: (value: boolean) => void
+  ) => () => void;
+}): Promise<void> {
   return new Promise((resolve) => {
     if (store.getState()._hasHydrated) {
       resolve();
@@ -284,9 +289,9 @@ export async function waitForHydration<TState extends HydrationState>(
 /**
  * Create a reset function for a store
  */
-export function createStoreReset<TState extends ResetState>(
-  store: { getState: () => TState }
-): () => void {
+export function createStoreReset<TState extends ResetState>(store: {
+  getState: () => TState;
+}): () => void {
   return () => {
     store.getState()._reset();
   };

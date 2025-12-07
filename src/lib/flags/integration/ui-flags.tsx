@@ -243,8 +243,6 @@ integrationRegistry.register(uiIntegration);
  * UI flags helper class
  */
 class UiFlagsHelper {
-  private getFlag: (flagKey: string) => boolean = () => false;
-
   setFlagGetter(getter: (flagKey: string) => boolean): void {
     this.getFlag = getter;
   }
@@ -333,6 +331,8 @@ class UiFlagsHelper {
       [UI_FLAG_KEYS.UI_INLINE_EDIT_ENABLED]: this.isInlineEditEnabled(),
     };
   }
+
+  private getFlag: (flagKey: string) => boolean = () => false;
 }
 
 /**

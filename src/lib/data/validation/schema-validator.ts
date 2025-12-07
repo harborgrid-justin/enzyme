@@ -115,14 +115,6 @@ export abstract class BaseSchema<TOutput> {
   protected _description?: string;
 
   /**
-   * Core validation logic to be implemented by subclasses
-   */
-  protected abstract _validate(
-    value: unknown,
-    options: ParseOptions
-  ): ValidationResult<TOutput>;
-
-  /**
    * Parse and validate input, throwing on error
    */
   parse(value: unknown, options?: ParseOptions): TOutput {
@@ -255,6 +247,14 @@ export abstract class BaseSchema<TOutput> {
   }
 
   /**
+   * Core validation logic to be implemented by subclasses
+   */
+  protected abstract _validate(
+    value: unknown,
+    options: ParseOptions
+  ): ValidationResult<TOutput>;
+
+  /**
    * Create a validation issue
    */
   protected _createIssue(
@@ -292,121 +292,6 @@ export class StringSchema extends BaseSchema<string> {
   private _trim = false;
   private _lowercase = false;
   private _uppercase = false;
-
-  protected _validate(value: unknown, options: ParseOptions): ValidationResult<string> {
-    // Coercion
-    let str = value;
-    if (options.coerce === true && typeof value !== 'string') {
-      str = String(value);
-    }
-
-    if (typeof str !== 'string') {
-      return {
-        success: false,
-        data: undefined,
-        issues: [
-          this._createIssue('invalid_type', `Expected string, received ${typeof value}`, options.path ?? [], {
-            expected: 'string',
-            received: typeof value,
-          }),
-        ],
-      };
-    }
-
-    // Apply string transformations
-    let result = str;
-    if (this._trim) result = result.trim();
-    if (this._lowercase) result = result.toLowerCase();
-    if (this._uppercase) result = result.toUpperCase();
-
-    const issues: ValidationIssue[] = [];
-
-    // Length checks
-    if (this._minLength !== undefined && result.length < this._minLength) {
-      issues.push(
-        this._createIssue(
-          'too_small',
-          `String must be at least ${this._minLength} characters`,
-          options.path ?? [],
-          { minimum: this._minLength, actual: result.length }
-        )
-      );
-    }
-
-    if (this._maxLength !== undefined && result.length > this._maxLength) {
-      issues.push(
-        this._createIssue(
-          'too_big',
-          `String must be at most ${this._maxLength} characters`,
-          options.path ?? [],
-          { maximum: this._maxLength, actual: result.length }
-        )
-      );
-    }
-
-    // Pattern check
-    if (this._pattern && !this._pattern.test(result)) {
-      issues.push(
-        this._createIssue('invalid_pattern', 'String does not match required pattern', options.path ?? [], {
-          pattern: this._pattern.toString(),
-        })
-      );
-    }
-
-    // Format checks
-    if (this._format && issues.length === 0) {
-      const formatIssue = this._validateFormat(result, this._format, options.path ?? []);
-      if (formatIssue) issues.push(formatIssue);
-    }
-
-    if (issues.length > 0) {
-      return { success: false, data: undefined, issues };
-    }
-
-    return { success: true, data: result, issues: [] };
-  }
-
-  private _validateFormat(
-    value: string,
-    format: string,
-    path: (string | number)[]
-  ): ValidationIssue | null {
-    switch (format) {
-      case 'email':
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-          return this._createIssue('invalid_email', 'Invalid email address', path);
-        }
-        break;
-      case 'url':
-        try {
-          new URL(value);
-        } catch {
-          return this._createIssue('invalid_url', 'Invalid URL', path);
-        }
-        break;
-      case 'uuid':
-        if (
-          !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-            value
-          )
-        ) {
-          return this._createIssue('invalid_uuid', 'Invalid UUID', path);
-        }
-        break;
-      case 'date':
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || isNaN(Date.parse(value))) {
-          return this._createIssue('invalid_date', 'Invalid date format (YYYY-MM-DD)', path);
-        }
-        break;
-      case 'datetime':
-      case 'iso8601':
-        if (isNaN(Date.parse(value))) {
-          return this._createIssue('invalid_datetime', 'Invalid datetime format', path);
-        }
-        break;
-    }
-    return null;
-  }
 
   min(length: number, message?: string): this {
     const clone = this._clone();
@@ -483,6 +368,79 @@ export class StringSchema extends BaseSchema<string> {
     return this.min(1, message ?? 'String cannot be empty');
   }
 
+  protected _validate(value: unknown, options: ParseOptions): ValidationResult<string> {
+    // Coercion
+    let str = value;
+    if (options.coerce === true && typeof value !== 'string') {
+      str = String(value);
+    }
+
+    if (typeof str !== 'string') {
+      return {
+        success: false,
+        data: undefined,
+        issues: [
+          this._createIssue('invalid_type', `Expected string, received ${typeof value}`, options.path ?? [], {
+            expected: 'string',
+            received: typeof value,
+          }),
+        ],
+      };
+    }
+
+    // Apply string transformations
+    let result = str;
+    if (this._trim) result = result.trim();
+    if (this._lowercase) result = result.toLowerCase();
+    if (this._uppercase) result = result.toUpperCase();
+
+    const issues: ValidationIssue[] = [];
+
+    // Length checks
+    if (this._minLength !== undefined && result.length < this._minLength) {
+      issues.push(
+        this._createIssue(
+          'too_small',
+          `String must be at least ${this._minLength} characters`,
+          options.path ?? [],
+          { minimum: this._minLength, actual: result.length }
+        )
+      );
+    }
+
+    if (this._maxLength !== undefined && result.length > this._maxLength) {
+      issues.push(
+        this._createIssue(
+          'too_big',
+          `String must be at most ${this._maxLength} characters`,
+          options.path ?? [],
+          { maximum: this._maxLength, actual: result.length }
+        )
+      );
+    }
+
+    // Pattern check
+    if (this._pattern && !this._pattern.test(result)) {
+      issues.push(
+        this._createIssue('invalid_pattern', 'String does not match required pattern', options.path ?? [], {
+          pattern: this._pattern.toString(),
+        })
+      );
+    }
+
+    // Format checks
+    if (this._format && issues.length === 0) {
+      const formatIssue = this._validateFormat(result, this._format, options.path ?? []);
+      if (formatIssue) issues.push(formatIssue);
+    }
+
+    if (issues.length > 0) {
+      return { success: false, data: undefined, issues };
+    }
+
+    return { success: true, data: result, issues: [] };
+  }
+
   protected _clone(): this {
     const clone = new StringSchema() as this;
     clone._optional = this._optional;
@@ -498,6 +456,48 @@ export class StringSchema extends BaseSchema<string> {
     clone._lowercase = this._lowercase;
     clone._uppercase = this._uppercase;
     return clone;
+  }
+
+  private _validateFormat(
+    value: string,
+    format: string,
+    path: (string | number)[]
+  ): ValidationIssue | null {
+    switch (format) {
+      case 'email':
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+          return this._createIssue('invalid_email', 'Invalid email address', path);
+        }
+        break;
+      case 'url':
+        try {
+          new URL(value);
+        } catch {
+          return this._createIssue('invalid_url', 'Invalid URL', path);
+        }
+        break;
+      case 'uuid':
+        if (
+          !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+            value
+          )
+        ) {
+          return this._createIssue('invalid_uuid', 'Invalid UUID', path);
+        }
+        break;
+      case 'date':
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || isNaN(Date.parse(value))) {
+          return this._createIssue('invalid_date', 'Invalid date format (YYYY-MM-DD)', path);
+        }
+        break;
+      case 'datetime':
+      case 'iso8601':
+        if (isNaN(Date.parse(value))) {
+          return this._createIssue('invalid_datetime', 'Invalid datetime format', path);
+        }
+        break;
+    }
+    return null;
   }
 }
 
@@ -515,6 +515,52 @@ export class NumberSchema extends BaseSchema<number> {
   private _positive = false;
   private _negative = false;
   private _finite = true;
+
+  min(value: number, message?: string): this {
+    const clone = this._clone();
+    clone._min = value;
+    if (message !== undefined && message !== '') clone._message = message;
+    return clone;
+  }
+
+  max(value: number, message?: string): this {
+    const clone = this._clone();
+    clone._max = value;
+    if (message !== undefined && message !== '') clone._message = message;
+    return clone;
+  }
+
+  int(message?: string): this {
+    const clone = this._clone();
+    clone._integer = true;
+    if (message !== undefined && message !== '') clone._message = message;
+    return clone;
+  }
+
+  positive(message?: string): this {
+    const clone = this._clone();
+    clone._positive = true;
+    if (message !== undefined && message !== '') clone._message = message;
+    return clone;
+  }
+
+  negative(message?: string): this {
+    const clone = this._clone();
+    clone._negative = true;
+    if (message !== undefined && message !== '') clone._message = message;
+    return clone;
+  }
+
+  nonnegative(message?: string): this {
+    return this.min(0, message ?? 'Number must be non-negative');
+  }
+
+  finite(message?: string): this {
+    const clone = this._clone();
+    clone._finite = true;
+    if (message !== undefined && message !== '') clone._message = message;
+    return clone;
+  }
 
   protected _validate(value: unknown, options: ParseOptions): ValidationResult<number> {
     // Coercion
@@ -577,52 +623,6 @@ export class NumberSchema extends BaseSchema<number> {
     }
 
     return { success: true, data: num, issues: [] };
-  }
-
-  min(value: number, message?: string): this {
-    const clone = this._clone();
-    clone._min = value;
-    if (message !== undefined && message !== '') clone._message = message;
-    return clone;
-  }
-
-  max(value: number, message?: string): this {
-    const clone = this._clone();
-    clone._max = value;
-    if (message !== undefined && message !== '') clone._message = message;
-    return clone;
-  }
-
-  int(message?: string): this {
-    const clone = this._clone();
-    clone._integer = true;
-    if (message !== undefined && message !== '') clone._message = message;
-    return clone;
-  }
-
-  positive(message?: string): this {
-    const clone = this._clone();
-    clone._positive = true;
-    if (message !== undefined && message !== '') clone._message = message;
-    return clone;
-  }
-
-  negative(message?: string): this {
-    const clone = this._clone();
-    clone._negative = true;
-    if (message !== undefined && message !== '') clone._message = message;
-    return clone;
-  }
-
-  nonnegative(message?: string): this {
-    return this.min(0, message ?? 'Number must be non-negative');
-  }
-
-  finite(message?: string): this {
-    const clone = this._clone();
-    clone._finite = true;
-    if (message !== undefined && message !== '') clone._message = message;
-    return clone;
   }
 
   protected _clone(): this {
@@ -696,6 +696,20 @@ export class DateSchema extends BaseSchema<Date> {
   private _min?: Date;
   private _max?: Date;
 
+  min(date: Date, message?: string): this {
+    const clone = this._clone();
+    clone._min = date;
+    if (message !== undefined && message !== '') clone._message = message;
+    return clone;
+  }
+
+  max(date: Date, message?: string): this {
+    const clone = this._clone();
+    clone._max = date;
+    if (message !== undefined && message !== '') clone._message = message;
+    return clone;
+  }
+
   protected _validate(value: unknown, options: ParseOptions): ValidationResult<Date> {
     // Coercion
     let date: Date;
@@ -745,20 +759,6 @@ export class DateSchema extends BaseSchema<Date> {
     return { success: true, data: date, issues: [] };
   }
 
-  min(date: Date, message?: string): this {
-    const clone = this._clone();
-    clone._min = date;
-    if (message !== undefined && message !== '') clone._message = message;
-    return clone;
-  }
-
-  max(date: Date, message?: string): this {
-    const clone = this._clone();
-    clone._max = date;
-    if (message !== undefined && message !== '') clone._message = message;
-    return clone;
-  }
-
   protected _clone(): this {
     const clone = new DateSchema() as this;
     clone._optional = this._optional;
@@ -782,13 +782,35 @@ export class DateSchema extends BaseSchema<Date> {
 export class ArraySchema<TElement extends BaseSchema<unknown>> extends BaseSchema<
   SchemaOutput<TElement>[]
 > {
-  private _element: TElement;
+  private readonly _element: TElement;
   private _minLength?: number;
   private _maxLength?: number;
 
   constructor(element: TElement) {
     super();
     this._element = element;
+  }
+
+  min(length: number, message?: string): this {
+    const clone = this._clone();
+    clone._minLength = length;
+    if (message !== undefined && message !== '') clone._message = message;
+    return clone;
+  }
+
+  max(length: number, message?: string): this {
+    const clone = this._clone();
+    clone._maxLength = length;
+    if (message !== undefined && message !== '') clone._message = message;
+    return clone;
+  }
+
+  length(length: number, message?: string): this {
+    return this.min(length, message).max(length, message);
+  }
+
+  nonempty(message?: string): this {
+    return this.min(1, message ?? 'Array cannot be empty');
   }
 
   protected _validate(
@@ -846,28 +868,6 @@ export class ArraySchema<TElement extends BaseSchema<unknown>> extends BaseSchem
     return { success: true, data: results, issues: [] };
   }
 
-  min(length: number, message?: string): this {
-    const clone = this._clone();
-    clone._minLength = length;
-    if (message !== undefined && message !== '') clone._message = message;
-    return clone;
-  }
-
-  max(length: number, message?: string): this {
-    const clone = this._clone();
-    clone._maxLength = length;
-    if (message !== undefined && message !== '') clone._message = message;
-    return clone;
-  }
-
-  length(length: number, message?: string): this {
-    return this.min(length, message).max(length, message);
-  }
-
-  nonempty(message?: string): this {
-    return this.min(1, message ?? 'Array cannot be empty');
-  }
-
   protected _clone(): this {
     const clone = new ArraySchema(this._element) as this;
     clone._optional = this._optional;
@@ -903,7 +903,7 @@ type InferObjectShape<T extends ObjectShape> = {
 export class ObjectSchema<TShape extends ObjectShape> extends BaseSchema<
   InferObjectShape<TShape>
 > {
-  private _shape: TShape;
+  private readonly _shape: TShape;
   private _strict = false;
   private _catchall?: BaseSchema<unknown>;
   private _passthrough = false;
@@ -913,72 +913,11 @@ export class ObjectSchema<TShape extends ObjectShape> extends BaseSchema<
     this._shape = shape;
   }
 
-  protected _validate(
-    value: unknown,
-    options: ParseOptions
-  ): ValidationResult<InferObjectShape<TShape>> {
-    if (typeof value !== 'object' || value === null || Array.isArray(value)) {
-      return {
-        success: false,
-        data: undefined,
-        issues: [
-          this._createIssue('invalid_type', `Expected object, received ${typeof value}`, options.path ?? [], {
-            expected: 'object',
-            received: Array.isArray(value) ? 'array' : typeof value,
-          }),
-        ],
-      };
-    }
-
-    const obj = value as Record<string, unknown>;
-    const issues: ValidationIssue[] = [];
-    const result: Record<string, unknown> = {};
-
-    // Validate defined shape
-    for (const [key, schema] of Object.entries(this._shape)) {
-      const fieldResult = schema.safeParse(obj[key], {
-        ...options,
-        path: [...(options.path ?? []), key],
-      });
-
-      if (!fieldResult.success) {
-        issues.push(...fieldResult.issues);
-        if (options.abortEarly === true) break;
-      } else {
-        result[key] = fieldResult.data;
-      }
-    }
-
-    // Handle unknown keys
-    const knownKeys = new Set(Object.keys(this._shape));
-    for (const key of Object.keys(obj)) {
-      if (!knownKeys.has(key)) {
-        if (this._strict) {
-          issues.push(
-            this._createIssue('unrecognized_key', `Unrecognized key: ${key}`, [...(options.path ?? []), key])
-          );
-        } else if (this._catchall) {
-          const catchResult = this._catchall.safeParse(obj[key], {
-            ...options,
-            path: [...(options.path ?? []), key],
-          });
-          if (!catchResult.success) {
-            issues.push(...catchResult.issues);
-          } else {
-            result[key] = catchResult.data;
-          }
-        } else if (this._passthrough) {
-          result[key] = obj[key];
-        }
-        // Default: strip unknown keys
-      }
-    }
-
-    if (issues.length > 0) {
-      return { success: false, data: undefined, issues };
-    }
-
-    return { success: true, data: result as InferObjectShape<TShape>, issues: [] };
+  /**
+   * Get the shape
+   */
+  get shape(): TShape {
+    return this._shape;
   }
 
   /**
@@ -1061,11 +1000,72 @@ export class ObjectSchema<TShape extends ObjectShape> extends BaseSchema<
     }>;
   }
 
-  /**
-   * Get the shape
-   */
-  get shape(): TShape {
-    return this._shape;
+  protected _validate(
+    value: unknown,
+    options: ParseOptions
+  ): ValidationResult<InferObjectShape<TShape>> {
+    if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+      return {
+        success: false,
+        data: undefined,
+        issues: [
+          this._createIssue('invalid_type', `Expected object, received ${typeof value}`, options.path ?? [], {
+            expected: 'object',
+            received: Array.isArray(value) ? 'array' : typeof value,
+          }),
+        ],
+      };
+    }
+
+    const obj = value as Record<string, unknown>;
+    const issues: ValidationIssue[] = [];
+    const result: Record<string, unknown> = {};
+
+    // Validate defined shape
+    for (const [key, schema] of Object.entries(this._shape)) {
+      const fieldResult = schema.safeParse(obj[key], {
+        ...options,
+        path: [...(options.path ?? []), key],
+      });
+
+      if (!fieldResult.success) {
+        issues.push(...fieldResult.issues);
+        if (options.abortEarly === true) break;
+      } else {
+        result[key] = fieldResult.data;
+      }
+    }
+
+    // Handle unknown keys
+    const knownKeys = new Set(Object.keys(this._shape));
+    for (const key of Object.keys(obj)) {
+      if (!knownKeys.has(key)) {
+        if (this._strict) {
+          issues.push(
+            this._createIssue('unrecognized_key', `Unrecognized key: ${key}`, [...(options.path ?? []), key])
+          );
+        } else if (this._catchall) {
+          const catchResult = this._catchall.safeParse(obj[key], {
+            ...options,
+            path: [...(options.path ?? []), key],
+          });
+          if (!catchResult.success) {
+            issues.push(...catchResult.issues);
+          } else {
+            result[key] = catchResult.data;
+          }
+        } else if (this._passthrough) {
+          result[key] = obj[key];
+        }
+        // Default: strip unknown keys
+      }
+    }
+
+    if (issues.length > 0) {
+      return { success: false, data: undefined, issues };
+    }
+
+    return { success: true, data: result as InferObjectShape<TShape>, issues: [] };
   }
 
   protected _clone(): this {
@@ -1092,11 +1092,15 @@ export class ObjectSchema<TShape extends ObjectShape> extends BaseSchema<
 export class EnumSchema<T extends readonly [string, ...string[]]> extends BaseSchema<
   T[number]
 > {
-  private _values: T;
+  private readonly _values: T;
 
   constructor(values: T) {
     super();
     this._values = values;
+  }
+
+  get values(): T {
+    return this._values;
   }
 
   protected _validate(value: unknown, options: ParseOptions): ValidationResult<T[number]> {
@@ -1121,10 +1125,6 @@ export class EnumSchema<T extends readonly [string, ...string[]]> extends BaseSc
     return { success: true, data: value as T[number], issues: [] };
   }
 
-  get values(): T {
-    return this._values;
-  }
-
   protected _clone(): this {
     const clone = new EnumSchema(this._values) as this;
     clone._optional = this._optional;
@@ -1144,11 +1144,15 @@ export class EnumSchema<T extends readonly [string, ...string[]]> extends BaseSc
  * Literal validation schema
  */
 export class LiteralSchema<T extends string | number | boolean> extends BaseSchema<T> {
-  private _value: T;
+  private readonly _value: T;
 
   constructor(value: T) {
     super();
     this._value = value;
+  }
+
+  get value(): T {
+    return this._value;
   }
 
   protected _validate(value: unknown, options: ParseOptions): ValidationResult<T> {
@@ -1167,10 +1171,6 @@ export class LiteralSchema<T extends string | number | boolean> extends BaseSche
     }
 
     return { success: true, data: value as T, issues: [] };
-  }
-
-  get value(): T {
-    return this._value;
   }
 
   protected _clone(): this {
@@ -1194,7 +1194,7 @@ export class LiteralSchema<T extends string | number | boolean> extends BaseSche
 export class UnionSchema<T extends BaseSchema<unknown>[]> extends BaseSchema<
   SchemaOutput<T[number]>
 > {
-  private _schemas: T;
+  private readonly _schemas: T;
 
   constructor(schemas: T) {
     super();
@@ -1251,8 +1251,8 @@ export class RecordSchema<
   TKey extends BaseSchema<string>,
   TValue extends BaseSchema<unknown>,
 > extends BaseSchema<Record<string, SchemaOutput<TValue>>> {
-  private _keySchema: TKey;
-  private _valueSchema: TValue;
+  private readonly _keySchema: TKey;
+  private readonly _valueSchema: TValue;
 
   constructor(keySchema: TKey, valueSchema: TValue) {
     super();

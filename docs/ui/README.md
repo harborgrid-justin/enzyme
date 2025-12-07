@@ -241,6 +241,11 @@ For detailed documentation on each component category:
 - **[Loading States](/home/user/enzyme/docs/ux/LOADING_STATES.md)** - Progressive loading indicators
 - **[Accessibility](/home/user/enzyme/docs/ux/ACCESSIBILITY.md)** - Accessibility utilities
 
+**Layout & Design:**
+- **[Layouts](/home/user/enzyme/docs/LAYOUTS.md)** - Adaptive and context-aware layouts
+- **[Design System](/home/user/enzyme/docs/DESIGN_SYSTEM.md)** - Design tokens and patterns
+- **[Components Reference](/home/user/enzyme/docs/COMPONENTS_REFERENCE.md)** - Complete component API
+
 ## Contributing
 
 When adding new components:

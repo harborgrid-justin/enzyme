@@ -438,6 +438,31 @@ export class RecoveryEngine {
   }
 
   /**
+   * Get circuit breaker state
+   */
+  getCircuitBreakerState(): CircuitBreakerState {
+    const now = Date.now();
+    const timeSinceFailure = now - (this.circuitBreaker.lastFailure ?? 0);
+    const resetIn = this.circuitBreaker.isOpen
+      ? Math.max(0, this.circuitBreakerTimeout - timeSinceFailure)
+      : 0;
+
+    return { ...this.circuitBreaker, resetIn };
+  }
+
+  /**
+   * Reset circuit breaker
+   */
+  resetCircuitBreaker(): void {
+    this.circuitBreaker = {
+      isOpen: false,
+      failures: 0,
+      lastFailure: null,
+      resetIn: 0,
+    };
+  }
+
+  /**
    * Calculate retry delay with exponential backoff and jitter
    */
   private calculateDelay(attempt: number, suggestedDelay: number): number {
@@ -463,31 +488,6 @@ export class RecoveryEngine {
    */
   private async delay(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
-  }
-
-  /**
-   * Get circuit breaker state
-   */
-  getCircuitBreakerState(): CircuitBreakerState {
-    const now = Date.now();
-    const timeSinceFailure = now - (this.circuitBreaker.lastFailure ?? 0);
-    const resetIn = this.circuitBreaker.isOpen
-      ? Math.max(0, this.circuitBreakerTimeout - timeSinceFailure)
-      : 0;
-
-    return { ...this.circuitBreaker, resetIn };
-  }
-
-  /**
-   * Reset circuit breaker
-   */
-  resetCircuitBreaker(): void {
-    this.circuitBreaker = {
-      isOpen: false,
-      failures: 0,
-      lastFailure: null,
-      resetIn: 0,
-    };
   }
 }
 

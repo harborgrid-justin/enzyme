@@ -262,13 +262,13 @@ export interface ThemeConfig {
 export interface ThemeContextValue {
   /** Current theme mode setting */
   mode: ThemeMode;
-  
+
   /** Resolved theme (light or dark) */
   resolvedMode: ResolvedTheme;
-  
+
   /** Set theme mode */
   setMode: (mode: ThemeMode) => void;
-  
+
   /** Current theme configuration */
   theme: ThemeConfig;
 }

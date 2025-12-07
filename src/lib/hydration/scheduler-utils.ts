@@ -21,13 +21,13 @@ export function requestIdle(
   }
 
   // Fallback using setTimeout with simulated deadline
-  const timeoutId = window.setTimeout(() => {
+
+  return window.setTimeout(() => {
     callback({
       didTimeout: false,
       timeRemaining: () => 50,
     });
   }, options?.timeout ?? 100);
-  return timeoutId;
 }
 
 /**

@@ -379,31 +379,42 @@ await authService.resendVerification();
 interface AuthService {
   // Authentication
   login(credentials: LoginCredentials): Promise<User>;
+
   logout(): Promise<void>;
+
   register(credentials: RegisterCredentials): Promise<User>;
 
   // Session Management
   getCurrentUser(): Promise<User | null>;
+
   refreshTokens(): Promise<AuthTokens>;
+
   isAuthenticated(): boolean;
 
   // Password Management
   forgotPassword(email: string): Promise<void>;
+
   resetPassword(token: string, password: string): Promise<void>;
+
   changePassword(oldPassword: string, newPassword: string): Promise<void>;
 
   // Email Verification
   verifyEmail(token: string): Promise<void>;
+
   resendVerification(): Promise<void>;
 
   // MFA
   setupMFA(method: 'totp' | 'webauthn'): Promise<MFASetup>;
+
   verifyMFA(code: string): Promise<void>;
+
   disableMFA(code: string): Promise<void>;
 
   // Social Auth
   loginWithProvider(provider: string): Promise<void>;
+
   linkProvider(provider: string): Promise<void>;
+
   unlinkProvider(provider: string): Promise<void>;
 }
 ```
@@ -484,14 +495,14 @@ function ApiTester() {
 // Secure storage (recommended) - encrypted in SecureStorage
 <AuthProvider config={{ tokenStorage: 'secure' }}>
 
-// Memory storage - tokens lost on page refresh
-<AuthProvider config={{ tokenStorage: 'memory' }}>
+  // Memory storage - tokens lost on page refresh
+  <AuthProvider config={{ tokenStorage: 'memory' }}>
 
-// Local storage - persisted but less secure
-<AuthProvider config={{ tokenStorage: 'local' }}>
+    // Local storage - persisted but less secure
+    <AuthProvider config={{ tokenStorage: 'local' }}>
 
-// Session storage - persisted for session only
-<AuthProvider config={{ tokenStorage: 'session' }}>
+      // Session storage - persisted for session only
+      <AuthProvider config={{ tokenStorage: 'session' }}>
 ```
 
 ---
@@ -944,11 +955,11 @@ function WebAuthnSetup() {
 // Always use secure storage for tokens
 <AuthProvider config={{ tokenStorage: 'secure' }}>
 
-// Never log tokens
-console.log(token); // DON'T DO THIS
+  // Never log tokens
+  console.log(token); // DON'T DO THIS
 
-// Clear tokens on logout
-const logout = async () => {
+  // Clear tokens on logout
+  const logout = async () => {
   await authService.logout();
   // Tokens are automatically cleared
 };
@@ -1116,21 +1127,25 @@ interface AuthContextValue extends AuthState {
 ## See Also
 
 ### Core Authentication
+
 - [Auth Examples](./examples/auth-examples.md) - 25+ authentication examples
 - [RBAC Guide](./RBAC.md) - Role-based access control patterns
 - [Routing Guide](./ROUTING.md) - Route guards and protected routes
 - [API Documentation](../../docs/API.md) - API authentication integration
 
 ### Security & Configuration
+
 - [Security Guide](../../docs/SECURITY.md) - Security best practices
 - [Configuration Guide](../../docs/CONFIGURATION.md) - Auth configuration options
 - [Environment Setup](../../docs/ENVIRONMENT.md) - Auth environment variables
 
 ### Architecture & Development
+
 - [Architecture Overview](../../docs/ARCHITECTURE.md) - Auth system architecture
 - [State Management](../../docs/STATE.md) - Auth state management
 - [Testing Guide](../../docs/TESTING.md) - Testing authentication flows
 
 ### Reference
+
 - [Documentation Index](./INDEX.md) - All library documentation
 - [Template Index](../../docs/INDEX.md) - Template documentation

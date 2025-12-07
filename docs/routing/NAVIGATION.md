@@ -781,7 +781,19 @@ function SafeNavigation() {
 
 ## Related Documentation
 
-- [Core Routing](./CORE.md)
-- [Route Guards](./GUARDS.md)
-- [Data Loaders](./LOADERS.md)
-- [Type Definitions](./TYPES.md)
+### Routing System
+- [README.md](./README.md) - Routing overview
+- [CORE.md](./CORE.md) - Core routing utilities
+- [GUARDS.md](./GUARDS.md) - Route guards
+- [LOADERS.md](./LOADERS.md) - Data loaders
+- [ADVANCED.md](./ADVANCED.md) - Advanced patterns
+- [TYPES.md](./TYPES.md) - Type definitions
+
+### State & Auth
+- [State System](../state/README.md) - Navigation with state
+- [State Hooks](../state/HOOKS.md) - State hooks for navigation
+- [Auth Guards](../auth/GUARDS.md) - Protected navigation
+- [Auth System](../auth/README.md) - Auth integration
+
+### Integration
+- [Routing Integration](../integration/ROUTING_STATE_GUARDS.md) - Navigation patterns

@@ -146,11 +146,41 @@ const DEFAULT_CONFIG: PerformanceReporterConfig = {
  * Default alert rules
  */
 const DEFAULT_ALERT_RULES: AlertRule[] = [
-  { metric: 'LCP', condition: 'above', threshold: 4000, severity: 'critical', message: 'LCP is critically slow' },
-  { metric: 'CLS', condition: 'above', threshold: 0.25, severity: 'critical', message: 'CLS is causing major layout shifts' },
-  { metric: 'INP', condition: 'above', threshold: 500, severity: 'critical', message: 'INP indicates poor interactivity' },
-  { metric: 'FCP', condition: 'above', threshold: 3000, severity: 'warning', message: 'FCP is slow' },
-  { metric: 'TTFB', condition: 'above', threshold: 1800, severity: 'warning', message: 'TTFB indicates slow server response' },
+  {
+    metric: 'LCP',
+    condition: 'above',
+    threshold: 4000,
+    severity: 'critical',
+    message: 'LCP is critically slow',
+  },
+  {
+    metric: 'CLS',
+    condition: 'above',
+    threshold: 0.25,
+    severity: 'critical',
+    message: 'CLS is causing major layout shifts',
+  },
+  {
+    metric: 'INP',
+    condition: 'above',
+    threshold: 500,
+    severity: 'critical',
+    message: 'INP indicates poor interactivity',
+  },
+  {
+    metric: 'FCP',
+    condition: 'above',
+    threshold: 3000,
+    severity: 'warning',
+    message: 'FCP is slow',
+  },
+  {
+    metric: 'TTFB',
+    condition: 'above',
+    threshold: 1800,
+    severity: 'warning',
+    message: 'TTFB indicates slow server response',
+  },
 ];
 
 // ============================================================================
@@ -306,7 +336,9 @@ export class PerformanceReporter {
     lines.push('SUMMARY:');
     lines.push('--------');
     lines.push(`Good: ${report.summary.goodMetrics}/${report.summary.totalMetrics}`);
-    lines.push(`Needs Improvement: ${report.summary.needsImprovementMetrics}/${report.summary.totalMetrics}`);
+    lines.push(
+      `Needs Improvement: ${report.summary.needsImprovementMetrics}/${report.summary.totalMetrics}`
+    );
     lines.push(`Poor: ${report.summary.poorMetrics}/${report.summary.totalMetrics}`);
 
     if (report.summary.criticalIssues.length > 0) {
@@ -362,10 +394,10 @@ export class PerformanceReporter {
 
     const weights: Record<string, number> = {
       LCP: 0.25,
-      INP: 0.30,
+      INP: 0.3,
       CLS: 0.25,
-      FCP: 0.10,
-      TTFB: 0.10,
+      FCP: 0.1,
+      TTFB: 0.1,
     };
 
     let totalWeight = 0;
@@ -378,7 +410,7 @@ export class PerformanceReporter {
       totalWeight += weight;
     }
 
-    return (totalWeight !== null && totalWeight !== undefined && totalWeight > 0) ? Math.round(weightedScore / totalWeight) : 0;
+    return totalWeight > 0 ? Math.round(weightedScore / totalWeight) : 0;
   }
 
   private createSummary(metrics: ReportMetric[]): ReportSummary {
@@ -386,7 +418,9 @@ export class PerformanceReporter {
 
     for (const metric of metrics) {
       if (metric.rating === 'poor') {
-        criticalIssues.push(`${metric.name} is poor (${this.formatValue(metric.name, metric.value)})`);
+        criticalIssues.push(
+          `${metric.name} is poor (${this.formatValue(metric.name, metric.value)})`
+        );
       }
     }
 
@@ -407,7 +441,9 @@ export class PerformanceReporter {
 
       switch (metric.name) {
         case 'LCP':
-          recommendations.push('Optimize Largest Contentful Paint by preloading critical resources');
+          recommendations.push(
+            'Optimize Largest Contentful Paint by preloading critical resources'
+          );
           recommendations.push('Consider using a CDN for faster asset delivery');
           recommendations.push('Optimize and compress images');
           break;
@@ -482,7 +518,9 @@ export class PerformanceReporter {
 
     // Check score threshold
     if (report.score < this.config.alertThreshold) {
-      triggeredAlerts.push(`Overall score (${report.score}) is below threshold (${this.config.alertThreshold})`);
+      triggeredAlerts.push(
+        `Overall score (${report.score}) is below threshold (${this.config.alertThreshold})`
+      );
     }
 
     // Check individual metric rules
@@ -491,9 +529,7 @@ export class PerformanceReporter {
       if (!metric) continue;
 
       const triggered =
-        rule.condition === 'above'
-          ? metric.value > rule.threshold
-          : metric.value < rule.threshold;
+        rule.condition === 'above' ? metric.value > rule.threshold : metric.value < rule.threshold;
 
       if (triggered) {
         triggeredAlerts.push(`[${rule.severity.toUpperCase()}] ${rule.message}`);
@@ -568,7 +604,8 @@ export class PerformanceReporter {
 
     try {
       const storedValue = localStorage.getItem(key);
-      const existing: unknown = storedValue !== null && storedValue !== undefined ? JSON.parse(storedValue) : [];
+      const existing: unknown =
+        storedValue !== null && storedValue !== undefined ? JSON.parse(storedValue) : [];
 
       if (Array.isArray(existing)) {
         existing.push(report);

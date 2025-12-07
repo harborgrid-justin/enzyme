@@ -36,12 +36,12 @@ import type { HttpMethod } from '../types';
  * API route segment types for file-system convention
  */
 export type ApiSegmentType =
-  | 'static'      // users -> /users
-  | 'dynamic'     // [id] -> /:id
-  | 'catchAll'    // [...slug] -> /*
-  | 'optional'    // [[id]] -> /:id?
-  | 'group'       // (auth) -> no path, modifier only
-  | 'private';    // _utils -> ignored
+  | 'static' // users -> /users
+  | 'dynamic' // [id] -> /:id
+  | 'catchAll' // [...slug] -> /*
+  | 'optional' // [[id]] -> /:id?
+  | 'group' // (auth) -> no path, modifier only
+  | 'private'; // _utils -> ignored
 
 /**
  * Parsed API segment from filename or directory
@@ -77,24 +77,24 @@ export interface GroupModifier {
  * Types of group modifiers
  */
 export type GroupModifierType =
-  | 'public'      // (public) - No auth required
-  | 'auth'        // (auth) - Requires authentication
-  | 'role'        // (admin), (manager) - Requires specific role
-  | 'permission'  // (perm:users:read) - Requires specific permission
-  | 'scope'       // (own), (team), (org) - Resource scope
-  | 'custom';     // Custom modifier
+  | 'public' // (public) - No auth required
+  | 'auth' // (auth) - Requires authentication
+  | 'role' // (admin), (manager) - Requires specific role
+  | 'permission' // (perm:users:read) - Requires specific permission
+  | 'scope' // (own), (team), (org) - Resource scope
+  | 'custom'; // Custom modifier
 
 /**
  * File type classification for API files
  */
 export type ApiFileType =
-  | 'collection'  // index.ts - list/create operations
-  | 'resource'    // [id].ts - single resource operations
-  | 'action'      // custom action (create.ts, delete.ts)
-  | 'schema'      // _schema.ts - OpenAPI schema
-  | 'middleware'  // _middleware.ts - Route middleware
-  | 'access'      // _access.ts - Access control override
-  | 'ignored';    // _* files or test files
+  | 'collection' // index.ts - list/create operations
+  | 'resource' // [id].ts - single resource operations
+  | 'action' // custom action (create.ts, delete.ts)
+  | 'schema' // _schema.ts - OpenAPI schema
+  | 'middleware' // _middleware.ts - Route middleware
+  | 'access' // _access.ts - Access control override
+  | 'ignored'; // _* files or test files
 
 /**
  * Scanned API route from file system
@@ -176,20 +176,20 @@ export const DEFAULT_API_SCANNER_CONFIG: ApiScannerConfig = {
  * Known group modifier patterns
  */
 const GROUP_MODIFIER_PATTERNS: Record<string, GroupModifierType> = {
-  'public': 'public',
-  'auth': 'auth',
-  'authenticated': 'auth',
-  'protected': 'auth',
-  'admin': 'role',
-  'manager': 'role',
-  'moderator': 'role',
-  'user': 'role',
-  'owner': 'scope',
-  'own': 'scope',
-  'team': 'scope',
-  'org': 'scope',
-  'organization': 'scope',
-  'global': 'scope',
+  public: 'public',
+  auth: 'auth',
+  authenticated: 'auth',
+  protected: 'auth',
+  admin: 'role',
+  manager: 'role',
+  moderator: 'role',
+  user: 'role',
+  owner: 'scope',
+  own: 'scope',
+  team: 'scope',
+  org: 'scope',
+  organization: 'scope',
+  global: 'scope',
 };
 
 /**
@@ -209,21 +209,21 @@ const FILE_TYPE_METHODS: Record<ApiFileType, readonly HttpMethod[]> = {
  * Action file name to HTTP method mapping
  */
 const ACTION_FILE_METHODS: Record<string, readonly HttpMethod[]> = {
-  'create': ['POST'],
-  'update': ['PUT', 'PATCH'],
-  'delete': ['DELETE'],
-  'list': ['GET'],
-  'get': ['GET'],
-  'patch': ['PATCH'],
-  'put': ['PUT'],
-  'post': ['POST'],
-  'search': ['GET', 'POST'],
-  'export': ['GET', 'POST'],
-  'import': ['POST'],
-  'upload': ['POST'],
-  'download': ['GET'],
-  'batch': ['POST'],
-  'bulk': ['POST'],
+  create: ['POST'],
+  update: ['PUT', 'PATCH'],
+  delete: ['DELETE'],
+  list: ['GET'],
+  get: ['GET'],
+  patch: ['PATCH'],
+  put: ['PUT'],
+  post: ['POST'],
+  search: ['GET', 'POST'],
+  export: ['GET', 'POST'],
+  import: ['POST'],
+  upload: ['POST'],
+  download: ['GET'],
+  batch: ['POST'],
+  bulk: ['POST'],
 };
 
 // =============================================================================
@@ -431,7 +431,14 @@ export function segmentsToUrlPath(
   baseUrl: string = '/api'
 ): string {
   const pathParts = segments
-    .filter((s) => s.type !== 'group' && s.type !== 'private' && s.name !== undefined && s.name !== null && s.name !== '')
+    .filter(
+      (s) =>
+        s.type !== 'group' &&
+        s.type !== 'private' &&
+        s.name !== undefined &&
+        s.name !== null &&
+        s.name !== ''
+    )
     .map((s) => s.name);
 
   const path = pathParts.join('/');
@@ -443,7 +450,10 @@ export function segmentsToUrlPath(
  */
 export function extractParamNames(segments: readonly ParsedApiSegment[]): readonly string[] {
   return segments
-    .filter((s): s is ParsedApiSegment & { paramName: string } => s.paramName !== undefined && s.paramName !== null && s.paramName !== '')
+    .filter(
+      (s): s is ParsedApiSegment & { paramName: string } =>
+        s.paramName !== undefined && s.paramName !== null && s.paramName !== ''
+    )
     .map((s) => s.paramName);
 }
 
@@ -488,7 +498,10 @@ export function extractGroupModifiers(
   segments: readonly ParsedApiSegment[]
 ): readonly GroupModifier[] {
   return segments
-    .filter((s): s is ParsedApiSegment & { groupModifier: GroupModifier } => s.type === 'group' && s.groupModifier !== undefined && s.groupModifier !== null)
+    .filter(
+      (s): s is ParsedApiSegment & { groupModifier: GroupModifier } =>
+        s.type === 'group' && s.groupModifier !== undefined && s.groupModifier !== null
+    )
     .map((s) => s.groupModifier);
 }
 
@@ -557,13 +570,13 @@ export async function scanApiRoutes(
     }
     let entries: DirEntry[];
     try {
-      entries = await fs.readdir(dirPath, { withFileTypes: true }) as unknown as DirEntry[];
+      entries = (await fs.readdir(dirPath, { withFileTypes: true })) as unknown as DirEntry[];
     } catch {
       return;
     }
 
     for (const entry of entries) {
-      const entryName = typeof entry.name === 'string' ? entry.name : String(entry.name);
+      const entryName = entry.name;
       const entryPath = path.join(dirPath, entryName);
 
       if (entry.isDirectory?.()) {
@@ -594,13 +607,13 @@ export async function scanApiRoutes(
     }
     let entries: DirEntry[];
     try {
-      entries = await fs.readdir(dirPath, { withFileTypes: true }) as unknown as DirEntry[];
+      entries = (await fs.readdir(dirPath, { withFileTypes: true })) as unknown as DirEntry[];
     } catch {
       return;
     }
 
     for (const entry of entries) {
-      const entryName = typeof entry.name === 'string' ? entry.name : String(entry.name);
+      const entryName = entry.name;
       const entryPath = path.join(dirPath, entryName);
       const relativePath = path.relative(basePath, entryPath);
 
@@ -612,7 +625,10 @@ export async function scanApiRoutes(
 
         // Parse directory segment
         const segment = parseApiSegment(entryName);
-        if (segment.type === 'private' && !['_schema', '_middleware', '_access'].includes(entryName.toLowerCase())) {
+        if (
+          segment.type === 'private' &&
+          !['_schema', '_middleware', '_access'].includes(entryName.toLowerCase())
+        ) {
           continue; // Skip private directories
         }
 
@@ -630,20 +646,27 @@ export async function scanApiRoutes(
         }
 
         // Classify file
-        const fileType = mergedConfig.classifyFile !== undefined
-          ? mergedConfig.classifyFile(entryName)
-          : classifyApiFile(entryName);
+        const fileType =
+          mergedConfig.classifyFile !== undefined
+            ? mergedConfig.classifyFile(entryName)
+            : classifyApiFile(entryName);
 
         // Skip non-route files
-        if (fileType === 'schema' || fileType === 'middleware' || fileType === 'access' || fileType === 'ignored') {
+        if (
+          fileType === 'schema' ||
+          fileType === 'middleware' ||
+          fileType === 'access' ||
+          fileType === 'ignored'
+        ) {
           continue;
         }
 
         // Parse file segment
         const fileSegment = parseApiSegment(entryName.replace(/\.(ts|tsx|js|jsx)$/, ''));
-        const allSegments = fileType === 'collection'
-          ? parentSegments // index.ts doesn't add to path
-          : [...parentSegments, fileSegment];
+        const allSegments =
+          fileType === 'collection'
+            ? parentSegments // index.ts doesn't add to path
+            : [...parentSegments, fileSegment];
 
         // Build route
         const urlPath = segmentsToUrlPath(allSegments, mergedConfig.baseUrl);
@@ -882,10 +905,5 @@ export function isScannedApiRoute(value: unknown): value is ScannedApiRoute {
  * Type guard for GroupModifier
  */
 export function isGroupModifier(value: unknown): value is GroupModifier {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'name' in value &&
-    'type' in value
-  );
+  return typeof value === 'object' && value !== null && 'name' in value && 'type' in value;
 }

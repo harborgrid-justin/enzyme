@@ -14,14 +14,14 @@
  */
 
 import type {
-  CSPPolicy,
   CSPDirective,
-  CSPSourceValue,
-  CSPNonce,
   CSPManagerConfig,
-  CSPViolationReport,
-  CSPViolationHandler,
+  CSPNonce,
   CSPNonceValue,
+  CSPPolicy,
+  CSPSourceValue,
+  CSPViolationHandler,
+  CSPViolationReport,
 } from './types';
 import { cspConfig, SECURITY_TIMING } from '@/config/security.config';
 
@@ -42,7 +42,7 @@ const MAX_VIOLATIONS_STORED = 100;
 /**
  * Debounce time for violation reports in milliseconds
  */
-const {VIOLATION_REPORT_DEBOUNCE} = SECURITY_TIMING;
+const { VIOLATION_REPORT_DEBOUNCE } = SECURITY_TIMING;
 
 // ============================================================================
 // Cryptographic Utilities
@@ -62,9 +62,7 @@ function getRandomBytes(length: number): Uint8Array {
  * Convert bytes to base64 string
  */
 function bytesToBase64(bytes: Uint8Array): string {
-  const binString = Array.from(bytes, (byte) =>
-    String.fromCharCode(byte)
-  ).join('');
+  const binString = Array.from(bytes, (byte) => String.fromCharCode(byte)).join('');
   return btoa(binString);
 }
 
@@ -182,10 +180,7 @@ class CSPManagerClass {
 
     // Remove violation listener
     if (typeof document !== 'undefined') {
-      document.removeEventListener(
-        'securitypolicyviolation',
-        this.handleViolationEvent
-      );
+      document.removeEventListener('securitypolicyviolation', this.handleViolationEvent);
     }
 
     this.violations = [];
@@ -330,9 +325,7 @@ class CSPManagerClass {
     for (const [directive, values] of Object.entries(policy)) {
       if (values != null && values.length > 0) {
         // Some directives don't have values (e.g., upgrade-insecure-requests)
-        const valueStr = values.length > 0 && values[0] !== ''
-          ? ` ${values.join(' ')}`
-          : '';
+        const valueStr = values.length > 0 && values[0] !== '' ? ` ${values.join(' ')}` : '';
         directives.push(`${directive}${valueStr}`);
       } else if (values != null) {
         // Directive without values (boolean-like)
@@ -394,44 +387,6 @@ class CSPManagerClass {
   // ==========================================================================
 
   /**
-   * Set up listener for CSP violation events
-   */
-  private setupViolationListener(): void {
-    if (typeof document === 'undefined') {
-      return;
-    }
-
-    document.addEventListener(
-      'securitypolicyviolation',
-      this.handleViolationEvent
-    );
-  }
-
-  /**
-   * Handle CSP violation event from browser
-   */
-  private handleViolationEvent = (
-    event: SecurityPolicyViolationEvent
-  ): void => {
-    const violation: CSPViolationReport = {
-      documentUri: event.documentURI,
-      referrer: event.referrer,
-      blockedUri: event.blockedURI,
-      violatedDirective: event.violatedDirective,
-      effectiveDirective: event.effectiveDirective,
-      originalPolicy: event.originalPolicy,
-      disposition: event.disposition as 'enforce' | 'report',
-      statusCode: event.statusCode,
-      lineNumber: event.lineNumber || undefined,
-      columnNumber: event.columnNumber || undefined,
-      sourceFile: event.sourceFile || undefined,
-      sample: event.sample || undefined,
-    };
-
-    this.recordViolation(violation);
-  };
-
-  /**
    * Record a CSP violation
    * @param violation - The violation report
    */
@@ -456,63 +411,6 @@ class CSPManagerClass {
     // Queue for reporting
     if (this.config.reportUri != null && this.config.reportUri !== '') {
       this.queueViolationReport(violation);
-    }
-  }
-
-  /**
-   * Queue violation for debounced reporting
-   */
-  private queueViolationReport(violation: CSPViolationReport): void {
-    this.pendingReports.push(violation);
-
-    // Clear existing timer
-    if (this.reportDebounceTimer) {
-      clearTimeout(this.reportDebounceTimer);
-    }
-
-    // Set up debounced report
-    this.reportDebounceTimer = setTimeout(() => {
-      void this.flushViolationReports();
-    }, VIOLATION_REPORT_DEBOUNCE);
-  }
-
-  /**
-   * Flush pending violation reports to server
-   *
-   * Note: This method intentionally uses raw fetch() rather than apiClient because:
-   * 1. CSP reports have special Content-Type (application/csp-report)
-   * 2. Security reporting must be independent of the main API client
-   * 3. Uses keepalive for reliability when page is unloading
-   *
-   * @see {@link @/lib/api/api-client} for application API calls
-   */
-  private async flushViolationReports(): Promise<void> {
-    if (this.pendingReports.length === 0 || this.config.reportUri == null || this.config.reportUri === '') {
-      return;
-    }
-
-    const reports = [...this.pendingReports];
-    this.pendingReports = [];
-
-    try {
-      // Raw fetch is intentional - CSP reports require special Content-Type
-      await fetch(this.config.reportUri, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/csp-report',
-        },
-        body: JSON.stringify({
-          'csp-reports': reports,
-        }),
-        // Don't fail silently - we want to know if reporting fails
-        keepalive: true,
-      });
-    } catch (error) {
-      console.error('[CSP] Failed to report violations:', error);
-      // Re-queue failed reports (with limit to prevent infinite growth)
-      if (this.pendingReports.length < MAX_VIOLATIONS_STORED) {
-        this.pendingReports.push(...reports);
-      }
     }
   }
 
@@ -549,10 +447,6 @@ class CSPManagerClass {
     this.violations = [];
   }
 
-  // ==========================================================================
-  // Meta Tag Injection
-  // ==========================================================================
-
   /**
    * Create a meta tag element with CSP
    * For client-side CSP enforcement
@@ -587,10 +481,6 @@ class CSPManagerClass {
     document.head.insertBefore(meta, document.head.firstChild);
   }
 
-  // ==========================================================================
-  // Configuration
-  // ==========================================================================
-
   /**
    * Get current configuration
    */
@@ -613,11 +503,113 @@ class CSPManagerClass {
     };
   }
 
+  // ==========================================================================
+  // Meta Tag Injection
+  // ==========================================================================
+
   /**
    * Check if CSP Manager is initialized
    */
   isInitialized(): boolean {
     return this.initialized;
+  }
+
+  /**
+   * Set up listener for CSP violation events
+   */
+  private setupViolationListener(): void {
+    if (typeof document === 'undefined') {
+      return;
+    }
+
+    document.addEventListener('securitypolicyviolation', this.handleViolationEvent);
+  }
+
+  // ==========================================================================
+  // Configuration
+  // ==========================================================================
+
+  /**
+   * Handle CSP violation event from browser
+   */
+  private handleViolationEvent = (event: SecurityPolicyViolationEvent): void => {
+    const violation: CSPViolationReport = {
+      documentUri: event.documentURI,
+      referrer: event.referrer,
+      blockedUri: event.blockedURI,
+      violatedDirective: event.violatedDirective,
+      effectiveDirective: event.effectiveDirective,
+      originalPolicy: event.originalPolicy,
+      disposition: event.disposition as 'enforce' | 'report',
+      statusCode: event.statusCode,
+      lineNumber: event.lineNumber || undefined,
+      columnNumber: event.columnNumber || undefined,
+      sourceFile: event.sourceFile || undefined,
+      sample: event.sample || undefined,
+    };
+
+    this.recordViolation(violation);
+  };
+
+  /**
+   * Queue violation for debounced reporting
+   */
+  private queueViolationReport(violation: CSPViolationReport): void {
+    this.pendingReports.push(violation);
+
+    // Clear existing timer
+    if (this.reportDebounceTimer) {
+      clearTimeout(this.reportDebounceTimer);
+    }
+
+    // Set up debounced report
+    this.reportDebounceTimer = setTimeout(() => {
+      void this.flushViolationReports();
+    }, VIOLATION_REPORT_DEBOUNCE);
+  }
+
+  /**
+   * Flush pending violation reports to server
+   *
+   * Note: This method intentionally uses raw fetch() rather than apiClient because:
+   * 1. CSP reports have special Content-Type (application/csp-report)
+   * 2. Security reporting must be independent of the main API client
+   * 3. Uses keepalive for reliability when page is unloading
+   *
+   * @see {@link @/lib/api/api-client} for application API calls
+   */
+  private async flushViolationReports(): Promise<void> {
+    if (
+      this.pendingReports.length === 0 ||
+      this.config.reportUri == null ||
+      this.config.reportUri === ''
+    ) {
+      return;
+    }
+
+    const reports = [...this.pendingReports];
+    this.pendingReports = [];
+
+    try {
+      // Raw fetch is intentional - CSP reports require special Content-Type
+      await fetch(this.config.reportUri, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/csp-report',
+        },
+        body: JSON.stringify({
+          'csp-reports': reports,
+        }),
+        // Don't fail silently - we want to know if reporting fails
+        keepalive: true,
+      });
+    } catch (error) {
+      console.error('[CSP] Failed to report violations:', error);
+      // Re-queue failed reports (with limit to prevent infinite growth)
+      if (this.pendingReports.length < MAX_VIOLATIONS_STORED) {
+        this.pendingReports.push(...reports);
+      }
+    }
   }
 }
 
@@ -681,8 +673,8 @@ export function mergeCSPPolicies(...policies: CSPPolicy[]): CSPPolicy {
       const newValues = values ?? [];
 
       // Deduplicate values
-      const combined = [...new Set([...existing, ...newValues])];
-      merged[key] = combined;
+
+      merged[key] = [...new Set([...existing, ...newValues])];
     }
   }
 
@@ -730,12 +722,7 @@ export function validateCSPPolicy(policy: CSPPolicy): {
     { value: 'data:', message: 'data: URLs can bypass CSP' },
   ];
 
-  const criticalDirectives = [
-    'script-src',
-    'script-src-elem',
-    'object-src',
-    'base-uri',
-  ];
+  const criticalDirectives = ['script-src', 'script-src-elem', 'object-src', 'base-uri'];
 
   for (const directive of criticalDirectives) {
     const values = policy[directive as CSPDirective];

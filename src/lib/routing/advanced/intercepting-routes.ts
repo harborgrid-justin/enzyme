@@ -278,6 +278,67 @@ export class InterceptingRouteManager {
   }
 
   /**
+   * Close the current interception
+   */
+  closeInterception(): void {
+    if (this.activeInterception) {
+      // Navigation would be handled by the consuming application
+      this.activeInterception = null;
+    }
+  }
+
+  /**
+   * Navigate to full page (break out of interception)
+   */
+  navigateToFull(_path: string): void {
+    this.activeInterception = null;
+    // Full navigation would be handled by the consuming application
+    // This would typically trigger a hard navigation or router.push
+
+  }
+
+  /**
+   * Get current interception state
+   */
+  getState(): InterceptionManagerState {
+    return {
+      activeInterception: this.activeInterception,
+      history: [...this.history],
+      interceptors: Array.from(this.interceptors.values()),
+    };
+  }
+
+  /**
+   * Check if currently in an interception
+   */
+  isIntercepted(): boolean {
+    return this.activeInterception !== null;
+  }
+
+  /**
+   * Get active interception context
+   */
+  getActiveInterception(): InterceptionContext | null {
+    return this.activeInterception;
+  }
+
+  /**
+   * Clear all interceptors
+   */
+  clearAll(): void {
+    this.interceptors.clear();
+    this.activeInterception = null;
+    this.history = [];
+  }
+
+  /**
+   * Get all registered interceptors
+   */
+  getInterceptors(): readonly RegisteredInterceptor[] {
+    return Array.from(this.interceptors.values());
+  }
+
+  /**
    * Check if a path matches a pattern
    *
    * Delegates to core path matching utility.
@@ -344,67 +405,6 @@ export class InterceptingRouteManager {
       default:
         return false;
     }
-  }
-
-  /**
-   * Close the current interception
-   */
-  closeInterception(): void {
-    if (this.activeInterception) {
-      // Navigation would be handled by the consuming application
-      this.activeInterception = null;
-    }
-  }
-
-  /**
-   * Navigate to full page (break out of interception)
-   */
-  navigateToFull(_path: string): void {
-    this.activeInterception = null;
-    // Full navigation would be handled by the consuming application
-    // This would typically trigger a hard navigation or router.push
-
-  }
-
-  /**
-   * Get current interception state
-   */
-  getState(): InterceptionManagerState {
-    return {
-      activeInterception: this.activeInterception,
-      history: [...this.history],
-      interceptors: Array.from(this.interceptors.values()),
-    };
-  }
-
-  /**
-   * Check if currently in an interception
-   */
-  isIntercepted(): boolean {
-    return this.activeInterception !== null;
-  }
-
-  /**
-   * Get active interception context
-   */
-  getActiveInterception(): InterceptionContext | null {
-    return this.activeInterception;
-  }
-
-  /**
-   * Clear all interceptors
-   */
-  clearAll(): void {
-    this.interceptors.clear();
-    this.activeInterception = null;
-    this.history = [];
-  }
-
-  /**
-   * Get all registered interceptors
-   */
-  getInterceptors(): readonly RegisteredInterceptor[] {
-    return Array.from(this.interceptors.values());
   }
 }
 

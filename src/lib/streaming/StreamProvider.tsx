@@ -28,41 +28,38 @@
  */
 
 import {
+  Component,
+  type ComponentType,
   createContext,
+  type DependencyList,
+  type ErrorInfo,
+  type FC,
+  type ReactElement,
+  type ReactNode,
+  useCallback,
   useContext,
   useEffect,
-  useRef,
   useMemo,
-  useCallback,
+  useRef,
   useState,
-  type ReactNode,
-  type ReactElement,
-  type DependencyList,
-  type ComponentType,
-  type FC,
-  Component,
-  type ErrorInfo,
 } from 'react';
 
-import {
-  StreamingEngine,
-  createStreamingEngine,
-} from './streaming-engine';
+import { createStreamingEngine, StreamingEngine, } from './streaming-engine';
 
 import {
-  type StreamConfig,
-  type EngineConfig,
-  type StreamError,
-  type StreamMetrics,
-  type StreamContextValue,
-  type StreamProviderProps,
-  type StreamEventHandler,
-  type StreamState,
+  createStreamError,
   DEFAULT_ENGINE_CONFIG,
   DEFAULT_METRICS,
-  StreamEventType,
+  type EngineConfig,
+  type StreamConfig,
+  type StreamContextValue,
+  type StreamError,
   StreamErrorCode,
-  createStreamError,
+  type StreamEventHandler,
+  StreamEventType,
+  type StreamMetrics,
+  type StreamProviderProps,
+  type StreamState,
 } from './types';
 
 // ============================================================================
@@ -137,10 +134,6 @@ class StreamErrorBoundary extends Component<
     }
   }
 
-  private handleReset = (): void => {
-    this.setState({ hasError: false, error: null });
-  };
-
   override render(): ReactNode {
     if (this.state.hasError && this.state.error) {
       const { fallback } = this.props;
@@ -190,6 +183,10 @@ class StreamErrorBoundary extends Component<
 
     return this.props.children;
   }
+
+  private handleReset = (): void => {
+    this.setState({ hasError: false, error: null });
+  };
 }
 
 // ============================================================================
@@ -622,11 +619,11 @@ export function useStreamMetrics(): StreamMetrics {
   const [metrics, setMetrics] = useState<StreamMetrics>(context.getMetrics);
 
   useEffect(() => {
-    const unsubscribe = context.subscribe(() => {
+
+
+    return context.subscribe(() => {
       setMetrics(context.getMetrics());
     });
-
-    return unsubscribe;
   }, [context]);
 
   return metrics;

@@ -89,12 +89,7 @@ export interface UsePredictivePrefetchReturn {
 export function usePredictivePrefetch(
   options: UsePredictivePrefetchOptions = {}
 ): UsePredictivePrefetchReturn {
-  const {
-    autoPrefetch = true,
-    prefetchDelay = 500,
-    enableTracking = true,
-    config,
-  } = options;
+  const { autoPrefetch = true, prefetchDelay = 500, enableTracking = true, config } = options;
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -102,10 +97,7 @@ export function usePredictivePrefetch(
   const prefetchTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   // Get the singleton engine instance
-  const engine = useMemo(
-    () => getPredictivePrefetchEngine(config),
-    [config]
-  );
+  const engine = useMemo(() => getPredictivePrefetchEngine(config), [config]);
 
   // Track navigation changes
   useEffect(() => {
@@ -206,8 +198,7 @@ export function usePredictivePrefetch(
 /**
  * Props for PredictiveLink component
  */
-export interface PredictiveLinkProps
-  extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
+export interface PredictiveLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
   /** Target route */
   to: string;
   /** Prefetch strategy */
@@ -229,9 +220,7 @@ function shouldPrefetch(): boolean {
   // Don't prefetch on slow connections or data saver mode
   if (nav.connection?.saveData === true) return false;
   if (nav.connection?.effectiveType === 'slow-2g') return false;
-  if (nav.connection?.effectiveType === '2g') return false;
-
-  return true;
+  return nav.connection?.effectiveType !== '2g';
 }
 
 /**
@@ -347,10 +336,10 @@ export function PredictiveLink({
       onClick={handleClick}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-    onFocus={handleFocus}
-    {...props}
-  >
-    {children}
-  </a>
-);
+      onFocus={handleFocus}
+      {...props}
+    >
+      {children}
+    </a>
+  );
 }

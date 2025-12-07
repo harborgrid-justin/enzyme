@@ -5,8 +5,8 @@
  * @module config/hooks/useConfigValue
  */
 
-import { useCallback, useEffect, useState, useRef } from 'react';
-import type { ConfigNamespace, ConfigValue, ConfigChangeEvent } from '../types';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { ConfigChangeEvent, ConfigNamespace, ConfigValue } from '../types';
 import { useConfigContext } from '../ConfigProvider';
 
 /**
@@ -125,9 +125,8 @@ export function useConfigValue<T extends ConfigValue = ConfigValue>(
     };
 
     // Subscribe to changes for this specific key
-    const unsubscribe = subscribe(namespace, key, handleChange);
 
-    return unsubscribe;
+    return subscribe(namespace, key, handleChange);
   }, [namespace, key, subscribe, shouldSubscribe, getValue, has]);
 
   // Sync with context when initialized
@@ -253,7 +252,11 @@ export function useConfigNumber(
   isLoading: boolean;
 } {
   const { defaultValue = 0, min, max, step = 1 } = options;
-  const { value, setValue: setRawValue, isLoading } = useConfigValue<number>(namespace, key, {
+  const {
+    value,
+    setValue: setRawValue,
+    isLoading,
+  } = useConfigValue<number>(namespace, key, {
     defaultValue,
   });
 
@@ -377,7 +380,11 @@ export function useConfigEnum<T extends string>(
   options: readonly T[];
   isLoading: boolean;
 } {
-  const { value, setValue: setRawValue, isLoading } = useConfigValue<T>(namespace, key, {
+  const {
+    value,
+    setValue: setRawValue,
+    isLoading,
+  } = useConfigValue<T>(namespace, key, {
     defaultValue,
   });
 
@@ -391,7 +398,7 @@ export function useConfigEnum<T extends string>(
   );
 
   // Ensure current value is valid
-  const validValue = allowedValues.includes(value) ? (value) : defaultValue;
+  const validValue = allowedValues.includes(value) ? value : defaultValue;
 
   return {
     value: validValue,

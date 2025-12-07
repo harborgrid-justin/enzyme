@@ -58,7 +58,9 @@ interface GlobalWithScheduler {
 /**
  * Type guard for checking if globalThis has the scheduler.yield API
  */
-function hasSchedulerYieldAPI(obj: typeof globalThis): obj is typeof globalThis & GlobalWithScheduler {
+function hasSchedulerYieldAPI(
+  obj: typeof globalThis
+): obj is typeof globalThis & GlobalWithScheduler {
   return (
     'scheduler' in obj &&
     typeof (obj as GlobalWithScheduler).scheduler === 'object' &&
@@ -270,9 +272,10 @@ class FrameBudgetTracker {
    * Get statistics
    */
   getStats(): { avgFrameTime: number; droppedFrames: number } {
-    const avgFrameTime = this.frameTimes.length > 0
-      ? this.frameTimes.reduce((a, b) => a + b, 0) / this.frameTimes.length
-      : 0;
+    const avgFrameTime =
+      this.frameTimes.length > 0
+        ? this.frameTimes.reduce((a, b) => a + b, 0) / this.frameTimes.length
+        : 0;
 
     return { avgFrameTime, droppedFrames: this.droppedFrames };
   }
@@ -295,13 +298,29 @@ class FrameBudgetTracker {
  */
 class TaskPriorityQueue {
   private queues: Map<RenderPriority, ScheduledTask[]> = new Map();
-  private maxSize: number;
+  private readonly maxSize: number;
 
   constructor(maxSize = 100) {
     this.maxSize = maxSize;
     for (const priority of Object.keys(PRIORITY_VALUES) as RenderPriority[]) {
       this.queues.set(priority, []);
     }
+  }
+
+  /**
+   * Get total pending task count
+   */
+  get size(): number {
+    let total = 0;
+    this.queues.forEach((queue) => (total += queue.length));
+    return total;
+  }
+
+  /**
+   * Check if queue is empty
+   */
+  get isEmpty(): boolean {
+    return this.size === 0;
   }
 
   /**
@@ -314,7 +333,10 @@ class TaskPriorityQueue {
     if (queue.length >= this.maxSize) {
       // Drop lowest priority task if queue is full
       const lowestPriority = this.getLowestPriorityWithTasks();
-      if (lowestPriority != null && PRIORITY_VALUES[lowestPriority] > PRIORITY_VALUES[task.priority]) {
+      if (
+        lowestPriority != null &&
+        PRIORITY_VALUES[lowestPriority] > PRIORITY_VALUES[task.priority]
+      ) {
         const lowestQueue = this.queues.get(lowestPriority);
         if (lowestQueue != null) {
           lowestQueue.pop();
@@ -362,38 +384,6 @@ class TaskPriorityQueue {
   }
 
   /**
-   * Get total pending task count
-   */
-  get size(): number {
-    let total = 0;
-    this.queues.forEach((queue) => (total += queue.length));
-    return total;
-  }
-
-  /**
-   * Check if queue is empty
-   */
-  get isEmpty(): boolean {
-    return this.size === 0;
-  }
-
-  /**
-   * Get lowest priority with pending tasks
-   */
-  private getLowestPriorityWithTasks(): RenderPriority | null {
-    const priorities = Object.keys(PRIORITY_VALUES) as RenderPriority[];
-    for (let i = priorities.length - 1; i >= 0; i--) {
-      const priority = priorities[i];
-      if (priority === undefined) continue;
-      const queue = this.queues.get(priority);
-      if (queue !== undefined && queue.length > 0) {
-        return priority;
-      }
-    }
-    return null;
-  }
-
-  /**
    * Remove task by ID
    */
   removeById(id: string): boolean {
@@ -412,6 +402,22 @@ class TaskPriorityQueue {
    */
   clear(): void {
     this.queues.forEach((queue) => (queue.length = 0));
+  }
+
+  /**
+   * Get lowest priority with pending tasks
+   */
+  private getLowestPriorityWithTasks(): RenderPriority | null {
+    const priorities = Object.keys(PRIORITY_VALUES) as RenderPriority[];
+    for (let i = priorities.length - 1; i >= 0; i--) {
+      const priority = priorities[i];
+      if (priority === undefined) continue;
+      const queue = this.queues.get(priority);
+      if (queue !== undefined && queue.length > 0) {
+        return priority;
+      }
+    }
+    return null;
   }
 }
 
@@ -481,11 +487,7 @@ export class RenderScheduler {
       estimatedDuration?: number;
     } = {}
   ): string {
-    const {
-      priority = 'normal',
-      deadline,
-      estimatedDuration,
-    } = options;
+    const { priority = 'normal', deadline, estimatedDuration } = options;
 
     const task: ScheduledTask = {
       id: `task-${++this.taskIdCounter}`,
@@ -516,7 +518,7 @@ export class RenderScheduler {
    * Schedule immediate work (runs synchronously if budget allows)
    */
   scheduleImmediate(callback: () => void): void {
-    if (this.frameBudget.hasRemainingBudget() === true) {
+    if (this.frameBudget.hasRemainingBudget()) {
       callback();
     } else {
       this.schedule(callback, { priority: 'immediate' });
@@ -530,7 +532,9 @@ export class RenderScheduler {
     return new Promise((resolve) => {
       // Use scheduler.yield() if available (Chrome 115+)
       if (hasSchedulerYieldAPI(globalThis)) {
-        const scheduler = (globalThis as typeof globalThis & { scheduler: { yield: () => Promise<void> } }).scheduler;
+        const { scheduler } = globalThis as typeof globalThis & {
+          scheduler: { yield: () => Promise<void> };
+        };
         void scheduler.yield().then(resolve);
       } else {
         // Fallback to setTimeout
@@ -572,10 +576,65 @@ export class RenderScheduler {
   }
 
   /**
+   * Stop the scheduler
+   */
+  stop(): void {
+    if (this.animationFrameId !== null) {
+      cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = null;
+    }
+    if (this.idleCallbackId !== null) {
+      cancelIdleCallback(this.idleCallbackId);
+      this.idleCallbackId = null;
+    }
+    if (this.cleanupIntervalId !== null) {
+      clearInterval(this.cleanupIntervalId);
+      this.cleanupIntervalId = null;
+    }
+    this.queue.clear();
+    this.isProcessing = false;
+  }
+
+  /**
+   * Get scheduler statistics
+   */
+  getStats(): SchedulerStats {
+    const frameStats = this.frameBudget.getStats();
+    const completed = this.completedTasks.filter((t) => t.status === 'completed');
+    const cancelled = this.completedTasks.filter((t) => t.status === 'cancelled');
+
+    const avgWaitTime =
+      completed.length > 0
+        ? completed.reduce((sum, t) => sum + ((t.startedAt ?? t.createdAt) - t.createdAt), 0) /
+          completed.length
+        : 0;
+
+    const avgExecutionTime =
+      completed.length > 0
+        ? completed.reduce(
+            (sum, t) =>
+              sum + ((t.completedAt ?? t.startedAt ?? t.createdAt) - (t.startedAt ?? t.createdAt)),
+            0
+          ) / completed.length
+        : 0;
+
+    return {
+      totalTasks: this.completedTasks.length,
+      completedTasks: completed.length,
+      cancelledTasks: cancelled.length,
+      averageWaitTime: avgWaitTime,
+      averageExecutionTime: avgExecutionTime,
+      droppedFrames: frameStats.droppedFrames,
+      frameTime: frameStats.avgFrameTime,
+      utilization: this.isProcessing ? 1 : 0,
+    };
+  }
+
+  /**
    * Ensure processing is happening
    */
   private ensureProcessing(): void {
-    if (this.isProcessing === true) return;
+    if (this.isProcessing) return;
     this.processQueue();
   }
 
@@ -583,7 +642,7 @@ export class RenderScheduler {
    * Process the task queue
    */
   private processQueue(): void {
-    if (this.queue.isEmpty === true) {
+    if (this.queue.isEmpty) {
       this.isProcessing = false;
       return;
     }
@@ -600,7 +659,7 @@ export class RenderScheduler {
       this.frameBudget.endFrame();
 
       // Continue processing if more tasks
-      if (this.queue.isEmpty === false) {
+      if (!this.queue.isEmpty) {
         this.processQueue();
       } else {
         this.isProcessing = false;
@@ -630,7 +689,7 @@ export class RenderScheduler {
    * Process tasks within frame budget
    */
   private processFrameTasks(): void {
-    while (this.frameBudget.hasRemainingBudget() === true && this.queue.isEmpty === false) {
+    while (this.frameBudget.hasRemainingBudget() && !this.queue.isEmpty) {
       const task = this.queue.peek();
       if (task === null) break;
 
@@ -638,7 +697,10 @@ export class RenderScheduler {
       if (task.priority === 'idle') break;
 
       // Check if task would exceed budget
-      if (task.estimatedDuration !== undefined && task.estimatedDuration > this.frameBudget.getRemainingTime()) {
+      if (
+        task.estimatedDuration !== undefined &&
+        task.estimatedDuration > this.frameBudget.getRemainingTime()
+      ) {
         break;
       }
 
@@ -651,7 +713,7 @@ export class RenderScheduler {
    * Process idle tasks during browser idle time
    */
   private processIdleTasks(deadline: IdleDeadline): void {
-    while (deadline.timeRemaining() > 0 && this.queue.isEmpty === false) {
+    while (deadline.timeRemaining() > 0 && !this.queue.isEmpty) {
       const task = this.queue.peek();
       if (task === null) break;
 
@@ -695,58 +757,10 @@ export class RenderScheduler {
   }
 
   /**
-   * Stop the scheduler
-   */
-  stop(): void {
-    if (this.animationFrameId !== null) {
-      cancelAnimationFrame(this.animationFrameId);
-      this.animationFrameId = null;
-    }
-    if (this.idleCallbackId !== null) {
-      cancelIdleCallback(this.idleCallbackId);
-      this.idleCallbackId = null;
-    }
-    if (this.cleanupIntervalId !== null) {
-      clearInterval(this.cleanupIntervalId);
-      this.cleanupIntervalId = null;
-    }
-    this.queue.clear();
-    this.isProcessing = false;
-  }
-
-  /**
-   * Get scheduler statistics
-   */
-  getStats(): SchedulerStats {
-    const frameStats = this.frameBudget.getStats();
-    const completed = this.completedTasks.filter((t) => t.status === 'completed');
-    const cancelled = this.completedTasks.filter((t) => t.status === 'cancelled');
-
-    const avgWaitTime = completed.length > 0
-      ? completed.reduce((sum, t) => sum + ((t.startedAt ?? t.createdAt) - t.createdAt), 0) / completed.length
-      : 0;
-
-    const avgExecutionTime = completed.length > 0
-      ? completed.reduce((sum, t) => sum + ((t.completedAt ?? t.startedAt ?? t.createdAt) - (t.startedAt ?? t.createdAt)), 0) / completed.length
-      : 0;
-
-    return {
-      totalTasks: this.completedTasks.length,
-      completedTasks: completed.length,
-      cancelledTasks: cancelled.length,
-      averageWaitTime: avgWaitTime,
-      averageExecutionTime: avgExecutionTime,
-      droppedFrames: frameStats.droppedFrames,
-      frameTime: frameStats.avgFrameTime,
-      utilization: this.isProcessing ? 1 : 0,
-    };
-  }
-
-  /**
    * Debug logging
    */
   private log(message: string, ...args: unknown[]): void {
-    if (this.config.debug === true) {
+    if (this.config.debug) {
       console.info(`[RenderScheduler] ${message}`, ...args);
     }
   }
@@ -776,7 +790,7 @@ export function useOptimizedRender<T>(
   const depsVersion = useDepsVersion(deps);
 
   useEffect(() => {
-    if (isFirstRender.current === true && defer === false) {
+    if (isFirstRender.current && !defer) {
       // Compute immediately on first render
       setValue(computeFn());
       isFirstRender.current = false;
@@ -784,9 +798,12 @@ export function useOptimizedRender<T>(
     }
 
     // Schedule subsequent updates
-    const taskId = scheduler.current.schedule(() => {
-      setValue(computeFn());
-    }, { priority });
+    const taskId = scheduler.current.schedule(
+      () => {
+        setValue(computeFn());
+      },
+      { priority }
+    );
 
     return () => {
       /* eslint-disable-next-line react-hooks/exhaustive-deps */
@@ -808,7 +825,7 @@ export function useDeferredRender(
   const [isDeferring, setIsDeferring] = useState(false);
 
   useEffect(() => {
-    if (shouldDefer === false) {
+    if (!shouldDefer) {
       /* eslint-disable-next-line react-hooks/set-state-in-effect */
       setIsDeferred(false);
       setIsDeferring(false);
@@ -826,13 +843,14 @@ export function useDeferredRender(
       { priority: 'low' }
     );
 
-    const timeoutId = delay > 0
-      ? setTimeout(() => {
-          setIsDeferred(true);
-          setIsDeferring(false);
-          scheduler.cancel(taskId);
-        }, delay)
-      : undefined;
+    const timeoutId =
+      delay > 0
+        ? setTimeout(() => {
+            setIsDeferred(true);
+            setIsDeferring(false);
+            scheduler.cancel(taskId);
+          }, delay)
+        : undefined;
 
     return () => {
       scheduler.cancel(taskId);
@@ -875,7 +893,7 @@ export function useScheduledWork(): {
   const yieldToMain = useCallback(async () => scheduler.yieldToMain(), [scheduler]);
 
   const runInChunks = useCallback(
-    async <T,>(
+    async <T>(
       items: T[],
       processor: (item: T, index: number) => void,
       options?: { chunkSize?: number; yieldAfter?: number }

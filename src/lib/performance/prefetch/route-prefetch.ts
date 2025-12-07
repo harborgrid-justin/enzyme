@@ -16,11 +16,7 @@ import {
   getIntelligentPrefetchEngine,
   type IntelligentPrefetchEngine,
 } from './intelligent-prefetch';
-import {
-  getPrefetchQueue,
-  type PrefetchQueue,
-  type PrefetchPriority,
-} from './prefetch-queue';
+import { getPrefetchQueue, type PrefetchQueue, type PrefetchPriority } from './prefetch-queue';
 
 // ============================================================================
 // Types
@@ -121,7 +117,7 @@ export class RoutePrefetchManager {
   private hoverTimers: Map<string, ReturnType<typeof setTimeout>> = new Map();
   private viewportObserver: IntersectionObserver | null = null;
   private observedLinks: Map<Element, string> = new Map();
-  private engine: IntelligentPrefetchEngine | null = null;
+  private readonly engine: IntelligentPrefetchEngine | null = null;
   private queue: PrefetchQueue;
   private currentPath: string = '';
 
@@ -221,9 +217,15 @@ export class RoutePrefetchManager {
     this.log(`Prefetching route: ${path}`);
 
     const results = await Promise.allSettled([
-      route.component !== undefined ? this.prefetchComponent(path, route.component) : Promise.resolve(null),
-      route.dataLoader !== undefined ? this.prefetchData(path, route.dataLoader) : Promise.resolve(null),
-      route.assets !== undefined ? Promise.resolve(this.prefetchAssets(route.assets)) : Promise.resolve(null),
+      route.component !== undefined
+        ? this.prefetchComponent(path, route.component)
+        : Promise.resolve(null),
+      route.dataLoader !== undefined
+        ? this.prefetchData(path, route.dataLoader)
+        : Promise.resolve(null),
+      route.assets !== undefined
+        ? Promise.resolve(this.prefetchAssets(route.assets))
+        : Promise.resolve(null),
     ]);
 
     const componentSuccess = results[0]?.status === 'fulfilled';
@@ -422,10 +424,7 @@ export class RoutePrefetchManager {
   // Private Methods
   // ============================================================================
 
-  private async prefetchComponent(
-    path: string,
-    loader: () => Promise<unknown>
-  ): Promise<unknown> {
+  private async prefetchComponent(path: string, loader: () => Promise<unknown>): Promise<unknown> {
     // Check cache first
     const cached = this.getCachedComponent(path);
     if (cached != null) {
@@ -444,10 +443,7 @@ export class RoutePrefetchManager {
     return module;
   }
 
-  private async prefetchData(
-    path: string,
-    loader: () => Promise<unknown>
-  ): Promise<unknown> {
+  private async prefetchData(path: string, loader: () => Promise<unknown>): Promise<unknown> {
     // Check cache first
     const cached = this.getCachedData(path);
     if (cached !== null) {
@@ -514,7 +510,7 @@ export class RoutePrefetchManager {
     this.viewportObserver = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting === true) {
+          if (entry.isIntersecting) {
             const path = this.observedLinks.get(entry.target);
             if (path !== undefined && !this.prefetchedRoutes.has(path)) {
               void this.prefetchRoute(path);
@@ -529,7 +525,7 @@ export class RoutePrefetchManager {
   }
 
   private log(message: string, ...args: unknown[]): void {
-    if (this.config.debug === true) {
+    if (this.config.debug) {
       console.info(`[RoutePrefetch] ${message}`, ...args);
     }
   }

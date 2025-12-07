@@ -143,19 +143,11 @@ export function usePerformanceAwareness(): {
   const { hasViolations, healthScore: budgetHealth } = usePerformanceBudget();
 
   const shouldReduceComplexity =
-    shouldReduceMemory ||
-    isHighBlocking ||
-    isSlowConnection ||
-    hasViolations;
+    shouldReduceMemory || isHighBlocking || isSlowConnection || hasViolations;
 
-  const shouldDefer =
-    isBlocked ||
-    memoryPressure === 'critical';
+  const shouldDefer = isBlocked || memoryPressure === 'critical';
 
-  const isUnderPressure =
-    memoryPressure !== 'normal' ||
-    isHighBlocking ||
-    hasViolations;
+  const isUnderPressure = memoryPressure !== 'normal' || isHighBlocking || hasViolations;
 
   let memoryScore = 0;
   if (memoryPressure === 'normal') {

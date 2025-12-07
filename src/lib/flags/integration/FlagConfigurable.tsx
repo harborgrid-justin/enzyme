@@ -128,9 +128,14 @@ export interface FlagConfigurableContextValue {
   /** Depth of nesting */
   readonly depth: number;
   /** Get configuration value */
-  readonly getConfig: (flagKey: string) => import('../../contexts/FlagConfigurableContext').ConfigurableValue | undefined;
+  readonly getConfig: (
+    flagKey: string
+  ) => import('../../contexts/FlagConfigurableContext').ConfigurableValue | undefined;
   /** Set configuration value */
-  readonly setConfig: (flagKey: string, value: import('../../contexts/FlagConfigurableContext').ConfigurableValue) => void;
+  readonly setConfig: (
+    flagKey: string,
+    value: import('../../contexts/FlagConfigurableContext').ConfigurableValue
+  ) => void;
   /** Check if configuration exists */
   readonly hasConfig: (flagKey: string) => boolean;
   /** Get all configurations */
@@ -435,13 +440,13 @@ export function FlagConfigurableMulti({
     if (strategy === 'first') {
       // Return first enabled flag's variant
       for (const key of flagKeys) {
-        if (getFlag(key) === true && variants[key] !== undefined) {
+        if (getFlag(key) && variants[key] !== undefined) {
           return key;
         }
       }
     } else {
       // Return variant based on all flags being enabled
-      const allEnabled = flagKeys.every((key) => getFlag(key) === true);
+      const allEnabled = flagKeys.every((key) => getFlag(key));
       if (allEnabled) {
         return 'all';
       }

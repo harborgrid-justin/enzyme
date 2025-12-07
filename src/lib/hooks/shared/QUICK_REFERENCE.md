@@ -92,35 +92,39 @@ function Link({ to, children }) {
 
 ## API Quick Reference
 
-| Utility | Purpose | Returns |
-|---------|---------|---------|
-| `useIsMounted()` | Track mounted state | `() => boolean` |
-| `useMountedState()` | Mounted state + guard | `{ isMounted, ifMounted }` |
-| `useLatestRef(value)` | Latest value ref | `MutableRefObject<T>` |
-| `useLatestCallback(fn)` | Stable callback | `T` (callback type) |
-| `useBuffer(options)` | Batch data | `{ add, flush, clear, size }` |
-| `getNetworkInfo()` | Network API data | `NetworkInformation` |
-| `isSlowConnection()` | Slow check | `boolean` |
-| `shouldAllowPrefetch()` | Prefetch decision | `boolean` |
+| Utility                 | Purpose               | Returns                       |
+|-------------------------|-----------------------|-------------------------------|
+| `useIsMounted()`        | Track mounted state   | `() => boolean`               |
+| `useMountedState()`     | Mounted state + guard | `{ isMounted, ifMounted }`    |
+| `useLatestRef(value)`   | Latest value ref      | `MutableRefObject<T>`         |
+| `useLatestCallback(fn)` | Stable callback       | `T` (callback type)           |
+| `useBuffer(options)`    | Batch data            | `{ add, flush, clear, size }` |
+| `getNetworkInfo()`      | Network API data      | `NetworkInformation`          |
+| `isSlowConnection()`    | Slow check            | `boolean`                     |
+| `shouldAllowPrefetch()` | Prefetch decision     | `boolean`                     |
 
 ## When to Use What
 
 ### useIsMounted
+
 - ✅ Async operations (fetch, timers)
 - ✅ WebSocket handlers
 - ❌ Synchronous renders
 
 ### useLatestRef
+
 - ✅ Debounced callbacks
 - ✅ Event handlers in loops
 - ❌ Values needed in JSX
 
 ### useBuffer
+
 - ✅ Analytics batching
 - ✅ Performance metrics
 - ❌ Single operations
 
 ### Network Utils
+
 - ✅ Adaptive loading
 - ✅ Prefetch logic
 - ❌ Critical features
@@ -128,12 +132,14 @@ function Link({ to, children }) {
 ## Common Gotchas
 
 ### ❌ Don't do this:
+
 ```tsx
 const isMounted = useIsMounted();
 if (isMounted) { ... }  // isMounted is a function!
 ```
 
 ### ✅ Do this:
+
 ```tsx
 const isMounted = useIsMounted();
 if (isMounted()) { ... }  // Call the function
@@ -142,12 +148,14 @@ if (isMounted()) { ... }  // Call the function
 ---
 
 ### ❌ Don't do this:
+
 ```tsx
 const latestRef = useLatestRef(value);
 console.log(latestRef);  // Logs ref object
 ```
 
 ### ✅ Do this:
+
 ```tsx
 const latestRef = useLatestRef(value);
 console.log(latestRef.current);  // Access .current
@@ -156,12 +164,14 @@ console.log(latestRef.current);  // Access .current
 ---
 
 ### ❌ Don't do this:
+
 ```tsx
 const { add } = useBuffer({ onFlush: flushFn });
 // flushFn defined after useBuffer
 ```
 
 ### ✅ Do this:
+
 ```tsx
 const flushFn = useCallback(...);
 const { add } = useBuffer({ onFlush: flushFn });

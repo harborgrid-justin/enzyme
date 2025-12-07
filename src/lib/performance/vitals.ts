@@ -296,6 +296,64 @@ export class VitalsCollector {
   }
 
   /**
+   * Flush buffered reports to analytics
+   */
+  flush(): void {
+    if (this.reportBuffer.length === 0) return;
+
+    const reports = [...this.reportBuffer];
+    this.reportBuffer = [];
+
+    if (this.config.reportToAnalytics && this.config.analyticsEndpoint) {
+      void this.sendToAnalytics(reports);
+    }
+  }
+
+  /**
+   * Get current vitals snapshot
+   * Performance optimized: Uses cached score to avoid recalculation on every call
+   */
+  getSnapshot(): VitalsSnapshot {
+    // Use cached score if metrics haven't changed
+    if (this.cachedScore === null || this.cachedScoreMetricsVersion !== this.metricsVersion) {
+      this.cachedScore = calculateOverallScore(this.metrics);
+      this.cachedScoreMetricsVersion = this.metricsVersion;
+    }
+
+    return {
+      ...this.metrics,
+      timestamp: Date.now(),
+      url: window.location.href,
+      path: window.location.pathname,
+      score: this.cachedScore,
+      rating: scoreToRating(this.cachedScore),
+    };
+  }
+
+  /**
+   * Get specific metric
+   */
+  getMetric(name: VitalMetricName): VitalMetricEntry | undefined {
+    return this.metrics[name];
+  }
+
+  /**
+   * Subscribe to metric updates
+   */
+  subscribe(callback: VitalsReporter): () => void {
+    this.subscribers.add(callback);
+    return () => this.subscribers.delete(callback);
+  }
+
+  /**
+   * Subscribe to budget violations
+   */
+  onViolation(callback: BudgetViolationHandler): () => void {
+    this.budgetHandlers.add(callback);
+    return () => this.budgetHandlers.delete(callback);
+  }
+
+  /**
    * Handle incoming metric
    */
   private handleMetric(metric: Metric): void {
@@ -395,20 +453,6 @@ export class VitalsCollector {
   }
 
   /**
-   * Flush buffered reports to analytics
-   */
-  flush(): void {
-    if (this.reportBuffer.length === 0) return;
-
-    const reports = [...this.reportBuffer];
-    this.reportBuffer = [];
-
-    if (this.config.reportToAnalytics && this.config.analyticsEndpoint) {
-      void this.sendToAnalytics(reports);
-    }
-  }
-
-  /**
    * Send metrics to analytics endpoint
    */
   private async sendToAnalytics(metrics: VitalMetricEntry[]): Promise<void> {
@@ -461,50 +505,6 @@ export class VitalsCollector {
       rtt: nav.connection?.rtt,
       saveData: nav.connection?.saveData,
     };
-  }
-
-  /**
-   * Get current vitals snapshot
-   * Performance optimized: Uses cached score to avoid recalculation on every call
-   */
-  getSnapshot(): VitalsSnapshot {
-    // Use cached score if metrics haven't changed
-    if (this.cachedScore === null || this.cachedScoreMetricsVersion !== this.metricsVersion) {
-      this.cachedScore = calculateOverallScore(this.metrics);
-      this.cachedScoreMetricsVersion = this.metricsVersion;
-    }
-
-    return {
-      ...this.metrics,
-      timestamp: Date.now(),
-      url: window.location.href,
-      path: window.location.pathname,
-      score: this.cachedScore,
-      rating: scoreToRating(this.cachedScore),
-    };
-  }
-
-  /**
-   * Get specific metric
-   */
-  getMetric(name: VitalMetricName): VitalMetricEntry | undefined {
-    return this.metrics[name];
-  }
-
-  /**
-   * Subscribe to metric updates
-   */
-  subscribe(callback: VitalsReporter): () => void {
-    this.subscribers.add(callback);
-    return () => this.subscribers.delete(callback);
-  }
-
-  /**
-   * Subscribe to budget violations
-   */
-  onViolation(callback: BudgetViolationHandler): () => void {
-    this.budgetHandlers.add(callback);
-    return () => this.budgetHandlers.delete(callback);
   }
 
   /**

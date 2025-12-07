@@ -48,10 +48,9 @@ export async function autoRegisterFeatures(): Promise<FeatureDiscoveryResult> {
 
   // Vite's glob import - resolved at build time
   // This pattern discovers all feature.ts files in the features directory
-  const featureModules = import.meta.glob<FeatureModule>(
-    '/src/features/*/feature.ts',
-    { eager: false }
-  );
+  const featureModules = import.meta.glob<FeatureModule>('/src/features/*/feature.ts', {
+    eager: false,
+  });
 
   const entries = Object.entries(featureModules);
 
@@ -136,23 +135,29 @@ export function registerFeaturesSync(features: FeatureRegistryEntry[]): FeatureD
 /**
  * Get feature registry as a plain object (for serialization/debugging)
  */
-export function getFeatureRegistrySnapshot(): Record<string, {
-  id: string;
-  name: string;
-  description?: string;
-  category?: string;
-  order?: number;
-  featureFlag?: string;
-}> {
-  const features = getAllFeatures();
-  const snapshot: Record<string, {
+export function getFeatureRegistrySnapshot(): Record<
+  string,
+  {
     id: string;
     name: string;
     description?: string;
     category?: string;
     order?: number;
     featureFlag?: string;
-  }> = {};
+  }
+> {
+  const features = getAllFeatures();
+  const snapshot: Record<
+    string,
+    {
+      id: string;
+      name: string;
+      description?: string;
+      category?: string;
+      order?: number;
+      featureFlag?: string;
+    }
+  > = {};
 
   for (const feature of features) {
     const { metadata, access } = feature.config;

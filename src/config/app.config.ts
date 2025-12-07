@@ -15,7 +15,13 @@
  */
 
 import { ROUTES } from './routes.registry';
-import { TIMING, QUERY_STALE_TIMES, QUERY_GC_TIMES, RETRY_CONFIG, UI_TIMING } from './timing.constants';
+import {
+  TIMING,
+  QUERY_STALE_TIMES,
+  QUERY_GC_TIMES,
+  RETRY_CONFIG,
+  UI_TIMING,
+} from './timing.constants';
 
 // =============================================================================
 // App Metadata
@@ -222,7 +228,12 @@ export const NAV_ITEMS: NavItem[] = [
     permission: 'view:reports',
     children: [
       { label: 'All Reports', href: ROUTES.REPORTS_LIST, icon: 'List' },
-      { label: 'Create Report', href: ROUTES.REPORT_CREATE, icon: 'Plus', permission: 'create:reports' },
+      {
+        label: 'Create Report',
+        href: ROUTES.REPORT_CREATE,
+        icon: 'Plus',
+        permission: 'create:reports',
+      },
     ],
   },
   {

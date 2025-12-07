@@ -237,9 +237,7 @@ export function throttleAsync<T extends (...args: unknown[]) => Promise<unknown>
 /**
  * Execute a function and return a tuple of [error, result]
  */
-export async function tryCatch<T>(
-  fn: () => Promise<T>
-): Promise<[Error, null] | [null, T]> {
+export async function tryCatch<T>(fn: () => Promise<T>): Promise<[Error, null] | [null, T]> {
   try {
     const result = await fn();
     return [null, result];
@@ -286,9 +284,7 @@ export function makeCancelable<T>(promise: Promise<T>): CancelablePromise<T> {
 /**
  * Run async functions in sequence
  */
-export async function sequence<T>(
-  fns: Array<() => Promise<T>>
-): Promise<T[]> {
+export async function sequence<T>(fns: Array<() => Promise<T>>): Promise<T[]> {
   const results: T[] = [];
   for (const fn of fns) {
     results.push(await fn());

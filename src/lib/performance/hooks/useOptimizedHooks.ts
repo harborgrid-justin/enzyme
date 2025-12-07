@@ -10,14 +10,14 @@
  */
 
 import {
-  useState,
-  useEffect,
-  useCallback,
-  useRef,
-  useMemo,
-  useTransition,
-  useDeferredValue,
   type DependencyList,
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
 } from 'react';
 
 // ============================================================================
@@ -40,7 +40,9 @@ function useDepsVersion(deps: DependencyList): number {
 
   // Use useMemo with deps to detect changes via React's shallow comparison
   // This is more efficient than JSON.stringify
-  const version = useMemo(() => {
+
+
+  return useMemo(() => {
     // React's shallow comparison already ran to trigger this memo
     // We just need to check if this is a new computation
     const prevDeps = prevDepsRef.current;
@@ -69,8 +71,6 @@ function useDepsVersion(deps: DependencyList): number {
     return versionRef.current;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
-
-  return version;
 }
 
 // ============================================================================
@@ -228,17 +228,17 @@ function getNetworkQuality(): NetworkQuality {
 
   if (!navigator.onLine) return 'offline';
 
-  const {connection} = (navigator as Navigator & {
+  const { connection } = navigator as Navigator & {
     connection?: {
       effectiveType?: string;
       saveData?: boolean;
     };
-  });
+  };
 
   if (connection === null || connection === undefined) return 'fast';
   if (connection.saveData === true) return 'slow';
 
-  const {effectiveType} = connection;
+  const { effectiveType } = connection;
   if (effectiveType === '4g') return 'fast';
   if (effectiveType === '3g') return 'moderate';
   return 'slow';
@@ -559,10 +559,10 @@ export function useLazyFeature<T>(
 
 const PHASE_ORDER: ProgressiveLoadPhase[] = ['skeleton', 'low-quality', 'medium-quality', 'full'];
 const DEFAULT_PHASE_DURATIONS: Record<ProgressiveLoadPhase, number> = {
-  'skeleton': 0,
+  skeleton: 0,
   'low-quality': 200,
   'medium-quality': 500,
-  'full': 1000,
+  full: 1000,
 };
 
 /**
@@ -596,9 +596,9 @@ export function useProgressiveLoad<T>(
     window.addEventListener('online', updateNetwork);
     window.addEventListener('offline', updateNetwork);
 
-    const {connection} = (navigator as Navigator & {
+    const { connection } = navigator as Navigator & {
       connection?: EventTarget & { addEventListener: (type: string, handler: () => void) => void };
-    });
+    };
     connection?.addEventListener('change', updateNetwork);
 
     return () => {
@@ -650,10 +650,13 @@ export function useProgressiveLoad<T>(
   }, [effectivePhases, phase, phaseDurations, minPhaseDuration]);
 
   // Set data for current phase
-  const setPhaseData = useCallback((newData: T) => {
-    setData(newData);
-    advancePhase();
-  }, [advancePhase]);
+  const setPhaseData = useCallback(
+    (newData: T) => {
+      setData(newData);
+      advancePhase();
+    },
+    [advancePhase]
+  );
 
   // Reset to initial state
   const reset = useCallback(() => {

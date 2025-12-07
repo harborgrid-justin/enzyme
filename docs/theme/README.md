@@ -456,3 +456,25 @@ See the theme examples directory for complete usage examples:
 2. Avoid inline style objects (extract to constants)
 3. Use CSS variables for frequently changing values
 4. Profile with React DevTools to find re-render issues
+
+---
+
+## Related Documentation
+
+### Theme System
+- [Theme Provider](./PROVIDER.md) - Theme provider setup and configuration
+- [Design Tokens](./DESIGN_TOKENS.md) - Complete token reference
+- [Type Definitions](./TYPES.md) - TypeScript types for theme
+- [Dark Mode](./DARK_MODE.md) - Dark mode implementation guide
+
+### UI & Components
+- [UI Components](../ui/README.md) - Theme-aware UI components
+- [Design System](../DESIGN_SYSTEM.md) - Design tokens and patterns
+- [Components Reference](../COMPONENTS_REFERENCE.md) - Component APIs
+
+### UX & Accessibility
+- [Accessibility](../ux/ACCESSIBILITY.md) - WCAG-compliant color palettes
+- [Loading States](../ux/LOADING_STATES.md) - Theme-aware loading states
+
+### Integration
+- [UI + Theme + Hooks Integration](../integration/UI_THEME_HOOKS_ACCESSIBILITY.md) - How theme integrates with other systems

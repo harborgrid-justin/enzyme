@@ -3,6 +3,7 @@
  *
  * This module exports the centralized infrastructure for the React library:
  * - Configuration management system
+ * - React environment detection and conflict resolution
  *
  * @module core
  */
@@ -12,3 +13,9 @@
 // =============================================================================
 
 export * from './config';
+
+// =============================================================================
+// React Environment Detection
+// =============================================================================
+
+export * from './react-env';

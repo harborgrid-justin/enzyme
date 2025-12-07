@@ -9,13 +9,7 @@
  * @version 1.0.0
  */
 
-import {
-  useState,
-  useCallback,
-  useMemo,
-  useEffect,
-  type FC,
-} from 'react';
+import { useState, useCallback, useMemo, useEffect, type FC } from 'react';
 import {
   type ModuleId,
   type ModuleProviderConfig,
@@ -27,15 +21,9 @@ import {
   DEFAULT_HYDRATION_CONFIG,
 } from './types';
 import { VDOMPool, setDefaultPool } from './vdom-pool';
-import {
-  ModuleRegistry,
-  setDefaultRegistry,
-} from './module-registry';
+import { ModuleRegistry, setDefaultRegistry } from './module-registry';
 import { ModuleLoader, setDefaultLoader } from './module-loader';
-import {
-  ModuleEventBus,
-  setDefaultEventBus,
-} from './event-bus';
+import { ModuleEventBus, setDefaultEventBus } from './event-bus';
 import {
   type SecuritySandbox,
   createSecuritySandbox,
@@ -154,18 +142,17 @@ export const ModuleProvider: FC<ModuleProviderProps> = ({
   });
 
   const [eventBus] = useState<ModuleEventBus>(() => {
-    const instance = userEventBus ?? new ModuleEventBus({
-      enableSecurity: true,
-    });
+    const instance =
+      userEventBus ??
+      new ModuleEventBus({
+        enableSecurity: true,
+      });
     setDefaultEventBus(instance);
     return instance;
   });
 
   const [security] = useState<SecuritySandbox>(() =>
-    createSecuritySandbox(
-      '__root__' as ModuleId,
-      config.security as ModuleSecurityConfig
-    )
+    createSecuritySandbox('__root__' as ModuleId, config.security as ModuleSecurityConfig)
   );
 
   // Services are initialized synchronously in useState, so we're always initialized
@@ -199,7 +186,11 @@ export const ModuleProvider: FC<ModuleProviderProps> = ({
         budget: number;
       }> = [];
 
-      if (budget.maxInitTime !== undefined && budget.maxInitTime !== null && metrics.initTime > budget.maxInitTime) {
+      if (
+        budget.maxInitTime !== undefined &&
+        budget.maxInitTime !== null &&
+        metrics.initTime > budget.maxInitTime
+      ) {
         violations.push({
           metric: 'maxInitTime',
           value: metrics.initTime,
@@ -207,7 +198,11 @@ export const ModuleProvider: FC<ModuleProviderProps> = ({
         });
       }
 
-      if (budget.maxMountTime !== undefined && budget.maxMountTime !== null && metrics.mountTime > budget.maxMountTime) {
+      if (
+        budget.maxMountTime !== undefined &&
+        budget.maxMountTime !== null &&
+        metrics.mountTime > budget.maxMountTime
+      ) {
         violations.push({
           metric: 'maxMountTime',
           value: metrics.mountTime,
@@ -215,7 +210,11 @@ export const ModuleProvider: FC<ModuleProviderProps> = ({
         });
       }
 
-      if (budget.maxRenderTime !== undefined && budget.maxRenderTime !== null && metrics.avgRenderTime > budget.maxRenderTime) {
+      if (
+        budget.maxRenderTime !== undefined &&
+        budget.maxRenderTime !== null &&
+        metrics.avgRenderTime > budget.maxRenderTime
+      ) {
         violations.push({
           metric: 'maxRenderTime',
           value: metrics.avgRenderTime,
@@ -235,7 +234,11 @@ export const ModuleProvider: FC<ModuleProviderProps> = ({
         });
       }
 
-      if (budget.maxVNodes !== undefined && budget.maxVNodes !== null && metrics.vNodeCount > budget.maxVNodes) {
+      if (
+        budget.maxVNodes !== undefined &&
+        budget.maxVNodes !== null &&
+        metrics.vNodeCount > budget.maxVNodes
+      ) {
         violations.push({
           metric: 'maxVNodes',
           value: metrics.vNodeCount,
@@ -243,7 +246,11 @@ export const ModuleProvider: FC<ModuleProviderProps> = ({
         });
       }
 
-      if (budget.maxMemory !== undefined && budget.maxMemory !== null && metrics.memoryEstimate > budget.maxMemory) {
+      if (
+        budget.maxMemory !== undefined &&
+        budget.maxMemory !== null &&
+        metrics.memoryEstimate > budget.maxMemory
+      ) {
         violations.push({
           metric: 'maxMemory',
           value: metrics.memoryEstimate,
@@ -254,17 +261,10 @@ export const ModuleProvider: FC<ModuleProviderProps> = ({
       // Report violations
       for (const violation of violations) {
         if (config.devMode === true) {
-          console.warn(
-            `[Module ${moduleId}] Performance budget exceeded:`,
-            violation
-          );
+          console.warn(`[Module ${moduleId}] Performance budget exceeded:`, violation);
         }
 
-        budget.onBudgetExceeded?.(
-          violation.metric,
-          violation.value,
-          violation.budget
-        );
+        budget.onBudgetExceeded?.(violation.metric, violation.value, violation.budget);
       }
     },
     [config]

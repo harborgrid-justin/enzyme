@@ -56,9 +56,7 @@ export const DefaultLoadingFallback: FC<LoadingFallbackProps> = ({ message }) =>
           margin: '0 auto 16px',
         }}
       />
-      <p style={{ color: '#6b7280', margin: 0 }}>
-        {message ?? 'Loading application...'}
-      </p>
+      <p style={{ color: '#6b7280', margin: 0 }}>{message ?? 'Loading application...'}</p>
       <style>{`
         @keyframes spin {
           to { transform: rotate(360deg); }
@@ -98,14 +96,7 @@ export const DefaultErrorFallback: FC<ErrorFallbackProps> = ({ error, resetError
           margin: '0 auto 16px',
         }}
       >
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="white"
-          strokeWidth="2"
-        >
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
           <circle cx="12" cy="12" r="10" />
           <line x1="15" y1="9" x2="9" y2="15" />
           <line x1="9" y1="9" x2="15" y2="15" />
@@ -114,9 +105,7 @@ export const DefaultErrorFallback: FC<ErrorFallbackProps> = ({ error, resetError
       <h2 style={{ color: '#991b1b', textAlign: 'center', marginBottom: '8px' }}>
         Application Error
       </h2>
-      <p style={{ color: '#dc2626', textAlign: 'center', marginBottom: '16px' }}>
-        {error.message}
-      </p>
+      <p style={{ color: '#dc2626', textAlign: 'center', marginBottom: '16px' }}>{error.message}</p>
       {resetError && (
         <div style={{ textAlign: 'center' }}>
           <button

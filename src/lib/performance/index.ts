@@ -295,16 +295,18 @@ export {
  * });
  * ```
  */
-export async function initPerformanceMonitoring(options: {
-  debug?: boolean;
-  reportToAnalytics?: boolean;
-  analyticsEndpoint?: string;
-  sampleRate?: number;
-  onVitalMetric?: (metric: import('./vitals').VitalMetricEntry) => void;
-  onBudgetViolation?: (violation: import('./performance-budgets').BudgetViolationRecord) => void;
-  onLongTask?: (task: import('./performance-monitor').LongTaskEntry) => void;
-  onMemoryPressure?: (pressure: 'warning' | 'critical') => void;
-} = {}): Promise<() => void> {
+export async function initPerformanceMonitoring(
+  options: {
+    debug?: boolean;
+    reportToAnalytics?: boolean;
+    analyticsEndpoint?: string;
+    sampleRate?: number;
+    onVitalMetric?: (metric: import('./vitals').VitalMetricEntry) => void;
+    onBudgetViolation?: (violation: import('./performance-budgets').BudgetViolationRecord) => void;
+    onLongTask?: (task: import('./performance-monitor').LongTaskEntry) => void;
+    onMemoryPressure?: (pressure: 'warning' | 'critical') => void;
+  } = {}
+): Promise<() => void> {
   const {
     debug = false,
     reportToAnalytics = false,

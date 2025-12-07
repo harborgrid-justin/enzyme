@@ -13,7 +13,7 @@ import type {
   ADTokens,
   ADUser,
 } from './types';
-import { DEFAULT_SSO_CONFIG } from './ad-config';
+import { DEFAULT_SSO_CONFIG } from '@/lib/auth';
 
 // =============================================================================
 // Constants
@@ -107,7 +107,7 @@ export class SSOManager {
   private activityTimer: ReturnType<typeof setInterval> | null = null;
   private sessionCheckTimer: ReturnType<typeof setInterval> | null = null;
   private eventHandlers: Set<SSOEventHandler> = new Set();
-  private tabId: string;
+  private readonly tabId: string;
   private currentSession: SSOSession | null = null;
 
   /**
@@ -341,6 +341,28 @@ export class SSOManager {
   }
 
   /**
+   * Cleanup resources.
+   */
+  dispose(): void {
+    if (this.broadcastChannel) {
+      this.broadcastChannel.close();
+      this.broadcastChannel = null;
+    }
+
+    if (this.activityTimer) {
+      clearInterval(this.activityTimer);
+      this.activityTimer = null;
+    }
+
+    if (this.sessionCheckTimer) {
+      clearInterval(this.sessionCheckTimer);
+      this.sessionCheckTimer = null;
+    }
+
+    this.eventHandlers.clear();
+  }
+
+  /**
    * Initialize BroadcastChannel for cross-tab communication.
    */
   private initializeBroadcastChannel(): void {
@@ -418,6 +440,10 @@ export class SSOManager {
     }
   }
 
+  // ===========================================================================
+  // Activity Tracking
+  // ===========================================================================
+
   /**
    * Handle storage events for fallback sync.
    */
@@ -437,10 +463,6 @@ export class SSOManager {
       // Invalid message, ignore
     }
   }
-
-  // ===========================================================================
-  // Activity Tracking
-  // ===========================================================================
 
   /**
    * Initialize activity tracking.
@@ -464,7 +486,7 @@ export class SSOManager {
 
     // Periodic activity check
     this.activityTimer = setInterval(() => {
-      if (this.currentSession != null && this.options.trackActivity === true) {
+      if (this.currentSession != null && this.options.trackActivity) {
         const inactiveTime = Date.now() - this.currentSession.lastActivity;
         // If inactive for more than session timeout, expire the session
         if (inactiveTime > this.options.sessionTimeout) {
@@ -475,6 +497,10 @@ export class SSOManager {
       }
     }, this.options.activityCheckInterval);
   }
+
+  // ===========================================================================
+  // Storage Operations
+  // ===========================================================================
 
   /**
    * Start periodic session validity check.
@@ -488,10 +514,6 @@ export class SSOManager {
       }
     }, SESSION_CHECK_INTERVAL);
   }
-
-  // ===========================================================================
-  // Storage Operations
-  // ===========================================================================
 
   /**
    * Persist session to storage.
@@ -549,16 +571,16 @@ export class SSOManager {
     keysToRemove.forEach(key => storage.removeItem(key));
   }
 
+  // ===========================================================================
+  // Utility Methods
+  // ===========================================================================
+
   /**
    * Get the storage object.
    */
   private getStorage(): Storage {
     return sessionStorage;
   }
-
-  // ===========================================================================
-  // Utility Methods
-  // ===========================================================================
 
   /**
    * Check if a session is still valid.
@@ -576,15 +598,11 @@ export class SSOManager {
     }
 
     // Check domain
-    if (
-      this.options.allowedDomains != null &&
+    return !(this.options.allowedDomains != null &&
       this.options.allowedDomains.length > 0 &&
-      !this.options.allowedDomains.includes(session.domain)
-    ) {
-      return false;
-    }
+      !this.options.allowedDomains.includes(session.domain));
 
-    return true;
+
   }
 
   /**
@@ -609,32 +627,10 @@ export class SSOManager {
    * Log debug message.
    */
   private log(message: string, ...args: unknown[]): void {
-    if (this.options.debug === true) {
+    if (this.options.debug) {
       // eslint-disable-next-line no-console
       console.log(`[SSOManager] ${message}`, ...args);
     }
-  }
-
-  /**
-   * Cleanup resources.
-   */
-  dispose(): void {
-    if (this.broadcastChannel) {
-      this.broadcastChannel.close();
-      this.broadcastChannel = null;
-    }
-
-    if (this.activityTimer) {
-      clearInterval(this.activityTimer);
-      this.activityTimer = null;
-    }
-
-    if (this.sessionCheckTimer) {
-      clearInterval(this.sessionCheckTimer);
-      this.sessionCheckTimer = null;
-    }
-
-    this.eventHandlers.clear();
   }
 }
 
@@ -693,6 +689,7 @@ export class CrossDomainSSO {
    * Share session with another domain.
    *
    * @param targetOrigin - Target origin URL
+   * @param targetWindow
    * @param session - Session to share
    * @param tokens - Tokens to share
    */

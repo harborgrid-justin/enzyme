@@ -6,12 +6,7 @@
  * @module flags/providers/types
  */
 
-import type {
-  FeatureFlag,
-  Segment,
-  SegmentId,
-  EvaluationContext,
-} from '../advanced/types';
+import type { FeatureFlag, Segment, SegmentId, EvaluationContext } from '../advanced/types';
 
 // ============================================================================
 // Provider Interface
@@ -325,10 +320,9 @@ export interface ProviderStats {
 /**
  * Factory function for creating providers.
  */
-export type ProviderFactory<
-  C extends BaseProviderConfig,
-  P extends FlagProvider
-> = (config: C) => P;
+export type ProviderFactory<C extends BaseProviderConfig, P extends FlagProvider> = (
+  config: C
+) => P;
 
 /**
  * Provider registry entry.

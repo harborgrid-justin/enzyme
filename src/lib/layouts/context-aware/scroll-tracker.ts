@@ -98,59 +98,42 @@ const VELOCITY_SAMPLE_INTERVAL = 50; // ms
  * ```
  */
 export class ScrollTracker {
-  /** The scroll container element */
-  private readonly element: Element;
-
-  /** Unique identifier for this tracker */
-  private readonly id: string;
-
-  /** Configuration */
-  private readonly config: ContextTrackingConfig;
-
-  /** Options */
-  private readonly options: Required<ScrollTrackingOptions>;
-
-  /** Current scroll container state */
-  private state: ScrollContainer;
-
-  /** Velocity tracking state */
-  private velocityState: VelocityState;
-
-  /** Last known scroll direction */
-  private lastDirection: ScrollDirection = 'none';
-
-  /** Scroll event callbacks */
-  private readonly scrollCallbacks: Set<ScrollCallback> = new Set();
-
-  /** Edge event callbacks */
-  private readonly edgeCallbacks: Set<ScrollEdgeCallback> = new Set();
-
-  /** Sticky element callbacks */
-  private readonly stickyCallbacks: Map<Element, StickyCallback> = new Map();
-
-  /** Sticky element states */
-  private readonly stickyStates: Map<Element, StickyState> = new Map();
-
-  /** Throttle timer */
-  private throttleTimer: number | null = null;
-
-  /** Last throttle time */
-  private lastThrottleTime = 0;
-
-  /** Animation frame handle */
-  private rafHandle: number | null = null;
-
-  /** Whether scrolling is in progress */
-  private isScrolling = false;
-
-  /** Scroll end detection timer */
-  private scrollEndTimer: number | null = null;
-
-  /** Whether we're in SSR mode */
-  private readonly isSSR: boolean;
-
   /** ID counter for trackers */
   private static idCounter = 0;
+  /** The scroll container element */
+  private readonly element: Element;
+  /** Unique identifier for this tracker */
+  private readonly id: string;
+  /** Configuration */
+  private readonly config: ContextTrackingConfig;
+  /** Options */
+  private readonly options: Required<ScrollTrackingOptions>;
+  /** Current scroll container state */
+  private state: ScrollContainer;
+  /** Velocity tracking state */
+  private velocityState: VelocityState;
+  /** Last known scroll direction */
+  private lastDirection: ScrollDirection = 'none';
+  /** Scroll event callbacks */
+  private readonly scrollCallbacks: Set<ScrollCallback> = new Set();
+  /** Edge event callbacks */
+  private readonly edgeCallbacks: Set<ScrollEdgeCallback> = new Set();
+  /** Sticky element callbacks */
+  private readonly stickyCallbacks: Map<Element, StickyCallback> = new Map();
+  /** Sticky element states */
+  private readonly stickyStates: Map<Element, StickyState> = new Map();
+  /** Throttle timer */
+  private throttleTimer: number | null = null;
+  /** Last throttle time */
+  private lastThrottleTime = 0;
+  /** Animation frame handle */
+  private rafHandle: number | null = null;
+  /** Whether scrolling is in progress */
+  private isScrolling = false;
+  /** Scroll end detection timer */
+  private scrollEndTimer: number | null = null;
+  /** Whether we're in SSR mode */
+  private readonly isSSR: boolean;
 
   /**
    * Creates a new ScrollTracker.

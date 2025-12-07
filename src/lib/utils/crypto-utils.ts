@@ -153,10 +153,7 @@ export function base64ToBytes(base64: string): Uint8Array {
  */
 export function bytesToBase64Url(bytes: Uint8Array): string {
   const base64 = bytesToBase64(bytes);
-  return base64
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '');
+  return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
 /**
@@ -358,4 +355,4 @@ export async function deriveKey(
 // Type Exports
 // ============================================================================
 
-export type { };
+export type {};

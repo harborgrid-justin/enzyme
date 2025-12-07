@@ -95,39 +95,6 @@ export class CryptoStorage {
 
   constructor(private passphrase: string) {}
 
-  private async getKey(): Promise<CryptoKey> {
-    if (this.key) return this.key;
-    if (this.keyPromise) return this.keyPromise;
-
-    this.keyPromise = this.deriveKey();
-    this.key = await this.keyPromise;
-    return this.key;
-  }
-
-  private async deriveKey(): Promise<CryptoKey> {
-    const encoder = new TextEncoder();
-    const keyMaterial = await crypto.subtle.importKey(
-      'raw',
-      encoder.encode(this.passphrase),
-      'PBKDF2',
-      false,
-      ['deriveKey']
-    );
-
-    return crypto.subtle.deriveKey(
-      {
-        name: 'PBKDF2',
-        salt: encoder.encode('storage-salt-v1'),
-        iterations: 100000,
-        hash: 'SHA-256',
-      },
-      keyMaterial,
-      { name: 'AES-GCM', length: 256 },
-      false,
-      ['encrypt', 'decrypt']
-    );
-  }
-
   async encrypt(data: string): Promise<string> {
     const key = await this.getKey();
     const encoder = new TextEncoder();
@@ -162,6 +129,39 @@ export class CryptoStorage {
 
     return new TextDecoder().decode(decrypted);
   }
+
+  private async getKey(): Promise<CryptoKey> {
+    if (this.key) return this.key;
+    if (this.keyPromise) return this.keyPromise;
+
+    this.keyPromise = this.deriveKey();
+    this.key = await this.keyPromise;
+    return this.key;
+  }
+
+  private async deriveKey(): Promise<CryptoKey> {
+    const encoder = new TextEncoder();
+    const keyMaterial = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(this.passphrase),
+      'PBKDF2',
+      false,
+      ['deriveKey']
+    );
+
+    return crypto.subtle.deriveKey(
+      {
+        name: 'PBKDF2',
+        salt: encoder.encode('storage-salt-v1'),
+        iterations: 100000,
+        hash: 'SHA-256',
+      },
+      keyMaterial,
+      { name: 'AES-GCM', length: 256 },
+      false,
+      ['encrypt', 'decrypt']
+    );
+  }
 }
 
 // ============================================================================
@@ -174,7 +174,7 @@ export class CryptoStorage {
 export class StorageManager {
   private storage: Storage;
   private config: Required<StorageConfig>;
-  private crypto: CryptoStorage | null = null;
+  private readonly crypto: CryptoStorage | null = null;
   private migrations = new Map<string, MigrationFn<unknown>>();
   private broadcastChannel: BroadcastChannel | null = null;
 
@@ -203,50 +203,6 @@ export class StorageManager {
 
     // Periodic cleanup of expired items
     this.scheduleCleanup();
-  }
-
-  /**
-   * Get prefixed key
-   */
-  private getKey(key: string): string {
-    return `${this.config.prefix}:${key}`;
-  }
-
-  /**
-   * Setup cross-tab synchronization
-   */
-  private setupCrossTabSync(): void {
-    this.broadcastChannel = new BroadcastChannel(`${this.config.prefix}-storage`);
-
-    this.broadcastChannel.onmessage = (event: MessageEvent<{ type: string; key?: string }>) => {
-      const { type, key } = event.data;
-
-      if (type === 'set' && key !== undefined && key !== '') {
-        globalEventBus.emitSync('data:invalidate', { keys: [key] });
-      } else if (type === 'remove' && key !== undefined && key !== '') {
-        globalEventBus.emitSync('data:invalidate', { keys: [key] });
-      } else if (type === 'clear') {
-        globalEventBus.emitSync('data:invalidate', { keys: ['*'] });
-      }
-    };
-  }
-
-  /**
-   * Broadcast storage change to other tabs
-   */
-  private broadcast(type: 'set' | 'remove' | 'clear', key?: string): void {
-    if (this.broadcastChannel) {
-      this.broadcastChannel.postMessage({ type, key });
-    }
-  }
-
-  /**
-   * Schedule periodic cleanup of expired items
-   */
-  private scheduleCleanup(): void {
-    if (typeof window !== 'undefined') {
-      setInterval(() => this.cleanup(), 60000); // Every minute
-    }
   }
 
   /**
@@ -518,6 +474,50 @@ export class StorageManager {
   dispose(): void {
     this.broadcastChannel?.close();
     this.broadcastChannel = null;
+  }
+
+  /**
+   * Get prefixed key
+   */
+  private getKey(key: string): string {
+    return `${this.config.prefix}:${key}`;
+  }
+
+  /**
+   * Setup cross-tab synchronization
+   */
+  private setupCrossTabSync(): void {
+    this.broadcastChannel = new BroadcastChannel(`${this.config.prefix}-storage`);
+
+    this.broadcastChannel.onmessage = (event: MessageEvent<{ type: string; key?: string }>) => {
+      const { type, key } = event.data;
+
+      if (type === 'set' && key !== undefined && key !== '') {
+        globalEventBus.emitSync('data:invalidate', { keys: [key] });
+      } else if (type === 'remove' && key !== undefined && key !== '') {
+        globalEventBus.emitSync('data:invalidate', { keys: [key] });
+      } else if (type === 'clear') {
+        globalEventBus.emitSync('data:invalidate', { keys: ['*'] });
+      }
+    };
+  }
+
+  /**
+   * Broadcast storage change to other tabs
+   */
+  private broadcast(type: 'set' | 'remove' | 'clear', key?: string): void {
+    if (this.broadcastChannel) {
+      this.broadcastChannel.postMessage({ type, key });
+    }
+  }
+
+  /**
+   * Schedule periodic cleanup of expired items
+   */
+  private scheduleCleanup(): void {
+    if (typeof window !== 'undefined') {
+      setInterval(() => this.cleanup(), 60000); // Every minute
+    }
   }
 }
 

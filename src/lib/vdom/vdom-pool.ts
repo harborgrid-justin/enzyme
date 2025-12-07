@@ -254,6 +254,20 @@ export class VDOMPool {
   // ==========================================================================
 
   /**
+   * Checks if pool is disposed.
+   */
+  get disposed(): boolean {
+    return this.isDisposed;
+  }
+
+  /**
+   * Gets the current generation number.
+   */
+  get currentGeneration(): number {
+    return this.generation;
+  }
+
+  /**
    * Acquires a virtual node from the pool.
    * @param options - Node creation options
    * @returns Virtual node instance
@@ -453,20 +467,6 @@ export class VDOMPool {
     this.stopGCInterval();
     this.clear();
     this.isDisposed = true;
-  }
-
-  /**
-   * Checks if pool is disposed.
-   */
-  get disposed(): boolean {
-    return this.isDisposed;
-  }
-
-  /**
-   * Gets the current generation number.
-   */
-  get currentGeneration(): number {
-    return this.generation;
   }
 
   // ==========================================================================

@@ -30,12 +30,8 @@
  * ```
  */
 
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import {
-  getPerformanceMonitor,
-  type LongTaskEntry,
-  type PerformanceMonitor,
-} from '../performance-monitor';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { getPerformanceMonitor, type LongTaskEntry, type PerformanceMonitor, } from '../performance-monitor';
 import { LONG_TASK_CONFIG } from '../../../config/performance.config';
 
 // ============================================================================
@@ -192,14 +188,7 @@ export function useLongTaskDetector(
         clearTimeout(blockTimerRef.current);
       }
     };
-  }, [
-    monitor,
-    maxHistory,
-    blockDetectionWindow,
-    onLongTask,
-    onCriticalTask,
-    debug,
-  ]);
+  }, [monitor, maxHistory, blockDetectionWindow, onLongTask, onCriticalTask, debug]);
 
   // Calculate statistics
   const stats = useMemo<LongTaskStats>(() => {
@@ -217,10 +206,7 @@ export function useLongTaskDetector(
 
     const durations = longTasks.map((t) => t.duration);
     const criticalTasks = longTasks.filter((t) => t.isCritical);
-    const totalBlocking = durations.reduce(
-      (sum, d) => sum + Math.max(0, d - threshold),
-      0
-    );
+    const totalBlocking = durations.reduce((sum, d) => sum + Math.max(0, d - threshold), 0);
 
     // Calculate rate (tasks in last minute)
     const oneMinuteAgo = Date.now() - 60000;
@@ -233,7 +219,8 @@ export function useLongTaskDetector(
       averageDuration: durations.reduce((a, b) => a + b, 0) / durations.length,
       maxDuration: Math.max(...durations),
       ratePerMinute: recentTasks.length,
-      timeSinceLastTask: lastTaskTime !== null && lastTaskTime !== 0 ? Date.now() - lastTaskTime : null,
+      timeSinceLastTask:
+        lastTaskTime !== null && lastTaskTime !== 0 ? Date.now() - lastTaskTime : null,
     };
   }, [longTasks, threshold, lastTaskTime]);
 
@@ -247,19 +234,16 @@ export function useLongTaskDetector(
 
   // Get last task
   const lastTask = useMemo((): LongTaskEntry | null => {
-    return longTasks.length > 0 ? longTasks[longTasks.length - 1] ?? null : null;
+    return longTasks.length > 0 ? (longTasks[longTasks.length - 1] ?? null) : null;
   }, [longTasks]);
 
   // Register callback
-  const registerCallback = useCallback(
-    (callback: (task: LongTaskEntry) => void): (() => void) => {
-      callbacksRef.current.add(callback);
-      return () => {
-        callbacksRef.current.delete(callback);
-      };
-    },
-    []
-  );
+  const registerCallback = useCallback((callback: (task: LongTaskEntry) => void): (() => void) => {
+    callbacksRef.current.add(callback);
+    return () => {
+      callbacksRef.current.delete(callback);
+    };
+  }, []);
 
   // Clear history
   const clearHistory = useCallback(() => {
@@ -275,15 +259,23 @@ export function useLongTaskDetector(
 
   // Get attribution for last task
   const getLastTaskAttribution = useCallback((): string | null => {
-    if ((lastTask === null) || (lastTask.attribution.length === 0)) {
+    if (lastTask === null || lastTask.attribution.length === 0) {
       return null;
     }
 
     const [attr] = lastTask.attribution;
-    if ((attr?.containerSrc !== undefined) && (attr.containerSrc !== null) && (attr.containerSrc !== '')) {
+    if (
+      attr?.containerSrc !== undefined &&
+      attr.containerSrc !== null &&
+      attr.containerSrc !== ''
+    ) {
       return attr.containerSrc;
     }
-    if ((attr?.containerName !== undefined) && (attr.containerName !== null) && (attr.containerName !== '')) {
+    if (
+      attr?.containerName !== undefined &&
+      attr.containerName !== null &&
+      attr.containerName !== ''
+    ) {
       return attr.containerName;
     }
     return attr?.name ?? null;
@@ -310,10 +302,7 @@ export function useLongTaskDetector(
 /**
  * Hook to defer rendering during long tasks
  */
-export function useDeferredRender<T>(
-  value: T,
-  options: UseLongTaskDetectorOptions = {}
-): T {
+export function useDeferredRender<T>(value: T, options: UseLongTaskDetectorOptions = {}): T {
   const { shouldDefer } = useLongTaskDetector(options);
   const [deferredValue, setDeferredValue] = useState(value);
 
@@ -350,12 +339,12 @@ export function useBlockingTimeTracker(): {
   const { onLongTask } = useLongTaskDetector();
 
   useEffect(() => {
-    const unsubscribe = onLongTask((task) => {
+
+    return onLongTask((task) => {
       if (startTimeRef.current !== null) {
         tasksDuringOperationRef.current.push(task);
       }
     });
-    return unsubscribe;
   }, [onLongTask]);
 
   const startTracking = useCallback(() => {
@@ -438,11 +427,11 @@ export function useYieldToMain(): {
 // ============================================================================
 
 const requestIdleCallback =
-  (typeof window !== 'undefined') && (window.requestIdleCallback !== undefined)
+  typeof window !== 'undefined' && window.requestIdleCallback !== undefined
     ? window.requestIdleCallback
     : (callback: () => void) => setTimeout(callback, 1);
 
 const cancelIdleCallback =
-  (typeof window !== 'undefined') && (window.cancelIdleCallback !== undefined)
+  typeof window !== 'undefined' && window.cancelIdleCallback !== undefined
     ? window.cancelIdleCallback
     : (id: number) => clearTimeout(id);

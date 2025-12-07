@@ -41,16 +41,18 @@
  * // Result: Record<string, never>
  * ```
  */
-export type ExtractRequiredParams<TPath extends string, Acc extends Record<string, string> = Record<string, never>> =
-  TPath extends `${infer _Start}:${infer _Param}?/${infer Rest}`
-    ? ExtractRequiredParams<`/${Rest}`, Acc>
-    : TPath extends `${infer _Start}:${infer Param}/${infer Rest}`
-      ? ExtractRequiredParams<`/${Rest}`, Acc & { [K in Param]: string }>
-      : TPath extends `${infer _Start}:${infer _Param}?`
-        ? Acc
-        : TPath extends `${infer _Start}:${infer Param}`
-          ? Acc & { [K in Param]: string }
-          : Acc;
+export type ExtractRequiredParams<
+  TPath extends string,
+  Acc extends Record<string, string> = Record<string, never>,
+> = TPath extends `${infer _Start}:${infer _Param}?/${infer Rest}`
+  ? ExtractRequiredParams<`/${Rest}`, Acc>
+  : TPath extends `${infer _Start}:${infer Param}/${infer Rest}`
+    ? ExtractRequiredParams<`/${Rest}`, Acc & { [K in Param]: string }>
+    : TPath extends `${infer _Start}:${infer _Param}?`
+      ? Acc
+      : TPath extends `${infer _Start}:${infer Param}`
+        ? Acc & { [K in Param]: string }
+        : Acc;
 
 /**
  * Extract optional parameter names from a route path
@@ -81,8 +83,8 @@ export type ExtractOptionalParams<TPath extends string> =
  * // Result: { id: string; postId?: string }
  * ```
  */
-export type ExtractRouteParams<TPath extends string> =
-  ExtractRequiredParams<TPath> & ExtractOptionalParams<TPath>;
+export type ExtractRouteParams<TPath extends string> = ExtractRequiredParams<TPath> &
+  ExtractOptionalParams<TPath>;
 
 /**
  * Check if a path has any parameters
@@ -95,8 +97,9 @@ export type ExtractRouteParams<TPath extends string> =
  * type NoP = HasParams<'/about'>; // false
  * ```
  */
-export type HasParams<TPath extends string> =
-  keyof ExtractRouteParams<TPath> extends never ? false : true;
+export type HasParams<TPath extends string> = keyof ExtractRouteParams<TPath> extends never
+  ? false
+  : true;
 
 /**
  * Check if a route requires any parameters (has non-optional params)
@@ -109,8 +112,9 @@ export type HasParams<TPath extends string> =
  * type NoReq = RequiresParams<'/search/:query?'>; // false
  * ```
  */
-export type RequiresParams<TPath extends string> =
-  keyof ExtractRequiredParams<TPath> extends never ? false : true;
+export type RequiresParams<TPath extends string> = keyof ExtractRequiredParams<TPath> extends never
+  ? false
+  : true;
 
 /**
  * Check if a route has only optional parameters
@@ -141,10 +145,9 @@ export type HasOnlyOptionalParams<TPath extends string> =
  * type NoParams = ParamsFor<'/about'>; // undefined
  * ```
  */
-export type ParamsFor<TPath extends string> =
-  keyof ExtractRouteParams<TPath> extends never
-    ? undefined
-    : ExtractRouteParams<TPath>;
+export type ParamsFor<TPath extends string> = keyof ExtractRouteParams<TPath> extends never
+  ? undefined
+  : ExtractRouteParams<TPath>;
 
 // =============================================================================
 // Route Segment Types
@@ -161,14 +164,13 @@ export type ParamsFor<TPath extends string> =
  * // Result: ['users', ':id', 'posts', ':postId']
  * ```
  */
-export type ExtractSegments<TPath extends string> =
-  TPath extends `/${infer Rest}`
-    ? ExtractSegments<Rest>
-    : TPath extends `${infer Segment}/${infer Rest}`
-      ? [Segment, ...ExtractSegments<Rest>]
-      : TPath extends ''
-        ? []
-        : [TPath];
+export type ExtractSegments<TPath extends string> = TPath extends `/${infer Rest}`
+  ? ExtractSegments<Rest>
+  : TPath extends `${infer Segment}/${infer Rest}`
+    ? [Segment, ...ExtractSegments<Rest>]
+    : TPath extends ''
+      ? []
+      : [TPath];
 
 /**
  * Get the depth (number of segments) of a route path
@@ -194,8 +196,10 @@ export type RouteDepth<TPath extends string> = ExtractSegments<TPath>['length'];
  * type NotChild = IsChildRoute<'/users', '/users/:id'>; // false
  * ```
  */
-export type IsChildRoute<TChild extends string, TParent extends string> =
-  TChild extends `${TParent}/${infer _Rest}` ? true : false;
+export type IsChildRoute<
+  TChild extends string,
+  TParent extends string,
+> = TChild extends `${TParent}/${infer _Rest}` ? true : false;
 
 /**
  * Get the parent path of a route
@@ -207,36 +211,36 @@ export type IsChildRoute<TChild extends string, TParent extends string> =
  * type Parent = GetParentPath<'/users/:id/posts'>; // '/users/:id'
  * ```
  */
-export type GetParentPath<TPath extends string> =
-  TPath extends `${infer Parent}/${infer _Last}`
-    ? Parent extends ''
-      ? '/'
-      : Parent
-    : '/';
+export type GetParentPath<TPath extends string> = TPath extends `${infer Parent}/${infer _Last}`
+  ? Parent extends ''
+    ? '/'
+    : Parent
+  : '/';
 
 /**
  * Check if a path segment is dynamic
  *
  * @template TSegment - A path segment string
  */
-export type IsDynamicSegment<TSegment extends string> =
-  TSegment extends `:${infer _Param}` ? true : false;
+export type IsDynamicSegment<TSegment extends string> = TSegment extends `:${infer _Param}`
+  ? true
+  : false;
 
 /**
  * Check if a path segment is optional
  *
  * @template TSegment - A path segment string
  */
-export type IsOptionalSegment<TSegment extends string> =
-  TSegment extends `:${infer _Param}?` ? true : false;
+export type IsOptionalSegment<TSegment extends string> = TSegment extends `:${infer _Param}?`
+  ? true
+  : false;
 
 /**
  * Check if a path segment is catch-all
  *
  * @template TSegment - A path segment string
  */
-export type IsCatchAllSegment<TSegment extends string> =
-  TSegment extends '*' ? true : false;
+export type IsCatchAllSegment<TSegment extends string> = TSegment extends '*' ? true : false;
 
 // =============================================================================
 // Route Builder Types
@@ -256,13 +260,9 @@ export type IsCatchAllSegment<TSegment extends string> =
  * type UserBuilder = RouteBuilder<'/users/:id'>; // (params: { id: string }, query?: ...) => string
  * ```
  */
-export type RouteBuilder<TPath extends string> =
-  keyof ExtractRouteParams<TPath> extends never
-    ? (query?: Record<string, string | undefined>) => TPath
-    : (
-        params: ExtractRouteParams<TPath>,
-        query?: Record<string, string | undefined>
-      ) => string;
+export type RouteBuilder<TPath extends string> = keyof ExtractRouteParams<TPath> extends never
+  ? (query?: Record<string, string | undefined>) => TPath
+  : (params: ExtractRouteParams<TPath>, query?: Record<string, string | undefined>) => string;
 
 /**
  * Type-safe route registry with builders for all routes
@@ -355,7 +355,7 @@ export type TypedNavigate<TPath extends string, TOptions = unknown> =
  */
 export type BuildPath<
   TPath extends string,
-  TParams extends Record<string, string>
+  TParams extends Record<string, string>,
 > = TPath extends `${infer Start}:${infer Param}/${infer Rest}`
   ? `${Start}${TParams[Extract<Param, keyof TParams>]}/${BuildPath<`/${Rest}`, TParams>}`
   : TPath extends `${infer Start}:${infer Param}`
@@ -448,7 +448,7 @@ export type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
  */
 export type RoutePathFromId<
   TRegistry extends Record<string, string>,
-  TId extends keyof TRegistry
+  TId extends keyof TRegistry,
 > = TRegistry[TId];
 
 // =============================================================================
@@ -469,15 +469,14 @@ type TupleFromUnion<T, L = LastOfUnion<T>> = [T] extends [never]
   ? []
   : [...TupleFromUnion<Exclude<T, L>>, L];
 
-type LastOfUnion<T> = UnionToIntersection<
-  T extends unknown ? (t: T) => T : never
-> extends (t: infer L) => unknown
-  ? L
-  : never;
+type LastOfUnion<T> =
+  UnionToIntersection<T extends unknown ? (t: T) => T : never> extends (t: infer L) => unknown
+    ? L
+    : never;
 
-type UnionToIntersection<U> = (
-  U extends unknown ? (k: U) => void : never
-) extends (k: infer I) => void
+type UnionToIntersection<U> = (U extends unknown ? (k: U) => void : never) extends (
+  k: infer I
+) => void
   ? I
   : never;
 
@@ -485,10 +484,9 @@ type UnionToIntersection<U> = (
  * Get the number of parameters in a route
  * @internal
  */
-export type ParamCount<TPath extends string> =
-  keyof ExtractRouteParams<TPath> extends never
-    ? 0
-    : TupleFromUnion<keyof ExtractRouteParams<TPath>>['length'];
+export type ParamCount<TPath extends string> = keyof ExtractRouteParams<TPath> extends never
+  ? 0
+  : TupleFromUnion<keyof ExtractRouteParams<TPath>>['length'];
 
 // =============================================================================
 // Runtime Helpers
@@ -511,12 +509,14 @@ export type ParamCount<TPath extends string> =
  */
 export function createBuilder<TPath extends string>(
   path: TPath,
-  buildPathFn: (pattern: string, params?: Record<string, string>, query?: Record<string, string | undefined>) => string
-): RouteBuilder<TPath> {
-  return ((
-    params?: ExtractRouteParams<TPath>,
+  buildPathFn: (
+    pattern: string,
+    params?: Record<string, string>,
     query?: Record<string, string | undefined>
-  ) => buildPathFn(path, params as Record<string, string>, query)) as RouteBuilder<TPath>;
+  ) => string
+): RouteBuilder<TPath> {
+  return ((params?: ExtractRouteParams<TPath>, query?: Record<string, string | undefined>) =>
+    buildPathFn(path, params as Record<string, string>, query)) as RouteBuilder<TPath>;
 }
 
 /**
@@ -542,7 +542,11 @@ export function createBuilder<TPath extends string>(
  */
 export function createRegistry<T extends Record<string, string>>(
   routes: T,
-  buildPathFn: (pattern: string, params?: Record<string, string>, query?: Record<string, string | undefined>) => string
+  buildPathFn: (
+    pattern: string,
+    params?: Record<string, string>,
+    query?: Record<string, string | undefined>
+  ) => string
 ): TypedRouteRegistry<T> {
   const registry = {} as TypedRouteRegistry<T>;
 

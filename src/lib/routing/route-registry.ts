@@ -4,19 +4,21 @@
  */
 
 import type { ComponentType, LazyExoticComponent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type {
   DiscoveredRoute,
-  RouteMetadata,
-  RouteAccessConfig,
-  RoutePrefetchConfig,
-  RouteAnalyticsEvent,
-  TypedNavigationOptions,
   NavigationResult,
+  RouteAccessConfig,
+  RouteAnalyticsEvent,
+  RouteMetadata,
   RouteParams,
+  RoutePrefetchConfig,
+  TypedNavigationOptions,
 } from './types';
-import { generateRouteId, extractParamNames } from './scanner';
+import { extractParamNames, generateRouteId } from './scanner';
 import { buildRoutePath } from './route-builder';
 import { parsePathParams as coreParsePathParams } from './core/path-utils';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 // =============================================================================
 // Registry Types
@@ -548,9 +550,6 @@ export const routeRegistry = new RouteRegistry();
 // React Integration Hooks
 // =============================================================================
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-
 /**
  * Hook for accessing the route registry
  */
@@ -610,12 +609,9 @@ export function useTypedNavigate(): {
     [navigate]
   );
 
-  const prefetchRoute = useCallback(
-    (path: string): void => {
-      void routeRegistry.prefetchByPath(path);
-    },
-    []
-  );
+  const prefetchRoute = useCallback((path: string): void => {
+    void routeRegistry.prefetchByPath(path);
+  }, []);
 
   return {
     navigateTo,
@@ -636,7 +632,10 @@ export function usePrefetchHandlers(path: string): {
 } {
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handlers = useMemo(
+
+  
+
+  return useMemo(
     () => ({
       onMouseEnter: () => {
         timeoutRef.current = setTimeout(() => {
@@ -655,8 +654,6 @@ export function usePrefetchHandlers(path: string): {
     }),
     [path]
   );
-
-  return handlers;
 }
 
 /**

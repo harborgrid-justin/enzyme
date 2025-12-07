@@ -49,8 +49,8 @@ export interface StreamCacheConfig {
 export class StreamQueryCacheUpdater {
   private queryClient: QueryClient;
   private strategies: Map<string, CacheUpdateStrategy>;
-  private onEvent?: (event: StreamEvent) => void;
-  private onError?: (error: Error, event: StreamEvent) => void;
+  private readonly onEvent?: (event: StreamEvent) => void;
+  private readonly onError?: (error: Error, event: StreamEvent) => void;
   
   constructor(config: StreamCacheConfig) {
     this.queryClient = config.queryClient;
@@ -103,7 +103,21 @@ export class StreamQueryCacheUpdater {
     }
   }
   
+/**
+   * Add or update a strategy
+   */
+  addStrategy<T>(strategy: CacheUpdateStrategy<T>): void {
+    this.strategies.set(strategy.entity, strategy as CacheUpdateStrategy);
+  }
+  
   /**
+   * Remove a strategy
+   */
+  removeStrategy(entity: string): void {
+    this.strategies.delete(entity);
+  }
+
+    /**
    * Handle create event
    */
   private handleCreate<T>(
@@ -124,7 +138,6 @@ export class StreamQueryCacheUpdater {
       );
     }
   }
-  
   /**
    * Handle update event
    */
@@ -142,14 +155,13 @@ export class StreamQueryCacheUpdater {
         event.data
       );
     }
-    
+
     // Invalidate list queries
     void this.queryClient.invalidateQueries({
       queryKey: strategy.getListQueryKey(),
     });
   }
-
-  /**
+/**
    * Handle delete event
    */
   private handleDelete<T>(
@@ -165,7 +177,8 @@ export class StreamQueryCacheUpdater {
     void this.queryClient.invalidateQueries({
       queryKey: strategy.getListQueryKey(),
     });
-  }  /**
+  }
+/**
    * Handle patch event (partial update)
    */
   private handlePatch<T>(
@@ -188,7 +201,9 @@ export class StreamQueryCacheUpdater {
         return { ...old, ...eventData } as T;
       }
     );
-  }  /**
+  }
+  
+/**
    * Handle invalidate event
    */
   private handleInvalidate<T>(
@@ -208,18 +223,6 @@ export class StreamQueryCacheUpdater {
     void this.queryClient.invalidateQueries({
       queryKey: strategy.getListQueryKey(),
     });
-  }  /**
-   * Add or update a strategy
-   */
-  addStrategy<T>(strategy: CacheUpdateStrategy<T>): void {
-    this.strategies.set(strategy.entity, strategy as CacheUpdateStrategy);
-  }
-  
-  /**
-   * Remove a strategy
-   */
-  removeStrategy(entity: string): void {
-    this.strategies.delete(entity);
   }
 }
 

@@ -769,12 +769,19 @@ console.log('Improvement:', {
 
 ## Related Documentation
 
-- [Web Vitals](./WEB_VITALS.md) - Core Web Vitals metrics
-- [Performance Monitoring](./MONITORING.md) - Real-time monitoring
-- [Observatory Dashboard](./OBSERVATORY.md) - Performance dashboard
-- [Lazy Loading](./LAZY_LOADING.md) - Resource optimization
-- [Performance Guide](../PERFORMANCE.md) - Template performance
-- [Configuration Reference](./CONFIG.md) - Performance configuration
+### Performance System
+- [README.md](./README.md) - Performance overview
+- [WEB_VITALS.md](./WEB_VITALS.md) - Core Web Vitals metrics
+- [MONITORING.md](./MONITORING.md) - Real-time monitoring
+- [OBSERVATORY.md](./OBSERVATORY.md) - Performance dashboard
+- [LAZY_LOADING.md](./LAZY_LOADING.md) - Resource optimization
+- [CONFIG.md](./CONFIG.md) - Performance configuration
+
+### Monitoring & Integration
+- [Monitoring System](../monitoring/README.md) - Performance monitoring integration
+- [Error Boundaries](../monitoring/ERROR_BOUNDARIES.md) - Error tracking
+- [Hydration System](../hydration/README.md) - Hydration performance
+- [Performance Integration](../integration/PERFORMANCE_MONITORING_HYDRATION.md) - Complete integration
 
 ---
 

@@ -3,14 +3,10 @@
  * @description React hooks for progressive enhancement functionality
  */
 
+import { useContext, useCallback, useMemo } from 'react';
 import {
-  useContext,
-  useCallback,
-  useMemo,
-} from 'react';
-import { 
   ProgressiveEnhancementContext,
-  type ProgressiveEnhancementContextValue
+  type ProgressiveEnhancementContextValue,
 } from '../contexts/ProgressiveEnhancementContext';
 import type { BrowserCapabilities, CapabilityLevel } from './progressive-enhancement';
 
@@ -20,7 +16,9 @@ import type { BrowserCapabilities, CapabilityLevel } from './progressive-enhance
 export function useProgressiveEnhancement(): ProgressiveEnhancementContextValue {
   const context = useContext(ProgressiveEnhancementContext);
   if (!context) {
-    throw new Error('useProgressiveEnhancement must be used within a ProgressiveEnhancementProvider');
+    throw new Error(
+      'useProgressiveEnhancement must be used within a ProgressiveEnhancementProvider'
+    );
   }
   return context;
 }
@@ -43,9 +41,9 @@ export function useProgressiveFeature<T = unknown>(
 } {
   const { autoLoad = true, fallback } = options;
   const { features, loadFeature, getFeatureLevel } = useProgressiveEnhancement();
-  
+
   const status = features.get(featureId);
-  
+
   const load = useCallback(async (): Promise<T> => {
     try {
       const result = await loadFeature(featureId);
@@ -54,14 +52,14 @@ export function useProgressiveFeature<T = unknown>(
       throw error instanceof Error ? error : new Error(String(error));
     }
   }, [featureId, loadFeature, fallback]);
-  
+
   // Auto-load if enabled and not loaded
   useMemo(() => {
-    if (autoLoad === true && status?.loaded !== true && status?.loading !== true) {
+    if (autoLoad && status?.loaded !== true && status?.loading !== true) {
       void load();
     }
   }, [autoLoad, status, load]);
-  
+
   return {
     module: (status?.module as T) ?? null,
     level: getFeatureLevel(featureId),

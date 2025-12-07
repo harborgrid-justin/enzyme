@@ -4,7 +4,8 @@
 
 ## Overview
 
-The types module provides TypeScript type definitions for non-standard browser APIs and DOM extensions used throughout the library.
+The types module provides TypeScript type definitions for non-standard browser APIs and DOM extensions used throughout
+the library.
 
 ## Quick Start
 
@@ -31,14 +32,15 @@ function useNetworkInfo() {
 ## Exports
 
 ### DOM Extensions (`dom.ts`)
-| Type | Description |
-|------|-------------|
-| `ExtendedNavigator` | Navigator with all optional extensions |
-| `NavigatorWithConnection` | Network Information API |
-| `NavigatorWithStorage` | Storage estimation API |
-| `NavigatorWithDeviceMemory` | Device memory API |
-| `NetworkInformation` | Network connection info |
-| `PerformanceMemory` | Memory usage info |
+
+| Type                        | Description                            |
+|-----------------------------|----------------------------------------|
+| `ExtendedNavigator`         | Navigator with all optional extensions |
+| `NavigatorWithConnection`   | Network Information API                |
+| `NavigatorWithStorage`      | Storage estimation API                 |
+| `NavigatorWithDeviceMemory` | Device memory API                      |
+| `NetworkInformation`        | Network connection info                |
+| `PerformanceMemory`         | Memory usage info                      |
 
 ## Usage Pattern
 

@@ -16,6 +16,7 @@
 ## WebSocket Basics
 
 ### Example 1: Basic WebSocket Connection
+
 **Difficulty:** ⭐ Basic
 
 ```tsx
@@ -40,6 +41,7 @@ function useWebSocket(url: string) {
 ```
 
 ### Example 2: Send and Receive Messages
+
 **Difficulty:** ⭐ Basic
 
 ```tsx
@@ -67,6 +69,7 @@ function Chat() {
 ```
 
 ### Example 3: Typed WebSocket Messages
+
 **Difficulty:** ⭐⭐ Intermediate
 
 ```tsx
@@ -98,6 +101,7 @@ function useTypedWebSocket() {
 ```
 
 ### Example 4: WebSocket with React Query
+
 **Difficulty:** ⭐⭐⭐ Advanced
 
 ```tsx
@@ -131,6 +135,7 @@ function useRealtimeQuery<T>(queryKey: string[], wsUrl: string) {
 ```
 
 ### Example 5: Reconnection Logic
+
 **Difficulty:** ⭐⭐⭐ Advanced
 
 ```tsx
@@ -173,6 +178,7 @@ function useWebSocketWithReconnect(url: string) {
 ## Server-Sent Events
 
 ### Example 6: Basic SSE Connection
+
 **Difficulty:** ⭐ Basic
 
 ```tsx
@@ -199,6 +205,7 @@ function useServerSentEvents(url: string) {
 ```
 
 ### Example 7: Custom SSE Events
+
 **Difficulty:** ⭐⭐ Intermediate
 
 ```tsx
@@ -227,6 +234,7 @@ function useSSEWithEvents(url: string) {
 ## Message Handling
 
 ### Example 8: Message Queue
+
 **Difficulty:** ⭐⭐⭐ Advanced
 
 ```tsx
@@ -257,6 +265,7 @@ function useMessageQueue() {
 ```
 
 ### Example 9: Message Deduplication
+
 **Difficulty:** ⭐⭐ Intermediate
 
 ```tsx
@@ -281,6 +290,7 @@ function useDeduplicatedMessages() {
 ```
 
 ### Example 10: Presence System
+
 **Difficulty:** ⭐⭐⭐ Advanced
 
 ```tsx
@@ -320,6 +330,7 @@ function usePresence(roomId: string) {
 ## Connection Management
 
 ### Example 11: Connection Status Indicator
+
 **Difficulty:** ⭐ Basic
 
 ```tsx
@@ -336,6 +347,7 @@ function ConnectionStatus() {
 ```
 
 ### Example 12: Auto-Reconnect with Backoff
+
 **Difficulty:** ⭐⭐⭐ Advanced
 
 ```tsx
@@ -371,6 +383,7 @@ function useSmartReconnect(url: string) {
 ```
 
 ### Example 13: Heartbeat/Ping-Pong
+
 **Difficulty:** ⭐⭐ Intermediate
 
 ```tsx
@@ -411,6 +424,7 @@ function useWebSocketWithHeartbeat(url: string) {
 ## Optimistic Updates
 
 ### Example 14: Optimistic Chat Messages
+
 **Difficulty:** ⭐⭐⭐ Advanced
 
 ```tsx
@@ -456,6 +470,7 @@ function useOptimisticChat() {
 ```
 
 ### Example 15: Rollback on Error
+
 **Difficulty:** ⭐⭐⭐ Advanced
 
 ```tsx
@@ -496,6 +511,7 @@ function useOptimisticUpdate() {
 ```
 
 ### Example 16: Collaborative Editing
+
 **Difficulty:** ⭐⭐⭐ Advanced
 
 ```tsx
@@ -539,6 +555,7 @@ function useCollaborativeEditor(documentId: string) {
 ```
 
 ### Example 17: Live Notifications
+
 **Difficulty:** ⭐⭐ Intermediate
 
 ```tsx
@@ -568,6 +585,7 @@ function useLiveNotifications() {
 ```
 
 ### Example 18: Real-Time Analytics
+
 **Difficulty:** ⭐⭐⭐ Advanced
 
 ```tsx
@@ -594,6 +612,7 @@ function useRealtimeAnalytics(dashboardId: string) {
 ```
 
 ### Example 19: Multiplayer Cursor Tracking
+
 **Difficulty:** ⭐⭐⭐ Advanced
 
 ```tsx
@@ -631,6 +650,7 @@ function useMultiplayerCursors(roomId: string) {
 ```
 
 ### Example 20: Live Poll Results
+
 **Difficulty:** ⭐⭐ Intermediate
 
 ```tsx
@@ -670,6 +690,7 @@ function LivePollResults({ pollId }: { pollId: string }) {
 ## Best Practices
 
 ### Connection Management
+
 - ✅ **DO** implement reconnection logic
 - ✅ **DO** use heartbeats to detect dead connections
 - ✅ **DO** handle connection state in UI
@@ -677,6 +698,7 @@ function LivePollResults({ pollId }: { pollId: string }) {
 - ❌ **DON'T** forget to close connections on unmount
 
 ### Message Handling
+
 - ✅ **DO** validate incoming messages
 - ✅ **DO** handle message ordering
 - ✅ **DO** implement deduplication
@@ -684,6 +706,7 @@ function LivePollResults({ pollId }: { pollId: string }) {
 - ❌ **DON'T** process every message synchronously
 
 ### Performance
+
 - ✅ **DO** throttle frequent updates
 - ✅ **DO** batch multiple updates
 - ✅ **DO** use optimistic updates

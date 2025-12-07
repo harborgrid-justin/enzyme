@@ -566,6 +566,18 @@ For detailed migration instructions from other frameworks, see the [Migration Gu
 - [Configuration Guide](./CONFIGURATION.md) - Feature configuration options
 - [Config Reference](./CONFIG_REFERENCE.md) - Complete configuration reference
 
+### Module Documentation
+- [API Module](./api/README.md) - HTTP client for feature data
+- [Auth Module](./auth/README.md) - Feature authorization
+- [State Module](./state/README.md) - Feature-scoped state
+- [Routing Module](./routing/README.md) - Feature routing
+- [UI Module](./ui/README.md) - UI components for features
+- [Config Module](./config/README.md) - Feature configuration
+- [Security Module](./security/README.md) - Feature security
+- [Performance Module](./performance/README.md) - Feature optimization
+- [Theme Module](./theme/README.md) - Feature theming
+- [Hooks Module](./hooks/README.md) - Feature-specific hooks
+
 ---
 
 <p align="center">

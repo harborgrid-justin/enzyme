@@ -253,11 +253,11 @@ export const VITAL_THRESHOLDS: Record<string, VitalMetricThreshold> = {
  * - Async chunks should be < 100KB for quick route transitions
  */
 export const BUNDLE_BUDGET: BundleBudget = {
-  initial: 200 * 1024,        // 200 KB
-  asyncChunk: 100 * 1024,     // 100 KB
-  vendor: 150 * 1024,         // 150 KB
-  total: 500 * 1024,          // 500 KB
-  warningThreshold: 0.8,      // Warn at 80% of budget
+  initial: 200 * 1024, // 200 KB
+  asyncChunk: 100 * 1024, // 100 KB
+  vendor: 150 * 1024, // 150 KB
+  total: 500 * 1024, // 500 KB
+  warningThreshold: 0.8, // Warn at 80% of budget
 } as const;
 
 /**
@@ -270,7 +270,7 @@ export const BUNDLE_BUDGET: BundleBudget = {
  * - Load: < 1000ms for interactive
  */
 export const RUNTIME_BUDGET: RuntimeBudget = {
-  jsExecutionPerFrame: 10,    // Leave 6ms for browser work
+  jsExecutionPerFrame: 10, // Leave 6ms for browser work
   styleRecalc: 2,
   layout: 2,
   paint: 2,
@@ -303,7 +303,7 @@ export const MEMORY_CONFIG: MemoryConfig = {
   warningThreshold: 0.7,
   criticalThreshold: 0.9,
   pollingInterval: 5000,
-  gcTriggerSize: 100,         // 100 MB
+  gcTriggerSize: 100, // 100 MB
   autoCleanup: true,
 } as const;
 
@@ -510,9 +510,6 @@ export function calculateBudgetUsage(
   budgetType: keyof BundleBudget
 ): { usage: number; status: 'ok' | 'warning' | 'exceeded' } {
   const budget = BUNDLE_BUDGET[budgetType];
-  if (typeof budget !== 'number') {
-    return { usage: 0, status: 'ok' };
-  }
 
   const usage = actualSize / budget;
 

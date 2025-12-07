@@ -226,10 +226,7 @@ export function createAnalyticsSuite(config: AnalyticsSuiteConfig = {}): Analyti
     impact,
 
     async shutdown(): Promise<void> {
-      await Promise.all([
-        analytics.shutdown(),
-        exposure.shutdown(),
-      ]);
+      await Promise.all([analytics.shutdown(), exposure.shutdown()]);
     },
 
     reset(): void {

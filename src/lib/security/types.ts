@@ -149,12 +149,12 @@ export interface CSPManagerConfig {
  * HTML encoding context for contextual output encoding
  */
 export type HTMLEncodingContext =
-  | 'html-content'      // Inside HTML element content
-  | 'html-attribute'    // Inside HTML attribute value
-  | 'javascript'        // Inside JavaScript context
-  | 'css'               // Inside CSS context
-  | 'url'               // Inside URL context
-  | 'url-param';        // Inside URL query parameter
+  | 'html-content' // Inside HTML element content
+  | 'html-attribute' // Inside HTML attribute value
+  | 'javascript' // Inside JavaScript context
+  | 'css' // Inside CSS context
+  | 'url' // Inside URL context
+  | 'url-param'; // Inside URL query parameter
 
 /**
  * Sanitization options for HTML content
@@ -181,7 +181,7 @@ export interface SanitizationOptions {
  */
 export type TagTransformer = (
   tagName: string,
-  attributes: Record<string, string>,
+  attributes: Record<string, string>
 ) => { tagName: string; attributes: Record<string, string> } | null;
 
 /**
@@ -272,10 +272,10 @@ export interface CSRFToken {
  * CSRF protection mode
  */
 export type CSRFProtectionMode =
-  | 'synchronizer-token'    // Traditional synchronizer token pattern
-  | 'double-submit-cookie'  // Double-submit cookie pattern
-  | 'origin-check'          // Origin/Referer header check
-  | 'custom-header';        // Custom header requirement
+  | 'synchronizer-token' // Traditional synchronizer token pattern
+  | 'double-submit-cookie' // Double-submit cookie pattern
+  | 'origin-check' // Origin/Referer header check
+  | 'custom-header'; // Custom header requirement
 
 /**
  * CSRF protection configuration
@@ -324,9 +324,7 @@ export interface CSRFValidationResult {
 /**
  * Request interceptor for automatic CSRF token injection
  */
-export type CSRFRequestInterceptor = (
-  config: RequestInit,
-) => RequestInit | Promise<RequestInit>;
+export type CSRFRequestInterceptor = (config: RequestInit) => RequestInit | Promise<RequestInit>;
 
 // ============================================================================
 // Secure Storage Types
@@ -544,7 +542,11 @@ export interface SecurityContextValue extends SecurityContextState, SecurityCont
  */
 export interface SecureStorageInterface {
   /** Set an encrypted item */
-  setItem<T>(key: string, value: T, options?: SecureStorageSetOptions): Promise<SecureStorageResult<void>>;
+  setItem<T>(
+    key: string,
+    value: T,
+    options?: SecureStorageSetOptions
+  ): Promise<SecureStorageResult<void>>;
   /** Get a decrypted item */
   getItem<T>(key: string): Promise<SecureStorageResult<T>>;
   /** Remove an item */

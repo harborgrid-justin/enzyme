@@ -5,11 +5,7 @@
  */
 
 import React, { useCallback, useEffect, useRef } from 'react';
-import {
-  DisposableRegistry,
-  createDisposable,
-  type Disposable,
-} from '../utils/memoryManager';
+import { DisposableRegistry, createDisposable, type Disposable } from '../utils/memoryManager';
 import { useIsMounted, useMountedState } from './shared/useIsMounted';
 
 /**
@@ -199,22 +195,25 @@ export function useEventListener(): {
     };
   }, []);
 
-  const add = useCallback(<K extends keyof WindowEventMap>(
-    target: EventTarget,
-    type: K,
-    listener: (event: WindowEventMap[K]) => void,
-    options?: boolean | AddEventListenerOptions
-  ): () => void => {
-    target.addEventListener(type, listener as EventListener, options);
+  const add = useCallback(
+    <K extends keyof WindowEventMap>(
+      target: EventTarget,
+      type: K,
+      listener: (event: WindowEventMap[K]) => void,
+      options?: boolean | AddEventListenerOptions
+    ): (() => void) => {
+      target.addEventListener(type, listener as EventListener, options);
 
-    const cleanup = (): void => {
-      target.removeEventListener(type, listener as EventListener, options);
-      cleanupsRef.current.delete(cleanup);
-    };
+      const cleanup = (): void => {
+        target.removeEventListener(type, listener as EventListener, options);
+        cleanupsRef.current.delete(cleanup);
+      };
 
-    cleanupsRef.current.add(cleanup);
-    return cleanup;
-  }, []);
+      cleanupsRef.current.add(cleanup);
+      return cleanup;
+    },
+    []
+  );
 
   const remove = useCallback((cleanup: () => void): void => {
     cleanup();
@@ -251,17 +250,20 @@ export function useSubscription(): {
     };
   }, []);
 
-  const subscribe = useCallback(<T>(
-    subscribeFn: (callback: (value: T) => void) => () => void,
-    callback: (value: T) => void
-  ): () => void => {
-    const unsubscribe = subscribeFn(callback);
-    subscriptionsRef.current.add(unsubscribe);
-    return () => {
-      unsubscribe();
-      subscriptionsRef.current.delete(unsubscribe);
-    };
-  }, []);
+  const subscribe = useCallback(
+    <T>(
+      subscribeFn: (callback: (value: T) => void) => () => void,
+      callback: (value: T) => void
+    ): (() => void) => {
+      const unsubscribe = subscribeFn(callback);
+      subscriptionsRef.current.add(unsubscribe);
+      return () => {
+        unsubscribe();
+        subscriptionsRef.current.delete(unsubscribe);
+      };
+    },
+    []
+  );
 
   const unsubscribe = useCallback((cleanup: () => void): void => {
     cleanup();
@@ -297,7 +299,6 @@ export function useUnmountEffect(effect: () => void): void {
  */
 export { useMountedState as useMounted } from './shared/useIsMounted';
 
-
 /**
  * Hook for safe state updates that prevent updates after unmount
  */
@@ -305,15 +306,17 @@ export function useSafeState<T>(initialValue: T): [T, (value: T | ((prev: T) => 
   const [state, setStateInternal] = React.useState(initialValue);
   const isMounted = useIsMounted();
 
-  const setState = useCallback((value: T | ((prev: T) => T)): void => {
-    if (isMounted()) {
-      setStateInternal(value);
-    }
-  }, [isMounted, setStateInternal]);
+  const setState = useCallback(
+    (value: T | ((prev: T) => T)): void => {
+      if (isMounted()) {
+        setStateInternal(value);
+      }
+    },
+    [isMounted, setStateInternal]
+  );
 
   return [state, setState];
 }
-
 
 /**
  * Hook for ref-based cleanup that runs synchronously
@@ -387,16 +390,13 @@ export function useWebSocketCleanup(
       // Auto reconnect
       if (
         options?.reconnect === true &&
-        event.wasClean !== true &&
+        !event.wasClean &&
         reconnectAttemptsRef.current < (options?.maxReconnectAttempts ?? 5)
       ) {
         reconnectAttemptsRef.current++;
-        reconnectTimeoutRef.current = setTimeout(
-          (): void => {
-            connect();
-          },
-          options?.reconnectInterval ?? 3000
-        );
+        reconnectTimeoutRef.current = setTimeout((): void => {
+          connect();
+        }, options?.reconnectInterval ?? 3000);
       }
     };
 

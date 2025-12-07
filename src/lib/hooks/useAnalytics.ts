@@ -20,10 +20,7 @@ import {
 /**
  * Hook to track page views automatically
  */
-export function usePageView(
-  pageName?: string,
-  properties?: Record<string, unknown>
-): void {
+export function usePageView(pageName?: string, properties?: Record<string, unknown>): void {
   const tracked = useRef(false);
   // Memoize properties to avoid unnecessary effect re-runs if caller passes unstable object
   // Use JSON.stringify for deep comparison since properties is an object
@@ -132,9 +129,7 @@ export function useTrackRenderPerformance(componentName: string): void {
 /**
  * Hook to track interaction timing
  */
-export function useTrackInteractionTiming(
-  interactionName: string
-): {
+export function useTrackInteractionTiming(interactionName: string): {
   startTiming: () => void;
   endTiming: (context?: Record<string, unknown>) => void;
   cancelTiming: () => void;
@@ -271,13 +266,15 @@ export function useTrackClick(
 ): (event?: React.MouseEvent) => void {
   return useCallback(
     (event?: React.MouseEvent) => {
-      trackEvent(eventName, {
-        ...properties,
-        element: event?.currentTarget?.tagName?.toLowerCase(),
-        coordinates: event
-          ? { x: event.clientX, y: event.clientY }
-          : undefined,
-      }, 'click');
+      trackEvent(
+        eventName,
+        {
+          ...properties,
+          element: event?.currentTarget?.tagName?.toLowerCase(),
+          coordinates: event ? { x: event.clientX, y: event.clientY } : undefined,
+        },
+        'click'
+      );
     },
     [eventName, properties]
   );
@@ -325,10 +322,7 @@ export function useAnalyticsConsent(): {
 /**
  * Hook to identify user for analytics
  */
-export function useAnalyticsIdentify(): (
-  userId: string,
-  properties?: UserProperties
-) => void {
+export function useAnalyticsIdentify(): (userId: string, properties?: UserProperties) => void {
   return useCallback((userId: string, properties?: UserProperties) => {
     analytics.identify(userId, properties);
   }, []);
@@ -353,32 +347,44 @@ export function useTrackSearch(searchContext: string): {
 } {
   const trackSearch = useCallback(
     (query: string, resultsCount: number) => {
-      trackEvent(`search:${searchContext}`, {
-        query: query.substring(0, 100), // Truncate for privacy
-        queryLength: query.length,
-        resultsCount,
-      }, 'search');
+      trackEvent(
+        `search:${searchContext}`,
+        {
+          query: query.substring(0, 100), // Truncate for privacy
+          queryLength: query.length,
+          resultsCount,
+        },
+        'search'
+      );
     },
     [searchContext]
   );
 
   const trackSearchClick = useCallback(
     (query: string, resultIndex: number, resultId: string) => {
-      trackEvent(`search:${searchContext}:click`, {
-        queryLength: query.length,
-        resultIndex,
-        resultId,
-      }, 'click');
+      trackEvent(
+        `search:${searchContext}:click`,
+        {
+          queryLength: query.length,
+          resultIndex,
+          resultId,
+        },
+        'click'
+      );
     },
     [searchContext]
   );
 
   const trackNoResults = useCallback(
     (query: string) => {
-      trackEvent(`search:${searchContext}:no_results`, {
-        queryLength: query.length,
-        queryPreview: query.substring(0, 20),
-      }, 'search');
+      trackEvent(
+        `search:${searchContext}:no_results`,
+        {
+          queryLength: query.length,
+          queryPreview: query.substring(0, 20),
+        },
+        'search'
+      );
     },
     [searchContext]
   );
@@ -421,7 +427,10 @@ const DEFAULT_TIME_INTERVALS = [30, 60, 120, 300];
 /**
  * Hook to track time on page
  */
-export function useTrackTimeOnPage(pageName: string, intervals: number[] = DEFAULT_TIME_INTERVALS): void {
+export function useTrackTimeOnPage(
+  pageName: string,
+  intervals: number[] = DEFAULT_TIME_INTERVALS
+): void {
   const trackedIntervals = useRef<Set<number>>(new Set());
   // Memoize intervals to avoid effect re-runs if caller passes unstable reference
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -523,4 +532,3 @@ export function useTrackedSection(sectionName: string): {
     viewDuration,
   };
 }
-

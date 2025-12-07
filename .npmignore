@@ -64,3 +64,4 @@ pnpm-lock.yaml
 demo/
 scripts/
 test/
+cli/

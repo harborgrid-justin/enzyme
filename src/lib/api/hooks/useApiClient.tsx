@@ -24,24 +24,24 @@
 
 import type { Context } from 'react';
 import {
-  useContext,
-  useMemo,
-  useCallback,
-  useState,
-  useEffect,
-  type ReactNode,
   type ReactElement,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
 } from 'react';
 import { ApiClientContext as ImportedApiClientContext } from '../../contexts/ApiClientContext';
 import { type ApiClient, apiClient, createApiClient } from '../api-client';
 import type {
   ApiClientConfig,
-  ApiResponse,
   ApiError,
+  ApiResponse,
+  ErrorInterceptor,
   RequestConfig,
   RequestInterceptor,
   ResponseInterceptor,
-  ErrorInterceptor,
 } from '../types';
 
 // =============================================================================
@@ -62,11 +62,23 @@ export interface ApiClientContextValue {
   /** Make a GET request */
   get: <T>(url: string, options?: Partial<RequestConfig>) => Promise<ApiResponse<T>>;
   /** Make a POST request */
-  post: <T, B = unknown>(url: string, body?: B, options?: Partial<RequestConfig>) => Promise<ApiResponse<T>>;
+  post: <T, B = unknown>(
+    url: string,
+    body?: B,
+    options?: Partial<RequestConfig>
+  ) => Promise<ApiResponse<T>>;
   /** Make a PUT request */
-  put: <T, B = unknown>(url: string, body?: B, options?: Partial<RequestConfig>) => Promise<ApiResponse<T>>;
+  put: <T, B = unknown>(
+    url: string,
+    body?: B,
+    options?: Partial<RequestConfig>
+  ) => Promise<ApiResponse<T>>;
   /** Make a PATCH request */
-  patch: <T, B = unknown>(url: string, body?: B, options?: Partial<RequestConfig>) => Promise<ApiResponse<T>>;
+  patch: <T, B = unknown>(
+    url: string,
+    body?: B,
+    options?: Partial<RequestConfig>
+  ) => Promise<ApiResponse<T>>;
   /** Make a DELETE request */
   del: <T>(url: string, options?: Partial<RequestConfig>) => Promise<ApiResponse<T>>;
   /** Make a generic request */
@@ -168,19 +180,17 @@ export function ApiClientProvider({
   // Set up global error handler
   useEffect(() => {
     if (onError) {
-      const removeInterceptor = client.addErrorInterceptor((error) => {
+      return client.addErrorInterceptor((error) => {
         onError(error);
         return error;
       });
-      return removeInterceptor;
     }
     return undefined;
   }, [client, onError]);
 
   // Memoized request methods
   const get = useCallback(
-    async <T,>(url: string, options?: Partial<RequestConfig>) =>
-      client.get<T>(url, options),
+    async <T,>(url: string, options?: Partial<RequestConfig>) => client.get<T>(url, options),
     [client]
   );
 
@@ -203,8 +213,7 @@ export function ApiClientProvider({
   );
 
   const del = useCallback(
-    async <T,>(url: string, options?: Partial<RequestConfig>) =>
-      client.delete<T>(url, options),
+    async <T,>(url: string, options?: Partial<RequestConfig>) => client.delete<T>(url, options),
     [client]
   );
 
@@ -245,7 +254,7 @@ export function ApiClientProvider({
 
   // Configuration method
   const configure = useCallback((newConfig: Partial<ApiClientConfig>) => {
-    setCurrentConfig((prev) => ({ ...prev, ...newConfig } as ApiClientConfig));
+    setCurrentConfig((prev) => ({ ...prev, ...newConfig }) as ApiClientConfig);
     // Note: ApiClient doesn't support runtime reconfiguration
     // This would require creating a new client instance
   }, []);
@@ -289,9 +298,7 @@ export function ApiClientProvider({
     ]
   );
 
-  return (
-    <ApiClientContext.Provider value={contextValue}>{children}</ApiClientContext.Provider>
-  );
+  return <ApiClientContext.Provider value={contextValue}>{children}</ApiClientContext.Provider>;
 }
 
 // =============================================================================

@@ -104,10 +104,8 @@ function isLocalhost(): boolean {
 
   return Boolean(
     window.location.hostname === 'localhost' ||
-      window.location.hostname === '[::1]' ||
-      window.location.hostname.match(
-        /^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/
-      )
+    window.location.hostname === '[::1]' ||
+    window.location.hostname.match(/^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/)
   );
 }
 
@@ -116,8 +114,7 @@ function isLocalhost(): boolean {
  */
 function shouldEnableSW(enableInDev: boolean): boolean {
   if (!currentState.isSupported) return false;
-  if (!enableInDev && isLocalhost()) return false;
-  return true;
+  return !(!enableInDev && isLocalhost());
 }
 
 // ============================================================================
@@ -235,9 +232,7 @@ async function checkValidServiceWorker(
  * });
  * ```
  */
-export function registerServiceWorker(
-  config: ServiceWorkerConfig = {}
-): ServiceWorkerController {
+export function registerServiceWorker(config: ServiceWorkerConfig = {}): ServiceWorkerController {
   const {
     swPath = '/sw.js',
     enableInDev = false,
@@ -336,10 +331,7 @@ function createController(): ServiceWorkerController {
 
         const activeWorker = currentState.registration?.active;
         if (activeWorker) {
-          activeWorker.postMessage(
-            { type: 'GET_VERSION' },
-            [channel.port2]
-          );
+          activeWorker.postMessage({ type: 'GET_VERSION' }, [channel.port2]);
         } else {
           resolve(null);
           return;

@@ -71,9 +71,7 @@ export interface UseAdaptiveLayoutOptions {
  * }
  * ```
  */
-export function useAdaptiveLayout(
-  options: UseAdaptiveLayoutOptions = {}
-): UseAdaptiveLayoutReturn {
+export function useAdaptiveLayout(options: UseAdaptiveLayoutOptions = {}): UseAdaptiveLayoutReturn {
   const {
     initialMode = 'grid',
     config = {},
@@ -128,11 +126,10 @@ export function useAdaptiveLayout(
       const containerDimensions: Dimensions = { width: rect.width, height: rect.height };
 
       // Get item IDs from children
-      const itemIds = Array.from(container.children)
-        .map((child, index) => {
-          const id = (child as HTMLElement).getAttribute('data-layout-id');
-          return id ?? `item-${index}`;
-        });
+      const itemIds = Array.from(container.children).map((child, index) => {
+        const id = (child as HTMLElement).getAttribute('data-layout-id');
+        return id ?? `item-${index}`;
+      });
 
       // Compute layout
       const result = engine.compute({
@@ -158,20 +155,23 @@ export function useAdaptiveLayout(
   }, [autoDetect, mode, onModeChange, onLayoutComputed]);
 
   // Set mode manually
-  const setMode = useCallback((newMode: LayoutMode) => {
-    const previousMode = mode;
-    setModeState(newMode);
+  const setMode = useCallback(
+    (newMode: LayoutMode) => {
+      const previousMode = mode;
+      setModeState(newMode);
 
-    if (newMode !== previousMode) {
-      setIsTransitioning(true);
+      if (newMode !== previousMode) {
+        setIsTransitioning(true);
 
-      // Recompute layout with new mode
-      requestAnimationFrame(() => {
-        computeLayout();
-        setIsTransitioning(false);
-      });
-    }
-  }, [mode, computeLayout]);
+        // Recompute layout with new mode
+        requestAnimationFrame(() => {
+          computeLayout();
+          setIsTransitioning(false);
+        });
+      }
+    },
+    [mode, computeLayout]
+  );
 
   // Recompute layout
   const recompute = useCallback(() => {

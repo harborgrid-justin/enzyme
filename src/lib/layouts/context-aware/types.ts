@@ -45,12 +45,7 @@ export type LayoutType =
 /**
  * Represents CSS position property values.
  */
-export type PositionType =
-  | 'static'
-  | 'relative'
-  | 'absolute'
-  | 'fixed'
-  | 'sticky';
+export type PositionType = 'static' | 'relative' | 'absolute' | 'fixed' | 'sticky';
 
 /**
  * Represents CSS overflow property values.
@@ -211,11 +206,11 @@ export interface GridContainerProperties {
  * Visibility states for elements relative to the viewport.
  */
 export type VisibilityState =
-  | 'visible'           // Fully visible in viewport
-  | 'partial'           // Partially visible
-  | 'hidden'            // Not visible (above/below viewport)
-  | 'obscured'          // In viewport but covered by another element
-  | 'unknown';          // State cannot be determined (SSR)
+  | 'visible' // Fully visible in viewport
+  | 'partial' // Partially visible
+  | 'hidden' // Not visible (above/below viewport)
+  | 'obscured' // In viewport but covered by another element
+  | 'unknown'; // State cannot be determined (SSR)
 
 /**
  * Scroll direction for tracking scroll behavior.
@@ -406,16 +401,16 @@ export interface DOMContextSnapshot {
  * Z-index layer presets for consistent stacking.
  */
 export type ZIndexLayer =
-  | 'base'          // 0 - Normal content
-  | 'dropdown'      // 1000 - Dropdowns, selects
-  | 'sticky'        // 1100 - Sticky elements
-  | 'fixed'         // 1200 - Fixed elements
+  | 'base' // 0 - Normal content
+  | 'dropdown' // 1000 - Dropdowns, selects
+  | 'sticky' // 1100 - Sticky elements
+  | 'fixed' // 1200 - Fixed elements
   | 'modalBackdrop' // 1300 - Modal backdrops
-  | 'modal'         // 1400 - Modal dialogs
-  | 'popover'       // 1500 - Popovers, tooltips
-  | 'toast'         // 1600 - Toast notifications
-  | 'tooltip'       // 1700 - Tooltips (highest priority)
-  | 'max';          // 9999 - Maximum (use sparingly)
+  | 'modal' // 1400 - Modal dialogs
+  | 'popover' // 1500 - Popovers, tooltips
+  | 'toast' // 1600 - Toast notifications
+  | 'tooltip' // 1700 - Tooltips (highest priority)
+  | 'max'; // 9999 - Maximum (use sparingly)
 
 /**
  * Z-index values for each layer.
@@ -557,6 +552,21 @@ export interface PortalBridgeProps extends ContextAwareComponentProps {
   onPortalMount?: (portal: PortalContext) => void;
   /** Callback when portal is unmounted */
   onPortalUnmount?: () => void;
+  /**
+   * Whether to render children inline as fallback when portal cannot be created.
+   * This prevents blank pages when React environment issues occur.
+   * @default true
+   */
+  fallbackToInline?: boolean;
+  /**
+   * Custom fallback content to render when portal fails.
+   * If not provided and fallbackToInline is true, children will render inline.
+   */
+  fallback?: React.ReactNode;
+  /**
+   * Callback when portal initialization fails.
+   */
+  onPortalError?: (error: Error) => void;
 }
 
 /**
@@ -802,9 +812,18 @@ export function isDefined<T>(value: T | null | undefined): value is T {
  */
 export function isLayoutType(value: string): value is LayoutType {
   return [
-    'grid', 'flex', 'block', 'inline', 'inline-block',
-    'inline-flex', 'inline-grid', 'table', 'table-row',
-    'table-cell', 'contents', 'none'
+    'grid',
+    'flex',
+    'block',
+    'inline',
+    'inline-block',
+    'inline-flex',
+    'inline-grid',
+    'table',
+    'table-row',
+    'table-cell',
+    'contents',
+    'none',
   ].includes(value);
 }
 
@@ -820,10 +839,9 @@ export function isPositionType(value: string): value is PositionType {
  */
 export function isScrollContainer(element: Element): boolean {
   const style = getComputedStyle(element);
-  const {overflowX} = style;
-  const {overflowY} = style;
+  const { overflowX } = style;
+  const { overflowY } = style;
   return (
-    (overflowX === 'auto' || overflowX === 'scroll') ||
-    (overflowY === 'auto' || overflowY === 'scroll')
+    overflowX === 'auto' || overflowX === 'scroll' || overflowY === 'auto' || overflowY === 'scroll'
   );
 }

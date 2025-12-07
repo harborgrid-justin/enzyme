@@ -3,11 +3,7 @@
  * @description Sends errors to external monitoring services (Sentry/Datadog/etc.)
  */
 
-import type {
-  AppError,
-  ErrorContext,
-  ErrorReport,
-} from './errorTypes';
+import type { AppError, ErrorContext, ErrorReport } from './errorTypes';
 import { normalizeError } from './errorTypes';
 import { isDebugModeEnabled, isDevelopmentEnv } from '../flags/debug-mode';
 
@@ -31,7 +27,12 @@ export interface ErrorReporterConfig {
  */
 const defaultConfig: ErrorReporterConfig = {
   enabled: !isDevelopmentEnv(),
-  environment: (process.env['NODE_ENV'] !== undefined && process.env['NODE_ENV'] !== null && process.env['NODE_ENV'] !== '') ? process.env['NODE_ENV'] : 'development',
+  environment:
+    process.env['NODE_ENV'] !== undefined &&
+    process.env['NODE_ENV'] !== null &&
+    process.env['NODE_ENV'] !== ''
+      ? process.env['NODE_ENV']
+      : 'development',
   version: '1.0.0',
   sampleRate: 1.0,
   ignoredErrors: [
@@ -42,6 +43,17 @@ const defaultConfig: ErrorReporterConfig = {
 };
 
 /**
+ * Maximum number of errors to queue before dropping
+ */
+const MAX_ERROR_QUEUE_SIZE = 100;
+
+/**
+ * Rate limiting configuration
+ */
+const RATE_LIMIT_WINDOW_MS = 60000; // 1 minute
+const MAX_ERRORS_PER_WINDOW = 50;
+
+/**
  * Error reporter state
  */
 let config: ErrorReporterConfig = defaultConfig;
@@ -50,20 +62,86 @@ let errorQueue: ErrorReport[] = [];
 let isInitialized = false;
 
 /**
+ * Rate limiting state
+ */
+let errorTimestamps: number[] = [];
+
+/**
+ * Store references to event handlers for proper cleanup
+ * This prevents event listener accumulation when initErrorReporter is called multiple times
+ */
+let globalErrorHandler: ((event: ErrorEvent) => void) | null = null;
+let unhandledRejectionHandler: ((event: PromiseRejectionEvent) => void) | null = null;
+
+/**
  * Initialize the error reporter
  */
 export function initErrorReporter(options: Partial<ErrorReporterConfig> = {}): void {
+  // Clean up existing handlers first to prevent accumulation
+  cleanupErrorHandlers();
+
   config = { ...defaultConfig, ...options };
   isInitialized = true;
-  
-  // Set up global error handlers
+
+  // Set up global error handlers with stored references
   if (typeof window !== 'undefined') {
-    window.addEventListener('error', handleGlobalError);
-    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    globalErrorHandler = handleGlobalError;
+    unhandledRejectionHandler = handleUnhandledRejection;
+
+    window.addEventListener('error', globalErrorHandler);
+    window.addEventListener('unhandledrejection', unhandledRejectionHandler);
   }
-  
+
   // Flush any queued errors
   flushErrorQueue();
+}
+
+/**
+ * Clean up error handlers
+ * Call this when resetting the error reporter or before re-initialization
+ */
+export function cleanupErrorHandlers(): void {
+  if (typeof window !== 'undefined') {
+    if (globalErrorHandler !== null) {
+      window.removeEventListener('error', globalErrorHandler);
+      globalErrorHandler = null;
+    }
+    if (unhandledRejectionHandler !== null) {
+      window.removeEventListener('unhandledrejection', unhandledRejectionHandler);
+      unhandledRejectionHandler = null;
+    }
+  }
+}
+
+/**
+ * Reset error reporter state
+ * Useful for testing or when unmounting the application
+ */
+export function resetErrorReporter(): void {
+  cleanupErrorHandlers();
+  // Clone defaultConfig to avoid mutating the shared default object
+  config = { ...defaultConfig };
+  currentContext = {};
+  errorQueue = [];
+  errorTimestamps = [];
+  isInitialized = false;
+}
+
+/**
+ * Check if we're within rate limits
+ */
+function isWithinRateLimit(): boolean {
+  const now = Date.now();
+  // Clean up old timestamps
+  errorTimestamps = errorTimestamps.filter((timestamp) => now - timestamp < RATE_LIMIT_WINDOW_MS);
+  return errorTimestamps.length < MAX_ERRORS_PER_WINDOW;
+}
+
+/**
+ * Record an error for rate limiting
+ */
+function recordErrorForRateLimit(): void {
+  errorTimestamps.push(Date.now());
 }
 
 /**
@@ -94,37 +172,48 @@ export function clearErrorContext(): void {
 /**
  * Report an error
  */
-export function reportError(
-  error: unknown,
-  context?: Partial<ErrorContext>
-): void {
+export function reportError(error: unknown, context?: Partial<ErrorContext>): void {
   const appError = normalizeError(error);
-  
+
   // Check if error should be ignored
   if (shouldIgnoreError(appError)) {
     return;
   }
-  
+
   const report = createErrorReport(appError, context);
-  
+
   // Apply beforeSend hook
   const finalReport = config.beforeSend ? config.beforeSend(report) : report;
   if (!finalReport) {
     return;
   }
-  
+
   // Apply sample rate
   if (config.sampleRate != null && config.sampleRate > 0 && Math.random() > config.sampleRate) {
     return;
   }
 
+  // Apply rate limiting
+  if (!isWithinRateLimit()) {
+    if (isDebugModeEnabled()) {
+      console.warn('[Error Reporter] Rate limit exceeded, dropping error');
+    }
+    return;
+  }
+
+  recordErrorForRateLimit();
+
   if (isInitialized && config.enabled) {
     void sendErrorReport(finalReport);
   } else {
-    // Queue error for later
-    errorQueue.push(finalReport);
+    // Queue error for later with bounds checking
+    if (errorQueue.length < MAX_ERROR_QUEUE_SIZE) {
+      errorQueue.push(finalReport);
+    } else if (isDebugModeEnabled()) {
+      console.warn('[Error Reporter] Error queue full, dropping error');
+    }
   }
-  
+
   // Log when debug mode is enabled
   if (isDebugModeEnabled()) {
     console.error('[Error Reporter]', appError.message, appError);
@@ -134,10 +223,7 @@ export function reportError(
 /**
  * Report a warning (lower severity)
  */
-export function reportWarning(
-  message: string,
-  context?: Partial<ErrorContext>
-): void {
+export function reportWarning(message: string, context?: Partial<ErrorContext>): void {
   const appError: AppError = {
     id: `warn_${Date.now()}`,
     message,
@@ -145,7 +231,7 @@ export function reportWarning(
     severity: 'low',
     timestamp: new Date().toISOString(),
   };
-  
+
   const report = createErrorReport(appError, context);
 
   if (isDebugModeEnabled()) {
@@ -160,14 +246,11 @@ export function reportWarning(
 /**
  * Report an info event
  */
-export function reportInfo(
-  message: string,
-  metadata?: Record<string, unknown>
-): void {
+export function reportInfo(message: string, metadata?: Record<string, unknown>): void {
   if (isDebugModeEnabled()) {
     console.info('[Info]', message, metadata);
   }
-  
+
   // Send as breadcrumb in production
   addBreadcrumb('info', message, metadata);
 }
@@ -175,11 +258,7 @@ export function reportInfo(
 /**
  * Add a breadcrumb for error context
  */
-export function addBreadcrumb(
-  type: string,
-  message: string,
-  data?: Record<string, unknown>
-): void {
+export function addBreadcrumb(type: string, message: string, data?: Record<string, unknown>): void {
   // In production, this would add to Sentry/Datadog breadcrumbs
   // Log to console when debug mode is enabled
   if (isDebugModeEnabled()) {
@@ -191,12 +270,9 @@ export function addBreadcrumb(
 /**
  * Create error report from app error
  */
-function createErrorReport(
-  appError: AppError,
-  context?: Partial<ErrorContext>
-): ErrorReport {
+function createErrorReport(appError: AppError, context?: Partial<ErrorContext>): ErrorReport {
   const route = typeof window !== 'undefined' ? window.location.pathname : undefined;
-  
+
   return {
     ...appError,
     context: {
@@ -268,7 +344,7 @@ function handleUnhandledRejection(event: PromiseRejectionEvent): void {
  */
 function shouldIgnoreError(error: AppError): boolean {
   if (!config.ignoredErrors) return false;
-  
+
   return config.ignoredErrors.some((pattern) => {
     if (typeof pattern === 'string') {
       return error.message.includes(pattern);
@@ -294,6 +370,8 @@ function flushErrorQueue(): void {
  */
 export const ErrorReporter = {
   init: initErrorReporter,
+  cleanup: cleanupErrorHandlers,
+  reset: resetErrorReporter,
   setUserContext,
   setErrorContext,
   clearErrorContext,

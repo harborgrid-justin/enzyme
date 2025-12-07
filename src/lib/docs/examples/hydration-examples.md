@@ -20,6 +20,7 @@
 ## Basic Hydration
 
 ### Example 1: HydrationProvider Setup
+
 **Use Case:** Basic SSR hydration setup
 **Difficulty:** ⭐ Basic
 
@@ -40,12 +41,14 @@ export default App;
 **Explanation:** HydrationProvider manages hydration state and optimization for SSR/SSG apps.
 
 **See Also:**
+
 - [Example 2](#example-2-hydration-with-configuration)
 - [Hydration Guide](../HYDRATION.md)
 
 ---
 
 ### Example 2: Hydration with Configuration
+
 **Use Case:** Configure hydration behavior
 **Difficulty:** ⭐ Basic
 
@@ -83,6 +86,7 @@ function App({ Component, pageProps }: AppProps) {
 ---
 
 ### Example 3: Detecting Hydration State
+
 **Use Case:** Conditionally render based on hydration
 **Difficulty:** ⭐ Basic
 
@@ -117,6 +121,7 @@ function InteractiveComponent() {
 ## Priority Boundaries
 
 ### Example 4: Priority Hydration Boundary
+
 **Use Case:** Hydrate critical sections first
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -154,6 +159,7 @@ function HomePage() {
 ---
 
 ### Example 5: Visible Hydration
+
 **Use Case:** Hydrate only when visible in viewport
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -187,6 +193,7 @@ function LongPage() {
 ---
 
 ### Example 6: Interaction-Based Hydration
+
 **Use Case:** Hydrate on user interaction
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -224,6 +231,7 @@ function ProductPage() {
 ## Interaction Replay
 
 ### Example 7: Replaying Captured Interactions
+
 **Use Case:** Preserve clicks during hydration
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -258,6 +266,7 @@ function Newsletter() {
 ---
 
 ### Example 8: Custom Interaction Replay
+
 **Use Case:** Define which events to replay
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -285,6 +294,7 @@ function InteractiveWidget() {
 ## Metrics and Monitoring
 
 ### Example 9: Hydration Metrics Collection
+
 **Use Case:** Track hydration performance
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -339,6 +349,7 @@ function PerformanceMonitor() {
 ---
 
 ### Example 10: Performance Budgets
+
 **Use Case:** Enforce hydration performance limits
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -381,6 +392,7 @@ function App({ Component, pageProps }: AppProps) {
 ## Progressive Enhancement
 
 ### Example 11: Progressive Hydration
+
 **Use Case:** Basic HTML works, JS enhances
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -427,6 +439,7 @@ function ProductCard({ product }: { product: Product }) {
 ---
 
 ### Example 12: No-JS Fallbacks
+
 **Use Case:** Graceful degradation for disabled JS
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -476,6 +489,7 @@ function SearchForm() {
 ## Lazy Hydration
 
 ### Example 13: Lazy Component Hydration
+
 **Use Case:** Defer heavy component hydration
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -510,6 +524,7 @@ function Dashboard() {
 ---
 
 ### Example 14: Idle Hydration
+
 **Use Case:** Hydrate during browser idle time
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -546,6 +561,7 @@ function BlogPost({ content }: { content: string }) {
 ---
 
 ### Example 15: Media Query-Based Hydration
+
 **Use Case:** Conditionally hydrate based on viewport
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -579,6 +595,7 @@ function ResponsiveFeature() {
 ## Partial Hydration
 
 ### Example 16: Island Architecture
+
 **Use Case:** Hydrate only interactive islands
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -624,6 +641,7 @@ function LandingPage() {
 ---
 
 ### Example 17: Selective Component Hydration
+
 **Use Case:** Fine-grained hydration control
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -665,6 +683,7 @@ function SelectiveComponent({ staticData, interactiveFeature }: SelectiveProps) 
 ## Advanced Patterns
 
 ### Example 18: Hydration Error Handling
+
 **Use Case:** Gracefully handle hydration mismatches
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -712,6 +731,7 @@ function App({ Component, pageProps }: AppProps) {
 ---
 
 ### Example 19: Streaming Hydration
+
 **Use Case:** Hydrate as HTML streams in
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -747,6 +767,7 @@ function StreamingPage() {
 ---
 
 ### Example 20: Resumable Hydration
+
 **Use Case:** Resume from server-side state
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -787,6 +808,7 @@ function App({ dehydratedState, appState }: PageProps) {
 ---
 
 ### Example 21: Hydration Scheduling
+
 **Use Case:** Custom hydration scheduling strategy
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -836,6 +858,7 @@ function App({ Component, pageProps }: AppProps) {
 ---
 
 ### Example 22: Conditional Hydration Based on Device
+
 **Use Case:** Skip hydration on low-end devices
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -890,6 +913,7 @@ function App({ Component, pageProps }: AppProps) {
 ## Best Practices
 
 ### Hydration Strategy
+
 - ✅ **DO** hydrate critical above-the-fold content first
 - ✅ **DO** defer non-critical hydration
 - ✅ **DO** use visibility-based hydration for below-fold content
@@ -898,6 +922,7 @@ function App({ Component, pageProps }: AppProps) {
 - ❌ **DON'T** ignore hydration mismatches
 
 ### Performance
+
 - ✅ **DO** use priority boundaries strategically
 - ✅ **DO** lazy load heavy components
 - ✅ **DO** implement progressive enhancement
@@ -906,6 +931,7 @@ function App({ Component, pageProps }: AppProps) {
 - ❌ **DON'T** hydrate static content
 
 ### User Experience
+
 - ✅ **DO** replay user interactions
 - ✅ **DO** provide loading states
 - ✅ **DO** ensure core functionality works without JS
@@ -914,6 +940,7 @@ function App({ Component, pageProps }: AppProps) {
 - ❌ **DON'T** lose user input during hydration
 
 ### Development
+
 - ✅ **DO** test with slow connections
 - ✅ **DO** measure real-world performance
 - ✅ **DO** use hydration metrics in CI
@@ -926,6 +953,7 @@ function App({ Component, pageProps }: AppProps) {
 ## Anti-Patterns
 
 ### ❌ Hydrating Everything
+
 ```tsx
 // BAD - Hydrates entire page unnecessarily
 function Page() {
@@ -960,6 +988,7 @@ function Page() {
 ```
 
 ### ❌ Ignoring Hydration Mismatches
+
 ```tsx
 // BAD - Different content on server/client
 function BadComponent() {
@@ -983,6 +1012,7 @@ function GoodComponent() {
 ```
 
 ### ❌ Blocking Interactions
+
 ```tsx
 // BAD - Button doesn't work until hydration
 function BadButton() {

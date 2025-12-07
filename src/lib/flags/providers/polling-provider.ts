@@ -176,6 +176,133 @@ export class PollingProvider implements FlagProvider {
     await this.poll();
   }
 
+  /**
+   * Get all flags.
+   */
+  async getFlags(): Promise<readonly FeatureFlag[]> {
+    return Promise.resolve(this.cachedFlags);
+  }
+
+  /**
+   * Get a flag by key.
+   */
+  async getFlag(key: string): Promise<FeatureFlag | null> {
+    return Promise.resolve(this.cachedFlags.find((f) => f.key === key) ?? null);
+  }
+
+  /**
+   * Get all segments.
+   */
+  async getSegments(): Promise<readonly Segment[]> {
+    return Promise.resolve(this.cachedSegments);
+  }
+
+  // ==========================================================================
+  // Visibility Handling
+  // ==========================================================================
+
+  /**
+   * Get a segment by ID.
+   */
+  async getSegment(id: SegmentId): Promise<Segment | null> {
+    return Promise.resolve(this.cachedSegments.find((s) => s.id === id) ?? null);
+  }
+
+  /**
+   * Check if the provider is ready.
+   */
+  isReady(): boolean {
+    return this.ready && this.provider.isReady();
+  }
+
+  // ==========================================================================
+  // Flag Operations
+  // ==========================================================================
+
+  /**
+   * Check if the provider is healthy.
+   */
+  async isHealthy(): Promise<boolean> {
+    return (
+      this.consecutiveFailures < this.config.maxFailures &&
+      (await this.provider.isHealthy())
+    );
+  }
+
+  /**
+   * Get polling status.
+   */
+  getPollingStatus(): {
+    isPolling: boolean;
+    isPaused: boolean;
+    lastPollTime: Date | null;
+    consecutiveFailures: number;
+    interval: number;
+  } {
+    return {
+      isPolling: this.isPolling,
+      isPaused: this.isPaused,
+      lastPollTime: this.lastPollTime,
+      consecutiveFailures: this.consecutiveFailures,
+      interval: this.config.interval,
+    };
+  }
+
+  // ==========================================================================
+  // Segment Operations
+  // ==========================================================================
+
+  /**
+   * Get provider statistics.
+   */
+  getStats(): ProviderStats {
+    return {
+      flagCount: this.cachedFlags.length,
+      segmentCount: this.cachedSegments.length,
+      requestCount: 0,
+      errorCount: this.consecutiveFailures,
+      lastRefresh: this.lastPollTime ?? undefined,
+    };
+  }
+
+  /**
+   * Subscribe to flag changes.
+   */
+  subscribe(listener: FlagChangeListener): () => void {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  // ==========================================================================
+  // Status and Health
+  // ==========================================================================
+
+  /**
+   * Shutdown the provider.
+   */
+  async shutdown(): Promise<void> {
+    this.stopPolling();
+    this.removeVisibilityHandler();
+    await this.provider.shutdown();
+    this.ready = false;
+    this.listeners.clear();
+    this.log('Polling provider shutdown');
+  }
+
+  /**
+   * Update the polling interval.
+   */
+  setInterval(interval: number): void {
+    // Update config immutably
+    this.config = { ...this.config, interval };
+    if (this.isPolling) {
+      this.stopPolling();
+      this.startPolling();
+    }
+  }
+
   private scheduleNextPoll(): void {
     if (!this.isPolling || this.isPaused) {
       return;
@@ -225,6 +352,10 @@ export class PollingProvider implements FlagProvider {
     }
   }
 
+  // ==========================================================================
+  // Subscription
+  // ==========================================================================
+
   private detectChanges(
     previousFlags: FeatureFlag[],
     newFlags: FeatureFlag[]
@@ -269,10 +400,6 @@ export class PollingProvider implements FlagProvider {
     }
   }
 
-  // ==========================================================================
-  // Visibility Handling
-  // ==========================================================================
-
   private setupVisibilityHandler(): void {
     this.visibilityHandler = (): void => {
       if (document.hidden) {
@@ -285,6 +412,10 @@ export class PollingProvider implements FlagProvider {
     document.addEventListener('visibilitychange', this.visibilityHandler);
   }
 
+  // ==========================================================================
+  // Shutdown
+  // ==========================================================================
+
   private removeVisibilityHandler(): void {
     if (this.visibilityHandler && typeof document !== 'undefined') {
       document.removeEventListener('visibilitychange', this.visibilityHandler);
@@ -293,107 +424,8 @@ export class PollingProvider implements FlagProvider {
   }
 
   // ==========================================================================
-  // Flag Operations
+  // Configuration
   // ==========================================================================
-
-  /**
-   * Get all flags.
-   */
-  async getFlags(): Promise<readonly FeatureFlag[]> {
-    return Promise.resolve(this.cachedFlags);
-  }
-
-  /**
-   * Get a flag by key.
-   */
-  async getFlag(key: string): Promise<FeatureFlag | null> {
-    return Promise.resolve(this.cachedFlags.find((f) => f.key === key) ?? null);
-  }
-
-  // ==========================================================================
-  // Segment Operations
-  // ==========================================================================
-
-  /**
-   * Get all segments.
-   */
-  async getSegments(): Promise<readonly Segment[]> {
-    return Promise.resolve(this.cachedSegments);
-  }
-
-  /**
-   * Get a segment by ID.
-   */
-  async getSegment(id: SegmentId): Promise<Segment | null> {
-    return Promise.resolve(this.cachedSegments.find((s) => s.id === id) ?? null);
-  }
-
-  // ==========================================================================
-  // Status and Health
-  // ==========================================================================
-
-  /**
-   * Check if the provider is ready.
-   */
-  isReady(): boolean {
-    return this.ready && this.provider.isReady();
-  }
-
-  /**
-   * Check if the provider is healthy.
-   */
-  async isHealthy(): Promise<boolean> {
-    return (
-      this.consecutiveFailures < this.config.maxFailures &&
-      (await this.provider.isHealthy())
-    );
-  }
-
-  /**
-   * Get polling status.
-   */
-  getPollingStatus(): {
-    isPolling: boolean;
-    isPaused: boolean;
-    lastPollTime: Date | null;
-    consecutiveFailures: number;
-    interval: number;
-  } {
-    return {
-      isPolling: this.isPolling,
-      isPaused: this.isPaused,
-      lastPollTime: this.lastPollTime,
-      consecutiveFailures: this.consecutiveFailures,
-      interval: this.config.interval,
-    };
-  }
-
-  /**
-   * Get provider statistics.
-   */
-  getStats(): ProviderStats {
-    return {
-      flagCount: this.cachedFlags.length,
-      segmentCount: this.cachedSegments.length,
-      requestCount: 0,
-      errorCount: this.consecutiveFailures,
-      lastRefresh: this.lastPollTime ?? undefined,
-    };
-  }
-
-  // ==========================================================================
-  // Subscription
-  // ==========================================================================
-
-  /**
-   * Subscribe to flag changes.
-   */
-  subscribe(listener: FlagChangeListener): () => void {
-    this.listeners.add(listener);
-    return () => {
-      this.listeners.delete(listener);
-    };
-  }
 
   private emitChange(event: FlagChangeEvent): void {
     for (const listener of this.listeners) {
@@ -402,38 +434,6 @@ export class PollingProvider implements FlagProvider {
       } catch (error) {
         this.log('Error in change listener:', error);
       }
-    }
-  }
-
-  // ==========================================================================
-  // Shutdown
-  // ==========================================================================
-
-  /**
-   * Shutdown the provider.
-   */
-  async shutdown(): Promise<void> {
-    this.stopPolling();
-    this.removeVisibilityHandler();
-    await this.provider.shutdown();
-    this.ready = false;
-    this.listeners.clear();
-    this.log('Polling provider shutdown');
-  }
-
-  // ==========================================================================
-  // Configuration
-  // ==========================================================================
-
-  /**
-   * Update the polling interval.
-   */
-  setInterval(interval: number): void {
-    // Update config immutably
-    this.config = { ...this.config, interval };
-    if (this.isPolling) {
-      this.stopPolling();
-      this.startPolling();
     }
   }
 

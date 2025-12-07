@@ -19,6 +19,7 @@
 ## Basic Forms
 
 ### Example 1: Simple Form with React Hook Form
+
 **Use Case:** Basic form handling
 **Difficulty:** ⭐ Basic
 
@@ -78,12 +79,14 @@ function SimpleForm() {
 **Explanation:** React Hook Form provides simple form state management and validation.
 
 **See Also:**
+
 - [React Hook Form Docs](https://react-hook-form.com/)
 - [Example 2](#example-2-controlled-form)
 
 ---
 
 ### Example 2: Controlled Form
+
 **Use Case:** Full React state control
 **Difficulty:** ⭐ Basic
 
@@ -152,6 +155,7 @@ function ControlledForm() {
 ## Form Validation
 
 ### Example 3: Sync Validation with Zod
+
 **Use Case:** Schema-based validation
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -273,6 +277,7 @@ function ValidatedForm() {
 ---
 
 ### Example 4: Async Validation
+
 **Use Case:** Check username availability
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -330,6 +335,7 @@ function AsyncValidationForm() {
 ---
 
 ### Example 5: Field-Level Validation
+
 **Use Case:** Validate on blur
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -372,6 +378,7 @@ function FieldLevelValidation() {
 ## Form Submission
 
 ### Example 6: Form Submission with Loading State
+
 **Use Case:** Handle async submission
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -440,6 +447,7 @@ function SubmissionForm() {
 ---
 
 ### Example 7: Optimistic Updates
+
 **Use Case:** Update UI before server confirms
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -502,6 +510,7 @@ function OptimisticForm({ itemId }: { itemId: string }) {
 ## Multi-Step Forms
 
 ### Example 8: Wizard Form
+
 **Use Case:** Multi-step registration
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -634,6 +643,7 @@ function AccountStep({ data, onUpdate, onNext }: StepProps) {
 ---
 
 ### Example 9: Persistent Form State
+
 **Use Case:** Save draft across sessions
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -709,6 +719,7 @@ function PersistentForm() {
 ## Dynamic Forms
 
 ### Example 10: Dynamic Field Arrays
+
 **Use Case:** Add/remove fields dynamically
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -794,6 +805,7 @@ function DynamicFieldsForm() {
 ---
 
 ### Example 11: Conditional Fields
+
 **Use Case:** Show fields based on selections
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -863,6 +875,7 @@ function ConditionalFieldsForm() {
 ## File Uploads
 
 ### Example 12: Single File Upload
+
 **Use Case:** Upload profile picture
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -926,6 +939,7 @@ function FileUploadForm() {
 ---
 
 ### Example 13: Multiple File Upload with Progress
+
 **Use Case:** Upload multiple documents
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -1017,6 +1031,7 @@ function MultiFileUpload() {
 ## Advanced Patterns
 
 ### Example 14: Form with Auto-Save
+
 **Use Case:** Automatically save form changes
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -1082,6 +1097,7 @@ function AutoSaveForm({ documentId }: { documentId: string }) {
 ---
 
 ### Example 15: Form with Search/Autocomplete
+
 **Use Case:** Searchable select with API
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -1143,6 +1159,7 @@ function SearchableSelect() {
 ---
 
 ### Example 16: Form with Dependent Fields
+
 **Use Case:** Fields that depend on other field values
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -1238,6 +1255,7 @@ function DependentFieldsForm() {
 ---
 
 ### Example 17: Form Schema Generator
+
 **Use Case:** Generate forms from JSON schema
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -1331,6 +1349,7 @@ const formSchema: FieldSchema[] = [
 ---
 
 ### Example 18: Rich Text Editor Form
+
 **Use Case:** WYSIWYG editor in form
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -1390,6 +1409,7 @@ function RichTextForm() {
 ---
 
 ### Example 19: Form with Inline Editing
+
 **Use Case:** Edit fields in place
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -1450,6 +1470,7 @@ function InlineEditableField({ value, onSave }: Props) {
 ---
 
 ### Example 20: Form with Drag and Drop Reordering
+
 **Use Case:** Reorder form items
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -1515,6 +1536,7 @@ function ReorderableForm() {
 ---
 
 ### Example 21: Form with Custom Validation Messages
+
 **Use Case:** Localized or custom error messages
 **Difficulty:** ⭐⭐ Intermediate
 
@@ -1561,6 +1583,7 @@ function CustomMessagesForm() {
 ---
 
 ### Example 22: Form with Server-Side Validation
+
 **Use Case:** Handle server validation errors
 **Difficulty:** ⭐⭐⭐ Advanced
 
@@ -1626,6 +1649,7 @@ function ServerValidationForm() {
 ## Best Practices
 
 ### Form Design
+
 - ✅ **DO** use clear, descriptive labels
 - ✅ **DO** provide helpful error messages
 - ✅ **DO** group related fields
@@ -1634,6 +1658,7 @@ function ServerValidationForm() {
 - ❌ **DON'T** ask for unnecessary information
 
 ### Validation
+
 - ✅ **DO** validate on both client and server
 - ✅ **DO** show errors inline near fields
 - ✅ **DO** validate progressively (on blur, on submit)
@@ -1642,6 +1667,7 @@ function ServerValidationForm() {
 - ❌ **DON'T** show errors before user interaction
 
 ### Submission
+
 - ✅ **DO** show loading states during submission
 - ✅ **DO** prevent double submission
 - ✅ **DO** provide clear success feedback
@@ -1650,6 +1676,7 @@ function ServerValidationForm() {
 - ❌ **DON'T** submit without user confirmation for destructive actions
 
 ### Accessibility
+
 - ✅ **DO** associate labels with inputs
 - ✅ **DO** use proper ARIA attributes
 - ✅ **DO** ensure keyboard navigation works
@@ -1662,6 +1689,7 @@ function ServerValidationForm() {
 ## Anti-Patterns
 
 ### ❌ Missing Labels
+
 ```tsx
 // BAD
 <input placeholder="Enter your name" />
@@ -1674,6 +1702,7 @@ function ServerValidationForm() {
 ```
 
 ### ❌ Generic Error Messages
+
 ```tsx
 // BAD
 {errors.email && <p>Invalid input</p>}
@@ -1683,6 +1712,7 @@ function ServerValidationForm() {
 ```
 
 ### ❌ No Loading State
+
 ```tsx
 // BAD
 <Button type="submit">Submit</Button>

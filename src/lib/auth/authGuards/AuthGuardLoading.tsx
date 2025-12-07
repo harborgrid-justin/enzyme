@@ -49,25 +49,22 @@ interface AuthGuardLoadingProps {
  * <AuthGuardLoading className="custom-loading-container" />
  * ```
  */
-export const AuthGuardLoading = memo(({
-  fallback,
-  className = 'auth-guard-loading',
-  ariaLabel = 'Checking authentication...',
-}: AuthGuardLoadingProps) => {
-  // If a custom fallback is provided, render it directly
-  if (typeof fallback !== 'undefined') {
-    return <>{fallback}</>;
-  }
+export const AuthGuardLoading = memo(
+  ({
+    fallback,
+    className = 'auth-guard-loading',
+    ariaLabel = 'Checking authentication...',
+  }: AuthGuardLoadingProps) => {
+    // If a custom fallback is provided, render it directly
+    if (typeof fallback !== 'undefined') {
+      return <>{fallback}</>;
+    }
 
-  // Default loading UI with spinner
-  return (
-    <div
-      className={className}
-      role="status"
-      aria-label={ariaLabel}
-      aria-busy="true"
-    >
-      <Spinner size="lg" />
-    </div>
-  );
-});
+    // Default loading UI with spinner
+    return (
+      <div className={className} role="status" aria-label={ariaLabel} aria-busy="true">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
+);

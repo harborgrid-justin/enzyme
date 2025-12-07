@@ -140,84 +140,81 @@ const loadingOverlayFocusStyles = `
 /**
  * Spinner component - memoized for performance
  */
-export const Spinner = memo(({
-  size = 'md',
-  variant = 'default',
-  color,
-  label = 'Loading...',
-  className,
-  centered = false,
-}: SpinnerProps): React.ReactElement => {
-  const { size: dimension, border } = sizeMap[size];
-  const spinnerColor = color ?? colorMap[variant];
+export const Spinner = memo(
+  ({
+    size = 'md',
+    variant = 'default',
+    color,
+    label = 'Loading...',
+    className,
+    centered = false,
+  }: SpinnerProps): React.ReactElement => {
+    const { size: dimension, border } = sizeMap[size];
+    const spinnerColor = color ?? colorMap[variant];
 
-  // Memoize spinner style
-  const spinnerStyle = useMemo((): CSSProperties => ({
-    width: dimension,
-    height: dimension,
-    border: `${border}px solid transparent`,
-    borderTopColor: spinnerColor,
-    borderRadius: '50%',
-    animation: 'spin 0.75s linear infinite',
-  }), [dimension, border, spinnerColor]);
+    // Memoize spinner style
+    const spinnerStyle = useMemo(
+      (): CSSProperties => ({
+        width: dimension,
+        height: dimension,
+        border: `${border}px solid transparent`,
+        borderTopColor: spinnerColor,
+        borderRadius: '50%',
+        animation: 'spin 0.75s linear infinite',
+      }),
+      [dimension, border, spinnerColor]
+    );
 
-  const spinner = (
-    <div
-      role="status"
-      aria-label={label}
-      className={className}
-      style={spinnerStyle}
-    >
-      <span style={srOnlyStyle}>
-        {label}
-      </span>
+    const spinner = (
+      <div role="status" aria-label={label} className={className} style={spinnerStyle}>
+        <span style={srOnlyStyle}>{label}</span>
 
-      {/* Keyframe animation with reduced motion support */}
-      <style>{keyframeStyles}</style>
-    </div>
-  );
-
-  if (centered) {
-    return (
-      <div style={centeredContainerStyle}>
-        {spinner}
+        {/* Keyframe animation with reduced motion support */}
+        <style>{keyframeStyles}</style>
       </div>
     );
-  }
 
-  return spinner;
-});
+    if (centered) {
+      return <div style={centeredContainerStyle}>{spinner}</div>;
+    }
+
+    return spinner;
+  }
+);
 
 Spinner.displayName = 'Spinner';
 
 /**
  * Inline spinner with text - memoized for performance
  */
-export const SpinnerWithText = memo(({
-  text = 'Loading...',
-  size = 'sm',
-  variant = 'default',
-  className,
-}: {
-  text?: string;
-  size?: SpinnerSize;
-  variant?: SpinnerVariant;
-  className?: string;
-}): React.ReactElement => {
-  // Memoize text style based on size
-  const textStyle = useMemo((): CSSProperties => ({
-    fontSize: size === 'xs' ? '0.75rem' : '0.875rem',
-  }), [size]);
+export const SpinnerWithText = memo(
+  ({
+    text = 'Loading...',
+    size = 'sm',
+    variant = 'default',
+    className,
+  }: {
+    text?: string;
+    size?: SpinnerSize;
+    variant?: SpinnerVariant;
+    className?: string;
+  }): React.ReactElement => {
+    // Memoize text style based on size
+    const textStyle = useMemo(
+      (): CSSProperties => ({
+        fontSize: size === 'xs' ? '0.75rem' : '0.875rem',
+      }),
+      [size]
+    );
 
-  return (
-    <div className={className} style={spinnerWithTextContainerBaseStyle}>
-      <Spinner size={size} variant={variant} label={text} />
-      <span style={textStyle}>
-        {text}
-      </span>
-    </div>
-  );
-});
+    return (
+      <div className={className} style={spinnerWithTextContainerBaseStyle}>
+        <Spinner size={size} variant={variant} label={text} />
+        <span style={textStyle}>{text}</span>
+      </div>
+    );
+  }
+);
 
 SpinnerWithText.displayName = 'SpinnerWithText';
 
@@ -225,82 +222,83 @@ SpinnerWithText.displayName = 'SpinnerWithText';
  * Full page loading overlay - memoized for performance
  * Includes focus trap to prevent interaction with background content
  */
-export const LoadingOverlay = memo(({
-  visible = true,
-  text = 'Loading...',
-  blur = true,
-}: {
-  visible?: boolean;
-  text?: string;
-  blur?: boolean;
-}): React.ReactElement | null => {
-  const overlayRef = useRef<HTMLDivElement>(null);
-  const previousActiveElement = useRef<HTMLElement | null>(null);
+export const LoadingOverlay = memo(
+  ({
+    visible = true,
+    text = 'Loading...',
+    blur = true,
+  }: {
+    visible?: boolean;
+    text?: string;
+    blur?: boolean;
+  }): React.ReactElement | null => {
+    const overlayRef = useRef<HTMLDivElement>(null);
+    const previousActiveElement = useRef<HTMLElement | null>(null);
 
-  // Focus trap - move focus to overlay when visible and restore when hidden
-  useEffect(() => {
-    if (visible) {
-      // Store the currently focused element
-      previousActiveElement.current = document.activeElement as HTMLElement;
-      // Focus the overlay container
-      overlayRef.current?.focus();
-    } else if (previousActiveElement.current) {
-      // Restore focus when overlay is hidden
-      previousActiveElement.current.focus();
-    }
-  }, [visible]);
+    // Focus trap - move focus to overlay when visible and restore when hidden
+    useEffect(() => {
+      if (visible) {
+        // Store the currently focused element
+        previousActiveElement.current = document.activeElement as HTMLElement;
+        // Focus the overlay container
+        overlayRef.current?.focus();
+      } else if (previousActiveElement.current) {
+        // Restore focus when overlay is hidden
+        previousActiveElement.current.focus();
+      }
+    }, [visible]);
 
-  // Trap keyboard focus within overlay
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    // Trap Tab key within the overlay
-    if (e.key === 'Tab') {
-      e.preventDefault();
-      // Keep focus on the overlay itself since there's nothing else to focus
-      overlayRef.current?.focus();
-    }
-  }, []);
+    // Trap keyboard focus within overlay
+    const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+      // Trap Tab key within the overlay
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        // Keep focus on the overlay itself since there's nothing else to focus
+        overlayRef.current?.focus();
+      }
+    }, []);
 
-  // Memoize overlay style - uses focus-visible for accessibility
-  // Note: We keep a visible focus indicator for accessibility compliance (WCAG 2.4.7)
-  // Uses theme token for z-index to maintain proper stacking context
-  const overlayStyle = useMemo((): CSSProperties => ({
-    position: 'fixed',
-    inset: 0,
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: blur ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.95)',
-    backdropFilter: blur ? 'blur(4px)' : undefined,
-    zIndex: parseInt(tokens.zIndex.modal),
-    // Focus indicator for keyboard users - inset ring that doesn't affect layout
-    // The overlay background provides visual context, but we add a subtle ring for WCAG compliance
-  }), [blur]);
+    // Memoize overlay style - uses focus-visible for accessibility
+    // Note: We keep a visible focus indicator for accessibility compliance (WCAG 2.4.7)
+    // Uses theme token for z-index to maintain proper stacking context
+    const overlayStyle = useMemo(
+      (): CSSProperties => ({
+        position: 'fixed',
+        inset: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: blur ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.95)',
+        backdropFilter: blur ? 'blur(4px)' : undefined,
+        zIndex: parseInt(tokens.zIndex.modal),
+        // Focus indicator for keyboard users - inset ring that doesn't affect layout
+        // The overlay background provides visual context, but we add a subtle ring for WCAG compliance
+      }),
+      [blur]
+    );
 
-  if (!visible) return null;
+    if (!visible) return null;
 
-  return (
-    <div
-      ref={overlayRef}
-      role="alertdialog"
-      aria-modal="true"
-      aria-label={text || 'Loading'}
-      aria-live="assertive"
-      aria-busy="true"
-      tabIndex={-1}
-      onKeyDown={handleKeyDown}
-      style={overlayStyle}
-    >
-      {/* Focus styles for accessibility compliance */}
-      <style>{loadingOverlayFocusStyles}</style>
-      <Spinner size="lg" variant="primary" label={text} />
-      {text && (
-        <p style={overlayTextStyle}>
-          {text}
-        </p>
-      )}
-    </div>
-  );
-});
+    return (
+      <div
+        ref={overlayRef}
+        role="alertdialog"
+        aria-modal="true"
+        aria-label={text || 'Loading'}
+        aria-live="assertive"
+        aria-busy="true"
+        tabIndex={-1}
+        onKeyDown={handleKeyDown}
+        style={overlayStyle}
+      >
+        {/* Focus styles for accessibility compliance */}
+        <style>{loadingOverlayFocusStyles}</style>
+        <Spinner size="lg" variant="primary" label={text} />
+        {text && <p style={overlayTextStyle}>{text}</p>}
+      </div>
+    );
+  }
+);
 
 LoadingOverlay.displayName = 'LoadingOverlay';

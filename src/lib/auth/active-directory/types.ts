@@ -16,12 +16,7 @@ import type { User, Role, Permission } from '../types';
 /**
  * Supported Active Directory provider types.
  */
-export type ADProviderType =
-  | 'azure-ad'
-  | 'azure-ad-b2c'
-  | 'adfs'
-  | 'on-premises'
-  | 'custom';
+export type ADProviderType = 'azure-ad' | 'azure-ad-b2c' | 'adfs' | 'on-premises' | 'custom';
 
 /**
  * OAuth2/OIDC grant types supported by AD providers.
@@ -37,11 +32,7 @@ export type ADGrantType =
 /**
  * Authentication prompt behaviors for AD login flows.
  */
-export type ADPromptBehavior =
-  | 'login'
-  | 'consent'
-  | 'select_account'
-  | 'none';
+export type ADPromptBehavior = 'login' | 'consent' | 'select_account' | 'none';
 
 // =============================================================================
 // AD Configuration Types

@@ -1,14 +1,20 @@
 # Routing Module
 
-> **Purpose:** Type-safe file-system routing with automatic route discovery, guards, prefetching, and React Router integration.
+> **Purpose:** Type-safe file-system routing with automatic route discovery, guards, prefetching, and React Router
+> integration.
 
 ## Overview
 
-The Routing module provides a Next.js-style file-system routing experience for React Router applications with full TypeScript support. It automatically discovers routes from your file structure, generates type-safe navigation helpers, detects conflicts, and provides powerful guard mechanisms for authorization and feature gating.
+The Routing module provides a Next.js-style file-system routing experience for React Router applications with full
+TypeScript support. It automatically discovers routes from your file structure, generates type-safe navigation helpers,
+detects conflicts, and provides powerful guard mechanisms for authorization and feature gating.
 
-This module transforms React Router from a manual routing configuration into an automated, type-safe system that catches routing errors at compile time, prevents route conflicts before deployment, and provides enterprise-grade features like route guards, middleware, parallel routes, and intelligent prefetching.
+This module transforms React Router from a manual routing configuration into an automated, type-safe system that catches
+routing errors at compile time, prevents route conflicts before deployment, and provides enterprise-grade features like
+route guards, middleware, parallel routes, and intelligent prefetching.
 
-Perfect for large applications with many routes, this module eliminates boilerplate, prevents routing bugs, and provides a superior developer experience through autocomplete, type checking, and automatic route generation.
+Perfect for large applications with many routes, this module eliminates boilerplate, prevents routing bugs, and provides
+a superior developer experience through autocomplete, type checking, and automatic route generation.
 
 ## Key Features
 
@@ -73,18 +79,21 @@ function Navigation() {
 ## Exports
 
 ### Router Creation
+
 - `createRouter()` - Create React Router from file system
 - `createSimpleRouter()` - Create router with minimal config
 - `createRouteBuilder()` - Build routes programmatically
 - `createRouteDefinition()` - Define single route
 
 ### Type-Safe Navigation
+
 - `useTypedNavigate()` - Type-safe navigation hook
 - `usePrefetchHandlers()` - Prefetch route on hover
 - `useRouteMetadata()` - Access route metadata
 - `useNavigationAnalytics()` - Track navigation events
 
 ### Route Discovery
+
 - `scanRouteFiles()` - Scan file system for routes
 - `AutoScanner` - Automatic route scanner
 - `DiscoveryEngine` - Route discovery orchestrator
@@ -92,12 +101,14 @@ function Navigation() {
 - `RouteTransformer` - Transform discovered routes
 
 ### Conflict Detection
+
 - `detectRouteConflicts()` - Find route conflicts
 - `detectConflicts()` - Comprehensive conflict analysis
 - `sortRoutesBySpecificity()` - Order routes by priority
 - `generateConflictReport()` - Human-readable conflict report
 
 ### Route Guards
+
 - `RequireAuth` - Authentication guard component
 - `RequireRole` - Role-based guard
 - `RequirePermission` - Permission-based guard
@@ -107,6 +118,7 @@ function Navigation() {
 - `GuardResolver` - Guard evaluation engine
 
 ### Advanced Routing
+
 - `ParallelRoutes` - Multiple routes in slots
 - `InterceptingRouteManager` - Modal routes
 - `CatchAllRouteManager` - Wildcard routes
@@ -114,6 +126,7 @@ function Navigation() {
 - `RouteGroupManager` - Route organization
 
 ### Route Building
+
 - `buildPath()` - Build path with params
 - `buildRoutePath()` - Generate route path
 - `buildRouteTree()` - Build route hierarchy
@@ -121,6 +134,7 @@ function Navigation() {
 - `extractRouteParams()` - Parse params from path
 
 ### Utilities
+
 - `routeRegistry` - Global route registry
 - `validateRoute()` - Validate route definition
 - `generateRouteTypeDefinitions()` - Generate TypeScript types
@@ -128,6 +142,7 @@ function Navigation() {
 - `parseQueryString()` - Parse query parameters
 
 ### Types
+
 - `RouteDefinition` - Route configuration object
 - `RouteParams` - Path parameter types
 - `RouteMetadata` - Route metadata (title, description, etc.)
@@ -186,6 +201,7 @@ src/pages/
 ## Common Patterns
 
 ### Pattern 1: File-System Routes with Type Safety
+
 ```tsx
 // src/pages/users/[id].tsx
 export default function UserProfile() {
@@ -210,6 +226,7 @@ function UserList() {
 ```
 
 ### Pattern 2: Protected Routes with Guards
+
 ```tsx
 // src/pages/admin/dashboard.tsx
 import { RequireRole } from '@/lib/routing';
@@ -232,6 +249,7 @@ export const metadata = {
 ```
 
 ### Pattern 3: Route Groups for Organization
+
 ```tsx
 // File structure:
 // src/pages/(marketing)/
@@ -247,6 +265,7 @@ export const metadata = {
 ```
 
 ### Pattern 4: Parallel Routes (Slots)
+
 ```tsx
 // src/pages/dashboard/@analytics/index.tsx
 export default function Analytics() {
@@ -270,6 +289,7 @@ export default function DashboardLayout({ analytics, activity }) {
 ```
 
 ### Pattern 5: Intercepting Routes (Modals)
+
 ```tsx
 // src/pages/photos/[id].tsx
 // Full page photo view
@@ -293,6 +313,7 @@ export default function PhotoModal() {
 ```
 
 ### Pattern 6: Intelligent Prefetching
+
 ```tsx
 import { usePrefetchHandlers } from '@/lib/routing';
 
@@ -322,6 +343,7 @@ setupPrefetching({
 ## Configuration
 
 ### Router Configuration
+
 ```tsx
 import { createRouter } from '@/lib/routing';
 
@@ -358,6 +380,7 @@ const router = createRouter({
 ```
 
 ### Route Metadata
+
 ```tsx
 // In route file
 export const metadata = {
@@ -400,6 +423,7 @@ export const metadata = {
 ## Testing
 
 ### Testing Routes
+
 ```tsx
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { render, screen } from '@testing-library/react';
@@ -425,6 +449,7 @@ describe('UserProfile', () => {
 ```
 
 ### Testing Guards
+
 ```tsx
 import { RequireRole } from '@/lib/routing';
 
@@ -467,7 +492,9 @@ describe('AdminDashboard', () => {
 ## Troubleshooting
 
 ### Issue: Route Not Found After Adding File
+
 **Solution:** Ensure file matches naming convention and restart dev server:
+
 ```bash
 # File must export default component
 export default function MyPage() { ... }
@@ -477,13 +504,17 @@ npm run dev
 ```
 
 ### Issue: Type Errors on Navigation
+
 **Solution:** Regenerate route types:
+
 ```bash
 npm run routes:generate
 ```
 
 ### Issue: Route Conflict Errors
+
 **Solution:** Use conflict detector to identify issues:
+
 ```tsx
 import { detectRouteConflicts, generateConflictReport } from '@/lib/routing';
 
@@ -492,7 +523,9 @@ console.log(generateConflictReport(conflicts));
 ```
 
 ### Issue: Guard Not Working
+
 **Solution:** Ensure guard is registered and providers are present:
+
 ```tsx
 <AuthProvider>
   <RBACProvider>

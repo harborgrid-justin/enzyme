@@ -32,12 +32,7 @@ import {
   type UseMutationResult,
 } from '@tanstack/react-query';
 import { useApiClient } from './useApiClient';
-import type {
-  ApiResponse,
-  ApiError,
-  RequestConfig,
-  QueryParams,
-} from '../types';
+import type { ApiResponse, ApiError, RequestConfig, QueryParams } from '../types';
 
 // =============================================================================
 // TYPES
@@ -72,10 +67,7 @@ export interface ApiMutationConfig<TResponse = unknown, TBody = unknown, TContex
   /** Query key for optimistic updates */
   optimisticQueryKey?: QueryKey;
   /** Optimistic update function */
-  optimisticUpdate?: (
-    oldData: unknown,
-    variables: MutationVariables<TBody>
-  ) => unknown;
+  optimisticUpdate?: (oldData: unknown, variables: MutationVariables<TBody>) => unknown;
   /** On mutate callback (for custom optimistic updates) */
   onMutate?: (variables: MutationVariables<TBody>) => Promise<TContext> | TContext;
   /** On success callback */
@@ -106,8 +98,10 @@ export interface ApiMutationConfig<TResponse = unknown, TBody = unknown, TContex
 /**
  * Return type for useApiMutation
  */
-export interface UseApiMutationResult<TResponse, TBody = unknown>
-  extends Omit<UseMutationResult<TResponse, ApiError, MutationVariables<TBody>, unknown>, never> {
+export interface UseApiMutationResult<TResponse, TBody = unknown> extends Omit<
+  UseMutationResult<TResponse, ApiError, MutationVariables<TBody>>,
+  never
+> {
   /** Execute mutation with just body */
   mutateWithBody: (body: TBody) => void;
   /** Execute mutation async with just body */
@@ -164,11 +158,7 @@ export interface UseApiMutationResult<TResponse, TBody = unknown>
  * deleteUser.mutate({ pathParams: { id: '123' } });
  * ```
  */
-export function useApiMutation<
-  TResponse = unknown,
-  TBody = unknown,
-  TContext = unknown,
->(
+export function useApiMutation<TResponse = unknown, TBody = unknown, TContext = unknown>(
   config: ApiMutationConfig<TResponse, TBody, TContext>
 ): UseApiMutationResult<TResponse, TBody> {
   const { client } = useApiClient();
@@ -178,7 +168,7 @@ export function useApiMutation<
   const mutationFn = useCallback(
     async (variables: MutationVariables<TBody>): Promise<TResponse> => {
       // Build URL with path params
-      let {url} = config;
+      let { url } = config;
       if (variables.pathParams) {
         for (const [key, value] of Object.entries(variables.pathParams)) {
           url = url.replace(`:${key}`, encodeURIComponent(String(value)));
@@ -194,25 +184,13 @@ export function useApiMutation<
 
       switch (config.method) {
         case 'POST':
-          response = await client.post<TResponse, TBody>(
-            url,
-            variables.body,
-            requestOptions
-          );
+          response = await client.post<TResponse, TBody>(url, variables.body, requestOptions);
           break;
         case 'PUT':
-          response = await client.put<TResponse, TBody>(
-            url,
-            variables.body,
-            requestOptions
-          );
+          response = await client.put<TResponse, TBody>(url, variables.body, requestOptions);
           break;
         case 'PATCH':
-          response = await client.patch<TResponse, TBody>(
-            url,
-            variables.body,
-            requestOptions
-          );
+          response = await client.patch<TResponse, TBody>(url, variables.body, requestOptions);
           break;
         case 'DELETE':
           response = await client.delete<TResponse>(url, requestOptions);
@@ -253,11 +231,7 @@ export function useApiMutation<
 
   // Build onSuccess handler
   const onSuccess = useCallback(
-    async (
-      data: TResponse,
-      variables: MutationVariables<TBody>,
-      context: TContext | undefined
-    ) => {
+    async (data: TResponse, variables: MutationVariables<TBody>, context: TContext | undefined) => {
       // Invalidate queries
       if (config.invalidateQueries && config.invalidateQueries.length > 0) {
         await Promise.all(
@@ -270,9 +244,7 @@ export function useApiMutation<
       // Refetch queries
       if (config.refetchQueries && config.refetchQueries.length > 0) {
         await Promise.all(
-          config.refetchQueries.map(async (queryKey) =>
-            queryClient.refetchQueries({ queryKey })
-          )
+          config.refetchQueries.map(async (queryKey) => queryClient.refetchQueries({ queryKey }))
         );
       }
 
@@ -286,11 +258,7 @@ export function useApiMutation<
 
   // Build onError handler
   const onError = useCallback(
-    async (
-      error: ApiError,
-      variables: MutationVariables<TBody>,
-      context: TContext | undefined
-    ) => {
+    async (error: ApiError, variables: MutationVariables<TBody>, context: TContext | undefined) => {
       // Rollback optimistic update
       if (config.optimisticQueryKey !== undefined && context !== undefined && context !== null) {
         const ctx = context as { previousData?: unknown };
@@ -526,9 +494,7 @@ export function createOptimisticUpdate<TItem extends Record<string, unknown>>(
       const id = variables.pathParams?.id;
       if (id === undefined || id === null) return items;
 
-      return items.map((item) =>
-        getItemId(item) === id ? { ...item, ...variables.body } : item
-      );
+      return items.map((item) => (getItemId(item) === id ? { ...item, ...variables.body } : item));
     },
   };
 }

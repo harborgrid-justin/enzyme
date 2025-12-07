@@ -598,6 +598,18 @@ registerPlugin({
 - [Quick Start](./QUICKSTART.md) - Get started in 5 minutes
 - [Documentation Index](./INDEX.md) - Complete documentation map
 
+### Module Documentation
+- [API Module](./api/README.md) - HTTP client architecture
+- [Auth Module](./auth/README.md) - Authentication architecture
+- [State Module](./state/README.md) - State architecture
+- [Routing Module](./routing/README.md) - Routing architecture
+- [UI Module](./ui/README.md) - UI component architecture
+- [Config Module](./config/README.md) - Configuration architecture
+- [Security Module](./security/README.md) - Security architecture
+- [Performance Module](./performance/README.md) - Performance architecture
+- [Theme Module](./theme/README.md) - Theme architecture
+- [Hooks Module](./hooks/README.md) - Hooks architecture
+
 ---
 
 <p align="center">

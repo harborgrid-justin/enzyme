@@ -4,7 +4,13 @@
  */
 
 import type { RouteObject } from 'react-router-dom';
-import { lazy, createElement, type ComponentType, type LazyExoticComponent, type ReactNode } from 'react';
+import {
+  lazy,
+  createElement,
+  type ComponentType,
+  type LazyExoticComponent,
+  type ReactNode,
+} from 'react';
 import type {
   DiscoveredRoute,
   RouteDefinition,
@@ -54,23 +60,15 @@ export function buildRoutePath(
  */
 export function createRouteBuilder<TPath extends string>(
   path: TPath
-): (
-  params?: RouteParams<TPath>,
-  query?: Record<string, string | undefined>
-) => string {
+): (params?: RouteParams<TPath>, query?: Record<string, string | undefined>) => string {
   const paramNames = extractParamNames(path);
   const requiredParams = paramNames.filter((p) => !path.includes(`:${p}?`));
 
-  return (
-    params?: RouteParams<TPath>,
-    query?: Record<string, string | undefined>
-  ): string => {
+  return (params?: RouteParams<TPath>, query?: Record<string, string | undefined>): string => {
     // Validate required params
     if (requiredParams.length > 0) {
       if (params === null || params === undefined) {
-        throw new Error(
-          `Route "${path}" requires parameters: ${requiredParams.join(', ')}`
-        );
+        throw new Error(`Route "${path}" requires parameters: ${requiredParams.join(', ')}`);
       }
 
       for (const param of requiredParams) {
@@ -130,7 +128,9 @@ export function createRouteBuilders<T extends Record<string, string>>(
 /**
  * Import function type for dynamic imports
  */
-export type RouteImportFn = () => Promise<{ default: ComponentType<unknown> } & Partial<RouteModule>>;
+export type RouteImportFn = () => Promise<
+  { default: ComponentType<unknown> } & Partial<RouteModule>
+>;
 
 /**
  * Create a lazy component with preload capability
@@ -292,12 +292,8 @@ export function createRouteDefinition(
 /**
  * Create route definitions for all discovered routes
  */
-export function createRouteDefinitions(
-  routes: DiscoveredRoute[]
-): RouteDefinition[] {
-  return routes
-    .filter((r) => !r.isLayout)
-    .map((r) => createRouteDefinition(r));
+export function createRouteDefinitions(routes: DiscoveredRoute[]): RouteDefinition[] {
+  return routes.filter((r) => !r.isLayout).map((r) => createRouteDefinition(r));
 }
 
 // =============================================================================
@@ -316,10 +312,7 @@ export function matchRoute(pattern: string, path: string): boolean {
  * Extract parameters from a path using a pattern
  * @see core/path-utils.ts for implementation details
  */
-export function extractRouteParams(
-  pattern: string,
-  path: string
-): Record<string, string> | null {
+export function extractRouteParams(pattern: string, path: string): Record<string, string> | null {
   return parsePathParams(pattern, path);
 }
 
@@ -330,9 +323,7 @@ export function extractRouteParams(
 /**
  * Generate TypeScript type definitions for routes
  */
-export function generateRouteTypeDefinitions(
-  routes: DiscoveredRoute[]
-): string {
+export function generateRouteTypeDefinitions(routes: DiscoveredRoute[]): string {
   const lines: string[] = [
     '/**',
     ' * @file Auto-Generated Route Types',
@@ -377,10 +368,7 @@ export function generateRouteTypeDefinitions(
 /**
  * Generate route registry code
  */
-export function generateRouteRegistry(
-  routes: DiscoveredRoute[],
-  rootDir: string
-): string {
+export function generateRouteRegistry(routes: DiscoveredRoute[], rootDir: string): string {
   const lines: string[] = [
     '/**',
     ' * @file Auto-Generated Route Registry',

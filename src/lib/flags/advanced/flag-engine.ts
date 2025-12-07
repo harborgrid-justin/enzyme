@@ -158,19 +158,10 @@ interface CacheEntry<T> {
  */
 class EvaluationCache {
   private cache = new Map<string, CacheEntry<EvaluationResult>>();
-  private ttl: number;
+  private readonly ttl: number;
 
   constructor(ttl: number = DEFAULT_CACHE_TTL) {
     this.ttl = ttl;
-  }
-
-  /**
-   * Generate a cache key from flag key and context.
-   */
-  private generateKey(flagKey: string, context: EvaluationContext): string {
-    const userId = context.user?.id ?? 'anonymous';
-    const sessionId = context.session?.sessionId ?? '';
-    return `${flagKey}:${userId}:${sessionId}`;
   }
 
   /**
@@ -236,6 +227,15 @@ class EvaluationCache {
       keys: Array.from(this.cache.keys()),
     };
   }
+
+  /**
+   * Generate a cache key from flag key and context.
+   */
+  private generateKey(flagKey: string, context: EvaluationContext): string {
+    const userId = context.user?.id ?? 'anonymous';
+    const sessionId = context.session?.sessionId ?? '';
+    return `${flagKey}:${userId}:${sessionId}`;
+  }
 }
 
 // ============================================================================
@@ -258,7 +258,7 @@ export class FlagEngine {
   private rolloutEngine: PercentageRolloutEngine;
   private segmentMatcher: SegmentMatcher;
   private dependencyResolver: DependencyResolver;
-  private hashFunction: (key: string, salt?: string) => number;
+  private readonly hashFunction: (key: string, salt?: string) => number;
   private previousValues = new Map<FlagId, JsonValue>();
   private initialized = false;
 
@@ -448,11 +448,11 @@ export class FlagEngine {
    */
   getStringValue(
     flagKey: string,
-    defaultValue: string,
+    _defaultValue: string,
     contextOverrides?: Partial<EvaluationContext>
   ): string {
     const result = this.evaluate<string>(flagKey, contextOverrides);
-    return typeof result.value === 'string' ? result.value : defaultValue;
+    return result.value;
   }
 
   /**
@@ -460,11 +460,11 @@ export class FlagEngine {
    */
   getNumberValue(
     flagKey: string,
-    defaultValue: number,
+    _defaultValue: number,
     contextOverrides?: Partial<EvaluationContext>
   ): number {
     const result = this.evaluate<number>(flagKey, contextOverrides);
-    return typeof result.value === 'number' ? result.value : defaultValue;
+    return result.value;
   }
 
   /**
@@ -512,6 +512,99 @@ export class FlagEngine {
   // ==========================================================================
   // Internal Evaluation
   // ==========================================================================
+
+  /**
+   * Track an exposure event (for experiments).
+   */
+  trackExposure(
+    flagKey: string,
+    experimentId?: string,
+    metadata?: Record<string, JsonValue>
+  ): void {
+    if (!this.config.onExposure) {
+      return;
+    }
+
+    const result = this.evaluate(flagKey);
+    const event: FlagExposureEvent = {
+      type: 'exposure',
+      flagKey,
+      variantId: result.variantId,
+      experimentId,
+      userId: this.context.user?.id ?? 'anonymous',
+      sessionId: this.context.session?.sessionId ?? '',
+      timestamp: new Date(),
+      metadata,
+    };
+
+    this.config.onExposure(event);
+  }
+
+  /**
+   * Invalidate cache for a flag.
+   */
+  invalidateCache(flagKey: string): void {
+    this.cache.invalidate(flagKey);
+  }
+
+  /**
+   * Clear all cached evaluations.
+   */
+  clearCache(): void {
+    this.cache.clear();
+  }
+
+  // ==========================================================================
+  // Result Creation
+  // ==========================================================================
+
+  /**
+   * Get cache statistics.
+   */
+  getCacheStats(): { size: number; keys: string[] } {
+    return this.cache.getStats();
+  }
+
+  /**
+   * Check if the engine is initialized.
+   */
+  isInitialized(): boolean {
+    return this.initialized;
+  }
+
+  /**
+   * Get engine statistics.
+   */
+  getStats(): {
+    flagCount: number;
+    segmentCount: number;
+    cacheSize: number;
+    initialized: boolean;
+  } {
+    return {
+      flagCount: this.flags.size,
+      segmentCount: this.segments.size,
+      cacheSize: this.cache.getStats().size,
+      initialized: this.initialized,
+    };
+  }
+
+  // ==========================================================================
+  // Event Tracking
+  // ==========================================================================
+
+  /**
+   * Reset the engine to initial state.
+   */
+  reset(): void {
+    this.flags.clear();
+    this.segments.clear();
+    this.cache.clear();
+    this.previousValues.clear();
+    this.context = this.config.defaultContext ?? {};
+    this.initialized = false;
+    this.log('Engine reset');
+  }
 
   private evaluateInternal<T>(
     flagKey: string,
@@ -689,6 +782,10 @@ export class FlagEngine {
     return { satisfied: true };
   }
 
+  // ==========================================================================
+  // Cache Management
+  // ==========================================================================
+
   private checkSegments(
     segmentIds: readonly string[],
     context: EvaluationContext
@@ -701,10 +798,6 @@ export class FlagEngine {
     }
     return false;
   }
-
-  // ==========================================================================
-  // Result Creation
-  // ==========================================================================
 
   private createResult<T>(
     flag: FeatureFlag,
@@ -750,6 +843,10 @@ export class FlagEngine {
     };
   }
 
+  // ==========================================================================
+  // Utilities
+  // ==========================================================================
+
   private createErrorResult<T>(
     flagKey: string,
     error: unknown,
@@ -777,10 +874,6 @@ export class FlagEngine {
     );
   }
 
-  // ==========================================================================
-  // Event Tracking
-  // ==========================================================================
-
   private trackEvaluation(
     result: EvaluationResult,
     context: EvaluationContext
@@ -801,33 +894,6 @@ export class FlagEngine {
     };
 
     this.config.onEvaluation(event);
-  }
-
-  /**
-   * Track an exposure event (for experiments).
-   */
-  trackExposure(
-    flagKey: string,
-    experimentId?: string,
-    metadata?: Record<string, JsonValue>
-  ): void {
-    if (!this.config.onExposure) {
-      return;
-    }
-
-    const result = this.evaluate(flagKey);
-    const event: FlagExposureEvent = {
-      type: 'exposure',
-      flagKey,
-      variantId: result.variantId,
-      experimentId,
-      userId: this.context.user?.id ?? 'anonymous',
-      sessionId: this.context.session?.sessionId ?? '',
-      timestamp: new Date(),
-      metadata,
-    };
-
-    this.config.onExposure(event);
   }
 
   private checkForChanges(flagKey: string, newValue: JsonValue): void {
@@ -853,72 +919,6 @@ export class FlagEngine {
     }
 
     this.previousValues.set(flagKey, newValue);
-  }
-
-  // ==========================================================================
-  // Cache Management
-  // ==========================================================================
-
-  /**
-   * Invalidate cache for a flag.
-   */
-  invalidateCache(flagKey: string): void {
-    this.cache.invalidate(flagKey);
-  }
-
-  /**
-   * Clear all cached evaluations.
-   */
-  clearCache(): void {
-    this.cache.clear();
-  }
-
-  /**
-   * Get cache statistics.
-   */
-  getCacheStats(): { size: number; keys: string[] } {
-    return this.cache.getStats();
-  }
-
-  // ==========================================================================
-  // Utilities
-  // ==========================================================================
-
-  /**
-   * Check if the engine is initialized.
-   */
-  isInitialized(): boolean {
-    return this.initialized;
-  }
-
-  /**
-   * Get engine statistics.
-   */
-  getStats(): {
-    flagCount: number;
-    segmentCount: number;
-    cacheSize: number;
-    initialized: boolean;
-  } {
-    return {
-      flagCount: this.flags.size,
-      segmentCount: this.segments.size,
-      cacheSize: this.cache.getStats().size,
-      initialized: this.initialized,
-    };
-  }
-
-  /**
-   * Reset the engine to initial state.
-   */
-  reset(): void {
-    this.flags.clear();
-    this.segments.clear();
-    this.cache.clear();
-    this.previousValues.clear();
-    this.context = this.config.defaultContext ?? {};
-    this.initialized = false;
-    this.log('Engine reset');
   }
 
   private log(message: string, data?: unknown): void {

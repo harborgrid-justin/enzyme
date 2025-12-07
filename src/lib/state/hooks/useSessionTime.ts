@@ -279,11 +279,7 @@ export function useIsSessionExpired(options: SessionTimeOptions = {}): boolean {
     }
 
     // Check inactivity timeout
-    if (lastActivity !== null && now - lastActivity > activityTimeoutMs) {
-      return true;
-    }
-
-    return false;
+    return lastActivity !== null && now - lastActivity > activityTimeoutMs;
   }, [sessionExpiresAt, lastActivity, activityTimeoutMs]);
 
   const [isExpired, setIsExpired] = useState<boolean>(checkExpiry);
@@ -385,12 +381,10 @@ export function useSessionTimeInfo(options: SessionTimeOptions = {}): SessionTim
     const now = Date.now();
 
     // Duration
-    const duration =
-      sessionStartedAt !== null && isSessionActive ? now - sessionStartedAt : null;
+    const duration = sessionStartedAt !== null && isSessionActive ? now - sessionStartedAt : null;
 
     // Time until expiry
-    const timeUntilExpiry =
-      sessionExpiresAt !== null ? Math.max(0, sessionExpiresAt - now) : null;
+    const timeUntilExpiry = sessionExpiresAt !== null ? Math.max(0, sessionExpiresAt - now) : null;
 
     // Is expired
     let isExpired = false;
@@ -402,13 +396,7 @@ export function useSessionTimeInfo(options: SessionTimeOptions = {}): SessionTim
     }
 
     return { duration, timeUntilExpiry, isExpired };
-  }, [
-    sessionStartedAt,
-    sessionExpiresAt,
-    lastActivity,
-    activityTimeoutMs,
-    isSessionActive,
-  ]);
+  }, [sessionStartedAt, sessionExpiresAt, lastActivity, activityTimeoutMs, isSessionActive]);
 
   const [state, setState] = useState(calculateState);
 

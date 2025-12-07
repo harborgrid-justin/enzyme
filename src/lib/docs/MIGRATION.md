@@ -34,11 +34,11 @@ This guide helps you upgrade between major versions of the Harbor React Library.
 
 ## Version Compatibility
 
-| Library Version | React | React Router | React Query | TypeScript |
-|-----------------|-------|--------------|-------------|------------|
-| 3.x | 18.x | 6.x | 5.x | 5.x |
-| 2.x | 18.x | 6.x | 4.x | 5.x |
-| 1.x | 17.x - 18.x | 6.x | 3.x - 4.x | 4.x - 5.x |
+| Library Version | React       | React Router | React Query | TypeScript |
+|-----------------|-------------|--------------|-------------|------------|
+| 3.x             | 18.x        | 6.x          | 5.x         | 5.x        |
+| 2.x             | 18.x        | 6.x          | 4.x         | 5.x        |
+| 1.x             | 17.x - 18.x | 6.x          | 3.x - 4.x   | 4.x - 5.x  |
 
 ---
 
@@ -282,14 +282,14 @@ npx @harbor/codemod v2-to-v3 --verbose
 
 ### What Codemods Handle
 
-| Transformation | v1->v2 | v2->v3 |
-|---------------|--------|--------|
-| Import paths | Yes | Yes |
-| Hook renames | Yes | Yes |
-| Component renames | Yes | Yes |
-| API changes | Yes | Yes |
-| Type updates | Partial | Partial |
-| Provider restructure | No | No |
+| Transformation       | v1->v2  | v2->v3  |
+|----------------------|---------|---------|
+| Import paths         | Yes     | Yes     |
+| Hook renames         | Yes     | Yes     |
+| Component renames    | Yes     | Yes     |
+| API changes          | Yes     | Yes     |
+| Type updates         | Partial | Partial |
+| Provider restructure | No      | No      |
 
 ---
 
@@ -485,10 +485,10 @@ function Component() {
 2. **Search existing issues** on GitHub
 3. **Check the documentation** for updated APIs
 4. **Open an issue** with:
-   - Current version
-   - Target version
-   - Error message
-   - Minimal reproduction
+    - Current version
+    - Target version
+    - Error message
+    - Minimal reproduction
 
 ---
 

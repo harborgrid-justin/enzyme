@@ -161,13 +161,9 @@ export class CriticalPathAnalyzer {
       ? this.findRenderBlockingResources()
       : [];
 
-    const criticalResources = this.config.analyzeResources
-      ? this.analyzeCriticalResources()
-      : [];
+    const criticalResources = this.config.analyzeResources ? this.analyzeCriticalResources() : [];
 
-    const domAnalysis = this.config.analyzeDom
-      ? this.analyzeDOM()
-      : this.getEmptyDOMAnalysis();
+    const domAnalysis = this.config.analyzeDom ? this.analyzeDOM() : this.getEmptyDOMAnalysis();
 
     const optimizations = this.generateOptimizations(
       renderBlockingResources,
@@ -175,11 +171,7 @@ export class CriticalPathAnalyzer {
       domAnalysis
     );
 
-    const score = this.calculateScore(
-      renderBlockingResources,
-      criticalResources,
-      domAnalysis
-    );
+    const score = this.calculateScore(renderBlockingResources, criticalResources, domAnalysis);
 
     return {
       renderBlockingResources,
@@ -309,7 +301,7 @@ export class CriticalPathAnalyzer {
       return this.getEmptyDOMAnalysis();
     }
 
-    const {body} = document;
+    const { body } = document;
     if (body == null) {
       return this.getEmptyDOMAnalysis();
     }
@@ -337,9 +329,7 @@ export class CriticalPathAnalyzer {
     const nodeDepths = new Map<Node, number>();
 
     while (node) {
-      const parentDepth = node.parentNode
-        ? nodeDepths.get(node.parentNode) ?? 0
-        : 0;
+      const parentDepth = node.parentNode ? (nodeDepths.get(node.parentNode) ?? 0) : 0;
       depth = parentDepth + 1;
       nodeDepths.set(node, depth);
 
@@ -366,9 +356,7 @@ export class CriticalPathAnalyzer {
     }
 
     if (maxDepth > 32) {
-      recommendations.push(
-        `DOM depth is ${maxDepth}. Consider flattening to under 32 levels.`
-      );
+      recommendations.push(`DOM depth is ${maxDepth}. Consider flattening to under 32 levels.`);
     }
 
     if (widestLevelNodeCount > 60) {
@@ -400,9 +388,7 @@ export class CriticalPathAnalyzer {
         (resource.criticality === 'high' && resource.aboveTheFold)
       ) {
         // Check if not already preloaded
-        const isPreloaded = document.querySelector(
-          `link[rel="preload"][href="${resource.url}"]`
-        );
+        const isPreloaded = document.querySelector(`link[rel="preload"][href="${resource.url}"]`);
 
         if (!isPreloaded) {
           recommendations.push({
@@ -422,9 +408,7 @@ export class CriticalPathAnalyzer {
   // Private Methods
   // ============================================================================
 
-  private getResourceTiming(
-    url: string
-  ): PerformanceResourceTiming | undefined {
+  private getResourceTiming(url: string): PerformanceResourceTiming | undefined {
     try {
       const entries = performance.getEntriesByType('resource');
       return entries.find((entry) => entry.name.includes(url));
@@ -486,9 +470,7 @@ export class CriticalPathAnalyzer {
 
     if (inViewport) {
       // Check for preload
-      const isPreloaded = document.querySelector(
-        `link[rel="preload"][href="${img.src}"]`
-      );
+      const isPreloaded = document.querySelector(`link[rel="preload"][href="${img.src}"]`);
       if (!isPreloaded) {
         recommendations.push({
           action: 'preload',
@@ -512,9 +494,7 @@ export class CriticalPathAnalyzer {
     return recommendations;
   }
 
-  private getFontRecommendations(
-    font: HTMLLinkElement
-  ): ResourceRecommendation[] {
+  private getFontRecommendations(font: HTMLLinkElement): ResourceRecommendation[] {
     const recommendations: ResourceRecommendation[] = [];
 
     // Check for font-display
@@ -571,9 +551,7 @@ export class CriticalPathAnalyzer {
     // LCP element optimization
     const lcpImages = critical.filter((r) => r.type === 'image' && r.aboveTheFold);
     if (lcpImages.length > 0) {
-      const slowestImage = lcpImages.reduce((a, b) =>
-        a.loadTime > b.loadTime ? a : b
-      );
+      const slowestImage = lcpImages.reduce((a, b) => (a.loadTime > b.loadTime ? a : b));
       if (slowestImage.loadTime > 500) {
         optimizations.push({
           type: 'lcp-optimization',
@@ -648,16 +626,12 @@ export class CriticalPathAnalyzer {
   }
 
   private estimateLCP(critical: CriticalResource[]): number {
-    const lcpCandidates = critical.filter(
-      (r) => r.type === 'image' && r.aboveTheFold
-    );
+    const lcpCandidates = critical.filter((r) => r.type === 'image' && r.aboveTheFold);
     if (lcpCandidates.length === 0) {
       return 1000; // Estimate for text-based LCP
     }
 
-    const slowestImage = lcpCandidates.reduce((a, b) =>
-      a.loadTime > b.loadTime ? a : b
-    );
+    const slowestImage = lcpCandidates.reduce((a, b) => (a.loadTime > b.loadTime ? a : b));
     return Math.max(1000, slowestImage.loadTime + 500);
   }
 
@@ -740,7 +714,9 @@ export function generateCriticalCSSHints(): string[] {
     }
   });
 
-  hints.push(`Consider extracting CSS for these selectors: ${Array.from(selectors).slice(0, 20).join(', ')}`);
+  hints.push(
+    `Consider extracting CSS for these selectors: ${Array.from(selectors).slice(0, 20).join(', ')}`
+  );
   hints.push(`${aboveTheFold.length} elements are above the fold`);
 
   return hints;
@@ -749,10 +725,7 @@ export function generateCriticalCSSHints(): string[] {
 /**
  * Check if a resource should be preloaded
  */
-export function shouldPreload(
-  resource: CriticalResource,
-  currentPreloads: string[]
-): boolean {
+export function shouldPreload(resource: CriticalResource, currentPreloads: string[]): boolean {
   // Already preloaded
   if (currentPreloads.includes(resource.url)) {
     return false;
@@ -764,9 +737,5 @@ export function shouldPreload(
   }
 
   // Large load times for high priority resources
-  if (resource.criticality === 'high' && resource.loadTime > 300) {
-    return true;
-  }
-
-  return false;
+  return resource.criticality === 'high' && resource.loadTime > 300;
 }

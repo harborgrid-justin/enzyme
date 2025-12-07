@@ -5,18 +5,18 @@ import {
   useCallback,
   useMemo,
   type ReactNode,
-  type JSX
+  type JSX,
 } from 'react';
-import { AuthContext } from '../contexts/AuthContext';
+import { AuthContext } from '@/lib/contexts';
 import { authService } from './authService';
 import { hasPermission as checkPermission } from '@/config/authConfig';
-import type { 
-  User, 
-  Role, 
-  Permission, 
-  LoginCredentials, 
+import type {
+  User,
+  Role,
+  Permission,
+  LoginCredentials,
   RegisterCredentials,
-  AuthContextValue 
+  AuthContextValue,
 } from './types';
 
 interface AuthProviderProps {
@@ -73,16 +73,19 @@ export function AuthProvider({ children }: AuthProviderProps): JSX.Element {
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    const refreshInterval = setInterval(() => {
-      void (async (): Promise<void> => {
-        try {
-          await authService.refreshTokens();
-        } catch {
-          // If refresh fails, log out the user
-          setUser(null);
-        }
-      })();
-    }, 4 * 60 * 1000); // Refresh every 4 minutes
+    const refreshInterval = setInterval(
+      () => {
+        void (async (): Promise<void> => {
+          try {
+            await authService.refreshTokens();
+          } catch {
+            // If refresh fails, log out the user
+            setUser(null);
+          }
+        })();
+      },
+      4 * 60 * 1000
+    ); // Refresh every 4 minutes
 
     return () => clearInterval(refreshInterval);
   }, [isAuthenticated]);
@@ -179,35 +182,38 @@ export function AuthProvider({ children }: AuthProviderProps): JSX.Element {
   // Alias for context compatibility
   const refreshToken = refreshSession;
 
-  const value: AuthContextValue = useMemo(() => ({
-    user,
-    isAuthenticated,
-    isLoading,
-    error,
-    login,
-    logout,
-    register,
-    refreshToken,
-    refreshSession,
-    hasRole,
-    hasAnyRole,
-    hasPermission: hasPermissionFn,
-    hasAnyPermission,
-  }), [
-    user,
-    isAuthenticated,
-    isLoading,
-    error,
-    login,
-    logout,
-    register,
-    refreshToken,
-    refreshSession,
-    hasRole,
-    hasAnyRole,
-    hasPermissionFn,
-    hasAnyPermission,
-  ]);
+  const value: AuthContextValue = useMemo(
+    () => ({
+      user,
+      isAuthenticated,
+      isLoading,
+      error,
+      login,
+      logout,
+      register,
+      refreshToken,
+      refreshSession,
+      hasRole,
+      hasAnyRole,
+      hasPermission: hasPermissionFn,
+      hasAnyPermission,
+    }),
+    [
+      user,
+      isAuthenticated,
+      isLoading,
+      error,
+      login,
+      logout,
+      register,
+      refreshToken,
+      refreshSession,
+      hasRole,
+      hasAnyRole,
+      hasPermissionFn,
+      hasAnyPermission,
+    ]
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

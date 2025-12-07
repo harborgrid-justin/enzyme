@@ -218,6 +218,7 @@ resource:action:scope
 ```
 
 Examples:
+
 - `users:read` - Read any user
 - `users:update:own` - Update own user only
 - `posts:delete:any` - Delete any post
@@ -225,14 +226,14 @@ Examples:
 
 ### Standard Permission Actions
 
-| Action | Description |
-|--------|-------------|
-| `read` | View resources |
-| `create` | Create new resources |
-| `update` | Modify existing resources |
-| `delete` | Remove resources |
+| Action   | Description                    |
+|----------|--------------------------------|
+| `read`   | View resources                 |
+| `create` | Create new resources           |
+| `update` | Modify existing resources      |
+| `delete` | Remove resources               |
 | `manage` | Full CRUD + special operations |
-| `*` | Wildcard - all actions |
+| `*`      | Wildcard - all actions         |
 
 ### Permission Definitions
 
