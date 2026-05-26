@@ -67,6 +67,11 @@
 - [Glossary](./GLOSSARY.md)
 - [Navigation Reference](./NAVIGATION.md)
 
+### Working with AI Agents
+- [LLM & Claude Code Guidance](./LLM_GUIDANCE.md)
+- [`.claude/` configuration](../.claude/README.md)
+- [Project memory (`CLAUDE.md`)](../CLAUDE.md)
+
 </td>
 </tr>
 </table>
