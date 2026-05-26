@@ -176,6 +176,14 @@ Invoke them by name ("use the **code-reviewer** subagent on my changes"),
 `@`-mention to force one, or let Claude delegate automatically from each agent's
 `description`. Manage them interactively with `/agents`.
 
+**Persistent memory.** `code-reviewer`, `security-auditor`, and
+`performance-engineer` declare `memory: project`, so they accumulate institutional
+knowledge (codebase patterns, weak spots, baseline measurements) in
+`.claude/agent-memory/<name>/`, shared via version control. Anthropic recommends
+`project` as the default memory scope; ask an agent to "check your memory" before
+a task and "save what you learned" after. See
+[persistent memory](https://code.claude.com/docs/en/sub-agents#enable-persistent-memory).
+
 ### Authoring guidance
 
 Per Anthropic's [best practices](https://code.claude.com/docs/en/sub-agents#example-subagents):
@@ -229,6 +237,33 @@ Our policy:
 
 Use settings for **technical enforcement** and `CLAUDE.md` for **behavioral
 guidance** — they are complementary, not interchangeable.
+
+---
+
+## Deterministic enforcement: git gates & hooks
+
+Some rules must hold regardless of what the model decides. This repo already
+enforces them deterministically with **husky** git hooks (`.husky/`):
+
+| Git hook     | Runs                                                   | Effect                          |
+| ------------ | ------------------------------------------------------ | ------------------------------- |
+| `commit-msg` | Conventional Commits validation                        | Rejects non-conforming messages |
+| `pre-commit` | `lint-staged` (ESLint `--fix` + Prettier on staged)    | Auto-fixes/formats staged code  |
+| `pre-push`   | `npm run typecheck` + `npm run test`                   | Aborts the push if either fails |
+
+Agents must write commit messages as `<type>(scope): subject`
+(`feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert`) and must not
+bypass these gates with `--no-verify`.
+
+**Claude Code [hooks](https://code.claude.com/docs/en/hooks)** (configured in
+`settings.json` or a subagent's frontmatter) fire on agent lifecycle events
+(`PreToolUse`, `PostToolUse`, `SessionStart`, `Stop`, …) and enforce things
+*within a session* — before the agent ever reaches a commit. We deliberately do
+**not** duplicate the husky gates as Claude hooks: formatting/linting/testing is
+already covered at commit and push time, and a format-on-every-edit hook would
+add noise and latency without adding safety. Add a Claude hook only for a gap
+husky doesn't cover (e.g. a `PreToolUse` validator that blocks a class of
+dangerous Bash command), not to re-run what husky already runs.
 
 ---
 

@@ -25,6 +25,15 @@ Keep it concise — see `docs/LLM_GUIDANCE.md` for the full LLM playbook.
 
 Always run `npm run verify` before committing. Treat lint warnings as errors.
 
+**Git hooks are enforced (husky):**
+- `commit-msg` — commit messages must follow Conventional Commits:
+  `<type>(scope): subject` where type ∈ `feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert`.
+- `pre-commit` — runs `lint-staged` (ESLint `--fix` + Prettier on staged files), so
+  staged code is auto-fixed/formatted on commit.
+- `pre-push` — runs `typecheck` + `test`; **a failing check aborts the push**.
+
+Don't bypass these with `--no-verify`; fix the underlying issue.
+
 ## Architecture
 
 - `src/lib/` — modular feature library. Each feature (`api`, `auth`, `routing`,

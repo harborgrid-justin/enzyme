@@ -1,7 +1,7 @@
 ---
 description: Review the current branch diff against master using the code-reviewer subagent
 argument-hint: "[base-branch, default master]"
-allowed-tools: Read, Grep, Glob, Bash(git diff:*), Bash(git log:*), Bash(git status)
+allowed-tools: Read, Grep, Glob, Bash(git diff:*), Bash(git log:*), Bash(git status:*)
 model: inherit
 ---
 
