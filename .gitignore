@@ -13,3 +13,8 @@ coverage
 # ESLint cache
 .eslintcache
 scripts/.eslintcache
+
+# Claude Code — personal/machine-local files (team config is committed)
+CLAUDE.local.md
+.claude/settings.local.json
+.claude/agent-memory-local/
