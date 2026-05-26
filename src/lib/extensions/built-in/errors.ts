@@ -445,7 +445,7 @@ function levenshteinDistance(a: string, b: string): number {
 /**
  * Find similar error codes using fuzzy matching
  */
-function findSimilarErrorCodes(input: string, maxDistance = 3, maxSuggestions = 5): string[] {
+export function findSimilarErrorCodes(input: string, maxDistance = 3, maxSuggestions = 5): string[] {
   const codes = Object.keys(ERROR_CODE_REGISTRY);
   const similarities = codes
     .map(code => ({

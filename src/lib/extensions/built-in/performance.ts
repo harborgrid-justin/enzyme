@@ -54,6 +54,7 @@ import {
   getVitalsCollector,
   type VitalsCollector,
   type VitalsSnapshot,
+  type PerformanceBudget,
 } from '../../performance/vitals';
 
 import {
