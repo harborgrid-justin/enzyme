@@ -337,8 +337,12 @@ class PerformanceExtensionState {
     this.performanceMonitor.start();
 
     // Initialize budget manager
+    const budgets: Record<string, BudgetThreshold> = {};
+    for (const [name, threshold] of Object.entries(this.config.budgets)) {
+      if (threshold) budgets[name] = threshold;
+    }
     this.budgetManager = getBudgetManager({
-      budgets: this.config.budgets,
+      budgets,
       enableAutoDegradation: true,
       debug: this.config.debug,
       onViolation: (violation) => {
@@ -465,7 +469,7 @@ class PerformanceExtensionState {
    */
   public setPerformanceBudget(budgets: Partial<Record<string, BudgetThreshold>>): void {
     Object.entries(budgets).forEach(([name, threshold]) => {
-      this.budgetManager?.registerBudget(name, threshold);
+      if (threshold) this.budgetManager?.registerBudget(name, threshold);
     });
     this.log('Performance budgets updated');
   }

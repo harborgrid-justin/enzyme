@@ -502,7 +502,7 @@ class DryRunStateManager {
   private escalateSeverity(current: ImpactSeverity): ImpactSeverity {
     const levels: ImpactSeverity[] = ['low', 'medium', 'high', 'critical'];
     const index = levels.indexOf(current);
-    return levels[Math.min(index + 1, levels.length - 1)];
+    return levels[Math.min(index + 1, levels.length - 1)] ?? current;
   }
 
   // ==========================================================================

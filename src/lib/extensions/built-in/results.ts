@@ -251,7 +251,7 @@ export class ResultEnhancer<T extends object = Record<string, unknown>> {
 
         const cached = this.cache.get(cacheKey);
         if (cached !== undefined) {
-          (enhanced as any)[fieldName] = cached;
+          (enhanced as Record<string, unknown>)[fieldName] = cached;
           continue;
         }
 
@@ -322,9 +322,15 @@ export function mapFields<T extends object = Record<string, unknown>>(
 ): ResultTransformer<T> {
   return (result: T): T => {
     const mapped = { ...result };
-    for (const [field, fn] of Object.entries(mapper)) {
+    const entries = Object.entries(mapper) as [
+      string,
+      ((value: unknown) => unknown) | undefined,
+    ][];
+    for (const [field, fn] of entries) {
       if (field in mapped && fn) {
-        (mapped as Record<string, unknown>)[field] = fn((mapped as Record<string, unknown>)[field]);
+        (mapped as Record<string, unknown>)[field] = fn(
+          (mapped as Record<string, unknown>)[field]
+        );
       }
     }
     return mapped;
@@ -865,11 +871,13 @@ const modelEnhancers = new Map<string, ResultEnhancer<Record<string, unknown>>>(
 /**
  * Get or create enhancer for a model
  */
-function getModelEnhancer<T extends object = Record<string, unknown>>(model: string): ResultEnhancer<T> {
+function getModelEnhancer<T extends object = Record<string, unknown>>(
+  model: string
+): ResultEnhancer<T> {
   if (!modelEnhancers.has(model)) {
-    modelEnhancers.set(model, new ResultEnhancer<Record<string, unknown>>() as ResultEnhancer<T>);
+    modelEnhancers.set(model, new ResultEnhancer<Record<string, unknown>>());
   }
-  return modelEnhancers.get(model) as ResultEnhancer<T>;
+  return modelEnhancers.get(model) as unknown as ResultEnhancer<T>;
 }
 
 /**
@@ -968,7 +976,7 @@ export const resultsExtension = {
       result: T
     ): T & Record<string, unknown> {
       const enhancer = getModelEnhancer<T>(model);
-      return enhancer.enhance(result as Record<string, unknown>) as T & Record<string, unknown>;
+      return enhancer.enhance(result);
     },
 
     /**
@@ -979,7 +987,7 @@ export const resultsExtension = {
       results: T[]
     ): (T & Record<string, unknown>)[] {
       const enhancer = getModelEnhancer<T>(model);
-      return enhancer.enhanceMany(results as Record<string, unknown>[]) as (T & Record<string, unknown>)[];
+      return enhancer.enhanceMany(results);
     },
 
     /**
