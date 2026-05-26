@@ -6,7 +6,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { performanceExtension } from './performance';
-import type { PerformanceExtensionConfig } from './performance';
+import type {
+  PerformanceExtensionConfig,
+  PerformanceReport,
+  RenderTiming,
+  OperationTiming,
+} from './performance';
+import type { BudgetStatusSummary } from '../../performance/performance-budgets';
 
 // ============================================================================
 // Example 1: Basic Setup
