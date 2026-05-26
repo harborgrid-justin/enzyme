@@ -2,7 +2,6 @@
  * @file Results Extension Tests
  * @description Comprehensive test suite for the results extension
  */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { QueryClient } from '@tanstack/react-query';
@@ -23,7 +22,6 @@ import {
   aggregators,
   createReactQueryMiddleware,
   resultsExtension,
-  type ComputedFieldDef,
   type NormalizationSchema,
 } from './results';
 
@@ -199,8 +197,8 @@ describe('ResultEnhancer - Computed Fields', () => {
     ];
 
     const enhanced = enhancer.enhanceMany(users);
-    expect(enhanced[0].fullName).toBe('John Doe');
-    expect(enhanced[1].fullName).toBe('Jane Smith');
+    expect(enhanced[0]?.fullName).toBe('John Doe');
+    expect(enhanced[1]?.fullName).toBe('Jane Smith');
   });
 
   it('should provide cache statistics', () => {
@@ -397,7 +395,7 @@ describe('Normalization', () => {
     expect(denormalized.id).toBe(post.id);
     expect(denormalized.title).toBe(post.title);
     expect(denormalized.author.name).toBe(post.author.name);
-    expect(denormalized.comments[0].text).toBe(post.comments[0].text);
+    expect(denormalized.comments[0]?.text).toBe(post.comments[0]?.text);
   });
 
   it('should normalize arrays', () => {
@@ -480,7 +478,7 @@ describe('Field Masking', () => {
     const masked = mask(data, {
       custom: {
         email: (email) => {
-          const [local, domain] = String(email).split('@');
+          const [local = '', domain = ''] = String(email).split('@');
           return `${local.slice(0, 2)}***@${domain}`;
         },
       },
@@ -594,8 +592,8 @@ describe('Result Aggregation', () => {
 
   it('should group by field', () => {
     const grouped = aggregate(sales, aggregators.groupBy('category'));
-    expect(grouped.electronics.length).toBe(2);
-    expect(grouped.books.length).toBe(1);
+    expect(grouped.electronics?.length).toBe(2);
+    expect(grouped.books?.length).toBe(1);
   });
 
   it('should merge items', () => {
@@ -608,8 +606,7 @@ describe('Result Aggregation', () => {
     const categoryTotals = aggregate(sales, (items) => {
       const totals: Record<string, number> = {};
       for (const item of items) {
-        if (!totals[item.category]) totals[item.category] = 0;
-        totals[item.category] += item.amount;
+        totals[item.category] = (totals[item.category] ?? 0) + item.amount;
       }
       return totals;
     });
@@ -642,7 +639,7 @@ describe('Result Diffing', () => {
     const result = diff(oldData, newData);
 
     expect(result.hasChanges).toBe(true);
-    expect(result.changes[0].op).toBe('add');
+    expect(result.changes[0]?.op).toBe('add');
   });
 
   it('should detect removed fields', () => {
@@ -652,7 +649,7 @@ describe('Result Diffing', () => {
     const result = diff(oldData, newData);
 
     expect(result.hasChanges).toBe(true);
-    expect(result.changes[0].op).toBe('remove');
+    expect(result.changes[0]?.op).toBe('remove');
   });
 
   it('should detect no changes', () => {

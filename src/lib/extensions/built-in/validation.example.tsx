@@ -4,7 +4,6 @@
  *
  * @module extensions/built-in/validation.example
  */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { z } from 'zod';
@@ -66,11 +65,11 @@ async function example1_schemaRegistry() {
 // Example 2: Form Validation with React Hook
 // ============================================================================
 
-interface LoginForm {
+type LoginForm = {
   email: string;
   password: string;
   rememberMe: boolean;
-}
+};
 
 const loginSchema = z.object({
   email: commonSchemas.email,
@@ -80,9 +79,7 @@ const loginSchema = z.object({
 
 function LoginFormExample() {
   const {
-    values,
     errors,
-    touched,
     isSubmitting,
     isValid,
     register,
@@ -197,7 +194,7 @@ async function example4_apiValidation() {
     { strict: true } // Fail on unknown fields
   );
 
-  if (result.success) {
+  if (result.success && result.data) {
     const user: ApiUser = result.data;
     console.log('Valid user from API:', user);
   } else {
@@ -256,6 +253,9 @@ function example5_stateValidation() {
   } else {
     console.error('Invalid state change:', result.errors);
   }
+
+  // Also demonstrate state-management integration helpers
+  example11_stateManagement();
 }
 
 // ============================================================================
@@ -287,6 +287,14 @@ const signupSchema = z.object({
 
 async function example6_customValidation() {
   const email = 'newuser@example.com';
+
+  // Validate the overall signup payload (including password confirmation)
+  const parsed = signupSchema.safeParse({
+    email,
+    password: 'Sup3rSecret!',
+    confirmPassword: 'Sup3rSecret!',
+  });
+  console.info('Signup payload valid:', parsed.success);
 
   // Execute custom validator
   const result = await validationExtension.client.$executeValidator(
@@ -394,7 +402,7 @@ function example9_commonSchemas() {
 // Example 10: Complex Form with Multiple Sections
 // ============================================================================
 
-interface RegistrationForm {
+type RegistrationForm = {
   // Personal info
   firstName: string;
   lastName: string;
@@ -417,7 +425,7 @@ interface RegistrationForm {
   // Preferences
   newsletter: boolean;
   terms: boolean;
-}
+};
 
 const registrationSchema = z.object({
   firstName: z.string().min(2),
@@ -553,6 +561,22 @@ const storeSchema = z.object({
     name: z.string(),
   }).nullable(),
 });
+
+function example11_stateManagement(): void {
+  // Redux: validate every UPDATE_STATE action against the store schema
+  const validationMiddleware = createValidationMiddleware(storeSchema);
+  console.info('Created validation middleware:', typeof validationMiddleware);
+
+  // Zustand: a typed store shape validated by `storeSchema`
+  const initialStore: Store = {
+    user: null,
+    setUser: () => {},
+  };
+  console.info(
+    'Initial store valid:',
+    storeSchema.safeParse(initialStore).success
+  );
+}
 
 // ============================================================================
 // Export Examples

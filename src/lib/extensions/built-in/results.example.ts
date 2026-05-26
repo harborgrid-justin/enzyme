@@ -2,8 +2,6 @@
  * @file Results Extension Examples
  * @description Comprehensive examples demonstrating the results extension features
  */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { QueryClient } from '@tanstack/react-query';
 import {
@@ -20,7 +18,6 @@ import {
   aggregate,
   aggregators,
   createReactQueryMiddleware,
-  type ComputedFieldDef,
   type NormalizationSchema,
 } from './results';
 
@@ -238,7 +235,7 @@ const maskedUser = mask(sensitiveUser, {
   custom: {
     email: (email) => {
       // Show first 2 chars and domain
-      const [local, domain] = String(email).split('@');
+      const [local = '', domain = ''] = String(email).split('@');
       return `${local.slice(0, 2)}***@${domain}`;
     },
   },
@@ -320,8 +317,7 @@ console.log(byCategory);
 const categoryTotals = aggregate(sales, (items) => {
   const totals: Record<string, number> = {};
   for (const item of items) {
-    if (!totals[item.category]) totals[item.category] = 0;
-    totals[item.category] += item.amount;
+    totals[item.category] = (totals[item.category] ?? 0) + item.amount;
   }
   return totals;
 });
@@ -533,4 +529,12 @@ export {
   userEnhancer,
   employeeEnhancer,
   postSchema,
+  withFormattedPrice,
+  publicProduct,
+  cleanProduct,
+  apiResponse,
+  fetchUser,
+  updateUser,
+  setNormalizedPost,
+  getDenormalizedPost,
 };

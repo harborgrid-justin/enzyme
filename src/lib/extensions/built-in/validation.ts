@@ -722,9 +722,11 @@ export function useFormValidation<T extends Record<string, unknown>>(
    * Register field
    */
   const register = useCallback((name: keyof T) => {
+    const fieldValue = values[name];
     return {
       name: name as string,
-      value: values[name] ?? '',
+      // Coerce to a DOM-compatible string value for controlled inputs
+      value: fieldValue == null ? '' : String(fieldValue),
       onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
         setValue(name, e.target.value);
       },

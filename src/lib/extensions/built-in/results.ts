@@ -41,7 +41,7 @@ export type ResultTransformer<T, R = T> = (result: T) => R;
 /**
  * Normalization schema for nested data structures
  */
-export interface NormalizationSchema<T = unknown> {
+export interface NormalizationSchema<T = Record<string, unknown>> {
   /** Entity name for this schema */
   entity: string;
   /** ID field name (default: 'id') */
@@ -301,15 +301,22 @@ export class ResultEnhancer<T extends object = Record<string, unknown>> {
 // ============================================================================
 
 /**
- * Transform result using a pipeline of transformers
+ * Transform result using a pipeline of transformers.
+ *
+ * Each transformer is applied in sequence, with the output of one feeding the
+ * input of the next. The `never` input type lets transformers typed for any
+ * specific input shape (e.g. `ResultTransformer<Product>`) be passed without a
+ * cast, since the pipeline values flow as `unknown` at runtime.
  */
 export function transform<T, R = T>(
   result: T,
-  ...transformers: ResultTransformer<unknown, unknown>[]
+  ...transformers: ResultTransformer<never, unknown>[]
 ): R {
   let transformed: unknown = result;
   for (const transformer of transformers) {
-    transformed = transformer(transformed);
+    transformed = (transformer as ResultTransformer<unknown, unknown>)(
+      transformed
+    );
   }
   return transformed as R;
 }
@@ -374,9 +381,15 @@ export function omitFields<T extends object = Record<string, unknown>>(
 // ============================================================================
 
 /**
- * Normalize nested data structures
+ * Normalize nested data structures.
+ *
+ * Accepts either a single entity or an array of entities described by the same
+ * schema; `T` is inferred from `schema`, so passing `T[]` does not widen `T`.
  */
-export function normalize<T>(data: T, schema: NormalizationSchema<T>): NormalizedData {
+export function normalize<T>(
+  data: T | T[],
+  schema: NormalizationSchema<T>
+): NormalizedData {
   const entities: Record<string, Record<string | number, unknown>> = {};
 
   function normalizeEntity<E>(entity: E, entitySchema: NormalizationSchema<E>): string | number {
@@ -907,7 +920,7 @@ export const resultsExtension = {
      */
     $transform<T, R = T>(
       result: T,
-      ...transformers: ResultTransformer<unknown, unknown>[]
+      ...transformers: ResultTransformer<never, unknown>[]
     ): R {
       return transform(result, ...transformers);
     },

@@ -4,12 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import {
-  DryRunStateManager,
-  dryRunExtension,
-  type OperationChange,
-  type DryRunConfig,
-} from '../dry-run';
+import { DryRunStateManager, dryRunExtension } from '../dry-run';
 
 describe('DryRunExtension', () => {
   let manager: DryRunStateManager;
@@ -120,7 +115,7 @@ describe('DryRunExtension', () => {
 
       const pending = manager.getPendingChanges();
       expect(pending).toHaveLength(1);
-      expect(pending[0].id).toBe(id2);
+      expect(pending[0]?.id).toBe(id2);
     });
 
     it('should remove a change', () => {
@@ -248,7 +243,7 @@ describe('DryRunExtension', () => {
       const diff = manager.getDiff(before, after);
 
       expect(diff.modified).toHaveLength(1);
-      expect(diff.modified[0].path).toBe('user.age');
+      expect(diff.modified[0]?.path).toBe('user.age');
     });
 
     it('should return empty diff for identical objects', () => {
@@ -360,7 +355,7 @@ describe('DryRunExtension', () => {
     });
 
     it('should escalate severity for dependent changes', () => {
-      const id1 = manager.addChange({
+      manager.addChange({
         type: 'create',
         resource: 'dependency',
         action: 'create',
