@@ -379,9 +379,13 @@ describe('ApiClient', () => {
 
     it('should run error interceptors', async () => {
       // Arrange
+      // 500 is a retryable status; disable retry so the single mocked error
+      // response isn't exhausted by a retry attempt (which would fall through
+      // to the default 200 mock and make the request resolve).
       const client = createApiClient({
         baseUrl: 'https://api.test.com',
         fetch: mockFetch,
+        retry: { maxAttempts: 1 },
       });
       mockFetch.mockError(500, 'Server Error');
 
@@ -539,9 +543,12 @@ describe('ApiClient', () => {
 
     it('should categorize rate limit errors', async () => {
       // Arrange
+      // 429 is a retryable status; disable retry so the single mocked error
+      // response isn't exhausted by a retry attempt.
       const client = createApiClient({
         baseUrl: 'https://api.test.com',
         fetch: mockFetch,
+        retry: { maxAttempts: 1 },
       });
       mockFetch.mockError(429, 'Too Many Requests');
 
@@ -554,9 +561,12 @@ describe('ApiClient', () => {
 
     it('should categorize server errors', async () => {
       // Arrange
+      // 500 is a retryable status; disable retry so the single mocked error
+      // response isn't exhausted by a retry attempt.
       const client = createApiClient({
         baseUrl: 'https://api.test.com',
         fetch: mockFetch,
+        retry: { maxAttempts: 1 },
       });
       mockFetch.mockError(500, 'Internal Server Error');
 
@@ -1040,10 +1050,21 @@ describe('ApiClient', () => {
   describe('token management', () => {
     it('should add Authorization header when token exists', async () => {
       // Arrange
-      mockStorage.set('access_token', 'test-token');
+      // Inject the token via the supported tokenProvider surface. The default
+      // provider reads from encrypted secure storage (key `api_access_token`),
+      // not plaintext localStorage, so a custom provider is the contract-correct
+      // way to make a token "exist" for the request.
+      const tokenProvider = {
+        getAccessToken: vi.fn(() => 'test-token'),
+        getRefreshToken: vi.fn(),
+        setAccessToken: vi.fn(),
+        setRefreshToken: vi.fn(),
+        clearTokens: vi.fn(),
+      };
       const client = createApiClient({
         baseUrl: 'https://api.test.com',
         fetch: mockFetch,
+        tokenProvider,
       });
       mockFetch.mockResponse({});
 
@@ -1332,10 +1353,13 @@ describe('ApiClient', () => {
     it('should call onError callback on failure', async () => {
       // Arrange
       const onError = vi.fn();
+      // 500 is a retryable status; disable retry so the single mocked error
+      // response isn't exhausted by a retry attempt.
       const client = createApiClient({
         baseUrl: 'https://api.test.com',
         fetch: mockFetch,
         onError,
+        retry: { maxAttempts: 1 },
       });
       mockFetch.mockError(500, 'Server Error');
 

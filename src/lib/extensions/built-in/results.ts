@@ -543,7 +543,14 @@ export function maskDeep<T>(result: T, config: FieldMaskConfig): T {
   }
 
   if (result && typeof result === 'object') {
-    return mask(result as Record<string, unknown>, config) as T;
+    // Mask this object's own fields, then recurse into nested object/array values
+    // so deeply-nested sensitive fields are masked too.
+    const maskedLevel = mask(result as Record<string, unknown>, config);
+    const out: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(maskedLevel)) {
+      out[key] = value !== null && typeof value === 'object' ? maskDeep(value, config) : value;
+    }
+    return out as T;
   }
 
   return result;

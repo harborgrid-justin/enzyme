@@ -680,6 +680,9 @@ describe('DryRunExtension', () => {
 
     it('should get stats via client API', () => {
       dryRunExtension.client.$enableDryRun();
+      // Isolate from prior tests: the client API operates on a shared singleton
+      // whose changes aren't cleared by $disableDryRun.
+      dryRunExtension.client.$discardChanges();
 
       dryRunExtension.client.$previewOperation({
         type: 'create',
