@@ -187,7 +187,7 @@ class SchemaRegistry {
   }
 }
 
-const schemaRegistry = new SchemaRegistry();
+export const schemaRegistry = new SchemaRegistry();
 
 // ============================================================================
 // Custom Validator Registry
@@ -257,7 +257,7 @@ class CustomValidatorRegistry {
   }
 }
 
-const customValidatorRegistry = new CustomValidatorRegistry();
+export const customValidatorRegistry = new CustomValidatorRegistry();
 
 // ============================================================================
 // Validation Cache
@@ -338,7 +338,7 @@ class ValidationCache {
   }
 }
 
-const validationCache = new ValidationCache();
+export const validationCache = new ValidationCache();
 
 // ============================================================================
 // Error Formatting
@@ -722,9 +722,11 @@ export function useFormValidation<T extends Record<string, unknown>>(
    * Register field
    */
   const register = useCallback((name: keyof T) => {
+    const fieldValue = values[name];
     return {
       name: name as string,
-      value: values[name] ?? '',
+      // Coerce to a DOM-compatible string value for controlled inputs
+      value: fieldValue == null ? '' : String(fieldValue),
       onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
         setValue(name, e.target.value);
       },

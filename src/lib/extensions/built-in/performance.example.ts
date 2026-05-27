@@ -2,11 +2,16 @@
  * @file Performance Extension Usage Examples
  * @description Comprehensive examples of using the performance monitoring extension
  */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { performanceExtension } from './performance';
-import type { PerformanceExtensionConfig } from './performance';
+import type {
+  PerformanceExtensionConfig,
+  PerformanceReport,
+  RenderTiming,
+  OperationTiming,
+} from './performance';
+import type { BudgetStatusSummary } from '../../performance/performance-budgets';
 
 // ============================================================================
 // Example 1: Basic Setup
@@ -69,8 +74,8 @@ export function example3_RenderTracking() {
     // Track render
     const stopTracking = enzyme.$trackRender('MyComponent', 'update');
 
-    // Cleanup on unmount
-    // useEffect(() => stopTracking, []);
+    // Cleanup on unmount (in a real component: useEffect(() => stopTracking, []))
+    stopTracking();
 
     return null; // JSX
   }
@@ -78,9 +83,12 @@ export function example3_RenderTracking() {
   // Track mount phase
   function AnotherComponent() {
     const stopTracking = enzyme.$trackRender('AnotherComponent', 'mount');
-    // useEffect(() => stopTracking, []);
+    stopTracking();
     return null;
   }
+
+  // Return the components so this example exposes them for rendering
+  return { MyComponent, AnotherComponent };
 }
 
 // ============================================================================
@@ -243,18 +251,26 @@ export function example6_MonitorMetrics() {
   }
 
   // Check budgets
-  const criticalBudgets = metrics.budgets.filter((b) => b.status === 'critical');
-  const warningBudgets = metrics.budgets.filter((b) => b.status === 'warning');
+  const criticalBudgets = metrics.budgets.filter(
+    (b: BudgetStatusSummary) => b.status === 'critical'
+  );
+  const warningBudgets = metrics.budgets.filter(
+    (b: BudgetStatusSummary) => b.status === 'warning'
+  );
 
   console.log('Critical Budget Violations:', criticalBudgets.length);
   console.log('Warning Budget Violations:', warningBudgets.length);
 
   // Check recent renders
-  const slowRenders = metrics.renders.filter((r) => r.duration && r.duration > 16);
+  const slowRenders = metrics.renders.filter(
+    (r: RenderTiming) => r.duration && r.duration > 16
+  );
   console.log('Slow Renders:', slowRenders.length);
 
   // Check operations
-  const failedOperations = metrics.operations.filter((o) => !o.success);
+  const failedOperations = metrics.operations.filter(
+    (o: OperationTiming) => !o.success
+  );
   console.log('Failed Operations:', failedOperations.length);
 }
 
@@ -270,7 +286,7 @@ export function example7_GenerateReport() {
   enzyme.$extends(performanceExtension);
 
   // Generate comprehensive report
-  const report = enzyme.$getPerformanceReport();
+  const report: PerformanceReport = enzyme.$getPerformanceReport();
 
   console.log('=== Performance Report ===');
   console.log('Generated:', new Date(report.timestamp));
@@ -369,6 +385,9 @@ export function example8_TimelineMarkers() {
     await new Promise((resolve) => setTimeout(resolve, 500));
     enzyme.$markTimeline('data-fetch-complete');
   }
+
+  // Return the handlers so this example exposes them for wiring up
+  return { handleUserClick, loadData };
 }
 
 // ============================================================================

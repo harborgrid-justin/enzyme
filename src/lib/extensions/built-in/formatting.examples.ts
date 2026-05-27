@@ -14,12 +14,7 @@ import {
   formatCurrency,
   formatPercentage,
   formatDate,
-  formatRelativeTime,
   pluralize,
-  truncate,
-  escapeHtml,
-  stripHtml,
-  formatJson,
   formatterRegistry,
   format,
 } from './formatting.js';
@@ -58,7 +53,6 @@ export function exampleEcommerce() {
 // Multi-locale support example
 export function exampleI18n() {
   const amount = 1234.56;
-  const date = new Date('2024-06-15');
 
   console.log('US: ' + formatCurrency(amount, { currency: 'USD', locale: 'en-US' }));
   console.log('DE: ' + formatCurrency(amount, { currency: 'EUR', locale: 'de-DE' }));

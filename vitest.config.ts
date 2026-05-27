@@ -32,6 +32,11 @@ export default defineConfig({
       '.cache',
       '.development',
       'src/test/e2e/**',
+      // Test helpers/fixtures live under __tests__/ but contain no suites.
+      // The broad __tests__ include glob would otherwise collect them and fail
+      // with "No test suite found in file".
+      'src/**/__tests__/**/setup.{ts,tsx}',
+      'src/**/__tests__/**/utils/**',
     ],
 
     // Coverage configuration

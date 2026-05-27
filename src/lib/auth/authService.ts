@@ -371,13 +371,19 @@ class AuthService {
    * @returns Promise resolving to the access token or null
    */
   async getAccessTokenAsync(): Promise<string | null> {
-    const storage = this.getSecureStorage();
-    const result = await storage.getItem<string>(SECURE_TOKEN_KEYS.ACCESS_TOKEN);
-    if (result.success && result.data !== undefined && result.data !== null) {
-      this.tokenCache.accessToken = result.data;
-      return result.data;
+    try {
+      const storage = this.getSecureStorage();
+      const result = await storage.getItem<string>(SECURE_TOKEN_KEYS.ACCESS_TOKEN);
+      if (result.success && result.data !== undefined && result.data !== null) {
+        this.tokenCache.accessToken = result.data;
+        return result.data;
+      }
+      return null;
+    } catch {
+      // Fail closed: if secure storage is unavailable, treat the token as
+      // absent rather than propagating the error to callers.
+      return null;
     }
-    return null;
   }
 
   /**

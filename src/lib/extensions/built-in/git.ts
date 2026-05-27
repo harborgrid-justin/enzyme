@@ -482,9 +482,9 @@ function parseDiffHunks(diff: string): DiffHunk[] {
       }
 
       currentHunk = {
-        oldStart: parseInt(hunkHeaderMatch[1], 10),
+        oldStart: parseInt(hunkHeaderMatch[1] ?? '0', 10),
         oldLines: hunkHeaderMatch[2] ? parseInt(hunkHeaderMatch[2], 10) : 1,
-        newStart: parseInt(hunkHeaderMatch[3], 10),
+        newStart: parseInt(hunkHeaderMatch[3] ?? '0', 10),
         newLines: hunkHeaderMatch[4] ? parseInt(hunkHeaderMatch[4], 10) : 1,
         header: line,
         lines: [],
@@ -536,7 +536,7 @@ async function getGitStatus(useCache = true): Promise<GitStatus> {
     const statusLines = statusOutput.split('\n');
 
     // Parse branch info from first line
-    const branchLine = statusLines[0];
+    const branchLine = statusLines[0] ?? '';
     let ahead = 0;
     let behind = 0;
     let remote: string | undefined;
@@ -545,9 +545,9 @@ async function getGitStatus(useCache = true): Promise<GitStatus> {
     const behindMatch = branchLine.match(/behind (\d+)/);
     const remoteMatch = branchLine.match(/\.\.\.([^\s]+)/);
 
-    if (aheadMatch) ahead = parseInt(aheadMatch[1], 10);
-    if (behindMatch) behind = parseInt(behindMatch[1], 10);
-    if (remoteMatch) remote = remoteMatch[1];
+    if (aheadMatch?.[1]) ahead = parseInt(aheadMatch[1], 10);
+    if (behindMatch?.[1]) behind = parseInt(behindMatch[1], 10);
+    if (remoteMatch?.[1]) remote = remoteMatch[1];
 
     // Parse file status
     const fileStatus = parseGitStatus(statusLines.slice(1).join('\n'));
@@ -625,15 +625,18 @@ async function getBranchInfo(useCache = true): Promise<BranchInfo> {
     if (!detached) {
       try {
         const trackingBranch = await execGit(['rev-parse', '--abbrev-ref', `${current}@{upstream}`]);
-        const [remoteName, branchName] = trackingBranch.split('/');
+        const [remoteName, ...branchParts] = trackingBranch.split('/');
+        const branchName = branchParts.join('/');
 
-        const status = await getGitStatus(false);
-        tracking = {
-          remote: remoteName,
-          branch: branchName,
-          ahead: status.ahead,
-          behind: status.behind,
-        };
+        if (remoteName && branchName) {
+          const status = await getGitStatus(false);
+          tracking = {
+            remote: remoteName,
+            branch: branchName,
+            ahead: status.ahead,
+            behind: status.behind,
+          };
+        }
       } catch {
         // No tracking branch
       }
@@ -673,20 +676,23 @@ async function getRecentCommits(count = 10): Promise<GitCommit[]> {
     const lines = output.split('\n');
 
     for (let i = 0; i < lines.length; i += 6) {
-      if (i + 5 < lines.length) {
-        const timestamp = parseInt(lines[i + 5], 10) * 1000;
-        const date = new Date(timestamp);
-
-        commits.push({
-          hash: lines[i],
-          shortHash: lines[i + 1],
-          message: lines[i + 2],
-          author: lines[i + 3],
-          email: lines[i + 4],
-          date,
-          relativeTime: getRelativeTime(date),
-        });
+      const [hash, shortHash, message, author, email, rawTimestamp] =
+        lines.slice(i, i + 6);
+      if (rawTimestamp === undefined) {
+        continue;
       }
+      const timestamp = parseInt(rawTimestamp, 10) * 1000;
+      const date = new Date(timestamp);
+
+      commits.push({
+        hash: hash ?? '',
+        shortHash: shortHash ?? '',
+        message: message ?? '',
+        author: author ?? '',
+        email: email ?? '',
+        date,
+        relativeTime: getRelativeTime(date),
+      });
     }
 
     return commits;
@@ -793,7 +799,8 @@ async function getDiff(file?: string): Promise<FileDiff | FileDiff[]> {
 
       // Extract file paths
       const pathMatch = firstLine.match(/a\/(.+) b\/(.+)/);
-      if (!pathMatch) continue;
+      if (!pathMatch || pathMatch[1] === undefined || pathMatch[2] === undefined)
+        continue;
 
       const oldPath = pathMatch[1];
       const newPath = pathMatch[2];
@@ -947,7 +954,7 @@ async function createCommit(messageOrOptions: string | CommitOptions): Promise<s
 
     // Extract commit hash
     const hashMatch = output.match(/\[.+ ([a-f0-9]+)\]/);
-    const hash = hashMatch ? hashMatch[1] : '';
+    const hash = hashMatch?.[1] ?? '';
 
     // Clear caches
     statusCache = null;

@@ -94,35 +94,15 @@ export function useGlobalStoreComputed<T>(
   compute: (state: StoreState) => T,
   deps: unknown[] = []
 ): T {
-  // Memoize the selector based on deps to maintain referential stability
+  // Subscribe to the whole state (a stable reference unless the store updates),
+  // then derive via useMemo. Returning a freshly-computed value straight from
+  // the zustand selector on every render previously caused an update loop.
+  const state = useStore((s) => s);
+
+  // Recompute when the store state or any provided dep changes. `deps` is the
+  // caller-controlled dependency list, so it's spread into the memo deps.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const memoizedSelector = useCallback(compute, deps);
-
-  // Use a custom equality function that caches and compares results
-  const resultRef = useRef<{ value: T; initialized: boolean }>({
-    value: undefined as T,
-    initialized: false,
-  });
-
-  return useStore((state) => {
-    const newValue = memoizedSelector(state);
-
-    // On first run, initialize the cache
-    if (!resultRef.current.initialized) {
-      resultRef.current = { value: newValue, initialized: true };
-      return newValue;
-    }
-
-    // For objects/arrays, use shallow comparison for stability
-    const prevValue = resultRef.current.value;
-    if (Object.is(newValue, prevValue)) {
-      return prevValue;
-    }
-
-    // Update cache and return new value
-    resultRef.current.value = newValue;
-    return newValue;
-  });
+  return useMemo(() => compute(state), [state, ...deps]);
 }
 
 /**

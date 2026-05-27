@@ -41,7 +41,7 @@ export type ResultTransformer<T, R = T> = (result: T) => R;
 /**
  * Normalization schema for nested data structures
  */
-export interface NormalizationSchema<T = unknown> {
+export interface NormalizationSchema<T = Record<string, unknown>> {
   /** Entity name for this schema */
   entity: string;
   /** ID field name (default: 'id') */
@@ -251,7 +251,7 @@ export class ResultEnhancer<T extends object = Record<string, unknown>> {
 
         const cached = this.cache.get(cacheKey);
         if (cached !== undefined) {
-          (enhanced as any)[fieldName] = cached;
+          (enhanced as Record<string, unknown>)[fieldName] = cached;
           continue;
         }
 
@@ -301,15 +301,22 @@ export class ResultEnhancer<T extends object = Record<string, unknown>> {
 // ============================================================================
 
 /**
- * Transform result using a pipeline of transformers
+ * Transform result using a pipeline of transformers.
+ *
+ * Each transformer is applied in sequence, with the output of one feeding the
+ * input of the next. The `never` input type lets transformers typed for any
+ * specific input shape (e.g. `ResultTransformer<Product>`) be passed without a
+ * cast, since the pipeline values flow as `unknown` at runtime.
  */
 export function transform<T, R = T>(
   result: T,
-  ...transformers: ResultTransformer<unknown, unknown>[]
+  ...transformers: ResultTransformer<never, unknown>[]
 ): R {
   let transformed: unknown = result;
   for (const transformer of transformers) {
-    transformed = transformer(transformed);
+    transformed = (transformer as ResultTransformer<unknown, unknown>)(
+      transformed
+    );
   }
   return transformed as R;
 }
@@ -322,9 +329,15 @@ export function mapFields<T extends object = Record<string, unknown>>(
 ): ResultTransformer<T> {
   return (result: T): T => {
     const mapped = { ...result };
-    for (const [field, fn] of Object.entries(mapper)) {
+    const entries = Object.entries(mapper) as [
+      string,
+      ((value: unknown) => unknown) | undefined,
+    ][];
+    for (const [field, fn] of entries) {
       if (field in mapped && fn) {
-        (mapped as Record<string, unknown>)[field] = fn((mapped as Record<string, unknown>)[field]);
+        (mapped as Record<string, unknown>)[field] = fn(
+          (mapped as Record<string, unknown>)[field]
+        );
       }
     }
     return mapped;
@@ -368,9 +381,15 @@ export function omitFields<T extends object = Record<string, unknown>>(
 // ============================================================================
 
 /**
- * Normalize nested data structures
+ * Normalize nested data structures.
+ *
+ * Accepts either a single entity or an array of entities described by the same
+ * schema; `T` is inferred from `schema`, so passing `T[]` does not widen `T`.
  */
-export function normalize<T>(data: T, schema: NormalizationSchema<T>): NormalizedData {
+export function normalize<T>(
+  data: T | T[],
+  schema: NormalizationSchema<T>
+): NormalizedData {
   const entities: Record<string, Record<string | number, unknown>> = {};
 
   function normalizeEntity<E>(entity: E, entitySchema: NormalizationSchema<E>): string | number {
@@ -524,7 +543,14 @@ export function maskDeep<T>(result: T, config: FieldMaskConfig): T {
   }
 
   if (result && typeof result === 'object') {
-    return mask(result as Record<string, unknown>, config) as T;
+    // Mask this object's own fields, then recurse into nested object/array values
+    // so deeply-nested sensitive fields are masked too.
+    const maskedLevel = mask(result as Record<string, unknown>, config);
+    const out: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(maskedLevel)) {
+      out[key] = value !== null && typeof value === 'object' ? maskDeep(value, config) : value;
+    }
+    return out as T;
   }
 
   return result;
@@ -865,11 +891,13 @@ const modelEnhancers = new Map<string, ResultEnhancer<Record<string, unknown>>>(
 /**
  * Get or create enhancer for a model
  */
-function getModelEnhancer<T extends object = Record<string, unknown>>(model: string): ResultEnhancer<T> {
+function getModelEnhancer<T extends object = Record<string, unknown>>(
+  model: string
+): ResultEnhancer<T> {
   if (!modelEnhancers.has(model)) {
-    modelEnhancers.set(model, new ResultEnhancer<Record<string, unknown>>() as ResultEnhancer<T>);
+    modelEnhancers.set(model, new ResultEnhancer<Record<string, unknown>>());
   }
-  return modelEnhancers.get(model) as ResultEnhancer<T>;
+  return modelEnhancers.get(model) as unknown as ResultEnhancer<T>;
 }
 
 /**
@@ -899,7 +927,7 @@ export const resultsExtension = {
      */
     $transform<T, R = T>(
       result: T,
-      ...transformers: ResultTransformer<unknown, unknown>[]
+      ...transformers: ResultTransformer<never, unknown>[]
     ): R {
       return transform(result, ...transformers);
     },
@@ -968,7 +996,7 @@ export const resultsExtension = {
       result: T
     ): T & Record<string, unknown> {
       const enhancer = getModelEnhancer<T>(model);
-      return enhancer.enhance(result as Record<string, unknown>) as T & Record<string, unknown>;
+      return enhancer.enhance(result);
     },
 
     /**
@@ -979,7 +1007,7 @@ export const resultsExtension = {
       results: T[]
     ): (T & Record<string, unknown>)[] {
       const enhancer = getModelEnhancer<T>(model);
-      return enhancer.enhanceMany(results as Record<string, unknown>[]) as (T & Record<string, unknown>)[];
+      return enhancer.enhanceMany(results);
     },
 
     /**

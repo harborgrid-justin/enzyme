@@ -16,8 +16,6 @@ import {
   createRemoteTransport,
   consoleTransport,
   localStorageTransport,
-  type LoggerConfig,
-  type Logger,
 } from './logging';
 
 // ============================================================================
@@ -164,6 +162,7 @@ export function performanceTrackingExample() {
   // Get performance metrics
   const metrics = logger.$getMetrics();
   logger.$info('Performance metrics', {
+    renderDuration: endTime - startTime,
     totalOperations: metrics.totalOperations,
     averageDuration: metrics.averageDuration,
     slowestOperations: metrics.slowestOperations.slice(0, 5),
@@ -370,6 +369,9 @@ export async function errorRecoveryExample() {
       await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
     }
   }
+
+  // Unreachable: the loop either returns a result or throws on max retries
+  throw new Error('API call failed after exhausting retries');
 }
 
 // ============================================================================

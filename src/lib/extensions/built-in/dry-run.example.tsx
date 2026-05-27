@@ -3,7 +3,7 @@
  * @description Comprehensive examples for using the dry run extension
  */
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   DryRunProvider,
   useDryRun,
@@ -459,7 +459,7 @@ function BatchPreviewExample() {
 
   const createBatchOperation = () => {
     // Start a batch
-    const batchId = startBatch('User Migration Batch');
+    startBatch('User Migration Batch');
 
     // Add multiple operations
     addChange({
@@ -604,7 +604,6 @@ function DryRunDashboard() {
     stats,
     changes,
     enableDryRun,
-    disableDryRun,
     commitChanges,
     clearChanges,
   } = useDryRun();

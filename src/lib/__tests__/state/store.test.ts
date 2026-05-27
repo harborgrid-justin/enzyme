@@ -144,7 +144,7 @@ describe('Store', () => {
       // If already hydrated, should resolve immediately
       if (state._hasHydrated) {
         // Act & Assert
-        await expect(waitForHydration()).resolves.toBeUndefined();
+        await expect(waitForHydration()).resolves.toBe(true);
       } else {
         // Manually trigger hydration
         act(() => {
@@ -152,7 +152,7 @@ describe('Store', () => {
         });
 
         // Should now resolve
-        await expect(waitForHydration()).resolves.toBeUndefined();
+        await expect(waitForHydration()).resolves.toBe(true);
       }
     });
 
@@ -451,7 +451,10 @@ describe('Store', () => {
 
   describe('persistence', () => {
     it('should clear persisted store from localStorage', () => {
-      // Arrange
+      // Arrange — re-assert our mock as the active global; the shared test setup
+      // (test/setup.ts beforeAll) overwrites window.localStorage after this
+      // file's module-level stub runs.
+      vi.stubGlobal('localStorage', mockLocalStorage);
       mockLocalStorage._store.set('app-store', '{"test": true}');
 
       // Act

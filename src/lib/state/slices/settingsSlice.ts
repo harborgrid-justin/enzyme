@@ -489,7 +489,10 @@ export const settingsSlice = createSlice<
     // ========================================================================
 
     resetSettings: () => {
-      set(() => ({ ...defaultSettings }), 'resetSettings');
+      // Pass a partial object so the slice setter performs a native (merge)
+      // update. The previous `set(() => ({ ...defaultSettings }))` form returned
+      // a value from an Immer recipe, which Immer ignores — making it a no-op.
+      set({ ...defaultSettings }, 'resetSettings');
     },
 
     resetDisplaySettings: () => {

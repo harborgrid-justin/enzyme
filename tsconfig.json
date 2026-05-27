@@ -74,6 +74,6 @@
     "types": ["vite/client", "vitest/globals", "node"]
   },
   "include": ["src", "test"],
-  "exclude": ["node_modules", "dist", "coverage", ".development", "**/*.stories.tsx", "*.config.ts"],
+  "exclude": ["node_modules", "dist", "coverage", ".development", "examples", "**/*.stories.tsx", "*.config.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

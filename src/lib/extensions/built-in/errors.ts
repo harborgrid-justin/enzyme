@@ -420,32 +420,35 @@ function levenshteinDistance(a: string, b: string): number {
   for (let i = 0; i <= b.length; i++) {
     matrix[i] = [i];
   }
+  const firstRow = matrix[0]!;
   for (let j = 0; j <= a.length; j++) {
-    matrix[0][j] = j;
+    firstRow[j] = j;
   }
 
   // Calculate distances
   for (let i = 1; i <= b.length; i++) {
+    const row = matrix[i]!;
+    const prevRow = matrix[i - 1]!;
     for (let j = 1; j <= a.length; j++) {
       if (b.charAt(i - 1) === a.charAt(j - 1)) {
-        matrix[i][j] = matrix[i - 1][j - 1];
+        row[j] = prevRow[j - 1]!;
       } else {
-        matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1, // substitution
-          matrix[i][j - 1] + 1,     // insertion
-          matrix[i - 1][j] + 1      // deletion
+        row[j] = Math.min(
+          prevRow[j - 1]! + 1, // substitution
+          row[j - 1]! + 1, // insertion
+          prevRow[j]! + 1 // deletion
         );
       }
     }
   }
 
-  return matrix[b.length][a.length];
+  return matrix[b.length]![a.length]!;
 }
 
 /**
  * Find similar error codes using fuzzy matching
  */
-function findSimilarErrorCodes(input: string, maxDistance = 3, maxSuggestions = 5): string[] {
+export function findSimilarErrorCodes(input: string, maxDistance = 3, maxSuggestions = 5): string[] {
   const codes = Object.keys(ERROR_CODE_REGISTRY);
   const similarities = codes
     .map(code => ({
@@ -513,7 +516,7 @@ export class EnzymeError extends Error {
     }
 
     // Parse error code
-    const [domain, category] = definition.code.split('_');
+    const [domain = '', category = ''] = definition.code.split('_');
 
     // Handle context or message parameter
     let context: Partial<ErrorContext>;
@@ -559,7 +562,7 @@ export class EnzymeError extends Error {
   /**
    * Get formatted error message with code and remediation
    */
-  toString(): string {
+  override toString(): string {
     let str = `[${this.code}] ${this.message}`;
 
     if (this.remediation) {
@@ -749,7 +752,7 @@ export class AggregateError extends EnzymeError {
   /**
    * Override toString to show all errors
    */
-  toString(): string {
+  override toString(): string {
     let str = `[AGGREGATE] ${this.message}\n\n`;
     str += 'Individual errors:\n';
     this.errors.forEach((error, index) => {
@@ -976,13 +979,13 @@ export interface EnzymeExtension {
   name: string;
   version?: string;
   description?: string;
-  client?: Record<string, (...args: unknown[]) => unknown>;
+  client?: Record<string, (...args: never[]) => unknown>;
 }
 
 /**
  * Errors extension for enzyme framework
  */
-export const errorsExtension: EnzymeExtension = {
+export const errorsExtension = {
   name: 'enzyme:errors',
   version: '2.0.0',
   description: 'Comprehensive structured error handling system with fuzzy matching, recovery, and i18n support',
@@ -1117,7 +1120,7 @@ export const errorsExtension: EnzymeExtension = {
      */
     $getErrorCodesByDomain(domain: ErrorDomain): string[] {
       return Object.keys(ERROR_CODE_REGISTRY).filter(
-        code => ERROR_CODE_REGISTRY[code].domain === domain
+        code => ERROR_CODE_REGISTRY[code]?.domain === domain
       );
     },
 
@@ -1128,7 +1131,7 @@ export const errorsExtension: EnzymeExtension = {
       return ERROR_CODE_REGISTRY[code];
     },
   },
-};
+} satisfies EnzymeExtension;
 
 // ============================================================================
 // Default Export

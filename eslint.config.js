@@ -26,6 +26,7 @@ export default [
       'node_modules/**',
       'coverage/**',
       'public/**',
+      'examples/**',
       '.eslintcache',
       '*.config.js',
       '*.config.cjs',
