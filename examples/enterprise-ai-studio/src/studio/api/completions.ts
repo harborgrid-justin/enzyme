@@ -25,6 +25,8 @@ import { conversationsKey, messagesKey } from './conversations';
 import { costFor, modelOrDefault } from '../providers/catalog';
 import { parseArtifacts } from '../artifacts/parser';
 import { useArtifactStore } from '../artifacts/store';
+import { useAzureStore, parseLiveModelId } from '../azure/store';
+import { streamSse } from '../azure/api';
 
 export interface SendTurnArgs {
   conversation: Conversation;
@@ -143,7 +145,45 @@ export function useChatCompletion(): UseChatCompletionResult {
         providerOptions,
       };
 
+      // Helper that the inner streaming loops call on each new chunk so all
+      // three code paths (mock, Azure live, future ones) share artifact
+      // parsing + cache updates without copy-paste drift.
+      let aggregated = '';
+      function applyChunk(text: string): void {
+        aggregated = text;
+        const parsed = parseArtifacts(aggregated);
+        for (const event of parsed.events) {
+          useArtifactStore.getState().recordArtifactEvent(
+            conversation.id,
+            event,
+            { provider: model.provider, id: model.id, label: model.label }
+          );
+        }
+        const displayContent = parsed.events.length > 0 ? parsed.visibleText : aggregated;
+        queryClient.setQueryData<StudioMessage[]>(key, (old) =>
+          (old ?? []).map((m) =>
+            m.id === assistantId ? { ...m, content: displayContent } : m
+          )
+        );
+      }
+
       try {
+        // Branch: live Azure deployment (the bridge proxies to the user's
+        // own Foundry endpoint, key resolved server-side) vs the mock backend.
+        const liveRef = parseLiveModelId(effectiveModelId);
+        const liveDeployment = useAzureStore.getState().liveDeployment;
+
+        let finalUsage: { inputTokens: number; outputTokens: number } | null = null;
+        let serverMessageId: string | null = null;
+
+        if (liveRef != null && liveDeployment != null) {
+          finalUsage = await streamLiveAzureChat({
+            controller,
+            request: requestBody,
+            deployment: liveDeployment,
+            onText: applyChunk,
+          });
+        } else {
         const response = await api.apiClient.request<ReadableStream<Uint8Array>>({
           method: 'POST',
           url: '/completions',
@@ -160,9 +200,6 @@ export function useChatCompletion(): UseChatCompletionResult {
         const reader = stream.getReader();
         const decoder = new TextDecoder();
         let buffer = '';
-        let aggregated = '';
-        let finalUsage: { inputTokens: number; outputTokens: number } | null = null;
-        let serverMessageId: string | null = null;
 
         // eslint-disable-next-line no-constant-condition
         while (true) {
@@ -176,25 +213,7 @@ export function useChatCompletion(): UseChatCompletionResult {
           while (!next.done) {
             const frame = next.value;
             if (frame.type === 'token') {
-              aggregated += frame.text;
-              // Parse the accumulated text for artifact blocks. The parser is
-              // idempotent + chunk-boundary-resilient — calling it on every
-              // tick lets the artifact preview render incrementally.
-              const parsed = parseArtifacts(aggregated);
-              for (const event of parsed.events) {
-                useArtifactStore.getState().recordArtifactEvent(
-                  conversation.id,
-                  event,
-                  { provider: model.provider, id: model.id, label: model.label }
-                );
-              }
-              const displayContent =
-                parsed.events.length > 0 ? parsed.visibleText : aggregated;
-              queryClient.setQueryData<StudioMessage[]>(key, (old) =>
-                (old ?? []).map((m) =>
-                  m.id === assistantId ? { ...m, content: displayContent } : m
-                )
-              );
+              applyChunk(aggregated + frame.text);
             } else if (frame.type === 'done') {
               finalUsage = frame.usage;
               serverMessageId = frame.messageId;
@@ -204,6 +223,7 @@ export function useChatCompletion(): UseChatCompletionResult {
             next = iter.next();
           }
           buffer = next.value;
+        }
         }
 
         // Final parse so partial-tail artifacts get fully realized.
@@ -288,4 +308,101 @@ export function useChatCompletion(): UseChatCompletionResult {
   );
 
   return { send, abort, isStreaming, error };
+}
+
+/**
+ * Stream a chat completion through the Azure bridge → user's Foundry deployment.
+ *
+ * The bridge resolves the deployment key server-side (so it never reaches the
+ * browser) and proxies the request to Azure with `stream: true`. Azure
+ * OpenAI's SSE shape is the standard OpenAI shape — `data: {...}` frames where
+ * each `choices[0].delta.content` is a token. We aggregate and forward to
+ * `onText` so the caller's chunk handler stays format-agnostic.
+ */
+async function streamLiveAzureChat({
+  controller,
+  request,
+  deployment,
+  onText,
+}: {
+  controller: AbortController;
+  request: CompletionRequest;
+  deployment: ReturnType<typeof useAzureStore.getState>['liveDeployment'];
+  onText: (aggregatedText: string) => void;
+}): Promise<{ inputTokens: number; outputTokens: number }> {
+  if (deployment == null) throw new Error('No active live deployment.');
+
+  let aggregated = '';
+  let inputTokens = 0;
+  let outputTokens = 0;
+
+  // The bridge wants the OpenAI-shaped message list (system as a role)
+  // since Azure OpenAI deployments expect that shape.
+  const messages = [
+    { role: 'system', content: request.systemPrompt },
+    ...request.messages,
+  ];
+
+  return await new Promise((resolve, reject) => {
+    void streamSse(
+      '/api/azure/openai/chat',
+      {
+        subscriptionId: deployment.subscriptionId,
+        resourceGroup: deployment.resourceGroup,
+        accountName: deployment.accountName,
+        deploymentName: deployment.deploymentName,
+        apiVersion: deployment.apiVersion ?? '2024-10-21',
+        messages,
+        maxTokens: request.maxTokens,
+        temperature: request.temperature,
+      },
+      controller.signal,
+      {
+        onEvent: (event, data) => {
+          if (event === 'error') {
+            reject(
+              new Error(
+                (data as { message?: string } | null)?.message ?? 'Azure bridge error'
+              )
+            );
+            return;
+          }
+          // Azure OpenAI/Foundry emits the OpenAI chat-completion SSE shape:
+          //   data: {"choices":[{"delta":{"content":"…"}}], "usage": null}
+          //   data: [DONE]
+          if (event !== 'message' && event !== 'data' && event !== '') return;
+          if (data === '[DONE]' || data === null) return;
+          const payload = data as {
+            choices?: Array<{ delta?: { content?: string }; finish_reason?: string }>;
+            usage?: { prompt_tokens?: number; completion_tokens?: number };
+          };
+          const delta = payload.choices?.[0]?.delta?.content;
+          if (typeof delta === 'string' && delta.length > 0) {
+            aggregated += delta;
+            onText(aggregated);
+          }
+          if (payload.usage != null) {
+            inputTokens = payload.usage.prompt_tokens ?? inputTokens;
+            outputTokens = payload.usage.completion_tokens ?? outputTokens;
+          }
+        },
+        onClose: () => {
+          // If the server didn't include usage (some Foundry deployments don't
+          // report tokens on stream), estimate from the aggregated text using
+          // the same ~4-chars-per-token rule the mock uses.
+          if (outputTokens === 0) outputTokens = Math.max(1, Math.ceil(aggregated.length / 4));
+          if (inputTokens === 0) {
+            inputTokens = Math.max(
+              1,
+              Math.ceil(
+                (request.systemPrompt.length +
+                  request.messages.reduce((acc, m) => acc + m.content.length, 0)) / 4
+              )
+            );
+          }
+          resolve({ inputTokens, outputTokens });
+        },
+      }
+    );
+  });
 }

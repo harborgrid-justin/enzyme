@@ -149,7 +149,126 @@ option and watch the body update live. The cURL view is copy-pasteable.
   SVG artifacts strip `<script>` blocks and `on*=` event handlers defensively
   before inserting.
 
-## Wiring real providers
+## Running on Windows with live Azure Foundry
+
+The studio ships with an **Azure bridge** — a Vite dev-server plugin
+(`scripts/azure-bridge/`) that exposes `/api/azure/*` and shells out to the
+`az` CLI on the host machine. When you're signed in with `az login`, the
+studio can browse your subscriptions, deploy real models to Foundry, route
+chat completions through your own deployments, and track spend against a
+configurable budget cap.
+
+### Prerequisites
+
+| Tool | Install command | Notes |
+| ---- | --------------- | ----- |
+| Windows 10/11 | — | Bridge runs on Linux/macOS too; commands below assume Windows |
+| PowerShell 7 | `winget install Microsoft.PowerShell` | Bridge uses `pwsh.exe` for any PowerShell helpers |
+| Azure CLI ≥ 2.60 | `winget install -e --id Microsoft.AzureCLI` | The bridge shells out to `az` via `cmd /c az <args>` |
+| (optional) `az ml` extension | `az extension add --name ml` | Required for the Foundry hubs listing |
+
+Then:
+
+```powershell
+az login                                  # opens browser, signs you in
+az account set --subscription <id>        # pick which sub to default to
+az account show                           # verify
+
+# Set the budget cap + expiry (defaults: $45000, 2026-06-05)
+$env:AZURE_BUDGET_USD = "45000"
+$env:AZURE_BUDGET_EXPIRES = "2026-06-05"
+
+cd examples\enterprise-ai-studio
+npm install
+npm run dev                                # studio at http://localhost:3004
+```
+
+When the dev server starts you'll see:
+
+```
+⬢  Azure bridge ready (platform=win32, budget=$45000, expires=2026-06-05)
+```
+
+Click the **⬢ Azure** button in the studio's top bar to open the console.
+
+### What the Azure console does
+
+The right-pane Azure console stacks five sections, every one driven by live
+`az` calls (none of these are mocked):
+
+1. **Status banner** — confirms `az` is installed, you're logged in,
+   shows your default subscription and CLI version. Tells you exactly what
+   command to run if a prerequisite is missing.
+2. **Subscription picker** — populated from `az account list`. Switching
+   subscription clears downstream picks.
+3. **Budget meter** — month-to-date Azure spend (via
+   `az rest …/Microsoft.Consumption/usageDetails`) plotted against the
+   `AZURE_BUDGET_USD` cap. Goes amber at 80%, red at 95%, shows days
+   remaining to the configured expiry.
+4. **Foundry deployment list** — picks a Cognitive Services / Foundry
+   account (from `az cognitiveservices account list`), shows its
+   deployments (`… account deployment list`), and lets you tag any one as
+   "live" — the studio's composer then routes chats through that real
+   deployment.
+5. **Deploy wizard** — runs `az cognitiveservices account deployment create`
+   with the chosen template (DeepSeek V4 Pro / Phi-4 / Llama 4 Scout /
+   GPT-5 mini). The az log streams back to the UI via SSE, and on success
+   the deployment appears in the list above with a one-click "Use in studio"
+   button.
+
+### How "live" routing works end-to-end
+
+1. You deploy a model in the wizard. The bridge runs:
+   ```
+   az cognitiveservices account deployment create \
+       --name <account> --resource-group <rg> \
+       --deployment-name <name> \
+       --model-name DeepSeek-V3 --model-version 1 --model-format DeepSeek \
+       --sku-name GlobalStandard --sku-capacity 10
+   ```
+2. You click **Use in studio →** on the deployment row. The studio adds
+   `azure-live:<account>:<deployment>` to its model picker (with a green
+   `LIVE` badge) and selects it.
+3. You send a chat. The composer detects the `azure-live:` prefix and POSTs
+   to `/api/azure/openai/chat`. The bridge:
+   - Runs `az cognitiveservices account keys list` to grab the deployment
+     key. **The key never leaves the bridge** — it's added to the outgoing
+     request server-side.
+   - POSTs the chat to
+     `https://<account>.openai.azure.com/openai/deployments/<name>/chat/completions`
+     with `stream: true`.
+   - Pipes Azure's SSE response back through the bridge to the browser.
+4. The studio's existing chat renderer + artifact parser handle Azure's
+   response unchanged — same code path as the mock backend, just live data.
+
+### Security posture
+
+- **Bridge only listens on localhost** (it's a Vite middleware on the dev
+  server, not exposed to the network).
+- **Subcommand allowlist** — `scripts/azure-bridge/commands.mjs` is the
+  ONLY surface that knows how to invoke `az`. Adding a new operation requires
+  adding a function there. There's no "run any az command" endpoint, so a
+  compromised browser context can't trigger `az group delete` or similar.
+- **Arg-array spawning** — every `az` invocation passes args as a JavaScript
+  array, never as a shell string. User-supplied values can't break out into
+  shell interpretation.
+- **Keys stay server-side** — the deployment key is fetched on the bridge,
+  attached to outbound requests, and never serialized to the browser. The
+  React DevTools / Network tab will never show it.
+
+### Pre-flight: confirm the budget read works
+
+The consumption API requires the user to have `Microsoft.Consumption/usageDetails/read`
+on the subscription. If `az rest` returns 401 you'll see a "Couldn't read
+consumption" callout — that's not a code bug, that's an RBAC gap. Fix:
+
+```powershell
+az role assignment create --assignee <your-email> \
+    --role "Cost Management Reader" \
+    --scope "/subscriptions/<id>"
+```
+
+## Wiring real providers (other than Azure)
 
 Each provider's wire-format translator already lives in
 `src/studio/providers/formatters.ts` — given the studio's neutral

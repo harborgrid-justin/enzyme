@@ -2,6 +2,7 @@ import { state } from '@missionfabric-js/enzyme';
 import { useConversations } from '../api/conversations';
 import { useStudioStore } from '../store/studioStore';
 import { useOpenArtifact } from '../artifacts/store';
+import { useAzureStore } from '../azure/store';
 import { ConversationSidebar } from './ConversationSidebar';
 import { ConversationView } from './ConversationView';
 import { WelcomeScreen } from './WelcomeScreen';
@@ -12,6 +13,7 @@ import { SettingsPanel } from './SettingsPanel';
 import { RequestPreview } from './RequestPreview';
 import { UsageMeter } from './UsageMeter';
 import { ArtifactPanel } from './ArtifactPanel';
+import { AzureConsole } from './azure/AzureConsole';
 
 /**
  * Top-level studio layout — sidebar + main pane + right rail. The selected
@@ -23,6 +25,9 @@ export function StudioShell(): React.ReactElement {
   const modelOverrideId = useStudioStore((s) => s.modelOverrideId);
   const { data: conversations } = useConversations();
   const { artifact: openArtifact } = useOpenArtifact();
+  const isAzureConsoleOpen = useAzureStore((s) => s.isConsoleOpen);
+  const liveDeployment = useAzureStore((s) => s.liveDeployment);
+  const setAzureConsoleOpen = useAzureStore((s) => s.setConsoleOpen);
 
   state.useBroadcastSync(useStudioStore, {
     channelName: 'enzyme-ai-studio-sync',
@@ -49,6 +54,24 @@ export function StudioShell(): React.ReactElement {
           </span>
         </div>
         <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={() => setAzureConsoleOpen(!isAzureConsoleOpen)}
+            className={`flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium transition ${
+              isAzureConsoleOpen
+                ? 'border-sky-300 bg-sky-50 text-sky-700'
+                : 'border-slate-300 text-slate-700 hover:bg-slate-100'
+            }`}
+            title="Open Azure console: Foundry deployments + budget"
+          >
+            <span>⬢</span>
+            <span>Azure</span>
+            {liveDeployment != null && (
+              <span className="ml-1 rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700">
+                LIVE
+              </span>
+            )}
+          </button>
           <UserSwitcher />
           <ThemeToggle />
         </div>
@@ -65,9 +88,11 @@ export function StudioShell(): React.ReactElement {
           <WelcomeScreen />
         )}
 
-        {activeConversation && artifactOpen && <ArtifactPanel />}
+        {isAzureConsoleOpen && <AzureConsole />}
 
-        {activeConversation && !artifactOpen && (
+        {!isAzureConsoleOpen && activeConversation && artifactOpen && <ArtifactPanel />}
+
+        {!isAzureConsoleOpen && activeConversation && !artifactOpen && (
           <aside className="hidden w-80 shrink-0 space-y-4 overflow-y-auto border-l border-slate-200 bg-slate-50 p-4 lg:block">
             <section className="rounded-lg border border-slate-200 bg-white p-4">
               <SystemPromptEditor conversation={activeConversation} />

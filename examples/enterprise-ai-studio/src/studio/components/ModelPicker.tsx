@@ -2,6 +2,7 @@ import { flags } from '@missionfabric-js/enzyme';
 import { useMemo, useState } from 'react';
 import { MODELS, PROVIDERS, ACCENT_CLASSES, providerOf, modelOrDefault } from '../providers/catalog';
 import { useStudioStore } from '../store/studioStore';
+import { useAzureStore, liveModelId } from '../azure/store';
 import type { ModelDescriptor, ModelCapability } from '../types';
 
 interface ModelPickerProps {
@@ -21,11 +22,14 @@ interface ModelPickerProps {
 export function ModelPicker({ conversationModelId, compact }: ModelPickerProps): React.ReactElement {
   const modelOverrideId = useStudioStore((s) => s.modelOverrideId);
   const setModelOverride = useStudioStore((s) => s.setModelOverride);
+  const liveDeployment = useAzureStore((s) => s.liveDeployment);
   const betaEnabled = flags.useFeatureFlag(flags.flagKeys.BETA_FEATURES);
   const [open, setOpen] = useState(false);
 
   const activeModelId = modelOverrideId ?? conversationModelId;
-  const activeModel = modelOrDefault(activeModelId);
+  const isLive = activeModelId.startsWith('azure-live:');
+  const activeModel = isLive ? null : modelOrDefault(activeModelId);
+  const activeLabel = isLive ? (liveDeployment?.label ?? 'Azure live deployment') : activeModel?.label ?? '—';
 
   const visibleModels = useMemo(
     () => MODELS.filter((m) => betaEnabled || m.beta !== true),
@@ -49,8 +53,22 @@ export function ModelPicker({ conversationModelId, compact }: ModelPickerProps):
         className="flex w-full items-center justify-between gap-2 rounded-md border border-slate-300 bg-white px-2 py-1.5 text-left text-sm hover:border-indigo-400 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
       >
         <span className="flex min-w-0 items-center gap-2">
-          <ProviderGlyph modelId={activeModelId} />
-          <span className="min-w-0 truncate font-medium">{activeModel.label}</span>
+          {isLive ? (
+            <span
+              className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-emerald-100 text-[10px] font-bold text-emerald-700"
+              title="Live Azure Foundry deployment"
+            >
+              ⬢
+            </span>
+          ) : (
+            <ProviderGlyph modelId={activeModelId} />
+          )}
+          <span className="min-w-0 truncate font-medium">{activeLabel}</span>
+          {isLive && (
+            <span className="rounded bg-emerald-100 px-1 py-0.5 text-[9px] font-semibold text-emerald-700">
+              LIVE
+            </span>
+          )}
         </span>
         <span className="text-[10px] text-slate-400">▾</span>
       </button>
@@ -77,6 +95,38 @@ export function ModelPicker({ conversationModelId, compact }: ModelPickerProps):
             className="fixed inset-0 z-10 cursor-default bg-transparent"
           />
           <div className="absolute right-0 z-20 mt-1 max-h-96 w-[420px] overflow-y-auto rounded-lg border border-slate-200 bg-white p-1 shadow-2xl">
+            {liveDeployment != null && (
+              <div className="mb-1 border-b border-slate-100 pb-1">
+                <div className="flex items-center gap-2 px-2 py-1">
+                  <span className="text-base">⬢</span>
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-emerald-700">
+                    Azure Foundry · live
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => selectModel(liveModelId(liveDeployment))}
+                  className={`block w-full rounded px-2 py-2 text-left text-xs transition ${
+                    activeModelId === liveModelId(liveDeployment)
+                      ? 'bg-emerald-50 ring-1 ring-emerald-200'
+                      : 'hover:bg-slate-50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-semibold text-slate-900">{liveDeployment.label}</span>
+                    <span className="rounded bg-emerald-100 px-1 py-0.5 text-[9px] font-semibold text-emerald-700">
+                      LIVE
+                    </span>
+                  </div>
+                  <p className="mt-0.5 text-[11px] text-slate-500">
+                    {liveDeployment.modelName ?? 'deployment'}
+                    {liveDeployment.modelVersion != null && `@${liveDeployment.modelVersion}`}
+                    {' · '}
+                    routed through Azure bridge
+                  </p>
+                </button>
+              </div>
+            )}
             {Object.entries(grouped).map(([providerId, models]) => {
               if (models.length === 0) return null;
               const provider = PROVIDERS[providerId as keyof typeof PROVIDERS];
