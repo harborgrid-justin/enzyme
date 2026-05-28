@@ -1,0 +1,38 @@
+{
+  "name": "@missionfabric-js/enzyme-example-enterprise-ai-studio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Multi-provider enterprise AI workspace built with @missionfabric-js/enzyme (auth/RBAC, streaming, state, API, flags, performance)",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "postinstall": "msw init public --save"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.90.12",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1",
+    "zustand": "^5.0.8"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.17",
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "autoprefixer": "^10.4.22",
+    "msw": "^2.12.4",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.17",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.6"
+  },
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
+  }
+}
