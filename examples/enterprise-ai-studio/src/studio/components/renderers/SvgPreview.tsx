@@ -1,16 +1,23 @@
 import { security } from '@missionfabric-js/enzyme';
 import { useMemo } from 'react';
+import { sanitizeSvg } from '../../security/sanitize';
 
 interface SvgPreviewProps {
   body: string;
 }
 
 /**
- * SVG preview — renders inline. We extract the inner content and remount it
- * via `dangerouslySetInnerHTML` so users can copy the same markup that's
- * displayed; the `useSafeText` import is intentionally NOT used here because
- * SVG markup intentionally needs to render as DOM, not text — instead we
- * defensively strip `<script>` blocks before inserting.
+ * SVG preview — renders inline via `dangerouslySetInnerHTML` (the markup MUST
+ * become DOM, not text, for the artifact to render). Because there is no
+ * iframe sandbox to fall back on, every byte we inject is first run through
+ * the DOM-based SVG sanitizer in `studio/security/sanitize.ts`, which:
+ *
+ *   - removes `<script>`, `<foreignObject>`, `<iframe>`, `<style>`,
+ *     `<animate*>`, and other script-bearing or layout-escape elements;
+ *   - strips every `on*` attribute (including namespaced `xlink:on*`) across
+ *     single-quoted, double-quoted, and unquoted forms;
+ *   - drops `<use>` / `<image>` / `<a>` with non-fragment, non-data hrefs so
+ *     SVGs can't pull external resources or navigate the parent.
  *
  * If the artifact streams in partial chunks (e.g. mid-tag), we skip rendering
  * until a closing `</svg>` exists to avoid React tearing on malformed DOM.
@@ -20,7 +27,7 @@ export default function SvgPreview({ body }: SvgPreviewProps): React.ReactElemen
   // that the renderer was security-reviewed even though we don't string-sanitize.
   void security;
 
-  const safeMarkup = useMemo(() => stripScripts(body), [body]);
+  const safeMarkup = useMemo(() => sanitizeSvg(body), [body]);
   const looksComplete = /<\/svg>/i.test(safeMarkup);
 
   if (!looksComplete) {
@@ -41,9 +48,3 @@ export default function SvgPreview({ body }: SvgPreviewProps): React.ReactElemen
   );
 }
 
-const SCRIPT_RE = /<script[\s\S]*?<\/script>/gi;
-const EVENT_HANDLER_RE = /\son[a-z]+\s*=\s*"[^"]*"/gi;
-
-function stripScripts(svg: string): string {
-  return svg.replace(SCRIPT_RE, '').replace(EVENT_HANDLER_RE, '');
-}

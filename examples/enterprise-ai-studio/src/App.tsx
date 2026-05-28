@@ -8,6 +8,8 @@ import {
   theme,
 } from '@missionfabric-js/enzyme';
 import { StudioShell } from './studio/components/StudioShell';
+import { Toaster } from './studio/ui/Toaster';
+import { TooltipProvider } from './studio/ui/Tooltip';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -41,7 +43,10 @@ export default function App(): React.ReactElement {
             <monitoring.GlobalErrorBoundary>
               <perf.PerformanceProvider>
                 <streaming.StreamProvider>
-                  <StudioShell />
+                  <TooltipProvider delayDuration={400} skipDelayDuration={150}>
+                    <StudioShell />
+                    <Toaster />
+                  </TooltipProvider>
                 </streaming.StreamProvider>
               </perf.PerformanceProvider>
             </monitoring.GlobalErrorBoundary>

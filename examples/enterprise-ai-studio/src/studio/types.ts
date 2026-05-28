@@ -114,6 +114,8 @@ export interface Conversation {
   totals: { inputTokens: number; outputTokens: number; costUsd: number };
   /** Marks workspace-shared conversations (visible to all signed-in members). */
   shared?: boolean;
+  /** Caller-pinned: sticks to the top of the sidebar regardless of recency. */
+  pinned?: boolean;
 }
 
 /**

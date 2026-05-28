@@ -1,4 +1,6 @@
 import { useMemo } from 'react';
+import { theme as enzymeTheme } from '@missionfabric-js/enzyme';
+import { withHtmlSecurityMeta } from '../../security/sanitize';
 
 interface HtmlPreviewProps {
   body: string;
@@ -7,19 +9,33 @@ interface HtmlPreviewProps {
 }
 
 /**
- * HTML preview — renders the artifact body in a fully sandboxed iframe via
- * `srcdoc`. The sandbox blocks all forms of script execution that could escape
- * the iframe (no `allow-same-origin`), so model-generated markup can't reach
- * the host page's DOM, cookies, or storage. The Tailwind CDN inside the iframe
- * is the only "script" we permit, which is enabled via `allow-scripts`.
+ * HTML preview — renders the artifact body in a sandboxed iframe via `srcdoc`,
+ * with defense in depth at three layers:
+ *
+ *   1. `sandbox="allow-scripts"` (no `allow-same-origin`, no `allow-forms`,
+ *      no `allow-top-navigation`) — the iframe origin is "null", so scripts
+ *      can't reach the host's DOM, cookies, storage, or navigate the parent.
+ *   2. A strict CSP meta tag injected into `<head>` whitelists only the
+ *      Tailwind CDN for scripts and sets `connect-src 'none'`, so an artifact
+ *      cannot beacon out (no fetch / XHR / WebSocket / EventSource egress).
+ *   3. A `referrer 'no-referrer'` meta strips Referer on any image load the
+ *      CSP permits.
+ *
+ * See `studio/security/sanitize.ts` for the injection logic.
  */
 export default function HtmlPreview({ body, streaming }: HtmlPreviewProps): React.ReactElement {
   // Only assign srcdoc once the HTML document is structurally complete —
   // streaming a partial document into the iframe causes constant reloads + the
   // partial DOM can crash Tailwind's CDN script. While we wait we show a
   // streaming placeholder so the user knows something's happening.
+  // Feature #28: artifact iframe inherits the host theme — dark studio gives
+  // dark artifact previews so the transition isn't jarring.
+  const { resolvedTheme } = enzymeTheme.useThemeContext();
   const looksComplete = /<\/html>/i.test(body);
-  const srcDoc = useMemo(() => body, [body]);
+  const srcDoc = useMemo(
+    () => withHtmlSecurityMeta(body, { theme: resolvedTheme === 'dark' ? 'dark' : 'light' }),
+    [body, resolvedTheme]
+  );
 
   if (!looksComplete) {
     return (
