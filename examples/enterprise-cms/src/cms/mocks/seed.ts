@@ -1,0 +1,131 @@
+import type { CmsEntry } from '../types';
+
+/** Deterministic-ish seed entries spanning each workflow status. */
+export function createSeedEntries(): CmsEntry[] {
+  const base = Date.now();
+  const mk = (
+    id: string,
+    title: string,
+    slug: string,
+    type: CmsEntry['type'],
+    status: CmsEntry['status'],
+    authorId: string,
+    authorName: string,
+    owner: string,
+    channel: string,
+    offsetHours: number,
+    body: string,
+    tags: string[],
+    metrics: { views: number; conversions: number; seoScore: number },
+    publishAt?: string
+  ): CmsEntry => ({
+    id,
+    title,
+    slug,
+    type,
+    status,
+    authorId,
+    authorName,
+    owner,
+    channel,
+    updatedAt: new Date(base - offsetHours * 60 * 60 * 1000).toISOString(),
+    publishAt,
+    body,
+    tags,
+    ...metrics,
+  });
+
+  return [
+    mk(
+      'home-refresh',
+      'Homepage conversion refresh',
+      '/home-refresh',
+      'landing',
+      'review',
+      'u-editor',
+      'Grace Hopper',
+      'Growth',
+      'Web',
+      4,
+      'Refresh the primary landing page with proof points, customer quotes, and a faster product tour.',
+      ['growth', 'homepage', 'seo'],
+      { views: 18420, conversions: 1260, seoScore: 91 }
+    ),
+    mk(
+      'docs-onboarding',
+      'Developer onboarding guide',
+      '/docs/developer-onboarding',
+      'docs',
+      'published',
+      'u-admin',
+      'Ada Lovelace',
+      'Platform',
+      'Docs',
+      28,
+      'A step-by-step guide for installing the framework, wiring providers, and publishing the first feature module.',
+      ['docs', 'platform', 'developer'],
+      { views: 9321, conversions: 402, seoScore: 96 }
+    ),
+    mk(
+      'q3-launch-plan',
+      'Q3 launch editorial plan',
+      '/blog/q3-launch-plan',
+      'post',
+      'scheduled',
+      'u-reviewer',
+      'Katherine Johnson',
+      'Marketing',
+      'Blog',
+      52,
+      'Editorial calendar and messaging pillars for the Q3 launch sequence.',
+      ['launch', 'calendar', 'marketing'],
+      { views: 4100, conversions: 228, seoScore: 87 },
+      new Date(base + 6 * 24 * 60 * 60 * 1000).toISOString()
+    ),
+    mk(
+      'security-trust-center',
+      'Trust center security update',
+      '/trust/security-update',
+      'page',
+      'draft',
+      'u-admin',
+      'Ada Lovelace',
+      'Security',
+      'Web',
+      76,
+      'Security control updates, compliance evidence, and new enterprise trust-center disclosures.',
+      ['security', 'compliance', 'trust'],
+      { views: 7600, conversions: 530, seoScore: 94 }
+    ),
+    mk(
+      'changelog-may',
+      'May product changelog',
+      '/changelog/2026-05',
+      'post',
+      'draft',
+      'u-editor',
+      'Grace Hopper',
+      'Product',
+      'Blog',
+      8,
+      'Roundup of shipped features, fixes, and deprecations across the May release train.',
+      ['changelog', 'product'],
+      { views: 0, conversions: 0, seoScore: 78 }
+    ),
+    mk(
+      'pricing-page',
+      'Pricing page refresh',
+      '/pricing',
+      'landing',
+      'archived',
+      'u-editor',
+      'Grace Hopper',
+      'Growth',
+      'Web',
+      720,
+      'Last quarter\'s pricing experiment, archived for historical comparison.',
+      ['pricing', 'growth'],
+      { views: 24500, conversions: 1840, seoScore: 88 }
+    ),
+  ];
+}
