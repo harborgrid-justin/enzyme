@@ -1,7 +1,9 @@
 import { auth } from '@missionfabric-js/enzyme';
-import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { useRef, useState } from 'react';
 import type { Conversation } from '../types';
 import {
+  conversationsKey,
   useConversations,
   useCreateConversation,
   useDeleteConversation,
@@ -10,6 +12,12 @@ import { useStudioStore } from '../store/studioStore';
 import { providerOf, ACCENT_CLASSES, DEFAULT_MODEL_ID } from '../providers/catalog';
 import { DEFAULT_SYSTEM_PROMPT } from '../mocks/seed';
 import { STUDIO_PERMISSIONS } from '../users';
+import {
+  Dialog,
+  DialogDangerButton,
+  DialogSecondaryButton,
+} from '../ui/Dialog';
+import { toast } from '../ui/toast';
 
 function formatRelative(iso: string): string {
   const date = new Date(iso);
@@ -23,11 +31,17 @@ function formatRelative(iso: string): string {
 /** Left rail — conversation list grouped by ownership (mine / shared workspace). */
 export function ConversationSidebar(): React.ReactElement {
   const { user, hasPermission } = auth.useAuth();
+  const queryClient = useQueryClient();
   const { data, isLoading, isError } = useConversations();
   const activeConversationId = useStudioStore((s) => s.activeConversationId);
   const setActiveConversation = useStudioStore((s) => s.setActiveConversation);
   const create = useCreateConversation();
   const remove = useDeleteConversation();
+  // Feature #2: confirmation dialog for destructive delete (no more "click twice").
+  const [pendingDelete, setPendingDelete] = useState<Conversation | null>(null);
+  // Feature #4 undo support: track deletes that haven't fired their network
+  // call yet, so the user has a 5s window to cancel.
+  const undoTimers = useRef<Map<string, number>>(new Map());
 
   const canChat = hasPermission(STUDIO_PERMISSIONS.CHAT);
 
@@ -39,16 +53,80 @@ export function ConversationSidebar(): React.ReactElement {
 
   async function startNew(): Promise<void> {
     if (user == null) return;
-    const created = await create.mutateAsync({
-      body: {
-        title: 'New conversation',
-        modelId: DEFAULT_MODEL_ID,
-        ownerId: user.id,
-        systemPrompt: DEFAULT_SYSTEM_PROMPT,
-        shared: false,
+    try {
+      const created = await create.mutateAsync({
+        body: {
+          title: 'New conversation',
+          modelId: DEFAULT_MODEL_ID,
+          ownerId: user.id,
+          systemPrompt: DEFAULT_SYSTEM_PROMPT,
+          shared: false,
+        },
+      });
+      setActiveConversation(created.id);
+      // Feature #3: toast on conversation created.
+      toast.success('Started a new conversation');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      toast.error(`Couldn't create conversation: ${message}`);
+    }
+  }
+
+  function confirmDelete(conv: Conversation): void {
+    setPendingDelete(conv);
+  }
+
+  function executeDelete(): void {
+    const target = pendingDelete;
+    if (target == null) return;
+    setPendingDelete(null);
+
+    // Optimistically remove the row from the cache, keep the original list
+    // so Undo can restore it. The real network call doesn't fire for 5s.
+    const snapshot = queryClient.getQueryData<Conversation[]>(conversationsKey());
+    queryClient.setQueryData<Conversation[]>(conversationsKey(), (old) =>
+      (old ?? []).filter((c) => c.id !== target.id)
+    );
+    if (activeConversationId === target.id) {
+      setActiveConversation(null);
+    }
+
+    const timerId = window.setTimeout(() => {
+      undoTimers.current.delete(target.id);
+      remove.mutate(
+        { pathParams: { id: target.id } },
+        {
+          onError: (err) => {
+            // Restore on server-side failure.
+            if (snapshot != null) {
+              queryClient.setQueryData<Conversation[]>(conversationsKey(), snapshot);
+            }
+            toast.error(`Couldn't delete conversation: ${err.message}`);
+          },
+        }
+      );
+    }, 5000);
+    undoTimers.current.set(target.id, timerId);
+
+    // Feature #4: toast with Undo action.
+    toast.success(`Deleted "${target.title}"`, {
+      duration: 5000,
+      action: {
+        label: 'Undo',
+        onClick: () => {
+          const tid = undoTimers.current.get(target.id);
+          if (tid != null) {
+            window.clearTimeout(tid);
+            undoTimers.current.delete(target.id);
+          }
+          if (snapshot != null) {
+            queryClient.setQueryData<Conversation[]>(conversationsKey(), snapshot);
+          }
+          setActiveConversation(target.id);
+          toast.info('Conversation restored');
+        },
       },
     });
-    setActiveConversation(created.id);
   }
 
   return (
@@ -85,7 +163,7 @@ export function ConversationSidebar(): React.ReactElement {
                 conversation={c}
                 isActive={c.id === activeConversationId}
                 onSelect={() => setActiveConversation(c.id)}
-                onDelete={() => void remove.mutate({ pathParams: { id: c.id } })}
+                onDelete={() => confirmDelete(c)}
               />
             )}
           </ConversationSection>
@@ -108,6 +186,31 @@ export function ConversationSidebar(): React.ReactElement {
           </p>
         )}
       </div>
+
+      <Dialog
+        open={pendingDelete != null}
+        onOpenChange={(open) => {
+          if (!open) setPendingDelete(null);
+        }}
+        title="Delete this conversation?"
+        description={
+          pendingDelete != null
+            ? `"${pendingDelete.title}" and all of its messages will be removed. You'll have 5 seconds to undo.`
+            : undefined
+        }
+        footer={
+          <>
+            <DialogSecondaryButton onClick={() => setPendingDelete(null)}>
+              Cancel
+            </DialogSecondaryButton>
+            <DialogDangerButton onClick={executeDelete}>Delete</DialogDangerButton>
+          </>
+        }
+      >
+        <p className="text-xs text-slate-500 dark:text-slate-400">
+          This action affects only you unless the conversation is shared.
+        </p>
+      </Dialog>
     </div>
   );
 }
@@ -146,52 +249,48 @@ function ConversationRow({
   onSelect,
   onDelete,
 }: ConversationRowProps): React.ReactElement {
-  const [confirming, setConfirming] = useState(false);
   const provider = providerOf(conversation.modelId);
   const classes = ACCENT_CLASSES[provider.accent] ?? ACCENT_CLASSES.indigo;
 
   return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={`group block w-full rounded-md px-2 py-2 text-left transition ${
-        isActive
-          ? 'bg-indigo-50 ring-1 ring-indigo-200'
-          : 'hover:bg-slate-100'
+    <div
+      className={`group relative block w-full rounded-md transition ${
+        isActive ? 'bg-indigo-50 ring-1 ring-indigo-200' : 'hover:bg-slate-100'
       }`}
     >
-      <div className="flex items-start gap-2">
-        <span
-          className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded text-xs font-bold ${classes.chip}`}
-          title={provider.label}
-        >
-          {provider.glyph}
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium text-slate-900">{conversation.title}</p>
-          <p className="text-[11px] text-slate-500">
-            {formatRelative(conversation.updatedAt)} · ${conversation.totals.costUsd.toFixed(4)}
-          </p>
-        </div>
-        {onDelete && (
+      <button
+        type="button"
+        onClick={onSelect}
+        className="block w-full rounded-md px-2 py-2 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+      >
+        <div className="flex items-start gap-2">
           <span
-            className="shrink-0 self-start opacity-0 transition group-hover:opacity-100"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (confirming) {
-                onDelete();
-              } else {
-                setConfirming(true);
-                setTimeout(() => setConfirming(false), 2500);
-              }
-            }}
+            className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded text-xs font-bold ${classes.chip}`}
+            aria-label={`${provider.label} model`}
           >
-            <span className="rounded px-1.5 py-0.5 text-[11px] text-rose-500 hover:bg-rose-50">
-              {confirming ? 'Confirm?' : '🗑'}
-            </span>
+            {provider.glyph}
           </span>
-        )}
-      </div>
-    </button>
+          <div className="min-w-0 flex-1 pr-7">
+            <p className="truncate text-sm font-medium text-slate-900">{conversation.title}</p>
+            <p className="text-[11px] text-slate-500">
+              {formatRelative(conversation.updatedAt)} · ${conversation.totals.costUsd.toFixed(4)}
+            </p>
+          </div>
+        </div>
+      </button>
+      {onDelete && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete();
+          }}
+          aria-label={`Delete conversation "${conversation.title}"`}
+          className="absolute right-1.5 top-1.5 rounded p-1 text-rose-500 opacity-0 transition hover:bg-rose-50 focus:outline-none focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-rose-400 group-hover:opacity-100"
+        >
+          <span aria-hidden>🗑</span>
+        </button>
+      )}
+    </div>
   );
 }
