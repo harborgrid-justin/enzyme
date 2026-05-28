@@ -9,6 +9,7 @@ import { UserSwitcher } from './UserSwitcher';
 import { ThemeToggle } from './ThemeToggle';
 import { SystemPromptEditor } from './SystemPromptEditor';
 import { SettingsPanel } from './SettingsPanel';
+import { RequestPreview } from './RequestPreview';
 import { UsageMeter } from './UsageMeter';
 import { ArtifactPanel } from './ArtifactPanel';
 
@@ -19,6 +20,7 @@ import { ArtifactPanel } from './ArtifactPanel';
  */
 export function StudioShell(): React.ReactElement {
   const activeConversationId = useStudioStore((s) => s.activeConversationId);
+  const modelOverrideId = useStudioStore((s) => s.modelOverrideId);
   const { data: conversations } = useConversations();
   const { artifact: openArtifact } = useOpenArtifact();
 
@@ -70,7 +72,10 @@ export function StudioShell(): React.ReactElement {
             <section className="rounded-lg border border-slate-200 bg-white p-4">
               <SystemPromptEditor conversation={activeConversation} />
             </section>
-            <SettingsPanel />
+            <SettingsPanel
+              activeModelId={modelOverrideId ?? activeConversation.modelId}
+            />
+            <RequestPreview conversation={activeConversation} />
             <UsageMeter />
           </aside>
         )}

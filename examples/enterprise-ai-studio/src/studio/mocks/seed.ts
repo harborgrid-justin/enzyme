@@ -31,7 +31,7 @@ export function createSeedConversations(): Conversation[] {
     {
       id: 'c-onboarding',
       title: 'New-hire onboarding playbook',
-      modelId: 'gpt-5',
+      modelId: 'gpt-5.4',
       ownerId: 'u-engineer',
       shared: true,
       updatedAt: new Date(now - 6 * HOUR).toISOString(),
@@ -41,7 +41,7 @@ export function createSeedConversations(): Conversation[] {
     {
       id: 'c-perf-investigation',
       title: 'Latency regression on /search',
-      modelId: 'gemini-2-5-pro',
+      modelId: 'gemini-3.5-flash',
       ownerId: 'u-engineer',
       updatedAt: new Date(now - 24 * HOUR).toISOString(),
       systemPrompt:
@@ -73,7 +73,7 @@ export function createSeedMessages(): StudioMessage[] {
         'oncall; Day 5: retro. Want me to expand each day with explicit owners?',
       -359,
       'u-engineer',
-      { provider: 'openai', id: 'gpt-5', label: 'GPT-5' },
+      { provider: 'openai', id: 'gpt-5.4', label: 'GPT-5.4' },
       { inputTokens: 220, outputTokens: 410 }
     ),
   ];
@@ -112,19 +112,19 @@ export const PROVIDER_PERSONAS: Record<ProviderId, string[]> = {
     'Three things to try, then I can dig deeper on any of them: ',
   ],
   google: [
-    "From an analytical lens, the strongest signal here is ",
+    'From an analytical lens, the strongest signal here is ',
     'Looking at this holistically across the trade-offs: ',
     'I would frame this as a multi-objective problem — the axes are ',
   ],
-  mistral: [
-    'Quick answer: ',
-    'Direct take — the pragmatic move is ',
-    'Compact rundown: ',
+  microsoft: [
+    'Routing through Foundry — applying the responsible-AI content safety pass first. ',
+    'Here is a structured answer suitable for enterprise audit: ',
+    'Working from the Foundry-hosted weights — the deterministic path is ',
   ],
-  meta: [
-    "Let's break it down. The model behind this works best when ",
-    'A useful mental model: ',
-    "Here's how I'd structure an experiment to validate this: ",
+  huggingface: [
+    'Open-weights take, routed to the fastest available partner: ',
+    "I'll be concise — open models reward tight prompts: ",
+    'Pragmatic answer (community-weights flavor): ',
   ],
 };
 

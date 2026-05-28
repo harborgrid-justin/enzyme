@@ -65,22 +65,25 @@ export function WelcomeScreen(): React.ReactElement {
         </div>
 
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
-          Available providers
+          {MODELS.length} models across {Object.keys(PROVIDERS).length} providers
         </h2>
-        <div className="mx-auto grid max-w-xl grid-cols-2 gap-3 sm:grid-cols-5">
+        <div className="mx-auto grid max-w-2xl grid-cols-2 gap-2 sm:grid-cols-5">
           {Object.values(PROVIDERS).map((p) => {
             const count = MODELS.filter((m) => m.provider === p.id).length;
             return (
-              <div
+              <a
                 key={p.id}
-                className="rounded-lg border border-slate-200 bg-white p-2 text-center shadow-sm"
+                href={p.docsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-lg border border-slate-200 bg-white p-3 text-center shadow-sm transition hover:border-indigo-300 hover:shadow-md"
               >
-                <div className="text-xl">{p.glyph}</div>
+                <div className="text-2xl">{p.glyph}</div>
                 <div className="mt-1 text-xs font-semibold text-slate-900">{p.label}</div>
                 <div className="text-[10px] text-slate-500">
                   {count} model{count === 1 ? '' : 's'}
                 </div>
-              </div>
+              </a>
             );
           })}
         </div>

@@ -18,6 +18,7 @@ import type {
   CompletionFrame,
   CompletionRequest,
   Conversation,
+  ProviderOptions,
   StudioMessage,
 } from '../types';
 import { conversationsKey, messagesKey } from './conversations';
@@ -33,6 +34,8 @@ export interface SendTurnArgs {
   modelId?: string;
   temperature?: number;
   maxTokens?: number;
+  /** Provider-specific knobs from the Settings panel. */
+  providerOptions?: ProviderOptions;
   authorId: string;
 }
 
@@ -86,6 +89,7 @@ export function useChatCompletion(): UseChatCompletionResult {
       modelId,
       temperature = 0.7,
       maxTokens = 512,
+      providerOptions,
     }: SendTurnArgs) => {
       const effectiveModelId = modelId ?? conversation.modelId;
       const model = modelOrDefault(effectiveModelId);
@@ -136,6 +140,7 @@ export function useChatCompletion(): UseChatCompletionResult {
         messages: [...priorMessages, { role: 'user', content: userText }],
         temperature,
         maxTokens,
+        providerOptions,
       };
 
       try {

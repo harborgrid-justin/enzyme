@@ -17,6 +17,7 @@ export function Composer({ conversation }: ComposerProps): React.ReactElement {
   const modelOverrideId = useStudioStore((s) => s.modelOverrideId);
   const temperature = useStudioStore((s) => s.temperature);
   const maxTokens = useStudioStore((s) => s.maxTokens);
+  const providerOptions = useStudioStore((s) => s.providerOptions);
 
   const canChat = hasPermission(STUDIO_PERMISSIONS.CHAT);
 
@@ -33,6 +34,7 @@ export function Composer({ conversation }: ComposerProps): React.ReactElement {
       modelId: modelOverrideId ?? undefined,
       temperature,
       maxTokens,
+      providerOptions,
       authorId: user.id,
     });
     setText('');

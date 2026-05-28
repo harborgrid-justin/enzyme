@@ -95,8 +95,18 @@ function buildCompletionStream(req: CompletionRequest): ReadableStream<Uint8Arra
   // For artifact-heavy responses we chunk by larger blocks (~24 chars) so a
   // 3KB landing page streams in 4-5s rather than 15s of word-by-word.
   const wordChunks = chunkReply(reply);
+  // Provider personalities — Foundry-hosted small models stream fastest,
+  // Gemini frontier is paced, HF routing has slight extra hops.
   const baseDelay =
-    provider.id === 'mistral' ? 8 : provider.id === 'google' ? 18 : provider.id === 'meta' ? 22 : 14;
+    provider.id === 'microsoft'
+      ? 8
+      : provider.id === 'huggingface'
+        ? 20
+        : provider.id === 'google'
+          ? 18
+          : provider.id === 'openai'
+            ? 12
+            : 14;
 
   return new ReadableStream<Uint8Array>({
     async start(controller) {

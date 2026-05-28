@@ -1,9 +1,10 @@
 # Enterprise AI Studio — `@missionfabric-js/enzyme` example
 
 A multi-provider AI chat workspace (think Claude.ai / ChatGPT for the enterprise)
-built on enzyme. It supports models from **Anthropic, OpenAI, Google, Mistral,
-and Meta**, lets you swap providers mid-conversation, streams tokens like the
-real APIs, and exposes per-conversation cost + workspace-wide usage.
+built on enzyme. It supports models from **five real LLM providers** —
+Anthropic, OpenAI, Microsoft Foundry, Hugging Face, and Google — and lets you
+swap providers mid-conversation, with each provider's own wire format applied
+under the hood.
 
 **Plus a Claude-style Artifacts pane**: ask for a landing page, dashboard, SVG
 logo, or markdown brief and the assistant streams a live preview alongside the
@@ -47,19 +48,35 @@ aliases, so no publish or `npm run build` of the library is needed.
 
 ## Providers
 
-The studio ships nine canned models grouped by provider:
+The studio ships **19 models across 5 real providers**, sourced from each
+provider's live documentation as of May 2026:
 
-| Provider  | Models |
-| --------- | ------ |
-| Anthropic | Claude Opus 4.7, Claude Sonnet 4.6, Claude Haiku 4.5 |
-| OpenAI    | GPT-5, GPT-5 Mini |
-| Google    | Gemini 2.5 Pro, Gemini 2.5 Flash |
-| Mistral   | Mistral Large 3 |
-| Meta      | Llama 4 405B *(beta-flag gated)* |
+| Provider | Wire format | Models |
+| --- | --- | --- |
+| **Anthropic** | `messages` API (system as top-level field, `thinking` block) | Claude Opus 4.7 · Sonnet 4.6 · Haiku 4.5 |
+| **OpenAI** | `chat/completions` (`max_completion_tokens`, `service_tier`, `reasoning`) | GPT-5.5 · GPT-5.4 · GPT-5.4 mini · GPT-5.4 nano |
+| **Microsoft Foundry** | Azure OpenAI-compatible (deployment in path, `api-version` query) | Phi-4 · Mistral Large 2 · Llama 4 Scout (10M ctx) · DeepSeek V4 Pro |
+| **Hugging Face** | OpenAI-compatible router (`:fastest` / `:cheapest` / `:provider` suffix) | GPT-OSS 120B · DeepSeek V4 Pro · Llama 4 Scout · Qwen3 235B |
+| **Google** | Gemini `streamGenerateContent` (roles user/model, `systemInstruction`, `generationConfig`) | Gemini 3.1 Pro · 3.5 Flash · 3 Flash · 2.5 Flash-Lite |
 
 The mock backend swaps voice + token cadence per provider so each one feels
-distinct. Token usage + cost are computed from the catalog's per-million-token
-pricing so the usage meter is meaningful out of the box.
+distinct. Token usage + cost are computed from each provider's real per-million
+token pricing so the usage meter is meaningful out of the box.
+
+### Provider-specific options
+
+The right-rail Settings panel surfaces the options each provider actually
+exposes — not a least-common-denominator union:
+
+- **Anthropic** → Extended-thinking level (off / 1k / 4k / 16k budget)
+- **OpenAI** → Service tier (auto/default/flex/priority) + reasoning effort
+- **Microsoft Foundry** → `api-version` and deployment name override
+- **Hugging Face** → Provider routing (auto / fastest / cheapest / Together / Fireworks / SambaNova / Groq / Cerebras / preferred)
+- **Google** → Thinking budget slider (-1=dynamic / 0=off / 1-32k) + code-execution toggle
+
+Below the panel, a **Request preview** expander shows the actual JSON body
++ URL the studio would post upstream for each provider — toggle a provider
+option and watch the body update live. The cURL view is copy-pasteable.
 
 ## Things to try
 
@@ -132,23 +149,33 @@ pricing so the usage meter is meaningful out of the box.
   SVG artifacts strip `<script>` blocks and `on*=` event handlers defensively
   before inserting.
 
-## Wiring a real provider
+## Wiring real providers
 
-Drop the mock and point `apiClient` at your gateway:
+Each provider's wire-format translator already lives in
+`src/studio/providers/formatters.ts` — given the studio's neutral
+`CompletionRequest`, it produces the exact URL, headers, and JSON body the
+upstream provider expects. To go live, replace the call to
+`apiClient.request({ url: '/completions', … })` in
+`src/studio/api/completions.ts` with:
 
 ```ts
-// src/main.tsx — replace worker.start() with whatever auth you use,
-// then either re-base the singleton or supply per-request URLs.
+import { formatRequest } from '../providers/formatters';
 
-import { api } from './enzyme';
-api.apiClient.setBaseUrl('https://your-llm-gateway.example.com');
-api.apiClient.setAuthHeader(`Bearer ${yourGatewayToken}`);
+const formatted = formatRequest(requestBody);
+// formatted.headers has placeholders like <ANTHROPIC_API_KEY>; replace
+// them on a server-side proxy so the key never reaches the browser.
+const response = await fetch(formatted.url, {
+  method: 'POST',
+  headers: formatted.headers,
+  body: JSON.stringify(formatted.body),
+  signal: controller.signal,
+});
+// Then parse provider-specific SSE frame shapes (delta.text for OpenAI/HF/Foundry,
+// content_block_delta for Anthropic, candidates[].content for Gemini).
 ```
 
-The wire shape is provider-neutral (see `src/studio/types.ts`), so you can
-either keep `/completions` as your gateway endpoint and translate to the
-upstream provider on the server, or fan out from the client by branching on
-`modelId.startsWith('claude-' | 'gpt-' | 'gemini-' | ...)`.
+In practice, ship it behind a server-side gateway: keep the studio talking to
+`/completions`, terminate auth + provider key resolution there, and proxy out.
 
 > Client-side RBAC here is UX only — a real deployment must enforce permissions
 > on the server, and provider API keys must NEVER be shipped to the browser.
