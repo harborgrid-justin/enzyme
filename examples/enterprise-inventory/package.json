@@ -1,0 +1,37 @@
+{
+  "name": "@missionfabric-js/enzyme-example-enterprise-inventory",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Enterprise inventory management application showcasing @missionfabric-js/enzyme (auth/RBAC, api, flags, theme, monitoring, performance, security, state)",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "postinstall": "msw init public --save"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.90.12",
+    "lucide-react": "^0.555.0",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1",
+    "react-router-dom": "^7.10.0",
+    "web-vitals": "^5.2.0",
+    "zustand": "^5.0.8"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "msw": "^2.12.4",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.6"
+  },
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
+  }
+}
