@@ -5,12 +5,11 @@ import type { Conversation } from '../types';
 import {
   conversationsKey,
   useConversations,
-  useCreateConversation,
   useDeleteConversation,
 } from '../api/conversations';
+import { useStartNewConversation } from '../api/useStartNewConversation';
 import { useStudioStore } from '../store/studioStore';
-import { providerOf, ACCENT_CLASSES, DEFAULT_MODEL_ID } from '../providers/catalog';
-import { DEFAULT_SYSTEM_PROMPT } from '../mocks/seed';
+import { providerOf, ACCENT_CLASSES } from '../providers/catalog';
 import { STUDIO_PERMISSIONS } from '../users';
 import {
   Dialog,
@@ -35,7 +34,7 @@ export function ConversationSidebar(): React.ReactElement {
   const { data, isLoading, isError } = useConversations();
   const activeConversationId = useStudioStore((s) => s.activeConversationId);
   const setActiveConversation = useStudioStore((s) => s.setActiveConversation);
-  const create = useCreateConversation();
+  const { start: startNew, isPending: isCreating } = useStartNewConversation();
   const remove = useDeleteConversation();
   // Feature #2: confirmation dialog for destructive delete (no more "click twice").
   const [pendingDelete, setPendingDelete] = useState<Conversation | null>(null);
@@ -50,27 +49,6 @@ export function ConversationSidebar(): React.ReactElement {
   const shared = conversations.filter(
     (c) => c.shared === true && (user == null || c.ownerId !== user.id)
   );
-
-  async function startNew(): Promise<void> {
-    if (user == null) return;
-    try {
-      const created = await create.mutateAsync({
-        body: {
-          title: 'New conversation',
-          modelId: DEFAULT_MODEL_ID,
-          ownerId: user.id,
-          systemPrompt: DEFAULT_SYSTEM_PROMPT,
-          shared: false,
-        },
-      });
-      setActiveConversation(created.id);
-      // Feature #3: toast on conversation created.
-      toast.success('Started a new conversation');
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown error';
-      toast.error(`Couldn't create conversation: ${message}`);
-    }
-  }
 
   function confirmDelete(conv: Conversation): void {
     setPendingDelete(conv);
@@ -135,10 +113,10 @@ export function ConversationSidebar(): React.ReactElement {
         <button
           type="button"
           onClick={() => void startNew()}
-          disabled={!canChat || create.isPending}
+          disabled={!canChat || isCreating}
           className="flex w-full items-center justify-center gap-2 rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
         >
-          {create.isPending ? 'Creating…' : '+ New conversation'}
+          {isCreating ? 'Creating…' : '+ New conversation'}
         </button>
         {!canChat && user != null && (
           <p className="mt-2 text-[11px] text-slate-500">

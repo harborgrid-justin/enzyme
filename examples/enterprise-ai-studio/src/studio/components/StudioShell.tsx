@@ -1,5 +1,7 @@
 import { state } from '@missionfabric-js/enzyme';
+import { useState } from 'react';
 import { useConversations } from '../api/conversations';
+import { useStartNewConversation } from '../api/useStartNewConversation';
 import { useStudioStore } from '../store/studioStore';
 import { useOpenArtifact } from '../artifacts/store';
 import { useAzureStore } from '../azure/store';
@@ -14,6 +16,10 @@ import { RequestPreview } from './RequestPreview';
 import { UsageMeter } from './UsageMeter';
 import { ArtifactPanel } from './ArtifactPanel';
 import { AzureConsole } from './azure/AzureConsole';
+import { CommandPalette } from '../ui/CommandPalette';
+import { KeyboardShortcutsDialog } from '../ui/KeyboardShortcutsDialog';
+import { useHotkey } from '../ui/useHotkey';
+import { COMPOSER_INPUT_ID } from '../ui/composerInputId';
 
 /**
  * Top-level studio layout — sidebar + main pane + right rail. The selected
@@ -28,6 +34,22 @@ export function StudioShell(): React.ReactElement {
   const isAzureConsoleOpen = useAzureStore((s) => s.isConsoleOpen);
   const liveDeployment = useAzureStore((s) => s.liveDeployment);
   const setAzureConsoleOpen = useAzureStore((s) => s.setConsoleOpen);
+  // Feature #6, #11: command palette + shortcuts dialog state lives here so
+  // global hotkeys can open them from anywhere in the studio.
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const { start: startNew } = useStartNewConversation();
+
+  // Feature #6: ⌘K opens the command palette (a la VS Code / Linear / Raycast).
+  useHotkey('mod+k', () => setPaletteOpen((v) => !v), { allowInInput: true });
+  // Feature #8: ⌘N starts a new conversation from anywhere.
+  useHotkey('mod+n', () => void startNew());
+  // Feature #9: ⌘/ focuses the composer textarea.
+  useHotkey('mod+/', () => {
+    document.getElementById(COMPOSER_INPUT_ID)?.focus();
+  });
+  // Feature #11: ⌘? (Shift+/) shows the shortcuts cheatsheet.
+  useHotkey('mod+shift+/', () => setShortcutsOpen((v) => !v), { allowInInput: true });
 
   state.useBroadcastSync(useStudioStore, {
     channelName: 'enzyme-ai-studio-sync',
@@ -105,6 +127,14 @@ export function StudioShell(): React.ReactElement {
           </aside>
         )}
       </div>
+
+      <CommandPalette
+        open={paletteOpen}
+        onOpenChange={setPaletteOpen}
+        onStartNew={() => void startNew()}
+        onShowShortcuts={() => setShortcutsOpen(true)}
+      />
+      <KeyboardShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
     </div>
   );
 }
