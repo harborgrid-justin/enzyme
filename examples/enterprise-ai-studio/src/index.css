@@ -26,3 +26,37 @@ body {
   white-space: pre-wrap;
   word-break: break-word;
 }
+
+/* Feature #29: visible keyboard focus rings on every interactive element.
+ * `:focus-visible` only triggers for keyboard focus so we don't add halos on
+ * mouse clicks. Components opt out by adding `focus-visible:ring-0`. */
+:focus-visible {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+[data-theme='dark'] :focus-visible {
+  outline-color: #818cf8;
+}
+button:focus,
+a:focus,
+input:focus,
+textarea:focus,
+select:focus,
+[tabindex]:focus {
+  /* Browsers default to the dotted outline on `:focus`; we drive everything
+   * through `:focus-visible` instead so mouse users don't see it. */
+  outline: none;
+}
+
+/* Honor prefers-reduced-motion across the whole app (audit item #11). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

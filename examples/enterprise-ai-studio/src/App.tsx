@@ -8,6 +8,7 @@ import {
   theme,
 } from '@missionfabric-js/enzyme';
 import { StudioShell } from './studio/components/StudioShell';
+import { Toaster } from './studio/ui/Toaster';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -42,6 +43,7 @@ export default function App(): React.ReactElement {
               <perf.PerformanceProvider>
                 <streaming.StreamProvider>
                   <StudioShell />
+                  <Toaster />
                 </streaming.StreamProvider>
               </perf.PerformanceProvider>
             </monitoring.GlobalErrorBoundary>
