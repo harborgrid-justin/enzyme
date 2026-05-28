@@ -60,6 +60,24 @@ function clampToTokens(text: string, maxTokens: number): string {
 }
 
 /**
+ * Chunk an outgoing reply into roughly token-sized pieces. Short replies are
+ * chunked by word so the typing animation feels natural; long replies (the
+ * 3KB+ artifact bodies) are chunked by ~24-char blocks so they stream in a
+ * few seconds instead of dozens.
+ */
+function chunkReply(reply: string): string[] {
+  if (reply.length < 800) {
+    return reply.match(/\S+\s*|\s+/g) ?? [reply];
+  }
+  const chunks: string[] = [];
+  const size = 32;
+  for (let i = 0; i < reply.length; i += size) {
+    chunks.push(reply.slice(i, i + size));
+  }
+  return chunks;
+}
+
+/**
  * Build a Server-Sent Events stream that drips characters out to the client,
  * pacing the cadence per-provider so each one feels distinct.
  */
@@ -69,14 +87,16 @@ function buildCompletionStream(req: CompletionRequest): ReadableStream<Uint8Arra
   const provider = providerOf(req.modelId);
   const lastUserTurn = [...req.messages].reverse().find((m) => m.role === 'user');
   const reply = clampToTokens(
-    synthesizeReply(provider.id, lastUserTurn?.content ?? '', model.label),
+    synthesizeReply(provider.id, lastUserTurn?.content ?? '', model.label, req.conversationId),
     req.maxTokens
   );
 
   // Token granularity + cadence vary per provider so the UX feels different.
-  const wordChunks = reply.match(/\S+\s*|\s+/g) ?? [reply];
+  // For artifact-heavy responses we chunk by larger blocks (~24 chars) so a
+  // 3KB landing page streams in 4-5s rather than 15s of word-by-word.
+  const wordChunks = chunkReply(reply);
   const baseDelay =
-    provider.id === 'mistral' ? 12 : provider.id === 'google' ? 28 : provider.id === 'meta' ? 35 : 22;
+    provider.id === 'mistral' ? 8 : provider.id === 'google' ? 18 : provider.id === 'meta' ? 22 : 14;
 
   return new ReadableStream<Uint8Array>({
     async start(controller) {

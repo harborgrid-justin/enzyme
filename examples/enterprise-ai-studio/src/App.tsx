@@ -4,6 +4,7 @@ import {
   flags,
   monitoring,
   performance as perf,
+  streaming,
   theme,
 } from '@missionfabric-js/enzyme';
 import { StudioShell } from './studio/components/StudioShell';
@@ -39,7 +40,9 @@ export default function App(): React.ReactElement {
           <auth.AuthProvider>
             <monitoring.GlobalErrorBoundary>
               <perf.PerformanceProvider>
-                <StudioShell />
+                <streaming.StreamProvider>
+                  <StudioShell />
+                </streaming.StreamProvider>
               </perf.PerformanceProvider>
             </monitoring.GlobalErrorBoundary>
           </auth.AuthProvider>

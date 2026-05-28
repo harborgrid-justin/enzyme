@@ -15,3 +15,4 @@ export * as theme from '@/lib/theme';
 export * as monitoring from '@/lib/monitoring';
 export * as performance from '@/lib/performance';
 export * as security from '@/lib/security';
+export * as streaming from '@/lib/streaming';

@@ -1,6 +1,7 @@
 import { state } from '@missionfabric-js/enzyme';
 import { useConversations } from '../api/conversations';
 import { useStudioStore } from '../store/studioStore';
+import { useOpenArtifact } from '../artifacts/store';
 import { ConversationSidebar } from './ConversationSidebar';
 import { ConversationView } from './ConversationView';
 import { WelcomeScreen } from './WelcomeScreen';
@@ -9,6 +10,7 @@ import { ThemeToggle } from './ThemeToggle';
 import { SystemPromptEditor } from './SystemPromptEditor';
 import { SettingsPanel } from './SettingsPanel';
 import { UsageMeter } from './UsageMeter';
+import { ArtifactPanel } from './ArtifactPanel';
 
 /**
  * Top-level studio layout — sidebar + main pane + right rail. The selected
@@ -18,6 +20,7 @@ import { UsageMeter } from './UsageMeter';
 export function StudioShell(): React.ReactElement {
   const activeConversationId = useStudioStore((s) => s.activeConversationId);
   const { data: conversations } = useConversations();
+  const { artifact: openArtifact } = useOpenArtifact();
 
   state.useBroadcastSync(useStudioStore, {
     channelName: 'enzyme-ai-studio-sync',
@@ -29,6 +32,10 @@ export function StudioShell(): React.ReactElement {
     activeConversationId != null
       ? (conversations ?? []).find((c) => c.id === activeConversationId)
       : undefined;
+
+  // When an artifact is open, collapse the settings rail to give the artifact
+  // pane room — the right-side panels stay accessible via the toolbar above.
+  const artifactOpen = openArtifact != null && openArtifact.conversationId === activeConversationId;
 
   return (
     <div className="flex h-full flex-col bg-slate-100">
@@ -56,7 +63,9 @@ export function StudioShell(): React.ReactElement {
           <WelcomeScreen />
         )}
 
-        {activeConversation && (
+        {activeConversation && artifactOpen && <ArtifactPanel />}
+
+        {activeConversation && !artifactOpen && (
           <aside className="hidden w-80 shrink-0 space-y-4 overflow-y-auto border-l border-slate-200 bg-slate-50 p-4 lg:block">
             <section className="rounded-lg border border-slate-200 bg-white p-4">
               <SystemPromptEditor conversation={activeConversation} />

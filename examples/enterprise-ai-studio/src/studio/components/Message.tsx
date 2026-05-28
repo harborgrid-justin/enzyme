@@ -1,6 +1,8 @@
 import { security } from '@missionfabric-js/enzyme';
+import { Fragment } from 'react';
 import type { StudioMessage } from '../types';
 import { ACCENT_CLASSES, PROVIDERS } from '../providers/catalog';
+import { ArtifactChip } from './ArtifactChip';
 
 interface MessageRowProps {
   message: StudioMessage;
@@ -9,6 +11,40 @@ interface MessageRowProps {
 
 function formatTime(iso: string): string {
   return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+const ARTIFACT_TOKEN_RE = /\[Artifact: ([^\]]+)\]/g;
+
+/**
+ * Splits the assistant text on `[Artifact: …]` placeholders the artifact
+ * parser leaves behind, interleaving inline chips that open the right-pane
+ * preview. Text segments still flow through `useSafeText` so model-emitted
+ * markup can't reach the DOM.
+ */
+function renderWithArtifactChips(text: string, conversationId: string): React.ReactNode[] {
+  const parts: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+  ARTIFACT_TOKEN_RE.lastIndex = 0;
+  match = ARTIFACT_TOKEN_RE.exec(text);
+  while (match != null) {
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+    parts.push(
+      <ArtifactChip
+        key={`chip-${match.index}`}
+        conversationId={conversationId}
+        title={match[1]}
+      />
+    );
+    lastIndex = match.index + match[0].length;
+    match = ARTIFACT_TOKEN_RE.exec(text);
+  }
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+  return parts;
 }
 
 export function MessageRow({ message, userInitials }: MessageRowProps): React.ReactElement {
@@ -27,6 +63,10 @@ export function MessageRow({ message, userInitials }: MessageRowProps): React.Re
       </div>
     );
   }
+
+  const segments = isAssistant
+    ? renderWithArtifactChips(safeContent, message.conversationId)
+    : [safeContent];
 
   const providerId = message.model?.provider;
   const provider = providerId != null ? PROVIDERS[providerId] : null;
@@ -71,7 +111,9 @@ export function MessageRow({ message, userInitials }: MessageRowProps): React.Re
               : 'bg-indigo-600 text-white'
           }`}
         >
-          {safeContent}
+          {segments.map((segment, i) => (
+            <Fragment key={i}>{segment}</Fragment>
+          ))}
           {message.streaming === true && <CursorBlink />}
         </div>
       </div>

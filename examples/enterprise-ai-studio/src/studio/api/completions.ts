@@ -22,6 +22,8 @@ import type {
 } from '../types';
 import { conversationsKey, messagesKey } from './conversations';
 import { costFor, modelOrDefault } from '../providers/catalog';
+import { parseArtifacts } from '../artifacts/parser';
+import { useArtifactStore } from '../artifacts/store';
 
 export interface SendTurnArgs {
   conversation: Conversation;
@@ -117,6 +119,10 @@ export function useChatCompletion(): UseChatCompletionResult {
       abortRef.current = controller;
       setIsStreaming(true);
       setError(null);
+      // Reset the artifact store's "currently-streaming" set so the next
+      // artifact event we see creates a NEW version (this iteration) rather
+      // than patching the prior conversation's final version.
+      useArtifactStore.getState().startTurn();
 
       const priorMessages =
         (queryClient.getQueryData<StudioMessage[]>(key) ?? [])
@@ -166,9 +172,22 @@ export function useChatCompletion(): UseChatCompletionResult {
             const frame = next.value;
             if (frame.type === 'token') {
               aggregated += frame.text;
+              // Parse the accumulated text for artifact blocks. The parser is
+              // idempotent + chunk-boundary-resilient — calling it on every
+              // tick lets the artifact preview render incrementally.
+              const parsed = parseArtifacts(aggregated);
+              for (const event of parsed.events) {
+                useArtifactStore.getState().recordArtifactEvent(
+                  conversation.id,
+                  event,
+                  { provider: model.provider, id: model.id, label: model.label }
+                );
+              }
+              const displayContent =
+                parsed.events.length > 0 ? parsed.visibleText : aggregated;
               queryClient.setQueryData<StudioMessage[]>(key, (old) =>
                 (old ?? []).map((m) =>
-                  m.id === assistantId ? { ...m, content: aggregated } : m
+                  m.id === assistantId ? { ...m, content: displayContent } : m
                 )
               );
             } else if (frame.type === 'done') {
@@ -182,6 +201,18 @@ export function useChatCompletion(): UseChatCompletionResult {
           buffer = next.value;
         }
 
+        // Final parse so partial-tail artifacts get fully realized.
+        const finalParsed = parseArtifacts(aggregated);
+        for (const event of finalParsed.events) {
+          useArtifactStore.getState().recordArtifactEvent(
+            conversation.id,
+            event,
+            { provider: model.provider, id: model.id, label: model.label }
+          );
+        }
+        const persistedContent =
+          finalParsed.events.length > 0 ? finalParsed.visibleText : aggregated;
+
         // 2) Mark the assistant message as no-longer-streaming and persist it.
         const usage = finalUsage ?? { inputTokens: 0, outputTokens: 0 };
         queryClient.setQueryData<StudioMessage[]>(key, (old) =>
@@ -190,17 +221,18 @@ export function useChatCompletion(): UseChatCompletionResult {
               ? {
                   ...m,
                   id: serverMessageId ?? m.id,
-                  content: aggregated,
+                  content: persistedContent,
                   streaming: false,
                   usage,
                 }
               : m
           )
         );
+        useArtifactStore.getState().endTurn();
 
         // 3) Persist the final assistant turn on the server side so reloads work.
         await api.apiClient.post(`/conversations/${conversation.id}/turns`, {
-          content: aggregated,
+          content: persistedContent,
           modelId: effectiveModelId,
           usage,
         });
@@ -244,6 +276,7 @@ export function useChatCompletion(): UseChatCompletionResult {
       } finally {
         setIsStreaming(false);
         abortRef.current = null;
+        useArtifactStore.getState().endTurn();
       }
     },
     [queryClient]
