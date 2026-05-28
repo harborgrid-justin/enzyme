@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { theme as enzymeTheme } from '@missionfabric-js/enzyme';
 import { withHtmlSecurityMeta } from '../../security/sanitize';
 
 interface HtmlPreviewProps {
@@ -27,8 +28,14 @@ export default function HtmlPreview({ body, streaming }: HtmlPreviewProps): Reac
   // streaming a partial document into the iframe causes constant reloads + the
   // partial DOM can crash Tailwind's CDN script. While we wait we show a
   // streaming placeholder so the user knows something's happening.
+  // Feature #28: artifact iframe inherits the host theme — dark studio gives
+  // dark artifact previews so the transition isn't jarring.
+  const { resolvedTheme } = enzymeTheme.useThemeContext();
   const looksComplete = /<\/html>/i.test(body);
-  const srcDoc = useMemo(() => withHtmlSecurityMeta(body), [body]);
+  const srcDoc = useMemo(
+    () => withHtmlSecurityMeta(body, { theme: resolvedTheme === 'dark' ? 'dark' : 'light' }),
+    [body, resolvedTheme]
+  );
 
   if (!looksComplete) {
     return (

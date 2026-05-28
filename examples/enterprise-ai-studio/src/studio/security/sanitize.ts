@@ -33,7 +33,15 @@
  * BLOCKS all `connect-src` / `frame-src` / `form-action`, preventing the
  * artifact from exfiltrating data or being weaponized for clickjacking.
  */
-export function withHtmlSecurityMeta(html: string): string {
+export interface HtmlSecurityMetaOptions {
+  /** Host theme to mirror into the iframe so dark mode is honored. */
+  theme?: 'light' | 'dark';
+}
+
+export function withHtmlSecurityMeta(
+  html: string,
+  options: HtmlSecurityMetaOptions = {}
+): string {
   const csp = [
     "default-src 'none'",
     "script-src https://cdn.tailwindcss.com",
@@ -49,18 +57,31 @@ export function withHtmlSecurityMeta(html: string): string {
 
   const meta =
     `<meta http-equiv="Content-Security-Policy" content="${csp}">` +
-    `<meta name="referrer" content="no-referrer">`;
+    `<meta name="referrer" content="no-referrer">` +
+    `<meta name="color-scheme" content="${options.theme ?? 'light'} dark">`;
+
+  // Feature #28: mirror the host's theme into the iframe so artifact previews
+  // adopt dark mode when the studio is in dark mode. We set the `dark` class
+  // on <html> AND inject a brief style override so Tailwind CDN (which sets
+  // up after load) doesn't flash light styles first.
+  const themeBootstrap =
+    options.theme === 'dark'
+      ? `<style>html.dark{color-scheme:dark}html.dark body{background:#0b1020;color:#e2e8f0}</style>` +
+        `<script>document.documentElement.classList.add('dark');</script>`
+      : '';
+
+  const injected = `${meta}${themeBootstrap}`;
 
   if (/<head(\s[^>]*)?>/i.test(html)) {
-    return html.replace(/<head(\s[^>]*)?>/i, (match) => `${match}${meta}`);
+    return html.replace(/<head(\s[^>]*)?>/i, (match) => `${match}${injected}`);
   }
   if (/<html(\s[^>]*)?>/i.test(html)) {
     return html.replace(
       /<html(\s[^>]*)?>/i,
-      (match) => `${match}<head>${meta}</head>`
+      (match) => `${match}<head>${injected}</head>`
     );
   }
-  return `<!DOCTYPE html><html><head>${meta}</head><body>${html}</body></html>`;
+  return `<!DOCTYPE html><html><head>${injected}</head><body>${html}</body></html>`;
 }
 
 const DANGEROUS_ELEMENTS = new Set([

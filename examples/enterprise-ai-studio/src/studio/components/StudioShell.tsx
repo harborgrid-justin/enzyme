@@ -1,5 +1,6 @@
 import { state } from '@missionfabric-js/enzyme';
-import { useState } from 'react';
+import * as RadixDialog from '@radix-ui/react-dialog';
+import { useEffect, useState } from 'react';
 import { useConversations } from '../api/conversations';
 import { useStartNewConversation } from '../api/useStartNewConversation';
 import { useStudioStore } from '../store/studioStore';
@@ -18,8 +19,12 @@ import { ArtifactPanel } from './ArtifactPanel';
 import { AzureConsole } from './azure/AzureConsole';
 import { CommandPalette } from '../ui/CommandPalette';
 import { KeyboardShortcutsDialog } from '../ui/KeyboardShortcutsDialog';
-import { useHotkey } from '../ui/useHotkey';
+import { OfflineBanner } from '../ui/OfflineBanner';
+import { useHotkey, modKeyLabel } from '../ui/useHotkey';
 import { COMPOSER_INPUT_ID } from '../ui/composerInputId';
+import { toast } from '../ui/toast';
+
+const FIRST_LOAD_HINT_KEY = 'enzyme-studio-saw-command-palette-hint';
 
 /**
  * Top-level studio layout — sidebar + main pane + right rail. The selected
@@ -34,21 +39,19 @@ export function StudioShell(): React.ReactElement {
   const isAzureConsoleOpen = useAzureStore((s) => s.isConsoleOpen);
   const liveDeployment = useAzureStore((s) => s.liveDeployment);
   const setAzureConsoleOpen = useAzureStore((s) => s.setConsoleOpen);
-  // Feature #6, #11: command palette + shortcuts dialog state lives here so
-  // global hotkeys can open them from anywhere in the studio.
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  // Feature #30: mobile sidebar drawer state. The desktop layout keeps the
+  // sidebar always-visible — this only opens on screens narrower than the
+  // `md` breakpoint.
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const { start: startNew } = useStartNewConversation();
 
-  // Feature #6: ⌘K opens the command palette (a la VS Code / Linear / Raycast).
   useHotkey('mod+k', () => setPaletteOpen((v) => !v), { allowInInput: true });
-  // Feature #8: ⌘N starts a new conversation from anywhere.
   useHotkey('mod+n', () => void startNew());
-  // Feature #9: ⌘/ focuses the composer textarea.
   useHotkey('mod+/', () => {
     document.getElementById(COMPOSER_INPUT_ID)?.focus();
   });
-  // Feature #11: ⌘? (Shift+/) shows the shortcuts cheatsheet.
   useHotkey('mod+shift+/', () => setShortcutsOpen((v) => !v), { allowInInput: true });
 
   state.useBroadcastSync(useStudioStore, {
@@ -56,6 +59,24 @@ export function StudioShell(): React.ReactElement {
     syncKeys: ['activeConversationId', 'temperature', 'maxTokens'],
     conflictStrategy: 'last-write-wins',
   });
+
+  // Feature #29: on first load (per browser), nudge the user toward ⌘K. The
+  // hint becomes an interactive toast — clicking it opens the palette.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (window.localStorage.getItem(FIRST_LOAD_HINT_KEY) === '1') return;
+    const timer = window.setTimeout(() => {
+      toast.info(`Tip: press ${modKeyLabel()}K to jump anywhere in the studio.`, {
+        duration: 8000,
+        action: {
+          label: 'Try it',
+          onClick: () => setPaletteOpen(true),
+        },
+      });
+      window.localStorage.setItem(FIRST_LOAD_HINT_KEY, '1');
+    }, 1500);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   const activeConversation =
     activeConversationId != null
@@ -66,16 +87,41 @@ export function StudioShell(): React.ReactElement {
   // pane room — the right-side panels stay accessible via the toolbar above.
   const artifactOpen = openArtifact != null && openArtifact.conversationId === activeConversationId;
 
+  // Closing the mobile drawer on conversation change so the picked thread
+  // takes the full viewport.
+  useEffect(() => {
+    setMobileSidebarOpen(false);
+  }, [activeConversationId]);
+
   return (
     <div className="flex h-full flex-col bg-slate-100">
+      <OfflineBanner />
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white px-5 py-3">
         <div className="flex items-center gap-3">
+          {/* Feature #30: hamburger to open the mobile drawer. Hidden on md+. */}
+          <button
+            type="button"
+            onClick={() => setMobileSidebarOpen(true)}
+            aria-label="Open conversation sidebar"
+            className="rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-700 hover:bg-slate-100 md:hidden"
+          >
+            <span aria-hidden>☰</span>
+          </button>
           <span className="text-lg font-bold text-indigo-600">⚛ Enzyme AI Studio</span>
-          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">
+          <span className="hidden rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 sm:inline">
             Multi-provider · enterprise
           </span>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
+          <button
+            type="button"
+            onClick={() => setPaletteOpen(true)}
+            className="hidden items-center gap-1.5 rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100 sm:inline-flex"
+            aria-label="Open command palette"
+          >
+            <span aria-hidden>⌘K</span>
+            <span className="text-xs">Search</span>
+          </button>
           <button
             type="button"
             onClick={() => setAzureConsoleOpen(!isAzureConsoleOpen)}
@@ -87,7 +133,7 @@ export function StudioShell(): React.ReactElement {
             title="Open Azure console: Foundry deployments + budget"
           >
             <span>⬢</span>
-            <span>Azure</span>
+            <span className="hidden sm:inline">Azure</span>
             {liveDeployment != null && (
               <span className="ml-1 rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700">
                 LIVE
@@ -100,9 +146,24 @@ export function StudioShell(): React.ReactElement {
       </header>
 
       <div className="flex min-h-0 flex-1">
-        <aside className="w-72 shrink-0 border-r border-slate-200 bg-white">
+        {/* Desktop sidebar — always rendered above md. */}
+        <aside className="hidden w-72 shrink-0 border-r border-slate-200 bg-white md:block">
           <ConversationSidebar />
         </aside>
+
+        {/* Mobile sidebar drawer — opens via the header hamburger. */}
+        <RadixDialog.Root open={mobileSidebarOpen} onOpenChange={setMobileSidebarOpen}>
+          <RadixDialog.Portal>
+            <RadixDialog.Overlay className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm motion-reduce:animate-none md:hidden" />
+            <RadixDialog.Content
+              className="fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-white shadow-2xl data-[state=open]:animate-in data-[state=open]:slide-in-from-left motion-reduce:animate-none md:hidden"
+              aria-describedby={undefined}
+            >
+              <RadixDialog.Title className="sr-only">Conversations</RadixDialog.Title>
+              <ConversationSidebar />
+            </RadixDialog.Content>
+          </RadixDialog.Portal>
+        </RadixDialog.Root>
 
         {activeConversation ? (
           <ConversationView conversation={activeConversation} />

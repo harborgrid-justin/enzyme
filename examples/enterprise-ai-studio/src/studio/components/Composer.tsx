@@ -9,6 +9,7 @@ import { STUDIO_PERMISSIONS } from '../users';
 import { useHotkey, modKeyLabel } from '../ui/useHotkey';
 import { COMPOSER_INPUT_ID } from '../ui/composerInputId';
 import { toast } from '../ui/toast';
+import { onComposerDraft } from '../ui/composerDraftBus';
 import { SlashMenu, filterSlashCommands, type SlashCommand } from './SlashMenu';
 
 interface ComposerProps {
@@ -49,6 +50,15 @@ export function Composer({ conversation }: ComposerProps): React.ReactElement {
 
   // Feature #10 (re-bound here too): Esc aborts the active stream.
   useHotkey('esc', () => abort(), { allowInInput: true, enabled: isStreaming });
+
+  // Feature #25: Welcome screen and empty-state chips fill the composer via
+  // a custom-event bus so they stay decoupled from this component.
+  useEffect(() => {
+    return onComposerDraft((draft) => {
+      setText(draft);
+      requestAnimationFrame(() => textareaRef.current?.focus());
+    });
+  }, []);
 
   // --- Feature #14: slash command menu ----------------------------------------
   const [slashIndex, setSlashIndex] = useState(0);
