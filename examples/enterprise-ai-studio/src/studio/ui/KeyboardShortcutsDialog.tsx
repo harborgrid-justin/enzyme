@@ -8,6 +8,7 @@ const SHORTCUTS: Array<{ section: string; rows: Array<{ combo: string; label: st
       { combo: 'MOD+K', label: 'Open command palette' },
       { combo: 'MOD+N', label: 'Start a new conversation' },
       { combo: 'MOD+/', label: 'Focus the message composer' },
+      { combo: 'MOD+.', label: 'Toggle the Settings panel' },
       { combo: 'MOD+?', label: 'Show keyboard shortcuts' },
     ],
   },
@@ -17,8 +18,18 @@ const SHORTCUTS: Array<{ section: string; rows: Array<{ combo: string; label: st
       { combo: 'Enter', label: 'Send the message' },
       { combo: 'MOD+Enter', label: 'Send the message (works in any field)' },
       { combo: 'Shift+Enter', label: 'Insert a newline' },
+      { combo: '↑ / ↓', label: 'Recall previously sent messages' },
       { combo: 'Esc', label: 'Stop the streaming response' },
       { combo: '/', label: 'Open slash-command menu in composer' },
+    ],
+  },
+  {
+    section: 'Slash commands',
+    rows: [
+      { combo: '/retry', label: 'Regenerate the last response' },
+      { combo: '/title …', label: 'Rename the conversation' },
+      { combo: '/temp …', label: 'Set the sampling temperature' },
+      { combo: '/export', label: 'Download the transcript as Markdown' },
     ],
   },
 ];

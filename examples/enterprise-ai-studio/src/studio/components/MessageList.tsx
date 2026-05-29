@@ -4,7 +4,7 @@ import { useConversationMessages } from '../api/conversations';
 import { useChatCompletion } from '../api/completions';
 import { useStudioStore } from '../store/studioStore';
 import { initials, STUDIO_PERMISSIONS } from '../users';
-import type { Conversation, StudioMessage } from '../types';
+import type { StudioMessage } from '../types';
 import { useConversations } from '../api/conversations';
 import { Skeleton } from '../ui/Skeleton';
 import { EmptyState } from '../ui/EmptyState';

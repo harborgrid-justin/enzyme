@@ -34,6 +34,10 @@ const FIRST_LOAD_HINT_KEY = 'enzyme-studio-saw-command-palette-hint';
 export function StudioShell(): React.ReactElement {
   const activeConversationId = useStudioStore((s) => s.activeConversationId);
   const modelOverrideId = useStudioStore((s) => s.modelOverrideId);
+  const isSettingsOpen = useStudioStore((s) => s.isSettingsOpen);
+  const isUsageOpen = useStudioStore((s) => s.isUsageOpen);
+  const toggleSettings = useStudioStore((s) => s.toggleSettings);
+  const toggleUsage = useStudioStore((s) => s.toggleUsage);
   const { data: conversations } = useConversations();
   const { artifact: openArtifact } = useOpenArtifact();
   const isAzureConsoleOpen = useAzureStore((s) => s.isConsoleOpen);
@@ -53,6 +57,8 @@ export function StudioShell(): React.ReactElement {
     document.getElementById(COMPOSER_INPUT_ID)?.focus();
   });
   useHotkey('mod+shift+/', () => setShortcutsOpen((v) => !v), { allowInInput: true });
+  // Feature #58: toggle the right-rail Settings panel from the keyboard.
+  useHotkey('mod+.', () => toggleSettings());
 
   state.useBroadcastSync(useStudioStore, {
     channelName: 'enzyme-ai-studio-sync',
@@ -82,6 +88,15 @@ export function StudioShell(): React.ReactElement {
     activeConversationId != null
       ? (conversations ?? []).find((c) => c.id === activeConversationId)
       : undefined;
+
+  // Feature #59: reflect the active conversation in the browser/tab title.
+  useEffect(() => {
+    const base = 'Enzyme AI Studio';
+    document.title = activeConversation != null ? `${activeConversation.title} · ${base}` : base;
+    return () => {
+      document.title = base;
+    };
+  }, [activeConversation]);
 
   // When an artifact is open, collapse the settings rail to give the artifact
   // pane room — the right-side panels stay accessible via the toolbar above.
@@ -177,14 +192,26 @@ export function StudioShell(): React.ReactElement {
 
         {!isAzureConsoleOpen && activeConversation && !artifactOpen && (
           <aside className="hidden w-80 shrink-0 space-y-4 overflow-y-auto border-l border-slate-200 bg-slate-50 p-4 lg:block">
-            <section className="rounded-lg border border-slate-200 bg-white p-4">
-              <SystemPromptEditor conversation={activeConversation} />
-            </section>
-            <SettingsPanel
-              activeModelId={modelOverrideId ?? activeConversation.modelId}
-            />
-            <RequestPreview conversation={activeConversation} />
-            <UsageMeter />
+            {/* Feature #57: collapsible right-rail panels. */}
+            <div className="flex items-center justify-end gap-1">
+              <PanelToggle
+                label="Settings"
+                icon="⚙"
+                open={isSettingsOpen}
+                onClick={toggleSettings}
+              />
+              <PanelToggle label="Usage" icon="📊" open={isUsageOpen} onClick={toggleUsage} />
+            </div>
+            {isSettingsOpen && (
+              <>
+                <section className="rounded-lg border border-slate-200 bg-white p-4">
+                  <SystemPromptEditor conversation={activeConversation} />
+                </section>
+                <SettingsPanel activeModelId={modelOverrideId ?? activeConversation.modelId} />
+                <RequestPreview conversation={activeConversation} />
+              </>
+            )}
+            {isUsageOpen && <UsageMeter />}
           </aside>
         )}
       </div>
@@ -197,5 +224,31 @@ export function StudioShell(): React.ReactElement {
       />
       <KeyboardShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
     </div>
+  );
+}
+
+interface PanelToggleProps {
+  label: string;
+  icon: string;
+  open: boolean;
+  onClick: () => void;
+}
+
+/** A pill toggle for collapsing/expanding a right-rail panel group. */
+function PanelToggle({ label, icon, open, onClick }: PanelToggleProps): React.ReactElement {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={open}
+      className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition ${
+        open
+          ? 'border-indigo-300 bg-indigo-50 text-indigo-700'
+          : 'border-slate-300 text-slate-500 hover:bg-slate-100'
+      }`}
+    >
+      <span aria-hidden>{icon}</span>
+      {label}
+    </button>
   );
 }

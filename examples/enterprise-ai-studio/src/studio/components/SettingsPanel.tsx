@@ -1,7 +1,15 @@
 import { flags } from '@missionfabric-js/enzyme';
 import { useStudioStore } from '../store/studioStore';
-import { providerOf } from '../providers/catalog';
+import { providerOf, modelOrDefault } from '../providers/catalog';
 import type { ProviderOptions } from '../types';
+
+/** Feature #48/#49: quick presets for the generation sliders. */
+const TEMPERATURE_PRESETS: Array<{ label: string; value: number }> = [
+  { label: 'Precise', value: 0.2 },
+  { label: 'Balanced', value: 0.7 },
+  { label: 'Creative', value: 1.2 },
+];
+const MAX_TOKEN_PRESETS = [512, 1024, 2048, 4096];
 
 interface SettingsPanelProps {
   /** The model that will be used for the next turn (override or conversation default). */
@@ -25,13 +33,30 @@ export function SettingsPanel({ activeModelId }: SettingsPanelProps): React.Reac
   const setMaxTokens = useStudioStore((s) => s.setMaxTokens);
   const providerOptions = useStudioStore((s) => s.providerOptions);
   const setProviderOption = useStudioStore((s) => s.setProviderOption);
+  const resetGenerationSettings = useStudioStore((s) => s.resetGenerationSettings);
   const { flags: flagState, setFlag } = flags.useFeatureFlags();
 
   const provider = providerOf(activeModelId);
 
+  // Feature #52: estimated worst-case cost of the next response, from the
+  // active model's output pricing and the Max-tokens cap.
+  const model = modelOrDefault(activeModelId);
+  const estMaxResponseCost = (maxTokens / 1_000_000) * model.pricing.outputPer1M;
+
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-4">
-      <h3 className="mb-3 text-sm font-semibold text-slate-900">Generation</h3>
+      <div className="mb-3 flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-slate-900">Generation</h3>
+        {/* Feature #51: restore defaults. */}
+        <button
+          type="button"
+          onClick={resetGenerationSettings}
+          className="text-[11px] text-slate-500 hover:text-indigo-600 hover:underline"
+          title="Reset temperature, max tokens, and provider options to defaults"
+        >
+          reset
+        </button>
+      </div>
 
       <Slider
         label="Temperature"
@@ -42,6 +67,14 @@ export function SettingsPanel({ activeModelId }: SettingsPanelProps): React.Reac
         onChange={setTemperature}
         hint="Lower = focused, higher = exploratory"
         format={(v) => v.toFixed(1)}
+      />
+      {/* Feature #48: temperature presets. */}
+      <PresetRow
+        options={TEMPERATURE_PRESETS.map((p) => ({
+          label: p.label,
+          active: Math.abs(temperature - p.value) < 0.001,
+          onClick: () => setTemperature(p.value),
+        }))}
       />
 
       <Slider
@@ -54,6 +87,21 @@ export function SettingsPanel({ activeModelId }: SettingsPanelProps): React.Reac
         hint="Cap on the response length"
         format={(v) => v.toLocaleString()}
       />
+      {/* Feature #49: max-token presets. */}
+      <PresetRow
+        options={MAX_TOKEN_PRESETS.map((value) => ({
+          label: value >= 1024 ? `${value / 1024}k` : String(value),
+          active: maxTokens === value,
+          onClick: () => setMaxTokens(value),
+        }))}
+      />
+
+      {/* Feature #52: estimated max response cost. */}
+      <p className="mt-1 text-[11px] text-slate-400">
+        Est. max response cost:{' '}
+        <span className="font-mono text-slate-600">${estMaxResponseCost.toFixed(4)}</span>{' '}
+        at {maxTokens.toLocaleString()} output tokens
+      </p>
 
       <div className="mb-2 mt-5 flex items-center justify-between">
         <h3 className="text-sm font-semibold text-slate-900">
@@ -229,6 +277,33 @@ function ProviderSpecificOptions({
 // -----------------------------------------------------------------------------
 // Reusable form controls
 // -----------------------------------------------------------------------------
+
+interface PresetRowProps {
+  options: Array<{ label: string; active: boolean; onClick: () => void }>;
+}
+
+/** A row of small "quick set" preset buttons under a slider. */
+function PresetRow({ options }: PresetRowProps): React.ReactElement {
+  return (
+    <div className="mb-3 mt-1 flex flex-wrap gap-1">
+      {options.map((opt) => (
+        <button
+          key={opt.label}
+          type="button"
+          onClick={opt.onClick}
+          aria-pressed={opt.active}
+          className={`rounded-full border px-2 py-0.5 text-[11px] font-medium transition ${
+            opt.active
+              ? 'border-indigo-300 bg-indigo-50 text-indigo-700'
+              : 'border-slate-200 text-slate-500 hover:bg-slate-100'
+          }`}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 interface SliderProps {
   label: string;

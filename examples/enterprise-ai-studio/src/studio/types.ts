@@ -116,6 +116,8 @@ export interface Conversation {
   shared?: boolean;
   /** Caller-pinned: sticks to the top of the sidebar regardless of recency. */
   pinned?: boolean;
+  /** Archived conversations are hidden from the main list behind a toggle. */
+  archived?: boolean;
 }
 
 /**

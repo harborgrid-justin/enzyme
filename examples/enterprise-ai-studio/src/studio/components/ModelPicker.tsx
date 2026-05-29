@@ -22,6 +22,8 @@ interface ModelPickerProps {
 export function ModelPicker({ conversationModelId, compact }: ModelPickerProps): React.ReactElement {
   const modelOverrideId = useStudioStore((s) => s.modelOverrideId);
   const setModelOverride = useStudioStore((s) => s.setModelOverride);
+  const favoriteModelIds = useStudioStore((s) => s.favoriteModelIds);
+  const toggleFavoriteModel = useStudioStore((s) => s.toggleFavoriteModel);
   const liveDeployment = useAzureStore((s) => s.liveDeployment);
   const betaEnabled = flags.useFeatureFlag(flags.flagKeys.BETA_FEATURES);
   const [open, setOpen] = useState(false);
@@ -36,6 +38,11 @@ export function ModelPicker({ conversationModelId, compact }: ModelPickerProps):
     [betaEnabled]
   );
   const grouped = useMemo(() => groupByProvider(visibleModels), [visibleModels]);
+  // Feature #50: starred models float into a dedicated section at the top.
+  const favoriteModels = useMemo(
+    () => visibleModels.filter((m) => favoriteModelIds.includes(m.id)),
+    [visibleModels, favoriteModelIds]
+  );
 
   function selectModel(id: string): void {
     setModelOverride(id === conversationModelId ? null : id);
@@ -127,6 +134,26 @@ export function ModelPicker({ conversationModelId, compact }: ModelPickerProps):
                 </button>
               </div>
             )}
+            {favoriteModels.length > 0 && (
+              <div className="mb-1 border-b border-slate-100 pb-1">
+                <div className="flex items-center gap-2 px-2 py-1">
+                  <span className="text-base">★</span>
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-amber-600">
+                    Favorites
+                  </span>
+                </div>
+                {favoriteModels.map((m) => (
+                  <ModelOption
+                    key={`fav-${m.id}`}
+                    model={m}
+                    isActive={m.id === activeModelId}
+                    isFavorite
+                    onToggleFavorite={() => toggleFavoriteModel(m.id)}
+                    onClick={() => selectModel(m.id)}
+                  />
+                ))}
+              </div>
+            )}
             {Object.entries(grouped).map(([providerId, models]) => {
               if (models.length === 0) return null;
               const provider = PROVIDERS[providerId as keyof typeof PROVIDERS];
@@ -144,6 +171,8 @@ export function ModelPicker({ conversationModelId, compact }: ModelPickerProps):
                       key={m.id}
                       model={m}
                       isActive={m.id === activeModelId}
+                      isFavorite={favoriteModelIds.includes(m.id)}
+                      onToggleFavorite={() => toggleFavoriteModel(m.id)}
                       onClick={() => selectModel(m.id)}
                     />
                   ))}
@@ -160,22 +189,27 @@ export function ModelPicker({ conversationModelId, compact }: ModelPickerProps):
 function ModelOption({
   model,
   isActive,
+  isFavorite,
+  onToggleFavorite,
   onClick,
 }: {
   model: ModelDescriptor;
   isActive: boolean;
+  isFavorite: boolean;
+  onToggleFavorite: () => void;
   onClick: () => void;
 }): React.ReactElement {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`block w-full rounded px-2 py-2 text-left text-xs transition ${
-        isActive
-          ? 'bg-indigo-50 ring-1 ring-indigo-200'
-          : 'hover:bg-slate-50'
+    <div
+      className={`group relative rounded transition ${
+        isActive ? 'bg-indigo-50 ring-1 ring-indigo-200' : 'hover:bg-slate-50'
       }`}
     >
+      <button
+        type="button"
+        onClick={onClick}
+        className="block w-full rounded px-2 py-2 pr-8 text-left text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+      >
       <div className="flex items-center justify-between gap-2">
         <span className="font-semibold text-slate-900">{model.label}</span>
         <span className="font-mono text-[10px] text-slate-500">
@@ -201,7 +235,26 @@ function ModelOption({
           <CapabilityBadge key={cap} cap={cap} />
         ))}
       </div>
-    </button>
+      </button>
+      {/* Feature #50: star toggle — favorites float to a section at the top. */}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggleFavorite();
+        }}
+        aria-label={isFavorite ? `Unstar ${model.label}` : `Star ${model.label}`}
+        aria-pressed={isFavorite}
+        title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+        className={`absolute right-1.5 top-1.5 rounded p-1 text-sm leading-none transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 ${
+          isFavorite
+            ? 'text-amber-500 opacity-100'
+            : 'text-slate-300 opacity-0 hover:text-amber-400 group-hover:opacity-100'
+        }`}
+      >
+        {isFavorite ? '★' : '☆'}
+      </button>
+    </div>
   );
 }
 

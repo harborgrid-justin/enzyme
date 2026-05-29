@@ -89,6 +89,8 @@ export function ConversationSidebar(): React.ReactElement {
   const { data, isLoading, isError } = useConversations();
   const activeConversationId = useStudioStore((s) => s.activeConversationId);
   const setActiveConversation = useStudioStore((s) => s.setActiveConversation);
+  const showArchived = useStudioStore((s) => s.showArchived);
+  const toggleShowArchived = useStudioStore((s) => s.toggleShowArchived);
   const { start: startNew, isPending: isCreating } = useStartNewConversation();
   const remove = useDeleteConversation();
   const update = useUpdateConversation();
@@ -100,12 +102,17 @@ export function ConversationSidebar(): React.ReactElement {
   const canChat = hasPermission(STUDIO_PERMISSIONS.CHAT);
 
   // Feature #16: client-side fuzzy search against title.
+  // Feature #43: archived conversations are hidden unless "show archived" is on.
   const conversations = data ?? [];
+  const archivedCount = conversations.filter((c) => c.archived === true).length;
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (q === '') return conversations;
-    return conversations.filter((c) => c.title.toLowerCase().includes(q));
-  }, [conversations, query]);
+    return conversations.filter((c) => {
+      if (c.archived === true && !showArchived) return false;
+      if (q === '') return true;
+      return c.title.toLowerCase().includes(q);
+    });
+  }, [conversations, query, showArchived]);
 
   const mine = visible.filter((c) => user != null && c.ownerId === user.id);
   const shared = visible.filter(
@@ -212,6 +219,21 @@ export function ConversationSidebar(): React.ReactElement {
             </button>
           )}
         </div>
+
+        {/* Feature #43: archived conversations toggle. */}
+        {archivedCount > 0 && (
+          <button
+            type="button"
+            onClick={toggleShowArchived}
+            aria-pressed={showArchived}
+            className="flex w-full items-center justify-between rounded-md px-2 py-1 text-[11px] text-slate-500 hover:bg-slate-100"
+          >
+            <span>🗄 {showArchived ? 'Hide archived' : 'Show archived'}</span>
+            <span className="rounded-full bg-slate-200 px-1.5 py-0.5 text-[10px] font-medium text-slate-600">
+              {archivedCount}
+            </span>
+          </button>
+        )}
 
         {!canChat && user != null && (
           <p className="text-[11px] text-slate-500">

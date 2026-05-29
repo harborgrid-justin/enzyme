@@ -1,7 +1,7 @@
 import { security } from '@missionfabric-js/enzyme';
-import { Fragment } from 'react';
+import { Fragment, useState } from 'react';
 import type { StudioMessage } from '../types';
-import { ACCENT_CLASSES, PROVIDERS } from '../providers/catalog';
+import { ACCENT_CLASSES, PROVIDERS, costFor } from '../providers/catalog';
 import { ArtifactChip } from './ArtifactChip';
 import { Tooltip } from '../ui/Tooltip';
 import { toast } from '../ui/toast';
@@ -24,6 +24,15 @@ function formatFullDate(iso: string): string {
 }
 
 const ARTIFACT_TOKEN_RE = /\[Artifact: ([^\]]+)\]/g;
+
+/** Feature #45: messages longer than this collapse behind a "Show more" toggle. */
+const COLLAPSE_CHAR_THRESHOLD = 1200;
+
+/** Feature #46: rough word count for the per-message meta line. */
+function countWords(text: string): number {
+  const trimmed = text.trim();
+  return trimmed === '' ? 0 : trimmed.split(/\s+/).length;
+}
 
 /**
  * Splits the assistant text on `[Artifact: …]` placeholders the artifact
@@ -79,6 +88,17 @@ export function MessageRow({
   const safeContent = security.useSafeText(message.content);
   const isAssistant = message.role === 'assistant';
   const isSystem = message.role === 'system';
+  // Feature #45: collapse very long messages until the reader expands them.
+  const [expanded, setExpanded] = useState(false);
+  const collapsible =
+    message.streaming !== true && message.content.length > COLLAPSE_CHAR_THRESHOLD;
+  const isCollapsed = collapsible && !expanded;
+  // Feature #46/#47: per-message word count + assistant turn cost.
+  const wordCount = countWords(message.content);
+  const turnCost =
+    isAssistant && message.usage != null && message.model != null
+      ? costFor(message.model.id, message.usage)
+      : null;
 
   if (isSystem) {
     return (
@@ -130,9 +150,19 @@ export function MessageRow({
                   {message.usage.outputTokens.toLocaleString()} out
                 </span>
               )}
+              {/* Feature #47: per-turn cost from the model's pricing. */}
+              {turnCost != null && (
+                <span title="Estimated cost for this turn">· ${turnCost.toFixed(4)}</span>
+              )}
             </>
           ) : (
             <span className="font-semibold text-slate-700">You</span>
+          )}
+          {/* Feature #46: word count for the message. */}
+          {message.streaming !== true && wordCount > 0 && (
+            <span title={`${message.content.length.toLocaleString()} characters`}>
+              · {wordCount.toLocaleString()} {wordCount === 1 ? 'word' : 'words'}
+            </span>
           )}
           {/* Feature #23: full date on hover, short time inline. */}
           <Tooltip label={formatFullDate(message.createdAt)}>
@@ -148,10 +178,24 @@ export function MessageRow({
               : 'bg-indigo-600 text-white'
           }`}
         >
-          {segments.map((segment, i) => (
-            <Fragment key={i}>{segment}</Fragment>
-          ))}
-          {message.streaming === true && <CursorBlink />}
+          <div className={isCollapsed ? 'max-h-60 overflow-hidden' : ''}>
+            {segments.map((segment, i) => (
+              <Fragment key={i}>{segment}</Fragment>
+            ))}
+            {message.streaming === true && <CursorBlink />}
+          </div>
+          {collapsible && (
+            <button
+              type="button"
+              onClick={() => setExpanded((v) => !v)}
+              className={`mt-1 text-[11px] font-medium underline-offset-2 hover:underline focus:outline-none ${
+                isAssistant ? 'text-indigo-600' : 'text-indigo-100'
+              }`}
+              aria-expanded={expanded}
+            >
+              {expanded ? 'Show less ▲' : 'Show more ▼'}
+            </button>
+          )}
         </div>
 
         {showActions && (

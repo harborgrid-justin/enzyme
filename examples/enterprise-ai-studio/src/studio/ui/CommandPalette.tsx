@@ -12,10 +12,16 @@
 import { Command } from 'cmdk';
 import { theme } from '@missionfabric-js/enzyme';
 import { useEffect } from 'react';
-import { useConversations } from '../api/conversations';
+import { useConversations, useConversationMessages } from '../api/conversations';
+import { useDuplicateConversation } from '../api/useDuplicateConversation';
 import { useStudioStore } from '../store/studioStore';
 import { useAzureStore } from '../azure/store';
 import { MODELS, providerOf } from '../providers/catalog';
+import {
+  exportConversationJson,
+  exportConversationMarkdown,
+} from '../utils/exportConversation';
+import { toast } from './toast';
 import { cn } from './cn';
 
 interface CommandPaletteProps {
@@ -35,9 +41,17 @@ export function CommandPalette({
   const setActiveConversation = useStudioStore((s) => s.setActiveConversation);
   const setModelOverride = useStudioStore((s) => s.setModelOverride);
   const activeConversationId = useStudioStore((s) => s.activeConversationId);
+  const temperature = useStudioStore((s) => s.temperature);
+  const setTemperature = useStudioStore((s) => s.setTemperature);
+  const resetGenerationSettings = useStudioStore((s) => s.resetGenerationSettings);
+  const toggleSettings = useStudioStore((s) => s.toggleSettings);
+  const toggleUsage = useStudioStore((s) => s.toggleUsage);
   const isAzureConsoleOpen = useAzureStore((s) => s.isConsoleOpen);
   const setAzureConsoleOpen = useAzureStore((s) => s.setConsoleOpen);
   const { resolvedTheme, toggleTheme, darkModeEnabled } = theme.useThemeContext();
+  const { duplicate } = useDuplicateConversation();
+  const { data: activeMessages } = useConversationMessages(activeConversationId);
+  const activeConversation = (conversations ?? []).find((c) => c.id === activeConversationId);
 
   // Esc handled by Command.Dialog. Reset filter on close so the next open
   // starts fresh.
@@ -120,6 +134,66 @@ export function CommandPalette({
               })}
             </Command.Group>
           )}
+
+          {activeConversation != null && (
+            <Command.Group
+              heading="Active conversation"
+              className="px-1 text-[11px] uppercase tracking-wider text-slate-500"
+            >
+              <PaletteItem
+                onSelect={() =>
+                  run(() => {
+                    exportConversationMarkdown(activeConversation, activeMessages ?? []);
+                    toast.success('Exported as Markdown');
+                  })
+                }
+                icon="⬇"
+                label="Export conversation as Markdown"
+              />
+              <PaletteItem
+                onSelect={() =>
+                  run(() => {
+                    exportConversationJson(activeConversation, activeMessages ?? []);
+                    toast.success('Exported as JSON');
+                  })
+                }
+                icon="{ }"
+                label="Export conversation as JSON"
+              />
+              <PaletteItem
+                onSelect={() => run(() => void duplicate(activeConversation))}
+                icon="⧉"
+                label="Duplicate conversation"
+              />
+            </Command.Group>
+          )}
+
+          <Command.Group
+            heading="Settings"
+            className="px-1 text-[11px] uppercase tracking-wider text-slate-500"
+          >
+            <PaletteItem
+              onSelect={() => run(() => setTemperature(temperature + 0.1))}
+              icon="🔥"
+              label="Increase temperature (+0.1)"
+            />
+            <PaletteItem
+              onSelect={() => run(() => setTemperature(temperature - 0.1))}
+              icon="❄"
+              label="Decrease temperature (−0.1)"
+            />
+            <PaletteItem
+              onSelect={() => run(resetGenerationSettings)}
+              icon="↺"
+              label="Reset generation settings"
+            />
+            <PaletteItem
+              onSelect={() => run(toggleSettings)}
+              icon="⚙"
+              label="Toggle Settings panel"
+            />
+            <PaletteItem onSelect={() => run(toggleUsage)} icon="📊" label="Toggle Usage panel" />
+          </Command.Group>
 
           {activeConversationId != null && (
             <Command.Group

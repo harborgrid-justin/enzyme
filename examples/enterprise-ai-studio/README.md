@@ -114,6 +114,34 @@ option and watch the body update live. The cURL view is copy-pasteable.
 - **Type `<script>alert(1)</script>`** — both user and model responses route
   through `security.useSafeText`, so the markup renders as inert text.
 
+### Power-user enhancements
+
+A second wave of workflow features layered on top of the core flow:
+
+- **It remembers where you left off.** Generation settings (temperature, max
+  tokens, provider options), the active conversation, starred models, and the
+  right-rail panel layout are persisted to `localStorage` and restored on
+  reload. Unsent composer text is saved as a **per-conversation draft**.
+- **Composer power-ups.** Press **↑ / ↓** on an empty composer to recall
+  previously sent messages (shell-style). Slash commands now include
+  `/retry` (regenerate), `/title …` (rename), `/temp …` (set temperature), and
+  `/export` (download the transcript) alongside `/clear` and `/share`.
+- **Conversation actions (⋯ menu).** Duplicate a thread, export it as
+  **Markdown** or **JSON**, pin it, or **archive** it (archived threads collapse
+  behind a sidebar toggle).
+- **Message tools.** Long messages collapse behind *Show more*; each shows a
+  word count, and assistant turns show a per-turn cost from the model's pricing.
+- **Settings quick-controls.** Temperature presets (Precise / Balanced /
+  Creative), max-token presets, a **Reset** button, an estimated
+  max-response-cost readout, and **★ favorite models** that float to the top of
+  the picker.
+- **More command-palette reach (⌘K).** Export or duplicate the current
+  conversation, nudge temperature, reset settings, and toggle the right-rail
+  panels — all keyboard-driven.
+- **Collapsible right rail + ⌘. shortcut**, and the **browser tab title**
+  tracks the active conversation. Curated **system-prompt presets** drop into
+  the editor with one click.
+
 ## How the no-backend wiring works
 
 - **MSW** (`src/studio/mocks/`) intercepts at the Service Worker layer — below

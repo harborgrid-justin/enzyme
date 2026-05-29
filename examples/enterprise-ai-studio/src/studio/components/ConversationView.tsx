@@ -6,6 +6,7 @@ import { useUpdateConversation } from '../api/conversations';
 import { useStudioStore } from '../store/studioStore';
 import { MessageList } from './MessageList';
 import { Composer } from './Composer';
+import { ConversationActions } from './ConversationActions';
 import { ProviderBadge } from './ModelPicker';
 import { STUDIO_PERMISSIONS } from '../users';
 import {
@@ -43,6 +44,7 @@ export function ConversationView({ conversation }: ConversationViewProps): React
   const [renameDraft, setRenameDraft] = useState(conversation.title);
 
   const canShare = hasPermission(STUDIO_PERMISSIONS.SHARE);
+  const canChat = hasPermission(STUDIO_PERMISSIONS.CHAT);
   const provider = providerOf(modelOverrideId ?? conversation.modelId);
 
   function toggleShared(): void {
@@ -108,6 +110,11 @@ export function ConversationView({ conversation }: ConversationViewProps): React
                 shared
               </span>
             )}
+            {conversation.archived === true && (
+              <span className="rounded bg-slate-200 px-1.5 py-0.5 text-[10px] font-medium text-slate-600">
+                archived
+              </span>
+            )}
           </div>
           <p className="text-[11px] text-slate-500">
             Powered by <span className="font-semibold">{provider.label}</span>
@@ -131,6 +138,8 @@ export function ConversationView({ conversation }: ConversationViewProps): React
               {conversation.shared === true ? 'Make private' : 'Share with workspace'}
             </button>
           )}
+          {/* Feature #44: overflow menu — duplicate / export / archive / pin. */}
+          <ConversationActions conversation={conversation} canManage={canChat} />
         </div>
       </header>
 
