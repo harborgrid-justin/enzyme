@@ -20,6 +20,7 @@ import { ConversationInsights } from './ConversationInsights';
 import { ModelCompareDialog } from './ModelCompareDialog';
 import { GlobalSearchDialog } from './GlobalSearchDialog';
 import { AzureConsole } from './azure/AzureConsole';
+import { DesignWorkspace } from '../design/DesignWorkspace';
 import { CommandPalette } from '../ui/CommandPalette';
 import { KeyboardShortcutsDialog } from '../ui/KeyboardShortcutsDialog';
 import { OfflineBanner } from '../ui/OfflineBanner';
@@ -37,6 +38,8 @@ const FIRST_LOAD_HINT_KEY = 'enzyme-studio-saw-command-palette-hint';
  * so switching conversations in one tab also switches it in another.
  */
 export function StudioShell(): React.ReactElement {
+  const studioMode = useStudioStore((s) => s.studioMode);
+  const setStudioMode = useStudioStore((s) => s.setStudioMode);
   const activeConversationId = useStudioStore((s) => s.activeConversationId);
   const modelOverrideId = useStudioStore((s) => s.modelOverrideId);
   const isSettingsOpen = useStudioStore((s) => s.isSettingsOpen);
@@ -159,9 +162,33 @@ export function StudioShell(): React.ReactElement {
             <span aria-hidden>☰</span>
           </button>
           <span className="text-lg font-bold text-indigo-600">⚛ Enzyme AI Studio</span>
-          <span className="hidden rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 sm:inline">
-            Multi-provider · enterprise
-          </span>
+          {/* Chat ↔ Design surface toggle. */}
+          <div className="inline-flex overflow-hidden rounded-md border border-slate-300 text-sm">
+            <button
+              type="button"
+              onClick={() => setStudioMode('chat')}
+              aria-pressed={studioMode === 'chat'}
+              className={`px-3 py-1 font-medium transition ${
+                studioMode === 'chat'
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-white text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              Chat
+            </button>
+            <button
+              type="button"
+              onClick={() => setStudioMode('design')}
+              aria-pressed={studioMode === 'design'}
+              className={`px-3 py-1 font-medium transition ${
+                studioMode === 'design'
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-white text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              Design
+            </button>
+          </div>
         </div>
         <div className="flex items-center gap-2 sm:gap-4">
           <button
@@ -211,6 +238,9 @@ export function StudioShell(): React.ReactElement {
         </div>
       </header>
 
+      {studioMode === 'design' ? (
+        <DesignWorkspace />
+      ) : (
       <div className="flex min-h-0 flex-1">
         {/* Desktop sidebar — always rendered above md, hidden in focus mode. */}
         {!focusMode && (
@@ -270,6 +300,7 @@ export function StudioShell(): React.ReactElement {
           </aside>
         )}
       </div>
+      )}
 
       <CommandPalette
         open={paletteOpen}
