@@ -9,6 +9,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { auth } from '@missionfabric-js/enzyme';
 import { useDesignStore } from './store';
+import { useAdvancedStore } from './advancedStore';
 import { DESIGN_GROUPS, DESIGN_FEATURES } from './registry';
 import { cn } from '../ui/cn';
 
@@ -17,13 +18,17 @@ export function DesignWorkspace(): React.ReactElement {
   const [query, setQuery] = useState('');
   const { user } = auth.useAuth();
   const setActor = useDesignStore((s) => s.setActor);
+  const setAdvancedActor = useAdvancedStore((s) => s.setActor);
   const activePageId = useDesignStore((s) => s.activePageId);
   const pages = useDesignStore((s) => s.pages);
 
-  // Attribute design actions to the signed-in identity.
+  // Attribute design + governance actions to the signed-in identity.
   useEffect(() => {
-    if (user?.firstName != null) setActor(user.firstName);
-  }, [user?.firstName, setActor]);
+    if (user?.firstName != null) {
+      setActor(user.firstName);
+      setAdvancedActor(user.firstName);
+    }
+  }, [user?.firstName, setActor, setAdvancedActor]);
 
   const active = useMemo(
     () => DESIGN_FEATURES.find((f) => f.id === activeId) ?? DESIGN_FEATURES[0]!,
