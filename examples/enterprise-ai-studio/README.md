@@ -114,6 +114,58 @@ option and watch the body update live. The cURL view is copy-pasteable.
 - **Type `<script>alert(1)</script>`** — both user and model responses route
   through `security.useSafeText`, so the markup renders as inert text.
 
+### Power-user enhancements
+
+A second wave of workflow features layered on top of the core flow:
+
+- **It remembers where you left off.** Generation settings (temperature, max
+  tokens, provider options), the active conversation, starred models, and the
+  right-rail panel layout are persisted to `localStorage` and restored on
+  reload. Unsent composer text is saved as a **per-conversation draft**.
+- **Composer power-ups.** Press **↑ / ↓** on an empty composer to recall
+  previously sent messages (shell-style). Slash commands now include
+  `/retry` (regenerate), `/title …` (rename), `/temp …` (set temperature), and
+  `/export` (download the transcript) alongside `/clear` and `/share`.
+- **Conversation actions (⋯ menu).** Duplicate a thread, export it as
+  **Markdown** or **JSON**, pin it, or **archive** it (archived threads collapse
+  behind a sidebar toggle).
+- **Message tools.** Long messages collapse behind *Show more*; each shows a
+  word count, and assistant turns show a per-turn cost from the model's pricing.
+- **Settings quick-controls.** Temperature presets (Precise / Balanced /
+  Creative), max-token presets, a **Reset** button, an estimated
+  max-response-cost readout, and **★ favorite models** that float to the top of
+  the picker.
+- **More command-palette reach (⌘K).** Export or duplicate the current
+  conversation, nudge temperature, reset settings, and toggle the right-rail
+  panels — all keyboard-driven.
+- **Collapsible right rail + ⌘. shortcut**, and the **browser tab title**
+  tracks the active conversation. Curated **system-prompt presets** drop into
+  the editor with one click.
+
+### Pro features
+
+A third wave focused on power workflows, organization, and per-message tools:
+
+- **Composer.** A live **context-window meter** (thread + draft vs the model's
+  limit), a **prompt-snippet library**, **quote-reply** from any message, an
+  **expand** editor, an **Enter-to-send** preference, and the `/system` slash
+  command. New chats **auto-title** from your first prompt.
+- **Per-message tools.** Bookmark messages (with a *★-only* filter), 👍/👎
+  feedback, **read-aloud** (Web Speech), **copy code blocks**, quote-reply, and
+  **edit-and-re-ask** a previous prompt — plus **in-thread search**.
+- **Organization.** Conversation **tags** (with a sidebar tag filter), sidebar
+  **sort** (recent / cost / title), and a per-conversation **insights** panel
+  (turns, tokens by role, models used).
+- **Models & sampling.** Advanced **top-p / frequency-penalty / seed** knobs, a
+  **model comparison** matrix, **recently-used** models, and **promote** a
+  per-turn override to the conversation default.
+- **Spend.** A **cost budget** with an over-budget banner and a
+  **cost-by-conversation** bar chart in the Usage meter.
+- **Workspace.** **Global content search** across every conversation (⌘⇧F),
+  **export the whole workspace** as JSON, a distraction-free **focus mode**
+  (⌘\\), **compact density**, **⌘J** to cycle models, and one-click
+  conversation **templates** on the welcome screen.
+
 ## How the no-backend wiring works
 
 - **MSW** (`src/studio/mocks/`) intercepts at the Service Worker layer — below

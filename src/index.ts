@@ -488,6 +488,41 @@ export {
   useAsyncWithRecovery,
   useSafeCallback,
   useErrorToast,
+  // State management
+  useToggle,
+  usePrevious,
+  useCounter,
+  useStep,
+  useStateHistory,
+  useList,
+  useMap,
+  useSet,
+  useQueue,
+  // Web storage
+  useLocalStorage,
+  useSessionStorage,
+  // DOM interaction
+  useClickOutside,
+  useHover,
+  useIntersectionObserver,
+  useResizeObserver,
+  useWindowSize,
+  useScrollPosition,
+  useLockBodyScroll,
+  useMediaQuery,
+  // Browser APIs
+  useDocumentTitle,
+  useCopyToClipboard,
+  usePageVisibility,
+  useIdle,
+  useGeolocation,
+  usePermission,
+  useReducedMotion,
+  // Lifecycle & timing
+  useMount,
+  useUpdateEffect,
+  useEventCallback,
+  useCountdown,
 } from './lib/hooks';
 
 // -----------------------------------------------------------------------------

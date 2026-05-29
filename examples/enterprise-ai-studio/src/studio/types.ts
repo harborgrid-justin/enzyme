@@ -116,6 +116,10 @@ export interface Conversation {
   shared?: boolean;
   /** Caller-pinned: sticks to the top of the sidebar regardless of recency. */
   pinned?: boolean;
+  /** Archived conversations are hidden from the main list behind a toggle. */
+  archived?: boolean;
+  /** Feature #73: free-form labels for filtering/grouping in the sidebar. */
+  tags?: string[];
 }
 
 /**
@@ -140,6 +144,12 @@ export interface ProviderOptions {
   gemini_thinking_budget?: number;
   /** Google: enable built-in code execution tool. */
   gemini_code_execution?: boolean;
+  /** Feature #78: nucleus sampling cutoff (0–1). */
+  top_p?: number;
+  /** Feature #79: penalize repeated tokens (-2..2). */
+  frequency_penalty?: number;
+  /** Feature #80: fixed seed for reproducible sampling (0 = unset/random). */
+  seed?: number;
 }
 
 /** Request body posted to /api/completions when the user submits a turn. */

@@ -36,6 +36,21 @@ function formatRelative(iso: string): string {
  */
 type DateBucket = 'today' | 'yesterday' | 'thisWeek' | 'earlier';
 
+/** Feature #74: sidebar ordering modes. */
+type SortMode = 'recent' | 'cost' | 'title';
+
+function comparatorFor(sort: SortMode): (a: Conversation, b: Conversation) => number {
+  switch (sort) {
+    case 'cost':
+      return (a, b) => b.totals.costUsd - a.totals.costUsd;
+    case 'title':
+      return (a, b) => a.title.localeCompare(b.title);
+    case 'recent':
+    default:
+      return (a, b) => b.updatedAt.localeCompare(a.updatedAt);
+  }
+}
+
 const BUCKET_TITLES: Record<DateBucket, string> = {
   today: 'Today',
   yesterday: 'Yesterday',
@@ -63,8 +78,8 @@ interface GroupedConversations {
   buckets: Record<DateBucket, Conversation[]>;
 }
 
-function groupConversations(items: Conversation[]): GroupedConversations {
-  const sortedByRecency = [...items].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+function groupConversations(items: Conversation[], sort: SortMode): GroupedConversations {
+  const sorted = [...items].sort(comparatorFor(sort));
   const pinned: Conversation[] = [];
   const buckets: GroupedConversations['buckets'] = {
     today: [],
@@ -72,7 +87,7 @@ function groupConversations(items: Conversation[]): GroupedConversations {
     thisWeek: [],
     earlier: [],
   };
-  for (const c of sortedByRecency) {
+  for (const c of sorted) {
     if (c.pinned === true) {
       pinned.push(c);
     } else {
@@ -89,6 +104,11 @@ export function ConversationSidebar(): React.ReactElement {
   const { data, isLoading, isError } = useConversations();
   const activeConversationId = useStudioStore((s) => s.activeConversationId);
   const setActiveConversation = useStudioStore((s) => s.setActiveConversation);
+  const showArchived = useStudioStore((s) => s.showArchived);
+  const toggleShowArchived = useStudioStore((s) => s.toggleShowArchived);
+  const sidebarSort = useStudioStore((s) => s.sidebarSort);
+  const setSidebarSort = useStudioStore((s) => s.setSidebarSort);
+  const [activeTag, setActiveTag] = useState<string | null>(null);
   const { start: startNew, isPending: isCreating } = useStartNewConversation();
   const remove = useDeleteConversation();
   const update = useUpdateConversation();
@@ -100,12 +120,24 @@ export function ConversationSidebar(): React.ReactElement {
   const canChat = hasPermission(STUDIO_PERMISSIONS.CHAT);
 
   // Feature #16: client-side fuzzy search against title.
+  // Feature #43: archived conversations are hidden unless "show archived" is on.
   const conversations = data ?? [];
+  const archivedCount = conversations.filter((c) => c.archived === true).length;
+  // Feature #73: distinct tags across visible conversations, for the filter row.
+  const allTags = useMemo(() => {
+    const set = new Set<string>();
+    for (const c of conversations) for (const t of c.tags ?? []) set.add(t);
+    return [...set].sort();
+  }, [conversations]);
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (q === '') return conversations;
-    return conversations.filter((c) => c.title.toLowerCase().includes(q));
-  }, [conversations, query]);
+    return conversations.filter((c) => {
+      if (c.archived === true && !showArchived) return false;
+      if (activeTag != null && !(c.tags ?? []).includes(activeTag)) return false;
+      if (q === '') return true;
+      return c.title.toLowerCase().includes(q);
+    });
+  }, [conversations, query, showArchived, activeTag]);
 
   const mine = visible.filter((c) => user != null && c.ownerId === user.id);
   const shared = visible.filter(
@@ -213,6 +245,59 @@ export function ConversationSidebar(): React.ReactElement {
           )}
         </div>
 
+        {/* Feature #74: sidebar sort order. */}
+        <div className="flex items-center justify-between gap-2">
+          <label className="text-[11px] text-slate-500" htmlFor="sidebar-sort">
+            Sort
+          </label>
+          <select
+            id="sidebar-sort"
+            value={sidebarSort}
+            onChange={(e) => setSidebarSort(e.target.value as SortMode)}
+            className="rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+          >
+            <option value="recent">Most recent</option>
+            <option value="cost">Highest cost</option>
+            <option value="title">Title (A–Z)</option>
+          </select>
+        </div>
+
+        {/* Feature #73: tag filter chips. */}
+        {allTags.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {allTags.map((tag) => (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => setActiveTag((cur) => (cur === tag ? null : tag))}
+                aria-pressed={activeTag === tag}
+                className={`rounded-full border px-2 py-0.5 text-[10px] font-medium transition ${
+                  activeTag === tag
+                    ? 'border-indigo-300 bg-indigo-50 text-indigo-700'
+                    : 'border-slate-200 text-slate-500 hover:bg-slate-100'
+                }`}
+              >
+                #{tag}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Feature #43: archived conversations toggle. */}
+        {archivedCount > 0 && (
+          <button
+            type="button"
+            onClick={toggleShowArchived}
+            aria-pressed={showArchived}
+            className="flex w-full items-center justify-between rounded-md px-2 py-1 text-[11px] text-slate-500 hover:bg-slate-100"
+          >
+            <span>🗄 {showArchived ? 'Hide archived' : 'Show archived'}</span>
+            <span className="rounded-full bg-slate-200 px-1.5 py-0.5 text-[10px] font-medium text-slate-600">
+              {archivedCount}
+            </span>
+          </button>
+        )}
+
         {!canChat && user != null && (
           <p className="text-[11px] text-slate-500">
             🔒 Your role can browse shared conversations but not start new ones.
@@ -269,6 +354,7 @@ export function ConversationSidebar(): React.ReactElement {
           <ConversationGroupedSection
             title="Your conversations"
             items={mine}
+            sort={sidebarSort}
             activeId={activeConversationId}
             onSelect={(c) => setActiveConversation(c.id)}
             onDelete={confirmDelete}
@@ -279,6 +365,7 @@ export function ConversationSidebar(): React.ReactElement {
           <ConversationGroupedSection
             title="Workspace · shared"
             items={shared}
+            sort={sidebarSort}
             activeId={activeConversationId}
             onSelect={(c) => setActiveConversation(c.id)}
             onTogglePin={canChat ? togglePinned : undefined}
@@ -317,6 +404,7 @@ export function ConversationSidebar(): React.ReactElement {
 interface ConversationGroupedSectionProps {
   title: string;
   items: Conversation[];
+  sort: SortMode;
   activeId: string | null;
   onSelect: (c: Conversation) => void;
   onDelete?: (c: Conversation) => void;
@@ -331,12 +419,13 @@ interface ConversationGroupedSectionProps {
 function ConversationGroupedSection({
   title,
   items,
+  sort,
   activeId,
   onSelect,
   onDelete,
   onTogglePin,
 }: ConversationGroupedSectionProps): React.ReactElement {
-  const grouped = useMemo(() => groupConversations(items), [items]);
+  const grouped = useMemo(() => groupConversations(items, sort), [items, sort]);
   return (
     <div className="mb-3">
       <h3 className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
@@ -449,6 +538,19 @@ function ConversationRow({
             <p className="text-[11px] text-slate-500">
               {formatRelative(conversation.updatedAt)} · ${conversation.totals.costUsd.toFixed(4)}
             </p>
+            {/* Feature #73: tag chips. */}
+            {(conversation.tags ?? []).length > 0 && (
+              <div className="mt-0.5 flex flex-wrap gap-1">
+                {(conversation.tags ?? []).slice(0, 3).map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded bg-slate-100 px-1 py-0.5 text-[9px] font-medium text-slate-500"
+                  >
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </button>

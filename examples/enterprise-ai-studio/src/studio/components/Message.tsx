@@ -1,10 +1,11 @@
 import { security } from '@missionfabric-js/enzyme';
-import { Fragment } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import type { StudioMessage } from '../types';
-import { ACCENT_CLASSES, PROVIDERS } from '../providers/catalog';
+import { ACCENT_CLASSES, PROVIDERS, costFor } from '../providers/catalog';
 import { ArtifactChip } from './ArtifactChip';
 import { Tooltip } from '../ui/Tooltip';
 import { toast } from '../ui/toast';
+import type { Feedback } from '../ui/messageMeta';
 
 interface MessageRowProps {
   message: StudioMessage;
@@ -13,6 +14,16 @@ interface MessageRowProps {
   /** Renders the regenerate button on the last assistant turn. */
   isLastAssistant?: boolean;
   onRegenerate?: () => void;
+  /** Feature #68: bookmark state + toggle. */
+  isBookmarked?: boolean;
+  onToggleBookmark?: () => void;
+  /** Feature #71: thumbs feedback. */
+  feedback?: Feedback;
+  onFeedback?: (value: Feedback) => void;
+  /** Feature #63: quote this message into the composer. */
+  onReply?: () => void;
+  /** Feature #72: load a user prompt back into the composer to re-ask. */
+  onEdit?: () => void;
 }
 
 function formatTime(iso: string): string {
@@ -24,6 +35,28 @@ function formatFullDate(iso: string): string {
 }
 
 const ARTIFACT_TOKEN_RE = /\[Artifact: ([^\]]+)\]/g;
+
+/** Feature #45: messages longer than this collapse behind a "Show more" toggle. */
+const COLLAPSE_CHAR_THRESHOLD = 1200;
+
+/** Feature #46: rough word count for the per-message meta line. */
+function countWords(text: string): number {
+  const trimmed = text.trim();
+  return trimmed === '' ? 0 : trimmed.split(/\s+/).length;
+}
+
+/** Feature #70: extract fenced code blocks from message text. */
+function extractCodeBlocks(text: string): string[] {
+  const blocks: string[] = [];
+  const re = /```[\w-]*\n?([\s\S]*?)```/g;
+  let match: RegExpExecArray | null = re.exec(text);
+  while (match != null) {
+    const body = (match[1] ?? '').trim();
+    if (body !== '') blocks.push(body);
+    match = re.exec(text);
+  }
+  return blocks;
+}
 
 /**
  * Splits the assistant text on `[Artifact: …]` placeholders the artifact
@@ -73,12 +106,56 @@ export function MessageRow({
   userDisplayName,
   isLastAssistant,
   onRegenerate,
+  isBookmarked,
+  onToggleBookmark,
+  feedback,
+  onFeedback,
+  onReply,
+  onEdit,
 }: MessageRowProps): React.ReactElement {
   // All message bodies — user OR assistant — are rendered through useSafeText so
   // a model response containing HTML/script tags can't be injected into the DOM.
   const safeContent = security.useSafeText(message.content);
   const isAssistant = message.role === 'assistant';
   const isSystem = message.role === 'system';
+  // Feature #45: collapse very long messages until the reader expands them.
+  const [expanded, setExpanded] = useState(false);
+  const collapsible =
+    message.streaming !== true && message.content.length > COLLAPSE_CHAR_THRESHOLD;
+  const isCollapsed = collapsible && !expanded;
+  // Feature #46/#47: per-message word count + assistant turn cost.
+  const wordCount = countWords(message.content);
+  const turnCost =
+    isAssistant && message.usage != null && message.model != null
+      ? costFor(message.model.id, message.usage)
+      : null;
+  // Feature #69: read-aloud via the Web Speech API.
+  const [speaking, setSpeaking] = useState(false);
+  useEffect(() => {
+    return () => {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+  function toggleSpeak(): void {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      toast.error('Text-to-speech is not available in this browser');
+      return;
+    }
+    if (speaking) {
+      window.speechSynthesis.cancel();
+      setSpeaking(false);
+      return;
+    }
+    const utterance = new SpeechSynthesisUtterance(message.content);
+    utterance.onend = () => setSpeaking(false);
+    utterance.onerror = () => setSpeaking(false);
+    setSpeaking(true);
+    window.speechSynthesis.speak(utterance);
+  }
+  // Feature #70: copy code blocks found in the message.
+  const codeBlocks = useMemo(() => extractCodeBlocks(message.content), [message.content]);
 
   if (isSystem) {
     return (
@@ -130,9 +207,19 @@ export function MessageRow({
                   {message.usage.outputTokens.toLocaleString()} out
                 </span>
               )}
+              {/* Feature #47: per-turn cost from the model's pricing. */}
+              {turnCost != null && (
+                <span title="Estimated cost for this turn">· ${turnCost.toFixed(4)}</span>
+              )}
             </>
           ) : (
             <span className="font-semibold text-slate-700">You</span>
+          )}
+          {/* Feature #46: word count for the message. */}
+          {message.streaming !== true && wordCount > 0 && (
+            <span title={`${message.content.length.toLocaleString()} characters`}>
+              · {wordCount.toLocaleString()} {wordCount === 1 ? 'word' : 'words'}
+            </span>
           )}
           {/* Feature #23: full date on hover, short time inline. */}
           <Tooltip label={formatFullDate(message.createdAt)}>
@@ -148,10 +235,24 @@ export function MessageRow({
               : 'bg-indigo-600 text-white'
           }`}
         >
-          {segments.map((segment, i) => (
-            <Fragment key={i}>{segment}</Fragment>
-          ))}
-          {message.streaming === true && <CursorBlink />}
+          <div className={isCollapsed ? 'max-h-60 overflow-hidden' : ''}>
+            {segments.map((segment, i) => (
+              <Fragment key={i}>{segment}</Fragment>
+            ))}
+            {message.streaming === true && <CursorBlink />}
+          </div>
+          {collapsible && (
+            <button
+              type="button"
+              onClick={() => setExpanded((v) => !v)}
+              className={`mt-1 text-[11px] font-medium underline-offset-2 hover:underline focus:outline-none ${
+                isAssistant ? 'text-indigo-600' : 'text-indigo-100'
+              }`}
+              aria-expanded={expanded}
+            >
+              {expanded ? 'Show less ▲' : 'Show more ▼'}
+            </button>
+          )}
         </div>
 
         {showActions && (
@@ -161,33 +262,92 @@ export function MessageRow({
             }`}
           >
             {/* Feature #21: copy message to clipboard. */}
-            <Tooltip label="Copy message">
-              <button
-                type="button"
-                onClick={() => void copyToClipboard(message.content)}
-                aria-label="Copy message to clipboard"
-                className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-              >
-                <span aria-hidden>📋</span>
-              </button>
-            </Tooltip>
+            <ActionIcon label="Copy message" icon="📋" onClick={() => void copyToClipboard(message.content)} />
+            {/* Feature #70: copy code blocks. */}
+            {codeBlocks.length > 0 && (
+              <ActionIcon
+                label={`Copy code (${codeBlocks.length})`}
+                icon="⟨⟩"
+                onClick={() => void copyToClipboard(codeBlocks.join('\n\n'))}
+              />
+            )}
+            {/* Feature #63: quote-reply. */}
+            {onReply != null && <ActionIcon label="Quote reply" icon="↩" onClick={onReply} />}
+            {/* Feature #68: bookmark. */}
+            {onToggleBookmark != null && (
+              <ActionIcon
+                label={isBookmarked === true ? 'Remove bookmark' : 'Bookmark message'}
+                icon={isBookmarked === true ? '★' : '☆'}
+                active={isBookmarked === true}
+                onClick={onToggleBookmark}
+              />
+            )}
+            {/* Feature #72: edit a user prompt (re-ask). */}
+            {!isAssistant && onEdit != null && (
+              <ActionIcon label="Edit & re-ask" icon="✎" onClick={onEdit} />
+            )}
+            {/* Feature #69: read aloud (assistant turns). */}
+            {isAssistant && (
+              <ActionIcon
+                label={speaking ? 'Stop reading' : 'Read aloud'}
+                icon={speaking ? '⏹' : '🔊'}
+                active={speaking}
+                onClick={toggleSpeak}
+              />
+            )}
+            {/* Feature #71: thumbs feedback (assistant turns). */}
+            {isAssistant && onFeedback != null && (
+              <>
+                <ActionIcon
+                  label="Good response"
+                  icon="👍"
+                  active={feedback === 'up'}
+                  onClick={() => onFeedback('up')}
+                />
+                <ActionIcon
+                  label="Bad response"
+                  icon="👎"
+                  active={feedback === 'down'}
+                  onClick={() => onFeedback('down')}
+                />
+              </>
+            )}
             {/* Feature #22: regenerate the last assistant response. */}
             {isAssistant && isLastAssistant === true && onRegenerate != null && (
-              <Tooltip label="Regenerate response">
-                <button
-                  type="button"
-                  onClick={onRegenerate}
-                  aria-label="Regenerate the assistant response"
-                  className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-                >
-                  <span aria-hidden>↻</span>
-                </button>
-              </Tooltip>
+              <ActionIcon label="Regenerate response" icon="↻" onClick={onRegenerate} />
             )}
           </div>
         )}
       </div>
     </div>
+  );
+}
+
+interface ActionIconProps {
+  label: string;
+  icon: string;
+  onClick: () => void;
+  active?: boolean;
+}
+
+/** A small icon button used in the per-message action row. */
+function ActionIcon({ label, icon, onClick, active }: ActionIconProps): React.ReactElement {
+  return (
+    <Tooltip label={label}>
+      <button
+        type="button"
+        onClick={onClick}
+        aria-label={label}
+        aria-pressed={active === true}
+        className={`rounded p-1 font-mono text-xs leading-none transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 ${
+          active === true
+            ? 'text-indigo-600'
+            : 'text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200'
+        }`}
+      >
+        <span aria-hidden>{icon}</span>
+      </button>
+    </Tooltip>
   );
 }
 
