@@ -17,6 +17,8 @@ import { DEFAULT_MODEL_ID } from '../providers/catalog';
 import type { ProviderOptions } from '../types';
 
 export interface StudioUiState {
+  /** Top-level surface: the chat studio or the Design workspace. */
+  studioMode: 'chat' | 'design';
   activeConversationId: string | null;
   /** When set, overrides the conversation's default model for the next turn. */
   modelOverrideId: string | null;
@@ -47,6 +49,8 @@ export interface StudioUiState {
   /** Feature #66: whether Enter sends (true) or inserts a newline (false). */
   enterToSend: boolean;
 
+  /** Switch between the chat studio and the Design workspace. */
+  setStudioMode: (mode: StudioUiState['studioMode']) => void;
   setActiveConversation: (id: string | null) => void;
   setModelOverride: (id: string | null) => void;
   setTemperature: (value: number) => void;
@@ -94,6 +98,7 @@ const DEFAULT_PROVIDER_OPTIONS: ProviderOptions = {
 export const useStudioStore = create<StudioUiState>()(
   persist(
     (set) => ({
+      studioMode: 'chat',
       activeConversationId: null,
       modelOverrideId: null,
       temperature: DEFAULT_TEMPERATURE,
@@ -111,6 +116,7 @@ export const useStudioStore = create<StudioUiState>()(
       costBudgetUsd: 0,
       enterToSend: true,
 
+      setStudioMode: (studioMode) => set({ studioMode }),
       setActiveConversation: (id) => set({ activeConversationId: id, modelOverrideId: null }),
       setModelOverride: (id) => set({ modelOverrideId: id }),
       setTemperature: (value) => set({ temperature: clamp(value, 0, 2) }),
@@ -147,6 +153,7 @@ export const useStudioStore = create<StudioUiState>()(
       storage: createJSONStorage(() => localStorage),
       // Persist only durable preferences — never the transient model override.
       partialize: (s) => ({
+        studioMode: s.studioMode,
         activeConversationId: s.activeConversationId,
         temperature: s.temperature,
         maxTokens: s.maxTokens,

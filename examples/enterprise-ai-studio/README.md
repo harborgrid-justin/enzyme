@@ -166,6 +166,86 @@ A third wave focused on power workflows, organization, and per-message tools:
   (⌘\\), **compact density**, **⌘J** to cycle models, and one-click
   conversation **templates** on the welcome screen.
 
+## Design workspace — an enterprise visual-prototyping platform
+
+Toggle **Design** in the top bar to switch from the chat studio to the **Design
+workspace**: a second surface that turns one-shot artifacts into a managed,
+collaborative, deployable design system. It's positioned as an enterprise-grade
+answer to Claude-style "prompt → page" visual prototyping — closing the gaps
+that single-page generators leave open (no reusable components, no backend, no
+collaboration, no governance) while keeping the no-backend, MSW-friendly model
+of the rest of this example.
+
+The workspace ships **25 capabilities** grouped into four themes. Each is a
+self-contained panel in `src/studio/design/panels/`, backed by a single Zustand
+store (`design/store.ts`, persisted to `localStorage`) and a set of pure,
+unit-tested helpers in `design/lib/` that carry the real logic.
+
+| # | Capability | What it does | Core helper |
+| --- | --- | --- | --- |
+| **Design depth** | | | |
+| 1 | **Design tokens** | Edit color/type/spacing tokens, compile to CSS vars, re-skin any page | `lib/tokens` |
+| 2 | **Component library** | Extract a markup block into a reusable `{{prop}}` component | `lib/componentize` |
+| 3 | **Multi-page prototypes** | Linked, navigable pages with an in-prototype route graph | store |
+| 4 | **Responsive matrix** | Preview the active page across device breakpoints side-by-side | store |
+| 5 | **Version diff** | LCS line diff + DOM tag-delta between two pages | `lib/diff` |
+| 6 | **Inspector** | Click an element, edit text/style, round-trip into the source | `lib/inspector` |
+| 7 | **Figma interop** | Import frames → page; export a page → Figma-style JSON | `lib/figma` |
+| 8 | **Accessibility audit** | WCAG sniff (alt/lang/contrast/headings) with one-click autofixes | `lib/a11y` |
+| 9 | **Brand guardrails** | Lint a page against the brand palette/fonts; snap off-brand colors | `lib/brand` |
+| 10 | **Asset manager** | Upload/manage images, icons, fonts (data-URI or URL) | store |
+| **Collaboration** | | | |
+| 11 | **Live presence** | Simulated multiplayer cursors + presence avatars | store |
+| 12 | **Comments** | Threaded, resolvable comments with `@mentions` | store |
+| 13 | **Approvals** | Draft → in-review → approved sign-off with required approvers | store |
+| 14 | **Workspaces** | Org → team → project hierarchy with scope selection | store |
+| 15 | **Activity feed** | `@mention`-aware event stream across every capability | store |
+| **To production** | | | |
+| 16 | **Deploy** | Simulated one-click deploy to Vercel/Netlify/static with live logs | store |
+| 17 | **Git sync** | Connect a repo, commit pages, open + merge PRs | store |
+| 18 | **Data binding** | Resolve `{{bind:token}}` placeholders against REST/GraphQL/mock sources | `lib/databind` |
+| 19 | **Environments** | dev → staging → prod vars + promotion of a page per env | store |
+| 20 | **Code export** | Export a page as a React / Vue / Web Component / Storybook artifact | `lib/exporters` |
+| **AI power** | | | |
+| 21 | **Knowledge / RAG** | TF-IDF retrieval over a knowledge base → grounding preamble | `lib/rag` |
+| 22 | **Tool use** | Validate + run "function-calling" tools with an invocation log | `lib/tools` |
+| 23 | **Prompt library** | Versioned `{{variable}}` prompt templates with live render | `lib/prompts` |
+| 24 | **Eval harness** | Run golden cases across providers → pass/fail matrix + pass rate | `lib/evals` |
+| 25 | **Agent workflows** | Run a multi-step plan (research → build → a11y → review) live | `lib/agent` |
+
+### Try it
+
+1. Click **Design** in the top bar. Pick a capability from the left nav
+   (grouped by theme; filter with the search box).
+2. **Tokens → Re-skin active page** rewrites the Home page's literal hex
+   colors to `var(--token)` references in one click.
+3. **Components** → paste a markup block (or "Use active page selection") to
+   extract a parameterized component, then tweak its props with a live preview.
+4. **Accessibility audit** → open the Pricing page and hit **Apply all fixes**.
+5. **Data binding** → the seeded Pricing page contains `{{bind:teamPrice}}`;
+   watch it resolve to `$49` from the mock Pricing API.
+6. **Agent workflows** → **Run workflow** to watch the five steps transition
+   pending → running → done with per-step output.
+
+### How it's built
+
+- **No new backend.** The whole design domain seeds from `design/seed.ts` and
+  persists to `localStorage`, exactly like the chat studio's UI state.
+- **Logic vs. UI split.** Every non-trivial capability has a pure helper in
+  `design/lib/*` (tokenizing, diffing, auditing, retrieval, binding, exporting,
+  the agent runner). Those helpers are covered by **31 unit tests** in
+  `design/__tests__/lib.test.ts` — run `npm test`.
+- **Same security posture.** Page previews reuse the studio's `PreviewFrame` —
+  HTML renders in a null-origin sandboxed iframe with a strict CSP; SVG is
+  sanitized before inline mount.
+- **Actions are attributed** to the signed-in identity (`auth.useAuth()`), so
+  comments, approvals, and the activity feed reflect who did what.
+
+> Like the chat studio's client-side RBAC, the collaboration/deploy/git/SSO
+> surfaces here are realistic **simulations** for a no-backend demo. Going live
+> means swapping each `design/lib` boundary (e.g. `executeTool`, `mockComplete`,
+> deploy progression) for a real service — the UI and types stay unchanged.
+
 ## How the no-backend wiring works
 
 - **MSW** (`src/studio/mocks/`) intercepts at the Service Worker layer — below
