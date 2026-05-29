@@ -176,9 +176,10 @@ that single-page generators leave open (no reusable components, no backend, no
 collaboration, no governance) while keeping the no-backend, MSW-friendly model
 of the rest of this example.
 
-The workspace ships **25 capabilities** grouped into four themes. Each is a
-self-contained panel in `src/studio/design/panels/`, backed by a single Zustand
-store (`design/store.ts`, persisted to `localStorage`) and a set of pure,
+The workspace ships **55 capabilities** grouped into nine themes. Each is a
+self-contained panel in `src/studio/design/panels/`, backed by Zustand stores
+(`design/store.ts` for the core 25, `design/advancedStore.ts` for the
+enterprise 30 — both persisted to `localStorage`) and a set of pure,
 unit-tested helpers in `design/lib/` that carry the real logic.
 
 | # | Capability | What it does | Core helper |
@@ -212,6 +213,41 @@ unit-tested helpers in `design/lib/` that carry the real logic.
 | 23 | **Prompt library** | Versioned `{{variable}}` prompt templates with live render | `lib/prompts` |
 | 24 | **Eval harness** | Run golden cases across providers → pass/fail matrix + pass rate | `lib/evals` |
 | 25 | **Agent workflows** | Run a multi-step plan (research → build → a11y → review) live | `lib/agent` |
+| **Governance & trust** | | | |
+| 26 | **Audit log** | Hash-chained, tamper-evident trail; one-click integrity verification | `lib/governance` |
+| 27 | **Access control** | Editable role → permission RBAC matrix + member role assignment | `lib/governance` |
+| 28 | **SSO & SCIM** | SAML/OIDC providers + directory reconciliation (provision plan) | `lib/governance` |
+| 29 | **Data governance** | Residency region, classification, and editable retention windows | `lib/governance` |
+| 30 | **PII / DLP** | Detect email/SSN/card/phone/IP in text and redact in one click | `lib/governance` |
+| 31 | **Secrets vault** | Masked secrets with rotation-health (`ok`/`due-soon`/`overdue`) | `lib/governance` |
+| **AI operations** | | | |
+| 32 | **Model registry** | Provider/model catalog with intent-based routing + cost estimate | `lib/aiops` |
+| 33 | **Cost governance** | Per-scope spend budgets with usage state and month-end projection | `lib/aiops` |
+| 34 | **Guardrails** | Screen prompts for injection / leakage / jailbreak patterns | `lib/aiops` |
+| 35 | **Groundedness** | Score generated claims against the knowledge base (hallucination check) | `lib/aiops` |
+| 36 | **Experiments** | A/B variant conversion with a two-proportion significance test | `lib/aiops` |
+| 37 | **Observability** | Request traces with p50/p95 latency + error rate | `lib/aiops` |
+| **Content & localization** | | | |
+| 38 | **Localization** | Per-locale translation coverage + inline editing of the catalog | `lib/content` |
+| 39 | **SEO optimizer** | Audit title/description/canonical/og metadata → 0–100 score | `lib/content` |
+| 40 | **Tone rewriter** | Rule-based brand-voice rewrite (concise / confident / friendly) | `lib/content` |
+| 41 | **Image synthesis** | Generate deterministic on-brand placeholder imagery from a brief | `lib/content` |
+| 42 | **Content (CMS)** | Versioned content entries with revision history + publish workflow | `lib/content` |
+| 43 | **Readability** | Flesch Reading Ease grade for marketing copy | `lib/content` |
+| **Integrations & automation** | | | |
+| 44 | **Webhooks** | Signed event delivery with per-endpoint success rate | `lib/integrations` |
+| 45 | **Connectors** | Marketplace of Slack/Jira/GitHub/Figma/… connect toggles | store |
+| 46 | **Automations** | Trigger → action rules with a "who fires?" dry-run | `lib/integrations` |
+| 47 | **Scheduler** | Recurring jobs with next-run computation + run-now | `lib/integrations` |
+| 48 | **API keys** | Scoped developer keys, shown once, masked at rest | `lib/integrations` |
+| 49 | **Template gallery** | Installable, vetted starting points | store |
+| **Analytics & insights** | | | |
+| 50 | **Funnels** | Step-over-step + overall conversion with biggest drop-off | `lib/analytics` |
+| 51 | **Heatmap** | Click density bucketed into a normalized grid | `lib/analytics` |
+| 52 | **Performance budget** | Core Web Vitals + bundle vs budget, pass rate | `lib/analytics` |
+| 53 | **Capacity** | Seat/storage/quota usage with `ok`/`warning`/`critical` state | `lib/analytics` |
+| 54 | **Anomalies** | z-score spike detection across operational metric series | `lib/analytics` |
+| 55 | **Executive report** | One-click markdown rollup of spend, perf, conversion, risk | `lib/analytics` |
 
 ### Try it
 
@@ -226,6 +262,12 @@ unit-tested helpers in `design/lib/` that carry the real logic.
    watch it resolve to `$49` from the mock Pricing API.
 6. **Agent workflows** → **Run workflow** to watch the five steps transition
    pending → running → done with per-step output.
+7. **Audit log → Verify integrity** confirms the hash chain is intact; every
+   governance action you take (toggling a grant, rotating a secret, installing a
+   template) appends a new tamper-evident entry.
+8. **PII / DLP** → hit **Redact all** to scrub emails, SSNs, and cards; **Cost
+   governance** and **Capacity** show live budget/quota states; **Executive
+   report → Download .md** exports a one-click rollup.
 
 ### How it's built
 
@@ -233,8 +275,11 @@ unit-tested helpers in `design/lib/` that carry the real logic.
   persists to `localStorage`, exactly like the chat studio's UI state.
 - **Logic vs. UI split.** Every non-trivial capability has a pure helper in
   `design/lib/*` (tokenizing, diffing, auditing, retrieval, binding, exporting,
-  the agent runner). Those helpers are covered by **31 unit tests** in
-  `design/__tests__/lib.test.ts` — run `npm test`.
+  the agent runner). The same split holds for the enterprise capabilities in
+  `design/lib/{governance,aiops,content,integrations,analytics}.ts`. Those
+  helpers are covered by **69 unit tests** across
+  `design/__tests__/lib.test.ts` and `design/__tests__/advanced.test.ts` — run
+  `npm test`.
 - **Same security posture.** Page previews reuse the studio's `PreviewFrame` —
   HTML renders in a null-origin sandboxed iframe with a strict CSP; SVG is
   sanitized before inline mount.

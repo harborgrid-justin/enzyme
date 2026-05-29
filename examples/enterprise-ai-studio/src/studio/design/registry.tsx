@@ -1,10 +1,12 @@
 /**
  * Feature registry for the Design workspace.
  *
- * The 25 capabilities are grouped into the four themes that position the studio
- * against Claude Design: deeper design tooling, real collaboration, a path to
- * production, and an enterprise-strength AI layer. The workspace shell renders
- * its left-nav and active panel straight off this list.
+ * The 55 capabilities are grouped into themes that position the studio against
+ * Claude Design / MindStudio: deeper design tooling, real collaboration, a path
+ * to production, an enterprise-strength AI layer, and the enterprise spine —
+ * governance & trust, AI operations, content & localization, integrations &
+ * automation, and analytics. The workspace shell renders its left-nav and
+ * active panel straight off this list.
  */
 import type { ReactElement } from 'react';
 import { TokensPanel } from './panels/TokensPanel';
@@ -32,6 +34,37 @@ import { ToolsPanel } from './panels/ToolsPanel';
 import { PromptLibraryPanel } from './panels/PromptLibraryPanel';
 import { EvalsPanel } from './panels/EvalsPanel';
 import { AgentPanel } from './panels/AgentPanel';
+// Enterprise capabilities (26–55).
+import { AuditLogPanel } from './panels/AuditLogPanel';
+import { AccessControlPanel } from './panels/AccessControlPanel';
+import { SsoPanel } from './panels/SsoPanel';
+import { DataPolicyPanel } from './panels/DataPolicyPanel';
+import { DlpPanel } from './panels/DlpPanel';
+import { SecretsPanel } from './panels/SecretsPanel';
+import { ModelRegistryPanel } from './panels/ModelRegistryPanel';
+import { CostGovernancePanel } from './panels/CostGovernancePanel';
+import { GuardrailsPanel } from './panels/GuardrailsPanel';
+import { GroundednessPanel } from './panels/GroundednessPanel';
+import { ExperimentsPanel } from './panels/ExperimentsPanel';
+import { ObservabilityPanel } from './panels/ObservabilityPanel';
+import { LocalizationPanel } from './panels/LocalizationPanel';
+import { SeoPanel } from './panels/SeoPanel';
+import { TonePanel } from './panels/TonePanel';
+import { ImageSynthPanel } from './panels/ImageSynthPanel';
+import { CmsPanel } from './panels/CmsPanel';
+import { ReadabilityPanel } from './panels/ReadabilityPanel';
+import { WebhooksPanel } from './panels/WebhooksPanel';
+import { ConnectorsPanel } from './panels/ConnectorsPanel';
+import { AutomationsPanel } from './panels/AutomationsPanel';
+import { SchedulerPanel } from './panels/SchedulerPanel';
+import { ApiKeysPanel } from './panels/ApiKeysPanel';
+import { TemplateGalleryPanel } from './panels/TemplateGalleryPanel';
+import { FunnelsPanel } from './panels/FunnelsPanel';
+import { HeatmapPanel } from './panels/HeatmapPanel';
+import { PerfBudgetPanel } from './panels/PerfBudgetPanel';
+import { CapacityPanel } from './panels/CapacityPanel';
+import { AnomaliesPanel } from './panels/AnomaliesPanel';
+import { ExecReportPanel } from './panels/ExecReportPanel';
 
 export interface DesignFeature {
   num: number;
@@ -96,6 +129,66 @@ export const DESIGN_GROUPS: DesignFeatureGroup[] = [
       { num: 23, id: 'prompts', title: 'Prompt library', icon: '📝', blurb: 'Versioned templates', Panel: PromptLibraryPanel },
       { num: 24, id: 'evals', title: 'Eval harness', icon: '🧪', blurb: 'Regression matrix', Panel: EvalsPanel },
       { num: 25, id: 'agents', title: 'Agent workflows', icon: '🤖', blurb: 'Multi-step runs', Panel: AgentPanel },
+    ],
+  },
+  {
+    id: 'governance',
+    label: 'Governance & trust',
+    features: [
+      { num: 26, id: 'audit', title: 'Audit log', icon: '📜', blurb: 'Tamper-evident trail', Panel: AuditLogPanel },
+      { num: 27, id: 'rbac', title: 'Access control', icon: '🔐', blurb: 'Role → permission matrix', Panel: AccessControlPanel },
+      { num: 28, id: 'sso', title: 'SSO & SCIM', icon: '🪪', blurb: 'Enterprise sign-on', Panel: SsoPanel },
+      { num: 29, id: 'data-policy', title: 'Data governance', icon: '🗄️', blurb: 'Residency & retention', Panel: DataPolicyPanel },
+      { num: 30, id: 'dlp', title: 'PII / DLP', icon: '🕵️', blurb: 'Detect + redact PII', Panel: DlpPanel },
+      { num: 31, id: 'secrets', title: 'Secrets vault', icon: '🔑', blurb: 'Rotation enforcement', Panel: SecretsPanel },
+    ],
+  },
+  {
+    id: 'aiops',
+    label: 'AI operations',
+    features: [
+      { num: 32, id: 'models', title: 'Model registry', icon: '🧠', blurb: 'Catalog + routing', Panel: ModelRegistryPanel },
+      { num: 33, id: 'cost', title: 'Cost governance', icon: '💰', blurb: 'Budgets & projection', Panel: CostGovernancePanel },
+      { num: 34, id: 'guardrails', title: 'Guardrails', icon: '🚧', blurb: 'Injection screening', Panel: GuardrailsPanel },
+      { num: 35, id: 'groundedness', title: 'Groundedness', icon: '⚓', blurb: 'Hallucination check', Panel: GroundednessPanel },
+      { num: 36, id: 'experiments', title: 'Experiments', icon: '🧬', blurb: 'A/B with significance', Panel: ExperimentsPanel },
+      { num: 37, id: 'observability', title: 'Observability', icon: '📈', blurb: 'Traces & latency', Panel: ObservabilityPanel },
+    ],
+  },
+  {
+    id: 'content',
+    label: 'Content & localization',
+    features: [
+      { num: 38, id: 'i18n', title: 'Localization', icon: '🌐', blurb: 'Translation coverage', Panel: LocalizationPanel },
+      { num: 39, id: 'seo', title: 'SEO optimizer', icon: '🔎', blurb: 'Meta + social audit', Panel: SeoPanel },
+      { num: 40, id: 'tone', title: 'Tone rewriter', icon: '🗣️', blurb: 'Brand-voice rewrite', Panel: TonePanel },
+      { num: 41, id: 'image-synth', title: 'Image synthesis', icon: '🎞️', blurb: 'Generate imagery', Panel: ImageSynthPanel },
+      { num: 42, id: 'cms', title: 'Content (CMS)', icon: '📰', blurb: 'Versioned content', Panel: CmsPanel },
+      { num: 43, id: 'readability', title: 'Readability', icon: '📖', blurb: 'Reading-ease grade', Panel: ReadabilityPanel },
+    ],
+  },
+  {
+    id: 'integrations',
+    label: 'Integrations & automation',
+    features: [
+      { num: 44, id: 'webhooks', title: 'Webhooks', icon: '🔗', blurb: 'Signed event delivery', Panel: WebhooksPanel },
+      { num: 45, id: 'connectors', title: 'Connectors', icon: '🧰', blurb: 'Slack, Jira, GitHub…', Panel: ConnectorsPanel },
+      { num: 46, id: 'automations', title: 'Automations', icon: '⚙️', blurb: 'Trigger → action', Panel: AutomationsPanel },
+      { num: 47, id: 'scheduler', title: 'Scheduler', icon: '⏰', blurb: 'Recurring jobs', Panel: SchedulerPanel },
+      { num: 48, id: 'api-keys', title: 'API keys', icon: '🗝️', blurb: 'Scoped dev access', Panel: ApiKeysPanel },
+      { num: 49, id: 'templates', title: 'Template gallery', icon: '🗂️', blurb: 'Installable starts', Panel: TemplateGalleryPanel },
+    ],
+  },
+  {
+    id: 'analytics',
+    label: 'Analytics & insights',
+    features: [
+      { num: 50, id: 'funnels', title: 'Funnels', icon: '🫗', blurb: 'Conversion drop-off', Panel: FunnelsPanel },
+      { num: 51, id: 'heatmap', title: 'Heatmap', icon: '🔥', blurb: 'Click density', Panel: HeatmapPanel },
+      { num: 52, id: 'perf-budget', title: 'Performance budget', icon: '⚡', blurb: 'Web Vitals vs budget', Panel: PerfBudgetPanel },
+      { num: 53, id: 'capacity', title: 'Capacity', icon: '📦', blurb: 'Quota planning', Panel: CapacityPanel },
+      { num: 54, id: 'anomalies', title: 'Anomalies', icon: '🚨', blurb: 'Spike detection', Panel: AnomaliesPanel },
+      { num: 55, id: 'exec-report', title: 'Executive report', icon: '🧾', blurb: 'One-click rollup', Panel: ExecReportPanel },
     ],
   },
 ];
