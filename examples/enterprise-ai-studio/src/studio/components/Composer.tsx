@@ -6,12 +6,14 @@ import { useUpdateConversation, useConversationMessages } from '../api/conversat
 import { useStudioStore } from '../store/studioStore';
 import { ModelPicker } from './ModelPicker';
 import { STUDIO_PERMISSIONS } from '../users';
-import { useHotkey, modKeyLabel } from '../ui/useHotkey';
+import { useHotkey } from '../ui/useHotkey';
 import { COMPOSER_INPUT_ID } from '../ui/composerInputId';
 import { toast } from '../ui/toast';
-import { onComposerDraft } from '../ui/composerDraftBus';
+import { onComposerDraft, onComposerQuote } from '../ui/composerDraftBus';
 import { loadDraft, saveDraft, clearDraft } from '../ui/composerDrafts';
+import { loadSnippets, saveSnippets, type PromptSnippet } from '../ui/promptSnippets';
 import { exportConversationMarkdown } from '../utils/exportConversation';
+import { modelOrDefault } from '../providers/catalog';
 import { SlashMenu, filterSlashCommands, type SlashCommand } from './SlashMenu';
 
 interface ComposerProps {
@@ -34,7 +36,15 @@ export function Composer({ conversation }: ComposerProps): React.ReactElement {
   const maxTokens = useStudioStore((s) => s.maxTokens);
   const providerOptions = useStudioStore((s) => s.providerOptions);
   const setTemperature = useStudioStore((s) => s.setTemperature);
+  const enterToSend = useStudioStore((s) => s.enterToSend);
+  const toggleEnterToSend = useStudioStore((s) => s.toggleEnterToSend);
   const update = useUpdateConversation();
+
+  // Feature #62: prompt-snippet library + popover.
+  const [snippets, setSnippets] = useState<PromptSnippet[]>(() => loadSnippets());
+  const [snippetsOpen, setSnippetsOpen] = useState(false);
+  // Feature #65: expand the composer to a taller editor.
+  const [expanded, setExpanded] = useState(false);
 
   // Feature #35/#39: history recall + /export + /retry read the message history.
   const { data: messagesData } = useConversationMessages(conversation.id);
@@ -72,9 +82,67 @@ export function Composer({ conversation }: ComposerProps): React.ReactElement {
     const el = textareaRef.current;
     if (el == null) return;
     el.style.height = 'auto';
-    const next = Math.min(el.scrollHeight, 280); // ~12 lines
+    const next = Math.min(el.scrollHeight, expanded ? 600 : 280); // ~12 lines, or tall when expanded
     el.style.height = `${next}px`;
-  }, [text]);
+  }, [text, expanded]);
+
+  // Feature #61: context-window usage from the thread + draft vs the model cap.
+  const activeModel = modelOrDefault(modelOverrideId ?? conversation.modelId);
+  const contextUsage = useMemo(() => {
+    const threadChars =
+      conversation.systemPrompt.length +
+      messages.reduce((acc, m) => acc + m.content.length, 0) +
+      text.length;
+    const usedTokens = Math.ceil(threadChars / 4);
+    const pct = Math.min(100, (usedTokens / activeModel.contextWindow) * 100);
+    return { usedTokens, pct };
+  }, [conversation.systemPrompt, messages, text, activeModel.contextWindow]);
+
+  // Feature #63: quote-reply appends a Markdown blockquote to the draft.
+  useEffect(() => {
+    return onComposerQuote((quoted) => {
+      const block = quoted
+        .split('\n')
+        .map((line) => `> ${line}`)
+        .join('\n');
+      setText((prev) => {
+        const next = `${prev.trim() === '' ? '' : `${prev}\n\n`}${block}\n\n`;
+        saveDraft(conversation.id, next);
+        return next;
+      });
+      requestAnimationFrame(() => textareaRef.current?.focus());
+    });
+  }, [conversation.id]);
+
+  function insertSnippet(snippet: PromptSnippet): void {
+    const next = text.trim() === '' ? snippet.text : `${text}\n${snippet.text}`;
+    updateText(next);
+    setSnippetsOpen(false);
+    textareaRef.current?.focus();
+  }
+
+  function saveDraftAsSnippet(): void {
+    const body = text.trim();
+    if (body === '') {
+      toast.info('Type something first to save it as a snippet');
+      return;
+    }
+    const snippet: PromptSnippet = {
+      id: `s-${Date.now().toString(36)}`,
+      label: body.slice(0, 24) + (body.length > 24 ? '…' : ''),
+      text: body,
+    };
+    const next = [snippet, ...snippets];
+    setSnippets(next);
+    saveSnippets(next);
+    toast.success('Saved snippet');
+  }
+
+  function deleteSnippet(id: string): void {
+    const next = snippets.filter((s) => s.id !== id);
+    setSnippets(next);
+    saveSnippets(next);
+  }
 
   // Feature #10 (re-bound here too): Esc aborts the active stream.
   useHotkey('esc', () => abort(), { allowInInput: true, enabled: isStreaming });
@@ -195,6 +263,18 @@ export function Composer({ conversation }: ComposerProps): React.ReactElement {
         doRename(arg);
         finishCommand();
         return true;
+      case 'system': {
+        if (arg === '') return false;
+        update.mutate(
+          { pathParams: { id: conversation.id }, body: { id: conversation.id, systemPrompt: arg } },
+          {
+            onSuccess: () => toast.success('System prompt updated'),
+            onError: (err) => toast.error(`Couldn't update system prompt: ${err.message}`),
+          }
+        );
+        finishCommand();
+        return true;
+      }
       case 'share':
         if (!canShare) return false;
         shareToggle(true);
@@ -260,6 +340,16 @@ export function Composer({ conversation }: ComposerProps): React.ReactElement {
       providerOptions,
       authorId: user.id,
     });
+    // Feature #76: auto-title an untitled conversation from its first prompt.
+    if (conversation.title === 'New conversation' && sentHistory.length === 0) {
+      const derived = trimmed.replace(/\s+/g, ' ').slice(0, 48).trim();
+      if (derived !== '') {
+        update.mutate({
+          pathParams: { id: conversation.id },
+          body: { id: conversation.id, title: derived },
+        });
+      }
+    }
     setText('');
     clearDraft(conversation.id);
     historyIndexRef.current = null;
@@ -385,7 +475,8 @@ export function Composer({ conversation }: ComposerProps): React.ReactElement {
                 }
                 return;
               }
-              const isSend = e.key === 'Enter' && !e.shiftKey && !e.altKey;
+              // Feature #66: honor the Enter-to-send preference.
+              const isSend = e.key === 'Enter' && !e.shiftKey && !e.altKey && enterToSend;
               if (isSend) {
                 e.preventDefault();
                 submit();
@@ -404,13 +495,104 @@ export function Composer({ conversation }: ComposerProps): React.ReactElement {
             aria-controls={slashOpen ? 'composer-slash-menu' : undefined}
             className="w-full resize-none rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
           />
-          <div className="mt-1 flex items-center justify-between text-[11px] text-slate-400">
-            <span>
-              Shift+Enter for newline · {modKeyLabel()}+Enter to send
-            </span>
+          {/* Feature #61: context-window usage bar. */}
+          <div
+            className="mt-1.5"
+            title={`~${contextUsage.usedTokens.toLocaleString()} of ${activeModel.contextWindow.toLocaleString()} context tokens`}
+          >
+            <div className="h-1 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+              <div
+                className={`h-full rounded-full ${
+                  contextUsage.pct > 90
+                    ? 'bg-rose-500'
+                    : contextUsage.pct > 70
+                      ? 'bg-amber-500'
+                      : 'bg-emerald-500'
+                }`}
+                style={{ width: `${contextUsage.pct}%` }}
+              />
+            </div>
+          </div>
+
+          <div className="relative mt-1 flex items-center justify-between text-[11px] text-slate-400">
+            <div className="flex items-center gap-2">
+              {/* Feature #62: snippets. */}
+              <button
+                type="button"
+                onClick={() => setSnippetsOpen((v) => !v)}
+                aria-expanded={snippetsOpen}
+                className="rounded px-1.5 py-0.5 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"
+              >
+                ✂ Snippets
+              </button>
+              {/* Feature #65: expand editor. */}
+              <button
+                type="button"
+                onClick={() => setExpanded((v) => !v)}
+                className="rounded px-1.5 py-0.5 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"
+              >
+                {expanded ? '⤡ Collapse' : '⤢ Expand'}
+              </button>
+              {/* Feature #66: Enter-to-send preference. */}
+              <label className="flex cursor-pointer items-center gap-1">
+                <input
+                  type="checkbox"
+                  checked={enterToSend}
+                  onChange={toggleEnterToSend}
+                  className="h-3 w-3 accent-indigo-600"
+                />
+                Enter sends
+              </label>
+            </div>
             <span className={counterColor}>
-              {charCount.toLocaleString()} chars · ~{approxTokens.toLocaleString()} tokens
+              {charCount.toLocaleString()} chars · ~{approxTokens.toLocaleString()} tokens ·{' '}
+              {Math.round(contextUsage.pct)}% ctx
             </span>
+
+            {snippetsOpen && (
+              <div className="absolute bottom-full left-0 z-20 mb-2 w-72 rounded-lg border border-slate-200 bg-white p-1 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+                <div className="flex items-center justify-between px-2 py-1">
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                    Snippets
+                  </span>
+                  <button
+                    type="button"
+                    onClick={saveDraftAsSnippet}
+                    className="text-[11px] text-indigo-600 hover:underline"
+                  >
+                    + Save draft
+                  </button>
+                </div>
+                <ul className="max-h-60 overflow-y-auto">
+                  {snippets.length === 0 && (
+                    <li className="px-2 py-2 text-[11px] text-slate-400">No snippets yet.</li>
+                  )}
+                  {snippets.map((s) => (
+                    <li
+                      key={s.id}
+                      className="group flex items-center justify-between gap-2 rounded px-2 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-800"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => insertSnippet(s)}
+                        className="min-w-0 flex-1 truncate text-left text-xs text-slate-700 dark:text-slate-200"
+                        title={s.text}
+                      >
+                        {s.label}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => deleteSnippet(s.id)}
+                        aria-label={`Delete snippet ${s.label}`}
+                        className="rounded p-0.5 text-slate-300 opacity-0 transition hover:text-rose-500 group-hover:opacity-100"
+                      >
+                        ×
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </div>
 
@@ -479,6 +661,13 @@ function useSlashCommands({
         hint: '/temp …',
         description: 'Adjust sampling temperature, 0.0–2.0',
         run: () => onPrefill('/temp '),
+      },
+      {
+        id: 'system',
+        label: 'Set system prompt',
+        hint: '/system …',
+        description: 'Replace the conversation system prompt',
+        run: () => onPrefill('/system '),
       },
     ];
     // Feature #36/#39: retry + export only make sense once there's history.

@@ -29,6 +29,9 @@ interface CommandPaletteProps {
   onOpenChange: (open: boolean) => void;
   onStartNew: () => void;
   onShowShortcuts: () => void;
+  onShowCompare: () => void;
+  onShowGlobalSearch: () => void;
+  onExportWorkspace: () => void;
 }
 
 export function CommandPalette({
@@ -36,6 +39,9 @@ export function CommandPalette({
   onOpenChange,
   onStartNew,
   onShowShortcuts,
+  onShowCompare,
+  onShowGlobalSearch,
+  onExportWorkspace,
 }: CommandPaletteProps): React.ReactElement {
   const { data: conversations } = useConversations();
   const setActiveConversation = useStudioStore((s) => s.setActiveConversation);
@@ -46,6 +52,9 @@ export function CommandPalette({
   const resetGenerationSettings = useStudioStore((s) => s.resetGenerationSettings);
   const toggleSettings = useStudioStore((s) => s.toggleSettings);
   const toggleUsage = useStudioStore((s) => s.toggleUsage);
+  const toggleFocusMode = useStudioStore((s) => s.toggleFocusMode);
+  const toggleDensity = useStudioStore((s) => s.toggleDensity);
+  const recentModelIds = useStudioStore((s) => s.recentModelIds);
   const isAzureConsoleOpen = useAzureStore((s) => s.isConsoleOpen);
   const setAzureConsoleOpen = useAzureStore((s) => s.setConsoleOpen);
   const { resolvedTheme, toggleTheme, darkModeEnabled } = theme.useThemeContext();
@@ -95,6 +104,20 @@ export function CommandPalette({
             className="px-1 text-[11px] uppercase tracking-wider text-slate-500"
           >
             <PaletteItem onSelect={() => run(onStartNew)} icon="✏️" label="New conversation" hint="⌘N" />
+            <PaletteItem
+              onSelect={() => run(onShowGlobalSearch)}
+              icon="🔍"
+              label="Search all conversations"
+              hint="⌘⇧F"
+            />
+            <PaletteItem onSelect={() => run(onShowCompare)} icon="📊" label="Compare models" />
+            <PaletteItem
+              onSelect={() => run(onExportWorkspace)}
+              icon="💾"
+              label="Export entire workspace (JSON)"
+            />
+            <PaletteItem onSelect={() => run(toggleFocusMode)} icon="⛶" label="Toggle focus mode" hint="⌘\" />
+            <PaletteItem onSelect={() => run(toggleDensity)} icon="≡" label="Toggle compact density" />
             <PaletteItem
               onSelect={() => run(onShowShortcuts)}
               icon="⌨"
@@ -194,6 +217,27 @@ export function CommandPalette({
             />
             <PaletteItem onSelect={() => run(toggleUsage)} icon="📊" label="Toggle Usage panel" />
           </Command.Group>
+
+          {activeConversationId != null && recentModelIds.length > 0 && (
+            <Command.Group
+              heading="Recently used models"
+              className="px-1 text-[11px] uppercase tracking-wider text-slate-500"
+            >
+              {recentModelIds
+                .map((id) => MODELS.find((m) => m.id === id))
+                .filter((m): m is (typeof MODELS)[number] => m != null)
+                .slice(0, 5)
+                .map((m) => (
+                  <PaletteItem
+                    key={`recent-${m.id}`}
+                    onSelect={() => run(() => setModelOverride(m.id))}
+                    icon={providerOf(m.id).glyph}
+                    label={m.label}
+                    hint="recent"
+                  />
+                ))}
+            </Command.Group>
+          )}
 
           {activeConversationId != null && (
             <Command.Group

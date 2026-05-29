@@ -16,6 +16,9 @@ import { SettingsPanel } from './SettingsPanel';
 import { RequestPreview } from './RequestPreview';
 import { UsageMeter } from './UsageMeter';
 import { ArtifactPanel } from './ArtifactPanel';
+import { ConversationInsights } from './ConversationInsights';
+import { ModelCompareDialog } from './ModelCompareDialog';
+import { GlobalSearchDialog } from './GlobalSearchDialog';
 import { AzureConsole } from './azure/AzureConsole';
 import { CommandPalette } from '../ui/CommandPalette';
 import { KeyboardShortcutsDialog } from '../ui/KeyboardShortcutsDialog';
@@ -23,6 +26,8 @@ import { OfflineBanner } from '../ui/OfflineBanner';
 import { useHotkey, modKeyLabel } from '../ui/useHotkey';
 import { COMPOSER_INPUT_ID } from '../ui/composerInputId';
 import { toast } from '../ui/toast';
+import { MODELS } from '../providers/catalog';
+import { useWorkspaceExport } from '../api/useWorkspaceExport';
 
 const FIRST_LOAD_HINT_KEY = 'enzyme-studio-saw-command-palette-hint';
 
@@ -38,7 +43,13 @@ export function StudioShell(): React.ReactElement {
   const isUsageOpen = useStudioStore((s) => s.isUsageOpen);
   const toggleSettings = useStudioStore((s) => s.toggleSettings);
   const toggleUsage = useStudioStore((s) => s.toggleUsage);
+  const focusMode = useStudioStore((s) => s.focusMode);
+  const toggleFocusMode = useStudioStore((s) => s.toggleFocusMode);
+  const setModelOverride = useStudioStore((s) => s.setModelOverride);
   const { data: conversations } = useConversations();
+  const { exportAll } = useWorkspaceExport();
+  const [compareOpen, setCompareOpen] = useState(false);
+  const [globalSearchOpen, setGlobalSearchOpen] = useState(false);
   const { artifact: openArtifact } = useOpenArtifact();
   const isAzureConsoleOpen = useAzureStore((s) => s.isConsoleOpen);
   const liveDeployment = useAzureStore((s) => s.liveDeployment);
@@ -98,6 +109,31 @@ export function StudioShell(): React.ReactElement {
     };
   }, [activeConversation]);
 
+  // Feature #90: cycle the next-turn model with a keyboard shortcut.
+  function cycleModel(): void {
+    if (activeConversation == null) return;
+    const current = modelOverrideId ?? activeConversation.modelId;
+    const ids = MODELS.map((m) => m.id);
+    const i = ids.indexOf(current);
+    const next = ids[(i + 1) % ids.length] ?? ids[0] ?? current;
+    setModelOverride(next === activeConversation.modelId ? null : next);
+    const label = MODELS.find((m) => m.id === next)?.label ?? next;
+    toast.info(`Model → ${label}`);
+  }
+  useHotkey('mod+j', cycleModel);
+  // Feature #85: focus mode hides the side panels.
+  useHotkey('mod+\\', () => toggleFocusMode());
+  // Feature #84: global content search.
+  useHotkey('mod+shift+f', () => setGlobalSearchOpen((v) => !v), { allowInInput: true });
+
+  function handleExportWorkspace(): void {
+    toast.promise(exportAll(), {
+      loading: 'Exporting workspace…',
+      success: 'Workspace exported as JSON',
+      error: 'Workspace export failed',
+    });
+  }
+
   // When an artifact is open, collapse the settings rail to give the artifact
   // pane room — the right-side panels stay accessible via the toolbar above.
   const artifactOpen = openArtifact != null && openArtifact.conversationId === activeConversationId;
@@ -137,6 +173,21 @@ export function StudioShell(): React.ReactElement {
             <span aria-hidden>⌘K</span>
             <span className="text-xs">Search</span>
           </button>
+          {/* Feature #85: focus mode toggle. */}
+          <button
+            type="button"
+            onClick={toggleFocusMode}
+            aria-pressed={focusMode}
+            title="Focus mode — hide side panels"
+            className={`hidden items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm transition sm:inline-flex ${
+              focusMode
+                ? 'border-indigo-300 bg-indigo-50 text-indigo-700'
+                : 'border-slate-300 text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <span aria-hidden>{focusMode ? '🅵' : '⛶'}</span>
+            <span className="text-xs">Focus</span>
+          </button>
           <button
             type="button"
             onClick={() => setAzureConsoleOpen(!isAzureConsoleOpen)}
@@ -161,10 +212,12 @@ export function StudioShell(): React.ReactElement {
       </header>
 
       <div className="flex min-h-0 flex-1">
-        {/* Desktop sidebar — always rendered above md. */}
-        <aside className="hidden w-72 shrink-0 border-r border-slate-200 bg-white md:block">
-          <ConversationSidebar />
-        </aside>
+        {/* Desktop sidebar — always rendered above md, hidden in focus mode. */}
+        {!focusMode && (
+          <aside className="hidden w-72 shrink-0 border-r border-slate-200 bg-white md:block">
+            <ConversationSidebar />
+          </aside>
+        )}
 
         {/* Mobile sidebar drawer — opens via the header hamburger. */}
         <RadixDialog.Root open={mobileSidebarOpen} onOpenChange={setMobileSidebarOpen}>
@@ -190,7 +243,7 @@ export function StudioShell(): React.ReactElement {
 
         {!isAzureConsoleOpen && activeConversation && artifactOpen && <ArtifactPanel />}
 
-        {!isAzureConsoleOpen && activeConversation && !artifactOpen && (
+        {!isAzureConsoleOpen && activeConversation && !artifactOpen && !focusMode && (
           <aside className="hidden w-80 shrink-0 space-y-4 overflow-y-auto border-l border-slate-200 bg-slate-50 p-4 lg:block">
             {/* Feature #57: collapsible right-rail panels. */}
             <div className="flex items-center justify-end gap-1">
@@ -209,6 +262,8 @@ export function StudioShell(): React.ReactElement {
                 </section>
                 <SettingsPanel activeModelId={modelOverrideId ?? activeConversation.modelId} />
                 <RequestPreview conversation={activeConversation} />
+                {/* Feature #75: conversation insights. */}
+                <ConversationInsights conversationId={activeConversation.id} />
               </>
             )}
             {isUsageOpen && <UsageMeter />}
@@ -221,8 +276,13 @@ export function StudioShell(): React.ReactElement {
         onOpenChange={setPaletteOpen}
         onStartNew={() => void startNew()}
         onShowShortcuts={() => setShortcutsOpen(true)}
+        onShowCompare={() => setCompareOpen(true)}
+        onShowGlobalSearch={() => setGlobalSearchOpen(true)}
+        onExportWorkspace={handleExportWorkspace}
       />
       <KeyboardShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
+      <ModelCompareDialog open={compareOpen} onOpenChange={setCompareOpen} />
+      <GlobalSearchDialog open={globalSearchOpen} onOpenChange={setGlobalSearchOpen} />
     </div>
   );
 }

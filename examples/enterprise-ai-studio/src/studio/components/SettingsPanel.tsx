@@ -34,6 +34,8 @@ export function SettingsPanel({ activeModelId }: SettingsPanelProps): React.Reac
   const providerOptions = useStudioStore((s) => s.providerOptions);
   const setProviderOption = useStudioStore((s) => s.setProviderOption);
   const resetGenerationSettings = useStudioStore((s) => s.resetGenerationSettings);
+  const density = useStudioStore((s) => s.density);
+  const toggleDensity = useStudioStore((s) => s.toggleDensity);
   const { flags: flagState, setFlag } = flags.useFeatureFlags();
 
   const provider = providerOf(activeModelId);
@@ -123,6 +125,43 @@ export function SettingsPanel({ activeModelId }: SettingsPanelProps): React.Reac
         setOption={setProviderOption}
       />
 
+      {/* Features #78/#79/#80: advanced sampling knobs (provider-agnostic). */}
+      <h3 className="mb-2 mt-5 text-sm font-semibold text-slate-900">Advanced sampling</h3>
+      <div className="space-y-3">
+        <Slider
+          label="Top-p"
+          value={providerOptions.top_p ?? 1}
+          min={0}
+          max={1}
+          step={0.05}
+          onChange={(v) => setProviderOption('top_p', v)}
+          hint="Nucleus sampling — consider tokens up to this cumulative probability"
+          format={(v) => v.toFixed(2)}
+        />
+        <Slider
+          label="Frequency penalty"
+          value={providerOptions.frequency_penalty ?? 0}
+          min={-2}
+          max={2}
+          step={0.1}
+          onChange={(v) => setProviderOption('frequency_penalty', v)}
+          hint="Positive values discourage repetition"
+          format={(v) => v.toFixed(1)}
+        />
+        <div>
+          <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+            Seed
+          </label>
+          <input
+            type="number"
+            value={providerOptions.seed ?? 0}
+            onChange={(e) => setProviderOption('seed', Math.max(0, Math.floor(Number(e.target.value))))}
+            className="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 font-mono text-xs focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+          />
+          <p className="mt-1 text-[11px] text-slate-400">0 = random each turn; any other value pins sampling</p>
+        </div>
+      </div>
+
       <h3 className="mb-2 mt-5 text-sm font-semibold text-slate-900">Feature flags</h3>
       <div className="space-y-2">
         <FlagSwitch
@@ -136,6 +175,13 @@ export function SettingsPanel({ activeModelId }: SettingsPanelProps): React.Reac
           description="Toggle the dark theme"
           enabled={flagState[flags.flagKeys.DARK_MODE] === true}
           onToggle={(value) => setFlag(flags.flagKeys.DARK_MODE, value)}
+        />
+        {/* Feature #86: compact message density. */}
+        <FlagSwitch
+          label="Compact mode"
+          description="Tighter message spacing and smaller text"
+          enabled={density === 'compact'}
+          onToggle={toggleDensity}
         />
       </div>
     </section>

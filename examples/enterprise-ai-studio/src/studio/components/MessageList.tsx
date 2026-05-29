@@ -8,7 +8,15 @@ import type { StudioMessage } from '../types';
 import { useConversations } from '../api/conversations';
 import { Skeleton } from '../ui/Skeleton';
 import { EmptyState } from '../ui/EmptyState';
-import { emitComposerDraft } from '../ui/composerDraftBus';
+import { emitComposerDraft, emitComposerQuote } from '../ui/composerDraftBus';
+import {
+  loadBookmarks,
+  saveBookmarks,
+  loadFeedback,
+  saveFeedback,
+  type Feedback,
+} from '../ui/messageMeta';
+import { toast } from '../ui/toast';
 
 interface MessageListProps {
   conversationId: string;
@@ -33,16 +41,71 @@ export function MessageList({ conversationId }: MessageListProps): React.ReactEl
   const temperature = useStudioStore((s) => s.temperature);
   const maxTokens = useStudioStore((s) => s.maxTokens);
   const providerOptions = useStudioStore((s) => s.providerOptions);
+  const density = useStudioStore((s) => s.density);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
   // Feature #27: scroll-to-bottom FAB — only when scrolled away from the end.
   const [showJumpBottom, setShowJumpBottom] = useState(false);
+  // Feature #67/#68: in-thread search + bookmark-only filter.
+  const [search, setSearch] = useState('');
+  const [bookmarksOnly, setBookmarksOnly] = useState(false);
+  const [bookmarks, setBookmarks] = useState<string[]>(() => loadBookmarks(conversationId));
+  const [feedback, setFeedbackMap] = useState<Record<string, Feedback>>(() =>
+    loadFeedback(conversationId)
+  );
+
+  // Reload per-message metadata when switching conversations.
+  useEffect(() => {
+    setBookmarks(loadBookmarks(conversationId));
+    setFeedbackMap(loadFeedback(conversationId));
+    setSearch('');
+    setBookmarksOnly(false);
+  }, [conversationId]);
 
   const messages = useMemo(
     () => [...(data ?? [])].sort((a, b) => a.createdAt.localeCompare(b.createdAt)),
     [data]
   );
+
+  // Feature #67/#68: filter the rendered set by search text + bookmark filter.
+  const visibleMessages = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return messages.filter((m) => {
+      if (bookmarksOnly && !bookmarks.includes(m.id)) return false;
+      if (q !== '' && !m.content.toLowerCase().includes(q)) return false;
+      return true;
+    });
+  }, [messages, search, bookmarksOnly, bookmarks]);
+
+  function toggleBookmark(id: string): void {
+    setBookmarks((prev) => {
+      const next = prev.includes(id) ? prev.filter((b) => b !== id) : [...prev, id];
+      saveBookmarks(conversationId, next);
+      return next;
+    });
+  }
+
+  function setMessageFeedback(id: string, value: Feedback): void {
+    setFeedbackMap((prev) => {
+      const next: Record<string, Feedback> = { ...prev };
+      if (next[id] === value) delete next[id];
+      else next[id] = value;
+      saveFeedback(conversationId, next);
+      return next;
+    });
+    toast.success('Thanks for the feedback');
+  }
+
+  function replyTo(message: StudioMessage): void {
+    const excerpt = message.content.slice(0, 240);
+    emitComposerQuote(excerpt);
+  }
+
+  function editUserMessage(message: StudioMessage): void {
+    // Feature #72: load a previous prompt back into the composer to re-ask.
+    emitComposerDraft(message.content);
+  }
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -152,32 +215,78 @@ export function MessageList({ conversationId }: MessageListProps): React.ReactEl
   const userInitials = user != null ? initials(user.displayName) : '?';
   const userDisplayName = user?.displayName ?? 'You';
 
-  // Find the index of the last assistant message — only that one shows the
-  // regenerate button.
-  let lastAssistantIndex = -1;
+  // Find the last assistant message — only that one shows the regenerate button.
+  let lastAssistantId: string | null = null;
   for (let i = messages.length - 1; i >= 0; i--) {
     if (messages[i].role === 'assistant') {
-      lastAssistantIndex = i;
+      lastAssistantId = messages[i].id;
       break;
     }
   }
 
+  const bookmarkCount = bookmarks.length;
+
   return (
-    <div className="relative min-h-0 flex-1">
+    <div className="relative flex min-h-0 flex-1 flex-col">
+      {/* Feature #67/#68: in-thread search + bookmark filter toolbar. */}
+      <div className="flex items-center gap-2 border-b border-slate-100 px-6 py-2 dark:border-slate-800">
+        <div className="relative flex-1">
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search in conversation…"
+            aria-label="Search messages in this conversation"
+            className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs focus:border-indigo-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-400 dark:border-slate-700 dark:bg-slate-800"
+          />
+        </div>
+        {search.trim() !== '' && (
+          <span className="text-[11px] text-slate-400">
+            {visibleMessages.length} match{visibleMessages.length === 1 ? '' : 'es'}
+          </span>
+        )}
+        {bookmarkCount > 0 && (
+          <button
+            type="button"
+            onClick={() => setBookmarksOnly((v) => !v)}
+            aria-pressed={bookmarksOnly}
+            className={`rounded-md border px-2 py-1 text-[11px] font-medium transition ${
+              bookmarksOnly
+                ? 'border-amber-300 bg-amber-50 text-amber-700'
+                : 'border-slate-200 text-slate-500 hover:bg-slate-100'
+            }`}
+          >
+            ★ {bookmarkCount}
+          </button>
+        )}
+      </div>
+
       <div
         ref={containerRef}
-        className="h-full space-y-4 overflow-y-auto px-6 py-6"
+        className={`min-h-0 flex-1 overflow-y-auto px-6 py-6 ${
+          density === 'compact' ? 'space-y-2 text-[13px]' : 'space-y-4'
+        }`}
       >
-        {messages.map((message, idx) => (
-          <MessageRow
-            key={message.id}
-            message={message}
-            userInitials={userInitials}
-            userDisplayName={userDisplayName}
-            isLastAssistant={idx === lastAssistantIndex}
-            onRegenerate={() => regenerate(message)}
-          />
-        ))}
+        {visibleMessages.length === 0 ? (
+          <p className="py-10 text-center text-sm text-slate-400">No messages match your filters.</p>
+        ) : (
+          visibleMessages.map((message) => (
+            <MessageRow
+              key={message.id}
+              message={message}
+              userInitials={userInitials}
+              userDisplayName={userDisplayName}
+              isLastAssistant={message.id === lastAssistantId}
+              onRegenerate={() => regenerate(message)}
+              isBookmarked={bookmarks.includes(message.id)}
+              onToggleBookmark={() => toggleBookmark(message.id)}
+              feedback={feedback[message.id]}
+              onFeedback={(f) => setMessageFeedback(message.id, f)}
+              onReply={() => replyTo(message)}
+              onEdit={() => editUserMessage(message)}
+            />
+          ))
+        )}
         <div ref={endRef} />
       </div>
 

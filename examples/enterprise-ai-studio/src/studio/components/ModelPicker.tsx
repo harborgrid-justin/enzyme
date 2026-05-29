@@ -24,6 +24,8 @@ export function ModelPicker({ conversationModelId, compact }: ModelPickerProps):
   const setModelOverride = useStudioStore((s) => s.setModelOverride);
   const favoriteModelIds = useStudioStore((s) => s.favoriteModelIds);
   const toggleFavoriteModel = useStudioStore((s) => s.toggleFavoriteModel);
+  const recentModelIds = useStudioStore((s) => s.recentModelIds);
+  const pushRecentModel = useStudioStore((s) => s.pushRecentModel);
   const liveDeployment = useAzureStore((s) => s.liveDeployment);
   const betaEnabled = flags.useFeatureFlag(flags.flagKeys.BETA_FEATURES);
   const [open, setOpen] = useState(false);
@@ -43,8 +45,19 @@ export function ModelPicker({ conversationModelId, compact }: ModelPickerProps):
     () => visibleModels.filter((m) => favoriteModelIds.includes(m.id)),
     [visibleModels, favoriteModelIds]
   );
+  // Feature #87: recently-used models (excluding ones already starred).
+  const recentModels = useMemo(
+    () =>
+      recentModelIds
+        .filter((id) => !favoriteModelIds.includes(id))
+        .map((id) => visibleModels.find((m) => m.id === id))
+        .filter((m): m is ModelDescriptor => m != null)
+        .slice(0, 4),
+    [recentModelIds, favoriteModelIds, visibleModels]
+  );
 
   function selectModel(id: string): void {
+    pushRecentModel(id);
     setModelOverride(id === conversationModelId ? null : id);
     setOpen(false);
   }
@@ -148,6 +161,26 @@ export function ModelPicker({ conversationModelId, compact }: ModelPickerProps):
                     model={m}
                     isActive={m.id === activeModelId}
                     isFavorite
+                    onToggleFavorite={() => toggleFavoriteModel(m.id)}
+                    onClick={() => selectModel(m.id)}
+                  />
+                ))}
+              </div>
+            )}
+            {recentModels.length > 0 && (
+              <div className="mb-1 border-b border-slate-100 pb-1">
+                <div className="flex items-center gap-2 px-2 py-1">
+                  <span className="text-base">🕘</span>
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                    Recently used
+                  </span>
+                </div>
+                {recentModels.map((m) => (
+                  <ModelOption
+                    key={`recent-${m.id}`}
+                    model={m}
+                    isActive={m.id === activeModelId}
+                    isFavorite={favoriteModelIds.includes(m.id)}
                     onToggleFavorite={() => toggleFavoriteModel(m.id)}
                     onClick={() => selectModel(m.id)}
                   />

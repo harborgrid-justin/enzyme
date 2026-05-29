@@ -142,6 +142,30 @@ A second wave of workflow features layered on top of the core flow:
   tracks the active conversation. Curated **system-prompt presets** drop into
   the editor with one click.
 
+### Pro features
+
+A third wave focused on power workflows, organization, and per-message tools:
+
+- **Composer.** A live **context-window meter** (thread + draft vs the model's
+  limit), a **prompt-snippet library**, **quote-reply** from any message, an
+  **expand** editor, an **Enter-to-send** preference, and the `/system` slash
+  command. New chats **auto-title** from your first prompt.
+- **Per-message tools.** Bookmark messages (with a *★-only* filter), 👍/👎
+  feedback, **read-aloud** (Web Speech), **copy code blocks**, quote-reply, and
+  **edit-and-re-ask** a previous prompt — plus **in-thread search**.
+- **Organization.** Conversation **tags** (with a sidebar tag filter), sidebar
+  **sort** (recent / cost / title), and a per-conversation **insights** panel
+  (turns, tokens by role, models used).
+- **Models & sampling.** Advanced **top-p / frequency-penalty / seed** knobs, a
+  **model comparison** matrix, **recently-used** models, and **promote** a
+  per-turn override to the conversation default.
+- **Spend.** A **cost budget** with an over-budget banner and a
+  **cost-by-conversation** bar chart in the Usage meter.
+- **Workspace.** **Global content search** across every conversation (⌘⇧F),
+  **export the whole workspace** as JSON, a distraction-free **focus mode**
+  (⌘\\), **compact density**, **⌘J** to cycle models, and one-click
+  conversation **templates** on the welcome screen.
+
 ## How the no-backend wiring works
 
 - **MSW** (`src/studio/mocks/`) intercepts at the Service Worker layer — below

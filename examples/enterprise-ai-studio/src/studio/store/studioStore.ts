@@ -34,6 +34,18 @@ export interface StudioUiState {
   favoriteModelIds: string[];
   /** Feature #43: whether archived conversations are shown in the sidebar. */
   showArchived: boolean;
+  /** Feature #74: sidebar ordering within each owner section. */
+  sidebarSort: 'recent' | 'cost' | 'title';
+  /** Feature #86: message density. */
+  density: 'comfortable' | 'compact';
+  /** Feature #85: focus mode hides the sidebar + right rail. */
+  focusMode: boolean;
+  /** Feature #87: most-recently-used model ids (most recent first). */
+  recentModelIds: string[];
+  /** Feature #77: per-conversation cost budget in USD (0 = disabled). */
+  costBudgetUsd: number;
+  /** Feature #66: whether Enter sends (true) or inserts a newline (false). */
+  enterToSend: boolean;
 
   setActiveConversation: (id: string | null) => void;
   setModelOverride: (id: string | null) => void;
@@ -52,6 +64,18 @@ export interface StudioUiState {
   toggleShowArchived: () => void;
   /** Feature #51: restore the default temperature / maxTokens / provider options. */
   resetGenerationSettings: () => void;
+  /** Feature #74: change the sidebar ordering. */
+  setSidebarSort: (sort: StudioUiState['sidebarSort']) => void;
+  /** Feature #86: toggle comfortable/compact message density. */
+  toggleDensity: () => void;
+  /** Feature #85: toggle focus mode. */
+  toggleFocusMode: () => void;
+  /** Feature #87: record a model as recently used. */
+  pushRecentModel: (id: string) => void;
+  /** Feature #77: set the per-conversation cost budget (USD). */
+  setCostBudget: (value: number) => void;
+  /** Feature #66: toggle Enter-to-send vs Enter-for-newline. */
+  toggleEnterToSend: () => void;
 }
 
 const DEFAULT_TEMPERATURE = 0.7;
@@ -80,6 +104,12 @@ export const useStudioStore = create<StudioUiState>()(
       isRequestPreviewOpen: false,
       favoriteModelIds: [],
       showArchived: false,
+      sidebarSort: 'recent',
+      density: 'comfortable',
+      focusMode: false,
+      recentModelIds: [],
+      costBudgetUsd: 0,
+      enterToSend: true,
 
       setActiveConversation: (id) => set({ activeConversationId: id, modelOverrideId: null }),
       setModelOverride: (id) => set({ modelOverrideId: id }),
@@ -103,6 +133,14 @@ export const useStudioStore = create<StudioUiState>()(
           maxTokens: DEFAULT_MAX_TOKENS,
           providerOptions: { ...DEFAULT_PROVIDER_OPTIONS },
         }),
+      setSidebarSort: (sidebarSort) => set({ sidebarSort }),
+      toggleDensity: () =>
+        set((s) => ({ density: s.density === 'compact' ? 'comfortable' : 'compact' })),
+      toggleFocusMode: () => set((s) => ({ focusMode: !s.focusMode })),
+      pushRecentModel: (id) =>
+        set((s) => ({ recentModelIds: [id, ...s.recentModelIds.filter((m) => m !== id)].slice(0, 6) })),
+      setCostBudget: (value) => set({ costBudgetUsd: Math.max(0, value) }),
+      toggleEnterToSend: () => set((s) => ({ enterToSend: !s.enterToSend })),
     }),
     {
       name: 'enzyme-ai-studio-ui',
@@ -117,6 +155,12 @@ export const useStudioStore = create<StudioUiState>()(
         isUsageOpen: s.isUsageOpen,
         favoriteModelIds: s.favoriteModelIds,
         showArchived: s.showArchived,
+        sidebarSort: s.sidebarSort,
+        density: s.density,
+        focusMode: s.focusMode,
+        recentModelIds: s.recentModelIds,
+        costBudgetUsd: s.costBudgetUsd,
+        enterToSend: s.enterToSend,
       }),
     }
   )

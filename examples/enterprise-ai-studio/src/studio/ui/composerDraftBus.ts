@@ -5,6 +5,7 @@
  * exists, and the composer doesn't need to know about chips.
  */
 const EVENT_NAME = 'studio:fill-composer';
+const QUOTE_EVENT_NAME = 'studio:quote-composer';
 
 export function emitComposerDraft(text: string): void {
   window.dispatchEvent(new CustomEvent<string>(EVENT_NAME, { detail: text }));
@@ -17,4 +18,21 @@ export function onComposerDraft(handler: (text: string) => void): () => void {
   }
   window.addEventListener(EVENT_NAME, listener);
   return () => window.removeEventListener(EVENT_NAME, listener);
+}
+
+/**
+ * Feature #63: quote-reply. Unlike `emitComposerDraft` (which replaces), this
+ * asks the composer to append a Markdown blockquote of the given text.
+ */
+export function emitComposerQuote(text: string): void {
+  window.dispatchEvent(new CustomEvent<string>(QUOTE_EVENT_NAME, { detail: text }));
+}
+
+export function onComposerQuote(handler: (text: string) => void): () => void {
+  function listener(event: Event): void {
+    const detail = (event as CustomEvent<string>).detail;
+    if (typeof detail === 'string') handler(detail);
+  }
+  window.addEventListener(QUOTE_EVENT_NAME, listener);
+  return () => window.removeEventListener(QUOTE_EVENT_NAME, listener);
 }
