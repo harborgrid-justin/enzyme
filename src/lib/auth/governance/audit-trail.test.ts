@@ -70,3 +70,56 @@ describe('AuditTrail', () => {
     expect(trail.list()[0]?.actor).toBe('svc');
   });
 });
+
+describe('AuditTrail hash chain', () => {
+  it('does not attach hashes when hashChain is off', () => {
+    const trail = createAuditTrail();
+    const entry = trail.record({ actor: 'a', action: 'x', target: '1' });
+    expect(entry.hash).toBeUndefined();
+    expect(entry.prevHash).toBeUndefined();
+    expect(trail.verifyIntegrity()).toBe(true); // vacuously true
+  });
+
+  it('links each entry to the previous and verifies an intact chain', () => {
+    let n = 0;
+    const trail = createAuditTrail({
+      hashChain: true,
+      generateId: () => `id-${(n += 1)}`,
+      now: () => '2026-01-01T00:00:00.000Z',
+    });
+    trail.record({ actor: 'ada', action: 'rbac.grant', target: 'admin:a' });
+    trail.record({ actor: 'ada', action: 'rbac.grant', target: 'admin:b' });
+
+    const [newest, oldest] = trail.list();
+    expect(oldest?.prevHash).toBe('0'); // genesis
+    expect(newest?.prevHash).toBe(oldest?.hash); // chained
+    expect(newest?.hash).toMatch(/^[0-9a-f]{8}$/);
+    expect(trail.verifyIntegrity()).toBe(true);
+  });
+
+  it('detects tampering with a recorded entry', () => {
+    const trail = createAuditTrail({ hashChain: true });
+    trail.record({ actor: 'a', action: 'x', target: '1' });
+    trail.record({ actor: 'a', action: 'x', target: '2' });
+    expect(trail.verifyIntegrity()).toBe(true);
+
+    // Mutate an entry in place (simulating storage tampering).
+    const tampered = trail.list()[1] as { target: string };
+    tampered.target = 'hacked';
+    expect(trail.verifyIntegrity()).toBe(false);
+  });
+
+  it('supports an injected (deterministic) hash function', () => {
+    const custom = (s: string): string => `h${s.length.toString(16)}`;
+    const trail = createAuditTrail({
+      hashChain: true,
+      hash: custom,
+      generateId: () => 'id',
+      now: () => '2026-01-01T00:00:00.000Z',
+    });
+    trail.record({ actor: 'a', action: 'x', target: '1' });
+    trail.record({ actor: 'a', action: 'x', target: '2' });
+    expect(trail.verifyIntegrity()).toBe(true);
+    expect(trail.list()[0]?.hash?.startsWith('h')).toBe(true);
+  });
+});

@@ -290,6 +290,7 @@ export {
   // Business audit trail
   AuditTrail,
   createAuditTrail,
+  checksum,
   type AuditTrailOptions,
   type AuditEntry,
   type AuditInput,

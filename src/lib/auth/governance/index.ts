@@ -45,7 +45,7 @@
 export { AccessControl, createAccessControl, WILDCARD_PERMISSION } from './access-control';
 export type { AccessControlConfig } from './access-control';
 
-export { AuditTrail, createAuditTrail } from './audit-trail';
+export { AuditTrail, createAuditTrail, checksum } from './audit-trail';
 export type { AuditTrailOptions } from './audit-trail';
 
 export {

@@ -21,6 +21,16 @@ export interface AuditEntry {
   at: string;
   /** Optional structured context. */
   metadata?: Record<string, unknown>;
+  /**
+   * Hash of the previous (chronologically earlier) entry, linking the chain.
+   * Present only when the trail was created with `hashChain: true`.
+   */
+  prevHash?: string;
+  /**
+   * Tamper-evident hash of this entry (over its fields and {@link prevHash}).
+   * Present only when the trail was created with `hashChain: true`.
+   */
+  hash?: string;
 }
 
 /** The shape passed to {@link AuditTrail.record} — `id`/`at` are filled in. */
