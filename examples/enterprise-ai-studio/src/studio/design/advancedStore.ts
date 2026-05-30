@@ -12,6 +12,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { appendAudit } from './lib/governance';
+import * as governance from './lib/governanceBridge';
 import { generateKey, maskKey } from './lib/integrations';
 import { commitRevision, svgPlaceholder } from './lib/content';
 import type {
@@ -195,31 +196,33 @@ export const useAdvancedStore = create<AdvancedState>()(
         setActor: (actor) => set({ actor }),
         audit_: (action, target) => set((s) => ({ audit: log(s, action, target) })),
 
+        // RBAC grant/member edits delegate to enzyme's editable access-control
+        // matrix (auth.createAccessControl) via the governance bridge; the
+        // audit hash-chain stays here since the framework trail isn't hashed.
         toggleGrant: (role, permission) =>
           set((s) => {
-            const has = (s.rbac.grants[role] ?? []).includes(permission);
-            const next = has
-              ? s.rbac.grants[role].filter((p) => p !== permission)
-              : [...(s.rbac.grants[role] ?? []), permission];
+            const { matrix, granted } = governance.toggleGrant(s.rbac, role, permission);
             return {
-              rbac: { ...s.rbac, grants: { ...s.rbac.grants, [role]: next } },
-              audit: log(s, has ? 'rbac.revoke' : 'rbac.grant', `${role}:${permission}`),
+              rbac: matrix,
+              audit: log(s, granted ? 'rbac.grant' : 'rbac.revoke', `${role}:${permission}`),
             };
           }),
         setMemberRole: (name, role) =>
           set((s) => ({
-            rbac: { ...s.rbac, members: s.rbac.members.map((m) => (m.name === name ? { ...m, role } : m)) },
+            rbac: governance.setMemberRole(s.rbac, name, role),
             audit: log(s, 'rbac.role', `${name}→${role}`),
           })),
 
+        // SSO/SCIM edits delegate to enzyme's provisioning directory
+        // (auth.createProvisioningDirectory) via the governance bridge.
         toggleIdp: (id) =>
           set((s) => ({
-            idps: s.idps.map((i) => (i.id === id ? { ...i, enabled: !i.enabled } : i)),
+            ...governance.toggleIdp(s.idps, s.scim, id),
             audit: log(s, 'sso.toggle', id),
           })),
         provisionUser: (id) =>
           set((s) => ({
-            scim: s.scim.map((u) => (u.id === id ? { ...u, provisioned: true } : u)),
+            ...governance.provisionUser(s.idps, s.scim, id),
             audit: log(s, 'scim.provision', id),
           })),
 
