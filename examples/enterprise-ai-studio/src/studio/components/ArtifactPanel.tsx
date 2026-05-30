@@ -1,3 +1,4 @@
+import { hooks } from '@missionfabric-js/enzyme';
 import { useArtifactStore, useOpenArtifact } from '../artifacts/store';
 import type { ArtifactKind, ArtifactVersion } from '../artifacts/types';
 import { ArtifactPreview } from './ArtifactPreview';
@@ -13,6 +14,7 @@ export function ArtifactPanel(): React.ReactElement | null {
   const setViewMode = useArtifactStore((s) => s.setViewMode);
   const selectVersion = useArtifactStore((s) => s.selectVersion);
   const closePanel = useArtifactStore((s) => s.openArtifact);
+  const [, copy] = hooks.useCopyToClipboard();
 
   if (artifact == null || selectedVersion == null) return null;
 
@@ -22,7 +24,7 @@ export function ArtifactPanel(): React.ReactElement | null {
 
   function copySource(): void {
     if (selectedVersion == null) return;
-    void navigator.clipboard.writeText(selectedVersion.body);
+    void copy(selectedVersion.body);
   }
 
   function download(): void {

@@ -1,10 +1,12 @@
 /**
  * Feature #62: saved prompt snippets.
  *
- * A tiny localStorage-backed library of reusable prompt fragments the user can
- * insert into the composer. Framework-free so the Composer can read/write it
- * directly.
+ * A localStorage-backed library of reusable prompt fragments the user can
+ * insert into the composer. Persistence goes through enzyme's `shared` storage
+ * layer so the Composer doesn't hand-roll `localStorage` access.
  */
+import { shared } from '@missionfabric-js/enzyme';
+
 const KEY = 'enzyme-ai-studio-snippets';
 
 export interface PromptSnippet {
@@ -24,20 +26,10 @@ const DEFAULT_SNIPPETS: PromptSnippet[] = [
 ];
 
 export function loadSnippets(): PromptSnippet[] {
-  try {
-    const raw = localStorage.getItem(KEY);
-    if (raw == null) return DEFAULT_SNIPPETS;
-    const parsed = JSON.parse(raw) as PromptSnippet[];
-    return Array.isArray(parsed) ? parsed : DEFAULT_SNIPPETS;
-  } catch {
-    return DEFAULT_SNIPPETS;
-  }
+  const stored = shared.getLocal<PromptSnippet[]>(KEY);
+  return Array.isArray(stored) ? stored : DEFAULT_SNIPPETS;
 }
 
 export function saveSnippets(snippets: PromptSnippet[]): void {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(snippets));
-  } catch {
-    // Best-effort.
-  }
+  shared.setLocal(KEY, snippets);
 }

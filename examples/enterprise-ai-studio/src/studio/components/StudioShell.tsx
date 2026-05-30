@@ -1,4 +1,4 @@
-import { state } from '@missionfabric-js/enzyme';
+import { hooks, shared, state } from '@missionfabric-js/enzyme';
 import * as RadixDialog from '@radix-ui/react-dialog';
 import { useEffect, useState } from 'react';
 import { useConversations } from '../api/conversations';
@@ -24,13 +24,20 @@ import { DesignWorkspace } from '../design/DesignWorkspace';
 import { CommandPalette } from '../ui/CommandPalette';
 import { KeyboardShortcutsDialog } from '../ui/KeyboardShortcutsDialog';
 import { OfflineBanner } from '../ui/OfflineBanner';
-import { useHotkey, modKeyLabel } from '../ui/useHotkey';
+import { modKeyLabel } from '../ui/useHotkey';
 import { COMPOSER_INPUT_ID } from '../ui/composerInputId';
 import { toast } from '../ui/toast';
 import { MODELS } from '../providers/catalog';
 import { useWorkspaceExport } from '../api/useWorkspaceExport';
 
 const FIRST_LOAD_HINT_KEY = 'enzyme-studio-saw-command-palette-hint';
+
+/**
+ * The platform modifier token enzyme's `useKeyboardShortcuts` parser expects:
+ * `cmd` (⌘) on macOS, `ctrl` elsewhere.
+ */
+const MOD_KEY =
+  typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform) ? 'cmd' : 'ctrl';
 
 /**
  * Top-level studio layout — sidebar + main pane + right rail. The selected
@@ -65,15 +72,6 @@ export function StudioShell(): React.ReactElement {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const { start: startNew } = useStartNewConversation();
 
-  useHotkey('mod+k', () => setPaletteOpen((v) => !v), { allowInInput: true });
-  useHotkey('mod+n', () => void startNew());
-  useHotkey('mod+/', () => {
-    document.getElementById(COMPOSER_INPUT_ID)?.focus();
-  });
-  useHotkey('mod+shift+/', () => setShortcutsOpen((v) => !v), { allowInInput: true });
-  // Feature #58: toggle the right-rail Settings panel from the keyboard.
-  useHotkey('mod+.', () => toggleSettings());
-
   state.useBroadcastSync(useStudioStore, {
     channelName: 'enzyme-ai-studio-sync',
     syncKeys: ['activeConversationId', 'temperature', 'maxTokens'],
@@ -84,7 +82,8 @@ export function StudioShell(): React.ReactElement {
   // hint becomes an interactive toast — clicking it opens the palette.
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (window.localStorage.getItem(FIRST_LOAD_HINT_KEY) === '1') return;
+    // Persist the "seen the hint" flag via enzyme's `shared` storage layer.
+    if (shared.getLocal<boolean>(FIRST_LOAD_HINT_KEY) === true) return;
     const timer = window.setTimeout(() => {
       toast.info(`Tip: press ${modKeyLabel()}K to jump anywhere in the studio.`, {
         duration: 8000,
@@ -93,7 +92,7 @@ export function StudioShell(): React.ReactElement {
           onClick: () => setPaletteOpen(true),
         },
       });
-      window.localStorage.setItem(FIRST_LOAD_HINT_KEY, '1');
+      shared.setLocal(FIRST_LOAD_HINT_KEY, true);
     }, 1500);
     return () => window.clearTimeout(timer);
   }, []);
@@ -103,14 +102,13 @@ export function StudioShell(): React.ReactElement {
       ? (conversations ?? []).find((c) => c.id === activeConversationId)
       : undefined;
 
-  // Feature #59: reflect the active conversation in the browser/tab title.
-  useEffect(() => {
-    const base = 'Enzyme AI Studio';
-    document.title = activeConversation != null ? `${activeConversation.title} · ${base}` : base;
-    return () => {
-      document.title = base;
-    };
-  }, [activeConversation]);
+  // Feature #59: reflect the active conversation in the browser/tab title via
+  // enzyme's declarative `useDocumentTitle` (restores the prior title on unmount).
+  const titleBase = 'Enzyme AI Studio';
+  hooks.useDocumentTitle(
+    activeConversation != null ? `${activeConversation.title} · ${titleBase}` : titleBase,
+    { restoreOnUnmount: true }
+  );
 
   // Feature #90: cycle the next-turn model with a keyboard shortcut.
   function cycleModel(): void {
@@ -123,11 +121,62 @@ export function StudioShell(): React.ReactElement {
     const label = MODELS.find((m) => m.id === next)?.label ?? next;
     toast.info(`Model → ${label}`);
   }
-  useHotkey('mod+j', cycleModel);
-  // Feature #85: focus mode hides the side panels.
-  useHotkey('mod+\\', () => toggleFocusMode());
-  // Feature #84: global content search.
-  useHotkey('mod+shift+f', () => setGlobalSearchOpen((v) => !v), { allowInInput: true });
+  // Global shortcuts via enzyme's `hooks.useKeyboardShortcuts` (gated by the
+  // `keyboard-shortcuts` flag set in App.tsx). `mod` resolves to ⌘ on macOS and
+  // Ctrl elsewhere. Note: unlike the previous hand-rolled hook, the framework
+  // hook only fires Escape while a text field is focused — the other combos are
+  // suppressed during typing, which is the standard accessible default.
+  const mod = MOD_KEY;
+  hooks.useKeyboardShortcuts([
+    {
+      id: 'palette',
+      keys: `${mod}+k`,
+      description: 'Open the command palette',
+      handler: () => setPaletteOpen((v) => !v),
+    },
+    {
+      id: 'new-conversation',
+      keys: `${mod}+n`,
+      description: 'Start a new conversation',
+      handler: () => void startNew(),
+    },
+    {
+      id: 'focus-composer',
+      keys: `${mod}+/`,
+      description: 'Focus the composer',
+      handler: () => document.getElementById(COMPOSER_INPUT_ID)?.focus(),
+    },
+    {
+      id: 'shortcuts-help',
+      keys: `${mod}+shift+/`,
+      description: 'Show keyboard shortcuts',
+      handler: () => setShortcutsOpen((v) => !v),
+    },
+    {
+      id: 'toggle-settings',
+      keys: `${mod}+.`,
+      description: 'Toggle the Settings panel',
+      handler: () => toggleSettings(),
+    },
+    {
+      id: 'cycle-model',
+      keys: `${mod}+j`,
+      description: 'Cycle the next-turn model',
+      handler: cycleModel,
+    },
+    {
+      id: 'focus-mode',
+      keys: `${mod}+\\`,
+      description: 'Toggle focus mode',
+      handler: () => toggleFocusMode(),
+    },
+    {
+      id: 'global-search',
+      keys: `${mod}+shift+f`,
+      description: 'Search across conversations',
+      handler: () => setGlobalSearchOpen((v) => !v),
+    },
+  ]);
 
   function handleExportWorkspace(): void {
     toast.promise(exportAll(), {

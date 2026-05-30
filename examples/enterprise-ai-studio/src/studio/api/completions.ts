@@ -22,6 +22,7 @@ import type {
   StudioMessage,
 } from '../types';
 import { conversationsKey, messagesKey } from './conversations';
+import { consumeSseStream } from './sse';
 import { costFor, modelOrDefault } from '../providers/catalog';
 import { parseArtifacts } from '../artifacts/parser';
 import { useArtifactStore } from '../artifacts/store';
@@ -46,31 +47,6 @@ export interface UseChatCompletionResult {
   abort: () => void;
   isStreaming: boolean;
   error: Error | null;
-}
-
-const SSE_FRAME_DELIMITER = /\n\n/;
-const SSE_DATA_PREFIX = 'data:';
-
-/**
- * Parse a chunk of SSE text into discrete frames. We carry a buffer across
- * chunks because TCP doesn't promise frame-aligned reads.
- */
-function* parseSseChunk(buffer: string): Generator<CompletionFrame, string> {
-  const parts = buffer.split(SSE_FRAME_DELIMITER);
-  // Everything except the last segment is a complete frame; the tail may be partial.
-  const complete = parts.slice(0, -1);
-  for (const block of complete) {
-    const line = block.split('\n').find((l) => l.startsWith(SSE_DATA_PREFIX));
-    if (!line) continue;
-    const payload = line.slice(SSE_DATA_PREFIX.length).trim();
-    if (payload === '') continue;
-    try {
-      yield JSON.parse(payload) as CompletionFrame;
-    } catch {
-      // Ignore malformed frames — a real client might log/break here.
-    }
-  }
-  return parts[parts.length - 1] ?? '';
 }
 
 export function useChatCompletion(): UseChatCompletionResult {
@@ -197,33 +173,25 @@ export function useChatCompletion(): UseChatCompletionResult {
           throw new Error('Provider returned an empty stream.');
         }
 
-        const reader = stream.getReader();
-        const decoder = new TextDecoder();
-        let buffer = '';
-
-        // eslint-disable-next-line no-constant-condition
-        while (true) {
-          const { value, done } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-
-          // Drain whole frames out of the buffer; the generator returns the tail.
-          const iter = parseSseChunk(buffer);
-          let next = iter.next();
-          while (!next.done) {
-            const frame = next.value;
-            if (frame.type === 'token') {
-              applyChunk(aggregated + frame.text);
-            } else if (frame.type === 'done') {
-              finalUsage = frame.usage;
-              serverMessageId = frame.messageId;
-            } else if (frame.type === 'error') {
-              throw new Error(frame.message);
-            }
-            next = iter.next();
+        // Shared SSE framing (see ./sse); each frame's `data` is the JSON
+        // CompletionFrame the mock backend emits.
+        await consumeSseStream(stream, (raw) => {
+          if (raw.data === '') return;
+          let frame: CompletionFrame;
+          try {
+            frame = JSON.parse(raw.data) as CompletionFrame;
+          } catch {
+            return; // Ignore malformed frames — a real client might log here.
           }
-          buffer = next.value;
-        }
+          if (frame.type === 'token') {
+            applyChunk(aggregated + frame.text);
+          } else if (frame.type === 'done') {
+            finalUsage = frame.usage;
+            serverMessageId = frame.messageId;
+          } else if (frame.type === 'error') {
+            throw new Error(frame.message);
+          }
+        });
         }
 
         // Final parse so partial-tail artifacts get fully realized.

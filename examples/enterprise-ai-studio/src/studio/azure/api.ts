@@ -24,20 +24,37 @@ import type {
   BudgetSummary,
   FoundryHub,
 } from './types';
+import { utils } from '@missionfabric-js/enzyme';
+import { consumeSseStream } from '../api/sse';
 
 // -----------------------------------------------------------------------------
 // Reads
 // -----------------------------------------------------------------------------
 
 async function bridgeFetch<T>(path: string): Promise<T> {
-  const res = await fetch(path, { headers: { accept: 'application/json' } });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    const err = new Error(body.message ?? `Bridge ${res.status} for ${path}`);
-    Object.assign(err, { status: res.status, body });
-    throw err;
-  }
-  return (await res.json()) as T;
+  // Wrap reads in enzyme's `withRetry` so a transient blip on the local bridge
+  // (network error, or a 5xx while `az` warms up) is retried with backoff.
+  // Deterministic client errors (4xx) are not retried — retrying them would
+  // only delay the error banner.
+  return utils.withRetry(
+    async () => {
+      const res = await fetch(path, { headers: { accept: 'application/json' } });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        const err = new Error(body.message ?? `Bridge ${res.status} for ${path}`);
+        Object.assign(err, { status: res.status, body });
+        throw err;
+      }
+      return (await res.json()) as T;
+    },
+    {
+      maxAttempts: 3,
+      retryOn: (error) => {
+        const status = (error as { status?: number }).status;
+        return status == null || status >= 500;
+      },
+    }
+  );
 }
 
 export function useAzureStatus(): UseQueryResult<AzureStatus> {
@@ -302,28 +319,20 @@ export async function streamSse(
     handlers.onClose();
     return;
   }
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let buf = '';
   try {
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
-      const { value, done } = await reader.read();
-      if (done) break;
-      buf += decoder.decode(value, { stream: true });
-      let frameEnd;
-      while ((frameEnd = buf.indexOf('\n\n')) !== -1) {
-        const frame = buf.slice(0, frameEnd);
-        buf = buf.slice(frameEnd + 2);
-        const event = /^event:\s*(.+)$/m.exec(frame)?.[1] ?? 'message';
-        const data = /^data:\s*([\s\S]+)$/m.exec(frame)?.[1] ?? '';
-        try {
-          handlers.onEvent(event.trim(), data === '' ? null : JSON.parse(data));
-        } catch {
-          handlers.onEvent(event.trim(), data);
-        }
+    // Shared SSE framing (see ../api/sse). Azure/Foundry emits the OpenAI
+    // chat-completion shape: `data: {json}` frames, plus a `data: [DONE]`.
+    await consumeSseStream(response.body, ({ event, data }) => {
+      if (data === '') {
+        handlers.onEvent(event, null);
+        return;
       }
-    }
+      try {
+        handlers.onEvent(event, JSON.parse(data));
+      } catch {
+        handlers.onEvent(event, data);
+      }
+    });
   } catch (err) {
     if ((err as Error).name !== 'AbortError') {
       handlers.onEvent('error', { message: (err as Error)?.message ?? String(err) });
