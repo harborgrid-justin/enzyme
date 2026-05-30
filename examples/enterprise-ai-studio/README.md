@@ -176,11 +176,12 @@ that single-page generators leave open (no reusable components, no backend, no
 collaboration, no governance) while keeping the no-backend, MSW-friendly model
 of the rest of this example.
 
-The workspace ships **55 capabilities** grouped into nine themes. Each is a
+The workspace ships **61 capabilities** grouped into ten themes. Each is a
 self-contained panel in `src/studio/design/panels/`, backed by Zustand stores
 (`design/store.ts` for the core 25, `design/advancedStore.ts` for the
-enterprise 30 — both persisted to `localStorage`) and a set of pure,
-unit-tested helpers in `design/lib/` that carry the real logic.
+enterprise 30, and `design/complianceStore.ts` for the compliance & risk 6 —
+all persisted to `localStorage`) and a set of pure, unit-tested helpers in
+`design/lib/` that carry the real logic.
 
 | # | Capability | What it does | Core helper |
 | --- | --- | --- | --- |
@@ -248,6 +249,13 @@ unit-tested helpers in `design/lib/` that carry the real logic.
 | 53 | **Capacity** | Seat/storage/quota usage with `ok`/`warning`/`critical` state | `lib/analytics` |
 | 54 | **Anomalies** | z-score spike detection across operational metric series | `lib/analytics` |
 | 55 | **Executive report** | One-click markdown rollup of spend, perf, conversion, risk | `lib/analytics` |
+| **Compliance & risk** | | | |
+| 56 | **Compliance frameworks** | Map controls to SOC 2 / ISO 27001 / GDPR → per-framework readiness score | `lib/compliance` |
+| 57 | **Evidence freshness** | Track control evidence against its refresh cadence (fresh/stale/expired) + coverage | `lib/compliance` |
+| 58 | **Vendor risk** | Weighted third-party portfolio risk (tier × data access) with reviews-due tracking | `lib/compliance` |
+| 59 | **Risk register** | Likelihood × impact scoring → level, with mitigation → residual risk | `lib/compliance` |
+| 60 | **Incident register** | Security incidents with SLA-breach detection and MTTR | `lib/compliance` |
+| 61 | **Data-subject requests** | GDPR / CCPA DSAR queue against the statutory clock (on-track/due-soon/overdue) | `lib/compliance` |
 
 ### Try it
 
@@ -268,6 +276,13 @@ unit-tested helpers in `design/lib/` that carry the real logic.
 8. **PII / DLP** → hit **Redact all** to scrub emails, SSNs, and cards; **Cost
    governance** and **Capacity** show live budget/quota states; **Executive
    report → Download .md** exports a one-click rollup.
+9. **Compliance & risk** → **Compliance frameworks** shows SOC 2 / ISO / GDPR
+   readiness (flip a control's status and watch the score move); **Evidence
+   freshness → Re-collect** resets a stale item's clock; **Risk register** drags
+   inherent down to residual via the mitigation slider; **Incident register**
+   flags SLA breaches and computes MTTR; **Data-subject requests** runs the
+   GDPR / CCPA queue against its statutory clock. Every action here lands on the
+   same tamper-evident **Audit log** as the rest of the governance suite.
 
 ### How it's built
 
@@ -276,10 +291,10 @@ unit-tested helpers in `design/lib/` that carry the real logic.
 - **Logic vs. UI split.** Every non-trivial capability has a pure helper in
   `design/lib/*` (tokenizing, diffing, auditing, retrieval, binding, exporting,
   the agent runner). The same split holds for the enterprise capabilities in
-  `design/lib/{governance,aiops,content,integrations,analytics}.ts`. Those
-  helpers are covered by **69 unit tests** across
-  `design/__tests__/lib.test.ts` and `design/__tests__/advanced.test.ts` — run
-  `npm test`.
+  `design/lib/{governance,aiops,content,integrations,analytics,compliance}.ts`.
+  Those helpers are covered by **85 unit tests** across
+  `design/__tests__/lib.test.ts`, `design/__tests__/advanced.test.ts`, and
+  `design/__tests__/compliance.test.ts` — run `npm test`.
 - **Same security posture.** Page previews reuse the studio's `PreviewFrame` —
   HTML renders in a null-origin sandboxed iframe with a strict CSP; SVG is
   sanitized before inline mount.

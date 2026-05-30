@@ -1,12 +1,12 @@
 /**
  * Feature registry for the Design workspace.
  *
- * The 55 capabilities are grouped into themes that position the studio against
+ * The 61 capabilities are grouped into themes that position the studio against
  * Claude Design / MindStudio: deeper design tooling, real collaboration, a path
  * to production, an enterprise-strength AI layer, and the enterprise spine —
  * governance & trust, AI operations, content & localization, integrations &
- * automation, and analytics. The workspace shell renders its left-nav and
- * active panel straight off this list.
+ * automation, analytics, and compliance & risk. The workspace shell renders its
+ * left-nav and active panel straight off this list.
  */
 import type { ReactElement } from 'react';
 import { TokensPanel } from './panels/TokensPanel';
@@ -65,6 +65,13 @@ import { PerfBudgetPanel } from './panels/PerfBudgetPanel';
 import { CapacityPanel } from './panels/CapacityPanel';
 import { AnomaliesPanel } from './panels/AnomaliesPanel';
 import { ExecReportPanel } from './panels/ExecReportPanel';
+// Compliance & risk capabilities (56–61).
+import { FrameworksPanel } from './panels/FrameworksPanel';
+import { EvidencePanel } from './panels/EvidencePanel';
+import { VendorRiskPanel } from './panels/VendorRiskPanel';
+import { RiskRegisterPanel } from './panels/RiskRegisterPanel';
+import { IncidentsPanel } from './panels/IncidentsPanel';
+import { DsarPanel } from './panels/DsarPanel';
 
 export interface DesignFeature {
   num: number;
@@ -189,6 +196,18 @@ export const DESIGN_GROUPS: DesignFeatureGroup[] = [
       { num: 53, id: 'capacity', title: 'Capacity', icon: '📦', blurb: 'Quota planning', Panel: CapacityPanel },
       { num: 54, id: 'anomalies', title: 'Anomalies', icon: '🚨', blurb: 'Spike detection', Panel: AnomaliesPanel },
       { num: 55, id: 'exec-report', title: 'Executive report', icon: '🧾', blurb: 'One-click rollup', Panel: ExecReportPanel },
+    ],
+  },
+  {
+    id: 'compliance',
+    label: 'Compliance & risk',
+    features: [
+      { num: 56, id: 'frameworks', title: 'Compliance frameworks', icon: '📋', blurb: 'SOC 2 / ISO / GDPR readiness', Panel: FrameworksPanel },
+      { num: 57, id: 'evidence', title: 'Evidence freshness', icon: '📑', blurb: 'Audit-ready evidence', Panel: EvidencePanel },
+      { num: 58, id: 'vendor-risk', title: 'Vendor risk', icon: '🏷️', blurb: 'Third-party portfolio', Panel: VendorRiskPanel },
+      { num: 59, id: 'risk-register', title: 'Risk register', icon: '⚠️', blurb: 'Likelihood × impact', Panel: RiskRegisterPanel },
+      { num: 60, id: 'incidents', title: 'Incident register', icon: '🚒', blurb: 'SLA + MTTR tracking', Panel: IncidentsPanel },
+      { num: 61, id: 'dsar', title: 'Data-subject requests', icon: '📨', blurb: 'GDPR / CCPA queue', Panel: DsarPanel },
     ],
   },
 ];
