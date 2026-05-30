@@ -262,3 +262,42 @@ export {
   type RBACAuditEvent,
   type RBACAuditHandler,
 } from './rbac';
+
+// ============================================================================
+// Access Governance (editable RBAC matrix, provisioning, audit trail)
+// ============================================================================
+
+export * as governance from './governance';
+
+export {
+  // Editable RBAC grant matrix
+  AccessControl,
+  createAccessControl,
+  WILDCARD_PERMISSION,
+  type AccessControlConfig,
+  type AccessControlSnapshot,
+
+  // Identity provisioning directory
+  ProvisioningDirectory,
+  createProvisioningDirectory,
+  type ProvisioningConfig,
+  type NewUserInput,
+  type IdentityProvider,
+  type ProvisionedUser,
+  type ProvisioningSnapshot,
+  type ProvisionStatus,
+
+  // Business audit trail
+  AuditTrail,
+  createAuditTrail,
+  type AuditTrailOptions,
+  type AuditEntry,
+  type AuditInput,
+  type AuditQuery,
+  type AuditSink,
+
+  // React bindings
+  useAccessControl,
+  useProvisioningDirectory,
+  useAuditTrail,
+} from './governance';
