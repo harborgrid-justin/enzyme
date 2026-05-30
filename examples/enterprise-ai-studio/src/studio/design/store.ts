@@ -62,10 +62,7 @@ import {
   SEED_WORKFLOWS,
   SEED_WORKSPACE,
 } from './seed';
-
-function uid(prefix: string): string {
-  return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
-}
+import { uid } from './lib/id';
 
 /** Parse `@Name` mentions out of free text. */
 export function parseMentions(text: string): string[] {

@@ -10,8 +10,7 @@
  * Opening is bound to ⌘K globally — see `StudioShell.tsx`.
  */
 import { Command } from 'cmdk';
-import { theme } from '@missionfabric-js/enzyme';
-import { useEffect } from 'react';
+import { hooks, theme } from '@missionfabric-js/enzyme';
 import { useConversations, useConversationMessages } from '../api/conversations';
 import { useDuplicateConversation } from '../api/useDuplicateConversation';
 import { useStudioStore } from '../store/studioStore';
@@ -62,16 +61,17 @@ export function CommandPalette({
   const { data: activeMessages } = useConversationMessages(activeConversationId);
   const activeConversation = (conversations ?? []).find((c) => c.id === activeConversationId);
 
-  // Esc handled by Command.Dialog. Reset filter on close so the next open
-  // starts fresh.
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') onOpenChange(false);
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [open, onOpenChange]);
+  // Esc closes the palette (enzyme's useKeyboardShortcuts lets Escape fire even
+  // with the search input focused). Only active while the palette is open.
+  hooks.useKeyboardShortcuts([
+    {
+      id: 'close-palette',
+      keys: 'escape',
+      description: 'Close the command palette',
+      enabled: open,
+      handler: () => onOpenChange(false),
+    },
+  ]);
 
   function run(action: () => void): void {
     action();

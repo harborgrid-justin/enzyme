@@ -1,4 +1,4 @@
-import { auth, monitoring } from '@missionfabric-js/enzyme';
+import { auth, hooks, monitoring } from '@missionfabric-js/enzyme';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Conversation } from '../types';
 import { useChatCompletion } from '../api/completions';
@@ -6,7 +6,6 @@ import { useUpdateConversation, useConversationMessages } from '../api/conversat
 import { useStudioStore } from '../store/studioStore';
 import { ModelPicker } from './ModelPicker';
 import { STUDIO_PERMISSIONS } from '../users';
-import { useHotkey } from '../ui/useHotkey';
 import { COMPOSER_INPUT_ID } from '../ui/composerInputId';
 import { toast } from '../ui/toast';
 import { onComposerDraft, onComposerQuote } from '../ui/composerDraftBus';
@@ -144,8 +143,18 @@ export function Composer({ conversation }: ComposerProps): React.ReactElement {
     saveSnippets(next);
   }
 
-  // Feature #10 (re-bound here too): Esc aborts the active stream.
-  useHotkey('esc', () => abort(), { allowInInput: true, enabled: isStreaming });
+  // Feature #10 (re-bound here too): Esc aborts the active stream. enzyme's
+  // `useKeyboardShortcuts` lets Escape fire even while the composer textarea is
+  // focused, so abort still works mid-typing.
+  hooks.useKeyboardShortcuts([
+    {
+      id: 'abort-stream',
+      keys: 'escape',
+      description: 'Abort the active response',
+      enabled: isStreaming,
+      handler: () => abort(),
+    },
+  ]);
 
   // Feature #25: Welcome screen and empty-state chips fill the composer via
   // a custom-event bus so they stay decoupled from this component.

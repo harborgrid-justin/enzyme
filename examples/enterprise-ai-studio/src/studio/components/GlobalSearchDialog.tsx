@@ -81,14 +81,17 @@ export function GlobalSearchDialog({
     };
   }, [open, conversations]);
 
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') onOpenChange(false);
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [open, onOpenChange]);
+  // Esc closes the dialog (Escape fires through enzyme's useKeyboardShortcuts
+  // even while the search field is focused). Only active while open.
+  hooks.useKeyboardShortcuts([
+    {
+      id: 'close-search',
+      keys: 'escape',
+      description: 'Close global search',
+      enabled: open,
+      handler: () => onOpenChange(false),
+    },
+  ]);
 
   const results = useMemo(() => {
     const q = debouncedQuery.trim().toLowerCase();

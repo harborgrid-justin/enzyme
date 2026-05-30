@@ -36,6 +36,9 @@ export default function App(): React.ReactElement {
         initialFlags={{
           [flags.flagKeys.BETA_FEATURES]: false,
           [flags.flagKeys.DARK_MODE]: true,
+          // Gates enzyme's `hooks.useKeyboardShortcuts`, which powers the studio's
+          // global shortcuts (palette, new chat, focus composer, …).
+          [flags.flagKeys.KEYBOARD_SHORTCUTS]: true,
         }}
       >
         <theme.ThemeProvider defaultTheme="light">
