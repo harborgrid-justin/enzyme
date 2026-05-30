@@ -1,23 +1,30 @@
 /**
  * Tiny event bus the Welcome screen (and empty conversation state) use to
- * prefill the composer when a user clicks a suggestion chip. A DOM CustomEvent
- * keeps the wiring decoupled — the chip doesn't need to know the composer
+ * prefill the composer when a user clicks a suggestion chip. A decoupled
+ * pub/sub keeps the wiring loose — the chip doesn't need to know the composer
  * exists, and the composer doesn't need to know about chips.
+ *
+ * Backed by enzyme's typed `createEventEmitter` (from `utils`) rather than a
+ * hand-rolled DOM `CustomEvent`, so the channel is strongly typed and the
+ * subscribe APIs return a consistent unsubscribe function.
  */
-const EVENT_NAME = 'studio:fill-composer';
-const QUOTE_EVENT_NAME = 'studio:quote-composer';
+import { utils } from '@missionfabric-js/enzyme';
+
+type ComposerEvents = {
+  /** Replace the composer contents with this text. */
+  fill: string;
+  /** Append a Markdown blockquote of this text to the composer. */
+  quote: string;
+};
+
+const bus = utils.createEventEmitter<ComposerEvents>();
 
 export function emitComposerDraft(text: string): void {
-  window.dispatchEvent(new CustomEvent<string>(EVENT_NAME, { detail: text }));
+  void bus.emit('fill', text);
 }
 
 export function onComposerDraft(handler: (text: string) => void): () => void {
-  function listener(event: Event): void {
-    const detail = (event as CustomEvent<string>).detail;
-    if (typeof detail === 'string') handler(detail);
-  }
-  window.addEventListener(EVENT_NAME, listener);
-  return () => window.removeEventListener(EVENT_NAME, listener);
+  return bus.on('fill', handler);
 }
 
 /**
@@ -25,14 +32,9 @@ export function onComposerDraft(handler: (text: string) => void): () => void {
  * asks the composer to append a Markdown blockquote of the given text.
  */
 export function emitComposerQuote(text: string): void {
-  window.dispatchEvent(new CustomEvent<string>(QUOTE_EVENT_NAME, { detail: text }));
+  void bus.emit('quote', text);
 }
 
 export function onComposerQuote(handler: (text: string) => void): () => void {
-  function listener(event: Event): void {
-    const detail = (event as CustomEvent<string>).detail;
-    if (typeof detail === 'string') handler(detail);
-  }
-  window.addEventListener(QUOTE_EVENT_NAME, listener);
-  return () => window.removeEventListener(QUOTE_EVENT_NAME, listener);
+  return bus.on('quote', handler);
 }

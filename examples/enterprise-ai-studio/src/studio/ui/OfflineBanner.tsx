@@ -4,27 +4,12 @@
  * silently when the SSE connection drops, so making the offline state explicit
  * prevents users from staring at a frozen typing indicator.
  */
-import { useEffect, useState } from 'react';
+import { hooks } from '@missionfabric-js/enzyme';
 
 export function OfflineBanner(): React.ReactElement | null {
-  const [online, setOnline] = useState(() =>
-    typeof navigator === 'undefined' ? true : navigator.onLine
-  );
-
-  useEffect(() => {
-    function setOnlineTrue(): void {
-      setOnline(true);
-    }
-    function setOnlineFalse(): void {
-      setOnline(false);
-    }
-    window.addEventListener('online', setOnlineTrue);
-    window.addEventListener('offline', setOnlineFalse);
-    return () => {
-      window.removeEventListener('online', setOnlineTrue);
-      window.removeEventListener('offline', setOnlineFalse);
-    };
-  }, []);
+  // enzyme's `useOnlineStatus` wraps the framework's network monitor (SSR-safe,
+  // shared across the app) instead of hand-binding window online/offline events.
+  const online = hooks.useOnlineStatus();
 
   if (online) return null;
 

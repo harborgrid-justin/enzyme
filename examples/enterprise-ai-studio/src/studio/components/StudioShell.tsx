@@ -1,4 +1,4 @@
-import { state } from '@missionfabric-js/enzyme';
+import { hooks, shared, state } from '@missionfabric-js/enzyme';
 import * as RadixDialog from '@radix-ui/react-dialog';
 import { useEffect, useState } from 'react';
 import { useConversations } from '../api/conversations';
@@ -84,7 +84,8 @@ export function StudioShell(): React.ReactElement {
   // hint becomes an interactive toast — clicking it opens the palette.
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (window.localStorage.getItem(FIRST_LOAD_HINT_KEY) === '1') return;
+    // Persist the "seen the hint" flag via enzyme's `shared` storage layer.
+    if (shared.getLocal<boolean>(FIRST_LOAD_HINT_KEY) === true) return;
     const timer = window.setTimeout(() => {
       toast.info(`Tip: press ${modKeyLabel()}K to jump anywhere in the studio.`, {
         duration: 8000,
@@ -93,7 +94,7 @@ export function StudioShell(): React.ReactElement {
           onClick: () => setPaletteOpen(true),
         },
       });
-      window.localStorage.setItem(FIRST_LOAD_HINT_KEY, '1');
+      shared.setLocal(FIRST_LOAD_HINT_KEY, true);
     }, 1500);
     return () => window.clearTimeout(timer);
   }, []);
@@ -103,14 +104,13 @@ export function StudioShell(): React.ReactElement {
       ? (conversations ?? []).find((c) => c.id === activeConversationId)
       : undefined;
 
-  // Feature #59: reflect the active conversation in the browser/tab title.
-  useEffect(() => {
-    const base = 'Enzyme AI Studio';
-    document.title = activeConversation != null ? `${activeConversation.title} · ${base}` : base;
-    return () => {
-      document.title = base;
-    };
-  }, [activeConversation]);
+  // Feature #59: reflect the active conversation in the browser/tab title via
+  // enzyme's declarative `useDocumentTitle` (restores the prior title on unmount).
+  const titleBase = 'Enzyme AI Studio';
+  hooks.useDocumentTitle(
+    activeConversation != null ? `${activeConversation.title} · ${titleBase}` : titleBase,
+    { restoreOnUnmount: true }
+  );
 
   // Feature #90: cycle the next-turn model with a keyboard shortcut.
   function cycleModel(): void {

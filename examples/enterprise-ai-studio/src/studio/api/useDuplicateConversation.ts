@@ -5,7 +5,7 @@
  * system prompt (a "fork" you can take in a new direction), then activates it.
  * Message history is intentionally not copied — the new thread starts clean.
  */
-import { auth } from '@missionfabric-js/enzyme';
+import { auth, monitoring } from '@missionfabric-js/enzyme';
 import { useCreateConversation } from './conversations';
 import { useStudioStore } from '../store/studioStore';
 import { toast } from '../ui/toast';
@@ -39,8 +39,7 @@ export function useDuplicateConversation(): UseDuplicateConversationResult {
       setActiveConversation(created.id);
       toast.success('Duplicated conversation');
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown error';
-      toast.error(`Couldn't duplicate: ${message}`);
+      toast.error(`Couldn't duplicate: ${monitoring.normalizeError(err).message}`);
     }
   }
 

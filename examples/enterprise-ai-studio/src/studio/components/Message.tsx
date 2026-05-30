@@ -1,4 +1,4 @@
-import { security } from '@missionfabric-js/enzyme';
+import { hooks, security } from '@missionfabric-js/enzyme';
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import type { StudioMessage } from '../types';
 import { ACCENT_CLASSES, PROVIDERS, costFor } from '../providers/catalog';
@@ -90,16 +90,6 @@ function renderWithArtifactChips(text: string, conversationId: string): React.Re
   return parts;
 }
 
-async function copyToClipboard(text: string): Promise<void> {
-  try {
-    await navigator.clipboard.writeText(text);
-    // Feature #21: toast on copy success so the click feels confirmed.
-    toast.success('Copied to clipboard');
-  } catch {
-    toast.error("Couldn't copy — clipboard permission denied");
-  }
-}
-
 export function MessageRow({
   message,
   userInitials,
@@ -116,6 +106,17 @@ export function MessageRow({
   // All message bodies — user OR assistant — are rendered through useSafeText so
   // a model response containing HTML/script tags can't be injected into the DOM.
   const safeContent = security.useSafeText(message.content);
+  // Feature #21: copy via enzyme's `useCopyToClipboard` (Clipboard API with a
+  // legacy execCommand fallback); toast confirms success/failure.
+  const [, copy] = hooks.useCopyToClipboard();
+  async function copyToClipboard(text: string): Promise<void> {
+    const ok = await copy(text);
+    if (ok) {
+      toast.success('Copied to clipboard');
+    } else {
+      toast.error("Couldn't copy — clipboard permission denied");
+    }
+  }
   const isAssistant = message.role === 'assistant';
   const isSystem = message.role === 'system';
   // Feature #45: collapse very long messages until the reader expands them.

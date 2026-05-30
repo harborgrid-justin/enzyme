@@ -3,8 +3,12 @@
  *
  * Unsent composer text is saved to localStorage keyed by conversation id, so
  * switching threads (or reloading the tab) restores whatever you were typing.
- * Kept tiny + framework-free so both the Composer and the draft bus can use it.
+ * Storage goes through enzyme's `shared` storage layer (`setLocal`/`getLocal`/
+ * `removeLocal`), which adds SSR/quota guards and a consistent envelope so the
+ * Composer and the draft bus don't hand-roll `localStorage` access.
  */
+import { shared } from '@missionfabric-js/enzyme';
+
 const PREFIX = 'enzyme-ai-studio-draft:';
 
 function keyFor(conversationId: string): string {
@@ -12,29 +16,17 @@ function keyFor(conversationId: string): string {
 }
 
 export function loadDraft(conversationId: string): string {
-  try {
-    return localStorage.getItem(keyFor(conversationId)) ?? '';
-  } catch {
-    return '';
-  }
+  return shared.getLocal<string>(keyFor(conversationId)) ?? '';
 }
 
 export function saveDraft(conversationId: string, text: string): void {
-  try {
-    if (text.trim() === '') {
-      localStorage.removeItem(keyFor(conversationId));
-    } else {
-      localStorage.setItem(keyFor(conversationId), text);
-    }
-  } catch {
-    // Storage unavailable (private mode / quota) — drafts are best-effort.
+  if (text.trim() === '') {
+    shared.removeLocal(keyFor(conversationId));
+  } else {
+    shared.setLocal(keyFor(conversationId), text);
   }
 }
 
 export function clearDraft(conversationId: string): void {
-  try {
-    localStorage.removeItem(keyFor(conversationId));
-  } catch {
-    // Ignore.
-  }
+  shared.removeLocal(keyFor(conversationId));
 }

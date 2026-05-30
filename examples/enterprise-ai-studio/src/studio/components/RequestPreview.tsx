@@ -1,3 +1,4 @@
+import { hooks } from '@missionfabric-js/enzyme';
 import { useMemo, useState } from 'react';
 import { useStudioStore } from '../store/studioStore';
 import { providerOf } from '../providers/catalog';
@@ -29,6 +30,7 @@ export function RequestPreview({
   const isOpen = useStudioStore((s) => s.isRequestPreviewOpen);
   const toggle = useStudioStore((s) => s.toggleRequestPreview);
   const [view, setView] = useState<'body' | 'curl'>('body');
+  const [, copy] = hooks.useCopyToClipboard();
 
   const effectiveModelId = modelOverrideId ?? conversation.modelId;
   const provider = providerOf(effectiveModelId);
@@ -97,7 +99,7 @@ export function RequestPreview({
             </span>
             <button
               type="button"
-              onClick={() => void navigator.clipboard.writeText(view === 'body' ? bodyJson : curlSnippet)}
+              onClick={() => void copy(view === 'body' ? bodyJson : curlSnippet)}
               title="Copy"
               className="ml-auto h-6 w-6 rounded text-slate-500 hover:bg-slate-100"
             >

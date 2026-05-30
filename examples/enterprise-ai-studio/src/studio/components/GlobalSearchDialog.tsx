@@ -6,7 +6,7 @@
  * conversation. Distinct from the command palette (which matches titles/models)
  * — this searches message *content*.
  */
-import { api } from '@missionfabric-js/enzyme';
+import { api, hooks } from '@missionfabric-js/enzyme';
 import { useEffect, useMemo, useState } from 'react';
 import { useConversations } from '../api/conversations';
 import { useStudioStore } from '../store/studioStore';
@@ -35,6 +35,9 @@ export function GlobalSearchDialog({
   const { data: conversations } = useConversations();
   const setActiveConversation = useStudioStore((s) => s.setActiveConversation);
   const [query, setQuery] = useState('');
+  // Debounce the query so the index isn't re-filtered on every keystroke; the
+  // input stays responsive while the (potentially large) scan is throttled.
+  const debouncedQuery = hooks.useDebouncedValue(query, 150);
   const [index, setIndex] = useState<IndexEntry[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -88,15 +91,15 @@ export function GlobalSearchDialog({
   }, [open, onOpenChange]);
 
   const results = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = debouncedQuery.trim().toLowerCase();
     if (q === '') return [];
     return index.filter((r) => r.content.toLowerCase().includes(q)).slice(0, 40);
-  }, [query, index]);
+  }, [debouncedQuery, index]);
 
   if (!open) return null;
 
   function snippet(content: string): string {
-    const q = query.trim().toLowerCase();
+    const q = debouncedQuery.trim().toLowerCase();
     const idx = content.toLowerCase().indexOf(q);
     if (idx < 0) return content.slice(0, 120);
     const start = Math.max(0, idx - 40);

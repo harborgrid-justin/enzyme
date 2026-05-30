@@ -7,7 +7,7 @@
  * Returns `{ start, isPending }`. `start()` resolves silently on success and
  * surfaces failures via toast so callers don't have to duplicate that.
  */
-import { auth } from '@missionfabric-js/enzyme';
+import { auth, monitoring, utils } from '@missionfabric-js/enzyme';
 import { useCreateConversation } from './conversations';
 import { useStudioStore } from '../store/studioStore';
 import { DEFAULT_MODEL_ID } from '../providers/catalog';
@@ -50,6 +50,10 @@ export function useStartNewConversation(): UseStartNewConversationResult {
         },
       });
       setActiveConversation(created.id);
+      utils.trackEvent('conversation_started', {
+        modelId: options.modelId ?? DEFAULT_MODEL_ID,
+        fromTemplate: options.title != null,
+      });
       if (options.draft != null && options.draft !== '') {
         const draft = options.draft;
         // Defer until the composer for the new thread has mounted.
@@ -57,8 +61,9 @@ export function useStartNewConversation(): UseStartNewConversationResult {
       }
       toast.success('Started a new conversation');
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown error';
-      toast.error(`Couldn't create conversation: ${message}`);
+      // Normalize through enzyme's error layer so non-Error throwables (strings,
+      // API error shapes) still yield a clean message.
+      toast.error(`Couldn't create conversation: ${monitoring.normalizeError(err).message}`);
     }
   }
 

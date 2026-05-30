@@ -16,3 +16,6 @@ export * as monitoring from '@/lib/monitoring';
 export * as performance from '@/lib/performance';
 export * as security from '@/lib/security';
 export * as streaming from '@/lib/streaming';
+export * as hooks from '@/lib/hooks';
+export * as shared from '@/lib/shared';
+export * as utils from '@/lib/utils';
